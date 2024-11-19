@@ -1,3 +1,10 @@
+@import '@fontsource/open-sans'; /* Defaults to weight 400 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: #FEF8F9; /* Background from your Figma design */
+}
