@@ -1,13 +1,17 @@
-import React, { useState } from "react";
-import { Formik, Field, Form, ErrorMessage } from "formik";
+import { Formik, FormikHelpers } from "formik";
+import * as Yup from "yup";
+import TextInput from "../../components/TextInput"; // Reusable component
+import { Button } from "@material-tailwind/react";
 
-import { registrationValidationSchema } from "./validation"; // Ensure this validation schema is defined
+interface FormErrors {
+  username?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  accessCode?: string;
+}
 
-// Toggle password visibility
-const RegistrationForm: React.FC = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+const RegistrationForm = () => {
   const initialValues = {
     username: "",
     email: "",
@@ -16,140 +20,118 @@ const RegistrationForm: React.FC = () => {
     accessCode: "",
   };
 
-  const handleSubmit = (values: any) => {
+  const validationSchema = Yup.object({
+    username: Yup.string()
+      .matches(/^[a-zA-Z0-9][a-zA-Z0-9.]*[a-zA-Z0-9]$/, "Sorry, only letters, numbers, periods (.) are allowed. The first character should be a letter or number. The last character should be a letter or number.")
+      .required("Username is required"),
+    email: Yup.string()
+      .email("Please enter a valid email address")
+      .matches(/@/, "Please include an ‘@’ in the email address")
+      .required("Enter an Email Address"),
+    password: Yup.string()
+      .required("Password is required")
+      .min(8, "Use 8 characters or more for your password"),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref("password"), undefined], "Passwords must match")
+      .required("Confirm password is required"),
+    accessCode: Yup.string().required("Enter an access code"),
+  });
+
+  const handleSubmit = (
+    values: typeof initialValues,
+    { setErrors }: FormikHelpers<typeof initialValues>
+  ) => {
     console.log("Form submitted:", values);
+
+    // Simulate a backend validation error for the username field
+    const errors: FormErrors = { username: "This username is already taken" };
+    setErrors(errors);
   };
 
   return (
-    <div className="relative w-full h-screen bg-[#FEF8F9]">
-      {/* Background Circle */}
-      <div className="absolute w-[733px] h-[733px] left-1/2 top-[-350px] transform -translate-x-1/2 bg-[#EE183C] opacity-10 blur-[200px]" />
+    <Formik
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+    >
+      {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
+        <form onSubmit={handleSubmit} className="p-8  mx-auto shadow-md rounded-lg bg-white border-6 border-white lg:w-[40vw] md:w-[60vw] max-w-md:w-[80vw]  flex flex-col items-center justify-center" >
+          <h1 className="text-2xl font-semibold text-center mb-6">Create Account</h1>
 
-      {/* Noise Texture */}
-      <div className="absolute w-full h-full bg-[url(.png)] mix-blend-overlay opacity-35" />
+          <div className="lg:w-[60%] md:w-[70%] max-md:w-[90%]">
+          <TextInput
+            name="username"
+            label="Username"
+            type="text"
+            value={values.username}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.username && touched.username && errors.username}
+          />
 
-      {/* Form Box */}
-      <div className="absolute w-[588px] h-[618px] left-[50%] top-[20%] transform -translate-x-1/2 border border-[#DCDCDD] rounded-lg">
-        <Formik
-          initialValues={initialValues}
-          validationSchema={registrationValidationSchema} // Use your validation schema
-          onSubmit={handleSubmit}
-        >
-          {({ isSubmitting }) => (
-            <Form className="flex flex-col items-center p-6 bg-gradient-to-b from-[#FBFAFB] to-[#FFFFFF] border-6 border-white shadow-xl rounded-lg">
-              <h1 className="text-3xl font-semibold mb-6 text-center text-black">Create Account</h1>
+          <TextInput
+            name="email"
+            label="Email Address"
+            type="email"
+            value={values.email}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.email && touched.email && errors.email}
+          />
 
-              {/* Username Field */}
-              <div className="mb-4 w-full">
-                <label htmlFor="username" className="block text-sm font-medium">Username</label>
-                <Field
-                  type="text"
-                  id="username"
-                  name="username"
-                  className="w-full p-2 border rounded-md mt-2 focus:ring-2 focus:ring-indigo-400"
-                  placeholder="Enter your username"
-                />
-                <ErrorMessage name="username" component="div" className="text-red-500 text-sm mt-1" />
-              </div>
+          <TextInput
+            name="password"
+            label="Password"
+            type="password"
+            value={values.password}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.password && touched.password && errors.password}
+          />
 
-              {/* Email Field */}
-              <div className="mb-4 w-full">
-                <label htmlFor="email" className="block text-sm font-medium">Email Address</label>
-                <Field
-                  type="email"
-                  id="email"
-                  name="email"
-                  className="w-full p-2 border rounded-md mt-2 focus:ring-2 focus:ring-indigo-400"
-                  placeholder="Enter your email"
-                />
-                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
-              </div>
+          <TextInput
+            name="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            value={values.confirmPassword}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.confirmPassword && touched.confirmPassword && errors.confirmPassword}
+          />
 
-              {/* Password Field */}
-              <div className="mb-4 w-full">
-                <label htmlFor="password" className="block text-sm font-medium">Password</label>
-                <div className="relative">
-                  <Field
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    name="password"
-                    className="w-full p-2 border rounded-md mt-2 focus:ring-2 focus:ring-indigo-400"
-                    placeholder="Enter your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-1/2 right-3 transform -translate-y-1/2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 11V7a3 3 0 00-3-3H7a3 3 0 00-3 3v10a3 3 0 003 3h7a3 3 0 003-3v-4" />
-                    </svg>
-                  </button>
-                </div>
-                <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-              </div>
+          <TextInput
+            name="accessCode"
+            label="Access Code"
+            type="text"
+            value={values.accessCode}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.accessCode && touched.accessCode && errors.accessCode}
+          />
 
-              {/* Confirm Password Field */}
-              <div className="mb-4 w-full">
-                <label htmlFor="confirmPassword" className="block text-sm font-medium">Confirm Password</label>
-                <div className="relative">
-                  <Field
-                    type={showConfirmPassword ? "text" : "password"}
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    className="w-full p-2 border rounded-md mt-2 focus:ring-2 focus:ring-indigo-400"
-                    placeholder="Confirm your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute top-1/2 right-3 transform -translate-y-1/2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 11V7a3 3 0 00-3-3H7a3 3 0 00-3 3v10a3 3 0 003 3h7a3 3 0 003-3v-4" />
-                    </svg>
-                  </button>
-                </div>
-                <ErrorMessage name="confirmPassword" component="div" className="text-red-500 text-sm mt-1" />
-              </div>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            color="red"
+            size="lg"
+            className="w-full mt-4"
+            placeholder=""
+            onPointerEnterCapture={() => {}}
+            onPointerLeaveCapture={() => {}}
+          >
+            Create Account
+          </Button>
+          </div>
 
-              {/* Access Code Field */}
-              <div className="mb-4 w-full">
-                <label htmlFor="accessCode" className="block text-sm font-medium">Access Code</label>
-                <Field
-                  type="text"
-                  id="accessCode"
-                  name="accessCode"
-                  className="w-full p-2 border rounded-md mt-2 focus:ring-2 focus:ring-indigo-400"
-                  placeholder="Enter your access code"
-                />
-                <ErrorMessage name="accessCode" component="div" className="text-red-500 text-sm mt-1" />
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-2 bg-red-500 text-white rounded-md hover:bg-red-600 mt-4"
-              >
-                Create Account
-              </button>
-
-              {/* Login Redirect */}
-              <p className="text-center text-sm text-gray-500 mt-4">
-                Already have an account?{" "}
-                <a href="/login" className="text-indigo-500">Log in</a>
-              </p>
-
-              {/* Footer Text */}
-              <p className="text-center text-xs text-gray-500 mt-4">
-                By signing up, you are agreeing to Dare's Terms of Service and Privacy Policy.
-              </p>
-            </Form>
-          )}
-        </Formik>
-      </div>
-    </div>
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Already have an account?{" "}
+            <a href="/login" className="text-indigo-500">
+              Log in
+            </a>
+          </p>
+        </form>
+      )}
+    </Formik>
   );
 };
 
