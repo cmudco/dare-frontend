@@ -1,11 +1,15 @@
-import React from 'react';
+import LoginForm from "./LoginForm";
 
 const Login = () => {
   return (
-    <div>
-      <h1>Login Page</h1>
-      <p>Welcome to the Login page!</p>
-    </div>
+    <>
+      <div className='absolute md:block hidden'>
+        <img src='/shapes/BgCircle.png' alt='' />
+      </div>
+      <div className='flex items-center justify-center min-h-screen '>
+        <LoginForm />
+      </div>
+    </>
   );
 };
 
