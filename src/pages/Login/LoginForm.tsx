@@ -62,7 +62,6 @@ const LoginForm = () => {
               onBlur={handleBlur}
               error={errors.password && touched.password && errors.password}
             />
-
             <div className='flex justify-end text-sm mb-4'>
               <a href='/forgot-password' className='text-red-500 font-medium'>
                 Forgot Password?
@@ -81,7 +80,7 @@ const LoginForm = () => {
 
           <p className='text-center text-sm text-gray-500 mt-4'>
             Don't have an account?{" "}
-            <a href='/signup' className='text-primary font-body font-bold'>
+            <a href='/register' className='text-primary font-body font-bold'>
               Signup
             </a>
           </p>

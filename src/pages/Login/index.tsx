@@ -1,6 +1,6 @@
 import LoginForm from "./LoginForm";
 
-const Login = () => {
+const LoginScreen = () => {
   return (
     <>
       <div className='absolute md:block hidden'>
@@ -13,4 +13,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginScreen;
