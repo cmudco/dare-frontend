@@ -28,7 +28,7 @@ const TextInput: React.FC<TextInputProps> = ({
   };
 
   return (
-    <div className="w-full mb-5 relative">
+    <div className='w-full mb-5 relative'>
       <Input
         id={name}
         name={name}
@@ -40,21 +40,29 @@ const TextInput: React.FC<TextInputProps> = ({
         icon={
           type === "password" && (
             <div
-              className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+              className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer'
               onClick={togglePasswordVisibility}
             >
               {showPassword ? (
-                <EyeSlashIcon className="h-5 w-5 text-gray-800" />
+                <EyeSlashIcon className='h-5 w-5 text-gray-800' />
               ) : (
-                <EyeIcon className="h-5 w-5 text-gray-800" />
+                <EyeIcon className='h-5 w-5 text-gray-800' />
               )}
             </div>
           )
         }
         error={!!error} // Highlights the input in red if there's an error
-        className="w-full"
+        className='w-full'
+        style={{ borderColor: error ? "red" : "#DCDCDD" }}
       />
-    <p className={`text-xs text-red-500 mt-0.5 mb-2 ml-2 ${!error ? 'opacity-0 my-2' : ''}`}>{error}</p>    </div>
+      <p
+        className={`text-xs text-red-500 mt-0.5 mb-2 ml-2 ${
+          !error ? "opacity-0 my-2" : ""
+        }`}
+      >
+        {error}
+      </p>{" "}
+    </div>
   );
 };
 
