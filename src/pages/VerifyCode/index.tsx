@@ -1,16 +1,17 @@
-import RegistrationForm from "./RegistrationForm";
+import VerifyCode from "./VerifyCode";
 
-const RegistrationScreen = () => {
+
+const VerifyScreen = () => {
   return (
     <>
       <div className='absolute md:block hidden'>
         <img src='/shapes/BgCircle.png' alt='' />
       </div>
       <div className='flex items-center justify-center min-h-screen '>
-        <RegistrationForm />
+        <VerifyCode />
       </div>
     </>
   );
 };
 
-export default RegistrationScreen;
+export default VerifyScreen;
