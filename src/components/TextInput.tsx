@@ -53,7 +53,7 @@ const TextInput: React.FC<TextInputProps> = ({
         }
         error={!!error} // Highlights the input in red if there's an error
         className='w-full'
-        style={{ borderColor: error ? "red" : "#DCDCDD" }}
+        // style={{ borderColor: error ? "red" : "#DCDCDD" }}
       />
       <p
         className={`text-xs text-red-500 mt-0.5 mb-2 ml-2 ${
