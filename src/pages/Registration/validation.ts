@@ -8,30 +8,45 @@ export const initialValues = {
   accessCode: "",
 };
 
-export interface FormErrors {
-  username?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-  accessCode?: string;
-}
+const mockValidateAccessCode = (
+  code: string
+): {
+  isValid: boolean;
+  isExpired: boolean;
+} => {
+  if (code === "123456") return { isValid: true, isExpired: true };
+  if (code.length !== 6) return { isValid: false, isExpired: false };
+  return { isValid: true, isExpired: false };
+};
 
 export const validationSchema = Yup.object({
   username: Yup.string()
     .matches(
-      /^[a-zA-Z0-9][a-zA-Z0-9.]*[a-zA-Z0-9]$/,
-      "Sorry, only letters, numbers, periods (.) are allowed. The first character should be a letter or number. The last character should be a letter or number."
+      /^[a-zA-Z0-9]/,
+      "The first character should be a letter or number."
+    )
+    .matches(/[a-zA-Z0-9]$/, "The last character should be a letter or number.")
+    .matches(
+      /^[a-zA-Z0-9.]*$/,
+      "Sorry, only letters, numbers, periods (.) are allowed."
     )
     .required("Username is required"),
   email: Yup.string()
-    .email("Please enter a valid email address")
     .matches(/@/, "Please include an ‘@’ in the email address")
+    .email("Please enter a valid email address")
     .required("Enter an Email Address"),
   password: Yup.string()
     .required("Password is required")
     .min(8, "Use 8 characters or more for your password"),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password"), undefined], "Passwords must match")
+    .oneOf([Yup.ref("password"), null], "Password does not match")
     .required("Confirm password is required"),
-  accessCode: Yup.string().required("Enter an access code"),
+  accessCode: Yup.string()
+    .required("Enter an access code")
+    .matches(/^\d+$/, "Invalid access code. Please try again")
+    .length(6, "The access code you entered is incorrect. Try again")
+    .test("This access code has expired. Request a new code", function (value) {
+      if (!value) return true;
+      return !mockValidateAccessCode(value).isExpired;
+    }),
 });

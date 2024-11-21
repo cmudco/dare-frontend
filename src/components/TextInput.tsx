@@ -9,7 +9,7 @@ interface TextInputProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
-  error?: string | boolean;
+  error?: string | undefined;
 }
 
 const TextInput: React.FC<TextInputProps> = ({
@@ -36,7 +36,7 @@ const TextInput: React.FC<TextInputProps> = ({
         value={value}
         onChange={onChange}
         onBlur={onBlur}
-        label={label} // Material Tailwind provides floating labels with this prop
+        label={label} 
         icon={
           type === "password" && (
             <div
@@ -51,16 +51,15 @@ const TextInput: React.FC<TextInputProps> = ({
             </div>
           )
         }
-        error={!!error} // Highlights the input in red if there's an error
+        error={!!error}
         className='w-full'
-        // style={{ borderColor: error ? "red" : "#DCDCDD" }}
       />
       <p
         className={`text-xs text-red-500 mt-0.5 mb-2 ml-2 ${
           !error ? "opacity-0 my-2" : ""
         }`}
       >
-        {error}
+        {String(error)}
       </p>{" "}
     </div>
   );

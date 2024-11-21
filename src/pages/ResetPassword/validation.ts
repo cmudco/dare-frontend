@@ -5,11 +5,6 @@ export const initialValues = {
   confirmPassword: "",
 };
 
-export interface FormErrors {
-  password?: string;
-  confirmPassword?: string;
-}
-
 export const validationSchema = Yup.object({
   password: Yup.string()
     .required("Password is required")
