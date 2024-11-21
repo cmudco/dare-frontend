@@ -5,17 +5,11 @@ export const initialValues = {
   password: "",
 };
 
-export interface FormErrors {
-  username?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-  accessCode?: string;
-}
-
 export const validationSchema = Yup.object({
-  emailOrUsername: Yup.string().required(
-    "Enter your username or email address"
-  ),
-  password: Yup.string().required("Password is required"),
+  emailOrUsername: Yup.string()
+    .required("Enter your username or email address")
+    .test("valid-format", "Enter valid credentials", function (value) {
+      return /^[a-zA-Z0-9._]{3,}$/.test(value);
+    }),
+  password: Yup.string().required("Enter a password"),
 });

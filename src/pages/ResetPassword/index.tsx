@@ -1,16 +1,32 @@
-import ResetPassword from "./ResetPassword";
+import React from "react";
+import AuthCard from "../../components/AuthCard";
+import { initialValues, validationSchema } from "./validation";
+import { FormikValues } from "formik";
 
-const ResetScreen = () => {
+const ResetPasswordScreen: React.FC = () => {
+  const handleSubmit = (values: FormikValues) => {
+    console.log("Submitted values:", values);
+  };
+
   return (
-    <>
-      <div className='absolute md:block hidden'>
-        <img src='/shapes/BgCircle.png' alt='' />
-      </div>
-      <div className='flex items-center justify-center min-h-screen '>
-        <ResetPassword />
-      </div>
-    </>
+    <AuthCard
+      title='Set a password'
+      subtitle='Your previous password has been reset. Please set a new password for your account.'
+      inputs={[
+        { name: "password", label: "Create Password", type: "password" },
+        {
+          name: "confirmPassword",
+          label: "Confirm Password",
+          type: "password",
+        },
+      ]}
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+      buttonText='Set Password'
+      showBackButton
+    />
   );
 };
 
-export default ResetScreen;
+export default ResetPasswordScreen;

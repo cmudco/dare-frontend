@@ -4,11 +4,8 @@ export const initialValues = {
   verificationCode: "",
 };
 
-export interface FormErrors {
-  verificationCode?: string;
-}
-
 export const validationSchema = Yup.object({
   verificationCode: Yup.string()
-    .required("Verification code is required"),
+    .required("Enter verification code")
+    .matches(/^\d+$/, "Incorrect verification code")
 });
