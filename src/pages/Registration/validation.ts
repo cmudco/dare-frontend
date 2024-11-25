@@ -8,17 +8,6 @@ export const initialValues = {
   accessCode: "",
 };
 
-const mockValidateAccessCode = (
-  code: string
-): {
-  isValid: boolean;
-  isExpired: boolean;
-} => {
-  if (code === "123456") return { isValid: true, isExpired: true };
-  if (code.length !== 6) return { isValid: false, isExpired: false };
-  return { isValid: true, isExpired: false };
-};
-
 export const validationSchema = Yup.object({
   username: Yup.string()
     .matches(
@@ -32,7 +21,7 @@ export const validationSchema = Yup.object({
     )
     .required("Username is required"),
   email: Yup.string()
-    .matches(/@/, "Please include an ‘@’ in the email address")
+    .matches(/@/, "Please include an '@' in the email address")
     .email("Please enter a valid email address")
     .required("Enter an Email Address"),
   password: Yup.string()
@@ -44,9 +33,5 @@ export const validationSchema = Yup.object({
   accessCode: Yup.string()
     .required("Enter an access code")
     .matches(/^\d+$/, "Invalid access code. Please try again")
-    .length(6, "The access code you entered is incorrect. Try again")
-    .test("This access code has expired. Request a new code", function (value) {
-      if (!value) return true;
-      return !mockValidateAccessCode(value).isExpired;
-    }),
+    .length(6, "The access code you entered is incorrect. Try again"),
 });
