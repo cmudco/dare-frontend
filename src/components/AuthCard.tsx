@@ -1,6 +1,6 @@
 import React from "react";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Formik, Form, FormikValues } from "formik";
 import TextInput from "./TextInput";
 
@@ -43,15 +43,15 @@ const AuthCard: React.FC<AuthCardProps> = ({
       <div className='absolute sm:block hidden w-full h-full'>
         <img src='/shapes/BgCircle.png' alt='' />
       </div>
-      <div className='p-8 mx-auto shadow-md rounded-2xl bg-white border-6 border-white lg:w-[50vw] md:w-[60vw] w-[80vw] flex flex-col items-center justify-center relative min-h-[50vh]'>
+      <div className='p-8 mx-auto shadow-md rounded-2xl bg-white border-6 border-white xl:w-[40vw] lg:w-[50vw] md:w-[60vw] w-[80vw] flex flex-col items-center justify-center relative xl:min-h-[55vh] min-h-[50vh]'>
         {showBackButton && (
-          <p
+          <div
             className='absolute top-5 left-9 w-full text-xs mt-4 cursor-pointer text-left flex items-center gap-1'
             onClick={() => navigate("/login")}
           >
             <ArrowLeftIcon className='h-5 w-5' />
-            Back to login
-          </p>
+            <span className='hidden lg:block'>Back to login</span>
+          </div>
         )}
 
         <img
@@ -60,7 +60,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
           className='absolute -top-10 w-24'
         />
 
-        <h1 className='text-2xl font-black text-center mb-4'>{title}</h1>
+        <h1 className='text-2xl font-black text-center mb-8'>{title}</h1>
         {subtitle && <p className='text-center text-sm mb-6'>{subtitle}</p>}
 
         <Formik
@@ -96,12 +96,12 @@ const AuthCard: React.FC<AuthCardProps> = ({
 
               {showForgotPassword && (
                 <div className='flex justify-end text-sm mb-4'>
-                  <a
-                    href='/forgot-password'
+                  <Link
+                    to='/forgot-password'
                     className='text-red-500 font-medium'
                   >
                     Forgot Password?
-                  </a>
+                  </Link>
                 </div>
               )}
 
