@@ -40,7 +40,11 @@ const RegistrationScreen: React.FC = () => {
         { name: "username", label: "Username", type: "text" },
         { name: "email", label: "Email Address", type: "email" },
         { name: "password", label: "Password", type: "password" },
-        { name: "confirmPassword", label: "Confirm Password", type: "password" },
+        {
+          name: "confirmPassword",
+          label: "Confirm Password",
+          type: "password",
+        },
         { name: "accessCode", label: "Access Code", type: "text" },
       ]}
       initialValues={initialValues}

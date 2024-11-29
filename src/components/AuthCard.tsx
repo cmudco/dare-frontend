@@ -1,6 +1,6 @@
 import React from "react";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form, FormikValues } from "formik";
 import TextInput from "./TextInput";
 
@@ -15,6 +15,7 @@ interface AuthCardProps {
   subtitle?: string;
   inputs: InputField[];
   validationSchema: any;
+  initialValues: any;
   onSubmit: (values: FormikValues) => void;
   buttonText: string;
   showBackButton?: boolean;

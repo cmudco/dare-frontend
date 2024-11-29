@@ -1,10 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { signInWithEmailAndPassword, User } from "firebase/auth";
+import { auth } from "../firebase/firebaseConfig";
+
 import {
   loginUser,
   registerUser,
   forgotPasswordUser,
   verifyCodeUser,
   resetPasswordUser,
+  sendTokenToBackend as sendTokenToBackendAPI,
 } from "../api/api";
 
 interface UserState {
@@ -21,13 +25,59 @@ const initialState: UserState = {
   error: null,
 };
 
+export const firebaseLogin = createAsyncThunk(
+  "user/firebaseLogin",
+  async (credentials: { email: string; password: string }, thunkAPI) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        credentials.email,
+        credentials.password
+      );
+      const firebaseUser = userCredential.user;
+      const idToken = await firebaseUser.getIdToken();
+
+      console.log("Firebase login successful:", firebaseUser.email);
+      console.log("ID token:", idToken);
+      console.log("CREDENTIALS: ", credentials);
+
+      return { idToken, email: credentials.email };
+    } catch (error: any) {
+      console.error("Firebase login error:", error.message);
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
+
+export const sendTokenToBackend = createAsyncThunk(
+  "user/sendTokenToBackend",
+  async (token: string, thunkAPI) => {
+    try {
+      const data = await sendTokenToBackendAPI(token);
+      return data;
+    } catch (error) {
+      console.error(
+        "Error sending token to backend:",
+        (error as Error).message
+      );
+      return thunkAPI.rejectWithValue((error as Error).message);
+    }
+  }
+);
+
 export const login = createAsyncThunk(
   "user/login",
-  async (credentials: { username: string; password: string }, thunkAPI) => {
+  async (
+    credentials: { id_token: string; email: string; password: string },
+    thunkAPI
+  ) => {
     try {
+      console.log("CREDENTIALS------: ", credentials);
+
       const data = await loginUser(credentials);
       return data;
     } catch (error) {
+      console.log("EHHHHHHH: ", error);
       return thunkAPI.rejectWithValue((error as Error).message);
     }
   }
@@ -101,6 +151,37 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(firebaseLogin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(firebaseLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = {
+          username: "", // Default value for username
+          email: action.payload.email,
+          csrf_token: action.payload.idToken,
+        };
+        state.isAuthenticated = true;
+        state.error = null;
+      })
+
+      .addCase(firebaseLogin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(sendTokenToBackend.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(sendTokenToBackend.fulfilled, (state) => {
+        state.loading = false;
+        // Handle the response from the backend if needed
+      })
+      .addCase(sendTokenToBackend.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -115,7 +196,6 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-
       .addCase(register.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -130,7 +210,6 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-
       .addCase(forgotPassword.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -143,7 +222,6 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-
       .addCase(verifyCode.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -156,7 +234,6 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-
       .addCase(resetPassword.pending, (state) => {
         state.loading = true;
         state.error = null;
