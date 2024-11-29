@@ -1,18 +1,49 @@
-const BASE_URL = 'process.env.REACT_APP_API_BASE_URL';
+import axios from "axios";
+import { User } from "firebase/auth";
 
-export const loginUser = async (data: { username: string; password: string }) => {
-  const response = await fetch(`${BASE_URL}/api/auth/login/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-    credentials: "include",
-  });
+const BASE_URL = import.meta.env.VITE_DJANGO_BACKEND_URL;
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Login failed");
+console.log("BASE_URL:", BASE_URL);
+
+const axiosInstance = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export const loginUser = async (data: {
+  id_token: string;
+  email: string;
+  password: string;
+}) => {
+  try {
+    const response = await axiosInstance.post("/auth/login/", data, {
+      headers: {
+        withCredentials: true,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error || "Login failed";
+    throw new Error(errorMessage);
   }
-  return await response.json();
+};
+
+export const sendTokenToBackend = async (token: string) => {
+  try {
+    const response = await axiosInstance.post("/api/auth/token/", null, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        withCrendentials: true,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.error || "Failed to send token to backend";
+    throw new Error(errorMessage);
+  }
 };
 
 export const registerUser = async (data: {
@@ -22,85 +53,52 @@ export const registerUser = async (data: {
   confirm_password: string;
   access_code: string;
 }) => {
-  const response = await fetch(`${BASE_URL}/api/auth/register/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  const responseText = await response.text();
-  if (!responseText) {
-    throw new Error('Empty response from server');
+  try {
+    const response = await axiosInstance.post("/api/auth/register/", data);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || "Registration failed";
+    throw new Error(errorMessage);
   }
-
-  const responseData = JSON.parse(responseText);
-
-  if (!response.ok) {
-    throw new Error(responseData.message || "Registration failed");
-  }
-
-  return responseData;
 };
 
 export const forgotPasswordUser = async (data: { email: string }) => {
-  const response = await fetch(`${BASE_URL}/api/auth/forgot-password/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  const responseText = await response.text();
-  if (!responseText) {
-    throw new Error('Empty response from server');
+  try {
+    const response = await axiosInstance.post(
+      "/api/auth/forgot-password/",
+      data
+    );
+    return response.data;
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message || "Password recovery failed";
+    throw new Error(errorMessage);
   }
-
-  const responseData = JSON.parse(responseText);
-
-  if (!response.ok) {
-    throw new Error(responseData.message || "Password recovery failed");
-  }
-
-  return responseData;
 };
 
 export const verifyCodeUser = async (data: { verificationCode: string }) => {
-  const response = await fetch(`${BASE_URL}/api/auth/verify-code/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  const responseText = await response.text();
-  if (!responseText) {
-    throw new Error('Empty response from server');
+  try {
+    const response = await axiosInstance.post("/api/auth/verify-code/", data);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || "Verification failed";
+    throw new Error(errorMessage);
   }
-
-  const responseData = JSON.parse(responseText);
-
-  if (!response.ok) {
-    throw new Error(responseData.message || "Verification failed");
-  }
-
-  return responseData;
 };
 
-export const resetPasswordUser = async (data: { password: string; confirmPassword: string }) => {
-  const response = await fetch(`${BASE_URL}/api/auth/reset-password/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  const responseText = await response.text();
-  if (!responseText) {
-    throw new Error('Empty response from server');
+export const resetPasswordUser = async (data: {
+  password: string;
+  confirmPassword: string;
+}) => {
+  try {
+    const response = await axiosInstance.post(
+      "/api/auth/reset-password/",
+      data
+    );
+    return response.data;
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message || "Password reset failed";
+    throw new Error(errorMessage);
   }
-
-  const responseData = JSON.parse(responseText);
-
-  if (!response.ok) {
-    throw new Error(responseData.message || "Password reset failed");
-  }
-
-  return responseData;
 };

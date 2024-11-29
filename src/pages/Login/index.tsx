@@ -5,19 +5,38 @@ import { initialValues, validationSchema } from "./validation";
 import { FormikValues } from "formik";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
-import { login } from "../../redux/userSlice";
+import { firebaseLogin, login } from "../../redux/userSlice";
 
 const LoginScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>(); // Typed dispatch
 
-  const handleSubmit = (values: FormikValues) => {
+  const handleSubmit = async (values: FormikValues) => {
     console.log("Submitted values:", values);
     const loginData = {
-      username: values.emailOrUsername,
+      email: values.emailOrUsername,
       password: values.password,
     };
 
-    dispatch(login(loginData));
+    try {
+      const resultAction = await dispatch(firebaseLogin(loginData));
+      console.log("Result action:", resultAction);
+
+      if (firebaseLogin.fulfilled.match(resultAction)) {
+        console.log("Login successful!");
+        console.log(resultAction);
+        await dispatch(
+          login({
+            id_token: resultAction.payload.idToken,
+            email: loginData.email,
+            password: loginData.password,
+          })
+        );
+      } else {
+        console.error("Login failed:", resultAction.payload);
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+    }
   };
 
   return (
