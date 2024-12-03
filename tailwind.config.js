@@ -10,10 +10,13 @@ export default withMT({
   theme: {
     extend: {
       colors: {
-        primary: '#EE183C',
-        stroke: '#DCDCDD',
+        primary: "#EE183C",
+        stroke: "#DCDCDD",
+        lightpink: "#FEF8F9",
+        'border-gray': '#F1F3F4', // Added new color
       },
     },
   },
   plugins: [],
 });
+

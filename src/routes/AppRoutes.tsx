@@ -8,6 +8,8 @@ import ResetScreen from "../pages/ResetPassword";
 import ForgotScreen from "../pages/ForgotPassword";
 import RegistrationScreen from "../pages/Registration";
 import ChatScreen from "../pages/Chat";
+import UserView from "../components/Layout/UserView";
+import QrVerificationScreen from "../pages/QrVerification";
 
 const AppRoutes = () => {
   return (
@@ -19,9 +21,14 @@ const AppRoutes = () => {
         <Route path='/forgot-password' element={<ForgotScreen />} />
         <Route path='/verify-code' element={<VerifyScreen />} />
         <Route path='/reset-password' element={<ResetScreen />} />
-        <Route path='/chat' element={<ChatScreen />} />
-        <Route path='/dashboard' element={<Dashboard />} />
-        <Route path='/files' element={<Files />} />
+        <Route path='/qr-verification' element={<QrVerificationScreen />} />
+
+        <Route path='/' element={<UserView />}>
+          <Route path='/chat' element={<ChatScreen />} />
+          <Route path='/dashboard' element={<Dashboard />} />
+          <Route path='/files' element={<Files />} />
+        </Route>
+
         <Route path='*' element={<div>404 - Page Not Found</div>} />
       </Routes>
     </BrowserRouter>

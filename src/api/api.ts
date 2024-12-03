@@ -10,6 +10,7 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // This should be set here, not in headers
 });
 
 export const loginUser = async (data: {
@@ -18,11 +19,7 @@ export const loginUser = async (data: {
   password: string;
 }) => {
   try {
-    const response = await axiosInstance.post("/auth/login/", data, {
-      headers: {
-        withCredentials: true,
-      },
-    });
+    const response = await axiosInstance.post("/auth/login/", data);
     return response.data;
   } catch (error: any) {
     const errorMessage = error.response?.data?.error || "Login failed";
@@ -32,10 +29,9 @@ export const loginUser = async (data: {
 
 export const sendTokenToBackend = async (token: string) => {
   try {
-    const response = await axiosInstance.post("/api/auth/token/", null, {
+    const response = await axiosInstance.post("/auth/token/", null, {
       headers: {
         Authorization: `Bearer ${token}`,
-        withCrendentials: true,
       },
     });
     return response.data;
@@ -54,7 +50,7 @@ export const registerUser = async (data: {
   access_code: string;
 }) => {
   try {
-    const response = await axiosInstance.post("/api/auth/register/", data);
+    const response = await axiosInstance.post("/auth/create-user/", data);
     return response.data;
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || "Registration failed";
@@ -78,7 +74,7 @@ export const forgotPasswordUser = async (data: { email: string }) => {
 
 export const verifyCodeUser = async (data: { verificationCode: string }) => {
   try {
-    const response = await axiosInstance.post("/api/auth/verify-code/", data);
+    const response = await axiosInstance.post("/auth/verify-code/", data);
     return response.data;
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || "Verification failed";
@@ -91,14 +87,30 @@ export const resetPasswordUser = async (data: {
   confirmPassword: string;
 }) => {
   try {
-    const response = await axiosInstance.post(
-      "/api/auth/reset-password/",
-      data
-    );
+    const response = await axiosInstance.post("/auth/reset-password/", data);
     return response.data;
   } catch (error: any) {
     const errorMessage =
       error.response?.data?.message || "Password reset failed";
+    throw new Error(errorMessage);
+  }
+};
+
+export const verifyEmailUser = async (data: { firebase_uid: string }) => {
+  try {
+    const response = await axiosInstance.post("/auth/verify-email/", data, {
+      headers: {
+        accept: "application/json",
+      },
+    });
+
+    if (!response.data) {
+      throw new Error("Failed to verify email");
+    }
+
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || "Verification failed";
     throw new Error(errorMessage);
   }
 };
