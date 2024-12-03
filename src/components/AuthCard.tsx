@@ -2,7 +2,7 @@ import React from "react";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form, FormikValues } from "formik";
-import TextInput from "./TextInput";
+import TextInput from "./UI/TextInput";
 
 interface InputField {
   name: string;
@@ -22,6 +22,7 @@ interface AuthCardProps {
   showForgotPassword?: boolean;
   showprivacyPolicy?: boolean;
   footer?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const AuthCard: React.FC<AuthCardProps> = ({
@@ -36,6 +37,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
   showForgotPassword = false,
   showprivacyPolicy = false,
   footer,
+  children,
 }) => {
   const navigate = useNavigate();
 
@@ -63,7 +65,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
 
         <h1 className='text-2xl font-black text-center mb-8'>{title}</h1>
         {subtitle && <p className='text-center text-sm mb-6'>{subtitle}</p>}
-
+        {children}
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
@@ -106,13 +108,15 @@ const AuthCard: React.FC<AuthCardProps> = ({
                 </div>
               )}
 
-              <button
-                type='submit'
-                disabled={isSubmitting}
-                className='w-full mt-3 bg-primary text-white py-2 px-4 rounded-md shadow-sm text-md font-medium'
-              >
-                {buttonText}
-              </button>
+              {buttonText && (
+                <button
+                  type='submit'
+                  disabled={isSubmitting}
+                  className='w-full mt-3 bg-primary text-white py-2 px-4 rounded-md shadow-sm text-md font-medium'
+                >
+                  {buttonText}
+                </button>
+              )}
             </Form>
           )}
         </Formik>

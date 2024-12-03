@@ -32,7 +32,7 @@ const AuthenticationManager: React.FC = () => {
 
       const response = await axios.post(`${apiUrl}login/`, {
         id_token: idToken,
-        email,π
+        email,
         password,
       });
 

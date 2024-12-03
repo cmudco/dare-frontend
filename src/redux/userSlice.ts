@@ -1,5 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { signInWithEmailAndPassword, User } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+  signOut,
+  User,
+} from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
 
 import {
@@ -9,6 +15,7 @@ import {
   verifyCodeUser,
   resetPasswordUser,
   sendTokenToBackend as sendTokenToBackendAPI,
+  verifyEmailUser,
 } from "../api/api";
 
 interface UserState {
@@ -16,6 +23,7 @@ interface UserState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  firebaseUid?: string;
 }
 
 const initialState: UserState = {
@@ -23,6 +31,7 @@ const initialState: UserState = {
   isAuthenticated: false,
   loading: false,
   error: null,
+  firebaseUid: "",
 };
 
 export const firebaseLogin = createAsyncThunk(
@@ -41,7 +50,11 @@ export const firebaseLogin = createAsyncThunk(
       console.log("ID token:", idToken);
       console.log("CREDENTIALS: ", credentials);
 
-      return { idToken, email: credentials.email };
+      return {
+        idToken,
+        email: credentials.email,
+        firebaseUid: firebaseUser.uid,
+      };
     } catch (error: any) {
       console.error("Firebase login error:", error.message);
       return thunkAPI.rejectWithValue(error.message);
@@ -97,6 +110,14 @@ export const register = createAsyncThunk(
   ) => {
     try {
       const data = await registerUser(formData);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+      await sendEmailVerification(userCredential.user);
+      await signOut(auth);
+
       return data;
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message);
@@ -140,6 +161,37 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
+export const verifyEmail = createAsyncThunk(
+  "user/verifyEmail",
+  async (formData: { firebase_uid: string }, thunkAPI) => {
+    try {
+      const data = await verifyEmailUser(formData);
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message);
+    }
+  }
+);
+
+export const resendEmailVerification = createAsyncThunk(
+  "user/resendEmailVerification",
+  async (credentials: { email: string; password: string }, thunkAPI) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        credentials.email,
+        credentials.password
+      );
+      await sendEmailVerification(userCredential.user);
+      await signOut(auth);
+      return { email: credentials.email };
+    } catch (error: any) {
+      console.error("Resend email verification error:", error.message);
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -156,6 +208,7 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(firebaseLogin.fulfilled, (state, action) => {
+        state.firebaseUid = action.payload.firebaseUid;
         state.loading = false;
         state.user = {
           username: "", // Default value for username
@@ -243,6 +296,18 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(resetPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(resendEmailVerification.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resendEmailVerification.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(resendEmailVerification.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
