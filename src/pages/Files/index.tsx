@@ -1,11 +1,7 @@
+import FileManagerLayout from "../../components/FileManager/FileManagerLayout";
 
 const Files = () => {
-  return (
-    <div>
-      <h1>Files Page</h1>
-      <p>Manage your files here.</p>
-    </div>
-  );
+  return <FileManagerLayout />;
 };
 
 export default Files;
