@@ -10,6 +10,7 @@ import RegistrationScreen from "../pages/Registration";
 import ChatScreen from "../pages/Chat";
 import UserView from "../components/Layout/UserView";
 import QrVerificationScreen from "../pages/QrVerification";
+import OTPRequired from "../pages/OTPRequired";
 
 const AppRoutes = () => {
   return (
@@ -22,6 +23,7 @@ const AppRoutes = () => {
         <Route path='/verify-code' element={<VerifyScreen />} />
         <Route path='/reset-password' element={<ResetScreen />} />
         <Route path='/qr-verification' element={<QrVerificationScreen />} />
+        <Route path='/otp-required' element={<OTPRequired />} />
 
         <Route path='/' element={<UserView />}>
           <Route path='/chat' element={<ChatScreen />} />

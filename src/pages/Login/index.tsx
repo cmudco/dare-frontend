@@ -5,10 +5,12 @@ import { initialValues, validationSchema } from "./validation";
 import { FormikValues } from "formik";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
-import { firebaseLogin, login, verifyEmail, resendEmailVerification } from "../../redux/userSlice";
+import { firebaseLogin, login, verifyEmail, resendEmailVerification, setup2FA } from "../../redux/userSlice";
+import { useNavigate } from "react-router-dom";
 
 const LoginScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>(); // Typed dispatch
+  const navigate = useNavigate();
   const [showResendButton, setShowResendButton] = useState(false);
 
   const handleSubmit = async (values: FormikValues) => {
@@ -31,13 +33,23 @@ const LoginScreen: React.FC = () => {
         );
 
         if (verifyEmail.fulfilled.match(emailAction)) {
-          await dispatch(
+          const loginAction = await dispatch(
             login({
               id_token: resultAction.payload.idToken,
               email: loginData.email,
               password: loginData.password,
             })
           );
+
+          if (login.fulfilled.match(loginAction)) {
+            if (loginAction.payload.setup_2fa_required) {
+              navigate("/otp-required");
+            } else if (loginAction.payload.otp_required) {
+              navigate("/verify-code");
+            }  else {
+              navigate("/dashboard");
+            }
+          }
         } else {
           console.error("Email verification failed:", emailAction.payload);
           setShowResendButton(true);

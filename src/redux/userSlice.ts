@@ -16,14 +16,16 @@ import {
   resetPasswordUser,
   sendTokenToBackend as sendTokenToBackendAPI,
   verifyEmailUser,
+  setup2FA as setup2FAAPI,
 } from "../api/api";
 
 interface UserState {
-  user: { username: string; email: string; csrf_token?: string } | null;
+  user: { username: string; email: string } | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
   firebaseUid?: string;
+  temp_token: string;
 }
 
 const initialState: UserState = {
@@ -32,6 +34,7 @@ const initialState: UserState = {
   loading: false,
   error: null,
   firebaseUid: "",
+  temp_token: "",
 };
 
 export const firebaseLogin = createAsyncThunk(
@@ -192,6 +195,20 @@ export const resendEmailVerification = createAsyncThunk(
   }
 );
 
+export const setup2FA = createAsyncThunk(
+  "user/setup2FA",
+  async (_, thunkAPI) => {
+    const state = thunkAPI.getState() as { user: UserState };
+    const { temp_token } = state.user;
+    try {
+      const data = await setup2FAAPI({ temp_token, skip_2fa: false });
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message);
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -213,7 +230,6 @@ const userSlice = createSlice({
         state.user = {
           username: "", // Default value for username
           email: action.payload.email,
-          csrf_token: action.payload.idToken,
         };
         state.isAuthenticated = true;
         state.error = null;
@@ -244,6 +260,7 @@ const userSlice = createSlice({
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
+        state.temp_token = action.payload.temp_token;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -308,6 +325,17 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(resendEmailVerification.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(setup2FA.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(setup2FA.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(setup2FA.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
