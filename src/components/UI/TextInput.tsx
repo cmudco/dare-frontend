@@ -41,23 +41,20 @@ const TextInput: React.FC<TextInputProps> = ({
 
         label={label}
         autoComplete='off'
-        icon={
-          type === "password" && (
-            <div
-              className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer'
-              onClick={togglePasswordVisibility}
-            >
-              {showPassword ? (
-                <EyeSlashIcon className='h-5 w-5 text-gray-800' />
-              ) : (
-                <EyeIcon className='h-5 w-5 text-gray-800' />
-              )}
-            </div>
-          )
-        }
+        icon={type === "password" && (
+          <div
+            className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer'
+            onClick={togglePasswordVisibility}
+          >
+            {showPassword ? (
+              <EyeSlashIcon className='h-5 w-5 text-gray-800' />
+            ) : (
+              <EyeIcon className='h-5 w-5 text-gray-800' />
+            )}
+          </div>
+        )}
         error={!!error}
-        className='w-full'
-      />
+        className='w-full' onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined}      />
       <p
         className={`text-xs text-red-500 mt-0.5 mb-2 ml-2 ${
           !error ? "opacity-0 my-2" : ""

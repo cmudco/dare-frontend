@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React  from "react";
 import AuthCard from "../../components/AuthCard";
 import { useLocation, useNavigate } from "react-router-dom";
-import QRCode from "qrcode";
 
 const QrVerificationScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -9,18 +8,19 @@ const QrVerificationScreen: React.FC = () => {
   const { qrCode } = location.state || {};
 
   const handleSkip = () => {
-    navigate("/dashboard"); // Navigate to the dashboard or any other route
+    navigate("/dashboard");
   };
 
   return (
     <AuthCard
       title='QR Code Verification'
       subtitle='Scan the QR code below to verify your account.'
-      inputs={[]} // No input fields needed
-      initialValues={{}} // No initial values needed
-      validationSchema={{}} // No validation schema needed
-      onSubmit={handleSkip} // Use handleSkip for the button action
+      inputs={[]}
+      initialValues={{}} 
+      validationSchema={{}} 
+      onSubmit={handleSkip} 
       showBackButton={false}
+      buttonText=""
     >
       <div className='flex flex-col items-center'>
         {qrCode ? (

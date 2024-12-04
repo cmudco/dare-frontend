@@ -1,16 +1,15 @@
 import axios from "axios";
-import { User } from "firebase/auth";
+import { getErrorMessage } from "../utils/errorHandler";
 
 const BASE_URL = import.meta.env.VITE_DJANGO_BACKEND_URL;
 
-console.log("BASE_URL:", BASE_URL);
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // This should be set here, not in headers
+  withCredentials: true,
 });
 
 export const loginUser = async (data: {
@@ -21,9 +20,8 @@ export const loginUser = async (data: {
   try {
     const response = await axiosInstance.post("/auth/login/", data);
     return response.data;
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.error || "Login failed";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
   }
 };
 
@@ -35,10 +33,8 @@ export const sendTokenToBackend = async (token: string) => {
       },
     });
     return response.data;
-  } catch (error: any) {
-    const errorMessage =
-      error.response?.data?.error || "Failed to send token to backend";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
   }
 };
 
@@ -52,9 +48,8 @@ export const registerUser = async (data: {
   try {
     const response = await axiosInstance.post("/auth/create-user/", data);
     return response.data;
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || "Registration failed";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
   }
 };
 
@@ -65,20 +60,17 @@ export const forgotPasswordUser = async (data: { email: string }) => {
       data
     );
     return response.data;
-  } catch (error: any) {
-    const errorMessage =
-      error.response?.data?.message || "Password recovery failed";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
   }
 };
 
-export const verifyCodeUser = async (data: { verificationCode: string }) => {
+export const verifyCodeUser = async (data: { otp: string, temp_token: string }) => {
   try {
-    const response = await axiosInstance.post("/auth/verify-code/", data);
+    const response = await axiosInstance.post("/auth/verify-otp/", data);
     return response.data;
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || "Verification failed";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
   }
 };
 
@@ -89,10 +81,8 @@ export const resetPasswordUser = async (data: {
   try {
     const response = await axiosInstance.post("/auth/reset-password/", data);
     return response.data;
-  } catch (error: any) {
-    const errorMessage =
-      error.response?.data?.message || "Password reset failed";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
   }
 };
 
@@ -109,18 +99,19 @@ export const verifyEmailUser = async (data: { firebase_uid: string }) => {
     }
 
     return response.data;
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || "Verification failed";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
   }
 };
 
-export const setup2FA = async (data: { temp_token: string; skip_2fa: boolean }) => {
+export const setup2FA = async (data: {
+  temp_token: string;
+  skip_2fa: boolean;
+}) => {
   try {
     const response = await axiosInstance.post("/auth/setup-2fa/", data);
     return response.data;
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || "2FA setup failed";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
   }
 };

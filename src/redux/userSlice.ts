@@ -1,213 +1,8 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  signInWithEmailAndPassword,
-  signOut,
-  User,
-} from "firebase/auth";
-import { auth } from "../firebase/firebaseConfig";
+import { createSlice } from "@reduxjs/toolkit";
+import { initialState } from "./initialState/user";
+import { firebaseLogin, forgotPassword, login, register, resendEmailVerification, resetPassword, setup2FA, verifyCode } from "./aynscThunks/user";
 
-import {
-  loginUser,
-  registerUser,
-  forgotPasswordUser,
-  verifyCodeUser,
-  resetPasswordUser,
-  sendTokenToBackend as sendTokenToBackendAPI,
-  verifyEmailUser,
-  setup2FA as setup2FAAPI,
-} from "../api/api";
 
-interface UserState {
-  user: { username: string; email: string } | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
-  firebaseUid?: string;
-  temp_token: string;
-}
-
-const initialState: UserState = {
-  user: null,
-  isAuthenticated: false,
-  loading: false,
-  error: null,
-  firebaseUid: "",
-  temp_token: "",
-};
-
-export const firebaseLogin = createAsyncThunk(
-  "user/firebaseLogin",
-  async (credentials: { email: string; password: string }, thunkAPI) => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        credentials.email,
-        credentials.password
-      );
-      const firebaseUser = userCredential.user;
-      const idToken = await firebaseUser.getIdToken();
-
-      console.log("Firebase login successful:", firebaseUser.email);
-      console.log("ID token:", idToken);
-      console.log("CREDENTIALS: ", credentials);
-
-      return {
-        idToken,
-        email: credentials.email,
-        firebaseUid: firebaseUser.uid,
-      };
-    } catch (error: any) {
-      console.error("Firebase login error:", error.message);
-      return thunkAPI.rejectWithValue(error.message);
-    }
-  }
-);
-
-export const sendTokenToBackend = createAsyncThunk(
-  "user/sendTokenToBackend",
-  async (token: string, thunkAPI) => {
-    try {
-      const data = await sendTokenToBackendAPI(token);
-      return data;
-    } catch (error) {
-      console.error(
-        "Error sending token to backend:",
-        (error as Error).message
-      );
-      return thunkAPI.rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-export const login = createAsyncThunk(
-  "user/login",
-  async (
-    credentials: { id_token: string; email: string; password: string },
-    thunkAPI
-  ) => {
-    try {
-      console.log("CREDENTIALS------: ", credentials);
-
-      const data = await loginUser(credentials);
-      return data;
-    } catch (error) {
-      console.log("EHHHHHHH: ", error);
-      return thunkAPI.rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-export const register = createAsyncThunk(
-  "user/register",
-  async (
-    formData: {
-      username: string;
-      email: string;
-      password: string;
-      confirm_password: string;
-      access_code: string;
-    },
-    thunkAPI
-  ) => {
-    try {
-      const data = await registerUser(formData);
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      await sendEmailVerification(userCredential.user);
-      await signOut(auth);
-
-      return data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-export const forgotPassword = createAsyncThunk(
-  "user/forgotPassword",
-  async (formData: { email: string }, thunkAPI) => {
-    try {
-      const data = await forgotPasswordUser(formData);
-      return data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-export const verifyCode = createAsyncThunk(
-  "user/verifyCode",
-  async (formData: { verificationCode: string }, thunkAPI) => {
-    try {
-      const data = await verifyCodeUser(formData);
-      return data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-export const resetPassword = createAsyncThunk(
-  "user/resetPassword",
-  async (formData: { password: string; confirmPassword: string }, thunkAPI) => {
-    try {
-      const data = await resetPasswordUser(formData);
-      return data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-export const verifyEmail = createAsyncThunk(
-  "user/verifyEmail",
-  async (formData: { firebase_uid: string }, thunkAPI) => {
-    try {
-      const data = await verifyEmailUser(formData);
-      return data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-export const resendEmailVerification = createAsyncThunk(
-  "user/resendEmailVerification",
-  async (credentials: { email: string; password: string }, thunkAPI) => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        credentials.email,
-        credentials.password
-      );
-      await sendEmailVerification(userCredential.user);
-      await signOut(auth);
-      return { email: credentials.email };
-    } catch (error: any) {
-      console.error("Resend email verification error:", error.message);
-      return thunkAPI.rejectWithValue(error.message);
-    }
-  }
-);
-
-export const setup2FA = createAsyncThunk(
-  "user/setup2FA",
-  async (_, thunkAPI) => {
-    const state = thunkAPI.getState() as { user: UserState };
-    const { temp_token } = state.user;
-    try {
-      const data = await setup2FAAPI({ temp_token, skip_2fa: false });
-      return data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message);
-    }
-  }
-);
 
 const userSlice = createSlice({
   name: "user",
@@ -216,6 +11,9 @@ const userSlice = createSlice({
     logout(state) {
       state.user = null;
       state.isAuthenticated = false;
+    },
+    resetError(state) {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -228,7 +26,7 @@ const userSlice = createSlice({
         state.firebaseUid = action.payload.firebaseUid;
         state.loading = false;
         state.user = {
-          username: "", // Default value for username
+          username: "", 
           email: action.payload.email,
         };
         state.isAuthenticated = true;
@@ -239,18 +37,18 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(sendTokenToBackend.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(sendTokenToBackend.fulfilled, (state) => {
-        state.loading = false;
-        // Handle the response from the backend if needed
-      })
-      .addCase(sendTokenToBackend.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
+      // .addCase(sendTokenToBackend.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(sendTokenToBackend.fulfilled, (state) => {
+      //   state.loading = false;
+      //   // Handle the response from the backend if needed
+      // })
+      // .addCase(sendTokenToBackend.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload as string;
+      // })
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -332,7 +130,7 @@ const userSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(setup2FA.fulfilled, (state, action) => {
+      .addCase(setup2FA.fulfilled, (state) => {
         state.loading = false;
       })
       .addCase(setup2FA.rejected, (state, action) => {
@@ -342,6 +140,6 @@ const userSlice = createSlice({
   },
 });
 
-export const { logout } = userSlice.actions;
+export const { logout, resetError } = userSlice.actions;
 
 export default userSlice.reducer;

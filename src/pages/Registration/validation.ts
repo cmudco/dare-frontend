@@ -28,7 +28,7 @@ export const validationSchema = Yup.object({
     .required("Password is required")
     .min(8, "Use 8 characters or more for your password"),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password"), null], "Password does not match")
+    .oneOf([Yup.ref("password"), undefined], "Password does not match")
     .required("Confirm password is required"),
   accessCode: Yup.string()
     .required("Enter an access code")

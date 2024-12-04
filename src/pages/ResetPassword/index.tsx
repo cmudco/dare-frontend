@@ -5,14 +5,13 @@ import AuthCard from "../../components/AuthCard";
 import { initialValues, validationSchema } from "./validation";
 import { FormikValues } from "formik";
 import { AppDispatch } from "../../redux/store";
-import { resetPassword } from "../../redux/userSlice"; // Assuming you have a resetPassword action
+import { resetPassword } from "../../redux/aynscThunks/user";
 
 const ResetPasswordScreen: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   const handleSubmit = async (values: FormikValues) => {
-    console.log("Submitted values:", values);
 
     const formData = {
       password: values.password,

@@ -6,15 +6,13 @@ import AuthFormFooter from "../../components/AuthFormFooter";
 import { initialValues, validationSchema } from "./validation";
 import { FormikValues } from "formik";
 import { AppDispatch } from "../../redux/store";
-import { register } from "../../redux/userSlice";
+import { register } from "../../redux/aynscThunks/user";
 
 const RegistrationScreen: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   const handleSubmit = async (values: FormikValues) => {
-    console.log("Submitted values:", values);
-
     const formData = {
       username: values.username,
       email: values.email,
@@ -26,16 +24,16 @@ const RegistrationScreen: React.FC = () => {
     const resultAction = await dispatch(register(formData));
 
     if (register.fulfilled.match(resultAction)) {
-      navigate("/verify-code");
-    } else if (register.rejected.match(resultAction)) {
-      console.error("Registration failed:", resultAction.payload);
+      navigate("/confirmation", {
+        state: { email: values.email, password: values.password },
+      });
     }
   };
 
   return (
     <AuthCard
       title='Create Account'
-      // subtitle=''
+
       inputs={[
         { name: "username", label: "Username", type: "text" },
         { name: "email", label: "Email Address", type: "email" },

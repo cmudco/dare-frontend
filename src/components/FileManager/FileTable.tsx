@@ -1,4 +1,4 @@
-// src/components/FileManager/FileTable.tsx
+
 import FileRow from "./FileRow";
 
 const FileTable = ({ files }: { files: any[] }) => {

@@ -5,15 +5,13 @@ import AuthCard from "../../components/AuthCard";
 import { initialValues, validationSchema } from "./validation";
 import { FormikValues } from "formik";
 import { AppDispatch } from "../../redux/store";
-import { forgotPassword } from "../../redux/userSlice"; // Assuming you have a forgotPassword action
+import { forgotPassword } from "../../redux/aynscThunks/user";
 
 const ForgotPasswordScreen: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   const handleSubmit = async (values: FormikValues) => {
-    console.log("Submitted values:", values);
-
     const formData = {
       email: values.email,
     };
@@ -22,8 +20,6 @@ const ForgotPasswordScreen: React.FC = () => {
 
     if (forgotPassword.fulfilled.match(resultAction)) {
       navigate("/verify-code");
-    } else if (forgotPassword.rejected.match(resultAction)) {
-      console.error("Password recovery failed:", resultAction.payload);
     }
   };
 
