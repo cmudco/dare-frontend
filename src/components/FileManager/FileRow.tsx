@@ -1,4 +1,4 @@
-// src/components/FileManager/FileRow.tsx
+
 
 const FileRow = ({ file }: { file: any }) => {
   return (

@@ -13,10 +13,9 @@ export default withMT({
         primary: "#EE183C",
         stroke: "#DCDCDD",
         lightpink: "#FEF8F9",
-        'border-gray': '#F1F3F4', // Added new color
+        'border-gray': '#F1F3F4', 
       },
     },
   },
   plugins: [],
 });
-

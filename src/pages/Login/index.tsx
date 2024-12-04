@@ -1,78 +1,70 @@
-import React, { useState } from "react";
+import React from "react";
 import AuthCard from "../../components/AuthCard";
 import AuthFormFooter from "../../components/AuthFormFooter";
 import { initialValues, validationSchema } from "./validation";
 import { FormikValues } from "formik";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "../../redux/store";
-import { firebaseLogin, login, verifyEmail, resendEmailVerification, setup2FA } from "../../redux/userSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
+import { firebaseLogin, verifyEmail, login, resendEmailVerification } from "../../redux/aynscThunks/user";
 
 const LoginScreen: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>(); // Typed dispatch
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const [showResendButton, setShowResendButton] = useState(false);
-
+  const error = useSelector((state: RootState) => state.user.error);
+  console.log(error)
   const handleSubmit = async (values: FormikValues) => {
-    console.log("Submitted values:", values);
     const loginData = {
       email: values.emailOrUsername,
       password: values.password,
     };
 
-    try {
-      const resultAction = await dispatch(firebaseLogin(loginData));
-      console.log("Result action:", resultAction);
+    const resultAction = await dispatch(firebaseLogin(loginData));
 
-      if (firebaseLogin.fulfilled.match(resultAction)) {
-        console.log("Login successful!");
-        console.log(resultAction);
+    if (!firebaseLogin.fulfilled.match(resultAction)) {
+      return;
+    }
 
-        const emailAction = await dispatch(
-          verifyEmail({ firebase_uid: resultAction.payload.firebaseUid })
-        );
+    const emailAction = await dispatch(
+      verifyEmail({ firebase_uid: resultAction.payload.firebaseUid })
+    );
 
-        if (verifyEmail.fulfilled.match(emailAction)) {
-          const loginAction = await dispatch(
-            login({
-              id_token: resultAction.payload.idToken,
-              email: loginData.email,
-              password: loginData.password,
-            })
-          );
+    if (!verifyEmail.fulfilled.match(emailAction)) {
+      return;
+    }
 
-          if (login.fulfilled.match(loginAction)) {
-            if (loginAction.payload.setup_2fa_required) {
-              navigate("/otp-required");
-            } else if (loginAction.payload.otp_required) {
-              navigate("/verify-code");
-            }  else {
-              navigate("/dashboard");
-            }
-          }
-        } else {
-          console.error("Email verification failed:", emailAction.payload);
-          setShowResendButton(true);
-        }
-      } else {
-        console.error("Login failed:", resultAction.payload);
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
+    const loginAction = await dispatch(
+      login({
+        id_token: resultAction.payload.idToken,
+        email: loginData.email,
+        password: loginData.password,
+      })
+    );
+
+    if (!login.fulfilled.match(loginAction)) {
+      return;
+    }
+
+    handleLoginSuccess(loginAction.payload);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleLoginSuccess = (payload: any) => {
+    if (payload.setup_2fa_required) {
+      navigate("/otp-required");
+    } else if (payload.otp_required) {
+      navigate("/verify-code");
+    } else {
+      navigate("/dashboard");
     }
   };
 
   const handleResendVerification = async () => {
-    try {
-      const loginData = {
-        email: initialValues.emailOrUsername,
-        password: initialValues.password,
-      };
-      await dispatch(resendEmailVerification(loginData));
-      console.log("Resend verification email");
-    } catch (error) {
-      console.error("Error resending verification email:", error);
-    }
+    const loginData = {
+      email: initialValues.emailOrUsername,
+      password: initialValues.password,
+    };
+    await dispatch(resendEmailVerification(loginData));
   };
 
   return (
@@ -94,7 +86,7 @@ const LoginScreen: React.FC = () => {
             route='/register'
             routeText='Signup'
           />
-          {showResendButton && (
+          {error && (
             <button
               onClick={handleResendVerification}
               className='text-xs w-max mt-3 bg-gray-500 text-white py-2 px-4 rounded-md shadow-sm font-medium'

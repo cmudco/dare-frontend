@@ -3,6 +3,9 @@ import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form, FormikValues } from "formik";
 import TextInput from "./UI/TextInput";
+import { RootState } from "../redux/store";
+import { useSelector } from "react-redux";
+import { Spinner } from "@material-tailwind/react";
 
 interface InputField {
   name: string;
@@ -14,7 +17,9 @@ interface AuthCardProps {
   title: string;
   subtitle?: string;
   inputs: InputField[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   validationSchema: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialValues: any;
   onSubmit: (values: FormikValues) => void;
   buttonText: string;
@@ -40,7 +45,8 @@ const AuthCard: React.FC<AuthCardProps> = ({
   children,
 }) => {
   const navigate = useNavigate();
-
+  const error = useSelector((state: RootState) => state.user.error);
+  const loading = useSelector((state: RootState) => state.user.loading);
   return (
     <div className='flex flex-col items-center justify-center min-h-screen'>
       <div className='absolute sm:block hidden w-full h-full'>
@@ -112,10 +118,24 @@ const AuthCard: React.FC<AuthCardProps> = ({
                 <button
                   type='submit'
                   disabled={isSubmitting}
-                  className='w-full mt-3 bg-primary text-white py-2 px-4 rounded-md shadow-sm text-md font-medium'
+                  className='w-full mt-3 bg-primary text-white py-2 px-4 rounded-md shadow-sm text-md font-medium flex justify-center items-center'
                 >
-                  {buttonText}
+                  {loading ? (
+                    <Spinner
+                      color='red'
+                      className='w-10'
+                      onPointerEnterCapture={undefined}
+                      onPointerLeaveCapture={undefined}
+                    />
+                  ) : (
+                    buttonText
+                  )}
                 </button>
+              )}
+              {error && (
+                <p className='text-red-500 text-xs font-medium text-center mt-2'>
+                  {error}
+                </p>
               )}
             </Form>
           )}
