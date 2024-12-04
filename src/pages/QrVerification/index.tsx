@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import AuthCard from "../../components/AuthCard";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 
 const QrVerificationScreen: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { qrCode } = location.state || {};
 
   const handleSkip = () => {
     navigate("/dashboard"); // Navigate to the dashboard or any other route
@@ -21,11 +23,15 @@ const QrVerificationScreen: React.FC = () => {
       showBackButton={false}
     >
       <div className='flex flex-col items-center'>
-        <img
-          src={`https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png`}
-          alt='QR Code'
-          className='w-56 h-56 object-cover mb-1 md:w-64 md:h-64 lg:w-72 lg:h-72'
-        />
+        {qrCode ? (
+          <img
+            src={`data:image/png;base64,${qrCode}`}
+            alt='QR Code'
+            className='w-56 h-56 object-cover mb-1 md:w-64 md:h-64 lg:w-72 lg:h-72'
+          />
+        ) : (
+          <p>No QR code available</p>
+        )}
         <button
           onClick={handleSkip}
           className='w-full mt-3 bg-primary text-white py-2 px-4 rounded-md shadow-sm text-md font-medium'

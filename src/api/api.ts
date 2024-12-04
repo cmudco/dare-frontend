@@ -114,3 +114,13 @@ export const verifyEmailUser = async (data: { firebase_uid: string }) => {
     throw new Error(errorMessage);
   }
 };
+
+export const setup2FA = async (data: { temp_token: string; skip_2fa: boolean }) => {
+  try {
+    const response = await axiosInstance.post("/auth/setup-2fa/", data);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || "2FA setup failed";
+    throw new Error(errorMessage);
+  }
+};
