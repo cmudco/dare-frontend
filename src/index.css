@@ -1,0 +1,36 @@
+@import "@fontsource/open-sans"; /* Defaults to weight 400 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Open Sans", sans-serif;
+  background-color: #fef8f9;
+}
+
+input:-webkit-autofill {
+  animation-name: onAutoFillStart;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input:not(:-webkit-autofill) {
+  animation-name: onAutoFillCancel;
+}
+
+@keyframes onAutoFillStart {
+  from {
+  }
+  to {
+  }
+}
+
+@keyframes onAutoFillCancel {
+  from {
+  }
+  to {
+  }
+}
+
+.autofilled + label,
+input:-webkit-autofill + label {
+}
