@@ -7,7 +7,7 @@ import {
   QuestionMarkCircleIcon,
   Cog8ToothIcon,
 } from "@heroicons/react/24/outline";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
+import { ChevronLeftIcon } from "@heroicons/react/20/solid";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -15,7 +15,7 @@ const Sidebar = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 768) {
+      if (window.innerWidth < 768) {
         setIsCollapsed(true);
       } else {
         setIsCollapsed(false);
@@ -23,15 +23,15 @@ const Sidebar = () => {
     };
 
     window.addEventListener("resize", handleResize);
-    handleResize(); 
+    handleResize(); // Call handler right away so state gets updated with initial window size
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const menuItems = [
     { name: "Dashboard", icon: RectangleGroupIcon, path: "/dashboard" },
-    { name: "Files", icon: FolderIcon, path: "/files" },
     { name: "Chat", icon: ChatBubbleBottomCenterIcon, path: "/chat" },
+    { name: "Files", icon: FolderIcon, path: "/files" },
   ];
 
   const bottomItems = [
@@ -41,31 +41,22 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`relative flex h-[calc(100vh)] ${
-        isCollapsed ? "w-[80px]" : "xl:w-[320px] lg:w-[240px] md:w-[200px] w-[160px]"
-      } flex-col bg-white bg-clip-border text-gray-700 shadow-xl shadow-blue-gray-900/5 transition-width duration-300`}
+      className={`relative flex ${
+        isCollapsed
+          ? "w-[80px]"
+          : "w-[160px] md:w-[200px] lg:w-[240px] xl:w-[260px]"
+      } flex-col bg-white bg-clip-border text-gray-700 shadow-xl shadow-blue-gray-900/5 transition-width duration-300 border border-pink-50`}
     >
-      <div className='flex items-center justify-between p-4 mb-2'>
-        <img
-          src='/icons/LogoWithText.png'
-          alt='Logo'
-          className={`h-12 transition-opacity duration-300 ${isCollapsed ? "opacity-0" : "opacity-100"} mx-auto`}
-        />
+      <div className='flex items-center justify-between p-4 mb-'>
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`absolute top-4 ${
-            isCollapsed ? "left-1/2 transform -translate-x-1/2" : "right-4"
-          } p-2 rounded-full bg-lightpink hover:bg-primary-dark border-2 border-border-gray transition-all duration-300`}
+          className={`absolute top-4 transition-all -right-4 transform translate-x-0 mt-1 p-1 rounded-full bg-lightpink hover:bg-primary-dark border-2 border-border-gray`}
         >
-          {isCollapsed ? (
-            <ChevronRightIcon className='w-5 h-5 text-primary font-bold' />
-          ) : (
-            <ChevronLeftIcon
-              className={`w-5 h-5 text-primary font-bold transition-transform duration-300 ${
-                isCollapsed ? "rotate-180" : ""
-              }`}
-            />
-          )}
+          <ChevronLeftIcon
+            className={`w-5 h-5 text-primary font-bold transition-transform duration-300 ${
+              isCollapsed ? "rotate-180" : ""
+            }`}
+          />
         </button>
       </div>
       <nav className='flex flex-col gap-1 p-2 font-sans text-base font-normal text-blue-gray-700 flex-grow'>
@@ -73,10 +64,10 @@ const Sidebar = () => {
           <Link
             key={item.name}
             to={item.path}
-            className={`flex items-center w-full p-3 leading-tight transition-all rounded-lg outline-none text-start ${
+            className={`flex items-center w-full p-3 leading-tight transition-all rounded-xl outline-none text-start ${
               location.pathname === item.path
-                ? "bg-primary text-white"
-                : "hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
+                ? "bg-pink-50 text-primary"
+                : "hover:bg-gray-200 hover:bg-opacity-80 hover:text--gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
             }`}
           >
             <item.icon
@@ -87,7 +78,7 @@ const Sidebar = () => {
             {!isCollapsed && item.name}
           </Link>
         ))}
-        <div className='mt-auto'>
+        <div className='mt-auto '>
           {bottomItems.map((item) => (
             <Link
               key={item.name}

@@ -4,17 +4,18 @@ import {
   sendEmailVerification,
   signOut,
 } from "firebase/auth";
-import {
-  loginUser,
-  registerUser,
-  forgotPasswordUser,
-  verifyCodeUser,
-  resetPasswordUser,
-    verifyEmailUser,
-    setup2FA as setup2FAAPI,
-} from "../../api/api";
+
 import { auth } from "../../firebase/firebaseConfig";
 import { UserState } from "../types/user";
+import {
+  forgotPasswordUser,
+  loginUser,
+  registerUser,
+  resetPasswordUser,
+  verifyCodeUser,
+  verifyEmailUser,
+  setup2FA as setup2FAAPI,
+} from "../../api/auth";
 
 export const firebaseLogin = createAsyncThunk(
   "user/firebaseLogin",
@@ -27,6 +28,8 @@ export const firebaseLogin = createAsyncThunk(
       );
       const firebaseUser = userCredential.user;
       const idToken = await firebaseUser.getIdToken();
+
+      localStorage.setItem("authToken", idToken);
 
       return {
         idToken,
@@ -110,11 +113,11 @@ export const forgotPassword = createAsyncThunk(
 
 export const verifyCode = createAsyncThunk(
   "user/verifyCode",
-  async ( otp: string , thunkAPI) => {
+  async (otp: string, thunkAPI) => {
     try {
       const state = thunkAPI.getState() as { user: UserState };
       const { temp_token } = state.user;
-      const data = await verifyCodeUser({otp: otp, temp_token: temp_token});
+      const data = await verifyCodeUser({ otp: otp, temp_token: temp_token });
       return data;
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message);
