@@ -1,8 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { initialState } from "./initialState/user";
-import { firebaseLogin, forgotPassword, login, register, resendEmailVerification, resetPassword, setup2FA, verifyCode } from "./aynscThunks/user";
-
-
+import {
+  firebaseLogin,
+  forgotPassword,
+  login,
+  register,
+  resendEmailVerification,
+  resetPassword,
+  setup2FA,
+  verifyCode,
+} from "./aynscThunks/user";
 
 const userSlice = createSlice({
   name: "user",
@@ -26,7 +33,7 @@ const userSlice = createSlice({
         state.firebaseUid = action.payload.firebaseUid;
         state.loading = false;
         state.user = {
-          username: "", 
+          username: "",
           email: action.payload.email,
         };
         state.isAuthenticated = true;

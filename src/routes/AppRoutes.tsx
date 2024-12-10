@@ -14,6 +14,7 @@ import OTPRequired from "../pages/OTPRequired";
 import EmailConfirmationScreen from "../pages/EmailConfirmation";
 import RouteListener from "../components/RouteListener";
 
+
 const AppRoutes = () => {
   return (
     <BrowserRouter>
@@ -28,6 +29,7 @@ const AppRoutes = () => {
           <Route path='/qr-verification' element={<QrVerificationScreen />} />
           <Route path='/otp-required' element={<OTPRequired />} />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
+
 
           <Route path='/' element={<UserView />}>
             <Route path='/chat' element={<ChatScreen />} />

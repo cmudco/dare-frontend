@@ -3,7 +3,6 @@ import { getErrorMessage } from "../utils/errorHandler";
 
 const BASE_URL = import.meta.env.VITE_DJANGO_BACKEND_URL;
 
-
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -19,19 +18,6 @@ export const loginUser = async (data: {
 }) => {
   try {
     const response = await axiosInstance.post("/auth/login/", data);
-    return response.data;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-};
-
-export const sendTokenToBackend = async (token: string) => {
-  try {
-    const response = await axiosInstance.post("/auth/token/", null, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
@@ -55,10 +41,7 @@ export const registerUser = async (data: {
 
 export const forgotPasswordUser = async (data: { email: string }) => {
   try {
-    const response = await axiosInstance.post(
-      "/api/auth/forgot-password/",
-      data
-    );
+    const response = await axiosInstance.post("/api/auth/forgot-password/", data);
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
