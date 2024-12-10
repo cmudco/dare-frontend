@@ -1,6 +1,6 @@
-import withMT from "@material-tailwind/react/utils/withMT";
+const withMT = require("@material-tailwind/react/utils/withMT");
 
-export default withMT({
+module.exports = withMT({
   content: [
     "./index.html",
     "./src/**/*.{vue,js,ts,jsx,tsx}",
@@ -13,7 +13,7 @@ export default withMT({
         primary: "#EE183C",
         stroke: "#DCDCDD",
         lightpink: "#FEF8F9",
-        'border-gray': '#F1F3F4', 
+        'border-gray': '#F1F3F4',
       },
     },
   },
