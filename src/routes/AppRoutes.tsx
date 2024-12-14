@@ -13,6 +13,7 @@ import QrVerificationScreen from "../pages/QrVerification";
 import OTPRequired from "../pages/OTPRequired";
 import EmailConfirmationScreen from "../pages/EmailConfirmation";
 import RouteListener from "../components/RouteListener";
+import Prompt from "../pages/Prompts";
 
 
 const AppRoutes = () => {
@@ -33,8 +34,10 @@ const AppRoutes = () => {
 
           <Route path='/' element={<UserView />}>
             <Route path='/chat' element={<ChatScreen />} />
+            <Route path='/chat/:id' element={<ChatScreen />} />
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/files' element={<Files />} />
+            <Route path='/prompts' element={<Prompt />} />
           </Route>
 
           <Route path='*' element={<div>404 - Page Not Found</div>} />

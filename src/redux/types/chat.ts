@@ -1,0 +1,27 @@
+export interface ChatSession {
+  session_id: string;
+  created_at: string;
+}
+
+export interface NewChatPayload {
+  session_id: string;
+}
+
+export interface ChatMessage {
+  message: string;
+  isSender: boolean;
+  date: string;
+}
+
+export interface ChatState {
+  sessions: ChatSession[];
+  activeChat: ChatSession | null;
+  loading: boolean;
+  error: string | null;
+  searchQuery: string;
+  activeChatMessages: ChatMessage[];
+  selectedModel: string; // New property
+  showDropdown: boolean; // New property
+  hoveredModel: string | null; // New property
+  chatInput: string; // New property
+}
