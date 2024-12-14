@@ -7,7 +7,7 @@ export const getFiles = createAsyncThunk("files/getFiles", async (_, thunkAPI) =
     const response = await fetchFiles();
     return response;
   } catch (error) {
-    return thunkAPI.rejectWithValue((error as Error).message);
+    return thunkAPI.rejectWithValue((error as Error).message);                                                                                                                     
   }
 });
 

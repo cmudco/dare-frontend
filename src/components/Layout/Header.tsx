@@ -2,7 +2,7 @@ import { BellIcon } from "@heroicons/react/24/solid";
 
 const Header = () => {
   return (
-    <header className='bg-white  p-1 flex justify-between items-center w-full top-0 left-0 right-0 border border-pink-50'>
+    <header className='bg-white  p-1  flex justify-between items-center w-full top-0 left-0 right-0  border   border-pink-50'>
       <div className='flex items-center'>
         <img
           src='/icons/LogoWithText.png'

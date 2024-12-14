@@ -1,11 +1,15 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "./userSlice";
 import fileReducer from "./fileSlice";
+import chatReducer from "./chatSlice";
+import promptReducer from "./promptSlice"; // Import the prompt reducer
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     files: fileReducer,
+    chat: chatReducer,
+    prompt: promptReducer, // Add the prompt reducer
   },
 });
 
