@@ -101,8 +101,11 @@ const userSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(verifyCode.fulfilled, (state) => {
+      .addCase(verifyCode.fulfilled, (state, action) => {
         state.loading = false;
+        state.token = action.payload.token;
+        console.log(state.token, action.payload)
+        localStorage.setItem("token", state.token);
         state.error = null;
       })
       .addCase(verifyCode.rejected, (state, action) => {

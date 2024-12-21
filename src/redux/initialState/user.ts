@@ -7,4 +7,5 @@ export const initialState: UserState = {
   error: null,
   firebaseUid: "",
   temp_token: "",
+  token: "",
 };

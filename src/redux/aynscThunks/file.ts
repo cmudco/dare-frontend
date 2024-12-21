@@ -7,7 +7,7 @@ export const getFiles = createAsyncThunk("files/getFiles", async (_, thunkAPI) =
     const response = await fetchFiles();
     return response;
   } catch (error) {
-    return thunkAPI.rejectWithValue((error as Error).message);                                                                                                                     
+    return thunkAPI.rejectWithValue((error as Error).message);
   }
 });
 
@@ -15,16 +15,22 @@ export const uploadNewFile = createAsyncThunk(
   "files/uploadNewFile",
   async (_, thunkAPI) => {
     const state = thunkAPI.getState() as RootState;
-    const { selectedTags, selectedFile, filename } = state.files;
+    const { selectedTags, filename } = state.files;
+    const selectedFile = state.files.selectedFile;
 
     if (!selectedFile) {
       return thunkAPI.rejectWithValue("No file selected");
     }
 
     const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('tags', JSON.stringify(selectedTags));
+    formData.append('file', selectedFile); // Append the file directly
+    formData.append('directory', selectedTags.join('/')); // Join tags with '/'
     formData.append('filename', filename);
+
+    // Log the FormData content
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
+    }
 
     try {
       const response = await uploadFile(formData);

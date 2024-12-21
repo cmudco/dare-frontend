@@ -5,9 +5,11 @@ export interface User {
 
 export interface UserState {
   user: User | null;
+
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
   firebaseUid?: string;
   temp_token: string;
+  token:  string;
 }

@@ -2,6 +2,9 @@ import axios from "axios";
 import { getErrorMessage } from "../utils/errorHandler";
 import { ChatSession, ChatMessage } from "../redux/types/chat";
 
+import { AppDispatch } from '../redux/store';
+import { connectWebSocket, sendWebSocketMessage } from "../redux/aynscThunks/websocket";
+
 const BASE_URL = import.meta.env.VITE_DJANGO_BACKEND_URL;
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
@@ -17,7 +20,7 @@ export const fetchChatSessions = async () => {
   try {
     const response = await axiosInstance.get<ChatSession[]>("/api/claude/chat/sessions/", {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
         Accept: "application/json",
       },
     });
@@ -47,11 +50,25 @@ export const fetchOpenAIResponse = async (message: string): Promise<ChatMessage>
       message: response.data.choices[0].message.content.trim(),
       isSender: false,
       date: new Date().toISOString(),
-
     };
 
     return replyMessage;
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
+};
+
+export const streamClaudeResponse = (dispatch: AppDispatch, apiKey: string, sessionId: string, message: string) => {
+  dispatch(connectWebSocket({ apiKey, sessionId }))
+    .then(() => {
+      const chatMessage: ChatMessage = {
+        message,
+        isSender: true,
+        date: new Date().toISOString(),
+      };
+      dispatch(sendWebSocketMessage(chatMessage));
+    })
+    .catch((error) => {
+      console.error('WebSocket connection error:', error);
+    });
 };

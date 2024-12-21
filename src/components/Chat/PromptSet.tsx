@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { AppDispatch, RootState } from "../../redux/store";
 import { fetchPrompts } from "../../redux/aynscThunks/prompt";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { Button } from "@material-tailwind/react";
@@ -17,7 +17,7 @@ const PromptSet: React.FC = () => {
 
   const handleOpenModal = () => {
     setShowModal(true);
-    dispatch(fetchPrompts());
+    (dispatch as AppDispatch)(fetchPrompts());
   };
 
   const handleCloseModal = () => {

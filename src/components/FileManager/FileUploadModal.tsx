@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Typography, Select, Option, Chip, Input } from '@material-tailwind/react';
 import { RootState, AppDispatch } from '../../redux/store';
-import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename } from '../../redux/fileSlice';
+import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename, updateFileObject } from '../../redux/fileSlice';
 import { uploadNewFile } from '../../redux/aynscThunks/file';
 
 const availableTags = ["Review", "Important", "Info", "Personal", "Work"];
@@ -24,7 +24,7 @@ const FileUploadModal: React.FC = () => {
 
     if (file) {
       dispatch(updateFilename(file.name));
-
+      dispatch(updateFileObject(file));
     }
   };
 
@@ -33,7 +33,7 @@ const FileUploadModal: React.FC = () => {
     const file = event.dataTransfer.files?.[0];
     if (file) {
       dispatch(updateFilename(file.name));
-
+      dispatch(updateFileObject(file));
     }
   };
 
@@ -105,7 +105,6 @@ const FileUploadModal: React.FC = () => {
           <input
             id="fileInput"
             type="file"
-            multiple
             onChange={handleFileChange}
             className="hidden"
           />
