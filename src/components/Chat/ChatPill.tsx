@@ -11,12 +11,12 @@ import { ChatMessage } from "../../redux/types/chat";
 import { useNavigate } from "react-router-dom";
 import { fetchDummyMessage } from "../../redux/aynscThunks/chat";
 
-
 const ChatPill: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const chatInput = useSelector((state: RootState) => state.chat.chatInput);
   const activeChat = useSelector((state: RootState) => state.chat.activeChat);
   const navigate = useNavigate();
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(updateChatInput(event.target.value));
   };
@@ -31,16 +31,17 @@ const ChatPill: React.FC = () => {
     };
 
     if (!activeChat) {
-      dispatch(createNewChat({ session_id: "new_session" }));
-      dispatch(updateChatSession({ session_id: "new_session", created_at: new Date().toISOString() }));
+      const newSessionId = Date.now(); // Use timestamp as session ID
+      dispatch(createNewChat({ session_id: newSessionId.toString() }));
+      dispatch(updateChatSession({ session_id: newSessionId.toString(), created_at: new Date().toISOString() }));
       dispatch(fetchDummyMessage(newMessage));
-      navigate(`/chat/${"new_session"}`);
+      navigate(`/chat/${newSessionId}`);
     } else {
+      console.log('Sending message:', newMessage);
       dispatch(fetchDummyMessage(newMessage));
     }
 
     dispatch(updateChatInput(""));
-
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {

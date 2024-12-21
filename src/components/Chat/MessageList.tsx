@@ -8,7 +8,7 @@ const MessageList = () => {
   return (
     <div className="flex flex-col gap-2 max-h-[80%] overflow-y-auto p-">
       {messages.map((message, idx) => (
-        <Message key={idx} message={message} />
+        message && <Message key={idx} message={message} />
       ))}
     </div>
   );

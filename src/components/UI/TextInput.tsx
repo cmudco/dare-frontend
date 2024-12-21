@@ -54,11 +54,10 @@ const TextInput: React.FC<TextInputProps> = ({
           </div>
         )}
         error={!!error}
-        className='w-full' onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined}      />
+        className='w-full' crossOrigin={undefined} />
       <p
-        className={`text-xs text-red-500 mt-0.5 mb-2 ml-2 ${
-          !error ? "opacity-0 my-2" : ""
-        }`}
+        className={`text-xs text-red-500 mt-0.5 mb-2 ml-2 ${!error ? "opacity-0 my-2" : ""
+          }`}
       >
         {String(error)}
       </p>{" "}

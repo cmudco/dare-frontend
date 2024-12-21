@@ -3,7 +3,7 @@ export interface MyFile {
   file: string;
   file_size: string;
   uploaded_at: string;
-  tags: string[];
+  directory: string;
 }
 
 export interface FileState {

@@ -3,13 +3,15 @@ import { useDispatch, useSelector } from "react-redux";
 import {
     MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { updateSearchQuery, createNewChat } from "../../redux/chatSlice";
+import { updateSearchQuery, createNewChat, updateChatSession } from "../../redux/chatSlice";
 import { getChatSessions } from "../../redux/aynscThunks/chat";
 import { AppDispatch, RootState } from "../../redux/store";
 import ChatList from "./ChatList";
+import { useNavigate } from "react-router-dom";
 
 const ChatHistory = () => {
     const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
     const searchQuery = useSelector((state: RootState) => state.chat?.searchQuery || "");
 
     useEffect(() => {
@@ -34,6 +36,9 @@ const ChatHistory = () => {
     const handleCreateNewChat = () => {
         const newChatPayload = { session_id: `session_${Date.now()}` };
         dispatch(createNewChat(newChatPayload));
+
+        dispatch(updateChatSession({ session_id: newChatPayload.session_id, created_at: new Date().toISOString() }));
+        navigate(`/chat/${newChatPayload.session_id}`);
     };
 
     return (

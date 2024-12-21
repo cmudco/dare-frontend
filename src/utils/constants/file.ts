@@ -2,7 +2,6 @@
 
 export const TABLE_HEAD = [
     "File Name",
-    "File Type",
     "Size",
     "Date Uploaded",
     "Tags",

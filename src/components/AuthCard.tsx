@@ -124,8 +124,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
                     <Spinner
                       color='red'
                       className='w-10'
-                      onPointerEnterCapture={undefined}
-                      onPointerLeaveCapture={undefined}
+
                     />
                   ) : (
                     buttonText

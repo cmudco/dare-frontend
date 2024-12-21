@@ -2,14 +2,16 @@ import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "./userSlice";
 import fileReducer from "./fileSlice";
 import chatReducer from "./chatSlice";
-import promptReducer from "./promptSlice"; // Import the prompt reducer
+import promptReducer from "./promptSlice";
+import websocketReducer from "./websocketSlice"
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     files: fileReducer,
     chat: chatReducer,
-    prompt: promptReducer, // Add the prompt reducer
+    prompt: promptReducer,
+    websocket: websocketReducer
   },
 });
 

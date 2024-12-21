@@ -3,15 +3,14 @@ import { Typography } from "@material-tailwind/react";
 import { ChatMessage } from "../../redux/types/chat";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 
-
-
 interface MessageProps {
   message: ChatMessage;
 }
 
 const Message: React.FC<MessageProps> = ({ message }) => {
-
-
+  if (!message) {
+    return null;
+  }
 
   return (
     <div className={`flex ${message.isSender ? "justify-end" : "justify-start"} items-start`}>
@@ -25,10 +24,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
         </Typography>
       </div>
       {!message.isSender && (
-        <button
-
-          className="ml-2 text-gray-500 hover:text-gray-700"
-        >
+        <button className="ml-2 text-gray-500 hover:text-gray-700">
           <ArrowPathIcon className="w-5 h-5 text-gray-900" />
         </button>
       )}

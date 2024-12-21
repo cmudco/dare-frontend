@@ -12,7 +12,7 @@ import {
     ArchiveBoxIcon,
 } from "@heroicons/react/24/solid";
 
-import { TAG_COLORS, TABLE_HEAD } from "../../utils/constants/file";
+import { TAG_COLORS } from "../../utils/constants/file";
 import { updateFileArchive } from "../../redux/fileSlice";
 import { PROMPTS_TABLE_HEAD } from "../../utils/constants/prompts";
 
