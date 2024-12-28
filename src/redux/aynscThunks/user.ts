@@ -6,7 +6,7 @@ import {
 } from "firebase/auth";
 
 import { auth } from "../../firebase/firebaseConfig";
-import { UserState } from "../types/user";
+import { User, UserState } from "../types/user";
 import {
   forgotPasswordUser,
   loginUser,
@@ -15,7 +15,10 @@ import {
   verifyCodeUser,
   verifyEmailUser,
   setup2FA as setup2FAAPI,
+  fetchUserDataFromAPI,
 } from "../../api/auth";
+import axios from "axios";
+import { getErrorMessage } from "../../utils/errorHandler";
 
 export const firebaseLogin = createAsyncThunk(
   "user/firebaseLogin",
@@ -68,6 +71,20 @@ export const login = createAsyncThunk(
     }
   }
 );
+
+export const logoutUser = createAsyncThunk(
+  "user/logoutUser",
+  async (_, thunkAPI) => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem("token");
+      return true;
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message);
+    }
+  }
+);
+
 
 export const register = createAsyncThunk(
   "user/register",
@@ -175,6 +192,18 @@ export const setup2FA = createAsyncThunk(
     try {
       const data = await setup2FAAPI({ temp_token, skip_2fa: false });
       return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message);
+    }
+  }
+);
+
+export const fetchUserData = createAsyncThunk<User, void, { rejectValue: string }>(
+  'user/fetchUserData',
+  async (_, thunkAPI) => {
+    try {
+      const user = await fetchUserDataFromAPI()
+      return user;
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message);
     }

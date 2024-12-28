@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "../pages/Dashboard";
-
 import Files from "../pages/Files";
 import VerifyScreen from "../pages/VerifyCode";
 import LoginScreen from "../pages/Login";
@@ -12,8 +11,9 @@ import UserView from "../components/Layout/UserView";
 import QrVerificationScreen from "../pages/QrVerification";
 import OTPRequired from "../pages/OTPRequired";
 import EmailConfirmationScreen from "../pages/EmailConfirmation";
-import RouteListener from "../components/RouteListener";
+import RouteListener from "./RouteListener";
 import Prompt from "../pages/Prompts";
+import ProtectedRoute from "./ProtectedRoute";
 
 
 const AppRoutes = () => {
@@ -30,9 +30,17 @@ const AppRoutes = () => {
           <Route path='/qr-verification' element={<QrVerificationScreen />} />
           <Route path='/otp-required' element={<OTPRequired />} />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
+          {/* <Route path='/loader' element={<Loader />} /> */}
 
-
-          <Route path='/' element={<UserView />}>
+          {/* Protected Routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <UserView />
+              </ProtectedRoute>
+            }
+          >
             <Route path='/chat' element={<ChatScreen />} />
             <Route path='/chat/:id' element={<ChatScreen />} />
             <Route path='/dashboard' element={<Dashboard />} />

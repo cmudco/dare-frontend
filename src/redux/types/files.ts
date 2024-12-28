@@ -4,6 +4,7 @@ export interface MyFile {
   file_size: string;
   uploaded_at: string;
   directory: string;
+  tags: string[];
 }
 
 export interface FileState {
@@ -11,7 +12,7 @@ export interface FileState {
   loading: boolean;
   error: string | null;
   selectedTags: string[];
-  selectedFile: File | null;
+  selectedFiles: File | null;
   isModalOpen: boolean;
   filename: string;
 }

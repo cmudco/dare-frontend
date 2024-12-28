@@ -1,20 +1,15 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { ChatMessage, ChatSession, NewChatPayload } from "../types/chat";
+import { ChatMessage, NewChatPayload } from "../types/chat";
 import { addMessage } from "../chatSlice";
-import { streamClaudeResponse } from "../../api/chat";
+import { streamClaudeResponse, fetchChatSessions } from "../../api/chat";
 import { AppDispatch, RootState } from "../store";
 
 const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
 
 export const getChatSessions = createAsyncThunk("chat/getChatSessions", async (_, thunkAPI) => {
   try {
-    // Create two dummy chat sessions
-    const dummySessions: ChatSession[] = [
-      { session_id: "session_1", created_at: new Date().toISOString() },
-      { session_id: "session_2", created_at: new Date().toISOString() },
-    ];
-
-    return dummySessions;
+    const sessions = await fetchChatSessions();
+    return sessions;
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message);
   }
@@ -22,7 +17,7 @@ export const getChatSessions = createAsyncThunk("chat/getChatSessions", async (_
 
 export const createChatSession = createAsyncThunk("chat/createChatSession", async (payload: NewChatPayload, thunkAPI) => {
   try {
-    // Simulate API call for creating a new chat sessio
+    // Simulate API call for creating a new chat session
     return payload;
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message);
@@ -42,10 +37,10 @@ export const fetchChatMessages = createAsyncThunk(
 
 export const fetchDummyMessage = createAsyncThunk(
   "chat/fetchDummyMessage",
-  async (message: ChatMessage, thunkAPI) => {
+  async (message: ChatMessage & { filePath?: string }, thunkAPI) => {
     const dispatch = thunkAPI.dispatch as AppDispatch;
     const state = thunkAPI.getState() as RootState;
-    const apiKey = CLAUDE_API_KEY; // Use the Claude API key from the environment variable
+    const apiKey = CLAUDE_API_KEY;
     const activeChat = state.chat.activeChat;
 
     if (!apiKey || !activeChat) {
@@ -55,7 +50,7 @@ export const fetchDummyMessage = createAsyncThunk(
     try {
       thunkAPI.dispatch(addMessage(message));
       console.log('Streaming message with Claude:', message.message);
-      streamClaudeResponse(dispatch, apiKey, activeChat.session_id, message.message);
+      streamClaudeResponse(dispatch, apiKey, activeChat.session_id, message.message, message.filePath);
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message);
     }

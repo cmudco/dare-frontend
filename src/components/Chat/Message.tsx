@@ -15,7 +15,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
   return (
     <div className={`flex ${message.isSender ? "justify-end" : "justify-start"} items-start`}>
       <div
-        className={`px-4 py-2 rounded-lg shadow ${message.isSender ? "bg-gray-200 text-right" : "bg-gray-200 text-left"
+        className={`px-4 py-2 rounded-lg shadow ${message.isSender ? "bg-gray-200 text-left " : "bg-gray-200 text-left"
           } inline-block max-w-full`}
       >
         <Typography className="text-base font-normal text-gray-900">{message.message}</Typography>

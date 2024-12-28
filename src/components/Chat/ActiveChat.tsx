@@ -9,12 +9,17 @@ import { updateChatSession } from "../../redux/chatSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
 
+const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
+
+
 const ActiveChat: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const activeChat = useSelector((state: RootState) => state.chat?.activeChat);
   const { id } = useParams<{ id: string }>();
   const sessions = useSelector((state: RootState) => state.chat?.sessions || []);
-  const apiKey = useSelector((state: RootState) => state.user?.token); // Assuming the API key is stored in the user state
+  const apiKey = CLAUDE_API_KEY
+  const token = localStorage.getItem("token");
+  const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
 
   useEffect(() => {
     if (id) {
@@ -28,15 +33,28 @@ const ActiveChat: React.FC = () => {
   }, [id, sessions, dispatch]);
 
   useEffect(() => {
-    if (apiKey && activeChat) {
-      console.log('Connecting WebSocket with API key:', apiKey, 'and session ID:', activeChat.session_id);
-      dispatch(connectWebSocket({ apiKey, sessionId: activeChat.session_id }));
-    }
+    const handleWebSocketConnection = async () => {
+      if (isConnected) {
+        await dispatch(disconnectWebSocket());
+      }
 
-    return () => {
-      dispatch(disconnectWebSocket());
+      if (apiKey && activeChat) {
+        console.log("Connecting to WebSocket...", activeChat.session_id);
+        try {
+        await dispatch(connectWebSocket({
+          apiKey,
+          sessionId: activeChat.session_id,
+          jwtKey: token || ""
+        }));
+        } catch (error) {
+          console.error("WebSocket connection failed:", error);
+        }
+      }
+
     };
-  }, [apiKey, activeChat, dispatch]);
+
+    handleWebSocketConnection();
+  }, [apiKey, activeChat?.session_id, dispatch]);
 
   return (
     <Card className="flex flex-col w-full h-full justify-end bg-white border border-pink-50 rounded-none rounded-tl-[3.25rem] p-6">

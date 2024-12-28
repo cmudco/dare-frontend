@@ -1,4 +1,3 @@
-import React from "react";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form, FormikValues } from "formik";
