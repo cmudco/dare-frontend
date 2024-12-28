@@ -5,10 +5,12 @@ export const initialState: ChatState = {
   activeChat: null,
   loading: false,
   error: null,
-  searchQuery: "", // New property
-  activeChatMessages: [], // New property
-  selectedModel: "default", // New property
-  showDropdown: false, // New property
-  hoveredModel: null, // New property
-  chatInput: "", // New property
+  searchQuery: "",
+  activeChatMessages: [],
+  selectedModel: "default",
+  selectedFiles: [],
+  showDropdown: false,
+  hoveredModel: null,
+  chatInput: "",
+
 };

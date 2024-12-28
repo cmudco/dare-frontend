@@ -1,3 +1,6 @@
+import { MyFile } from "./files";
+
+
 export interface ChatSession {
   session_id: string;
   created_at: string;
@@ -11,6 +14,7 @@ export interface ChatMessage {
   message: string;
   isSender: boolean;
   date: string;
+  partial?: boolean;
 }
 
 export interface ChatState {
@@ -21,6 +25,7 @@ export interface ChatState {
   searchQuery: string;
   activeChatMessages: ChatMessage[];
   selectedModel: string; // New property
+  selectedFiles: MyFile[];
   showDropdown: boolean; // New property
   hoveredModel: string | null; // New property
   chatInput: string; // New property

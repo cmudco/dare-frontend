@@ -59,16 +59,18 @@ export const fetchOpenAIResponse = async (message: string): Promise<ChatMessage>
 };
 
 export const streamClaudeResponse = (dispatch: AppDispatch, apiKey: string, sessionId: string, message: string) => {
-  dispatch(connectWebSocket({ apiKey, sessionId }))
-    .then(() => {
-      const chatMessage: ChatMessage = {
-        message,
-        isSender: true,
-        date: new Date().toISOString(),
-      };
-      dispatch(sendWebSocketMessage(chatMessage));
-    })
-    .catch((error) => {
-      console.error('WebSocket connection error:', error);
-    });
+
+  const chatMessage: ChatMessage = {
+    message,
+    isSender: true,
+    date: new Date().toISOString(),
+  };
+  dispatch(sendWebSocketMessage(chatMessage));
+  // dispatch(connectWebSocket({ apiKey, sessionId, jwtKey: localStorage.getItem("token") || "" }))
+  //   .then(() => {
+
+  //   })
+  //   .catch((error) => {
+  //     console.error('WebSocket connection error:', error);
+  //   });
 };

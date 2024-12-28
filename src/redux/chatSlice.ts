@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { initialState } from "./initialState/chat";
 import { fetchChatMessages, getChatSessions, fetchDummyMessage } from "./aynscThunks/chat";
 import { ChatMessage, ChatSession, NewChatPayload } from "./types/chat";
+import { MyFile } from "./types/files";
 
 const chatSlice = createSlice({
   name: "chat",
@@ -19,6 +20,9 @@ const chatSlice = createSlice({
     updateSelectedModel(state, action: PayloadAction<string>) {
       state.selectedModel = action.payload;
     },
+    updateSelectedFiles(state, action: PayloadAction<MyFile[]>) {
+      state.selectedFiles = action.payload;
+    },
     toggleDropdown(state) {
       state.showDropdown = !state.showDropdown;
     },
@@ -30,6 +34,9 @@ const chatSlice = createSlice({
     },
     addMessage(state, action: PayloadAction<ChatMessage>) {
       state.activeChatMessages.push(action.payload);
+    },
+    clearChat(state) {
+      state.activeChatMessages = [];
     },
   },
   extraReducers: (builder) => {
@@ -64,5 +71,5 @@ const chatSlice = createSlice({
   },
 });
 
-export const { updateSearchQuery, createNewChat, updateChatSession, updateSelectedModel, toggleDropdown, setHoveredModel, updateChatInput, addMessage } = chatSlice.actions;
+export const { updateSearchQuery, createNewChat, updateChatSession, updateSelectedModel, updateSelectedFiles, toggleDropdown, setHoveredModel, updateChatInput, addMessage, clearChat } = chatSlice.actions;
 export default chatSlice.reducer;

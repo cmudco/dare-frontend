@@ -41,7 +41,7 @@ const ChatList: React.FC = () => {
                         }`}
                 >
                     <ChatBubbleLeftEllipsisIcon className="w-5 h-5 font-bold mr-4" />
-                    {`Chat ${session.session_id}`}
+                    {`${session.session_id}`}
                 </div>
             ))}
             <div className="mt-auto">
