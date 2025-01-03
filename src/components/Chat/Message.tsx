@@ -1,4 +1,5 @@
 import React from "react";
+import ReactMarkdown from "react-markdown";
 import { Typography } from "@material-tailwind/react";
 import { ChatMessage } from "../../redux/types/chat";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
@@ -21,15 +22,18 @@ const Message: React.FC<MessageProps> = ({ message, onReprompt }) => {
         </div>
       )}
       <div
-        className={`relative px-5 py-3 rounded-xl max-w-lg ${message.isSender ? "bg-gray-100" : "bg-gray-100"} inline-block group`}
+        className={`relative px-5 py-3 rounded-xl max-w-[40vw] text-wrap ${message.isSender ? "bg-gray-100" : "bg-gray-100"} inline-block group`}
       >
         <Typography
           className={`text-base font-normal text-gray-900 ${message.streaming ? "animate-pulse" : ""}`}
         >
-          {message.message}
+          <ReactMarkdown className={"text-sm max-w-[40vw] text-wrap"}>{message.message}</ReactMarkdown>
           {message.streaming && "▋"}
         </Typography>
-        <Typography className="text-sm text-gray-400" children={undefined} />
+
+
+
+
         {!message.isSender && !message.streaming && (
           <button
             className="absolute -right-8 -top-2 mt-2 mr-2 text-gray-500 hover:text-gray-700 hidden group-hover:block"

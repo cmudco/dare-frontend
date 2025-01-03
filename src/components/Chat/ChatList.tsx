@@ -17,8 +17,8 @@ const ChatList: React.FC = () => {
     const navigate = useNavigate()
 
     const bottomItems = [
-        { name: "Clear Conversation", icon: TrashIcon, path: "/clear-conversation" },
-        { name: "Dark Mode", icon: MoonIcon, path: "/dark-mode" },
+        { name: "Clear Conversation", icon: TrashIcon,  },
+        { name: "Dark Mode", icon: MoonIcon},
     ];
 
     const handleChatClick = (session: ChatSession) => {

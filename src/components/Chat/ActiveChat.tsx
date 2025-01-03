@@ -15,7 +15,7 @@ const ActiveChat: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const activeChat = useSelector((state: RootState) => state.chat?.activeChat);
   const selectedModel = useSelector((state: RootState) => state.chat?.selectedModel);
-  console.log(selectedModel)
+
   const { id } = useParams<{ id: string }>();
   const sessions = useSelector((state: RootState) => state.chat?.sessions || []);
   const apiKey = getModelConfig(selectedModel || "");
@@ -38,10 +38,10 @@ const ActiveChat: React.FC = () => {
       if (isConnected) {
         await dispatch(disconnectWebSocket());
       }
-      console.log("ActiveChat: WebSocket connection is disconnected.", apiKey);
+      // console.log("ActiveChat: WebSocket connection is disconnected.", apiKey);
 
       if (apiKey && activeChat) {
-        console.log("Connecting to WebSocket...", activeChat.session_id);
+        // console.log("Connecting to WebSocket...", activeChat.session_id);
         try {
           await dispatch(connectWebSocket({
             apiKey,
@@ -49,7 +49,7 @@ const ActiveChat: React.FC = () => {
             jwtKey: token || ""
           }));
         } catch (error) {
-          console.error("WebSocket connection failed:", error);
+          // console.error("WebSocket connection failed:", error);
         }
       }
 

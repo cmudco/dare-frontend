@@ -16,12 +16,12 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
       partialBuffer = '';
       currentMessageId = Date.now().toString();
 
-      console.log('Connecting to WebSocket...');
-      console.log('WebSocket state:', socket?.readyState);
+      // console.log('Connecting to WebSocket...');
+      // console.log('WebSocket state:', socket?.readyState);
       const socketUrl = `ws://localhost:8000/ws/claude/?api_key=${encodeURIComponent(apiKey)}&session_id=${sessionId}&jwt_key=${encodeURIComponent(jwtKey)}`;
       socket = new WebSocket(socketUrl);
-      console.log('WebSocket connecting to:', socketUrl);
-      console.log('WebSocket state:', socket.readyState);
+      // console.log('WebSocket connecting to:', socketUrl);
+      // console.log('WebSocket state:', socket.readyState);
 
       socket.onopen = () => {
         resolve();
@@ -29,7 +29,7 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
 
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log('WebSocket message received:', data);
+        // console.log('WebSocket message received:', data);
 
         try {
           if (data.history) {
@@ -38,7 +38,7 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
 
               if (msg.user_message?.trim()) {
                 dispatch(addMessage({
-                  id: baseTimestamp.toString(),
+                  // id: baseTimestamp.toString(),
                   message: msg.user_message,
                   isSender: true,
                   date: new Date(baseTimestamp).toISOString(),
@@ -47,7 +47,7 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
 
               if (msg.bot_response?.trim()) {
                 dispatch(addMessage({
-                  id: (baseTimestamp + 1).toString(),
+                  // id: (baseTimestamp + 1).toString(),
                   message: msg.bot_response,
                   isSender: false,
                   date: new Date(baseTimestamp + 1).toISOString(),
@@ -60,8 +60,8 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
 
           if (data.title || data.partial_response) {
             const messageId = currentMessageId || Date.now().toString();
-            console.log('Message ID:', messageId);
-            console.log('Data:', data);
+            // console.log('Message ID:', messageId);
+            // console.log('Data:', data);
 
 
             if (data.title) {
@@ -69,7 +69,7 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
                 return;
               }
               dispatch(updateMessage({
-                id: messageId,
+                // id: messageId,
                 message: partialBuffer,
                 isSender: false,
                 date: new Date().toISOString(),
@@ -83,7 +83,7 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
             partialBuffer += data.partial_response;
 
             dispatch(updateMessage({
-              id: messageId,
+              // id: messageId,
               message: partialBuffer,
               isSender: false,
               date: new Date().toISOString(),
@@ -99,7 +99,7 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
             console.error('WebSocket error:', data.error);
             if (currentMessageId) {
               dispatch(updateMessage({
-                id: currentMessageId,
+                // id: currentMessageId,
                 message: partialBuffer || "An error occurred while processing your request",
                 isSender: false,
                 date: new Date().toISOString(),
@@ -131,7 +131,7 @@ export const sendWebSocketMessage = createAsyncThunk<void, ChatMessage, { dispat
     const state = getState();
     const file_paths = state.chat.selectedFiles
       .map((msg) => msg.file_name);
-    console.log(file_paths)
+    // console.log(file_paths)
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({
         prompt: message.message,
