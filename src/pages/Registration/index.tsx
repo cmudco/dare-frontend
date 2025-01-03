@@ -6,7 +6,7 @@ import AuthFormFooter from "../../components/AuthFormFooter";
 import { initialValues, validationSchema } from "./validation";
 import { FormikValues } from "formik";
 import { AppDispatch } from "../../redux/store";
-import { register } from "../../redux/aynscThunks/user";
+import { userRegister } from "../../redux/aynscThunks/user";
 
 const RegistrationScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -21,9 +21,9 @@ const RegistrationScreen: React.FC = () => {
       access_code: values.accessCode,
     };
 
-    const resultAction = await dispatch(register(formData));
+    const resultAction = await dispatch(userRegister(formData));
 
-    if (register.fulfilled.match(resultAction)) {
+    if (userRegister.fulfilled.match(resultAction)) {
       navigate("/confirmation", {
         state: { email: values.email, password: values.password },
       });

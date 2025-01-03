@@ -10,7 +10,7 @@ import {
 } from "@material-tailwind/react";
 
 import { AppDispatch, RootState } from "../../redux/store";
-import { fetchUserData, logoutUser } from "../../redux/aynscThunks/user";
+import { fetchUserData, userLogout } from "../../redux/aynscThunks/user";
 import { useNavigate } from "react-router-dom";
 
 
@@ -22,7 +22,7 @@ const Header: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await dispatch(logoutUser()).unwrap();
+      await dispatch(userLogout()).unwrap();
       navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
