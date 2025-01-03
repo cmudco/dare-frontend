@@ -33,8 +33,7 @@ const Sidebar = () => {
     { name: "Dashboard", icon: RectangleGroupIcon, path: "/dashboard" },
     { name: "Chat", icon: ChatBubbleBottomCenterIcon, path: "/chat" },
     { name: "Files", icon: FolderIcon, path: "/files" },
-    { name: "Prompts", icon: GoCommandPalette, path: "/prompts" },
-
+    { name: "Prompts", icon: GoCommandPalette, path: "/prompts", disabled: true }, // Add disabled property
   ];
 
   const bottomItems = [
@@ -66,9 +65,12 @@ const Sidebar = () => {
         {menuItems.map((item) => (
           <Link
             key={item.name}
-            to={item.path}
+            to={item.disabled ? "#" : item.path} // Disable link if item is disabled
+            onClick={item.disabled ? (e) => e.preventDefault() : undefined} // Prevent default action if item is disabled
             className={`flex items-center w-full p-3 leading-tight transition-all rounded-xl outline-none text-start ${
-              location.pathname === item.path
+              item.disabled
+                ? "cursor-not-allowed opacity-50" // Apply disabled styles
+                : location.pathname === item.path
                 ? "bg-pink-50 text-primary"
                 : "hover:bg-gray-200 hover:bg-opacity-80 hover:text--gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
             }`}

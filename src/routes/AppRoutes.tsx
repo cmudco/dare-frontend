@@ -15,6 +15,9 @@ import RouteListener from "./RouteListener";
 import Prompt from "../pages/Prompts";
 import ProtectedRoute from "./ProtectedRoute";
 
+import Help from "../pages/Help";
+import Settings from "../pages/Settings.tsx";
+
 
 const AppRoutes = () => {
   return (
@@ -46,6 +49,8 @@ const AppRoutes = () => {
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/files' element={<Files />} />
             <Route path='/prompts' element={<Prompt />} />
+            <Route path='/settings' element={<Settings />} />
+            <Route path='/help' element={<Help />} />
           </Route>
 
           <Route path='*' element={<div>404 - Page Not Found</div>} />
