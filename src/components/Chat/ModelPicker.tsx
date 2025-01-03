@@ -1,54 +1,22 @@
 import React, { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateSelectedModel, toggleDropdown, setHoveredModel } from "../../redux/chatSlice";
-import { RootState } from "../../redux/store";
+import { AppDispatch, RootState } from "../../redux/store";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
-
-const models = [
-  {
-    id: "chatgpt-4o",
-    name: "ChatGPT 4o",
-    description: "Optimized for specific tasks."
-  },
-  {
-    id: "chatgpt-4o-mini",
-    name: "ChatGPT 4o Mini",
-    description: "Compact and efficient."
-  },
-  {
-    id: "chatgpt-o1-mini",
-    name: "ChatGPT O1 Mini",
-    description: "Small and powerful."
-  },
-  {
-    id: "chatgpt-o1",
-    name: "ChatGPT O1",
-    description: "Reliable and versatile."
-  },
-  {
-    id: "gpt-3.5-turbo",
-    name: "GPT-3.5 Turbo",
-    description: "For a wide range of tasks."
-  },
-  {
-    id: "gpt-4",
-    name: "GPT-4",
-    description: "advanced model for high-performance tasks."
-  },
-  {
-    id: "claude-sonnet-3",
-    name: "Claude Sonnet 3",
-    description: "A creative and expressive ."
-  }
-];
+import { fetchAvailableModels } from "../../redux/aynscThunks/chat";
 
 const ModelPicker: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch: AppDispatch = useDispatch();
   const showDropdown = useSelector((state: RootState) => state.chat.showDropdown);
   const hoveredModel = useSelector((state: RootState) => state.chat.hoveredModel);
   const selectedModel = useSelector((state: RootState) => state.chat.selectedModel);
+  const models = useSelector((state: RootState) => state.chat.availableModels); // Fetch models from Redux state
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    dispatch(fetchAvailableModels());
+  }, [dispatch]);
 
   const handleModelPickerClick = () => {
     dispatch(toggleDropdown());
@@ -110,16 +78,16 @@ const ModelPicker: React.FC = () => {
           {models.map((model) => (
             <div
               key={model.id}
-              onMouseEnter={() => handleMouseEnter(model.id)}
+              onMouseEnter={() => handleMouseEnter(model.name)}
               onMouseLeave={handleMouseLeave}
-              onClick={() => handleModelChange(model.id)}
-              className={`w-full text-left text-md px-4 py-2 text-black font-thin flex items-center justify-between cursor-pointer ${hoveredModel === model.id ? 'bg-gray-100' : ''}`}
+              onClick={() => handleModelChange(model.name)}
+              className={`w-full text-left text-md px-4 py-2 text-black font-thin flex items-center justify-between cursor-pointer rounded-md ${hoveredModel === model.id ? 'bg-gray-100' : ''}`}
             >
               <div className="flex flex-col truncate">
                 <div className="font-normal text-sm truncate">{model.name}</div>
-                <div className="text-xs text-black font-extrathin truncate">{model.description}</div>
+                {/* <div className="text-xs text-black font-extrathin truncate">{model.description}</div> */}
               </div>
-              {selectedModel === model.id && (
+              {selectedModel === model.name && (
                 <CheckCircleIcon className="w-6 h-6 flex-shrink-0" />
               )}
             </div>
@@ -131,4 +99,3 @@ const ModelPicker: React.FC = () => {
 };
 
 export default ModelPicker;
-

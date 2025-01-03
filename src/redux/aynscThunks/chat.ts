@@ -1,10 +1,22 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ChatMessage, NewChatPayload } from "../types/chat";
 import { addMessage } from "../chatSlice";
-import { streamClaudeResponse, fetchChatSessions } from "../../api/chat";
+import { streamClaudeResponse, fetchChatSessions, fetchModelsAPI } from "../../api/chat";
 import { AppDispatch, RootState } from "../store";
 
 const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
+
+export const fetchAvailableModels = createAsyncThunk(
+  "chat/fetchAvailableModels",
+  async (_, thunkAPI) => {
+    try {
+      const models = await fetchModelsAPI();
+      return models; // Transformed data is returned
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message);
+    }
+  }
+);
 
 export const getChatSessions = createAsyncThunk("chat/getChatSessions", async (_, thunkAPI) => {
   try {
@@ -50,7 +62,7 @@ export const fetchDummyMessage = createAsyncThunk(
     try {
       thunkAPI.dispatch(addMessage(message));
       console.log('Streaming message with Claude:', message.message);
-      streamClaudeResponse(dispatch, apiKey, activeChat.session_id, message.message, message.filePath);
+      streamClaudeResponse(dispatch, apiKey, activeChat.session_id, message.message);
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message);
     }

@@ -17,8 +17,7 @@ import {
   setup2FA as setup2FAAPI,
   fetchUserDataFromAPI,
 } from "../../api/auth";
-import axios from "axios";
-import { getErrorMessage } from "../../utils/errorHandler";
+
 
 export const firebaseLogin = createAsyncThunk(
   "user/firebaseLogin",

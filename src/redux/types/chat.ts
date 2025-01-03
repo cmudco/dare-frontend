@@ -15,6 +15,7 @@ export interface ChatMessage {
   isSender: boolean;
   date: string;
   partial?: boolean;
+  streaming?: boolean;
 }
 
 export interface ChatState {
@@ -29,4 +30,5 @@ export interface ChatState {
   showDropdown: boolean; // New property
   hoveredModel: string | null; // New property
   chatInput: string; // New property
+  availableModels: { id: string; name: string; description: string }[]; // New property
 }

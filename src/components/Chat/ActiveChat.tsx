@@ -8,16 +8,17 @@ import { useParams } from "react-router-dom";
 import { updateChatSession } from "../../redux/chatSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
-
-const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
+import { getModelConfig } from "../../services/getSelectedModel";
 
 
 const ActiveChat: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const activeChat = useSelector((state: RootState) => state.chat?.activeChat);
+  const selectedModel = useSelector((state: RootState) => state.chat?.selectedModel);
+  console.log(selectedModel)
   const { id } = useParams<{ id: string }>();
   const sessions = useSelector((state: RootState) => state.chat?.sessions || []);
-  const apiKey = CLAUDE_API_KEY
+  const apiKey = getModelConfig(selectedModel || "");
   const token = localStorage.getItem("token");
   const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
 
@@ -37,15 +38,16 @@ const ActiveChat: React.FC = () => {
       if (isConnected) {
         await dispatch(disconnectWebSocket());
       }
+      console.log("ActiveChat: WebSocket connection is disconnected.", apiKey);
 
       if (apiKey && activeChat) {
         console.log("Connecting to WebSocket...", activeChat.session_id);
         try {
-        await dispatch(connectWebSocket({
-          apiKey,
-          sessionId: activeChat.session_id,
-          jwtKey: token || ""
-        }));
+          await dispatch(connectWebSocket({
+            apiKey,
+            sessionId: activeChat.session_id,
+            jwtKey: token || ""
+          }));
         } catch (error) {
           console.error("WebSocket connection failed:", error);
         }
@@ -57,7 +59,7 @@ const ActiveChat: React.FC = () => {
   }, [apiKey, activeChat?.session_id, dispatch]);
 
   return (
-    <Card className="flex flex-col w-full h-full justify-end bg-white border border-pink-50 rounded-none rounded-tl-[3.25rem] p-6">
+    <Card className="flex flex-col w-full h-full justify-end bg-white border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  ">
       <div className={`flex flex-col justify-between ${activeChat ? "h-full" : "h-[50vh]"}`}>
         {!activeChat && <NewChat />}
         {activeChat && <MessageList />}

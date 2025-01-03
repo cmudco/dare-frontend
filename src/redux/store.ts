@@ -6,6 +6,7 @@ import promptReducer from "./promptSlice";
 import websocketReducer from "./websocketSlice"
 
 export const store = configureStore({
+
   reducer: {
     user: userReducer,
     files: fileReducer,
@@ -13,6 +14,7 @@ export const store = configureStore({
     prompt: promptReducer,
     websocket: websocketReducer
   },
+  
 });
 
 export type RootState = ReturnType<typeof store.getState>;

@@ -11,7 +11,6 @@ function App() {
 
   const { userLoading, user } = useSelector((state: RootState) => state.user);
   useEffect(() => {
-    console.log(userLoading, user)
     if (!user) {
       dispatch(fetchUserData());
     }
