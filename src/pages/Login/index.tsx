@@ -6,7 +6,7 @@ import { FormikValues } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
-import { firebaseLogin, verifyEmail, login, resendEmailVerification } from "../../redux/aynscThunks/user";
+import { loginWithFirebase, verifyEmail, userLogin, resendEmailVerification } from "../../redux/aynscThunks/user";
 
 const LoginScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,9 +18,9 @@ const LoginScreen: React.FC = () => {
       password: values.password,
     };
 
-    const resultAction = await dispatch(firebaseLogin(loginData));
+    const resultAction = await dispatch(loginWithFirebase(loginData));
 
-    if (!firebaseLogin.fulfilled.match(resultAction)) {
+    if (!loginWithFirebase.fulfilled.match(resultAction)) {
       return;
     }
 
@@ -33,14 +33,14 @@ const LoginScreen: React.FC = () => {
     }
 
     const loginAction = await dispatch(
-      login({
+      userLogin({
         id_token: resultAction.payload.idToken,
         email: loginData.email,
         password: loginData.password,
       })
     );
 
-    if (!login.fulfilled.match(loginAction)) {
+    if (!userLogin.fulfilled.match(loginAction)) {
       return;
     }
 
