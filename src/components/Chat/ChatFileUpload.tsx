@@ -66,7 +66,7 @@ const ChatFileUpload: React.FC = () => {
             selectedFiles.includes(file.id)
         );
         dispatch(updateSelectedFiles(selectedFileObjects));
-        handleCloseModal();
+        handleOpenModal();
     };
 
     const handleClearSelection = () => {

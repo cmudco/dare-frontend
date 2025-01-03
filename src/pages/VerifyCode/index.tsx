@@ -30,21 +30,21 @@ const VerifyCodeScreen: React.FC = () => {
   return (
     <AuthCard
       title='Verify Code'
-      subtitle='An authentication code has been sent to your email.'
+      subtitle='An authentication code has been sent to your authenticator app.'
       inputs={[{ name: "otp", label: "Enter Code", type: "text" }]}
       initialValues={initialValues}
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
       buttonText='Verify'
       showBackButton
-      footer={
-        <p className='text-left text-xs mt-2'>
-          Didn't receive a code?{" "}
-          <span className='text-red-500 text-xs font-body font-extrabold cursor-pointer'>
-            Resend
-          </span>
-        </p>
-      }
+      // footer={
+      //   <p className='text-left text-xs mt-2'>
+      //     Didn't receive a code?{" "}
+      //     <span className='text-red-500 text-xs font-body font-extrabold cursor-pointer'>
+      //       Resend
+      //     </span>
+      //   </p>
+      // }
     />
   );
 };

@@ -12,5 +12,5 @@ export const initialState: ChatState = {
   showDropdown: false,
   hoveredModel: null,
   chatInput: "",
-
+  availableModels: [], // New property
 };

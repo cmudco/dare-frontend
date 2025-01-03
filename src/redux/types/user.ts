@@ -11,6 +11,6 @@ export interface UserState {
   error: string | null;
   firebaseUid?: string;
   temp_token: string;
-  token:  string;
+  token: string;
   userLoading: boolean;
 }

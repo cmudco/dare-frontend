@@ -1,30 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Typography, Select, Option, Chip, Input } from '@material-tailwind/react';
 import { RootState, AppDispatch } from '../../redux/store';
-import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename, updateFileObject } from '../../redux/fileSlice';
+import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename } from '../../redux/fileSlice';
 import { uploadNewFile } from '../../redux/aynscThunks/file';
 
 const availableTags = ["Review", "Important", "Info", "Personal", "Work"];
 
 const FileUploadModal: React.FC = () => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // Local state for the file
   const dispatch = useDispatch<AppDispatch>();
   const { selectedTags, isModalOpen, filename } = useSelector(
     (state: RootState) => state.files
   );
 
   const handleUploadClick = () => {
-    dispatch(uploadNewFile());
-    dispatch(resetSelectedTags());
-    dispatch(closeModal());
+    if (selectedFile) {
+      dispatch(uploadNewFile({ file: selectedFile })); // Pass the file to the thunk
+      dispatch(resetSelectedTags());
+      dispatch(closeModal());
+    } else {
+      console.error("No file selected");
+    }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-
     if (file) {
-      dispatch(updateFilename(file.name));
-      dispatch(updateFileObject(file));
+      setSelectedFile(file); // Update local state
+      dispatch(updateFilename(file.name)); // Update filename in Redux
     }
   };
 
@@ -32,8 +36,8 @@ const FileUploadModal: React.FC = () => {
     event.preventDefault();
     const file = event.dataTransfer.files?.[0];
     if (file) {
-      dispatch(updateFilename(file.name));
-      dispatch(updateFileObject(file));
+      setSelectedFile(file); // Update local state
+      dispatch(updateFilename(file.name)); // Update filename in Redux
     }
   };
 

@@ -3,7 +3,7 @@ import { getErrorMessage } from "../utils/errorHandler";
 import { ChatSession, ChatMessage } from "../redux/types/chat";
 
 import { AppDispatch } from '../redux/store';
-import { connectWebSocket, sendWebSocketMessage } from "../redux/aynscThunks/websocket";
+import { sendWebSocketMessage } from "../redux/aynscThunks/websocket";
 
 const BASE_URL = import.meta.env.VITE_DJANGO_BACKEND_URL;
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
@@ -27,6 +27,31 @@ export const fetchChatSessions = async () => {
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
+  }
+};
+
+export const fetchModelsAPI = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("Authentication token is missing.");
+  }
+
+  try {
+    const response = await axiosInstance.get("/api/claude/llms/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Transform the API response to match the expected structure
+    return response.data.map((model: { name: string; endpoint: string }, index: number) => ({
+      id: index.toString(), // Generate a unique `id` if not provided
+      name: model.name,
+      description: `Endpoint: ${model.endpoint}`, // Construct a description
+    }));
+  } catch (error) {
+    console.error("Error in fetchModelsAPI:", error);
+    throw error;
   }
 };
 

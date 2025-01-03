@@ -1,6 +1,7 @@
 export interface MyFile {
   id: number;
   file: string;
+  file_name: string;
   file_size: string;
   uploaded_at: string;
   directory: string;

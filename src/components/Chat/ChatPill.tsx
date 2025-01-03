@@ -55,6 +55,7 @@ const ChatPill: React.FC = () => {
         date: new Date().toISOString(),
       };
       dispatch(fetchDummyMessage(newMessage));
+      dispatch(updateChatInput(""));
     }
   },[isConnected, dispatch]);
 
@@ -69,7 +70,7 @@ const ChatPill: React.FC = () => {
 
   return (
     <div className="flex flex-col justify-end">
-      <div className="flex items-center w-full px-4">
+      <div className="flex items-center w-full ">
         <div className="relative flex items-center w-full rounded-md">
           <ChatFileUpload />
           <input

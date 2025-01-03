@@ -44,7 +44,7 @@ const FileTable = () => {
                 <tbody>
                     {files.map(
                         (
-                            { id, file, file_size, uploaded_at, directory },
+                            { id, file_name, file_size, uploaded_at, directory },
                             index
                         ) => {
                             const isLast = index === files.length - 1;
@@ -58,7 +58,7 @@ const FileTable = () => {
                                             color='blue-gray'
                                             className='font-normal'
                                         >
-                                            {file}
+                                            {file_name}
                                         </Typography>
                                     </td>
 
