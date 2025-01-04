@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { initialState } from "./initialState/chat";
-import { fetchChatMessages, getChatSessions, fetchDummyMessage, fetchAvailableModels } from "./aynscThunks/chat";
+import { getChatSessions, getAvailableModels } from "./aynscThunks/chat";
 import { ChatMessage, ChatSession, NewChatPayload } from "./types/chat";
 import { MyFile } from "./types/files";
 
@@ -69,34 +69,18 @@ export const chatSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(fetchChatMessages.pending, (state) => {
+      .addCase(getAvailableModels.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchChatMessages.fulfilled, (state, action: PayloadAction<ChatMessage[]>) => {
-        state.loading = false;
-        state.activeChatMessages = action.payload;
-      })
-      .addCase(fetchChatMessages.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      .addCase(fetchDummyMessage.fulfilled, (state, action: PayloadAction<ChatMessage>) => {
-        state.activeChatMessages.push(action.payload);
-      })
-      .addCase(fetchAvailableModels.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchAvailableModels.fulfilled, (state, action: PayloadAction<{ id: string; name: string; description: string }[]>) => {
+      .addCase(getAvailableModels.fulfilled, (state, action: PayloadAction<{ id: string; name: string; description: string }[]>) => {
         state.loading = false;
         state.availableModels = action.payload; // Properly assign the transformed data
       })
-      .addCase(fetchAvailableModels.rejected, (state, action) => {
+      .addCase(getAvailableModels.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      })
-      ;
+      });
 
   },
 });

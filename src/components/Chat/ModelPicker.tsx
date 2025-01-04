@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateSelectedModel, toggleDropdown, setHoveredModel } from "../../redux/chatSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { fetchAvailableModels } from "../../redux/aynscThunks/chat";
+import { getAvailableModels } from "../../redux/aynscThunks/chat";
 
 const ModelPicker: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -15,7 +15,7 @@ const ModelPicker: React.FC = () => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    dispatch(fetchAvailableModels());
+    dispatch(getAvailableModels());
   }, [dispatch]);
 
   const handleModelPickerClick = () => {

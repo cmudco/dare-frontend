@@ -8,7 +8,7 @@ import ModelPicker from "./ModelPicker";
 import PromptSet from "./PromptSet";
 import { ChatMessage } from "../../redux/types/chat";
 import { useNavigate } from "react-router-dom";
-import { fetchDummyMessage } from "../../redux/aynscThunks/chat";
+import { sendMessage } from "../../redux/aynscThunks/chat";
 import ChatFileUpload from "./ChatFileUpload";
 import { useEffect } from "react";
 
@@ -27,6 +27,7 @@ const ChatPill: React.FC = () => {
     if (chatInput.trim() === "") return;
 
     const newMessage: ChatMessage = {
+      id: Date.now().toString(),
       message: chatInput,
       isSender: true,
       date: new Date().toISOString(),
@@ -39,10 +40,9 @@ const ChatPill: React.FC = () => {
       navigate(`/chat/${newSessionId}`);
     } else {
       console.log('Sending message:', newMessage);
-      dispatch(fetchDummyMessage(newMessage));
+      dispatch(sendMessage(newMessage));
       dispatch(updateChatInput(""));
     }
-
   };
 
   useEffect(() => {
@@ -50,14 +50,15 @@ const ChatPill: React.FC = () => {
 
     if (isConnected) {
       const newMessage: ChatMessage = {
+        id: Date.now().toString(),
         message: chatInput,
         isSender: true,
         date: new Date().toISOString(),
       };
-      dispatch(fetchDummyMessage(newMessage));
+      dispatch(sendMessage(newMessage));
       dispatch(updateChatInput(""));
     }
-  },[isConnected, dispatch]);
+  }, [isConnected, dispatch]);
 
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -65,8 +66,6 @@ const ChatPill: React.FC = () => {
       handleSendMessage();
     }
   };
-
-
 
   return (
     <div className="flex flex-col justify-end">
