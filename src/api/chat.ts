@@ -1,12 +1,9 @@
 import axios from "axios";
 import { getErrorMessage } from "../utils/errorHandler";
-import { ChatSession, ChatMessage } from "../redux/types/chat";
-
-import { AppDispatch } from '../redux/store';
-import { sendWebSocketMessage } from "../redux/aynscThunks/websocket";
+import { ChatSession } from "../redux/types/chat";
 
 const BASE_URL = import.meta.env.VITE_DJANGO_BACKEND_URL;
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -16,7 +13,7 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-export const fetchChatSessions = async () => {
+export const getChatSessionsAPI = async () => {
   try {
     const response = await axiosInstance.get<ChatSession[]>("/api/claude/chat/sessions/", {
       headers: {
@@ -30,7 +27,7 @@ export const fetchChatSessions = async () => {
   }
 };
 
-export const fetchModelsAPI = async () => {
+export const getModelsAPI = async () => {
   const token = localStorage.getItem("token");
   if (!token) {
     throw new Error("Authentication token is missing.");
@@ -43,11 +40,11 @@ export const fetchModelsAPI = async () => {
       },
     });
 
-    // Transform the API response to match the expected structure
+
     return response.data.map((model: { name: string; endpoint: string }, index: number) => ({
-      id: index.toString(), // Generate a unique `id` if not provided
+      id: index.toString(),
       name: model.name,
-      description: `Endpoint: ${model.endpoint}`, // Construct a description
+      description: `Endpoint: ${model.endpoint}`,
     }));
   } catch (error) {
     console.error("Error in fetchModelsAPI:", error);
@@ -55,47 +52,6 @@ export const fetchModelsAPI = async () => {
   }
 };
 
-export const fetchOpenAIResponse = async (message: string): Promise<ChatMessage> => {
-  try {
-    const response = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: message }],
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-      }
-    );
-
-    const replyMessage: ChatMessage = {
-      message: response.data.choices[0].message.content.trim(),
-      isSender: false,
-      date: new Date().toISOString(),
-    };
-
-    return replyMessage;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-};
-
-export const streamClaudeResponse = (dispatch: AppDispatch, apiKey: string, sessionId: string, message: string) => {
-
-  const chatMessage: ChatMessage = {
-    message,
-    isSender: true,
-    date: new Date().toISOString(),
-  };
-  dispatch(sendWebSocketMessage(chatMessage));
-  // dispatch(connectWebSocket({ apiKey, sessionId, jwtKey: localStorage.getItem("token") || "" }))
-  //   .then(() => {
-
-  //   })
-  //   .catch((error) => {
-  //     console.error('WebSocket connection error:', error);
-  //   });
-};
+// export const streamClaudeResponse = (dispatch: AppDispatch, message: ChatMessage) => {
+//   dispatch(sendWebSocketMessage(message));
+// };

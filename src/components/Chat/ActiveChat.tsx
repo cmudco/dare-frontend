@@ -38,10 +38,8 @@ const ActiveChat: React.FC = () => {
       if (isConnected) {
         await dispatch(disconnectWebSocket());
       }
-      // console.log("ActiveChat: WebSocket connection is disconnected.", apiKey);
 
       if (apiKey && activeChat) {
-        // console.log("Connecting to WebSocket...", activeChat.session_id);
         try {
           await dispatch(connectWebSocket({
             apiKey,
@@ -49,7 +47,7 @@ const ActiveChat: React.FC = () => {
             jwtKey: token || ""
           }));
         } catch (error) {
-          // console.error("WebSocket connection failed:", error);
+          console.error("WebSocket connection failed:", error);
         }
       }
 

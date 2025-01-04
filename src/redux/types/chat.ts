@@ -11,6 +11,7 @@ export interface NewChatPayload {
 }
 
 export interface ChatMessage {
+  id: string;
   message: string;
   isSender: boolean;
   date: string;
