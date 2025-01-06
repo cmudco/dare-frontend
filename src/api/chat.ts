@@ -51,7 +51,3 @@ export const getModelsAPI = async () => {
     throw error;
   }
 };
-
-// export const streamClaudeResponse = (dispatch: AppDispatch, message: ChatMessage) => {
-//   dispatch(sendWebSocketMessage(message));
-// };

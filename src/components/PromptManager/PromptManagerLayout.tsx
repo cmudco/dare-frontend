@@ -35,7 +35,6 @@ const PromptManagerLayout = () => {
           <PromptTableControls />
         </Card>
 
-        {/* Upload Modal */}
         <PromptUploadModal />
       </div>
     </div>

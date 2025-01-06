@@ -37,14 +37,6 @@ const VerifyCodeScreen: React.FC = () => {
       onSubmit={handleSubmit}
       buttonText='Verify'
       showBackButton
-      // footer={
-      //   <p className='text-left text-xs mt-2'>
-      //     Didn't receive a code?{" "}
-      //     <span className='text-red-500 text-xs font-body font-extrabold cursor-pointer'>
-      //       Resend
-      //     </span>
-      //   </p>
-      // }
     />
   );
 };

@@ -5,7 +5,6 @@ export const initialState: FileState = {
   loading: false,
   error: null,
   selectedTags: [],
-  selectedFile: null,
   isModalOpen: false,
   filename: "",
 };

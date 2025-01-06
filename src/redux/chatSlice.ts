@@ -75,7 +75,7 @@ export const chatSlice = createSlice({
       })
       .addCase(getAvailableModels.fulfilled, (state, action: PayloadAction<{ id: string; name: string; description: string }[]>) => {
         state.loading = false;
-        state.availableModels = action.payload; // Properly assign the transformed data
+        state.availableModels = action.payload;
       })
       .addCase(getAvailableModels.rejected, (state, action) => {
         state.loading = false;

@@ -22,10 +22,8 @@ const ChatList: React.FC = () => {
     ];
 
     const handleChatClick = (session: ChatSession) => {
-        // Update active session in Redux
         dispatch(updateChatSession(session));
 
-        // Navigate to the session's chat route
         navigate(`/chat/${session.session_id}`);
     };
 

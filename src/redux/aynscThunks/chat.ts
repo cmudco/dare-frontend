@@ -5,21 +5,14 @@ import { getChatSessionsAPI, getModelsAPI } from "../../api/chat";
 import { AppDispatch, RootState } from "../store";
 import { sendWebSocketMessage } from "./websocket";
 
-// export const createChatSession = createAsyncThunk("chat/createChatSession", async (payload: NewChatPayload, thunkAPI) => {
-//   try {
-//     // Simulate API call for creating a new chat session
-//     return payload;
-//   } catch (error) {
-//     return thunkAPI.rejectWithValue((error as Error).message);
-//   }
-// });
+
 
 export const getAvailableModels = createAsyncThunk(
   "chat/getAvailableModels",
   async (_, thunkAPI) => {
     try {
       const models = await getModelsAPI();
-      return models; // Transformed data is returned
+      return models; 
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message);
     }

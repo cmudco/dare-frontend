@@ -20,7 +20,6 @@ const ChatHistory = () => {
 
     useEffect(() => {
         const handleResize = () => {
-            // No collapse logic
         };
 
         window.addEventListener("resize", handleResize);

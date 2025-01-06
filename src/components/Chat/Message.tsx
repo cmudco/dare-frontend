@@ -1,5 +1,4 @@
 import React from "react";
-// import ReactMarkdown from "react-markdown";
 import { Typography } from "@material-tailwind/react";
 import { ChatMessage } from "../../redux/types/chat";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";

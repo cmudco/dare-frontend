@@ -34,7 +34,7 @@ const ChatPill: React.FC = () => {
     };
 
     if (!activeChat) {
-      const newSessionId = Date.now(); // Use timestamp as session ID
+      const newSessionId = Date.now(); 
       dispatch(createNewChat({ session_id: newSessionId.toString() }));
       dispatch(updateChatSession({ session_id: newSessionId.toString(), created_at: new Date().toISOString() }));
       navigate(`/chat/${newSessionId}`);
