@@ -8,6 +8,7 @@ import {
   Cog8ToothIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronLeftIcon } from "@heroicons/react/20/solid";
+import { GoCommandPalette } from "react-icons/go";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -32,6 +33,8 @@ const Sidebar = () => {
     { name: "Dashboard", icon: RectangleGroupIcon, path: "/dashboard" },
     { name: "Chat", icon: ChatBubbleBottomCenterIcon, path: "/chat" },
     { name: "Files", icon: FolderIcon, path: "/files" },
+    { name: "Prompts", icon: GoCommandPalette, path: "/prompts" },
+
   ];
 
   const bottomItems = [
@@ -44,10 +47,10 @@ const Sidebar = () => {
       className={`relative flex ${
         isCollapsed
           ? "w-[80px]"
-          : "w-[160px] md:w-[200px] lg:w-[240px] xl:w-[260px]"
-      } flex-col bg-white bg-clip-border text-gray-700 shadow-xl shadow-blue-gray-900/5 transition-width duration-300 border border-pink-50`}
+          : "w-[160px] md:w-[200px] lg:w-[260px]"
+      } flex-col bg-white bg-clip-border text-gray-700 shadow-xl shadow-blue-gray-900/5 transition-width duration-300 border border-t-0 border-pink-50`}
     >
-      <div className='flex items-center justify-between p-4 mb-'>
+      <div className='flex items-center justify-between p-4  '>
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={`absolute top-4 transition-all -right-4 transform translate-x-0 mt-1 p-1 rounded-full bg-lightpink hover:bg-primary-dark border-2 border-border-gray`}

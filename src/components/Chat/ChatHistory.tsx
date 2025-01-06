@@ -1,0 +1,72 @@
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+    MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
+import { updateSearchQuery, createNewChat, updateChatSession } from "../../redux/chatSlice";
+import { getChatSessions } from "../../redux/aynscThunks/chat";
+import { AppDispatch, RootState } from "../../redux/store";
+import ChatList from "./ChatList";
+import { useNavigate } from "react-router-dom";
+
+const ChatHistory = () => {
+    const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
+    const searchQuery = useSelector((state: RootState) => state.chat?.searchQuery || "");
+
+    useEffect(() => {
+        dispatch(getChatSessions());
+    }, [dispatch]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            // No collapse logic
+        };
+
+        window.addEventListener("resize", handleResize);
+        handleResize();
+
+        return () => window.removeEventListener("resize", handleResize);
+    }, [dispatch]);
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        dispatch(updateSearchQuery(e.target.value));
+    };
+
+    const handleCreateNewChat = () => {
+        const newChatPayload = { session_id: `session_${Date.now()}` };
+        dispatch(createNewChat(newChatPayload));
+
+        dispatch(updateChatSession({ session_id: newChatPayload.session_id, created_at: new Date().toISOString() }));
+        navigate(`/chat/${newChatPayload.session_id}`);
+    };
+
+    return (
+        <div
+            className={`flex-grow h-full flex flex-col bg-white bg-clip-border text-gray-700 shadow-xl shadow-blue-gray-900/5 transition-width duration-300 border border-pink-50`}
+        >
+            <div className='flex items-center justify-between p-4  border-pink-50'>
+                <div className="flex items-center flex-grow border  border-gray-500 rounded-3xl p-2">
+                    <MagnifyingGlassIcon className="w-5 h-5 text-gray-600 mr-2 " />
+                    <input
+                        type="text"
+                        placeholder="Search"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        className="flex-grow outline-none bg-transparent placeholder-gray-600 font-normal"
+                    />
+                </div>
+                <button
+                    onClick={handleCreateNewChat}
+                    className="ml-2 min-w-5 bg-primary text-white rounded-xl w-10 h-10 flex items-center justify-center"
+                >
+                    <span className="text-xl">+</span>
+                </button>
+            </div>
+            <hr className=" border-gray-200 mx-1" />
+            <ChatList />
+        </div>
+    );
+};
+
+export default ChatHistory;
