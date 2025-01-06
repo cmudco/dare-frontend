@@ -10,7 +10,7 @@ const ModelPicker: React.FC = () => {
   const showDropdown = useSelector((state: RootState) => state.chat.showDropdown);
   const hoveredModel = useSelector((state: RootState) => state.chat.hoveredModel);
   const selectedModel = useSelector((state: RootState) => state.chat.selectedModel);
-  const models = useSelector((state: RootState) => state.chat.availableModels); // Fetch models from Redux state
+  const models = useSelector((state: RootState) => state.chat.availableModels);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -85,7 +85,6 @@ const ModelPicker: React.FC = () => {
             >
               <div className="flex flex-col truncate">
                 <div className="font-normal text-sm truncate">{model.name}</div>
-                {/* <div className="text-xs text-black font-extrathin truncate">{model.description}</div> */}
               </div>
               {selectedModel === model.name && (
                 <CheckCircleIcon className="w-6 h-6 flex-shrink-0" />

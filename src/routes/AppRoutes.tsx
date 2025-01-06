@@ -24,7 +24,6 @@ const AppRoutes = () => {
     <BrowserRouter>
       <RouteListener>
         <Routes>
-          {/* Public Routes */}
           <Route path='/login' element={<LoginScreen />} />
           <Route path='/register' element={<RegistrationScreen />} />
           <Route path='/forgot-password' element={<ForgotScreen />} />
@@ -33,9 +32,7 @@ const AppRoutes = () => {
           <Route path='/qr-verification' element={<QrVerificationScreen />} />
           <Route path='/otp-required' element={<OTPRequired />} />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
-          {/* <Route path='/loader' element={<Loader />} /> */}
 
-          {/* Protected Routes */}
           <Route
             path="/"
             element={

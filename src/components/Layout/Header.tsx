@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { BellIcon } from "@heroicons/react/24/solid";
 import {
@@ -10,7 +10,7 @@ import {
 } from "@material-tailwind/react";
 
 import { AppDispatch, RootState } from "../../redux/store";
-import { fetchUserData, userLogout } from "../../redux/aynscThunks/user";
+import { userLogout } from "../../redux/aynscThunks/user";
 import { useNavigate } from "react-router-dom";
 
 

@@ -8,7 +8,7 @@ import { uploadNewFile } from '../../redux/aynscThunks/file';
 const availableTags = ["Review", "Important", "Info", "Personal", "Work"];
 
 const FileUploadModal: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // Local state for the file
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const { selectedTags, isModalOpen, filename } = useSelector(
     (state: RootState) => state.files
@@ -16,7 +16,7 @@ const FileUploadModal: React.FC = () => {
 
   const handleUploadClick = () => {
     if (selectedFile) {
-      dispatch(uploadNewFile({ file: selectedFile })); // Pass the file to the thunk
+      dispatch(uploadNewFile({ file: selectedFile }));
       dispatch(resetSelectedTags());
       dispatch(closeModal());
     } else {
@@ -27,8 +27,8 @@ const FileUploadModal: React.FC = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setSelectedFile(file); // Update local state
-      dispatch(updateFilename(file.name)); // Update filename in Redux
+      setSelectedFile(file);
+      dispatch(updateFilename(file.name));
     }
   };
 
@@ -36,8 +36,8 @@ const FileUploadModal: React.FC = () => {
     event.preventDefault();
     const file = event.dataTransfer.files?.[0];
     if (file) {
-      setSelectedFile(file); // Update local state
-      dispatch(updateFilename(file.name)); // Update filename in Redux
+      setSelectedFile(file);
+      dispatch(updateFilename(file.name));
     }
   };
 
@@ -62,7 +62,6 @@ const FileUploadModal: React.FC = () => {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >
-        {/* File Name Input */}
         <Input
           label="File Name"
           value={filename}
@@ -70,7 +69,6 @@ const FileUploadModal: React.FC = () => {
           onChange={(e) => dispatch(updateFilename(e.target.value))}
         />
 
-        {/* Tag Management */}
         <div className="flex flex-col gap-2">
           <Select
             label="Add Tags"
@@ -98,7 +96,6 @@ const FileUploadModal: React.FC = () => {
           </div>
         </div>
 
-        {/* File Upload Section */}
         <div className="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center bg-blue-50 hover:bg-blue-100 transition cursor-pointer">
           <div
             onClick={() => document.getElementById("fileInput")?.click()}

@@ -1,9 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Prompt } from "../types/prompt";
 
-export const fetchPrompts = createAsyncThunk("prompt/fetchPrompts", async (_, thunkAPI) => {
+export const getPrompts = createAsyncThunk("prompt/fetchPrompts", async (_, thunkAPI) => {
   try {
-    // Simulate API call to fetch prompts
     const dummyPrompts: Prompt[] = [
       { id: "prompt_1", title: "Greeting", dateCreated: new Date().toISOString() },
       { id: "prompt_2", title: "Help", dateCreated: new Date().toISOString() },
