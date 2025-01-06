@@ -12,10 +12,11 @@ import {
     ArchiveBoxIcon,
 } from "@heroicons/react/24/solid";
 
-import { TAG_COLORS, TABLE_HEAD } from "../../utils/constants/file";
+import { TAG_COLORS } from "../../utils/constants/file";
 import { updateFileArchive } from "../../redux/fileSlice";
+import { PROMPTS_TABLE_HEAD } from "../../utils/constants/prompts";
 
-const FileTable = () => {
+const PromptTable = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { files } = useSelector((state: RootState) => state.files);
 
@@ -24,7 +25,7 @@ const FileTable = () => {
             <table className='mt-4 w-full min-w-max table-auto text-left bg-white'>
                 <thead>
                     <tr>
-                        {TABLE_HEAD.map((head) => (
+                        {PROMPTS_TABLE_HEAD.map((head) => (
                             <th
                                 key={head}
                                 className='cursor-pointer bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50'
@@ -44,7 +45,7 @@ const FileTable = () => {
                 <tbody>
                     {files.map(
                         (
-                            { id, file_name, file_size, uploaded_at, directory },
+                            { id, file, file_size, uploaded_at, tags },
                             index
                         ) => {
                             const isLast = index === files.length - 1;
@@ -58,7 +59,7 @@ const FileTable = () => {
                                             color='blue-gray'
                                             className='font-normal'
                                         >
-                                            {file_name}
+                                            {file}
                                         </Typography>
                                     </td>
 
@@ -81,15 +82,15 @@ const FileTable = () => {
                                         </Typography>
                                     </td>
                                     <td className={classes}>
-                                        {/* {tags.map((tag) => ( */}
+                                        {tags.map((tag) => (
                                             <Chip
-                                                key={directory ?? ' '}
+                                                key={tag}
                                                 variant='ghost'
                                                 className='flex justify-center py-0.5 items-center px rounded-2xl text-center font-normal text-sm normal-case'
-                                                value={directory ?? ' '}
-                                                color={TAG_COLORS['review']}
+                                                value={tag}
+                                                color={TAG_COLORS[tag]}
                                             />
-                                        {/* ))} */}
+                                        ))}
                                     </td>
                                     <td className={classes}>
                                         <div className='flex items-center justify-center'>
@@ -128,4 +129,4 @@ const FileTable = () => {
     );
 };
 
-export default FileTable;
+export default PromptTable;

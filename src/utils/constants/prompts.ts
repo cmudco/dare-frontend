@@ -1,10 +1,8 @@
 
 
-export const TABLE_HEAD = [
-    "File Name",
-    "Size",
-    "Date Uploaded",
-    "Tags",
+export const PROMPTS_TABLE_HEAD = [
+    "Prompt",
+    "Date Created",
     "Action",
   ];
 

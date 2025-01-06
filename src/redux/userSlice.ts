@@ -9,12 +9,18 @@ import {
   resetPassword,
   setup2FA,
   verifyCode,
+  fetchUserData,
+  logoutUser,
 } from "./aynscThunks/user";
 
 const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
+    updateUser(state, action) {
+      console.log(action)
+      state.user = action.payload
+    },
     logout(state) {
       state.user = null;
       state.isAuthenticated = false;
@@ -39,23 +45,10 @@ const userSlice = createSlice({
         state.isAuthenticated = true;
         state.error = null;
       })
-
       .addCase(firebaseLogin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      // .addCase(sendTokenToBackend.pending, (state) => {
-      //   state.loading = true;
-      //   state.error = null;
-      // })
-      // .addCase(sendTokenToBackend.fulfilled, (state) => {
-      //   state.loading = false;
-      //   // Handle the response from the backend if needed
-      // })
-      // .addCase(sendTokenToBackend.rejected, (state, action) => {
-      //   state.loading = false;
-      //   state.error = action.payload as string;
-      // })
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -101,8 +94,10 @@ const userSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(verifyCode.fulfilled, (state) => {
+      .addCase(verifyCode.fulfilled, (state, action) => {
         state.loading = false;
+        state.token = action.payload.token;
+        localStorage.setItem("token", state.token);
         state.error = null;
       })
       .addCase(verifyCode.rejected, (state, action) => {
@@ -143,10 +138,36 @@ const userSlice = createSlice({
       .addCase(setup2FA.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(fetchUserData.pending, (state) => {
+        state.loading = true;
+        state.userLoading = true
+        state.error = null;
+      })
+      .addCase(fetchUserData.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.userLoading = false
+        state.error = null;
+      })
+      .addCase(fetchUserData.rejected, (state, action) => {
+        state.loading = false;
+        state.userLoading = false
+        state.error = action.payload as string;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.token = "";
+        state.temp_token = "";
+        state.firebaseUid = "";
       });
+
+
   },
 });
 
-export const { logout, resetError } = userSlice.actions;
+export const { updateUser, logout, resetError } = userSlice.actions;
 
 export default userSlice.reducer;

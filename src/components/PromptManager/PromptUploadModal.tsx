@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Typography, Select, Option, Chip, Input } from '@material-tailwind/react';
 import { RootState, AppDispatch } from '../../redux/store';
@@ -7,28 +7,24 @@ import { uploadNewFile } from '../../redux/aynscThunks/file';
 
 const availableTags = ["Review", "Important", "Info", "Personal", "Work"];
 
-const FileUploadModal: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // Local state for the file
+const PromptUploadModal: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { selectedTags, isModalOpen, filename } = useSelector(
     (state: RootState) => state.files
   );
 
   const handleUploadClick = () => {
-    if (selectedFile) {
-      dispatch(uploadNewFile({ file: selectedFile })); // Pass the file to the thunk
-      dispatch(resetSelectedTags());
-      dispatch(closeModal());
-    } else {
-      console.error("No file selected");
-    }
+    dispatch(uploadNewFile());
+    dispatch(resetSelectedTags());
+    dispatch(closeModal());
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+
     if (file) {
-      setSelectedFile(file); // Update local state
-      dispatch(updateFilename(file.name)); // Update filename in Redux
+      dispatch(updateFilename(file.name));
+
     }
   };
 
@@ -36,8 +32,8 @@ const FileUploadModal: React.FC = () => {
     event.preventDefault();
     const file = event.dataTransfer.files?.[0];
     if (file) {
-      setSelectedFile(file); // Update local state
-      dispatch(updateFilename(file.name)); // Update filename in Redux
+      dispatch(updateFilename(file.name));
+
     }
   };
 
@@ -109,6 +105,7 @@ const FileUploadModal: React.FC = () => {
           <input
             id="fileInput"
             type="file"
+            multiple
             onChange={handleFileChange}
             className="hidden"
           />
@@ -129,4 +126,4 @@ const FileUploadModal: React.FC = () => {
   );
 };
 
-export default FileUploadModal;
+export default PromptUploadModal;

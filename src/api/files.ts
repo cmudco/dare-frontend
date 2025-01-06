@@ -12,7 +12,7 @@ const axiosInstance = axios.create({
 });
 
 const getAuthToken = () => {
-  return localStorage.getItem("authToken");
+  return localStorage.getItem("token");
 };
 
 export const fetchFiles = async () => {
@@ -34,6 +34,7 @@ export const uploadFile = async (data: FormData) => {
     const response = await axiosInstance.post("/api/upload/", data, {
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
       },
     });
     return response.data;

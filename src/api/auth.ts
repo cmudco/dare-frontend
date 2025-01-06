@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getErrorMessage } from "../utils/errorHandler";
+import { User } from "../redux/types/user";
 
 const BASE_URL = import.meta.env.VITE_DJANGO_BACKEND_URL;
 
@@ -96,5 +97,27 @@ export const setup2FA = async (data: {
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
+  }
+};
+
+export const fetchUserDataFromAPI = async (): Promise<User> => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No token found");
+  }
+
+  try {
+    const response = await axios.get<User>(
+      `${import.meta.env.VITE_DJANGO_BACKEND_URL}/auth/me/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error((error as Error).message);
   }
 };

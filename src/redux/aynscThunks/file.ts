@@ -13,18 +13,14 @@ export const getFiles = createAsyncThunk("files/getFiles", async (_, thunkAPI) =
 
 export const uploadNewFile = createAsyncThunk(
   "files/uploadNewFile",
-  async (_, thunkAPI) => {
+  async ({ file }: { file: File }, thunkAPI) => {
     const state = thunkAPI.getState() as RootState;
-    const { selectedTags, selectedFile, filename } = state.files;
-
-    if (!selectedFile) {
-      return thunkAPI.rejectWithValue("No file selected");
-    }
+    const { selectedTags, filename } = state.files;
 
     const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('tags', JSON.stringify(selectedTags));
-    formData.append('filename', filename);
+    formData.append("file", file); // Append the file directly
+    formData.append("directory", selectedTags.join("/"));
+    formData.append("filename", filename);
 
     try {
       const response = await uploadFile(formData);
