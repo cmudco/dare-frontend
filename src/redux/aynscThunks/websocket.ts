@@ -1,18 +1,22 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { clearChat } from '../chatSlice';
+import { clearChat, updateMessage } from '../chatSlice';
 import { ChatMessage } from '../types/chat';
 import { AppDispatch, RootState } from '../store';
 import { setConnectionStatus } from '../websocketSlice';
-import { handleDataConditions, handleDataHistory, handleError } from '../../services/socketService';
+import { handleDataHistory,  } from '../../services/socketService';
 
 
 let socket: WebSocket | null = null;
+let partialBuffer = '';
+let currentMessageId: string | null = null;
 
 export const connectWebSocket = createAsyncThunk<void, { apiKey: string; sessionId: string; jwtKey: string }, { dispatch: AppDispatch; state: RootState }>(
   'websocket/connect',
   async ({ apiKey, sessionId, jwtKey }, { dispatch }) => {
     return new Promise<void>((resolve, reject) => {
       dispatch(clearChat());
+      partialBuffer = '';
+      currentMessageId = Date.now().toString();
 
       const socketUrl = `${import.meta.env.VITE_WEBSOCKET_URL}/?api_key=${encodeURIComponent(apiKey)}&session_id=${sessionId}&jwt_key=${encodeURIComponent(jwtKey)}`;
       socket = new WebSocket(socketUrl);
@@ -26,10 +30,53 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
 
         try {
           handleDataHistory(data, dispatch);
-          handleDataConditions(data, dispatch);
+
+          if (data.title || data.partial_response) {
+            const messageId = currentMessageId || Date.now().toString();
+
+
+            if (data.title) {
+              if (partialBuffer == '') {
+                return;
+              }
+              dispatch(updateMessage({
+                id: messageId,
+                message: partialBuffer,
+                isSender: false,
+                date: new Date().toISOString(),
+                streaming: false
+              }));
+              partialBuffer = '';
+              currentMessageId = null;
+              return;
+            }
+            currentMessageId = messageId;
+            partialBuffer += data.partial_response;
+
+            dispatch(updateMessage({
+              id: messageId,
+              message: partialBuffer,
+              isSender: false,
+              date: new Date().toISOString(),
+              streaming: true
+            }));
+
+            return;
+          }
 
           if (data.error) {
-            handleError(data, dispatch);
+            console.error('WebSocket error:', data.error);
+            if (currentMessageId) {
+              dispatch(updateMessage({
+                id: currentMessageId,
+                message: partialBuffer || "An error occurred while processing your request",
+                isSender: false,
+                date: new Date().toISOString(),
+                streaming: false
+              }));
+            }
+            partialBuffer = '';
+            currentMessageId = null;
           }
         } catch (err) {
           console.error('Error processing WebSocket message:', err);

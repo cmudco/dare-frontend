@@ -5,7 +5,7 @@ import { Card } from "@material-tailwind/react";
 import ChatPill from "./ChatPill";
 import NewChat from "./NewChat";
 import { useParams } from "react-router-dom";
-import { updateChatSession } from "../../redux/chatSlice";
+import { updateChatInput, updateChatSession } from "../../redux/chatSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
 import { getModelConfig } from "../../services/getSelectedModel";
@@ -36,6 +36,8 @@ const ActiveChat: React.FC = () => {
   useEffect(() => {
     const handleWebSocketConnection = async () => {
       if (isConnected) {
+        // empty the text
+        dispatch(updateChatInput(""));
         await dispatch(disconnectWebSocket());
       }
 
@@ -57,8 +59,8 @@ const ActiveChat: React.FC = () => {
   }, [apiKey, activeChat?.session_id, dispatch]);
 
   return (
-    <Card className="flex flex-col w-full h-full justify-end bg-white border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  ">
-      <div className={`flex flex-col justify-between ${activeChat ? "h-full" : "h-[50vh]"}`}>
+    <Card className="flex flex-col w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  ">
+      <div className={`flex flex-col justify-between ${activeChat ? "h-full" : ""}`}>
         {!activeChat && <NewChat />}
         {activeChat && <MessageList />}
         <ChatPill />

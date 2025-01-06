@@ -1,8 +1,5 @@
 import { AppDispatch } from '../redux/store';
-import { addMessage, updateMessage } from '../redux/chatSlice';
-
-let partialBuffer = '';
-let currentMessageId: string | null = null;
+import { addMessage, } from '../redux/chatSlice';
 
 interface Message {
   user_message: string;
@@ -40,50 +37,4 @@ export const handleDataHistory = (data: Data, dispatch: AppDispatch) => {
       }
     });
   }
-};
-
-export const handleDataConditions = (data: Data, dispatch: AppDispatch) => {
-  const messageId = currentMessageId || Date.now().toString();
-
-  if (data.title) {
-    if (partialBuffer == '') {
-      return;
-    }
-    dispatch(updateMessage({
-      id: messageId,
-      message: partialBuffer,
-      isSender: false,
-      date: new Date().toISOString(),
-      streaming: false
-    }));
-    partialBuffer = '';
-    currentMessageId = null;
-    return;
-  }
-
-  currentMessageId = messageId;
-  partialBuffer += data.partial_response;
-
-  dispatch(updateMessage({
-    id: messageId,
-    message: partialBuffer,
-    isSender: false,
-    date: new Date().toISOString(),
-    streaming: true
-  }));
-};
-
-export const handleError = (data: Data, dispatch: AppDispatch) => {
-  console.error('WebSocket error:', data.error);
-  if (currentMessageId) {
-    dispatch(updateMessage({
-      id: currentMessageId,
-      message: partialBuffer || "An error occurred while processing your request",
-      isSender: false,
-      date: new Date().toISOString(),
-      streaming: false
-    }));
-  }
-  partialBuffer = '';
-  currentMessageId = null;
 };
