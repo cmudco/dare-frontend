@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
-import { fetchPrompts } from "../../redux/aynscThunks/prompt";
+import { getPrompts } from "../../redux/aynscThunks/prompt";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { Button } from "@material-tailwind/react";
 import { GoCommandPalette } from "react-icons/go";
@@ -17,7 +17,7 @@ const PromptSet: React.FC = () => {
 
   const handleOpenModal = () => {
     setShowModal(true);
-    (dispatch as AppDispatch)(fetchPrompts());
+    (dispatch as AppDispatch)(getPrompts());
   };
 
   const handleCloseModal = () => {
@@ -33,6 +33,7 @@ const PromptSet: React.FC = () => {
   const handlePromptSelect = (prompt: string) => {
     if (activeChat) {
       const newMessage: ChatMessage = {
+        id: Math.random().toString(),
         message: prompt,
         isSender: true,
         date: new Date().toISOString(),

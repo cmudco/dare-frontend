@@ -28,8 +28,8 @@ const ChatList: React.FC = () => {
     };
 
     return (
-        <nav className="flex flex-col gap-1 p-2 font-sans text-base font-normal text-blue-gray-700 flex-grow ">
-            <div className="flex flex-col max-h-[54vh] overflow-y-auto">
+        <nav className="flex flex-col gap-1 p-2 font-sans text-base font-normal text-blue-gray-700">
+            <div className="flex flex-col h-[50vh] overflow-y-auto">
             {sessions.map((session) => (
                 <div
                     key={session.session_id}
@@ -44,7 +44,7 @@ const ChatList: React.FC = () => {
                 </div>
             ))}
             </div>
-            <div className="mt-auto">
+            <div className="mt-auto max-h-[50%] overflow-y-auto">
                 <hr className=" border-gray-200 pt-1" />
 
                 {bottomItems.map((item) => (
