@@ -19,7 +19,7 @@ import {
 } from "../../api/auth";
 
 
-export const firebaseLogin = createAsyncThunk(
+export const loginWithFirebase = createAsyncThunk(
   "user/firebaseLogin",
   async (credentials: { email: string; password: string }, thunkAPI) => {
     try {
@@ -44,19 +44,7 @@ export const firebaseLogin = createAsyncThunk(
   }
 );
 
-//   export const sendTokenToBackend = createAsyncThunk(
-//     "user/sendTokenToBackend",
-//     async (token: string, thunkAPI) => {
-//       try {
-//         const data = await sendTokenToBackendAPI(token);
-//         return data;
-//       } catch (error) {
-//         return thunkAPI.rejectWithValue((error as Error).message);
-//       }
-//     }
-//   );
-
-export const login = createAsyncThunk(
+export const userLogin = createAsyncThunk(
   "user/login",
   async (
     credentials: { id_token: string; email: string; password: string },
@@ -70,22 +58,7 @@ export const login = createAsyncThunk(
     }
   }
 );
-
-export const logoutUser = createAsyncThunk(
-  "user/logoutUser",
-  async (_, thunkAPI) => {
-    try {
-      await signOut(auth);
-      localStorage.removeItem("token");
-      return true;
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-
-export const register = createAsyncThunk(
+export const userRegister = createAsyncThunk(
   "user/register",
   async (
     formData: {
@@ -114,6 +87,21 @@ export const register = createAsyncThunk(
     }
   }
 );
+
+export const userLogout = createAsyncThunk(
+  "user/logoutUser",
+  async (_, thunkAPI) => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem("token");
+      return true;
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message);
+    }
+  }
+);
+
+
 
 export const forgotPassword = createAsyncThunk(
   "user/forgotPassword",

@@ -81,15 +81,13 @@ const FileTable = () => {
                                         </Typography>
                                     </td>
                                     <td className={classes}>
-                                        {/* {tags.map((tag) => ( */}
-                                            <Chip
-                                                key={directory ?? ' '}
-                                                variant='ghost'
-                                                className='flex justify-center py-0.5 items-center px rounded-2xl text-center font-normal text-sm normal-case'
-                                                value={directory ?? ' '}
-                                                color={TAG_COLORS['review']}
-                                            />
-                                        {/* ))} */}
+                                        <Chip
+                                            key={directory ?? ' '}
+                                            variant='ghost'
+                                            className='flex justify-center py-0.5 items-center px rounded-2xl text-center font-normal text-sm normal-case'
+                                            value={directory ?? ' '}
+                                            color={TAG_COLORS['review']}
+                                        />
                                     </td>
                                     <td className={classes}>
                                         <div className='flex items-center justify-center'>
@@ -97,12 +95,7 @@ const FileTable = () => {
                                                 <IconButton
                                                     variant='text'
                                                     onClick={() => {
-                                                        // dispatch(openEditModal({
-                                                        //  file, tags,
-                                                        //     directory: "",
-                                                        //     file_size: "",
-                                                        //     uploaded_at: ""
-                                                        // }));
+
                                                     }}
                                                 >
                                                     <PencilIcon className='h-4 w-4' />

@@ -1,11 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import AuthCard from "../../components/AuthCard";
 import { initialValues, validationSchema } from "./validation";
 import { FormikValues } from "formik";
-import { AppDispatch, RootState } from "../../redux/store";
-import { fetchUserData, verifyCode } from "../../redux/aynscThunks/user";
+import { AppDispatch,  } from "../../redux/store";
+import {  verifyCode } from "../../redux/aynscThunks/user";
 import { fetchUserDataFromAPI } from "../../api";
 import { updateUser } from "../../redux/userSlice";
 
@@ -37,14 +37,6 @@ const VerifyCodeScreen: React.FC = () => {
       onSubmit={handleSubmit}
       buttonText='Verify'
       showBackButton
-      // footer={
-      //   <p className='text-left text-xs mt-2'>
-      //     Didn't receive a code?{" "}
-      //     <span className='text-red-500 text-xs font-body font-extrabold cursor-pointer'>
-      //       Resend
-      //     </span>
-      //   </p>
-      // }
     />
   );
 };

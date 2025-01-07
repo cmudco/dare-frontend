@@ -35,11 +35,6 @@ const fileSlice = createSlice({
     updateFilename: (state, action: PayloadAction<string>) => {
       state.filename = action.payload;
     },
-    // updateFileObject: (state, action: PayloadAction<File>) => {
-    //   console.log(action.payload);
-
-    //   state.selectedFile = action.payload;
-    // },
     updateSaveClick: (state, action: PayloadAction<{ filename: string; tags: string[] }>) => {
       const { filename, tags } = action.payload;
       state.files = state.files.map((file) =>
@@ -109,7 +104,6 @@ export const {
   openModal,
   closeModal,
   resetSelectedTags,
-  // updateFileObject
 } = fileSlice.actions;
 
 export default fileSlice.reducer;

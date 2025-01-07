@@ -18,7 +18,7 @@ export const uploadNewFile = createAsyncThunk(
     const { selectedTags, filename } = state.files;
 
     const formData = new FormData();
-    formData.append("file", file); // Append the file directly
+    formData.append("file", file); 
     formData.append("directory", selectedTags.join("/"));
     formData.append("filename", filename);
 

@@ -17,21 +17,19 @@ const ChatList: React.FC = () => {
     const navigate = useNavigate()
 
     const bottomItems = [
-        { name: "Clear Conversation", icon: TrashIcon, path: "/clear-conversation" },
-        { name: "Dark Mode", icon: MoonIcon, path: "/dark-mode" },
+        { name: "Clear Conversation", icon: TrashIcon,  },
+        { name: "Dark Mode", icon: MoonIcon},
     ];
 
     const handleChatClick = (session: ChatSession) => {
-        // Update active session in Redux
         dispatch(updateChatSession(session));
 
-        // Navigate to the session's chat route
         navigate(`/chat/${session.session_id}`);
     };
 
     return (
-        <nav className="flex flex-col gap-1 p-2 font-sans text-base font-normal text-blue-gray-700 flex-grow ">
-            <div className="flex flex-col max-h-[54vh] overflow-y-auto">
+        <nav className="flex flex-col gap-1 p-2 font-sans text-base font-normal text-blue-gray-700">
+            <div className="flex flex-col h-[50vh] overflow-y-auto">
             {sessions.map((session) => (
                 <div
                     key={session.session_id}
@@ -46,14 +44,14 @@ const ChatList: React.FC = () => {
                 </div>
             ))}
             </div>
-            <div className="mt-auto">
+            <div className="mt-auto max-h-[50%] overflow-y-auto">
                 <hr className=" border-gray-200 pt-1" />
 
                 {bottomItems.map((item) => (
                     <Link
                         key={item.name}
-                        to={item.path}
-                        className={`flex items-center w-full p-3  leading-tight transition-all  outline-none text-start font-normal rounded-md  ${location.pathname === item.path
+                        to={item.name}
+                        className={`flex items-center w-full p-3  leading-tight transition-all  outline-none text-start font-normal rounded-md  ${location.pathname === item.name
                             ? "bg-primary text-white"
                             : "hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
                             }`}

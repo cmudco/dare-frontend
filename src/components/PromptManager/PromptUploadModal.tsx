@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Typography, Select, Option, Chip, Input } from '@material-tailwind/react';
 import { RootState, AppDispatch } from '../../redux/store';
 import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename } from '../../redux/fileSlice';
-import { uploadNewFile } from '../../redux/aynscThunks/file';
+
 
 const availableTags = ["Review", "Important", "Info", "Personal", "Work"];
 
@@ -14,7 +14,6 @@ const PromptUploadModal: React.FC = () => {
   );
 
   const handleUploadClick = () => {
-    dispatch(uploadNewFile());
     dispatch(resetSelectedTags());
     dispatch(closeModal());
   };
@@ -58,7 +57,6 @@ const PromptUploadModal: React.FC = () => {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >
-        {/* File Name Input */}
         <Input
           label="File Name"
           value={filename}
@@ -66,7 +64,6 @@ const PromptUploadModal: React.FC = () => {
           onChange={(e) => dispatch(updateFilename(e.target.value))}
         />
 
-        {/* Tag Management */}
         <div className="flex flex-col gap-2">
           <Select
             label="Add Tags"
@@ -94,7 +91,6 @@ const PromptUploadModal: React.FC = () => {
           </div>
         </div>
 
-        {/* File Upload Section */}
         <div className="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center bg-blue-50 hover:bg-blue-100 transition cursor-pointer">
           <div
             onClick={() => document.getElementById("fileInput")?.click()}

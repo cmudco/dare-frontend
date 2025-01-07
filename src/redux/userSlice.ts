@@ -1,16 +1,16 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { initialState } from "./initialState/user";
 import {
-  firebaseLogin,
+  loginWithFirebase,
   forgotPassword,
-  login,
-  register,
+  userLogin,
+  userRegister,
   resendEmailVerification,
   resetPassword,
   setup2FA,
   verifyCode,
   fetchUserData,
-  logoutUser,
+  userLogout,
 } from "./aynscThunks/user";
 
 const userSlice = createSlice({
@@ -18,7 +18,6 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     updateUser(state, action) {
-      console.log(action)
       state.user = action.payload
     },
     logout(state) {
@@ -31,11 +30,11 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(firebaseLogin.pending, (state) => {
+      .addCase(loginWithFirebase.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(firebaseLogin.fulfilled, (state, action) => {
+      .addCase(loginWithFirebase.fulfilled, (state, action) => {
         state.firebaseUid = action.payload.firebaseUid;
         state.loading = false;
         state.user = {
@@ -45,36 +44,45 @@ const userSlice = createSlice({
         state.isAuthenticated = true;
         state.error = null;
       })
-      .addCase(firebaseLogin.rejected, (state, action) => {
+      .addCase(loginWithFirebase.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(login.pending, (state) => {
+      .addCase(userLogin.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(login.fulfilled, (state, action) => {
+      .addCase(userLogin.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
         state.temp_token = action.payload.temp_token;
       })
-      .addCase(login.rejected, (state, action) => {
+      .addCase(userLogin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(register.pending, (state) => {
+
+      .addCase(userLogout.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.token = "";
+        state.temp_token = "";
+        state.firebaseUid = "";
+      })
+
+      .addCase(userRegister.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(register.fulfilled, (state, action) => {
+      .addCase(userRegister.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
       })
-      .addCase(register.rejected, (state, action) => {
+      .addCase(userRegister.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
@@ -156,15 +164,6 @@ const userSlice = createSlice({
         state.userLoading = false
         state.error = action.payload as string;
       })
-      .addCase(logoutUser.fulfilled, (state) => {
-        state.user = null;
-        state.isAuthenticated = false;
-        state.token = "";
-        state.temp_token = "";
-        state.firebaseUid = "";
-      });
-
-
   },
 });
 

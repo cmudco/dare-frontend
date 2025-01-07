@@ -11,7 +11,9 @@ const UserView: React.FC = () => {
         <SideBar />
         <div className='flex-grow overflow-auto '>
           <Outlet />
+
         </div>
+
       </div>
     </div>
   );

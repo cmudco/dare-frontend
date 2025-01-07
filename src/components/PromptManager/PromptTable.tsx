@@ -98,12 +98,7 @@ const PromptTable = () => {
                                                 <IconButton
                                                     variant='text'
                                                     onClick={() => {
-                                                        // dispatch(openEditModal({
-                                                        //  file, tags,
-                                                        //     directory: "",
-                                                        //     file_size: "",
-                                                        //     uploaded_at: ""
-                                                        // }));
+                                                       
                                                     }}
                                                 >
                                                     <PencilIcon className='h-4 w-4' />

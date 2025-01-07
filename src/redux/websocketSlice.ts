@@ -8,7 +8,6 @@ const websocketSlice = createSlice({
   initialState,
   reducers: {
     setConnectionStatus(state, action: PayloadAction<boolean>) {
-      console.log('Setting connection status:', action.payload);
       state.isConnected = action.payload;
     },
     setWebSocketError(state, action: PayloadAction<string | null>) {
@@ -18,7 +17,6 @@ const websocketSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(connectWebSocket.fulfilled, (state) => {
-        console.log("WebSocket connection established");
         state.isConnected = true;
         state.error = null;
       })
