@@ -4,6 +4,9 @@ import { ChatMessage } from '../types/chat';
 import { AppDispatch, RootState } from '../store';
 import { setConnectionStatus } from '../websocketSlice';
 import { handleDataHistory,  } from '../../services/socketService';
+import { WEBSOCKET_URL } from '../../api/config';
+
+
 
 
 let socket: WebSocket | null = null;
@@ -18,7 +21,7 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
       partialBuffer = '';
       currentMessageId = Date.now().toString();
 
-      const socketUrl = `${import.meta.env.VITE_WEBSOCKET_URL}/?api_key=${encodeURIComponent(apiKey)}&session_id=${sessionId}&jwt_key=${encodeURIComponent(jwtKey)}`;
+      const socketUrl = `${WEBSOCKET_URL}/?api_key=${encodeURIComponent(apiKey)}&session_id=${sessionId}&jwt_key=${encodeURIComponent(jwtKey)}`;
       socket = new WebSocket(socketUrl);
 
       socket.onopen = () => {

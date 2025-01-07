@@ -1,11 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import AuthCard from "../../components/AuthCard";
 import { initialValues, validationSchema } from "./validation";
 import { FormikValues } from "formik";
-import { AppDispatch, RootState } from "../../redux/store";
-import { fetchUserData, verifyCode } from "../../redux/aynscThunks/user";
+import { AppDispatch,  } from "../../redux/store";
+import {  verifyCode } from "../../redux/aynscThunks/user";
 import { fetchUserDataFromAPI } from "../../api";
 import { updateUser } from "../../redux/userSlice";
 

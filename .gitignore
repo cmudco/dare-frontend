@@ -27,6 +27,7 @@ dist-ssr
 *.vscode
 *.vite
 
-.env
+
+.env*
 
 package-lock.json

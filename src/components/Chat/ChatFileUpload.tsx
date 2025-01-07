@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { DocumentIcon, MagnifyingGlassIcon, AdjustmentsVerticalIcon } from "@heroicons/react/24/outline";
 import { RootState, AppDispatch } from "../../redux/store";
 import { getFiles } from "../../redux/aynscThunks/file";
-import { closeModal, openModal } from "../../redux/fileSlice";
 import { updateSelectedFiles } from "../../redux/chatSlice";
 import { MyFile } from "../../redux/types/files";
 import { FolderIcon } from "@heroicons/react/24/solid";

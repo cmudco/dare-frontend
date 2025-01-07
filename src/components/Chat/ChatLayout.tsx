@@ -4,7 +4,7 @@ import ActiveChat from "./ActiveChat";
 
 const ChatLayout: React.FC = () => {
   return (
-    <div className='flex pt-[5.25rem] h-full bg-white'>
+    <div className='flex  pt-[5.25rem] h-full'>
       <ActiveChat />
       <ChatHistory />
     </div>
