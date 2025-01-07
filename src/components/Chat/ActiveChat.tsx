@@ -8,19 +8,21 @@ import { useParams } from "react-router-dom";
 import { updateChatInput, updateChatSession } from "../../redux/chatSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
-import { getModelConfig } from "../../services/getSelectedModel";
+// import { getModelConfig } from "../../services/getSelectedModel";
 
 
 const ActiveChat: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const activeChat = useSelector((state: RootState) => state.chat?.activeChat);
-  const selectedModel = useSelector((state: RootState) => state.chat?.selectedModel);
+  // const selectedModel = useSelector((state: RootState) => state.chat?.selectedModel);
 
   const { id } = useParams<{ id: string }>();
   const sessions = useSelector((state: RootState) => state.chat?.sessions || []);
-  const apiKey = getModelConfig(selectedModel || "");
+  // const apiKey = getModelConfig(selectedModel || "");
   const token = localStorage.getItem("token");
   const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
+  const apiKey = useSelector((state: RootState) => state.chat.apiKey);
+
 
   useEffect(() => {
     if (id) {
@@ -60,7 +62,7 @@ const ActiveChat: React.FC = () => {
 
   return (
     <Card className="flex flex-col w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  ">
-      <div className={`flex flex-col justify-between ${activeChat ? "h-full" : ""}`}>
+      <div className={`flex flex-col justify-between ${activeChat ? "h-full" : "h-[50vh]"}`}>
         {!activeChat && <NewChat />}
         {activeChat && <MessageList />}
         <ChatPill />

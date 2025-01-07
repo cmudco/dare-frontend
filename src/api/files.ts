@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getErrorMessage } from "../utils/errorHandler";
+import { BASE_URL } from "./config";
 
-const BASE_URL = import.meta.env.VITE_DJANGO_BACKEND_URL;
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,

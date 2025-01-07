@@ -54,6 +54,9 @@ export const chatSlice = createSlice({
     setAvailableModels(state, action: PayloadAction<{ id: string; name: string; description: string }[]>) {
       state.availableModels = action.payload;
     },
+    setApiKey(state, action: PayloadAction<string>) {
+      state.apiKey = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -85,5 +88,5 @@ export const chatSlice = createSlice({
   },
 });
 
-export const { updateSearchQuery, createNewChat, updateChatSession, updateSelectedModel, updateSelectedFiles, toggleDropdown, setHoveredModel, updateChatInput, addMessage, clearChat, updateMessage, setAvailableModels } = chatSlice.actions;
+export const { updateSearchQuery, createNewChat, updateChatSession, updateSelectedModel, updateSelectedFiles, toggleDropdown, setHoveredModel, updateChatInput, addMessage, clearChat, updateMessage, setAvailableModels, setApiKey } = chatSlice.actions;
 export default chatSlice.reducer;

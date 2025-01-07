@@ -13,4 +13,5 @@ export const initialState: ChatState = {
   hoveredModel: null,
   chatInput: "",
   availableModels: [],
+  apiKey: "",
 };

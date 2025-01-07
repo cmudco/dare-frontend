@@ -16,6 +16,7 @@ const ChatPill: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const chatInput = useSelector((state: RootState) => state.chat.chatInput);
   const activeChat = useSelector((state: RootState) => state.chat.activeChat);
+  const apiKey = useSelector((state: RootState) => state.chat.apiKey);
   const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
   const navigate = useNavigate();
 
@@ -33,8 +34,8 @@ const ChatPill: React.FC = () => {
       date: new Date().toISOString(),
     };
 
-    if (!activeChat) {
-      const newSessionId = Date.now(); 
+    if (!activeChat && apiKey) {
+      const newSessionId = Date.now();
       dispatch(createNewChat({ session_id: newSessionId.toString() }));
       dispatch(updateChatSession({ session_id: newSessionId.toString(), created_at: new Date().toISOString() }));
       navigate(`/chat/${newSessionId}`);

@@ -32,4 +32,5 @@ export interface ChatState {
   hoveredModel: string | null;
   chatInput: string;
   availableModels: { id: string; name: string; description: string }[];
+  apiKey: string;
 }
