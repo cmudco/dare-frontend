@@ -8,7 +8,6 @@ const MessageList = () => {
   const messageEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Scroll to the bottom whenever messages are updated
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -20,7 +19,6 @@ const MessageList = () => {
       {messages.map((message, idx) => (
         message && <Message key={idx} message={message} />
       ))}
-      {/* Ref div to handle scrolling */}
       <div ref={messageEndRef} />
     </div>
   );

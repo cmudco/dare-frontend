@@ -1,8 +1,13 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { addMessage, clearChat, updateMessage } from '../chatSlice';
+import { clearChat, updateMessage } from '../chatSlice';
 import { ChatMessage } from '../types/chat';
 import { AppDispatch, RootState } from '../store';
 import { setConnectionStatus } from '../websocketSlice';
+import { handleDataHistory,  } from '../../services/socketService';
+import { WEBSOCKET_URL } from '../../api/config';
+
+
+
 
 let socket: WebSocket | null = null;
 let partialBuffer = '';
@@ -16,12 +21,8 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
       partialBuffer = '';
       currentMessageId = Date.now().toString();
 
-      console.log('Connecting to WebSocket...');
-      console.log('WebSocket state:', socket?.readyState);
-      const socketUrl = `ws://localhost:8000/ws/claude/?api_key=${encodeURIComponent(apiKey)}&session_id=${sessionId}&jwt_key=${encodeURIComponent(jwtKey)}`;
+      const socketUrl = `${WEBSOCKET_URL}/?api_key=${encodeURIComponent(apiKey)}&session_id=${sessionId}&jwt_key=${encodeURIComponent(jwtKey)}`;
       socket = new WebSocket(socketUrl);
-      console.log('WebSocket connecting to:', socketUrl);
-      console.log('WebSocket state:', socket.readyState);
 
       socket.onopen = () => {
         resolve();
@@ -29,39 +30,12 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
 
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log('WebSocket message received:', data);
 
         try {
-          if (data.history) {
-            data.history.forEach((msg: { user_message: string; bot_response: string }) => {
-              const baseTimestamp = Date.now();
-
-              if (msg.user_message?.trim()) {
-                dispatch(addMessage({
-                  id: baseTimestamp.toString(),
-                  message: msg.user_message,
-                  isSender: true,
-                  date: new Date(baseTimestamp).toISOString(),
-                }));
-              }
-
-              if (msg.bot_response?.trim()) {
-                dispatch(addMessage({
-                  id: (baseTimestamp + 1).toString(),
-                  message: msg.bot_response,
-                  isSender: false,
-                  date: new Date(baseTimestamp + 1).toISOString(),
-                }));
-              }
-            });
-            return;
-          }
-          // Handle streaming response
+          handleDataHistory(data, dispatch);
 
           if (data.title || data.partial_response) {
             const messageId = currentMessageId || Date.now().toString();
-            console.log('Message ID:', messageId);
-            console.log('Data:', data);
 
 
             if (data.title) {
@@ -90,11 +64,9 @@ export const connectWebSocket = createAsyncThunk<void, { apiKey: string; session
               streaming: true
             }));
 
-            // Check for end of response
             return;
           }
 
-          // Handle errors
           if (data.error) {
             console.error('WebSocket error:', data.error);
             if (currentMessageId) {
@@ -131,7 +103,7 @@ export const sendWebSocketMessage = createAsyncThunk<void, ChatMessage, { dispat
     const state = getState();
     const file_paths = state.chat.selectedFiles
       .map((msg) => msg.file_name);
-    console.log(file_paths)
+
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({
         prompt: message.message,
@@ -152,7 +124,6 @@ export const disconnectWebSocket = createAsyncThunk<void, void, { dispatch: AppD
         socket.onclose = () => {
           socket = null;
           dispatch(setConnectionStatus(false));
-          partialBuffer = '';
           resolve();
         };
         socket.close();

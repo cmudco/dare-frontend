@@ -1,38 +1,29 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updateSelectedModel, toggleDropdown, setHoveredModel } from "../../redux/chatSlice";
+import { toggleDropdown, setApiKey } from "../../redux/chatSlice";
 import { AppDispatch, RootState } from "../../redux/store";
-import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { fetchAvailableModels } from "../../redux/aynscThunks/chat";
+
+import { getAvailableModels } from "../../redux/aynscThunks/chat";
 
 const ModelPicker: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const showDropdown = useSelector((state: RootState) => state.chat.showDropdown);
-  const hoveredModel = useSelector((state: RootState) => state.chat.hoveredModel);
-  const selectedModel = useSelector((state: RootState) => state.chat.selectedModel);
-  const models = useSelector((state: RootState) => state.chat.availableModels); // Fetch models from Redux state
+  // const hoveredModel = useSelector((state: RootState) => state.chat.hoveredModel);
+  // const selectedModel = useSelector((state: RootState) => state.chat.selectedModel);
+  // const models = useSelector((state: RootState) => state.chat.availableModels);
+  const apiKey = useSelector((state: RootState) => state.chat.apiKey);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const [inputApiKey, setInputApiKey] = useState<string>("");
 
   useEffect(() => {
-    dispatch(fetchAvailableModels());
-  }, [dispatch]);
+    if (apiKey) {
+      dispatch(getAvailableModels());
+    }
+  }, [dispatch, apiKey]);
 
   const handleModelPickerClick = () => {
     dispatch(toggleDropdown());
-  };
-
-  const handleModelChange = (model: string) => {
-    dispatch(updateSelectedModel(model));
-    dispatch(toggleDropdown());
-  };
-
-  const handleMouseEnter = (modelId: string) => {
-    dispatch(setHoveredModel(modelId));
-  };
-
-  const handleMouseLeave = () => {
-    dispatch(setHoveredModel(null));
   };
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -44,6 +35,21 @@ const ModelPicker: React.FC = () => {
     ) {
       dispatch(toggleDropdown());
     }
+  };
+
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputApiKey(e.target.value);
+  };
+
+  const handleApiKeySubmit = () => {
+    if (inputApiKey.trim() !== "") {
+      dispatch(setApiKey(inputApiKey));
+    }
+  };
+
+  const handleApiKeyReset = () => {
+    dispatch(setApiKey(""));
+    setInputApiKey("");
   };
 
   useEffect(() => {
@@ -72,26 +78,34 @@ const ModelPicker: React.FC = () => {
           className="absolute right-0 bottom-full mb-2 bg-white border rounded-md p-6 w-hug whitespace-nowrap"
           style={{ boxShadow: "1.85px 1.85px 4.63px 0px #EE183C29, -1.85px -1.85px 4.63px 0px #EE183C29" }}
         >
-          <h3 className="text-lg text-black font-bold flex items-center mb-2">
-            Model
-          </h3>
-          {models.map((model) => (
-            <div
-              key={model.id}
-              onMouseEnter={() => handleMouseEnter(model.name)}
-              onMouseLeave={handleMouseLeave}
-              onClick={() => handleModelChange(model.name)}
-              className={`w-full text-left text-md px-4 py-2 text-black font-thin flex items-center justify-between cursor-pointer rounded-md ${hoveredModel === model.id ? 'bg-gray-100' : ''}`}
-            >
-              <div className="flex flex-col truncate">
-                <div className="font-normal text-sm truncate">{model.name}</div>
-                {/* <div className="text-xs text-black font-extrathin truncate">{model.description}</div> */}
-              </div>
-              {selectedModel === model.name && (
-                <CheckCircleIcon className="w-6 h-6 flex-shrink-0" />
-              )}
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg text-black font-bold flex items-center">
+              Model
+            </h3>
+            {apiKey && (
+              <button
+                onClick={handleApiKeyReset}
+                className="p-2 bg-primary text-white rounded-2xl"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+            <div className="flex flex-col items-center">
+              <input
+                type="text"
+                placeholder="Enter API Key"
+                value={inputApiKey}
+                onChange={handleApiKeyChange}
+                className="mb-2 p-2 border rounded"
+              />
+              <button
+                onClick={handleApiKeySubmit}
+                className="p-2 bg-primary text-white rounded"
+              >
+                Submit
+              </button>
             </div>
-          ))}
         </div>
       )}
     </div>

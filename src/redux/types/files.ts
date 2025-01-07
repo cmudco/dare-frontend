@@ -13,7 +13,6 @@ export interface FileState {
   loading: boolean;
   error: string | null;
   selectedTags: string[];
-  selectedFiles: File | null;
   isModalOpen: boolean;
   filename: string;
 }

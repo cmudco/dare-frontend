@@ -11,6 +11,7 @@ export interface NewChatPayload {
 }
 
 export interface ChatMessage {
+  id: string;
   message: string;
   isSender: boolean;
   date: string;
@@ -25,10 +26,11 @@ export interface ChatState {
   error: string | null;
   searchQuery: string;
   activeChatMessages: ChatMessage[];
-  selectedModel: string; // New property
+  selectedModel: string;
   selectedFiles: MyFile[];
-  showDropdown: boolean; // New property
-  hoveredModel: string | null; // New property
-  chatInput: string; // New property
-  availableModels: { id: string; name: string; description: string }[]; // New property
+  showDropdown: boolean;
+  hoveredModel: string | null;
+  chatInput: string;
+  availableModels: { id: string; name: string; description: string }[];
+  apiKey: string;
 }

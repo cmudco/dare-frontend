@@ -8,7 +8,7 @@ import ModelPicker from "./ModelPicker";
 import PromptSet from "./PromptSet";
 import { ChatMessage } from "../../redux/types/chat";
 import { useNavigate } from "react-router-dom";
-import { fetchDummyMessage } from "../../redux/aynscThunks/chat";
+import { sendMessage } from "../../redux/aynscThunks/chat";
 import ChatFileUpload from "./ChatFileUpload";
 import { useEffect } from "react";
 
@@ -16,6 +16,7 @@ const ChatPill: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const chatInput = useSelector((state: RootState) => state.chat.chatInput);
   const activeChat = useSelector((state: RootState) => state.chat.activeChat);
+  const apiKey = useSelector((state: RootState) => state.chat.apiKey);
   const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
   const navigate = useNavigate();
 
@@ -27,22 +28,22 @@ const ChatPill: React.FC = () => {
     if (chatInput.trim() === "") return;
 
     const newMessage: ChatMessage = {
+      id: Date.now().toString(),
       message: chatInput,
       isSender: true,
       date: new Date().toISOString(),
     };
 
-    if (!activeChat) {
-      const newSessionId = Date.now(); // Use timestamp as session ID
+    if (!activeChat && apiKey) {
+      const newSessionId = Date.now();
       dispatch(createNewChat({ session_id: newSessionId.toString() }));
       dispatch(updateChatSession({ session_id: newSessionId.toString(), created_at: new Date().toISOString() }));
       navigate(`/chat/${newSessionId}`);
     } else {
       console.log('Sending message:', newMessage);
-      dispatch(fetchDummyMessage(newMessage));
+      dispatch(sendMessage(newMessage));
       dispatch(updateChatInput(""));
     }
-
   };
 
   useEffect(() => {
@@ -50,14 +51,15 @@ const ChatPill: React.FC = () => {
 
     if (isConnected) {
       const newMessage: ChatMessage = {
+        id: Date.now().toString(),
         message: chatInput,
         isSender: true,
         date: new Date().toISOString(),
       };
-      dispatch(fetchDummyMessage(newMessage));
+      dispatch(sendMessage(newMessage));
       dispatch(updateChatInput(""));
     }
-  },[isConnected, dispatch]);
+  }, [isConnected, dispatch]);
 
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -65,8 +67,6 @@ const ChatPill: React.FC = () => {
       handleSendMessage();
     }
   };
-
-
 
   return (
     <div className="flex flex-col justify-end">
