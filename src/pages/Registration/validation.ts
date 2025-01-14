@@ -30,8 +30,4 @@ export const validationSchema = Yup.object({
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password"), undefined], "Password does not match")
     .required("Confirm password is required"),
-  accessCode: Yup.string()
-    .required("Enter an access code")
-    .matches(/^\d+$/, "Invalid access code. Please try again")
-    .length(6, "The access code you entered is incorrect. Try again"),
 });
