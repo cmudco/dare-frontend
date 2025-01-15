@@ -15,7 +15,7 @@ const axiosInstance = axios.create({
 
 export const getChatSessionsAPI = async () => {
   try {
-    const response = await axiosInstance.get<ChatSession[]>("/api/claude/chat/sessions/", {
+    const response = await axiosInstance.get<ChatSession[]>("/claude/chat/sessions/", {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         Accept: "application/json",
@@ -34,7 +34,7 @@ export const getModelsAPI = async () => {
   }
 
   try {
-    const response = await axiosInstance.get("/api/claude/llms/", {
+    const response = await axiosInstance.get("/claude/llms/", {
       headers: {
         Authorization: `Bearer ${token}`,
       },

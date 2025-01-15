@@ -17,7 +17,7 @@ const getAuthToken = () => {
 
 export const fetchFiles = async () => {
   try {
-    const response = await axiosInstance.get("/api/files/", {
+    const response = await axiosInstance.get("/files/", {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -31,7 +31,7 @@ export const fetchFiles = async () => {
 export const uploadFile = async (data: FormData) => {
   try {
     const token = getAuthToken();
-    const response = await axiosInstance.post("/api/upload/", data, {
+    const response = await axiosInstance.post("/upload/", data, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
@@ -45,7 +45,7 @@ export const uploadFile = async (data: FormData) => {
 
 export const archiveFileAPI = async (id: number) => {
   try {
-    const response = await axiosInstance.post(`/api/archive/${id}/`, null, {
+    const response = await axiosInstance.post(`/archive/${id}/`, null, {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
