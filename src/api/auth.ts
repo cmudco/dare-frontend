@@ -42,7 +42,7 @@ export const registerUser = async (data: {
 
 export const forgotPasswordUser = async (data: { email: string }) => {
   try {
-    const response = await axiosInstance.post("/api/auth/forgot-password/", data);
+    const response = await axiosInstance.post("/auth/forgot-password/", data);
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
