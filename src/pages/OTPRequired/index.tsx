@@ -3,13 +3,16 @@ import { useDispatch } from "react-redux";
 import AuthCard from "../../components/AuthCard";
 import { AppDispatch } from "../../redux/store";
 import { setup2FA } from "../../redux/aynscThunks/user";
+import { fetchUserDataFromAPI } from "../../api";
+import { updateUser } from "../../redux/userSlice";
 
 const OTPRequired = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>(); 
+  const dispatch = useDispatch<AppDispatch>();
 
-  const handleSkip = () => {
-    
+  const handleSkip = async () => {
+    const user = await fetchUserDataFromAPI()
+    dispatch(updateUser(user))
     navigate("/dashboard");
   };
 
@@ -29,7 +32,7 @@ const OTPRequired = () => {
       inputs={[]}
       initialValues={{}}
       validationSchema={{}}
-      onSubmit={() => {}}
+      onSubmit={() => { }}
       buttonText=''
       showBackButton={false}
       footer={null}

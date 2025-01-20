@@ -13,23 +13,23 @@ export const getFiles = createAsyncThunk("files/getFiles", async (_, thunkAPI) =
 
 export const uploadNewFile = createAsyncThunk(
   "files/uploadNewFile",
-  async ({ file }: { file: File }, thunkAPI) => {
+  async ({ files }: { files: File[] }, thunkAPI) => {
     const state = thunkAPI.getState() as RootState;
-    const { selectedTags, filename } = state.files;
+    const { selectedTags } = state.files;
 
     const formData = new FormData();
-    formData.append("file", file); 
-    formData.append("directory", selectedTags.join("/"));
-    formData.append("filename", filename);
+    files.forEach((file) => formData.append("files[]", file)); // Use 'files[]' as the key
+    formData.append("directory", selectedTags.join("/")); // Set directory path from selectedTags
 
     try {
-      const response = await uploadFile(formData);
-      return response;
+      const response = await uploadFile(formData); // API call
+      return response.data; // Assuming response contains the uploaded file data
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message);
     }
   }
 );
+
 
 export const archiveFile = createAsyncThunk("files/archiveFile", async (id: number, thunkAPI) => {
   try {
