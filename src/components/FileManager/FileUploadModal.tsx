@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Typography, Select, Option, Chip, Input } from '@material-tailwind/react';
 import { RootState, AppDispatch } from '../../redux/store';
 import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename } from '../../redux/fileSlice';
-import { uploadNewFile } from '../../redux/aynscThunks/file';
+import { getFiles, uploadNewFile } from '../../redux/aynscThunks/file';
 
 const availableTags = ["Review", "Important", "Info", "Personal", "Work"];
 
@@ -14,11 +14,12 @@ const FileUploadModal: React.FC = () => {
     (state: RootState) => state.files
   );
 
-  const handleUploadClick = () => {
+  const handleUploadClick = async () => {
     if (selectedFile) {
-      dispatch(uploadNewFile({ file: selectedFile }));
+      await dispatch(uploadNewFile({ files: [selectedFile] }));
       dispatch(resetSelectedTags());
       dispatch(closeModal());
+      dispatch(getFiles())
     } else {
       console.error("No file selected");
     }

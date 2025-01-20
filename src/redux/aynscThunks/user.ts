@@ -31,7 +31,7 @@ export const loginWithFirebase = createAsyncThunk(
       const firebaseUser = userCredential.user;
       const idToken = await firebaseUser.getIdToken();
 
-      localStorage.setItem("authToken", idToken);
+      // localStorage.setItem("authToken", idToken);
 
       return {
         idToken,
@@ -120,8 +120,8 @@ export const verifyCode = createAsyncThunk(
   async (otp: string, thunkAPI) => {
     try {
       const state = thunkAPI.getState() as { user: UserState };
-      const { temp_token } = state.user;
-      const data = await verifyCodeUser({ otp: otp, temp_token: temp_token });
+      const { token } = state.user;
+      const data = await verifyCodeUser({ otp: otp, temp_token: token });
       return data;
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message);
@@ -175,9 +175,9 @@ export const setup2FA = createAsyncThunk(
   "user/setup2FA",
   async (_, thunkAPI) => {
     const state = thunkAPI.getState() as { user: UserState };
-    const { temp_token } = state.user;
+    const { token } = state.user;
     try {
-      const data = await setup2FAAPI({ temp_token, skip_2fa: false });
+      const data = await setup2FAAPI({ temp_token:token, skip_2fa: false });
       return data;
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message);
