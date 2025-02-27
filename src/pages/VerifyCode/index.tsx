@@ -1,13 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import AuthCard from "../../components/AuthCard";
-import { initialValues, validationSchema } from "./validation";
+import AuthCard from "../../components/Auth/AuthCard";
 import { FormikValues } from "formik";
-import { AppDispatch,  } from "../../redux/store";
-import {  verifyCode } from "../../redux/aynscThunks/user";
+import { AppDispatch, } from "../../redux/store";
+import { verifyCode } from "../../redux/aynscThunks/user";
 import { fetchUserDataFromAPI } from "../../api";
 import { updateUser } from "../../redux/userSlice";
+import { verifyCodeInitialValues, verifyCodeValidationSchema } from "./validation";
 
 const VerifyCodeScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -27,14 +27,19 @@ const VerifyCodeScreen: React.FC = () => {
     }
   };
 
+  const formikConfig = {
+    initialValues: verifyCodeInitialValues,
+    validationSchema: verifyCodeValidationSchema,
+    onSubmit: handleSubmit,
+  };
+
+
   return (
     <AuthCard
       title='Verify Code'
       subtitle='An authentication code has been sent to your authenticator app.'
       inputs={[{ name: "otp", label: "Enter Code", type: "text" }]}
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      onSubmit={handleSubmit}
+      formikConfig={formikConfig}
       buttonText='Verify'
       showBackButton
     />

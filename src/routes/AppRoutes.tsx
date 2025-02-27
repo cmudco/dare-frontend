@@ -16,7 +16,8 @@ import Prompt from "../pages/Prompts";
 import ProtectedRoute from "./ProtectedRoute";
 
 import Help from "../pages/Help";
-import Settings from "../pages/Settings.tsx";
+import Settings from "../pages/Settings/index.tsx";
+import VerifyEmailScreen from "@/pages/VerifyEmail/index.tsx";
 
 
 const AppRoutes = () => {
@@ -26,6 +27,7 @@ const AppRoutes = () => {
         <Routes>
           <Route path='/login' element={<LoginScreen />} />
           <Route path='/register' element={<RegistrationScreen />} />
+          <Route path='/users/confirm-email' element={<VerifyEmailScreen />} />
           <Route path='/forgot-password' element={<ForgotScreen />} />
           <Route path='/verify-code' element={<VerifyScreen />} />
           <Route path='/reset-password' element={<ResetScreen />} />

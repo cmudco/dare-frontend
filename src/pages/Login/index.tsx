@@ -1,81 +1,53 @@
-import React from "react";
-import AuthCard from "../../components/AuthCard";
-import AuthFormFooter from "../../components/AuthFormFooter";
-import { initialValues, validationSchema } from "./validation";
-import { FormikValues } from "formik";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../../redux/store";
+import React, { useEffect } from "react";
+import AuthCard from "../../components/Auth/AuthCard";
+import AuthFormFooter from "../../components/Auth/AuthFormFooter";
+import { LoginFormValues, loginInitialValues, loginValidationSchema } from "./validation";
+// import { FormikValues } from "formik";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
-import { loginWithFirebase, verifyEmail, userLogin, resendEmailVerification } from "../../redux/aynscThunks/user";
+import { fetchUserData, userLogin } from "../../redux/aynscThunks/user";
+import { resetError } from "../../redux/userSlice";
+import { useAppSelector } from "../../redux/hooks";
 
 const LoginScreen: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const error = useSelector((state: RootState) => state.user.error);
-  const handleSubmit = async (values: FormikValues) => {
-    const loginData = {
-      email: values.emailOrUsername,
-      password: values.password,
-    };
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error, user } = useAppSelector((state) => state.user)
 
-    const resultAction = await dispatch(loginWithFirebase(loginData));
+  useEffect(() => {
+    dispatch(resetError())
+  }, [dispatch])
 
-    if (!loginWithFirebase.fulfilled.match(resultAction)) {
-      return;
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true })
     }
+  }, [user, navigate])
 
-    const emailAction = await dispatch(
-      verifyEmail({ firebase_uid: resultAction.payload.firebaseUid })
-    );
+  const handleSubmit = async (values: LoginFormValues) => {
 
-    if (!verifyEmail.fulfilled.match(emailAction)) {
-      return;
+    try {
+      dispatch(userLogin(values)).unwrap;
+      dispatch(fetchUserData()).unwrap;
+    } catch (error) {
+      console.error('Login failed:', error);
     }
-
-    const loginAction = await dispatch(
-      userLogin({
-        id_token: resultAction.payload.idToken,
-        email: loginData.email,
-        password: loginData.password,
-      })
-    );
-
-    if (!userLogin.fulfilled.match(loginAction)) {
-      return;
-    }
-
-    handleLoginSuccess(loginAction.payload);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleLoginSuccess = (payload: any) => {
-    if (payload.setup_2fa_required) {
-      navigate("/otp-required");
-    } else if (payload.otp_required) {
-      navigate("/verify-code");
-    } else {
-      navigate("/dashboard");
-    }
-  };
-
-  const handleResendVerification = async () => {
-    const loginData = {
-      email: initialValues.emailOrUsername,
-      password: initialValues.password,
-    };
-    await dispatch(resendEmailVerification(loginData));
+  }
+  const formikConfig = {
+    initialValues: loginInitialValues,
+    validationSchema: loginValidationSchema,
+    onSubmit: handleSubmit,
   };
 
   return (
-    <AuthCard
+    <AuthCard<LoginFormValues>
       title='Sign In to Dare Platform'
       inputs={[
-        { name: "emailOrUsername", label: "Username/Email", type: "text" },
+        { name: "email", label: "Email", type: "email" },
         { name: "password", label: "Password", type: "password" },
       ]}
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      onSubmit={handleSubmit}
+      formikConfig={formikConfig}
       buttonText='Sign In'
       showForgotPassword={true}
       footer={
@@ -87,7 +59,8 @@ const LoginScreen: React.FC = () => {
           />
           {error && (
             <button
-              onClick={handleResendVerification}
+              // onClick={handleResendVerification}
+              disabled={loading}
               className='text-xs w-max mt-3 bg-gray-500 text-white py-2 px-4 rounded-md shadow-sm font-medium'
             >
               Resend Verification Email?

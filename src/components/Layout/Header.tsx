@@ -49,7 +49,7 @@ const Header: React.FC = () => {
               />
               <div className='flex flex-col mr-4 items-start normal-case'>
                 <span className='text-sm font-medium text-gray-900'>
-                  {user?.username || "John Doe"}
+                  {user?.name || "John Doe"}
                 </span>
                 <span className='text-xs text-gray-500 normal-case'>
                   {user?.email || "Loading..."}
