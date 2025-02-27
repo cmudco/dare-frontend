@@ -1,11 +1,13 @@
 import * as Yup from "yup";
 
-export const initialValues = {
-  otp: "",
+export type VerifyCodeFormValues = {
+    verifyCode: string;
 };
 
-export const validationSchema = Yup.object({
-  otp: Yup.string()
-    .required("Enter verification code")
-    .matches(/^\d+$/, "Incorrect verification code")
+export const verifyCodeInitialValues: VerifyCodeFormValues = {
+    verifyCode: "",
+};
+
+export const verifyCodeValidationSchema = Yup.object().shape({
+    verifyCode: Yup.string().required("Enter Code"),
 });

@@ -1,33 +1,33 @@
 import * as Yup from "yup";
 
-export const initialValues = {
-  username: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
-  accessCode: "",
+export type SignupFormValues = {
+    name: string;
+    email: string;
+    password1: string;
+    password2: string;
+    role: string;
 };
 
-export const validationSchema = Yup.object({
-  username: Yup.string()
-    .matches(
-      /^[a-zA-Z0-9]/,
-      "The first character should be a letter or number."
-    )
-    .matches(/[a-zA-Z0-9]$/, "The last character should be a letter or number.")
-    .matches(
-      /^[a-zA-Z0-9.]*$/,
-      "Sorry, only letters, numbers, periods (.) are allowed."
-    )
-    .required("Username is required"),
-  email: Yup.string()
-    .matches(/@/, "Please include an '@' in the email address")
-    .email("Please enter a valid email address")
-    .required("Enter an Email Address"),
-  password: Yup.string()
-    .required("Password is required")
-    .min(8, "Use 8 characters or more for your password"),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password"), undefined], "Password does not match")
-    .required("Confirm password is required"),
+export const signupInitialValues: SignupFormValues = {
+    name: "",
+    email: "",
+    password1: "",
+    password2: "",
+    role: "",
+};
+
+export const signupValidationSchema = Yup.object().shape({
+    name: Yup.string().required("Name is required"),
+    email: Yup.string()
+        .required("Please enter email address")
+        .email("Please enter a valid email"),
+    password1: Yup.string()
+        .min(8, "Use 8 characters or more for your password")
+        .required("Password is required"),
+    password2: Yup.string()
+        .oneOf([Yup.ref("password1")], "Password does not match")
+        .required("Confirm Password is required"),
+    role: Yup.string()
+        .oneOf(["professor", "student"], "Please select a role")
+        .required("Role is required"),
 });

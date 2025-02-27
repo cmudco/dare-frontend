@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import AuthCard from "../../components/AuthCard";
+import AuthCard from "../../components/Auth/AuthCard";
 import { initialValues, validationSchema } from "./validation";
 import { FormikValues } from "formik";
 import { AppDispatch } from "../../redux/store";

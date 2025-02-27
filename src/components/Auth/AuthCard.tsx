@@ -1,8 +1,8 @@
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import { Link, useNavigate } from "react-router-dom";
-import { Formik, Form, FormikValues } from "formik";
-import TextInput from "./UI/TextInput";
-import { RootState } from "../redux/store";
+import { Formik, Form, FormikConfig, FormikValues } from "formik";
+import TextInput from "../UI/TextInput";
+import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import { Spinner } from "@material-tailwind/react";
 
@@ -12,37 +12,33 @@ interface InputField {
   type: string;
 }
 
-interface AuthCardProps {
+interface AuthCardProps<T extends FormikValues> {
   title: string;
   subtitle?: string;
   inputs: InputField[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  validationSchema: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  initialValues: any;
-  onSubmit: (values: FormikValues) => void;
+  formikConfig: FormikConfig<T>;
   buttonText: string;
   showBackButton?: boolean;
   showForgotPassword?: boolean;
   showprivacyPolicy?: boolean;
   footer?: React.ReactNode;
   children?: React.ReactNode;
+  roleSelect?: React.ReactNode;
 }
 
-const AuthCard: React.FC<AuthCardProps> = ({
+const AuthCard = <T extends FormikValues>({
   title,
   subtitle,
   inputs,
-  initialValues,
-  validationSchema,
-  onSubmit,
+  formikConfig,
   buttonText,
   showBackButton = false,
   showForgotPassword = false,
   showprivacyPolicy = false,
   footer,
   children,
-}) => {
+  roleSelect,
+}: AuthCardProps<T>) => {
   const navigate = useNavigate();
   const error = useSelector((state: RootState) => state.user.error);
   const loading = useSelector((state: RootState) => state.user.loading);
@@ -72,9 +68,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
         {subtitle && <p className='text-center text-sm mb-6'>{subtitle}</p>}
         {children}
         <Formik
-          initialValues={initialValues}
-          validationSchema={validationSchema}
-          onSubmit={onSubmit}
+          {...formikConfig}
         >
           {({
             values,
@@ -102,6 +96,8 @@ const AuthCard: React.FC<AuthCardProps> = ({
                 />
               ))}
 
+              {roleSelect} 
+
               {showForgotPassword && (
                 <div className='flex justify-end text-sm mb-4'>
                   <Link
@@ -122,8 +118,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
                   {loading ? (
                     <Spinner
                       color='red'
-                      className='w-10'
-
+                      className='w-10' onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}
                     />
                   ) : (
                     buttonText
@@ -141,13 +136,15 @@ const AuthCard: React.FC<AuthCardProps> = ({
 
         {footer && <div className='mt-4'>{footer}</div>}
       </div>
-      {showprivacyPolicy && (
-        <p className='text-center text-sm text-gray-500 pt-10 '>
-          By signing up, you are agreeing to Dare's Terms of Service and Privacy
-          Policy.
-        </p>
-      )}
-    </div>
+      {
+        showprivacyPolicy && (
+          <p className='text-center text-sm text-gray-500 pt-10 '>
+            By signing up, you are agreeing to Dare's Terms of Service and Privacy
+            Policy.
+          </p>
+        )
+      }
+    </div >
   );
 };
 
