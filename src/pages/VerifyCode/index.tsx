@@ -33,12 +33,16 @@ const VerifyCodeScreen: React.FC = () => {
     onSubmit: handleSubmit,
   };
 
+  const inputs = [
+    { name: "otp", label: "Code", type: "text" },
+  ]
+
 
   return (
     <AuthCard
       title='Verify Code'
       subtitle='An authentication code has been sent to your authenticator app.'
-      inputs={[{ name: "otp", label: "Enter Code", type: "text" }]}
+      inputs={inputs}
       formikConfig={formikConfig}
       buttonText='Verify'
       showBackButton

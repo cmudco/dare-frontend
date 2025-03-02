@@ -6,7 +6,7 @@ import AuthFormFooter from "../../components/Auth/AuthFormFooter";
 import { AppDispatch } from "../../redux/store";
 import { userRegister } from "../../redux/aynscThunks/user";
 import { SignupFormValues, signupInitialValues, signupValidationSchema } from "./validation";
-import { useAppSelector } from "../../redux/hooks";
+
 import { resetError } from "../../redux/userSlice";
 
 import RoleSelectionScreen from "../../components/RoleSelect";
@@ -19,7 +19,7 @@ const RegistrationScreen: React.FC = () => {
     dispatch(resetError());
   }, [dispatch]);
 
-  const { loading, error } = useAppSelector((state) => state.user);
+
   const handleSubmit = async (values: SignupFormValues) => {
     const formData = {
       name: values.name,
@@ -30,7 +30,6 @@ const RegistrationScreen: React.FC = () => {
     };
 
     try {
-      
       const resultAction = await dispatch(userRegister(formData));
       if (userRegister.rejected.match(resultAction)) {
         return;
@@ -49,18 +48,20 @@ const RegistrationScreen: React.FC = () => {
     onSubmit: handleSubmit,
   };
 
+  const inputs = [
+    { name: "name", label: "Name", type: "text" },
+    { name: "email", label: "Email Address", type: "email" },
+    { name: "password1", label: "Password", type: "password" },
+    {
+      name: "password2",
+      label: "Confirm Password", type: "password",
+    },
+  ];
+
   return (
     <AuthCard<SignupFormValues>
       title='Create Account'
-      inputs={[
-        { name: "name", label: "Name", type: "text" },
-        { name: "email", label: "Email Address", type: "email" },
-        { name: "password1", label: "Password", type: "password" },
-        {
-          name: "password2",
-          label: "Confirm Password", type: "password",
-        },
-      ]}
+      inputs={inputs}
       formikConfig={formikConfig}
       buttonText='Create Account'
       showprivacyPolicy
@@ -71,8 +72,6 @@ const RegistrationScreen: React.FC = () => {
             route='/login'
             routeText='Log in'
           />
-          {error && <p className="text-red-500">{error}</p>}
-          {loading && <p>Loading...</p>}
         </>
       }
       roleSelect={<RoleSelectionScreen />}
