@@ -1,52 +1,69 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import AuthFormFooter from "../../components/Auth/AuthFormFooter";
-import { EmailConfirmationSchema, EmailConfirmationValues } from "./validation";
-import { FormikConfig } from "formik"; // Import Formik types
 import AuthCard from "../../components/Auth/AuthCard";
-
-interface EmailConfirmationFormValues {
-  verificationCode: string;
-}
+import * as Yup from "yup";
+import { AppDispatch } from "../../redux/store";
+import { resendVerification } from "../../redux/aynscThunks/user";
 
 const EmailConfirmationScreen: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
-  // const dispatch = useDispatch<AppDispatch>();
+  const email = location.state?.email;
+  const [resendSuccess, setResendSuccess] = useState(false);
 
-  const { email, password } = location.state || {};
+  useEffect(() => {
+    if (!email) {
+      navigate("/login", { replace: true });
+    }
+  }, [email, navigate]);
 
   const handleResendVerification = async () => {
-    const loginData = {
-      email,
-      password,
-    };
-    // await dispatch(resendEmailVerification(loginData));
+    try {
+      const resultAction = await dispatch(resendVerification({ email })).unwrap();
+      if (resendVerification.rejected.match(resultAction)) {
+        return;
+      }
+      setResendSuccess(true);
+    } catch (err) {
+      console.error("Failed to resend verification email:", err);
+    }
+  };
+
+  const handleSubmit = () => {
     navigate("/login");
   };
 
-  const handleSubmit = (values: EmailConfirmationFormValues) => {
-    console.log("Form submitted with values:", values);
-  };
-
-  const formikConfig: FormikConfig<EmailConfirmationFormValues> = {
-    initialValues: EmailConfirmationValues,
-    validationSchema: EmailConfirmationSchema,
+  const formikConfig = {
+    initialValues: {},
+    validationSchema: Yup.object({}),
     onSubmit: handleSubmit,
   };
 
   return (
-    <AuthCard<EmailConfirmationFormValues>
-      title='Email Confirmation'
-      subtitle='A verification link has been sent to your email. Please check your email and click on the link to verify your account.'
+    <AuthCard
+      title="Email Confirmation"
+      subtitle="A verification link has been sent to your email. Please check your email and click on the link to verify your account."
       inputs={[]}
       formikConfig={formikConfig}
-      buttonText='Back to login'
+      buttonText="Back to login"
       showBackButton={false}
-      footer={<AuthFormFooter
-        text="Didn't receive an email?"
-        routeText='Resend'
-        onClick={handleResendVerification} />}
+      footer={
+        <>
+          <AuthFormFooter
+            text="Didn't receive an email?"
+            routeText="Resend"
+            onClick={handleResendVerification}
+          />
+          {resendSuccess && (
+            <div className="text-xs w-max mt-3 bg-green-500 text-white py-2 px-4 rounded-md shadow-sm font-medium">
+              Verification email resent successfully.
+            </div>
+          )}
+        </>
+      }
     />
   );
 };

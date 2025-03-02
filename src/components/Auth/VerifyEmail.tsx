@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/hooks'
 import AuthCard from './AuthCard'
 import { verifyEmailRegistration } from '@/redux/aynscThunks/user'
 
-const VerifyEmail = () => {
+const VerifyEmailScreen = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
@@ -35,9 +35,9 @@ const VerifyEmail = () => {
       inputs={[]}
       formikConfig={{
         initialValues: {},
-        onSubmit: () => {},
+        onSubmit: () => { },
       }}
-      buttonText="" 
+      buttonText=""
       showBackButton={false}
       showForgotPassword={false}
       showprivacyPolicy={false}
@@ -51,14 +51,12 @@ const VerifyEmail = () => {
 
       {error && (
         <div className='text-red-500 text-sm flex justify-center gap-2'>
-          {/* <AlertCircle className='h-5 w-5' /> */}
           {error}
         </div>
       )}
 
       {successMessage && (
         <div className='text-green-500 text-sm flex flex-col items-center gap-2'>
-          {/* <CheckCircle2 className='h-5 w-5' /> */}
           <p>{successMessage}</p>
           <p className='text-gray-600'>Redirecting to login...</p>
         </div>
@@ -67,4 +65,4 @@ const VerifyEmail = () => {
   )
 }
 
-export default VerifyEmail
+export default VerifyEmailScreen

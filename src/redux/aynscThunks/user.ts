@@ -11,6 +11,7 @@ import {
     verifyEmailKey,
     logoutUser,
     uploadProfilePicture,
+    resendVerificationEmail,
 } from "../../api/auth";
 
 export const userRegister = createAsyncThunk(
@@ -118,10 +119,27 @@ export const verifyCode = createAsyncThunk(
     }
 );
 
+export const resendVerification = createAsyncThunk(
+    "user/resendVerification",
+    async ({ email }: { email: string }, thunkAPI) => {
+        try {
+            const response = await resendVerificationEmail({ email });
+            return response;
+        } catch (error) {
+            return thunkAPI.rejectWithValue((error as Error).message);
+        }
+    }
+);
+
 export const resetPassword = createAsyncThunk(
     "user/resetPassword",
     async (
-        formData: { password: string; confirmPassword: string },
+        formData: {
+            new_password1: string;
+            new_password2: string;
+            token: string;
+            uid: string;
+        },
         thunkAPI
     ) => {
         try {

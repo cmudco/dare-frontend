@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { getErrorMessage } from "../utils/errorHandler";
 import { User } from "../redux/types/user";
 import { BASE_URL } from "./config";
@@ -25,12 +25,6 @@ export const registerUser = async (data: {
         );
         return response.data;
     } catch (error) {
-        if (error instanceof AxiosError && error.response?.data) {
-            throw new Error(
-                error.response.data.message ||
-                JSON.stringify(error.response.data)
-            );
-        }
         throw new Error(getErrorMessage(error));
     }
 };
@@ -43,12 +37,6 @@ export const verifyEmailKey = async (data: { key: string }) => {
         );
         return response.data;
     } catch (error) {
-        if (error instanceof AxiosError && error.response?.data) {
-            throw new Error(
-                error.response.data.message ||
-                JSON.stringify(error.response.data)
-            );
-        }
         throw new Error(getErrorMessage(error));
     }
 };
@@ -61,12 +49,6 @@ export const loginUser = async (data: { email: string; password: string }) => {
         );
         return response.data;
     } catch (error) {
-        if (error instanceof AxiosError && error.response?.data) {
-            throw new Error(
-                error.response.data.message ||
-                JSON.stringify(error.response.data)
-            );
-        }
         throw new Error(getErrorMessage(error));
     }
 };
@@ -89,34 +71,23 @@ export const fetchUserDataFromAPI = async (): Promise<User | null> => {
         );
         return response.data;
     } catch (error) {
-        if (error instanceof AxiosError && error.response?.data) {
-            throw new Error(
-                error.response.data.message ||
-                JSON.stringify(error.response.data)
-            );
-        }
         throw new Error(getErrorMessage(error));
     }
 };
 
 export const logoutUser = async () => {
     try {
-      const response = await axiosInstance.post('/api/dj-rest-auth/logout/')
-      return response.data
+        const response = await axiosInstance.post("/api/dj-rest-auth/logout/");
+        return response.data;
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.data) {
-        throw new Error(
-          error.response.data.message || JSON.stringify(error.response.data)
-        )
-      }
-      throw new Error(getErrorMessage(error))
+        throw new Error(getErrorMessage(error));
     }
-  }
+};
 
 export const forgotPasswordUser = async (data: { email: string }) => {
     try {
         const response = await axiosInstance.post(
-            "/api/forgot-password/",
+            "/api/dj-rest-auth/password/reset",
             data
         );
         return response.data;
@@ -137,13 +108,27 @@ export const verifyCodeUser = async (data: {
     }
 };
 
+export const resendVerificationEmail = async (data: { email: string }) => {
+    try {
+        const response = await axiosInstance.post(
+            "/api/dj-rest-auth/registration/resend-email/",
+            data
+        );
+        return response.data;
+    } catch (error) {
+        throw new Error(getErrorMessage(error));
+    }
+};
+
 export const resetPasswordUser = async (data: {
-    password: string;
-    confirmPassword: string;
+    new_password1: string;
+    new_password2: string;
+    token: string;
+    uid: string;
 }) => {
     try {
         const response = await axiosInstance.post(
-            "/api/reset-password/",
+            "/api/dj-rest-auth/password/reset/confirm/",
             data
         );
         return response.data;
