@@ -16,10 +16,11 @@ const FileUploadModal: React.FC = () => {
 
   const handleUploadClick = async () => {
     if (selectedFile) {
-      await dispatch(uploadNewFile({ files: [selectedFile] }));
+      await dispatch(uploadNewFile({ files: [selectedFile], name: filename, tags: selectedTags }));
       dispatch(resetSelectedTags());
       dispatch(closeModal());
-      dispatch(getFiles())
+      dispatch(getFiles());
+      dispatch(updateFilename(''));
     } else {
       console.error("No file selected");
     }
