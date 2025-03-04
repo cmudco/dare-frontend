@@ -1,23 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Typography, Select, Option, Chip, Input } from '@material-tailwind/react';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { RootState, AppDispatch } from '../../redux/store';
 import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename } from '../../redux/fileSlice';
 import { getFiles, uploadNewFile } from '../../redux/aynscThunks/file';
+import { addTag, getTags } from '../../redux/aynscThunks/tag';
 
 const availableTags = ["Review", "Important", "Info", "Personal", "Work"];
 
 const FileUploadModal: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [newTag, setNewTag] = useState<string>('');
   const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    dispatch(getTags());
+  }, [dispatch]);
+  
   const { selectedTags, isModalOpen, filename, loading } = useSelector(
     (state: RootState) => state.files
   );
+  const { tags } = useSelector((state: RootState) => state.tags);
 
   const handleUploadClick = async () => {
     if (selectedFile) {
-      await dispatch(uploadNewFile({ files: [selectedFile], name: filename, tags: selectedTags }));
+      await dispatch(uploadNewFile({ files: [selectedFile], name: filename, tags:  selectedTags })).unwrap();
       dispatch(resetSelectedTags());
       dispatch(closeModal());
       dispatch(getFiles());
@@ -49,6 +57,13 @@ const FileUploadModal: React.FC = () => {
     event.preventDefault();
   };
 
+  const handleCreateTag = () => {
+    if (newTag.trim() !== '') {
+      dispatch(addTag(newTag));
+      setNewTag('');
+    }
+  };
+
   return (
     <Dialog
       open={isModalOpen}
@@ -78,13 +93,13 @@ const FileUploadModal: React.FC = () => {
             label="Add Tags"
             onChange={(value) => {
               if (value) {
-                dispatch(updateTagChange(value as string));
+                dispatch(updateTagChange(parseInt(value)));
               }
             }}
           >
-            {availableTags.map((tag) => (
-              <Option key={tag} value={tag}>
-                {tag}
+            {tags.map((tag) => (
+              <Option key={tag.id} value={tag.id.toString()}>
+                {tag.label}
               </Option>
             ))}
           </Select>
@@ -92,11 +107,21 @@ const FileUploadModal: React.FC = () => {
             {selectedTags.map((tag) => (
               <Chip
                 key={tag}
-                value={tag}
+                value={tags.find((t) => t.id === tag)?.label}
                 onClose={() => dispatch(updateRemoveTag(tag))}
                 className="bg-yellow-100 text-yellow-600"
               />
             ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              label="New Tag"
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+            />
+            <Button size="sm" color="green" onClick={handleCreateTag}>
+              Create Tag
+            </Button>
           </div>
         </div>
 

@@ -5,14 +5,14 @@ export interface MyFile {
     file: string;
     fileType: string;
     size: number;
-    tags: string[];
+    tags: number[];
 }
 
 export interface FileState {
     files: MyFile[];
     loading: boolean;
     error: string | null;
-    selectedTags: string[];
+    selectedTags: number[];
     isModalOpen: boolean;
     filename: string;
 }

@@ -1,5 +1,6 @@
 import { AxiosError, isAxiosError } from "axios";
 
+
 type ErrorResponse = {
     error?: string;
     nonFieldErrors?: string[];

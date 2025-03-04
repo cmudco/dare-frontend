@@ -24,13 +24,13 @@ const fileSlice = createSlice({
             const id = action.payload;
             state.files = state.files.filter((file) => file.id !== id);
         },
-        updateTagChange: (state, action: PayloadAction<string>) => {
+        updateTagChange: (state, action: PayloadAction<number>) => {
             const tag = action.payload;
             state.selectedTags = state.selectedTags.includes(tag)
                 ? state.selectedTags
                 : [...state.selectedTags, tag];
         },
-        updateRemoveTag: (state, action: PayloadAction<string>) => {
+        updateRemoveTag: (state, action: PayloadAction<number>) => {
             const tag = action.payload;
             state.selectedTags = state.selectedTags.filter((t) => t !== tag);
         },
@@ -85,9 +85,8 @@ const fileSlice = createSlice({
             })
             .addCase(
                 uploadNewFile.fulfilled,
-                (state, action: PayloadAction<MyFile>) => {
+                (state, _action) => {
                     state.loading = false;
-                    state.files.push(action.payload);
                 }
             )
             .addCase(uploadNewFile.rejected, (state, action) => {
@@ -100,10 +99,10 @@ const fileSlice = createSlice({
             })
             .addCase(
                 deleteFile.fulfilled,
-                (state, action: PayloadAction<{ id: number }>) => {
+                (state, action) => {
                     state.loading = false;
                     state.files = state.files.filter(
-                        (file) => file.id !== action.payload.id
+                        (file) => file.id !== action.payload
                     );
                 }
             )
