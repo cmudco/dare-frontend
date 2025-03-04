@@ -16,13 +16,13 @@ export const getFiles = createAsyncThunk(
 export const uploadNewFile = createAsyncThunk(
     "files/uploadNewFile",
     async (
-        { files, name, tags }: { files: File[]; name: string; tags: string[] },
+        { files, name, tags }: { files: File[]; name: string; tags: number[] },
         thunkAPI
     ) => {
         const formData = new FormData();
         files.forEach((file) => formData.append("file", file));
         formData.append("name", name);
-        formData.append("tags", JSON.stringify(tags));
+        tags.length > 0 && formData.append("tags", tags.toString());
 
         try {
             const response = await uploadFile(formData);
@@ -38,7 +38,7 @@ export const deleteFile = createAsyncThunk(
     async (id: number, thunkAPI) => {
         try {
             const response = await deleteFileAPI(id);
-            return response;
+            return id;
         } catch (error) {
             return thunkAPI.rejectWithValue((error as Error).message);
         }

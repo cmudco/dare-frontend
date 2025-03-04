@@ -1,34 +1,25 @@
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
-import { deleteFile, getFiles } from "../../redux/aynscThunks/file";
+import { deleteFile, } from "../../redux/aynscThunks/file";
 import { Typography, Chip, Button } from "@material-tailwind/react";
 import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
 import { TABLE_HEAD } from "../../utils/constants/file";
-import { useState, useEffect } from "react";
-import { formatFileSize } from "@/utils/formatFileSize";
+import { formatFileSize } from "@/utils/files";
 
 
 const FileTable = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { files, loading } = useSelector((state: RootState) => state.files);
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-    useEffect(() => {
-        dispatch(getFiles());
-    }, [dispatch, refreshTrigger]);
-
+    const {tags: allTags} = useSelector((state: RootState) => state.tags);
     const handleDelete = async (id: number) => {
         try {
             await dispatch(deleteFile(id)).unwrap();
-            setRefreshTrigger(prev => prev + 1);
+        
         } catch (error) {
             console.error("Failed to delete file:", error);
         }
     };
 
-
-
-    const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
 
     return (
         <div className="overflow-auto">
@@ -53,20 +44,20 @@ const FileTable = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {loading ? (
+                    {files.length == 0 && loading ? (
                         <tr>
                             <td colSpan={5} className="text-center p-4">
                                 <Typography>Loading files...</Typography>
                             </td>
                         </tr>
-                    ) : safeFiles.length === 0 ? (
+                    ) : files.length === 0 ? (
                         <tr>
                             <td colSpan={5} className="text-center p-4">
                                 <Typography>No files found</Typography>
                             </td>
                         </tr>
                     ) : (
-                        safeFiles.map(({ id, name, fileType, size, tags }) => {
+                        files.map(({ id, name, fileType, size, tags }) => {
                             const classes = "p-4";
                             return (
                                 <tr key={id}>
@@ -92,7 +83,7 @@ const FileTable = () => {
                                                     key={`${id}-${i}`}
                                                     variant="ghost"
                                                     className="font-normal text-sm transform-none"
-                                                    value={tag}
+                                                    value={allTags.find((t) => t.id == tag)?.label}
                                                 />
                                             ))}
                                         </div>

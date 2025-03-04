@@ -1,17 +1,6 @@
-import axios from "axios";
 import { getErrorMessage } from "../utils/errorHandler";
 import { ChatSession } from "../redux/types/chat";
-import { BASE_URL } from "./config";
-
-
-
-const axiosInstance = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true,
-});
+import axiosInstance from "@/utils/axios";
 
 export const getChatSessionsAPI = async () => {
   try {
