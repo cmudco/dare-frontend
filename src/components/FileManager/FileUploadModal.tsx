@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, Button, Typography, Select, Option, Chip, Input } from '@material-tailwind/react';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { RootState, AppDispatch } from '../../redux/store';
 import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename } from '../../redux/fileSlice';
 import { getFiles, uploadNewFile } from '../../redux/aynscThunks/file';
@@ -10,7 +11,7 @@ const availableTags = ["Review", "Important", "Info", "Personal", "Work"];
 const FileUploadModal: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const dispatch = useDispatch<AppDispatch>();
-  const { selectedTags, isModalOpen, filename } = useSelector(
+  const { selectedTags, isModalOpen, filename, loading } = useSelector(
     (state: RootState) => state.files
   );
 
@@ -21,6 +22,7 @@ const FileUploadModal: React.FC = () => {
       dispatch(closeModal());
       dispatch(getFiles());
       dispatch(updateFilename(''));
+      setSelectedFile(null);
     } else {
       console.error("No file selected");
     }
@@ -56,7 +58,7 @@ const FileUploadModal: React.FC = () => {
     >
       <DialogHeader>
         <Typography variant="h5" className="text-center">
-          Edit File Upload
+          File Upload
         </Typography>
       </DialogHeader>
       <DialogBody
@@ -98,13 +100,22 @@ const FileUploadModal: React.FC = () => {
           </div>
         </div>
 
-        <div className="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center bg-blue-50 hover:bg-blue-100 transition cursor-pointer">
-          <div
-            onClick={() => document.getElementById("fileInput")?.click()}
-            className="font-medium"
-          >
-            Drop your files here or <span className="text-blue-600">browse</span>
-          </div>
+        <div
+          className="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center bg-blue-50 hover:bg-blue-100 transition cursor-pointer"
+          onClick={() => document.getElementById("fileInput")?.click()}
+        >
+          {selectedFile ? (
+            <div className="flex items-center justify-center space-x-2">
+              <CheckCircleIcon className="w-6 h-6 text-green-600" />
+              <Typography variant="small" className="font-medium text-green-700">
+                {selectedFile.name} uploaded
+              </Typography>
+            </div>
+          ) : (
+            <div className="font-medium">
+              Drop your files here or <span className="text-blue-600">browse</span>
+            </div>
+          )}
           <input
             id="fileInput"
             type="file"
@@ -121,7 +132,7 @@ const FileUploadModal: React.FC = () => {
           Cancel
         </Button>
         <Button className="bg-primary" onClick={handleUploadClick}>
-          Save
+          {loading ? 'Saving...' : 'Save'}
         </Button>
       </DialogFooter>
     </Dialog>
