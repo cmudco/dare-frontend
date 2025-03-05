@@ -1,15 +1,6 @@
-import axios from "axios";
 import { getErrorMessage } from "../utils/errorHandler";
 import { User } from "../redux/types/user";
-import { BASE_URL } from "./config";
-
-const axiosInstance = axios.create({
-    baseURL: `${BASE_URL}/users`,
-    headers: {
-        "Content-Type": "application/json",
-    },
-    withCredentials: true,
-});
+import { userAxiosInstance } from "@/utils/axios";
 
 export const registerUser = async (data: {
     name: string;
@@ -19,7 +10,7 @@ export const registerUser = async (data: {
     role: string;
 }) => {
     try {
-        const response = await axiosInstance.post(
+        const response = await userAxiosInstance.post(
             "/api/dj-rest-auth/registration/",
             data
         );
@@ -31,7 +22,7 @@ export const registerUser = async (data: {
 
 export const verifyEmailKey = async (data: { key: string }) => {
     try {
-        const response = await axiosInstance.post(
+        const response = await userAxiosInstance.post(
             "/api/dj-rest-auth/registration/verify-email/",
             data
         );
@@ -43,7 +34,7 @@ export const verifyEmailKey = async (data: { key: string }) => {
 
 export const loginUser = async (data: { email: string; password: string }) => {
     try {
-        const response = await axiosInstance.post(
+        const response = await userAxiosInstance.post(
             "/api/dj-rest-auth/login/",
             data
         );
@@ -60,7 +51,7 @@ export const fetchUserDataFromAPI = async (): Promise<User | null> => {
     }
 
     try {
-        const response = await axiosInstance.get<User>(
+        const response = await userAxiosInstance.get<User>(
             "/api/dj-rest-auth/user/",
             {
                 headers: {
@@ -77,7 +68,9 @@ export const fetchUserDataFromAPI = async (): Promise<User | null> => {
 
 export const logoutUser = async () => {
     try {
-        const response = await axiosInstance.post("/api/dj-rest-auth/logout/");
+        const response = await userAxiosInstance.post(
+            "/api/dj-rest-auth/logout/"
+        );
         return response.data;
     } catch (error) {
         throw new Error(getErrorMessage(error));
@@ -86,8 +79,8 @@ export const logoutUser = async () => {
 
 export const forgotPasswordUser = async (data: { email: string }) => {
     try {
-        const response = await axiosInstance.post(
-            "/api/dj-rest-auth/password/reset",
+        const response = await userAxiosInstance.post(
+            "/api/dj-rest-auth/password/reset/",
             data
         );
         return response.data;
@@ -101,7 +94,7 @@ export const verifyCodeUser = async (data: {
     temp_token: string;
 }) => {
     try {
-        const response = await axiosInstance.post("/api/verify-otp/", data);
+        const response = await userAxiosInstance.post("/api/verify-otp/", data);
         return response.data;
     } catch (error) {
         throw new Error(getErrorMessage(error));
@@ -110,7 +103,7 @@ export const verifyCodeUser = async (data: {
 
 export const resendVerificationEmail = async (data: { email: string }) => {
     try {
-        const response = await axiosInstance.post(
+        const response = await userAxiosInstance.post(
             "/api/dj-rest-auth/registration/resend-email/",
             data
         );
@@ -127,7 +120,7 @@ export const resetPasswordUser = async (data: {
     uid: string;
 }) => {
     try {
-        const response = await axiosInstance.post(
+        const response = await userAxiosInstance.post(
             "/api/dj-rest-auth/password/reset/confirm/",
             data
         );
@@ -142,7 +135,7 @@ export const setup2FA = async (data: {
     skip_2fa: boolean;
 }) => {
     try {
-        const response = await axiosInstance.post("/api/setup-2fa/", data);
+        const response = await userAxiosInstance.post("/api/setup-2fa/", data);
         return response.data;
     } catch (error) {
         throw new Error(getErrorMessage(error));
@@ -156,7 +149,7 @@ export const uploadProfilePicture = async (formData: FormData) => {
     }
 
     try {
-        const response = await axiosInstance.put(
+        const response = await userAxiosInstance.put(
             `/api/update-profile-picture/`,
             formData,
             {

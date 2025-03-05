@@ -1,18 +1,18 @@
 export interface MyFile {
-  id: number;
-  file: string;
-  file_name: string;
-  file_size: string;
-  uploaded_at: string;
-  directory: string;
-  tags: string[];
+    id: number;
+    user: string;
+    name: string;
+    file: string;
+    fileType: string;
+    size: number;
+    tags: number[];
 }
 
 export interface FileState {
-  files: MyFile[];
-  loading: boolean;
-  error: string | null;
-  selectedTags: string[];
-  isModalOpen: boolean;
-  filename: string;
+    files: MyFile[];
+    loading: boolean;
+    error: string | null;
+    selectedTags: number[];
+    isModalOpen: boolean;
+    filename: string;
 }
