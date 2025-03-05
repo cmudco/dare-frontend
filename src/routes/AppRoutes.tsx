@@ -1,9 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "../pages/Dashboard";
 import Files from "../pages/Files";
-import VerifyScreen from "../pages/VerifyCode";
+import VerifyCodeScreen from "../pages/VerifyCode";
 import LoginScreen from "../pages/Login";
-import ResetScreen from "../pages/ResetPassword";
 import ForgotScreen from "../pages/ForgotPassword";
 import RegistrationScreen from "../pages/Registration";
 import ChatScreen from "../pages/Chat";
@@ -14,10 +13,11 @@ import EmailConfirmationScreen from "../pages/EmailConfirmation";
 import RouteListener from "./RouteListener";
 import Prompt from "../pages/Prompts";
 import ProtectedRoute from "./ProtectedRoute";
-
 import Help from "../pages/Help";
-import Settings from "../pages/Settings.tsx";
-
+import Settings from "../pages/Settings/index.tsx";
+import ResetPasswordScreen from "../pages/ResetPassword";
+import ForgotPasswordSuccess from "../components/Success.tsx";
+import VerifyEmailScreen from "@/components/Auth/VerifyEmail.tsx";
 
 const AppRoutes = () => {
   return (
@@ -26,13 +26,14 @@ const AppRoutes = () => {
         <Routes>
           <Route path='/login' element={<LoginScreen />} />
           <Route path='/register' element={<RegistrationScreen />} />
+          <Route path='/users/confirm-email' element={<VerifyEmailScreen />} />
           <Route path='/forgot-password' element={<ForgotScreen />} />
-          <Route path='/verify-code' element={<VerifyScreen />} />
-          <Route path='/reset-password' element={<ResetScreen />} />
+          <Route path='/forgot-password-success' element={<ForgotPasswordSuccess />} />
+          <Route path='/verify-code' element={<VerifyCodeScreen />} />
+          <Route path='/password-reset/confirm/:uid/:token' element={<ResetPasswordScreen />} />
           <Route path='/qr-verification' element={<QrVerificationScreen />} />
           <Route path='/otp-required' element={<OTPRequired />} />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
-
           <Route
             path="/"
             element={

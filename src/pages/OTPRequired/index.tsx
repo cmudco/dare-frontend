@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import AuthCard from "../../components/AuthCard";
+import AuthCard from "../../components/Auth/AuthCard";
 import { AppDispatch } from "../../redux/store";
 import { setup2FA } from "../../redux/aynscThunks/user";
 import { fetchUserDataFromAPI } from "../../api";

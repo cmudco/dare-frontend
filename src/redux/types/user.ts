@@ -1,16 +1,25 @@
 export interface User {
-  username: string;
-  email: string;
-
+    id: number;
+    email: string;
+    username: string | null;
+    name: string;
+    role: string;
+    is_2fa_enabled: boolean;
+    is_2fa_pending: boolean;
+    is_active: boolean;
+    is_staff: boolean;
+    roomid?: string;
+    invite_code?: string;
+    profile_picture?: string;
 }
 
 export interface UserState {
-  user: User | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
-  firebaseUid?: string;
-  temp_token: string;
-  token: string;
-  userLoading: boolean;
+    user: User | null;
+    isAuthenticated: boolean;
+    loading: boolean;
+    error: string | null;
+    temp_token: string;
+    token: string;
+    userLoading: boolean;
+    successMessage: string | null;
 }

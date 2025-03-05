@@ -1,5 +1,5 @@
 import React  from "react";
-import AuthCard from "../../components/AuthCard";
+import AuthCard from "../../components/Auth/AuthCard";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const QrVerificationScreen: React.FC = () => {
