@@ -1,135 +1,139 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
-import { clearChat, updateMessage } from '../chatSlice';
-import { ChatMessage } from '../types/chat';
-import { AppDispatch, RootState } from '../store';
-import { setConnectionStatus } from '../websocketSlice';
-import { handleDataHistory,  } from '../../services/socketService';
-import { WEBSOCKET_URL } from '../../api/config';
-
-
-
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import { clearChat, updateMessage, addMessage } from "../chatSlice";
+import { ChatMessage } from "../types/chat";
+import { AppDispatch, RootState } from "../store";
+import { setConnectionStatus } from "../websocketSlice";
+import { handleChatHistory } from "../../services/socketService";
+import { WEBSOCKET_URL } from "../../api/config";
 
 let socket: WebSocket | null = null;
-let partialBuffer = '';
-let currentMessageId: string | null = null;
+let partialBuffer = "";
 
-export const connectWebSocket = createAsyncThunk<void, { apiKey: string; sessionId: string; jwtKey: string }, { dispatch: AppDispatch; state: RootState }>(
-  'websocket/connect',
-  async ({ apiKey, sessionId, jwtKey }, { dispatch }) => {
+export const connectWebSocket = createAsyncThunk<
+    void,
+    { sessionId: string; jwtKey: string },
+    { dispatch: AppDispatch; state: RootState }
+>("websocket/connect", async ({ sessionId, jwtKey }, { dispatch }) => {
     return new Promise<void>((resolve, reject) => {
-      dispatch(clearChat());
-      partialBuffer = '';
-      currentMessageId = Date.now().toString();
+        dispatch(clearChat());
+        partialBuffer = "";
 
-      const socketUrl = `${WEBSOCKET_URL}/?api_key=${encodeURIComponent(apiKey)}&session_id=${sessionId}&jwt_key=${encodeURIComponent(jwtKey)}`;
-      socket = new WebSocket(socketUrl);
+        // WebSocket URL for chat session
+        const socketUrl = `${WEBSOCKET_URL}/chats/${sessionId}/?jwt_key=${encodeURIComponent(
+            jwtKey
+        )}`;
 
-      socket.onopen = () => {
-        resolve();
-      };
-
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-
-        try {
-          handleDataHistory(data, dispatch);
-
-          if (data.title || data.partial_response) {
-            const messageId = currentMessageId || Date.now().toString();
-
-
-            if (data.title) {
-              if (partialBuffer == '') {
-                return;
-              }
-              dispatch(updateMessage({
-                id: messageId,
-                message: partialBuffer,
-                isSender: false,
-                date: new Date().toISOString(),
-                streaming: false
-              }));
-              partialBuffer = '';
-              currentMessageId = null;
-              return;
-            }
-            currentMessageId = messageId;
-            partialBuffer += data.partial_response;
-
-            dispatch(updateMessage({
-              id: messageId,
-              message: partialBuffer,
-              isSender: false,
-              date: new Date().toISOString(),
-              streaming: true
-            }));
-
-            return;
-          }
-
-          if (data.error) {
-            console.error('WebSocket error:', data.error);
-            if (currentMessageId) {
-              dispatch(updateMessage({
-                id: currentMessageId,
-                message: partialBuffer || "An error occurred while processing your request",
-                isSender: false,
-                date: new Date().toISOString(),
-                streaming: false
-              }));
-            }
-            partialBuffer = '';
-            currentMessageId = null;
-          }
-        } catch (err) {
-          console.error('Error processing WebSocket message:', err);
+        // Close existing socket if one exists
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.close();
         }
-      };
 
-      socket.onerror = () => {
-        reject(new Error('WebSocket error'));
-      };
+        socket = new WebSocket(socketUrl);
 
-      socket.onclose = () => {
-        dispatch(setConnectionStatus(false));
-      };
-    });
-  }
-);
-
-export const sendWebSocketMessage = createAsyncThunk<void, ChatMessage, { dispatch: AppDispatch; state: RootState }>(
-  'websocket/sendMessage',
-  async (message, { rejectWithValue, getState }) => {
-    const state = getState();
-    const file_paths = state.chat.selectedFiles
-      .map((msg) => msg.file_name);
-
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({
-        prompt: message.message,
-        file_paths: file_paths,
-        use_rag: file_paths.length >= 1
-      }));
-    } else {
-      return rejectWithValue('WebSocket is not connected');
-    }
-  }
-);
-
-export const disconnectWebSocket = createAsyncThunk<void, void, { dispatch: AppDispatch }>(
-  'websocket/disconnect',
-  async (_, { dispatch }) => {
-    return new Promise<void>((resolve) => {
-      if (socket) {
-        socket.onclose = () => {
-          socket = null;
-          dispatch(setConnectionStatus(false));
-          resolve();
+        socket.onopen = () => {
+            dispatch(setConnectionStatus(true));
+            console.log("WebSocket connected:", socketUrl);
+            resolve();
         };
-        socket.close();
-      } else {
-        resolve();
-      }
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log("WebSocket received:", data);
+        
+            try {
+                // ✅ Handle chat history
+                if (data.chat_history) {
+                    handleChatHistory(data.chat_history, dispatch);
+                    return;
+                }
+        
+                const messageId = data.id;
+                if (!messageId) return; // ✅ Ignore messages without IDs
+        
+                if (data.partial_response !== undefined) {
+                    partialBuffer += data.partial_response;
+        
+                    dispatch(updateMessage({
+                        id: messageId,       // Use message_id to identify the correct message
+                        message: partialBuffer,  // Append the new chunk to the existing message
+                        streaming: true,      // Mark the message as streaming
+                        date: new Date().toISOString(),
+                        isSender: data.is_sender,
+                    }));
+                    return;
+                }
+        
+                if (data.message) {
+                    dispatch(updateMessage({
+                        id: messageId,
+                        message: data.message,  // Full message after streaming
+                        sender_name: data.sender || "AI Assistant", // Sender's name
+                        streaming: false,     // Mark as not streaming anymore
+                        date: data.timestamp || new Date().toISOString(),
+                        isSender: data.is_sender,
+                    }));
+                    partialBuffer = "";
+
+                    return;
+                }
+            } catch (err) {
+                console.error("Error processing WebSocket message:", err);
+            }
+        };
+        
+        
+        socket.onerror = (error) => {
+            console.error("WebSocket error:", error);            
+            dispatch(setConnectionStatus(false));
+            reject(new Error("WebSocket error"));
+        };
+
+        socket.onclose = (event) => {
+            console.log("WebSocket closed:", event.code, event.reason);
+            dispatch(setConnectionStatus(false));
+        };
     });
-  }
+});
+
+export const sendWebSocketMessage = createAsyncThunk<
+    void,
+    ChatMessage,
+    { dispatch: AppDispatch; state: RootState }
+>(
+    "websocket/sendMessage",
+    async (message, { rejectWithValue, getState, }) => {
+        const state = getState();
+        const fileIds = state.chat.selectedFiles.map((file) => file.id);
+
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(
+                JSON.stringify({
+                    message: message.message,
+                    sender_type: 1,
+                    file_ids: fileIds,
+                })
+            );
+        } else {
+            return rejectWithValue("WebSocket is not connected");
+        }
+    }
 );
+
+export const disconnectWebSocket = createAsyncThunk<
+    void,
+    void,
+    { dispatch: AppDispatch }
+>("websocket/disconnect", async (_, { dispatch }) => {
+    return new Promise<void>((resolve) => {
+        if (socket) {
+            socket.onclose = () => {
+                socket = null;
+                dispatch(setConnectionStatus(false));
+                resolve();
+            };
+            socket.close();
+        } else {
+            resolve();
+        }
+    });
+});

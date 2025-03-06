@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { updateSearchQuery, createNewChat, updateChatSession } from "../../redux/chatSlice";
-import { getChatSessions } from "../../redux/aynscThunks/chat";
+import { updateSearchQuery, } from "../../redux/chatSlice";
+import { getChatSessions, createConversation } from "../../redux/aynscThunks/chat";
 import { AppDispatch, RootState } from "../../redux/store";
 import ChatList from "./ChatList";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ const ChatHistory = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const searchQuery = useSelector((state: RootState) => state.chat?.searchQuery || "");
+
 
     useEffect(() => {
         dispatch(getChatSessions());
@@ -32,12 +33,11 @@ const ChatHistory = () => {
         dispatch(updateSearchQuery(e.target.value));
     };
 
-    const handleCreateNewChat = () => {
-        const newChatPayload = { session_id: `session_${Date.now()}` };
-        dispatch(createNewChat(newChatPayload));
-
-        dispatch(updateChatSession({ session_id: newChatPayload.session_id, created_at: new Date().toISOString() }));
-        navigate(`/chat/${newChatPayload.session_id}`);
+    const handleCreateConversation = () => {
+        dispatch(createConversation())
+        .then(({payload}) => {
+            navigate(`/chat/${payload.sessionId}`);
+        });
     };
 
     return (
@@ -56,7 +56,7 @@ const ChatHistory = () => {
                     />
                 </div>
                 <button
-                    onClick={handleCreateNewChat}
+                    onClick={handleCreateConversation}
                     className="ml-2 min-w-5 bg-primary text-white rounded-xl w-10 h-10 flex items-center justify-center"
                 >
                     <span className="text-xl">+</span>

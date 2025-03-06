@@ -1,27 +1,30 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
 import { DocumentIcon, MagnifyingGlassIcon, AdjustmentsVerticalIcon } from "@heroicons/react/24/outline";
 import { RootState, AppDispatch } from "../../redux/store";
 import { getFiles } from "../../redux/aynscThunks/file";
+import { getTags } from "../../redux/aynscThunks/tag";
 import { updateSelectedFiles } from "../../redux/chatSlice";
 import { MyFile } from "../../redux/types/files";
+import { Tag } from "../../redux/types/tags";
 import { FolderIcon } from "@heroicons/react/24/solid";
 import { TAG_COLORS } from "../../utils/constants/file";
 
 const ChatFileUpload: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const files = useSelector((state: RootState) => state.files.files);
+    const tags = useSelector((state: RootState) => state.tags?.tags || []);
     const [showModal, setShowModal] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
     const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [showTagFilter, setShowTagFilter] = useState(false);
-    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [selectedTags, setSelectedTags] = useState<number[]>([]); // Changed to number[]
 
     const handleOpenModal = () => {
         if (!showModal) {
             dispatch(getFiles());
+            dispatch(getTags());
         }
         setShowModal(!showModal);
     };
@@ -43,14 +46,9 @@ const ChatFileUpload: React.FC = () => {
         };
     }, [handleClickOutside, showModal]);
 
-
-
-
     const getFileName = (filepath: string) => {
         return filepath.split('/').pop() || filepath;
     };
-
-
 
     const handleToggleFile = (fileId: number) => {
         setSelectedFiles(prev =>
@@ -72,23 +70,25 @@ const ChatFileUpload: React.FC = () => {
         setSelectedFiles([]);
     };
 
-    const handleTagToggle = (tag: string) => {
+    const handleTagToggle = (tagId: number) => { // Changed tag to tagId which is a number
         setSelectedTags(prev =>
-            prev.includes(tag)
-                ? prev.filter(t => t !== tag)
-                : [...prev, tag]
+            prev.includes(tagId)
+                ? prev.filter(id => id !== tagId)
+                : [...prev, tagId]
         );
     };
 
+    const getTagColor = (tagLabel: string) => {
+        return TAG_COLORS[tagLabel] || 'gray';
+    };
 
     const filteredFiles = files.filter(file => {
         const fileName = getFileName(file.file).toLowerCase();
-        const fileDirectory = file.directory?.toLowerCase() || '';
         const matchesSearch = fileName.includes(searchQuery.toLowerCase());
-        const matchesTags = selectedTags.length === 0 ||
-            selectedTags.some(tag =>
-                fileDirectory.includes(tag.toLowerCase())
-            );
+
+        // Filter by selected tags
+        const matchesTags = selectedTags.length === 0 || file.tags?.some(tagId => selectedTags.includes(tagId));
+
         return matchesSearch && matchesTags;
     });
 
@@ -124,22 +124,26 @@ const ChatFileUpload: React.FC = () => {
                             </div>
                             {showTagFilter && (
                                 <div className="flex flex-wrap gap-2">
-                                    {Object.entries(TAG_COLORS).map(([tag, color]) => {
-                                        const isSelected = selectedTags.includes(tag);
+                                    {tags.map((tag: Tag) => {
+                                        const isSelected = selectedTags.includes(tag.id); // Changed to tag.id
+                                        const color = getTagColor(tag.label);
                                         return (
                                             <button
-                                                key={tag}
-                                                onClick={() => handleTagToggle(tag)}
+                                                key={tag.id}
+                                                onClick={() => handleTagToggle(tag.id)} // Changed to tag.id
                                                 className={`px-3 py-1 text-xs font-medium rounded-full transition-colors
                                                     ${isSelected
                                                         ? `bg-${color}-100 text-${color}-800 border-${color}-300`
                                                         : 'bg-gray-100 text-gray-600 border-gray-200'
                                                     } border`}
                                             >
-                                                {tag}
+                                                {tag.label}
                                             </button>
                                         );
                                     })}
+                                    {tags.length === 0 && (
+                                        <div className="text-sm text-gray-500">No tags available</div>
+                                    )}
                                 </div>
                             )}
                         </div>
