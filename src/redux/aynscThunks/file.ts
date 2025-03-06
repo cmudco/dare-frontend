@@ -22,7 +22,13 @@ export const uploadNewFile = createAsyncThunk(
         const formData = new FormData();
         files.forEach((file) => formData.append("file", file));
         formData.append("name", name);
-        tags.length > 0 && formData.append("tags", tags.toString());
+
+        // Handle tags properly - append each tag ID individually
+        if (tags && tags.length > 0) {
+            tags.forEach(tagId => {
+                formData.append("tags", tagId.toString());
+            });
+        }
 
         try {
             const response = await uploadFile(formData);

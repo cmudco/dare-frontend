@@ -1,40 +1,24 @@
-import { AppDispatch } from '../redux/store';
-import { addMessage, } from '../redux/chatSlice';
+import { AppDispatch } from "../redux/store";
+import { addMessage } from "../redux/chatSlice";
 
-interface Message {
-  user_message: string;
-  bot_response: string;
-}
-
-interface Data {
-  history?: Message[];
-  title?: string;
-  partial_response?: string;
-  error?: string;
-}
-
-export const handleDataHistory = (data: Data, dispatch: AppDispatch) => {
-  if (data.history) {
-    data.history.forEach((msg: { user_message: string; bot_response: string }) => {
-      const baseTimestamp = Date.now();
-
-      if (msg.user_message?.trim()) {
+/**
+ * Processes chat history from a WebSocket message.
+ *
+ * @param data The WebSocket message containing chat history.
+ * @param dispatch The dispatch function from Redux to dispatch actions.
+ */
+// Add chat history to the Redux state
+export const handleChatHistory = (history: any[], dispatch: AppDispatch) => {
+    history.forEach((msg) => {
         dispatch(addMessage({
-          id: baseTimestamp.toString(),
-          message: msg.user_message,
-          isSender: true,
-          date: new Date(baseTimestamp).toISOString(),
+            id: msg.id,
+            message: msg.message,
+            sender_name: msg.sender || "Unknown",
+            sender_type: msg.sender_type,
+            isSender: msg.sender_type === 1, // Assuming 1 is sender
+            date: msg.date,
+            files: msg.files || [],
+            streaming: false,
         }));
-      }
-
-      if (msg.bot_response?.trim()) {
-        dispatch(addMessage({
-          id: (baseTimestamp + 1).toString(),
-          message: msg.bot_response,
-          isSender: false,
-          date: new Date(baseTimestamp + 1).toISOString(),
-        }));
-      }
     });
-  }
 };

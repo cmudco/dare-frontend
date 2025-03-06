@@ -8,17 +8,14 @@ import { useParams } from "react-router-dom";
 import { updateChatInput, updateChatSession } from "../../redux/chatSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
-// import { getModelConfig } from "../../services/getSelectedModel";
-
+import { getChatMessages } from "../../redux/aynscThunks/chat";
 
 const ActiveChat: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const activeChat = useSelector((state: RootState) => state.chat?.activeChat);
-  // const selectedModel = useSelector((state: RootState) => state.chat?.selectedModel);
 
   const { id } = useParams<{ id: string }>();
   const sessions = useSelector((state: RootState) => state.chat?.sessions || []);
-  // const apiKey = getModelConfig(selectedModel || "");
   const token = localStorage.getItem("token");
   const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
   const apiKey = useSelector((state: RootState) => state.chat.apiKey);
@@ -26,7 +23,7 @@ const ActiveChat: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      const session = sessions.find((session) => session.session_id === id);
+      const session = sessions.find((session) => session.sessionId === id);
       if (session) {
         dispatch(updateChatSession(session));
       }
@@ -37,17 +34,18 @@ const ActiveChat: React.FC = () => {
 
   useEffect(() => {
     const handleWebSocketConnection = async () => {
+      console.log("WebSocket connection");
       if (isConnected) {
         // empty the text
         dispatch(updateChatInput(""));
         await dispatch(disconnectWebSocket());
       }
 
-      if (apiKey && activeChat) {
+      if (token && activeChat) {
         try {
           await dispatch(connectWebSocket({
-            apiKey,
-            sessionId: activeChat.session_id,
+            apiKey: apiKey,
+            sessionId: activeChat.sessionId,
             jwtKey: token || ""
           }));
         } catch (error) {
@@ -58,7 +56,7 @@ const ActiveChat: React.FC = () => {
     };
 
     handleWebSocketConnection();
-  }, [apiKey, activeChat?.session_id, dispatch]);
+  }, [apiKey, activeChat?.sessionId, dispatch]);
 
   return (
     <Card className="flex flex-col w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  ">

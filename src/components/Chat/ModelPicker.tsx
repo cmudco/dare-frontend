@@ -3,19 +3,29 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleDropdown, updateSelectedModel } from "../../redux/chatSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 import { getAvailableModels } from "../../redux/aynscThunks/chat";
+import { LLMModel } from "@/redux/types/chat";
 
 const ModelPicker: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const showDropdown = useSelector((state: RootState) => state.chat.showDropdown);
   const selectedModel = useSelector((state: RootState) => state.chat.selectedModel);
   const models = useSelector((state: RootState) => state.chat.availableModels);
+  const loading = useSelector((state: RootState) => state.chat.loading);
+  const error = useSelector((state: RootState) => state.chat.error);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-      dispatch(getAvailableModels());
+    dispatch(getAvailableModels());
+    // Debug log to see if models are being fetched
+    console.log("Fetching models...");
   }, [dispatch]);
+
+  // Debug: Log the models state whenever it changes
+  useEffect(() => {
+    console.log("Current models state:", models);
+  }, [models]);
 
   const handleModelPickerClick = () => {
     dispatch(toggleDropdown());
@@ -44,9 +54,21 @@ const ModelPicker: React.FC = () => {
   }, [showDropdown]);
 
   const handleModelSelect = (model: string) => {
+    console.log("Selected model:", model);
     dispatch(updateSelectedModel(model));
     dispatch(toggleDropdown());
   };
+
+  // Get display text for the model button
+  const getModelButtonText = () => {
+    if (selectedModel && selectedModel !== "default") {
+      return selectedModel.charAt(0).toUpperCase();
+    }
+    return "M";
+  };
+
+  // Safely check if models is an array and has items
+  const hasModels = Array.isArray(models) && models.length > 0;
 
   return (
     <div className="relative">
@@ -55,12 +77,12 @@ const ModelPicker: React.FC = () => {
         onClick={handleModelPickerClick}
         className="ml-4 p-4 bg-pink-50 text-black rounded-lg h-12 w-12 flex items-center justify-center"
       >
-        <span className="text-lg">M</span>
+        <span className="text-lg">{getModelButtonText()}</span>
       </button>
       {showDropdown && (
         <div
           ref={dropdownRef}
-          className="absolute right-0 bottom-full mb-2 bg-white border rounded-md p-6 w-hug whitespace-nowrap"
+          className="absolute right-0 bottom-full mb-2 bg-white border rounded-md p-6 w-64 whitespace-nowrap z-50"
           style={{
             boxShadow: "1.85px 1.85px 4.63px 0px #EE183C29, -1.85px -1.85px 4.63px 0px #EE183C29",
           }}
@@ -70,19 +92,61 @@ const ModelPicker: React.FC = () => {
               Model
             </h3>
           </div>
-          <ul className="space-y-2">
-            {models.map((model) => (
-              <li
-                key={model.id}
-                onClick={() => handleModelSelect(model.name)}
-                className={`cursor-pointer px-4 py-2 rounded ${
-                  model.name === selectedModel ? "bg-pink-50 font-bold" : "hover:bg-gray-100"
-                }`}
-              >
-                {model.name}
-              </li>
-            ))}
-          </ul>
+
+          {loading && (
+            <div className="text-center py-2">
+              <p>Loading models...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-2 text-red-500">
+              <p>Error loading models: {error}</p>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <ul className="space-y-2 max-h-60 overflow-y-auto">
+              {hasModels ? (
+                models.map((model: LLMModel) => (
+                  <li
+                    key={model.id}
+                    onClick={() => handleModelSelect(model.identifier || model.name)}
+                    className={`cursor-pointer px-4 py-2 rounded ${(model.identifier || model.name) === selectedModel ? "bg-pink-50 font-bold" : "hover:bg-gray-100"
+                      }`}
+                    title={model.description || model.name}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-bold">{model.name}</div>
+                        <div className="text-sm text-gray-500">{model.description}</div>
+                      </div>
+                      {(model.identifier || model.name) === selectedModel && (
+                        <div className="text-primary">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <li className="text-center py-2 text-gray-500">
+                  No models available
+                </li>
+              )}
+            </ul>
+          )}
         </div>
       )}
     </div>
