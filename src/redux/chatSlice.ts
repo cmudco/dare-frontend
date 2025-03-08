@@ -18,7 +18,7 @@ export const chatSlice = createSlice({
         updateChatSession(state, action: PayloadAction<ChatSession | null>) {
             state.activeChat = action.payload;
         },
-        updateSelectedModel(state, action: PayloadAction<string>) {
+        updateSelectedModel(state, action: PayloadAction<number>) {
             state.selectedModel = action.payload;
         },
         updateSelectedFiles(state, action: PayloadAction<MyFile[]>) {
@@ -54,7 +54,7 @@ export const chatSlice = createSlice({
                 };
             }
         },      
-        setAvailableModels(state, action: PayloadAction<{ id: string; name: string; description: string }[]>
+        setAvailableModels(state, action: PayloadAction<LLMModel[]>
         ) {
             state.availableModels = action.payload;
         },

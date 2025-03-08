@@ -53,18 +53,16 @@ const ModelPicker: React.FC = () => {
     };
   }, [showDropdown]);
 
-  const handleModelSelect = (model: string) => {
-    console.log("Selected model:", model);
-    dispatch(updateSelectedModel(model));
+  const handleModelSelect = (modelId: number) => {
+    console.log("Selected model:", modelId);
+    dispatch(updateSelectedModel(modelId));
     dispatch(toggleDropdown());
   };
 
   // Get display text for the model button
   const getModelButtonText = () => {
-    if (selectedModel && selectedModel !== "default") {
-      return selectedModel.charAt(0).toUpperCase();
-    }
-    return "M";
+    const model = models.find((m: LLMModel) => m.id === selectedModel);
+    return model ? model.name : "Select";
   };
 
   // Safely check if models is an array and has items
@@ -75,9 +73,9 @@ const ModelPicker: React.FC = () => {
       <button
         ref={buttonRef}
         onClick={handleModelPickerClick}
-        className="ml-4 p-4 bg-pink-50 text-black rounded-lg h-12 w-12 flex items-center justify-center"
+        className="ml-4 p-4 bg-pink-50 text-black rounded-lg h-12 min-w-40 w-min flex items-center justify-center"
       >
-        <span className="text-lg">{getModelButtonText()}</span>
+        {getModelButtonText()}
       </button>
       {showDropdown && (
         <div
@@ -111,8 +109,8 @@ const ModelPicker: React.FC = () => {
                 models.map((model: LLMModel) => (
                   <li
                     key={model.id}
-                    onClick={() => handleModelSelect(model.identifier || model.name)}
-                    className={`cursor-pointer px-4 py-2 rounded ${(model.identifier || model.name) === selectedModel ? "bg-pink-50 font-bold" : "hover:bg-gray-100"
+                    onClick={() => handleModelSelect(model.id)}
+                    className={`cursor-pointer px-4 py-2 rounded ${(model.id) === selectedModel ? "bg-pink-50 font-bold" : "hover:bg-gray-100"
                       }`}
                     title={model.description || model.name}
                   >
@@ -121,7 +119,7 @@ const ModelPicker: React.FC = () => {
                         <div className="font-bold">{model.name}</div>
                         <div className="text-sm text-gray-500">{model.description}</div>
                       </div>
-                      {(model.identifier || model.name) === selectedModel && (
+                      {model.id === selectedModel && (
                         <div className="text-primary">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"

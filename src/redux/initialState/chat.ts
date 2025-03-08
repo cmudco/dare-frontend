@@ -7,7 +7,7 @@ export const initialState: ChatState = {
   error: null,
   searchQuery: "",
   activeChatMessages: [],
-  selectedModel: "default",
+  selectedModel: null,
   selectedFiles: [],
   showDropdown: false,
   hoveredModel: null,
