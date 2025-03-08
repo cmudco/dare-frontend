@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
     MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { updateSearchQuery, } from "../../redux/conversationSlice";
+import { updateConversation, updateSearchQuery, } from "../../redux/conversationSlice";
 import { getConversations, createConversation } from "../../redux/aynscThunks/conversation";
 import { AppDispatch, RootState } from "../../redux/store";
 import ConversationList from "./ConversationList";
@@ -36,6 +36,7 @@ const ConversationHistory = () => {
     const handleCreateConversation = () => {
         dispatch(createConversation())
         .then(({payload}) => {
+            dispatch(updateConversation(payload));
             navigate(`/conversation/${payload.conversationId}`);
         });
     };
