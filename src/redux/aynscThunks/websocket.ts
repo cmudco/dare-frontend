@@ -81,6 +81,7 @@ export const sendWebSocketMessage = createAsyncThunk<
                     message: message.message,
                     sender_type: 1,
                     file_ids: fileIds,
+                    model_id: state.chat.selectedModel,
                 })
             );
         } else {

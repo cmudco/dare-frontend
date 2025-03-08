@@ -14,11 +14,12 @@ export interface ChatMessage {
     isSender: boolean;
     date: string;
     files?: MyFile[];
+    modelId?: number;
     streaming?: boolean;
 }
 
 export interface LLMModel {
-    id: string;
+    id: number;
     name: string;
     identifier?: string;
     description: string | null;
@@ -31,14 +32,12 @@ export interface ChatState {
     error: string | null;
     searchQuery: string;
     activeChatMessages: ChatMessage[];
-    selectedModel: string;
+    selectedModel: number | null;
     selectedFiles: MyFile[];
     showDropdown: boolean;
     hoveredModel: string | null;
     chatInput: string;
-    availableModels:
-        | LLMModel[]
-        | { id: string; name: string; description: string }[];
+    availableModels: LLMModel[]
 }
 
 export interface ChatSessionResponse {

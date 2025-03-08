@@ -63,15 +63,6 @@ export const sendMessage = createAsyncThunk(
     "chat/sendMessage",
     async (message: Partial<ChatMessage> & { filePath?: string }, thunkAPI) => {
         const dispatch = thunkAPI.dispatch as AppDispatch;
-        const state = thunkAPI.getState() as RootState;
-        const activeChat = state.chat.activeChat;
-
-        if (!activeChat) {
-            return thunkAPI.rejectWithValue(
-                "API key or active chat session is missing"
-            );
-        }
-
         try {
             dispatch(sendWebSocketMessage(message));
         } catch (error) {
