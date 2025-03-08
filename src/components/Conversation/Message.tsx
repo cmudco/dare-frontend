@@ -1,11 +1,11 @@
 import React from "react";
-import { ChatMessage } from "../../redux/types/chat";
+import { Message as MessageModel } from "../../redux/types/conversation";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 interface MessageProps {
-  message: ChatMessage;
+  message: MessageModel;
 }
 
 const Message: React.FC<MessageProps> = ({ message }) => {
@@ -27,8 +27,12 @@ const Message: React.FC<MessageProps> = ({ message }) => {
           className={` font-normal  max-w-[40vw] text-wrap ${message.streaming ? "animate-pulse" : ""}`}
         >
           <div className="prose">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.message}</ReactMarkdown>
-          </div>          {message.streaming && "▋"}
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {message.streaming? `${message.message}▋`: message.message}
+            </ReactMarkdown>
+            {/* {message.streaming && "▋"} */}
+            
+          </div>          
         </div>
 
         {!message.isSender && !message.streaming && (

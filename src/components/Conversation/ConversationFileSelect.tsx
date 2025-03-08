@@ -4,13 +4,13 @@ import { DocumentIcon, MagnifyingGlassIcon, AdjustmentsVerticalIcon } from "@her
 import { RootState, AppDispatch } from "../../redux/store";
 import { getFiles } from "../../redux/aynscThunks/file";
 import { getTags } from "../../redux/aynscThunks/tag";
-import { updateSelectedFiles } from "../../redux/chatSlice";
+import { updateSelectedFiles } from "../../redux/conversationSlice";
 import { MyFile } from "../../redux/types/files";
 import { Tag } from "../../redux/types/tags";
 import { FolderIcon } from "@heroicons/react/24/solid";
 import { TAG_COLORS } from "../../utils/constants/file";
 
-const ChatFileUpload: React.FC = () => {
+const ConversationFileSelect: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const files = useSelector((state: RootState) => state.files.files);
     const tags = useSelector((state: RootState) => state.tags?.tags || []);
@@ -19,7 +19,7 @@ const ChatFileUpload: React.FC = () => {
     const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [showTagFilter, setShowTagFilter] = useState(false);
-    const [selectedTags, setSelectedTags] = useState<number[]>([]); // Changed to number[]
+    const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
     const handleOpenModal = () => {
         if (!showModal) {
@@ -70,7 +70,7 @@ const ChatFileUpload: React.FC = () => {
         setSelectedFiles([]);
     };
 
-    const handleTagToggle = (tagId: number) => { // Changed tag to tagId which is a number
+    const handleTagToggle = (tagId: number) => {
         setSelectedTags(prev =>
             prev.includes(tagId)
                 ? prev.filter(id => id !== tagId)
@@ -199,4 +199,4 @@ const ChatFileUpload: React.FC = () => {
     );
 };
 
-export default ChatFileUpload;
+export default ConversationFileSelect;

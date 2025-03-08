@@ -7,13 +7,13 @@ import {
     MoonIcon,
 } from "@heroicons/react/24/outline";
 import { AppDispatch, RootState } from "../../redux/store";
-import { ChatSession } from "../../redux/types/chat";
-import { updateChatSession, } from "../../redux/chatSlice";
+import { Conversation } from "../../redux/types/conversation";
+import { updateConversation, } from "../../redux/conversationSlice";
 
-const ChatList: React.FC = () => {
+const ConversationList: React.FC = () => {
     const location = useLocation();
-    const sessions = useSelector((state: RootState) => state.chat.sessions);
-    const activeChat = useSelector((state: RootState) => state.chat.activeChat);
+    const conversations = useSelector((state: RootState) => state.conversation.conversations);
+    const activeConversation = useSelector((state: RootState) => state.conversation.activeConversation);
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
 
@@ -22,9 +22,9 @@ const ChatList: React.FC = () => {
         { name: "Dark Mode", icon: MoonIcon },
     ];
 
-    const handleChatClick = (session: ChatSession) => {
-        dispatch(updateChatSession(session));
-        navigate(`/chat/${session.conversationId}`);
+    const handleConversationClick = (conversation: Conversation) => {
+        dispatch(updateConversation(conversation));
+        navigate(`/conversation/${conversation.conversationId}`);
     };
 
     const handleBottomItemClick = (item: any) => {
@@ -34,14 +34,14 @@ const ChatList: React.FC = () => {
     return (
         <nav className="flex flex-col  gap-1 p-2 font-sans text-base font-normal text-blue-gray-700 h-full">
             <div className="flex flex-col h-[65vh] overflow-scroll  w-full">
-                {sessions.map((session) => {
-                    const conversationId = session.conversationId
+                {conversations.map((conversation) => {
+                    const conversationId = conversation.conversationId
 
-                    const isActive = location.pathname === `/chat/${conversationId}`;
+                    const isActive = location.pathname === `/conversation/${conversationId}`;
                     return (
                         <div
                             key={conversationId}
-                            onClick={() => handleChatClick(session)}
+                            onClick={() => handleConversationClick(conversation)}
                             className={`flex items-center w-full p-3 gap-3 leading-tight transition-all outline-none text-start cursor-pointer rounded-md
                             ${isActive
                                     ? "bg-pink-50 text-primary"
@@ -51,7 +51,7 @@ const ChatList: React.FC = () => {
                             <div>
                             <ChatBubbleLeftEllipsisIcon className="w-6 font-bold"/>
                             </div>
-                            {isActive ? activeChat?.title || `Chat ${conversationId}` : session.title || `Chat ${conversationId}`}
+                            {isActive ? activeConversation?.title || `New Chat` : conversation.title || `New Chat`}
                         </div>
                     );
                 })}
@@ -76,4 +76,4 @@ const ChatList: React.FC = () => {
     );
 };
 
-export default ChatList;
+export default ConversationList;

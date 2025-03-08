@@ -5,7 +5,7 @@ import VerifyCodeScreen from "../pages/VerifyCode";
 import LoginScreen from "../pages/Login";
 import ForgotScreen from "../pages/ForgotPassword";
 import RegistrationScreen from "../pages/Registration";
-import ChatScreen from "../pages/Chat";
+import CoversationScreen from "../pages/Conversation/index.tsx";
 import UserView from "../components/Layout/UserView";
 import QrVerificationScreen from "../pages/QrVerification";
 import OTPRequired from "../pages/OTPRequired";
@@ -42,8 +42,8 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           >
-            <Route path='/chat' element={<ChatScreen />} />
-            <Route path='/chat/:id' element={<ChatScreen />} />
+            <Route path='/conversation' element={<CoversationScreen />} />
+            <Route path='/conversation/:id' element={<CoversationScreen />} />
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/files' element={<Files />} />
             <Route path='/prompts' element={<Prompt />} />

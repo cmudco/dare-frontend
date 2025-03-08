@@ -1,17 +1,17 @@
 import React, { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleDropdown, updateSelectedModel } from "../../redux/chatSlice";
+import { toggleDropdown, updateSelectedModel } from "../../redux/conversationSlice";
 import { AppDispatch, RootState } from "../../redux/store";
-import { getAvailableModels } from "../../redux/aynscThunks/chat";
-import { LLMModel } from "@/redux/types/chat";
+import { getAvailableModels } from "../../redux/aynscThunks/conversation";
+import { LLMModel } from "@/redux/types/conversation";
 
 const ModelPicker: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
-  const showDropdown = useSelector((state: RootState) => state.chat.showDropdown);
-  const selectedModel = useSelector((state: RootState) => state.chat.selectedModel);
-  const models = useSelector((state: RootState) => state.chat.availableModels);
-  const loading = useSelector((state: RootState) => state.chat.loading);
-  const error = useSelector((state: RootState) => state.chat.error);
+  const showDropdown = useSelector((state: RootState) => state.conversation.showDropdown);
+  const selectedModel = useSelector((state: RootState) => state.conversation.selectedModel);
+  const models = useSelector((state: RootState) => state.conversation.availableModels);
+  const loading = useSelector((state: RootState) => state.conversation.loading);
+  const error = useSelector((state: RootState) => state.conversation.error);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);

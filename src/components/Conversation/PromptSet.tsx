@@ -5,13 +5,11 @@ import { getPrompts } from "../../redux/aynscThunks/prompt";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { Button } from "@material-tailwind/react";
 import { GoCommandPalette } from "react-icons/go";
-import { ChatMessage } from "../../redux/types/chat";
-import { addMessage } from "../../redux/chatSlice";
 
 const PromptSet: React.FC = () => {
   const dispatch = useDispatch();
   const prompts = useSelector((state: RootState) => state.prompt.prompts);
-  const activeChat = useSelector((state: RootState) => state.chat.activeChat);
+  // const activeConversation = useSelector((state: RootState) => state.chat.activeConversation);
   const [showModal, setShowModal] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -31,16 +29,16 @@ const PromptSet: React.FC = () => {
   }, []);
 
   const handlePromptSelect = (prompt: string) => {
-    if (activeChat) {
-      const newMessage: ChatMessage = {
-        id: Math.random().toString(),
-        message: prompt,
-        isSender: true,
-        date: new Date().toISOString(),
-      };
-      dispatch(addMessage(newMessage));
-      handleCloseModal();
-    }
+    // if (activeConversation) {
+    //   const newMessage: ChatMessage = {
+    //     id: Math.random().toString(),
+    //     message: prompt,
+    //     isSender: true,
+    //     date: new Date().toISOString(),
+    //   };
+    //   dispatch(addMessage(newMessage));
+    //   handleCloseModal();
+    // }
   };
 
   useEffect(() => {
