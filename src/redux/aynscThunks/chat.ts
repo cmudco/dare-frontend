@@ -1,11 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ChatMessage } from "../types/chat";
-import { addMessage } from "../chatSlice";
 import {
     getModelsAPI,
     createConversationAPI,
     getMessagesAPI,
-    getChatSessionsAPI,
+    getConversationsAPI,
 } from "../../api/chat";
 import { AppDispatch, RootState } from "../store";
 import { sendWebSocketMessage } from "./websocket";
@@ -18,20 +17,18 @@ export const getAvailableModels = createAsyncThunk<
 >("chat/getAvailableModels", async (_, thunkAPI) => {
     try {
         const response = await getModelsAPI();
-        console.log("Models API response:", response); // Debug log
-        // Return just the results array
-        return response.results || [];
+        return response || [];
     } catch (error) {
-        console.error("Error fetching models:", error); // Debug log
+        console.error("Error fetching models:", error); 
         return thunkAPI.rejectWithValue((error as Error).message);
     }
 });
 
-export const getChatSessions = createAsyncThunk(
-    "chat/getChatSessions",
+export const getConversations = createAsyncThunk(
+    "chat/getConversations",
     async (_, thunkAPI) => {
         try {
-            const sessions = await getChatSessionsAPI();
+            const sessions = await getConversationsAPI();
             return sessions.results;
         } catch (error) {
             return thunkAPI.rejectWithValue((error as Error).message);
@@ -64,7 +61,7 @@ export const getChatMessages = createAsyncThunk(
 
 export const sendMessage = createAsyncThunk(
     "chat/sendMessage",
-    async (message: ChatMessage & { filePath?: string }, thunkAPI) => {
+    async (message: Partial<ChatMessage> & { filePath?: string }, thunkAPI) => {
         const dispatch = thunkAPI.dispatch as AppDispatch;
         const state = thunkAPI.getState() as RootState;
         const activeChat = state.chat.activeChat;

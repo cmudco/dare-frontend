@@ -4,7 +4,7 @@ import {
     MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { updateSearchQuery, } from "../../redux/chatSlice";
-import { getChatSessions, createConversation } from "../../redux/aynscThunks/chat";
+import { getConversations, createConversation } from "../../redux/aynscThunks/chat";
 import { AppDispatch, RootState } from "../../redux/store";
 import ChatList from "./ChatList";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +16,7 @@ const ChatHistory = () => {
 
 
     useEffect(() => {
-        dispatch(getChatSessions());
+        dispatch(getConversations());
     }, [dispatch]);
 
     useEffect(() => {
@@ -36,13 +36,13 @@ const ChatHistory = () => {
     const handleCreateConversation = () => {
         dispatch(createConversation())
         .then(({payload}) => {
-            navigate(`/chat/${payload.sessionId}`);
+            navigate(`/chat/${payload.conversationId}`);
         });
     };
 
     return (
         <div
-            className={`flex flex-col bg-white bg-clip-border text-gray-700 shadow-xl shadow-blue-gray-900/5 transition-width duration-300 border border-pink-50`}
+            className={`flex flex-col flex-1 bg-white bg-clip-border text-gray-700 shadow-xl shadow-blue-gray-900/5 transition-width duration-300 border border-pink-50`}
         >
             <div className='flex items-center justify-between p-4  border-pink-50'>
                 <div className="flex items-center flex-grow border  border-gray-500 rounded-3xl p-2">

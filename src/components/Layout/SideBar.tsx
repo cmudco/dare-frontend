@@ -43,7 +43,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`relative flex ${
+      className={`relative h-full flex ${
         isCollapsed
           ? "w-[80px]"
           : "w-[160px] md:w-[200px] lg:w-[260px]"

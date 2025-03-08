@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { initialState } from "./initialState/chat";
-import { getChatSessions, getAvailableModels, createConversation } from "./aynscThunks/chat";
+import { getConversations, getAvailableModels, createConversation } from "./aynscThunks/chat";
 import {
     ChatMessage,
     ChatSession,
@@ -33,53 +33,54 @@ export const chatSlice = createSlice({
         updateChatInput(state, action: PayloadAction<string>) {
             state.chatInput = action.payload;
         },
-        addMessage(state, action: PayloadAction<ChatMessage>) {
-            state.activeChatMessages.push(action.payload);
-        },
         clearChat(state) {
             state.activeChatMessages = [];
         },
-        updateMessage(state, action: PayloadAction<ChatMessage>) {
-            const index = state.activeChatMessages.findIndex(
-                (msg) => msg?.id === action.payload.id
-            );
-        
+        addMessage(state, action: PayloadAction<ChatMessage>) {
+            const index = state.activeChatMessages.findIndex((msg) => msg?.id === action.payload.id);
             if (index !== -1) {
-                // Merge updates instead of replacing the whole message
-                state.activeChatMessages[index] = {
-                    ...state.activeChatMessages[index], 
-                    ...action.payload, 
-                };
+                state.activeChatMessages[index] = action.payload;
             } else {
                 state.activeChatMessages.push(action.payload);
             }
-        },        
-        setAvailableModels(
-            state,
-            action: PayloadAction<
-                { id: string; name: string; description: string }[]
-            >
+        },
+        updateMessage(state, action: PayloadAction<Partial<ChatMessage>>) { 
+            const index = state.activeChatMessages.findIndex((msg) => msg?.id === action.payload.id);
+            if (index !== -1) {
+                state.activeChatMessages[index] = {
+                    ...state.activeChatMessages[index], 
+                    ...action.payload,
+                    message: `${state.activeChatMessages[index].message}${action.payload.message}`
+                };
+            }
+        },      
+        setAvailableModels(state, action: PayloadAction<{ id: string; name: string; description: string }[]>
         ) {
             state.availableModels = action.payload;
         },
-        setApiKey(state, action: PayloadAction<string>) {
-            state.apiKey = action.payload;
+        updateConversationTitle(state, action: PayloadAction<string>) {
+            console.log("Updating conversation title to:", action.payload, state.activeChat);
+            if (!state.activeChat) {return}
+            state.activeChat.title = action.payload;
         },
+        updateConversationHistory(state, action: PayloadAction<ChatMessage[]>) {
+            state.activeChatMessages = action.payload;
+        }
     },
     extraReducers: (builder) => {
         builder
-            .addCase(getChatSessions.pending, (state) => {
+            .addCase(getConversations.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(
-                getChatSessions.fulfilled,
+                getConversations.fulfilled,
                 (state, action: PayloadAction<ChatSession[]>) => {
                     state.loading = false;
                     state.sessions = action.payload;
                 }
             )
-            .addCase(getChatSessions.rejected, (state, action) => {
+            .addCase(getConversations.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })
@@ -129,6 +130,7 @@ export const {
     clearChat,
     updateMessage,
     setAvailableModels,
-    setApiKey,
+    updateConversationTitle,
+    updateConversationHistory,
 } = chatSlice.actions;
 export default chatSlice.reducer;
