@@ -33,7 +33,7 @@ const ConversationList: React.FC = () => {
             const conversationId = activeConversation?.conversationId
             dispatch(deleteConversation(conversationId!))
             .then(() => {
-                navigate("/chat");
+                navigate("/conversation");
             })
         }
     };
