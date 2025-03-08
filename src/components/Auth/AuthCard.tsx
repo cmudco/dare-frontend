@@ -25,6 +25,7 @@ interface AuthCardProps<T extends FormikValues> {
   children?: React.ReactNode;
   roleSelect?: React.ReactNode;
   onResendVerification?: (values: T) => void;
+  
 }
 
 const AuthCard = <T extends FormikValues>({

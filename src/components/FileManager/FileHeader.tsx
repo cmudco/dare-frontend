@@ -16,6 +16,7 @@ const FileHeader: React.FC = () => {
                     icon={
                         <MagnifyingGlassIcon className='absolute h-5 w-5 text-gray-500' />
                     }
+                    crossOrigin={false}
                 />
             </div>
             <Button

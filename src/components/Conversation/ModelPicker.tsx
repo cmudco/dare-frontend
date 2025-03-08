@@ -18,14 +18,7 @@ const ModelPicker: React.FC = () => {
 
   useEffect(() => {
     dispatch(getAvailableModels());
-    // Debug log to see if models are being fetched
-    console.log("Fetching models...");
   }, [dispatch]);
-
-  // Debug: Log the models state whenever it changes
-  useEffect(() => {
-    console.log("Current models state:", models);
-  }, [models]);
 
   const handleModelPickerClick = () => {
     dispatch(toggleDropdown());
@@ -54,7 +47,6 @@ const ModelPicker: React.FC = () => {
   }, [showDropdown]);
 
   const handleModelSelect = (modelId: number) => {
-    console.log("Selected model:", modelId);
     dispatch(updateSelectedModel(modelId));
     dispatch(toggleDropdown());
   };

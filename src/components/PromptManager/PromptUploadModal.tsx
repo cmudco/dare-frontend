@@ -62,6 +62,7 @@ const PromptUploadModal: React.FC = () => {
           value={filename}
           className="w-full"
           onChange={(e) => dispatch(updateFilename(e.target.value))}
+          crossOrigin={false}
         />
 
         <div className="flex flex-col gap-2">
@@ -69,7 +70,7 @@ const PromptUploadModal: React.FC = () => {
             label="Add Tags"
             onChange={(value) => {
               if (value) {
-                dispatch(updateTagChange(value as string));
+                dispatch(updateTagChange(parseInt(value)));
               }
             }}
           >

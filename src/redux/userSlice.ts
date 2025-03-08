@@ -168,7 +168,6 @@ const userSlice = createSlice({
             })
             .addCase(updateProfilePicture.fulfilled, (state, action) => {
                 state.loading = false;
-                console.log(action.payload);
                 state.user = {
                     ...state.user!,
                     profile_picture: action.payload.profile_picture,

@@ -30,12 +30,6 @@ const ActiveConversation: React.FC = () => {
     }
   }, [id, conversations, dispatch]);
 
-
-useEffect(() => {
-    console.log(activeConversation); // Check if this is null or undefined
-}, [activeConversation]);
-
-
   useEffect(() => {
     const handleWebSocketConnection = async () => {
       if (isConnected) {
@@ -60,7 +54,7 @@ useEffect(() => {
   }, [activeConversation?.conversationId, dispatch]);
 
   return (
-    <Card className="flex flex-col flex-2 w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  ">
+    <Card className="flex flex-col flex-2 w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  " onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} placeholder={undefined}>
       <div className={`flex flex-col justify-between h-full`}>
         {!activeConversation && <NewConversation />}
         {activeConversation && <MessageList />}

@@ -4,8 +4,9 @@ import {
     getModelsAPI,
     createConversationAPI,
     getConversationsAPI,
+    deleteConversationAPI,
 } from "../../api/conversation";
-import { AppDispatch, RootState } from "../store";
+import { AppDispatch } from "../store";
 import { sendWebSocketMessage } from "./websocket";
 import { LLMModel } from "../types/conversation";
 
@@ -34,12 +35,25 @@ export const getConversations = createAsyncThunk(
         }
     }
 );
+
 export const createConversation = createAsyncThunk(
     "conversation/createConversation",
     async (_, thunkAPI) => {
         try {
             const newConversation = await createConversationAPI();
             return newConversation;
+        } catch (error) {
+            return thunkAPI.rejectWithValue((error as Error).message);
+        }
+    }
+);
+
+export const deleteConversation = createAsyncThunk(
+    "conversation/deleteConversation",
+    async (conversationId: string, thunkAPI) => {
+        try {
+            await deleteConversationAPI(conversationId);
+            return conversationId;
         } catch (error) {
             return thunkAPI.rejectWithValue((error as Error).message);
         }

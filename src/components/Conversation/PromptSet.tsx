@@ -28,7 +28,7 @@ const PromptSet: React.FC = () => {
     }
   }, []);
 
-  const handlePromptSelect = (prompt: string) => {
+  const handlePromptSelect = (_prompt: string) => {
     // if (activeConversation) {
     //   const newMessage: ChatMessage = {
     //     id: Math.random().toString(),

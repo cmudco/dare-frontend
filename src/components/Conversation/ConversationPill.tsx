@@ -37,7 +37,6 @@ const ConversationPill: React.FC = () => {
           navigate(`/conversation/${payload.conversationId}`);
         });
     } else {
-      console.log('Sending message:', newMessage);
       dispatch(sendMessage(newMessage));
       dispatch(updateConversationInput(""));
     }

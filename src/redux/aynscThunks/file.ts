@@ -43,7 +43,7 @@ export const deleteFile = createAsyncThunk(
     "files/archiveFile",
     async (id: number, thunkAPI) => {
         try {
-            const response = await deleteFileAPI(id);
+            await deleteFileAPI(id);
             return id;
         } catch (error) {
             return thunkAPI.rejectWithValue((error as Error).message);

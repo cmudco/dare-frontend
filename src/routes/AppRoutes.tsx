@@ -7,8 +7,6 @@ import ForgotScreen from "../pages/ForgotPassword";
 import RegistrationScreen from "../pages/Registration";
 import CoversationScreen from "../pages/Conversation/index.tsx";
 import UserView from "../components/Layout/UserView";
-import QrVerificationScreen from "../pages/QrVerification";
-import OTPRequired from "../pages/OTPRequired";
 import EmailConfirmationScreen from "../pages/EmailConfirmation";
 import RouteListener from "./RouteListener";
 import Prompt from "../pages/Prompts";
@@ -31,8 +29,6 @@ const AppRoutes = () => {
           <Route path='/forgot-password-success' element={<ForgotPasswordSuccess />} />
           <Route path='/verify-code' element={<VerifyCodeScreen />} />
           <Route path='/password-reset/confirm/:uid/:token' element={<ResetPasswordScreen />} />
-          <Route path='/qr-verification' element={<QrVerificationScreen />} />
-          <Route path='/otp-required' element={<OTPRequired />} />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
           <Route
             path="/"
