@@ -1,15 +1,15 @@
 import { getErrorMessage } from "../utils/errorHandler";
-import { ChatSession, ChatSessionResponse, LLMModel, NewChatPayload } from "../redux/types/chat";
+import { ChatSession, ChatSessionResponse, LLMModel, } from "../redux/types/chat";
 import axiosInstance from "@/utils/axios";
 
 const getAuthToken = () => {
     return localStorage.getItem("token");
 };
 
-export const getChatSessionsAPI = async (): Promise<ChatSessionResponse> => {
+export const getConversationsAPI = async (): Promise<ChatSessionResponse> => {
     try {
         const response = await axiosInstance.get<ChatSessionResponse>(
-            "/chats/api/conversations/",
+            "/api/conversations/",
             {
                 headers: {
                     Authorization: `Bearer ${getAuthToken()}`,
@@ -27,7 +27,7 @@ export const getChatSessionsAPI = async (): Promise<ChatSessionResponse> => {
 export const createConversationAPI = async () => {
     try {
         const response = await axiosInstance.post(
-            "/chats/api/conversations/",
+            "/api/conversations/",
             {
                 headers: {
                     Authorization: `Bearer ${getAuthToken()}`,
@@ -42,10 +42,10 @@ export const createConversationAPI = async () => {
 };
 
 // Get chat session details
-export const getChatSessionAPI = async (sessionId: string) => {
+export const getChatSessionAPI = async (conversationId: string) => {
     try {
         const response = await axiosInstance.get(
-            `/chats/api/conversations/${sessionId}/`,
+            `/api/conversations/${conversationId}/`,
             {
                 headers: {
                     Authorization: `Bearer ${getAuthToken()}`,
@@ -61,12 +61,12 @@ export const getChatSessionAPI = async (sessionId: string) => {
 
 // Update chat session (e.g., to change title)
 export const updateChatSessionAPI = async (
-    sessionId: string,
+    conversationId: string,
     updates: Partial<ChatSession>
 ) => {
     try {
         const response = await axiosInstance.patch(
-            `/chats/api/conversations/${sessionId}/`,
+            `/api/conversations/${conversationId}/`,
             updates,
             {
                 headers: {
@@ -82,15 +82,15 @@ export const updateChatSessionAPI = async (
 };
 
 // Delete/archive a chat session
-export const deleteChatSessionAPI = async (sessionId: string) => {
+export const deleteChatSessionAPI = async (conversationId: string) => {
     try {
-        await axiosInstance.delete(`/chats/api/conversations/${sessionId}/`, {
+        await axiosInstance.delete(`/api/conversations/${conversationId}/`, {
             headers: {
                 Authorization: `Bearer ${getAuthToken()}`,
                 Accept: "application/json",
             },
         });
-        return sessionId;
+        return conversationId;
     } catch (error) {
         throw new Error(getErrorMessage(error));
     }
@@ -100,7 +100,7 @@ export const deleteChatSessionAPI = async (sessionId: string) => {
 export const getMessagesAPI = async (conversationId: string) => {
     try {
         const response = await axiosInstance.get(
-            `/chats/api/messages/?conversation=${conversationId}`,
+            `/api/messages/?conversation=${conversationId}`,
             {
                 headers: {
                     Authorization: `Bearer ${getAuthToken()}`,
@@ -121,13 +121,13 @@ export const getModelsAPI = async (): Promise<LLMModel[]> => {
     }
 
     try {
-        const response = await axiosInstance.get("/chats/api/llms/", {
+        const response = await axiosInstance.get("/api/llms/", {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
         });
 
-        return response.data;
+        return response.data.results;
     } catch (error) {
         console.error("Error in getModelsAPI:", error);
         throw error;

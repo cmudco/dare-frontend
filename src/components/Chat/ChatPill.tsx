@@ -26,18 +26,15 @@ const ChatPill: React.FC = () => {
   const handleSendMessage = () => {
     if (chatInput.trim() === "") return;
 
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
+    const newMessage: Partial<ChatMessage> = {
       message: chatInput,
-      isSender: true,
-      date: new Date().toISOString(),
     };
 
     if (!activeChat) {
       dispatch(createConversation())
         .then(({payload}) => {
           dispatch(updateChatSession(payload));
-          navigate(`/chat/${payload.sessionId}`);
+          navigate(`/chat/${payload.conversationId}`);
         });
     } else {
       console.log('Sending message:', newMessage);
@@ -50,11 +47,8 @@ const ChatPill: React.FC = () => {
     if (chatInput.trim() === "") return;
 
     if (isConnected) {
-      const newMessage: ChatMessage = {
-        id: Date.now().toString(),
+      const newMessage: Partial<ChatMessage> = {
         message: chatInput,
-        isSender: true,
-        date: new Date().toISOString(),
       };
       dispatch(sendMessage(newMessage));
       dispatch(updateChatInput(""));

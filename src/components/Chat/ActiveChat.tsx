@@ -8,7 +8,6 @@ import { useParams } from "react-router-dom";
 import { updateChatInput, updateChatSession } from "../../redux/chatSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
-import { getChatMessages } from "../../redux/aynscThunks/chat";
 
 const ActiveChat: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,12 +17,11 @@ const ActiveChat: React.FC = () => {
   const sessions = useSelector((state: RootState) => state.chat?.sessions || []);
   const token = localStorage.getItem("token");
   const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
-  const apiKey = useSelector((state: RootState) => state.chat.apiKey);
 
 
   useEffect(() => {
     if (id) {
-      const session = sessions.find((session) => session.sessionId === id);
+      const session = sessions.find((session) => session.conversationId === id);
       if (session) {
         dispatch(updateChatSession(session));
       }
@@ -44,8 +42,7 @@ const ActiveChat: React.FC = () => {
       if (token && activeChat) {
         try {
           await dispatch(connectWebSocket({
-            apiKey: apiKey,
-            sessionId: activeChat.sessionId,
+            conversationId: activeChat.conversationId,
             jwtKey: token || ""
           }));
         } catch (error) {
@@ -56,11 +53,11 @@ const ActiveChat: React.FC = () => {
     };
 
     handleWebSocketConnection();
-  }, [apiKey, activeChat?.sessionId, dispatch]);
+  }, [activeChat?.conversationId, dispatch]);
 
   return (
-    <Card className="flex flex-col w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  ">
-      <div className={`flex flex-col justify-between ${activeChat ? "h-full" : "h-[50vh]"}`}>
+    <Card className="flex flex-col flex-2 w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  ">
+      <div className={`flex flex-col justify-between h-full`}>
         {!activeChat && <NewChat />}
         {activeChat && <MessageList />}
         <ChatPill />
