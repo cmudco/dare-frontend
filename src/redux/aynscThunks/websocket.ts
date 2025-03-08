@@ -23,13 +23,11 @@ export const connectWebSocket = createAsyncThunk<
 
         socket.onopen = () => {
             dispatch(setConnectionStatus(true));
-            console.log("WebSocket connected:", socketUrl);
             resolve();
         };
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            console.log("WebSocket received:", data);
 
             switch (data.type) {
                 case "conversation_history":
@@ -58,8 +56,7 @@ export const connectWebSocket = createAsyncThunk<
             reject(new Error("WebSocket error"));
         };
 
-        socket.onclose = (event) => {
-            console.log("WebSocket closed:", event.code, event.reason);
+        socket.onclose = (_event) => {
             dispatch(setConnectionStatus(false));
         };
     });

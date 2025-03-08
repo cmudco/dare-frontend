@@ -9,6 +9,7 @@ import {
 import { AppDispatch, RootState } from "../../redux/store";
 import { Conversation } from "../../redux/types/conversation";
 import { updateConversation, } from "../../redux/conversationSlice";
+import { deleteConversation } from "@/redux/aynscThunks/conversation";
 
 const ConversationList: React.FC = () => {
     const location = useLocation();
@@ -27,8 +28,14 @@ const ConversationList: React.FC = () => {
         navigate(`/conversation/${conversation.conversationId}`);
     };
 
-    const handleBottomItemClick = (item: any) => {
-
+    const handleBottomItemClick = (action?: string) => {
+        if (action === "clear") {
+            const conversationId = activeConversation?.conversationId
+            dispatch(deleteConversation(conversationId!))
+            .then(() => {
+                navigate("/chat");
+            })
+        }
     };
 
     return (
@@ -61,7 +68,7 @@ const ConversationList: React.FC = () => {
                 {bottomItems.map((item) => (
                     <div
                         key={item.name}
-                        onClick={() => handleBottomItemClick(item)}
+                        onClick={() => handleBottomItemClick(item.action)}
                         className={`flex items-center w-full p-3 leading-tight transition-all outline-none text-start font-normal rounded-md ${location.pathname === item.name
                             ? "bg-primary text-white"
                             : "hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"

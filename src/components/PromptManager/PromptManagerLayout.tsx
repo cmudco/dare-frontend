@@ -9,7 +9,7 @@ import { getFiles } from "../../redux/aynscThunks/file";
 
 import PromptUploadModal from "./PromptUploadModal";
 import PromptHeader from "./PromptHeader";
-import PromptTable from "./PromptTable";
+// import PromptTable from "./PromptTable";
 import PromptTableControls from "./PromptTableControls";
 
 
@@ -29,7 +29,7 @@ const PromptManagerLayout = () => {
           <CardBody className='px-0' placeholder='' >
             <PromptHeader />
 
-            <PromptTable />
+            {/* <PromptTable /> */}
 
           </CardBody>
           <PromptTableControls />

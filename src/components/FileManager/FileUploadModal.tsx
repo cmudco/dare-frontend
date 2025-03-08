@@ -7,7 +7,7 @@ import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, update
 import { getFiles, uploadNewFile } from '../../redux/aynscThunks/file';
 import { addTag, getTags } from '../../redux/aynscThunks/tag';
 
-const availableTags = ["Review", "Important", "Info", "Personal", "Work"];
+// const availableTags = ["Review", "Important", "Info", "Personal", "Work"];
 
 const FileUploadModal: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -86,6 +86,7 @@ const FileUploadModal: React.FC = () => {
           value={filename}
           className="w-full"
           onChange={(e) => dispatch(updateFilename(e.target.value))}
+          crossOrigin={false}
         />
 
         <div className="flex flex-col gap-2">
@@ -118,6 +119,7 @@ const FileUploadModal: React.FC = () => {
               label="New Tag"
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
+              crossOrigin={false}
             />
             <Button size="sm" color="green" onClick={handleCreateTag}>
               Create Tag

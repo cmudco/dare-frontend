@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { initialState } from "./initialState/conversation";
-import { getConversations, getAvailableModels, createConversation } from "./aynscThunks/conversation";
+import { getConversations, getAvailableModels, createConversation, deleteConversation } from "./aynscThunks/conversation";
 import {
     Message,
     Conversation,
@@ -58,7 +58,6 @@ export const conversationSlice = createSlice({
             state.availableModels = action.payload;
         },
         updateConversationTitle(state, action: PayloadAction<string>) {
-            console.log(state.activeConversation, action.payload);
             if (!state.activeConversation) {return}
             state.activeConversation.title = action.payload;
             const index = state.conversations.findIndex((conv) => conv.conversationId === state.activeConversation?.conversationId);
@@ -99,7 +98,6 @@ export const conversationSlice = createSlice({
                 (state, action: PayloadAction<LLMModel[]>) => {
                     state.loading = false;
                     state.availableModels = action.payload;
-                    console.log("Models loaded into state:", action.payload);
                 }
             )
             .addCase(getAvailableModels.rejected, (state, action) => {
@@ -114,13 +112,23 @@ export const conversationSlice = createSlice({
             .addCase(createConversation.fulfilled, (state, action) => {
                 state.loading = false;
                 state.conversations.unshift(action.payload); 
-            }
-            )
+            })
             .addCase(createConversation.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-            }
-            )
+            })
+            .addCase(deleteConversation.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(deleteConversation.fulfilled, (state, action) => {
+                state.loading = false;
+                state.conversations = state.conversations.filter((conv) => conv.conversationId !== action.payload);
+            })
+            .addCase(deleteConversation.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
     },
 });
 
