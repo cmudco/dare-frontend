@@ -1,20 +1,19 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { ChatMessage } from "../types/chat";
+import { Message } from "../types/conversation";
 import {
     getModelsAPI,
     createConversationAPI,
-    getMessagesAPI,
     getConversationsAPI,
-} from "../../api/chat";
+} from "../../api/conversation";
 import { AppDispatch, RootState } from "../store";
 import { sendWebSocketMessage } from "./websocket";
-import { LLMModel } from "../types/chat";
+import { LLMModel } from "../types/conversation";
 
 export const getAvailableModels = createAsyncThunk<
     LLMModel[],
     void,
     { rejectValue: string }
->("chat/getAvailableModels", async (_, thunkAPI) => {
+>("conversation/getAvailableModels", async (_, thunkAPI) => {
     try {
         const response = await getModelsAPI();
         return response || [];
@@ -25,18 +24,18 @@ export const getAvailableModels = createAsyncThunk<
 });
 
 export const getConversations = createAsyncThunk(
-    "chat/getConversations",
+    "conversation/getConversations",
     async (_, thunkAPI) => {
         try {
-            const sessions = await getConversationsAPI();
-            return sessions.results;
+            const conversations = await getConversationsAPI();
+            return conversations.results;
         } catch (error) {
             return thunkAPI.rejectWithValue((error as Error).message);
         }
     }
 );
 export const createConversation = createAsyncThunk(
-    "chat/createConversation",
+    "conversation/createConversation",
     async (_, thunkAPI) => {
         try {
             const newConversation = await createConversationAPI();
@@ -47,21 +46,9 @@ export const createConversation = createAsyncThunk(
     }
 );
 
-export const getChatMessages = createAsyncThunk(
-    "chat/getChatMessages",
-    async (conversationId: string, thunkAPI) => {
-        try {
-            const messages = await getMessagesAPI(conversationId);
-            return messages;
-        } catch (error) {
-            return thunkAPI.rejectWithValue((error as Error).message);
-        }
-    }
-);
-
 export const sendMessage = createAsyncThunk(
-    "chat/sendMessage",
-    async (message: Partial<ChatMessage> & { filePath?: string }, thunkAPI) => {
+    "conversation/sendMessage",
+    async (message: Partial<Message> & { filePath?: string }, thunkAPI) => {
         const dispatch = thunkAPI.dispatch as AppDispatch;
         try {
             dispatch(sendWebSocketMessage(message));

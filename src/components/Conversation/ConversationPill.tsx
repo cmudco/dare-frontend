@@ -2,56 +2,56 @@ import { Typography } from "@material-tailwind/react";
 import { PaperAirplaneIcon, } from "@heroicons/react/24/outline";
 
 import { useDispatch, useSelector } from "react-redux";
-import { updateChatInput, updateChatSession } from "../../redux/chatSlice";
+import { updateConversationInput, updateConversation } from "../../redux/conversationSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 import ModelPicker from "./ModelPicker";
 import PromptSet from "./PromptSet";
-import { ChatMessage } from "../../redux/types/chat";
+import { Message } from "../../redux/types/conversation";
 import { useNavigate } from "react-router-dom";
-import { sendMessage, createConversation } from "../../redux/aynscThunks/chat";
-import ChatFileUpload from "./ChatFileUpload";
+import { sendMessage, createConversation } from "../../redux/aynscThunks/conversation";
+import ConversationFileSelect from "./ConversationFileSelect";
 import { useEffect } from "react";
 
-const ChatPill: React.FC = () => {
+const ConversationPill: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const chatInput = useSelector((state: RootState) => state.chat.chatInput);
-  const activeChat = useSelector((state: RootState) => state.chat.activeChat);
+  const conversationInput = useSelector((state: RootState) => state.conversation.conversationInput);
+  const activeConversation = useSelector((state: RootState) => state.conversation.activeConversation);
   const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
   const navigate = useNavigate();
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(updateChatInput(event.target.value));
+    dispatch(updateConversationInput(event.target.value));
   };
 
   const handleSendMessage = () => {
-    if (chatInput.trim() === "") return;
+    if (conversationInput.trim() === "") return;
 
-    const newMessage: Partial<ChatMessage> = {
-      message: chatInput,
+    const newMessage: Partial<Message> = {
+      message: conversationInput,
     };
 
-    if (!activeChat) {
+    if (!activeConversation) {
       dispatch(createConversation())
         .then(({payload}) => {
-          dispatch(updateChatSession(payload));
-          navigate(`/chat/${payload.conversationId}`);
+          dispatch(updateConversation(payload));
+          navigate(`/conversation/${payload.conversationId}`);
         });
     } else {
       console.log('Sending message:', newMessage);
       dispatch(sendMessage(newMessage));
-      dispatch(updateChatInput(""));
+      dispatch(updateConversationInput(""));
     }
   };
 
   useEffect(() => {
-    if (chatInput.trim() === "") return;
+    if (conversationInput.trim() === "") return;
 
     if (isConnected) {
-      const newMessage: Partial<ChatMessage> = {
-        message: chatInput,
+      const newMessage: Partial<Message> = {
+        message: conversationInput,
       };
       dispatch(sendMessage(newMessage));
-      dispatch(updateChatInput(""));
+      dispatch(updateConversationInput(""));
     }
   }, [isConnected, dispatch]);
 
@@ -66,10 +66,10 @@ const ChatPill: React.FC = () => {
     <div className="flex flex-col justify-end">
       <div className="flex items-center w-full ">
         <div className="relative flex items-center w-full rounded-md">
-          <ChatFileUpload />
+          <ConversationFileSelect />
           <input
             type="text"
-            value={chatInput}
+            value={conversationInput}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder="Type message"
@@ -90,4 +90,4 @@ const ChatPill: React.FC = () => {
   );
 };
 
-export default ChatPill;
+export default ConversationPill;

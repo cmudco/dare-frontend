@@ -1,22 +1,22 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { initialState } from "./initialState/chat";
-import { getConversations, getAvailableModels, createConversation } from "./aynscThunks/chat";
+import { initialState } from "./initialState/conversation";
+import { getConversations, getAvailableModels, createConversation } from "./aynscThunks/conversation";
 import {
-    ChatMessage,
-    ChatSession,
+    Message,
+    Conversation,
     LLMModel,
-} from "./types/chat";
+} from "./types/conversation";
 import { MyFile } from "./types/files";
 
-export const chatSlice = createSlice({
-    name: "chat",
+export const conversationSlice = createSlice({
+    name: "conversation",
     initialState,
     reducers: {
         updateSearchQuery(state, action: PayloadAction<string>) {
             state.searchQuery = action.payload;
         },
-        updateChatSession(state, action: PayloadAction<ChatSession | null>) {
-            state.activeChat = action.payload;
+        updateConversation(state, action: PayloadAction<Conversation | null>) {
+            state.activeConversation = action.payload;
         },
         updateSelectedModel(state, action: PayloadAction<number>) {
             state.selectedModel = action.payload;
@@ -30,41 +30,47 @@ export const chatSlice = createSlice({
         setHoveredModel(state, action: PayloadAction<string | null>) {
             state.hoveredModel = action.payload;
         },
-        updateChatInput(state, action: PayloadAction<string>) {
-            state.chatInput = action.payload;
+        updateConversationInput(state, action: PayloadAction<string>) {
+            state.conversationInput = action.payload;
         },
-        clearChat(state) {
-            state.activeChatMessages = [];
+        clearConversation(state) {
+            state.activeConversationMessages = [];
         },
-        addMessage(state, action: PayloadAction<ChatMessage>) {
-            const index = state.activeChatMessages.findIndex((msg) => msg?.id === action.payload.id);
+        addMessage(state, action: PayloadAction<Message>) {
+            const index = state.activeConversationMessages.findIndex((msg) => msg?.id === action.payload.id);
             if (index !== -1) {
-                state.activeChatMessages[index] = action.payload;
+                state.activeConversationMessages[index] = action.payload;
             } else {
-                state.activeChatMessages.push(action.payload);
+                state.activeConversationMessages.push(action.payload);
             }
         },
-        updateMessage(state, action: PayloadAction<Partial<ChatMessage>>) { 
-            const index = state.activeChatMessages.findIndex((msg) => msg?.id === action.payload.id);
+        updateMessage(state, action: PayloadAction<Partial<Message>>) { 
+            const index = state.activeConversationMessages.findIndex((msg) => msg?.id === action.payload.id);
             if (index !== -1) {
-                state.activeChatMessages[index] = {
-                    ...state.activeChatMessages[index], 
+                state.activeConversationMessages[index] = {
+                    ...state.activeConversationMessages[index], 
                     ...action.payload,
-                    message: `${state.activeChatMessages[index].message}${action.payload.message}`
+                    message: `${state.activeConversationMessages[index].message}${action.payload.message}`
                 };
             }
         },      
-        setAvailableModels(state, action: PayloadAction<LLMModel[]>
-        ) {
+        setAvailableModels(state, action: PayloadAction<LLMModel[]>) {
             state.availableModels = action.payload;
         },
         updateConversationTitle(state, action: PayloadAction<string>) {
-            console.log("Updating conversation title to:", action.payload, state.activeChat);
-            if (!state.activeChat) {return}
-            state.activeChat.title = action.payload;
+            console.log(state.activeConversation, action.payload);
+            if (!state.activeConversation) {return}
+            state.activeConversation.title = action.payload;
+            const index = state.conversations.findIndex((conv) => conv.conversationId === state.activeConversation?.conversationId);
+            if (index !== -1) {
+                state.conversations[index] = {
+                    ...state.conversations[index],
+                    title: action.payload
+                }
+            }
         },
-        updateConversationHistory(state, action: PayloadAction<ChatMessage[]>) {
-            state.activeChatMessages = action.payload;
+        updateConversationHistory(state, action: PayloadAction<Message[]>) {
+            state.activeConversationMessages = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -75,9 +81,9 @@ export const chatSlice = createSlice({
             })
             .addCase(
                 getConversations.fulfilled,
-                (state, action: PayloadAction<ChatSession[]>) => {
+                (state, action: PayloadAction<Conversation[]>) => {
                     state.loading = false;
-                    state.sessions = action.payload;
+                    state.conversations = action.payload;
                 }
             )
             .addCase(getConversations.rejected, (state, action) => {
@@ -92,14 +98,14 @@ export const chatSlice = createSlice({
                 getAvailableModels.fulfilled,
                 (state, action: PayloadAction<LLMModel[]>) => {
                     state.loading = false;
-                    state.availableModels = action.payload; // This should now be the results array directly
-                    console.log("Models loaded into state:", action.payload); // Debug log
+                    state.availableModels = action.payload;
+                    console.log("Models loaded into state:", action.payload);
                 }
             )
             .addCase(getAvailableModels.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-                console.error("Failed to load models:", action.payload); // Debug log
+                console.error("Failed to load models:", action.payload);
             })
             .addCase(createConversation.pending, (state) => {
                 state.loading = true;
@@ -107,7 +113,7 @@ export const chatSlice = createSlice({
             })
             .addCase(createConversation.fulfilled, (state, action) => {
                 state.loading = false;
-                state.sessions.push(action.payload)
+                state.conversations.unshift(action.payload); 
             }
             )
             .addCase(createConversation.rejected, (state, action) => {
@@ -120,17 +126,17 @@ export const chatSlice = createSlice({
 
 export const {
     updateSearchQuery,
-    updateChatSession,
+    updateConversation,
     updateSelectedModel,
     updateSelectedFiles,
     toggleDropdown,
     setHoveredModel,
-    updateChatInput,
+    updateConversationInput,
     addMessage,
-    clearChat,
+    clearConversation,
     updateMessage,
     setAvailableModels,
     updateConversationTitle,
     updateConversationHistory,
-} = chatSlice.actions;
-export default chatSlice.reducer;
+} = conversationSlice.actions;
+export default conversationSlice.reducer;

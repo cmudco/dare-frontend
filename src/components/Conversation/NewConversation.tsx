@@ -1,6 +1,6 @@
 import { Typography } from "@material-tailwind/react";
 
-const NewChat: React.FC = () => {
+const NewConversation: React.FC = () => {
 
     return (
         <div className="flex justify-center items-center h-full">
@@ -11,4 +11,4 @@ const NewChat: React.FC = () => {
     );
 };
 
-export default NewChat;
+export default NewConversation;

@@ -31,7 +31,7 @@ const Sidebar = () => {
 
   const menuItems = [
     { name: "Dashboard", icon: RectangleGroupIcon, path: "/dashboard" },
-    { name: "Chat", icon: ChatBubbleBottomCenterIcon, path: "/chat" },
+    { name: "Conversation", icon: ChatBubbleBottomCenterIcon, path: "/conversation" },
     { name: "Files", icon: FolderIcon, path: "/files" },
     { name: "Prompts", icon: GoCommandPalette, path: "/prompts", disabled: true }, 
   ];

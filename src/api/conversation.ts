@@ -1,14 +1,14 @@
 import { getErrorMessage } from "../utils/errorHandler";
-import { ChatSession, ChatSessionResponse, LLMModel, } from "../redux/types/chat";
+import { Conversation, ConversationResponse, LLMModel, } from "../redux/types/conversation";
 import axiosInstance from "@/utils/axios";
 
 const getAuthToken = () => {
     return localStorage.getItem("token");
 };
 
-export const getConversationsAPI = async (): Promise<ChatSessionResponse> => {
+export const getConversationsAPI = async (): Promise<ConversationResponse> => {
     try {
-        const response = await axiosInstance.get<ChatSessionResponse>(
+        const response = await axiosInstance.get<ConversationResponse>(
             "/api/conversations/",
             {
                 headers: {
@@ -23,7 +23,6 @@ export const getConversationsAPI = async (): Promise<ChatSessionResponse> => {
     }
 };
 
-// Create a conversation with optional title
 export const createConversationAPI = async () => {
     try {
         const response = await axiosInstance.post(
@@ -41,8 +40,7 @@ export const createConversationAPI = async () => {
     }
 };
 
-// Get chat session details
-export const getChatSessionAPI = async (conversationId: string) => {
+export const getConversationAPI = async (conversationId: string) => {
     try {
         const response = await axiosInstance.get(
             `/api/conversations/${conversationId}/`,
@@ -59,10 +57,9 @@ export const getChatSessionAPI = async (conversationId: string) => {
     }
 };
 
-// Update chat session (e.g., to change title)
-export const updateChatSessionAPI = async (
+export const updateConversationAPI = async (
     conversationId: string,
-    updates: Partial<ChatSession>
+    updates: Partial<Conversation>
 ) => {
     try {
         const response = await axiosInstance.patch(
@@ -81,8 +78,7 @@ export const updateChatSessionAPI = async (
     }
 };
 
-// Delete/archive a chat session
-export const deleteChatSessionAPI = async (conversationId: string) => {
+export const deleteConversationAPI = async (conversationId: string) => {
     try {
         await axiosInstance.delete(`/api/conversations/${conversationId}/`, {
             headers: {
@@ -91,24 +87,6 @@ export const deleteChatSessionAPI = async (conversationId: string) => {
             },
         });
         return conversationId;
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
-    }
-};
-
-// Get messages for a specific conversation
-export const getMessagesAPI = async (conversationId: string) => {
-    try {
-        const response = await axiosInstance.get(
-            `/api/messages/?conversation=${conversationId}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${getAuthToken()}`,
-                    Accept: "application/json",
-                },
-            }
-        );
-        return response.data;
     } catch (error) {
         throw new Error(getErrorMessage(error));
     }

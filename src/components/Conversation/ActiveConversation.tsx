@@ -2,47 +2,51 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import { Card } from "@material-tailwind/react";
-import ChatPill from "./ChatPill";
-import NewChat from "./NewChat";
+import ConversationPill from "./ConversationPill";
+import NewConversation from "./NewConversation";
 import { useParams } from "react-router-dom";
-import { updateChatInput, updateChatSession } from "../../redux/chatSlice";
+import { updateConversationInput, updateConversation } from "../../redux/conversationSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
 
-const ActiveChat: React.FC = () => {
+const ActiveConversation: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const activeChat = useSelector((state: RootState) => state.chat?.activeChat);
+  const activeConversation = useSelector((state: RootState) => state.conversation?.activeConversation);
 
   const { id } = useParams<{ id: string }>();
-  const sessions = useSelector((state: RootState) => state.chat?.sessions || []);
+  const conversations = useSelector((state: RootState) => state.conversation?.conversations || []);
   const token = localStorage.getItem("token");
   const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
 
 
   useEffect(() => {
     if (id) {
-      const session = sessions.find((session) => session.conversationId === id);
-      if (session) {
-        dispatch(updateChatSession(session));
+      const conversation = conversations.find((conversation) => conversation.conversationId === id);
+      if (!activeConversation && conversation) {
+        dispatch(updateConversation(conversation));
       }
     } else {
-      dispatch(updateChatSession(null));
+      dispatch(updateConversation(null));
     }
-  }, [id, sessions, dispatch]);
+  }, [id, conversations, dispatch]);
+
+
+useEffect(() => {
+    console.log(activeConversation); // Check if this is null or undefined
+}, [activeConversation]);
+
 
   useEffect(() => {
     const handleWebSocketConnection = async () => {
-      console.log("WebSocket connection");
       if (isConnected) {
-        // empty the text
-        dispatch(updateChatInput(""));
+        dispatch(updateConversationInput(""));
         await dispatch(disconnectWebSocket());
       }
 
-      if (token && activeChat) {
+      if (token && activeConversation) {
         try {
           await dispatch(connectWebSocket({
-            conversationId: activeChat.conversationId,
+            conversationId: activeConversation.conversationId,
             jwtKey: token || ""
           }));
         } catch (error) {
@@ -53,17 +57,17 @@ const ActiveChat: React.FC = () => {
     };
 
     handleWebSocketConnection();
-  }, [activeChat?.conversationId, dispatch]);
+  }, [activeConversation?.conversationId, dispatch]);
 
   return (
     <Card className="flex flex-col flex-2 w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  ">
       <div className={`flex flex-col justify-between h-full`}>
-        {!activeChat && <NewChat />}
-        {activeChat && <MessageList />}
-        <ChatPill />
+        {!activeConversation && <NewConversation />}
+        {activeConversation && <MessageList />}
+        <ConversationPill />
       </div>
     </Card>
   );
 };
 
-export default ActiveChat;
+export default ActiveConversation;

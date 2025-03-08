@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { clearChat, updateMessage, addMessage, updateConversationTitle, updateConversationHistory } from "../chatSlice";
-import { ChatMessage } from "../types/chat";
+import { clearConversation, updateMessage, addMessage, updateConversationTitle, updateConversationHistory } from "../conversationSlice";
+import { Message } from "../types/conversation";
 import { AppDispatch, RootState } from "../store";
 import { setConnectionStatus } from "../websocketSlice";
 import { WEBSOCKET_URL } from "../../api/config";
@@ -13,7 +13,7 @@ export const connectWebSocket = createAsyncThunk<
     { dispatch: AppDispatch; state: RootState }
 >("websocket/connect", async ({ conversationId, jwtKey }, { dispatch }) => {
     return new Promise<void>((resolve, reject) => {
-        dispatch(clearChat());
+        dispatch(clearConversation());
 
         const socketUrl = `${WEBSOCKET_URL}/conversations/${conversationId}/?jwt_key=${encodeURIComponent(
             jwtKey
@@ -32,15 +32,15 @@ export const connectWebSocket = createAsyncThunk<
             console.log("WebSocket received:", data);
 
             switch (data.type) {
-                case "chat_history":
-                    if (data.chatHistory) dispatch(updateConversationHistory(data.chatHistory));
+                case "conversation_history":
+                    if (data.conversationHistory) dispatch(updateConversationHistory(data.conversationHistory));
                     break;
 
                 case "message":
-                    dispatch(addMessage(data as ChatMessage));
+                    dispatch(addMessage(data as Message));
                     break;
                 case "ai_stream":
-                    dispatch(updateMessage(data as Partial<ChatMessage>));
+                    dispatch(updateMessage(data as Partial<Message>));
                     break;
 
                 case "conversation_title":
@@ -67,13 +67,13 @@ export const connectWebSocket = createAsyncThunk<
 
 export const sendWebSocketMessage = createAsyncThunk<
     void,
-    Partial<ChatMessage>,
+    Partial<Message>,
     { dispatch: AppDispatch; state: RootState }
 >(
     "websocket/sendMessage",
     async (message, { rejectWithValue, getState, }) => {
         const state = getState();
-        const fileIds = state.chat.selectedFiles.map((file) => file.id);
+        const fileIds = state.conversation.selectedFiles.map((file) => file.id);
 
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(
@@ -81,7 +81,7 @@ export const sendWebSocketMessage = createAsyncThunk<
                     message: message.message,
                     sender_type: 1,
                     file_ids: fileIds,
-                    model_id: state.chat.selectedModel,
+                    model_id: state.conversation.selectedModel,
                 })
             );
         } else {

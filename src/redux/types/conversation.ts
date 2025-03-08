@@ -1,15 +1,16 @@
+import { SenderType } from "@/utils/constants/conversation";
 import { MyFile } from "./files";
 
-export interface ChatSession {
+export interface Conversation {
     conversationId: string;
     title?: string;
     createdAt: string;
     user?: string;
 }
-export interface ChatMessage {
+export interface Message {
     id: string;
     message: string;
-    senderType: number;
+    senderType: SenderType;
     senderName: string;
     isSender: boolean;
     date: string;
@@ -25,21 +26,21 @@ export interface LLMModel {
     description: string | null;
 }
 
-export interface ChatState {
-    sessions: ChatSession[];
-    activeChat: ChatSession | null;
+export interface ConversationState {
+    conversations: Conversation[];
+    activeConversation: Conversation | null;
     loading: boolean;
     error: string | null;
     searchQuery: string;
-    activeChatMessages: ChatMessage[];
+    activeConversationMessages: Message[];
     selectedModel: number | null;
     selectedFiles: MyFile[];
     showDropdown: boolean;
     hoveredModel: string | null;
-    chatInput: string;
+    conversationInput: string;
     availableModels: LLMModel[]
 }
 
-export interface ChatSessionResponse {
-    results: ChatSession[];
+export interface ConversationResponse {
+    results: Conversation[];
 }

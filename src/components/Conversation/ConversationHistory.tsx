@@ -3,16 +3,16 @@ import { useDispatch, useSelector } from "react-redux";
 import {
     MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { updateSearchQuery, } from "../../redux/chatSlice";
-import { getConversations, createConversation } from "../../redux/aynscThunks/chat";
+import { updateSearchQuery, } from "../../redux/conversationSlice";
+import { getConversations, createConversation } from "../../redux/aynscThunks/conversation";
 import { AppDispatch, RootState } from "../../redux/store";
-import ChatList from "./ChatList";
+import ConversationList from "./ConversationList";
 import { useNavigate } from "react-router-dom";
 
-const ChatHistory = () => {
+const ConversationHistory = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
-    const searchQuery = useSelector((state: RootState) => state.chat?.searchQuery || "");
+    const searchQuery = useSelector((state: RootState) => state.conversation?.searchQuery || "");
 
 
     useEffect(() => {
@@ -36,7 +36,7 @@ const ChatHistory = () => {
     const handleCreateConversation = () => {
         dispatch(createConversation())
         .then(({payload}) => {
-            navigate(`/chat/${payload.conversationId}`);
+            navigate(`/conversation/${payload.conversationId}`);
         });
     };
 
@@ -63,9 +63,9 @@ const ChatHistory = () => {
                 </button>
             </div>
             <hr className=" border-gray-200 mx-1" />
-            <ChatList />
+            <ConversationList />
         </div>
     );
 };
 
-export default ChatHistory;
+export default ConversationHistory;
