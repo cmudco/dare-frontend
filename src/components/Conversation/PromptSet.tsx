@@ -3,8 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import { getPrompts } from "../../redux/aynscThunks/prompt";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import { Button } from "@material-tailwind/react";
 import { GoCommandPalette } from "react-icons/go";
+import { Button } from "../UI/button";
 
 const PromptSet: React.FC = () => {
   const dispatch = useDispatch();
@@ -72,7 +72,7 @@ const PromptSet: React.FC = () => {
               <h3 className="text-lg text-black font-bold flex items-center">
                 Select Prompt
               </h3>
-              <Button className="text-white bg-primary flex items-center px-4 py-2 rounded-xl">
+              <Button className="bg-primary flex items-center px-4 py-2 rounded-xl text-white">
                 <PlusIcon className="w-6 h-6 mr-1" />
                 Create Prompt
               </Button>

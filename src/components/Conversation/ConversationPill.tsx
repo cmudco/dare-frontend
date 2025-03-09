@@ -1,4 +1,3 @@
-import { Typography } from "@material-tailwind/react";
 import { PaperAirplaneIcon, } from "@heroicons/react/24/outline";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -32,7 +31,7 @@ const ConversationPill: React.FC = () => {
 
     if (!activeConversation) {
       dispatch(createConversation())
-        .then(({payload}) => {
+        .then(({ payload }) => {
           dispatch(updateConversation(payload));
           navigate(`/conversation/${payload.conversationId}`);
         });
@@ -82,9 +81,9 @@ const ConversationPill: React.FC = () => {
         <PromptSet />
         <ModelPicker />
       </div>
-      <Typography variant="small" className="mt-4 text-center">
+      <p className="text-sm text-center mt-2">
         Dare Chat can make mistakes. Check important information.
-      </Typography>
+      </p>
     </div>
   );
 };
