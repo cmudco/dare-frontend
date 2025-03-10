@@ -1,11 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { fetchFiles, uploadFile, deleteFileAPI } from "../../api/files";
+import { uploadFileAPI, deleteFileAPI, getFilesAPI } from "../../api/files";
 
 export const getFiles = createAsyncThunk(
     "files/getFiles",
     async (_, thunkAPI) => {
         try {
-            const response = await fetchFiles();
+            const response = await getFilesAPI();
             return response;
         } catch (error) {
             return thunkAPI.rejectWithValue((error as Error).message);
@@ -23,15 +23,14 @@ export const uploadNewFile = createAsyncThunk(
         files.forEach((file) => formData.append("file", file));
         formData.append("name", name);
 
-        // Handle tags properly - append each tag ID individually
         if (tags && tags.length > 0) {
-            tags.forEach(tagId => {
+            tags.forEach((tagId) => {
                 formData.append("tags", tagId.toString());
             });
         }
 
         try {
-            const response = await uploadFile(formData);
+            const response = await uploadFileAPI(formData);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue((error as Error).message);

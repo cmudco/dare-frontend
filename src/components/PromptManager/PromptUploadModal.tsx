@@ -1,89 +1,154 @@
-import React from 'react';
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "../../redux/store";
+import { createPrompt, updatePrompt, getPromptById } from "../../redux/aynscThunks/prompt";
+import { clearSelectedPrompt, closeModal } from "../../redux/promptSlice";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "../UI/dialog";
+import { Button } from "../UI/button";
+import { Input } from "../UI/input";
+import { Label } from "../UI/label";
+import { Textarea } from "../UI/textarea";
+import { Formik, Form } from "formik";
+import * as Yup from "yup";
+
+const promptValidationSchema = Yup.object().shape({
+  title: Yup.string().required("Title is required"),
+  content: Yup.string().required("Content is required"),
+});
 
 const PromptUploadModal: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { selectedPrompt, loading, isModalOpen } = useSelector(
+    (state: RootState) => state.prompt
+  );
+  const isEditMode = !!selectedPrompt;
 
+  const initialValues = {
+    title: selectedPrompt?.title || "",
+    content: selectedPrompt?.content || "",
+  };
+
+  useEffect(() => {
+    if (selectedPrompt?.id && isModalOpen) {
+      dispatch(getPromptById(selectedPrompt.id));
+    }
+  }, [selectedPrompt?.id, isModalOpen, dispatch]);
+
+  const handleClose = () => {
+    dispatch(closeModal());
+    if (selectedPrompt) {
+      dispatch(clearSelectedPrompt());
+    }
+  };
+
+  const handleSubmit = async (values: { title: string; content: string }) => {
+    try {
+      if (isEditMode && selectedPrompt?.id) {
+        await dispatch(
+          updatePrompt({
+            id: selectedPrompt.id,
+            promptData: {
+              title: values.title,
+              content: values.content,
+            },
+          })
+        ).unwrap();
+      } else {
+        await dispatch(
+          createPrompt({
+            title: values.title,
+            content: values.content,
+          })
+        ).unwrap();
+      }
+      handleClose();
+    } catch (error) {
+      console.error("Failed to save prompt:", error);
+    }
+  };
 
   return (
-    <></>
-    // <Dialog
-    //   open={isModalOpen}
-    //   handler={() => dispatch(closeModal())}
-    //   size="sm"
-    //   className="p-8 mx-auto shadow-md rounded-2xl xl:w-[40vw] lg:w-[50vw] md:w-[60vw] w-[80vw] flex flex-col items-center justify-center relative xl:min-h-[55vh] min-h-[50vh]"
-    // >
-    //   <DialogHeader>
-    //     <Typography variant="h5" className="text-center">
-    //       Edit File Upload
-    //     </Typography>
-    //   </DialogHeader>
-    //   <DialogBody
-    //     className="space-y-6 w-full"
-    //     onDrop={handleDrop}
-    //     onDragOver={handleDragOver}
-    //   >
-    //     <Input
-    //       label="File Name"
-    //       value={filename}
-    //       className="w-full"
-    //       onChange={(e) => dispatch(updateFilename(e.target.value))}
-    //       crossOrigin={false}
-    //     />
+    <Dialog open={isModalOpen} onOpenChange={handleClose}>
+      <DialogContent className="p-6 mx-auto w-[90vw] max-w-md bg-white rounded-lg shadow-lg">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold text-gray-900">
+            {isEditMode ? "Edit Prompt" : "Create New Prompt"}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-gray-500">
+            {isEditMode
+              ? "Update your prompt details below."
+              : "Fill in the details to create a new prompt."}
+          </DialogDescription>
+        </DialogHeader>
 
-    //     <div className="flex flex-col gap-2">
-    //       <Select
-    //         label="Add Tags"
-    //         onChange={(value) => {
-    //           if (value) {
-    //             dispatch(updateTagChange(parseInt(value)));
-    //           }
-    //         }}
-    //       >
-    //         {availableTags.map((tag) => (
-    //           <Option key={tag} value={tag}>
-    //             {tag}
-    //           </Option>
-    //         ))}
-    //       </Select>
-    //       <div className="flex flex-wrap gap-2">
-    //         {selectedTags.map((tag) => (
-    //           <Chip
-    //             key={tag}
-    //             value={tag}
-    //             onClose={() => dispatch(updateRemoveTag(tag))}
-    //             className="bg-yellow-100 text-yellow-600"
-    //           />
-    //         ))}
-    //       </div>
-    //     </div>
+        <Formik
+          initialValues={initialValues}
+          validationSchema={promptValidationSchema}
+          onSubmit={handleSubmit}
+          enableReinitialize
+        >
+          {({
+            values,
+            errors,
+            touched,
+            handleChange,
+            isValid,
+            dirty,
+          }) => (
+            <Form className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Prompt Title</Label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={values.title}
+                  onChange={handleChange}
+                  placeholder="Enter prompt title"
+                  className={
+                    errors.title && touched.title ? "border-red-500" : ""
+                  }
+                />
+                {errors.title && touched.title && (
+                  <p className="text-red-500 text-xs mt-1">{errors.title}</p>
+                )}
+              </div>
 
-    //     <div className="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center bg-blue-50 hover:bg-blue-100 transition cursor-pointer">
-    //       <div
-    //         onClick={() => document.getElementById("fileInput")?.click()}
-    //         className="font-medium"
-    //       >
-    //         Drop your files here or <span className="text-blue-600">browse</span>
-    //       </div>
-    //       <input
-    //         id="fileInput"
-    //         type="file"
-    //         multiple
-    //         onChange={handleFileChange}
-    //         className="hidden"
-    //       />
-    //       <Typography variant="small" className="mt-2 text-gray-500">
-    //         Maximum size: 1 MB
-    //       </Typography>
-    //     </div>
-    //   </DialogBody>
-    //   <DialogFooter className="flex justify-end space-x-2 p-4">
-    //     <Button color="gray" onClick={() => dispatch(closeModal())}>
-    //       Cancel
-    //     </Button>
-    //     <Button className="bg-primary" onClick={handleUploadClick}>
-    //       Save
-    //     </Button>
-    //   </DialogFooter>
-    // </Dialog>
+              <div className="space-y-2">
+                <Label htmlFor="content">Prompt Content</Label>
+                <Textarea
+                  id="content"
+                  name="content"
+                  value={values.content}
+                  onChange={handleChange}
+                  placeholder="Enter prompt content"
+                  className={`min-h-[150px] ${errors.content && touched.content ? "border-red-500" : ""
+                    }`}
+                />
+                {errors.content && touched.content && (
+                  <p className="text-red-500 text-xs mt-1">{errors.content}</p>
+                )}
+              </div>
+
+              <DialogFooter className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={!(isValid && dirty) || loading}>
+                  {loading ? "Saving..." : isEditMode ? "Update" : "Create"}
+                </Button>
+              </DialogFooter>
+            </Form>
+          )}
+        </Formik>
+      </DialogContent>
+    </Dialog>
   );
 };
 

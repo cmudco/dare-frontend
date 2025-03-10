@@ -121,7 +121,7 @@ const ConversationFileSelect: React.FC = () => {
                             </div>
                             {showTagFilter && (
                                 <div className="flex flex-wrap gap-2">
-                                    {tags.map((tag: Tag) => {
+                                    {tags?.map((tag: Tag) => {
                                         const isSelected = selectedTags.includes(tag.id);
                                         const colorVariant = getTagColor(tag.label);
 
