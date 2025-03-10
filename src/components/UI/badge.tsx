@@ -15,22 +15,45 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+
+        blue: "bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200",
+        green: "bg-green-100 text-green-800 border-green-300 hover:bg-green-200",
+        yellow: "bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200",
+        red: "bg-red-100 text-red-800 border-red-300 hover:bg-red-200",
+        purple: "bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200",
+        gray: "bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200",
+      },
+
+      selected: {
+        true: "",
+        false: "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200",
       },
     },
+    compoundVariants: [
+      {
+        selected: false,
+        variant: ["blue", "green", "yellow", "red", "purple", "gray"],
+        className: "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"
+      }
+    ],
     defaultVariants: {
       variant: "default",
+      selected: true,
     },
   }
 )
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+  VariantProps<typeof badgeVariants> {
+  selected?: boolean;
+}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
+function Badge({ className, variant, selected, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div className={cn(badgeVariants({ variant, selected }), className)} {...props} />
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { Badge, badgeVariants }
