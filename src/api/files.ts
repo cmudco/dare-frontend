@@ -1,13 +1,11 @@
 import axiosInstance from "@/utils/axios";
 import { getErrorMessage } from "../utils/errorHandler";
 
-
-
 const getAuthToken = () => {
     return localStorage.getItem("token");
 };
 
-export const fetchFiles = async () => {
+export const getFilesAPI = async () => {
     try {
         const response = await axiosInstance.get("/api/files/", {
             headers: {
@@ -20,7 +18,7 @@ export const fetchFiles = async () => {
     }
 };
 
-export const uploadFile = async (data: FormData) => {
+export const uploadFileAPI = async (data: FormData) => {
     try {
         const token = getAuthToken();
         const response = await axiosInstance.post("/api/files/", data, {

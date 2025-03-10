@@ -44,7 +44,7 @@ export const loginUser = async (data: { email: string; password: string }) => {
     }
 };
 
-export const fetchUserDataFromAPI = async (): Promise<User | null> => {
+export const getUserDataFromAPI = async (): Promise<User | null> => {
     const token = localStorage.getItem("token");
     if (!token) {
         return null;

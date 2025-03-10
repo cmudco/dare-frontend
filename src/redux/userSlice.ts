@@ -7,7 +7,7 @@ import {
     resetPassword,
     setup2FA,
     verifyCode,
-    fetchUserData,
+    getUserData,
     userLogout,
     verifyEmailRegistration,
     updateProfilePicture,
@@ -62,19 +62,19 @@ const userSlice = createSlice({
                 state.error = action.payload as string;
             })
 
-            .addCase(fetchUserData.pending, (state) => {
+            .addCase(getUserData.pending, (state) => {
                 state.loading = true;
                 state.userLoading = true;
                 state.error = null;
             })
-            .addCase(fetchUserData.fulfilled, (state, action) => {
+            .addCase(getUserData.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload;
                 state.isAuthenticated = true;
                 state.userLoading = false;
                 state.error = null;
             })
-            .addCase(fetchUserData.rejected, (state, action) => {
+            .addCase(getUserData.rejected, (state, action) => {
                 state.loading = false;
                 state.userLoading = false;
                 state.error = action.payload as string;

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename } from "../../redux/fileSlice";
 import { getFiles, uploadNewFile } from "../../redux/aynscThunks/file";
-import { addTag, getTags } from "../../redux/aynscThunks/tag";
+import { addTag, getTags,  } from "../../redux/aynscThunks/tag";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "../UI/dialog";
@@ -87,11 +87,17 @@ const FileUploadModal: React.FC = () => {
                 <SelectValue placeholder="Add Tags" />
               </SelectTrigger>
               <SelectContent>
-                {tags.map((tag) => (
-                  <SelectItem key={tag.id} value={tag.id.toString()}>
-                    {tag.label}
+                {Array.isArray(tags) && tags.length > 0 ? (
+                  tags.map((tag) => (
+                    <SelectItem key={tag.id} value={String(tag.id)}>
+                      {tag.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-tags" disabled>
+                    No tags available
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
 

@@ -7,7 +7,7 @@ import {
     resetPasswordUser,
     verifyCodeUser,
     setup2FA as setup2FAAPI,
-    fetchUserDataFromAPI,
+    getUserDataFromAPI,
     verifyEmailKey,
     logoutUser,
     uploadProfilePicture,
@@ -63,13 +63,13 @@ export const userLogin = createAsyncThunk(
     }
 );
 
-export const fetchUserData = createAsyncThunk<
+export const getUserData = createAsyncThunk<
     User,
     void,
     { rejectValue: string }
->("user/fetchUserData", async (_, thunkAPI) => {
+>("user/getUserData", async (_, thunkAPI) => {
     try {
-        const user = await fetchUserDataFromAPI();
+        const user = await getUserDataFromAPI();
         if (!user) {
             return thunkAPI.rejectWithValue("No user data found");
         }
