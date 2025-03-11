@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Button } from "../UI/button";
 import { Badge } from "../UI/badge";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../UI/Table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../UI/dropdown-menu";
+import { EllipsisVerticalIcon } from "lucide-react";
+
 
 interface FileTableProps {
     searchQuery: string;
@@ -101,10 +104,19 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                                             })}
                                     </div>
                                 </TableCell>
-                                <TableCell className="p-4">
-                                    <Button variant="destructive" onClick={() => handleDelete(id)} disabled={loading}>
-                                        Delete
-                                    </Button>
+                                <TableCell className="p-4 text-center">
+                                    <DropdownMenu >
+                                        <DropdownMenuTrigger className="hover:bg-gray-200 rounded-md p-2" >
+                                            <EllipsisVerticalIcon className="h-4 w-4 text-gray-500" />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                                <DropdownMenuItem
+                                                    className="text-red-500" onClick={() => handleDelete(id)}>
+
+                                                    <span>Delete</span>
+                                                </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </TableCell>
                             </TableRow>
                         ))

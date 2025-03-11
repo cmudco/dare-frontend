@@ -7,7 +7,6 @@ import {
     updatePrompt,
     deletePrompt,
 } from "./aynscThunks/prompt";
-import { Prompt } from "./types/prompt";
 
 const promptSlice = createSlice({
     name: "prompts",
@@ -27,7 +26,9 @@ const promptSlice = createSlice({
         },
         openEditModal: (state, action: PayloadAction<string>) => {
             state.isModalOpen = true;
-            state.selectedPrompt = { id: action.payload } as Prompt;
+            state.selectedPrompt =
+                state.prompts.find((prompt) => prompt.id === action.payload) ||
+                null;
         },
         closeModal: (state) => {
             state.isModalOpen = false;
@@ -123,19 +124,5 @@ export const {
     openEditModal,
     closeModal,
 } = promptSlice.actions;
-
-export const dispatchOpenModal = () => {
-    const event = new CustomEvent("redux-action", {
-        detail: { type: "prompts/openModal" },
-    });
-    document.dispatchEvent(event);
-};
-
-export const dispatchOpenEditModal = (id: string) => {
-    const event = new CustomEvent("redux-action", {
-        detail: { type: "prompts/openEditModal", payload: id },
-    });
-    document.dispatchEvent(event);
-};
 
 export default promptSlice.reducer;

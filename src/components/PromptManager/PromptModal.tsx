@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
-import { createPrompt, updatePrompt, getPromptById } from "../../redux/aynscThunks/prompt";
+import { createPrompt, updatePrompt,  } from "../../redux/aynscThunks/prompt";
 import { clearSelectedPrompt, closeModal } from "../../redux/promptSlice";
 import {
   Dialog,
@@ -34,12 +34,6 @@ const PromptUploadModal: React.FC = () => {
     title: selectedPrompt?.title || "",
     content: selectedPrompt?.content || "",
   };
-
-  useEffect(() => {
-    if (selectedPrompt?.id && isModalOpen) {
-      dispatch(getPromptById(selectedPrompt.id));
-    }
-  }, [selectedPrompt?.id, isModalOpen, dispatch]);
 
   const handleClose = () => {
     dispatch(closeModal());
