@@ -9,7 +9,7 @@ import { formatFileSize } from "@/utils/files";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../UI/select";
 import { Button } from "../UI/button";
 import { Badge } from "../UI/badge";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../UI/Table";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../UI/table";
 
 interface FileTableProps {
     searchQuery: string;
