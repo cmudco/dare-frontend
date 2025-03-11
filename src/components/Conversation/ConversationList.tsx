@@ -39,7 +39,7 @@ const ConversationList: React.FC = () => {
     };
 
     return (
-        <nav className="flex flex-col  gap-1 p-2 font-sans text-base font-normal text-blue-gray-700 h-full">
+        <nav className="flex flex-col  gap-1 font-sans text-base font-normal text-blue-gray-700 h-full">
             <div className="flex flex-col h-[65vh] overflow-scroll  w-full">
                 {conversations.map((conversation) => {
                     const conversationId = conversation.conversationId

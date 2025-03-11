@@ -1,16 +1,19 @@
-import { Spinner } from "@material-tailwind/react";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const Loader: React.FC = () => {
-    return (
-        <div className="relative h-screen w-full backdrop-blur">
-            <div className="absolute sm:block hidden w-full h-full">
-                <img src='/shapes/BgCircle.png' alt='' />
-            </div>
-            <div className="flex items-center justify-center h-full">
-                <Spinner color="red" className="h-16 w-16" />
-            </div>
-        </div>
-    );
+interface LoaderProps {
+  size?: number;
+  className?: string;
+}
+
+const Loader: React.FC<LoaderProps> = ({ size = 24, className }) => {
+  return (
+    <Loader2
+      className={cn("animate-spin text-red-500", className)}
+      width={size}
+      height={size}
+    />
+  );
 };
 
 export default Loader;

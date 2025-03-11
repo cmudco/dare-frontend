@@ -8,7 +8,10 @@ import { updateSelectedFiles } from "../../redux/conversationSlice";
 import { MyFile } from "../../redux/types/files";
 import { Tag } from "../../redux/types/tags";
 import { FolderIcon } from "@heroicons/react/24/solid";
-import { TAG_COLORS } from "../../utils/constants/file";
+
+import { Badge } from "../UI/badge";
+import { getTagColor } from "@/utils/files";
+
 
 const ConversationFileSelect: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -78,17 +81,11 @@ const ConversationFileSelect: React.FC = () => {
         );
     };
 
-    const getTagColor = (tagLabel: string) => {
-        return TAG_COLORS[tagLabel] || 'gray';
-    };
 
     const filteredFiles = files.filter(file => {
         const fileName = getFileName(file.file).toLowerCase();
         const matchesSearch = fileName.includes(searchQuery.toLowerCase());
-
-        // Filter by selected tags
         const matchesTags = selectedTags.length === 0 || file.tags?.some(tagId => selectedTags.includes(tagId));
-
         return matchesSearch && matchesTags;
     });
 
@@ -125,20 +122,19 @@ const ConversationFileSelect: React.FC = () => {
                             {showTagFilter && (
                                 <div className="flex flex-wrap gap-2">
                                     {tags.map((tag: Tag) => {
-                                        const isSelected = selectedTags.includes(tag.id); // Changed to tag.id
-                                        const color = getTagColor(tag.label);
+                                        const isSelected = selectedTags.includes(tag.id);
+                                        const colorVariant = getTagColor(tag.label);
+
                                         return (
-                                            <button
+                                            <Badge
                                                 key={tag.id}
-                                                onClick={() => handleTagToggle(tag.id)} // Changed to tag.id
-                                                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors
-                                                    ${isSelected
-                                                        ? `bg-${color}-100 text-${color}-800 border-${color}-300`
-                                                        : 'bg-gray-100 text-gray-600 border-gray-200'
-                                                    } border`}
+                                                variant={colorVariant}
+                                                selected={isSelected}
+                                                className="cursor-pointer"
+                                                onClick={() => handleTagToggle(tag.id)}
                                             >
                                                 {tag.label}
-                                            </button>
+                                            </Badge>
                                         );
                                     })}
                                     {tags.length === 0 && (

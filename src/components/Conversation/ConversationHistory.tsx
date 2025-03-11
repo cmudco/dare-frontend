@@ -43,7 +43,7 @@ const ConversationHistory = () => {
 
     return (
         <div
-            className={`flex flex-col flex-1 bg-white bg-clip-border text-gray-700 shadow-xl shadow-blue-gray-900/5 transition-width duration-300 border border-pink-50`}
+            className={`flex flex-col flex-1 bg-white bg-clip-border text-gray-700  transition-width duration-300 border border-pink-50`}
         >
             <div className='flex items-center justify-between p-4  border-pink-50'>
                 <div className="flex items-center flex-grow border  border-gray-500 rounded-3xl p-2">
