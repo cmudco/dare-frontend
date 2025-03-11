@@ -28,6 +28,8 @@ dist-ssr
 *.vite
 
 
-.env*
+.env
+.env.local
+.env.production
 
 package-lock.json

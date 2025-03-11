@@ -4,7 +4,7 @@ import { RootState } from "../../redux/store";
 import Message from "./Message";
 
 const MessageList = () => {
-  const messages = useSelector((state: RootState) => state.chat.activeChatMessages);
+  const messages = useSelector((state: RootState) => state.conversation.activeConversationMessages);
   const messageEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
