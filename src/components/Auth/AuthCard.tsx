@@ -4,7 +4,7 @@ import { Formik, Form, FormikConfig, FormikValues } from "formik";
 import TextInput from "../UI/TextInput";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
-import { Spinner } from "@material-tailwind/react";
+import Loader from "../Loader";
 
 interface InputField {
   name: string;
@@ -25,7 +25,7 @@ interface AuthCardProps<T extends FormikValues> {
   children?: React.ReactNode;
   roleSelect?: React.ReactNode;
   onResendVerification?: (values: T) => void;
-  
+
 }
 
 const AuthCard = <T extends FormikValues>({
@@ -114,12 +114,7 @@ const AuthCard = <T extends FormikValues>({
                   className="w-full mt-3 bg-primary text-white py-2 px-4 rounded-md shadow-sm text-md font-medium flex justify-center items-center"
                 >
                   {loading ? (
-                    <Spinner
-                      color="red"
-                      className="w-10"
-                      onPointerEnterCapture={undefined}
-                      onPointerLeaveCapture={undefined}
-                    />
+                    <Loader />
                   ) : (
                     buttonText
                   )}

@@ -1,24 +1,26 @@
-import { Select, Option } from "@material-tailwind/react";
 import { useFormikContext } from "formik";
 import { SignupFormValues } from "../pages/Registration/validation";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./UI/select";
 
 const RoleSelectionScreen: React.FC = () => {
   const { setFieldValue, values } = useFormikContext<SignupFormValues>();
+
   return (
     <div className="mb-5">
       <Select
-        label="Select Role"
-        name="role"
         value={values.role}
-        onChange={(value) => {
-          setFieldValue("role", value || "");
-        }}
+        onValueChange={(value) => setFieldValue("role", value || "")}
       >
-        <Option value="student">Student</Option>
-        <Option value="professor">Professor</Option>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select Role" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="student">Student</SelectItem>
+          <SelectItem value="professor">Professor</SelectItem>
+        </SelectContent>
       </Select>
     </div>
   );
-}
+};
 
 export default RoleSelectionScreen;

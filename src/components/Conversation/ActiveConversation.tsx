@@ -1,13 +1,13 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
-import { Card } from "@material-tailwind/react";
 import ConversationPill from "./ConversationPill";
 import NewConversation from "./NewConversation";
 import { useParams } from "react-router-dom";
 import { updateConversationInput, updateConversation } from "../../redux/conversationSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
+import { Card } from "../UI/card";
 
 const ActiveConversation: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -54,7 +54,7 @@ const ActiveConversation: React.FC = () => {
   }, [activeConversation?.conversationId, dispatch]);
 
   return (
-    <Card className="flex flex-col flex-2 w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5  " onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} placeholder={undefined}>
+    <Card className="flex flex-col flex-2 w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5">
       <div className={`flex flex-col justify-between h-full`}>
         {!activeConversation && <NewConversation />}
         {activeConversation && <MessageList />}
