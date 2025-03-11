@@ -8,6 +8,9 @@ import { openEditModal } from "../../redux/promptSlice";
 import { Button } from "../UI/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../UI/select";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../UI/Table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from "../UI/dropdown-menu";
+import { EllipsisVerticalIcon } from "lucide-react";
+
 
 interface PromptTableProps {
   searchQuery: string;
@@ -86,21 +89,22 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                   </div>
                 </TableCell>
                 <TableCell className="p-4">{formatDate(createdAt)}</TableCell>
-                <TableCell className="p-4 flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => handleEdit(id)}
-                    disabled={loading}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleDelete(id)}
-                    disabled={loading}
-                  >
-                    Delete
-                  </Button>
+
+                <TableCell className="p-4 text-center ">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="hover:bg-gray-200 rounded-md p-2" >
+                      <EllipsisVerticalIcon className="h-4 w-4 text-gray-500" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => handleEdit(id)}>
+                        <span>Edit</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-500" onClick={() => handleDelete(id)}>
+                        <span>Delete</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))

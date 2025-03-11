@@ -4,7 +4,7 @@ import { AppDispatch } from "../../redux/store";
 import { getPrompts } from "../../redux/aynscThunks/prompt";
 import PromptHeader from "./PromptHeader";
 import PromptTable from "./PromptTable";
-import PromptUploadModal from "./PromptUploadModal";
+import PromptModal from "./PromptModal";
 
 const PromptManagerLayout = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -27,7 +27,7 @@ const PromptManagerLayout = () => {
             <PromptTable searchQuery={searchQuery} />
           </div>
         </div>
-        <PromptUploadModal />
+        <PromptModal />
       </div>
     </div>
   );
