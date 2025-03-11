@@ -1,63 +1,55 @@
-import { Typography } from "@material-tailwind/react";
 import { PaperAirplaneIcon, } from "@heroicons/react/24/outline";
 
 import { useDispatch, useSelector } from "react-redux";
-import { updateChatInput, createNewChat, updateChatSession } from "../../redux/chatSlice";
+import { updateConversationInput, updateConversation } from "../../redux/conversationSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 import ModelPicker from "./ModelPicker";
 import PromptSet from "./PromptSet";
-import { ChatMessage } from "../../redux/types/chat";
+import { Message } from "../../redux/types/conversation";
 import { useNavigate } from "react-router-dom";
-import { sendMessage } from "../../redux/aynscThunks/chat";
-import ChatFileUpload from "./ChatFileUpload";
+import { sendMessage, createConversation } from "../../redux/aynscThunks/conversation";
+import ConversationFileSelect from "./ConversationFileSelect";
 import { useEffect } from "react";
 
-const ChatPill: React.FC = () => {
+const ConversationPill: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const chatInput = useSelector((state: RootState) => state.chat.chatInput);
-  const activeChat = useSelector((state: RootState) => state.chat.activeChat);
-  const apiKey = useSelector((state: RootState) => state.chat.apiKey);
+  const conversationInput = useSelector((state: RootState) => state.conversation.conversationInput);
+  const activeConversation = useSelector((state: RootState) => state.conversation.activeConversation);
   const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
   const navigate = useNavigate();
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(updateChatInput(event.target.value));
+    dispatch(updateConversationInput(event.target.value));
   };
 
   const handleSendMessage = () => {
-    if (chatInput.trim() === "") return;
+    if (conversationInput.trim() === "") return;
 
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      message: chatInput,
-      isSender: true,
-      date: new Date().toISOString(),
+    const newMessage: Partial<Message> = {
+      message: conversationInput,
     };
 
-    if (!activeChat && apiKey) {
-      const newSessionId = Date.now();
-      dispatch(createNewChat({ session_id: newSessionId.toString() }));
-      dispatch(updateChatSession({ session_id: newSessionId.toString(), created_at: new Date().toISOString() }));
-      navigate(`/chat/${newSessionId}`);
+    if (!activeConversation) {
+      dispatch(createConversation())
+        .then(({ payload }) => {
+          dispatch(updateConversation(payload));
+          navigate(`/conversation/${payload.conversationId}`);
+        });
     } else {
-      console.log('Sending message:', newMessage);
       dispatch(sendMessage(newMessage));
-      dispatch(updateChatInput(""));
+      dispatch(updateConversationInput(""));
     }
   };
 
   useEffect(() => {
-    if (chatInput.trim() === "") return;
+    if (conversationInput.trim() === "") return;
 
     if (isConnected) {
-      const newMessage: ChatMessage = {
-        id: Date.now().toString(),
-        message: chatInput,
-        isSender: true,
-        date: new Date().toISOString(),
+      const newMessage: Partial<Message> = {
+        message: conversationInput,
       };
       dispatch(sendMessage(newMessage));
-      dispatch(updateChatInput(""));
+      dispatch(updateConversationInput(""));
     }
   }, [isConnected, dispatch]);
 
@@ -72,10 +64,10 @@ const ChatPill: React.FC = () => {
     <div className="flex flex-col justify-end">
       <div className="flex items-center w-full ">
         <div className="relative flex items-center w-full rounded-md">
-          <ChatFileUpload />
+          <ConversationFileSelect />
           <input
             type="text"
-            value={chatInput}
+            value={conversationInput}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder="Type message"
@@ -89,11 +81,11 @@ const ChatPill: React.FC = () => {
         <PromptSet />
         <ModelPicker />
       </div>
-      <Typography variant="small" className="mt-4 text-center">
+      <p className="text-sm text-center mt-2">
         Dare Chat can make mistakes. Check important information.
-      </Typography>
+      </p>
     </div>
   );
 };
 
-export default ChatPill;
+export default ConversationPill;

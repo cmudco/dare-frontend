@@ -1,11 +1,18 @@
 export const TABLE_HEAD = ["File Name", "File Type", "Size", "Tags", "Action"];
 
 export const TAG_COLORS: {
-    [key: string]: "yellow" | "red" | "blue" | "green" | "purple";
+    [key: string]: "yellow" | "red" | "blue" | "green" | "purple" | "gray";
 } = {
-    Review: "yellow",
+    Archived: "blue",
+    Favorite: "green",
+    Personal: "yellow",
+    GenAI: "blue",
+    Review: "green",
+    Research: "yellow",
     Important: "red",
-    Info: "blue",
-    Personal: "green",
+    AutoCorrecting: "purple",
+    MachineLearning: "gray",
+    Steps: "green",
     Work: "purple",
+
 };

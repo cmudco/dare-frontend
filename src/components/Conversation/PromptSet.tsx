@@ -3,15 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import { getPrompts } from "../../redux/aynscThunks/prompt";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import { Button } from "@material-tailwind/react";
 import { GoCommandPalette } from "react-icons/go";
-import { ChatMessage } from "../../redux/types/chat";
-import { addMessage } from "../../redux/chatSlice";
+import { Button } from "../UI/button";
 
 const PromptSet: React.FC = () => {
   const dispatch = useDispatch();
   const prompts = useSelector((state: RootState) => state.prompt.prompts);
-  const activeChat = useSelector((state: RootState) => state.chat.activeChat);
+  // const activeConversation = useSelector((state: RootState) => state.chat.activeConversation);
   const [showModal, setShowModal] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -30,17 +28,17 @@ const PromptSet: React.FC = () => {
     }
   }, []);
 
-  const handlePromptSelect = (prompt: string) => {
-    if (activeChat) {
-      const newMessage: ChatMessage = {
-        id: Math.random().toString(),
-        message: prompt,
-        isSender: true,
-        date: new Date().toISOString(),
-      };
-      dispatch(addMessage(newMessage));
-      handleCloseModal();
-    }
+  const handlePromptSelect = (_prompt: string) => {
+    // if (activeConversation) {
+    //   const newMessage: ChatMessage = {
+    //     id: Math.random().toString(),
+    //     message: prompt,
+    //     isSender: true,
+    //     date: new Date().toISOString(),
+    //   };
+    //   dispatch(addMessage(newMessage));
+    //   handleCloseModal();
+    // }
   };
 
   useEffect(() => {
@@ -74,7 +72,7 @@ const PromptSet: React.FC = () => {
               <h3 className="text-lg text-black font-bold flex items-center">
                 Select Prompt
               </h3>
-              <Button className="text-white bg-primary flex items-center px-4 py-2 rounded-xl">
+              <Button className="bg-primary flex items-center px-4 py-2 rounded-xl text-white">
                 <PlusIcon className="w-6 h-6 mr-1" />
                 Create Prompt
               </Button>

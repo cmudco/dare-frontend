@@ -5,17 +5,17 @@ import Header from "./Header";
 
 const UserView: React.FC = () => {
   return (
-    <div className='h-screen flex flex-col'>
+    <>
       <Header />
-      <div className='flex flex-grow overflow-hidden'>
+      <div className='h-[90vh] flex '>
         <SideBar />
-        <div className='flex-grow overflow-auto '>
+        <div className='w-full  '>
           <Outlet />
 
         </div>
 
       </div>
-    </div>
+    </>
   );
 };
 
