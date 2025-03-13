@@ -10,11 +10,11 @@ import {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-} from "../UI/dialog";
-import { Button } from "../UI/button";
-import { Input } from "../UI/input";
-import { Label } from "../UI/label";
-import { Textarea } from "../UI/textarea";
+} from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 

@@ -6,11 +6,11 @@ import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
 import { TABLE_HEAD, TAG_COLORS } from "../../utils/constants/file";
 import { formatFileSize } from "@/utils/files";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../UI/select";
-import { Button } from "../UI/button";
-import { Badge } from "../UI/badge";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../UI/Table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../UI/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../ui/Table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { EllipsisVerticalIcon } from "lucide-react";
 
 

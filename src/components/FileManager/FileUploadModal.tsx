@@ -6,11 +6,11 @@ import { getFiles, uploadNewFile } from "../../redux/aynscThunks/file";
 import { addTag, getTags,  } from "../../redux/aynscThunks/tag";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "../UI/dialog";
-import { Button } from "../UI/button";
-import { Input } from "../UI/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../UI/select";
-import { Badge } from "../UI/badge";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
+import { Badge } from "../ui/badge";
 import { getTagColor } from "@/utils/files";
 
 
