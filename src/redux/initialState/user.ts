@@ -9,4 +9,5 @@ export const initialState: UserState = {
     token: "",
     userLoading: true,
     successMessage: null,
+    stats: null,
 };
