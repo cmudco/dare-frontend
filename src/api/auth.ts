@@ -1,5 +1,5 @@
 import { getErrorMessage } from "../utils/errorHandler";
-import { User, UserStats } from "../redux/types/user";
+import { User } from "../redux/types/user";
 import { userAxiosInstance } from "@/utils/axios";
 
 export const registerUser = async (data: {
@@ -7,7 +7,7 @@ export const registerUser = async (data: {
     email: string;
     password1: string;
     password2: string;
-    role: string;
+    // role: string;
 }) => {
     try {
         const response = await userAxiosInstance.post(

@@ -10,7 +10,6 @@ const websocketSlice = createSlice({
         setConnectionStatus: (state, action: PayloadAction<boolean>) => {
             state.isConnected = action.payload;
             if (action.payload) {
-                // Clear error when successfully connected
                 state.error = null;
             }
         },

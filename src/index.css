@@ -5,7 +5,6 @@
 body {
   font-family: "Open Sans", sans-serif;
   background-color: #fef8f9;
-  overflow-y: hidden;
 }
 
 input:-webkit-autofill {

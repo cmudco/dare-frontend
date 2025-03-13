@@ -13,12 +13,10 @@ const Dashboard = () => {
     dispatch(getUserStats())
   }, [dispatch])
 
-  // Format numbers with commas
   const formatNumber = (num: number) => {
     return num.toLocaleString()
   }
 
-  // Define stat cards with their respective icons and descriptions
   const statCards = [
     {
       title: "AI Messages",
@@ -114,7 +112,6 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Additional summary card */}
       <Card className="bg-gradient-to-br bg-white dark:from-slate-900 dark:to-slate-800 border-none">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
