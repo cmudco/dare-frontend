@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { User, UserState } from "../types/user";
+import { User, UserState, UserStats } from "../types/user";
 import {
     forgotPasswordUser,
     loginUser,
@@ -12,7 +12,9 @@ import {
     logoutUser,
     uploadProfilePicture,
     resendVerificationEmail,
+    getUserStatsFromAPI,
 } from "../../api/auth";
+import { getErrorMessage } from "@/utils/errorHandler";
 
 export const userRegister = createAsyncThunk(
     "user/register",
@@ -78,6 +80,22 @@ export const getUserData = createAsyncThunk<
         return thunkAPI.rejectWithValue((error as Error).message);
     }
 });
+
+export const getUserStats = createAsyncThunk<
+    UserStats,
+    void,
+    { rejectValue: string }
+>("user/getUserStats", async (_, thunkAPI) => {
+    try {
+
+        const response = await getUserStatsFromAPI();
+
+        return response;
+    } catch (error) {
+        return thunkAPI.rejectWithValue((error as Error).message);
+    }
+});
+
 
 export const userLogout = createAsyncThunk(
     "user/logoutUser",

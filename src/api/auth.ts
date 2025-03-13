@@ -1,5 +1,5 @@
 import { getErrorMessage } from "../utils/errorHandler";
-import { User } from "../redux/types/user";
+import { User, UserStats } from "../redux/types/user";
 import { userAxiosInstance } from "@/utils/axios";
 
 export const registerUser = async (data: {
@@ -65,6 +65,25 @@ export const getUserDataFromAPI = async (): Promise<User | null> => {
         throw new Error(getErrorMessage(error));
     }
 };
+
+export const getUserStatsFromAPI = async () => {
+    try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            return null;
+        }
+
+        const response = await userAxiosInstance.get("/api/stats/", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+            },
+        });
+        return response.data;
+    } catch (error) {
+        throw new Error(getErrorMessage(error));
+    }
+}
 
 export const logoutUser = async () => {
     try {

@@ -11,6 +11,7 @@ import {
     userLogout,
     verifyEmailRegistration,
     updateProfilePicture,
+    getUserStats,
 } from "./aynscThunks/user";
 
 const userSlice = createSlice({
@@ -81,7 +82,18 @@ const userSlice = createSlice({
                 localStorage.removeItem("token");
                 localStorage.removeItem("refresh_token");
             })
-
+            .addCase(getUserStats.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getUserStats.fulfilled, (state, action) => {
+                state.loading = false;
+                state.stats = action.payload;
+            })
+            .addCase(getUserStats.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
             .addCase(userLogout.pending, (state) => {
                 state.loading = true;
                 state.error = null;
