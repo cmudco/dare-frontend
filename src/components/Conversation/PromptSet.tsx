@@ -5,13 +5,17 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { GoCommandPalette } from "react-icons/go";
 import { formatDate } from "../../utils/constants/prompts";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+
+
 import { openModal } from "@/redux/promptSlice";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog";
+
 import { setPrompt } from "@/redux/conversationSlice";
 import { Prompt } from "@/redux/types/prompt";
+
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog";
 
 const PromptSet: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -22,6 +26,11 @@ const PromptSet: React.FC = () => {
 
   const handlePromptSelect = (prompt: Prompt) => {
     dispatch(setPrompt(prompt));
+    if (selectedPrompt?.id === prompt.id) {
+      dispatch(setPrompt(null))
+    } else {
+      dispatch(setPrompt(prompt))
+    }
   };
 
   const handleCreatePrompt = () => {
@@ -79,7 +88,10 @@ const PromptSet: React.FC = () => {
           {filteredPrompts.map((prompt) => (
             <div
               key={prompt.id}
-              className={`mb-3 p-3 text-black border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${selectedPrompt?.id === prompt?.id ? "bg-slate-200" : ""}`}
+              className={`mb-3 p-3 text-black border border-gray-100 rounded-lg cursor-pointer transition-colors
+                ${selectedPrompt?.id === prompt?.id
+                  ? "bg-pink-50 hover:bg-pink-50 "
+                  : "bg-muted hover:bg-pink-50 text-foreground"}`}
               onClick={() => handlePromptSelect(prompt)}
             >
               <div className="flex justify-between items-start mb-1">

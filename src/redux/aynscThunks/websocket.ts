@@ -79,7 +79,6 @@ export const sendWebSocketMessage = createAsyncThunk<
     const state = getState();
     const fileIds = state.conversation.selectedFiles.map((file) => file.id);
     const prompt = state.conversation.prompt;
-    console.log("here", fileIds, prompt, socket?.readyState);
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(
             JSON.stringify({

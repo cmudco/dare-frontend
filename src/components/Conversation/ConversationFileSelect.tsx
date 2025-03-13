@@ -7,12 +7,12 @@ import { updateSelectedFiles } from "@/redux/conversationSlice";
 import type { MyFile } from "@/redux/types/files";
 import type { Tag } from "@/redux/types/tags";
 import { getTagColor } from "@/utils/files";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
-import { Separator } from "../ui/separator";
 import { FolderIcon } from "@heroicons/react/24/outline";
+import { Separator } from "../ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 const ConversationFileSelect: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -24,16 +24,13 @@ const ConversationFileSelect: React.FC = () => {
     const [showTagFilter, setShowTagFilter] = useState(false);
     const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
-    const getFileName = (filepath: string) => {
-        return filepath.split("/").pop() || filepath;
-    };
-
     const handleToggleFile = (fileId: number) => {
         setSelectedFiles((prev) =>
             prev.includes(fileId)
                 ? prev.filter((id) => id !== fileId)
                 : [...prev, fileId]
         );
+        dispatch(updateSelectedFiles(files.filter((file) => file.id === fileId)));
     };
 
     const handleSaveSelection = () => {
@@ -57,7 +54,7 @@ const ConversationFileSelect: React.FC = () => {
     };
 
     const filteredFiles = files.filter((file) => {
-        const fileName = getFileName(file.file).toLowerCase();
+        const fileName = file.name.toLowerCase();
         const matchesSearch = fileName.includes(searchQuery.toLowerCase());
         const matchesTags =
             selectedTags.length === 0 ||
@@ -95,8 +92,8 @@ const ConversationFileSelect: React.FC = () => {
                                 variant="ghost"
                                 size="icon"
                                 className={`absolute right-1 h-7 w-7 ${showTagFilter
-                                        ? "text-primary"
-                                        : "text-muted-foreground"
+                                    ? "text-primary"
+                                    : "text-muted-foreground"
                                     }`}
                                 onClick={() => setShowTagFilter(!showTagFilter)}
                             >
@@ -160,7 +157,7 @@ const ConversationFileSelect: React.FC = () => {
                                 </div>
                                 <FileIcon className="h-4 w-4 text-muted-foreground mr-3" />
                                 <span className="text-sm font-medium">
-                                    {getFileName(file.file)}
+                                    {file.name}
                                 </span>
                             </div>
                         ))}

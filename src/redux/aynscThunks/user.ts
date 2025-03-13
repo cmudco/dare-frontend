@@ -14,7 +14,6 @@ import {
     resendVerificationEmail,
     getUserStatsFromAPI,
 } from "../../api/auth";
-import { getErrorMessage } from "@/utils/errorHandler";
 
 export const userRegister = createAsyncThunk(
     "user/register",
@@ -24,7 +23,7 @@ export const userRegister = createAsyncThunk(
             email: string;
             password1: string;
             password2: string;
-            role: string;
+            // role: string;
         },
         thunkAPI
     ) => {
