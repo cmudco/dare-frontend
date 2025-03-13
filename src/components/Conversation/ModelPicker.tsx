@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
 
 const ModelPicker: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -45,9 +46,9 @@ const ModelPicker: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="ml-4 p-4 bg-pink-50 text-black rounded-lg h-12 min-w-40 w-min flex items-center justify-center">
+        <Button className="ml-4 p-4  rounded-lg h-12 min-w-40 w-min flex items-center justify-center">
           {getModelButtonText()}
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
@@ -67,8 +68,8 @@ const ModelPicker: React.FC = () => {
               key={model.id}
               onClick={() => handleModelSelect(model.id)}
               className={`cursor-pointer mt-1 px-4 py-2 outlin rounded ${model.id === selectedModel
-                  ? "bg-pink-50 font-bold"
-                  : "hover:bg-gray-100"
+                ? "bg-pink-50 font-bold"
+                : "hover:bg-gray-100"
                 }`}
             >
               <div className="flex flex-col">

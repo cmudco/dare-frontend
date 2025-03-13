@@ -70,7 +70,7 @@ const ConversationList: React.FC = () => {
                         key={item.name}
                         onClick={() => handleBottomItemClick(item.action)}
                         className={`flex items-center w-full p-3 leading-tight transition-all outline-none text-start font-normal rounded-md ${location.pathname === item.name
-                            ? "bg-primary text-white"
+                            ? "bg-pink-50 text-primary"
                             : "hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
                             } cursor-pointer`}
                     >

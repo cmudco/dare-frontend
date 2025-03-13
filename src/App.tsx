@@ -21,7 +21,7 @@ function App() {
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="relative h-screen w-full backdrop-blur">
           <div className="absolute sm:block hidden w-full h-full">
-            <img src="/shapes/BgCircle.png" alt="" />
+            <img src="/shapes/BgCircle.svg" alt="" />
           </div>
           <div className="flex items-center justify-center h-full">
             <Loader className='w-16 h-16 text-red-500' />

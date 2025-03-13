@@ -57,7 +57,7 @@ const PromptSet: React.FC = () => {
         <div className="flex justify-between items-center mb-4">
           <DialogTitle className="text-lg text-black font-bold">Select Prompt</DialogTitle>
           <Button
-            className="bg-primary flex items-center px-3 py-1 rounded-xl text-white"
+            className="flex items-center px-3 py-1 rounded-xl text-white"
             onClick={handleCreatePrompt}
           >
             <PlusIcon className="w-4 h-4 mr-1" />
