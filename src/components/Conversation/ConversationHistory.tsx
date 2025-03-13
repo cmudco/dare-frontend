@@ -8,6 +8,7 @@ import { createConversation } from "../../redux/aynscThunks/conversation";
 import { AppDispatch, RootState } from "../../redux/store";
 import ConversationList from "./ConversationList";
 import { useNavigate } from "react-router-dom";
+import { Button } from "../ui/button";
 
 const ConversationHistory = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -51,12 +52,12 @@ const ConversationHistory = () => {
                         className="flex-grow outline-none bg-transparent placeholder-gray-600 font-normal"
                     />
                 </div>
-                <button
+                <Button
                     onClick={handleCreateConversation}
-                    className="ml-2 min-w-5 bg-primary text-white rounded-xl w-10 h-10 flex items-center justify-center"
+                    className="ml-2 min-w-5  rounded-xl w-10 h-10 flex items-center justify-center"
                 >
                     <span className="text-xl">+</span>
-                </button>
+                </Button>
             </div>
             <hr className=" border-gray-200 mx-1" />
             <ConversationList />

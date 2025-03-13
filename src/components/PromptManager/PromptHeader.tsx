@@ -39,7 +39,7 @@ const PromptHeader: React.FC<PromptHeaderProps> = ({ onSearch }) => {
 
       <Button
         variant="default"
-        className="bg-primary text-white py-2 rounded-md shadow-sm normal-case font-normal whitespace-nowrap"
+        className="py-2 rounded-md shadow-sm normal-case font-normal whitespace-nowrap"
         onClick={handleCreatePrompt}
       >
         Create Prompt

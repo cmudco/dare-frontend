@@ -13,11 +13,11 @@ const AuthFormFooter: React.FC<AuthFormFooterProps> = ({ text, route, routeText,
     <p className="text-center text-sm text-gray-500 mt-4">
       {text}{" "}
       {route ? (
-        <Link to={route} className="text-primary font-body font-bold">
+        <Link to={route} className="text-[#023572] font-body font-bold">
           {routeText}
         </Link>
       ) : (
-        <button onClick={onClick} className="text-primary font-body font-bold">
+        <button onClick={onClick} className="font-body font-bold">
           {routeText}
         </button>
       )}

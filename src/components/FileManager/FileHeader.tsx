@@ -60,10 +60,12 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onSearch, onTagsChange }) => {
           </Button>
         </div>
         <Button
-          className="bg-primary text-white py-2 rounded-md shadow-sm normal-case font-normal whitespace-nowrap !gap-6"
+          className="py-2 rounded-md shadow-sm normal-case font-normal whitespace-nowrap !gap-6"
+          variant="default"
           size="default"
           onClick={() => dispatch(openModal())}
         >
+          
           Upload File
         </Button>
       </div>
