@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom";
 import { updateConversationInput, updateConversation } from "../../redux/conversationSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
-import { Card } from "../UI/card";
+import { Card } from "../ui/card";
 
 const ActiveConversation: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();

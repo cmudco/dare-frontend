@@ -1,7 +1,7 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { useDispatch } from "react-redux";
-import { Button } from "../UI/button";
-import { Input } from "../UI/input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { useState } from "react";
 import { openModal } from "@/redux/promptSlice";
 

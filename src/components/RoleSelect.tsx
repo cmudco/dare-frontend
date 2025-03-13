@@ -1,6 +1,6 @@
 import { useFormikContext } from "formik";
 import { SignupFormValues } from "../pages/Registration/validation";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./UI/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 const RoleSelectionScreen: React.FC = () => {
   const { setFieldValue, values } = useFormikContext<SignupFormValues>();

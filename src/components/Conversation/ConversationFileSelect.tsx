@@ -7,11 +7,11 @@ import { updateSelectedFiles } from "@/redux/conversationSlice";
 import type { MyFile } from "@/redux/types/files";
 import type { Tag } from "@/redux/types/tags";
 import { getTagColor } from "@/utils/files";
-import { Popover, PopoverContent, PopoverTrigger } from "../UI/popover";
-import { Button } from "../UI/button";
-import { Input } from "../UI/input";
-import { Badge } from "../UI/badge";
-import { Separator } from "../UI/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Badge } from "../ui/badge";
+import { Separator } from "../ui/separator";
 import { FolderIcon } from "@heroicons/react/24/outline";
 
 const ConversationFileSelect: React.FC = () => {

@@ -5,10 +5,10 @@ import { deletePrompt } from "../../redux/aynscThunks/prompt";
 import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
 import { formatDate, PROMPTS_TABLE_HEAD } from "../../utils/constants/prompts";
 import { openEditModal } from "../../redux/promptSlice";
-import { Button } from "../UI/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../UI/select";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../UI/Table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from "../UI/dropdown-menu";
+import { Button } from "../ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../ui/Table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from "../ui/dropdown-menu";
 import { EllipsisVerticalIcon } from "lucide-react";
 
 

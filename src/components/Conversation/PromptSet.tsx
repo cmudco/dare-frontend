@@ -5,11 +5,11 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { GoCommandPalette } from "react-icons/go";
 import { formatDate } from "../../utils/constants/prompts";
-import { Button } from "../UI/button";
-import { Input } from "../UI/input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { openModal } from "@/redux/promptSlice";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../UI/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { setPrompt } from "@/redux/conversationSlice";
 import { Prompt } from "@/redux/types/prompt";
 

@@ -12,7 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../UI/dropdown-menu";
+} from "../ui/dropdown-menu";
 
 const ModelPicker: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
