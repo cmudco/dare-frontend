@@ -11,7 +11,7 @@ import { sendMessage, createConversation } from "../../redux/aynscThunks/convers
 import ConversationFileSelect from "./ConversationFileSelect";
 import { useEffect } from "react";
 
-const ConversationPill: React.FC = () => {
+  const ConversationPill: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const conversationInput = useSelector((state: RootState) => state.conversation.conversationInput);
   const activeConversation = useSelector((state: RootState) => state.conversation.activeConversation);
@@ -36,6 +36,7 @@ const ConversationPill: React.FC = () => {
           navigate(`/conversation/${payload.conversationId}`);
         });
     } else {
+
       dispatch(sendMessage(newMessage));
       dispatch(updateConversationInput(""));
     }
@@ -71,7 +72,7 @@ const ConversationPill: React.FC = () => {
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder="Type message"
-            className="w-full h-14 pl-10 pr-10 py-4 bg-gray-200 rounded-2xl focus:outline-none font-normal text-sm"
+            className="w-full h-14 pl-12 pr-10 py-4 bg-gray-200 rounded-2xl focus:outline-none font-normal text-sm"
           />
           <PaperAirplaneIcon
             className="absolute right-3 w-5 h-5 cursor-pointer"

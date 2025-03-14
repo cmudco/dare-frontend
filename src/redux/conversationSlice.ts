@@ -44,16 +44,16 @@ export const conversationSlice = createSlice({
                 state.activeConversationMessages.push(action.payload);
             }
         },
-        updateMessage(state, action: PayloadAction<Partial<Message>>) { 
+        updateMessage(state, action: PayloadAction<Partial<Message>>) {
             const index = state.activeConversationMessages.findIndex((msg) => msg?.id === action.payload.id);
             if (index !== -1) {
                 state.activeConversationMessages[index] = {
-                    ...state.activeConversationMessages[index], 
+                    ...state.activeConversationMessages[index],
                     ...action.payload,
                     message: `${state.activeConversationMessages[index].message}${action.payload.message}`
                 };
             }
-        },      
+        },
         setAvailableModels(state, action: PayloadAction<LLMModel[]>) {
             state.availableModels = action.payload;
         },
@@ -70,6 +70,9 @@ export const conversationSlice = createSlice({
         },
         updateConversationHistory(state, action: PayloadAction<Message[]>) {
             state.activeConversationMessages = action.payload;
+        },
+        setPrompt(state, action) {
+            state.prompt = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -111,7 +114,7 @@ export const conversationSlice = createSlice({
             })
             .addCase(createConversation.fulfilled, (state, action) => {
                 state.loading = false;
-                state.conversations.unshift(action.payload); 
+                state.conversations.unshift(action.payload);
             })
             .addCase(createConversation.rejected, (state, action) => {
                 state.loading = false;
@@ -146,5 +149,6 @@ export const {
     setAvailableModels,
     updateConversationTitle,
     updateConversationHistory,
+    setPrompt,
 } = conversationSlice.actions;
 export default conversationSlice.reducer;

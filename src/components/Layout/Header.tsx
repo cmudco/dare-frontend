@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { AppDispatch, RootState } from "../../redux/store";
 import { userLogout } from "../../redux/aynscThunks/user";
 
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "../UI/dropdown-menu";
-import { Button } from "../UI/button";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
 
 
 const Header: React.FC = () => {

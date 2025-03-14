@@ -1,12 +1,12 @@
 import { MagnifyingGlassIcon, AdjustmentsVerticalIcon } from "@heroicons/react/24/solid";
 import { useDispatch, useSelector } from "react-redux";
 import { openModal } from "../../redux/fileSlice";
-import { Button } from "../UI/button";
-import { Input } from "../UI/input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { RootState } from "../../redux/store";
 import { useState } from "react";
 import { Tag } from "../../redux/types/tags";
-import { Badge } from "../UI/badge";
+import { Badge } from "../ui/badge";
 import { getTagColor } from "@/utils/files";
 
 interface FileHeaderProps {

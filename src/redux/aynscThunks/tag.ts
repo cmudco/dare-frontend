@@ -1,22 +1,23 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { fetchTags, createTag, updateTag, deleteTag } from "../../api/tags";
+import { createTag, updateTag, deleteTag, getTagsAPI } from "../../api/tags";
 import { Tag } from "../types/tags";
 
 export const getTags = createAsyncThunk("tags/getTags", async (_, thunkAPI) => {
-    try {
-        const response = await fetchTags();
-        return response;
-    } catch (error) {
-        return thunkAPI.rejectWithValue((error as Error).message);
+        try {
+            const response = await getTagsAPI();
+            return response;
+        } catch (error) {
+            return thunkAPI.rejectWithValue((error as Error).message);
+        }
     }
-});
+);
 
 export const addTag = createAsyncThunk(
     "tags/addTag",
     async (label: string, thunkAPI) => {
         try {
             const response = await createTag(label);
-            return response;
+            return response || [];
         } catch (error) {
             return thunkAPI.rejectWithValue((error as Error).message);
         }

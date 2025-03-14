@@ -1,127 +1,157 @@
-// import { useDispatch, useSelector } from "react-redux";
-// import { RootState, AppDispatch } from "../../redux/store";
-// import {
-//     Typography,
-//     Chip,
-//     Tooltip,
-//     IconButton,
-// } from "@material-tailwind/react";
-// import {
-//     ChevronUpDownIcon,
-//     PencilIcon,
-//     ArchiveBoxIcon,
-// } from "@heroicons/react/24/solid";
+import { useState, useMemo, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "../../redux/store";
+import { deletePrompt } from "../../redux/aynscThunks/prompt";
+import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
+import { formatDate, PROMPTS_TABLE_HEAD } from "../../utils/constants/prompts";
+import { openEditModal } from "../../redux/promptSlice";
+import { Button } from "../ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../ui/Table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from "../ui/dropdown-menu";
+import { EllipsisVerticalIcon } from "lucide-react";
 
-// import { TAG_COLORS } from "../../utils/constants/file";
-// import { updateFileArchive } from "../../redux/fileSlice";
-// import { PROMPTS_TABLE_HEAD } from "../../utils/constants/prompts";
 
-// const PromptTable = () => {
-//     const dispatch = useDispatch<AppDispatch>();
-//     const { files } = useSelector((state: RootState) => state.files);
+interface PromptTableProps {
+  searchQuery: string;
+}
 
-//     return (
-//         <div className='overflow-scroll'>
-//             <table className='mt-4 w-full min-w-max table-auto text-left bg-white'>
-//                 <thead>
-//                     <tr>
-//                         {PROMPTS_TABLE_HEAD.map((head) => (
-//                             <th
-//                                 key={head}
-//                                 className='cursor-pointer bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50'
-//                             >
-//                                 <Typography
-//                                     variant='small'
-//                                     color='blue-gray'
-//                                     className='flex items-center justify-between gap-2 font-semibold text-sm leading-none opacity-70'
-//                                 >
-//                                     {head}{" "}
-//                                     <ChevronUpDownIcon strokeWidth={2} className='h-4 w-4' />
-//                                 </Typography>
-//                             </th>
-//                         ))}
-//                     </tr>
-//                 </thead>
-//                 <tbody>
-//                     {files.map(
-//                         (
-//                             { id, file, file_size, uploaded_at, tags },
-//                             index
-//                         ) => {
-//                             const isLast = index === files.length - 1;
-//                             const classes = isLast ? "p-4" : "p-4";
+const PromptTable = ({ searchQuery }: PromptTableProps) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { prompts, loading } = useSelector((state: RootState) => state.prompt);
 
-//                             return (
-//                                 <tr key={id}>
-//                                     <td className={classes}>
-//                                         <Typography
-//                                             variant='small'
-//                                             color='blue-gray'
-//                                             className='font-normal'
-//                                         >
-//                                             {file}
-//                                         </Typography>
-//                                     </td>
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
-//                                     <td className={classes}>
-//                                         <Typography
-//                                             variant='small'
-//                                             color='blue-gray'
-//                                             className='font-normal'
-//                                         >
-//                                             {file_size}
-//                                         </Typography>
-//                                     </td>
-//                                     <td className={classes}>
-//                                         <Typography
-//                                             variant='small'
-//                                             color='blue-gray'
-//                                             className='font-normal'
-//                                         >
-//                                             {new Date(uploaded_at).toLocaleDateString()}
-//                                         </Typography>
-//                                     </td>
-//                                     <td className={classes}>
-//                                         {tags.map((tag) => (
-//                                             <Chip
-//                                                 key={tag}
-//                                                 variant='ghost'
-//                                                 className='flex justify-center py-0.5 items-center px rounded-2xl text-center font-normal text-sm normal-case'
-//                                                 value={tag}
-//                                                 color={TAG_COLORS[tag]}
-//                                             />
-//                                         ))}
-//                                     </td>
-//                                     <td className={classes}>
-//                                         <div className='flex items-center justify-center'>
-//                                             <Tooltip content='Edit File'>
-//                                                 <IconButton
-//                                                     variant='text'
-//                                                     onClick={() => {
-                                                       
-//                                                     }}
-//                                                 >
-//                                                     <PencilIcon className='h-4 w-4' />
-//                                                 </IconButton>
-//                                             </Tooltip>
-//                                             <Tooltip content='Archive File'>
-//                                                 <IconButton
-//                                                     variant='text'
-//                                                     onClick={() => dispatch(updateFileArchive(id))}
-//                                                 >
-//                                                     <ArchiveBoxIcon className='h-4 w-4' />
-//                                                 </IconButton>
-//                                             </Tooltip>
-//                                         </div>
-//                                     </td>
-//                                 </tr>
-//                             );
-//                         }
-//                     )}
-//                 </tbody>
-//             </table>
-//         </div>
-//     );
-// };
+  const filteredPrompts = useMemo(() => {
+    return prompts.filter(prompt => {
+      const promptTitle = prompt.title?.toLowerCase() || "";
+      const promptContent = prompt.content?.toLowerCase() || "";
+      const matchesSearch = searchQuery === "" ||
+        promptTitle.includes(searchQuery.toLowerCase()) ||
+        promptContent.includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    });
+  }, [prompts, searchQuery]);
 
-// export default PromptTable;
+  const totalPages = Math.ceil(filteredPrompts.length / itemsPerPage);
+  const paginatedPrompts = filteredPrompts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await dispatch(deletePrompt(id)).unwrap();
+    } catch (error) {
+      console.error("Failed to delete prompt:", error);
+    }
+  };
+
+  const handleEdit = (id: string) => {
+    dispatch(openEditModal(id));
+  };
+
+  return (
+    <div className="overflow-auto">
+      <Table className="mt-4 w-full min-w-max text-left bg-white">
+        <TableHeader>
+          <TableRow className="bg-muted">
+            {PROMPTS_TABLE_HEAD.map((head) => (
+              <TableHead key={head} className="cursor-pointer p-4 font-semibold text-sm">
+                <div className="flex items-center justify-between gap-2 opacity-70">
+                  {head}
+                  <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
+                </div>
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {prompts.length === 0 && loading ? (
+            <TableRow>
+              <TableCell colSpan={3} className="text-center p-4">Loading prompts...</TableCell>
+            </TableRow>
+          ) : filteredPrompts.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={3} className="text-center p-4">No matching prompts found</TableCell>
+            </TableRow>
+          ) : (
+            paginatedPrompts.map(({ id, title, content, createdAt }) => (
+              <TableRow key={id}>
+                <TableCell className="p-4">
+                  <div>
+                    <h3 className="font-medium">{title || "Untitled"}</h3>
+                    <p className="text-sm text-gray-500 truncate max-w-[300px]">
+                      {content || "No content"}
+                    </p>
+                  </div>
+                </TableCell>
+                <TableCell className="p-4">{formatDate(createdAt)}</TableCell>
+
+                <TableCell className="p-4 text-center ">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="hover:bg-gray-200 rounded-md p-2" >
+                      <EllipsisVerticalIcon className="h-4 w-4 text-gray-500" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => handleEdit(id)}>
+                        <span>Edit</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-500" onClick={() => handleDelete(id)}>
+                        <span>Delete</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+
+        {/* Footer for Pagination & Controls */}
+        {filteredPrompts.length > 0 && (
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={PROMPTS_TABLE_HEAD.length} className="p-4 w-full">
+                <div className="flex justify-between items-center w-full">
+                  {/* Rows per page dropdown */}
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm">Rows per page:</span>
+                    <Select value={String(itemsPerPage)} onValueChange={(val) => setItemsPerPage(Number(val))}>
+                      <SelectTrigger className="w-[80px]">
+                        <SelectValue placeholder="Rows" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Pagination Controls */}
+                  <div className="flex items-center gap-4">
+                    <Button variant="secondary" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+                      Previous
+                    </Button>
+                    <span className="text-sm">
+                      Page {currentPage} of {totalPages || 1}
+                    </span>
+                    <Button variant="secondary" size="sm" disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage((p) => p + 1)}>
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        )}
+      </Table>
+    </div>
+  );
+};
+
+export default PromptTable;

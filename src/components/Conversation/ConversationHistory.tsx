@@ -4,7 +4,7 @@ import {
     MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { updateConversation, updateSearchQuery, } from "../../redux/conversationSlice";
-import { getConversations, createConversation } from "../../redux/aynscThunks/conversation";
+import { createConversation } from "../../redux/aynscThunks/conversation";
 import { AppDispatch, RootState } from "../../redux/store";
 import ConversationList from "./ConversationList";
 import { useNavigate } from "react-router-dom";
@@ -13,11 +13,6 @@ const ConversationHistory = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const searchQuery = useSelector((state: RootState) => state.conversation?.searchQuery || "");
-
-
-    useEffect(() => {
-        dispatch(getConversations());
-    }, [dispatch]);
 
     useEffect(() => {
         const handleResize = () => {

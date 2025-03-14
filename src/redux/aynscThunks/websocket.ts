@@ -1,5 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { clearConversation, updateMessage, addMessage, updateConversationTitle, updateConversationHistory } from "../conversationSlice";
+import {
+    clearConversation,
+    updateMessage,
+    addMessage,
+    updateConversationTitle,
+    updateConversationHistory,
+} from "../conversationSlice";
 import { Message } from "../types/conversation";
 import { AppDispatch, RootState } from "../store";
 import { setConnectionStatus } from "../websocketSlice";
@@ -31,7 +37,10 @@ export const connectWebSocket = createAsyncThunk<
 
             switch (data.type) {
                 case "conversation_history":
-                    if (data.conversationHistory) dispatch(updateConversationHistory(data.conversationHistory));
+                    if (data.conversationHistory)
+                        dispatch(
+                            updateConversationHistory(data.conversationHistory)
+                        );
                     break;
 
                 case "message":
@@ -56,7 +65,7 @@ export const connectWebSocket = createAsyncThunk<
             reject(new Error("WebSocket error"));
         };
 
-        socket.onclose = (_event) => {
+        socket.onclose = () => {
             dispatch(setConnectionStatus(false));
         };
     });
@@ -66,26 +75,24 @@ export const sendWebSocketMessage = createAsyncThunk<
     void,
     Partial<Message>,
     { dispatch: AppDispatch; state: RootState }
->(
-    "websocket/sendMessage",
-    async (message, { rejectWithValue, getState, }) => {
-        const state = getState();
-        const fileIds = state.conversation.selectedFiles.map((file) => file.id);
-
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(
-                JSON.stringify({
-                    message: message.message,
-                    sender_type: 1,
-                    file_ids: fileIds,
-                    model_id: state.conversation.selectedModel,
-                })
-            );
-        } else {
-            return rejectWithValue("WebSocket is not connected");
-        }
+>("websocket/sendMessage", async (message, { rejectWithValue, getState }) => {
+    const state = getState();
+    const fileIds = state.conversation.selectedFiles.map((file) => file.id);
+    const prompt = state.conversation.prompt;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+            JSON.stringify({
+                message: message.message,
+                sender_type: 1,
+                file_ids: fileIds,
+                model_id: state.conversation.selectedModel,
+                prompt_id: prompt?.id,
+            })
+        );
+    } else {
+        return rejectWithValue("WebSocket is not connected");
     }
-);
+});
 
 export const disconnectWebSocket = createAsyncThunk<
     void,

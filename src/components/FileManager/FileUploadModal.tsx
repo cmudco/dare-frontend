@@ -3,14 +3,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename } from "../../redux/fileSlice";
 import { getFiles, uploadNewFile } from "../../redux/aynscThunks/file";
-import { addTag, getTags } from "../../redux/aynscThunks/tag";
+import { addTag, getTags,  } from "../../redux/aynscThunks/tag";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "../UI/dialog";
-import { Button } from "../UI/button";
-import { Input } from "../UI/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../UI/select";
-import { Badge } from "../UI/badge";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
+import { Badge } from "../ui/badge";
 import { getTagColor } from "@/utils/files";
 
 
@@ -87,11 +87,17 @@ const FileUploadModal: React.FC = () => {
                 <SelectValue placeholder="Add Tags" />
               </SelectTrigger>
               <SelectContent>
-                {tags.map((tag) => (
-                  <SelectItem key={tag.id} value={tag.id.toString()}>
-                    {tag.label}
+                {Array.isArray(tags) && tags.length > 0 ? (
+                  tags.map((tag) => (
+                    <SelectItem key={tag.id} value={String(tag.id)}>
+                      {tag.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-tags" disabled>
+                    No tags available
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
 

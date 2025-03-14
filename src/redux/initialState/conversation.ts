@@ -13,4 +13,5 @@ export const initialState: ConversationState = {
   hoveredModel: null,
   conversationInput: "",
   availableModels: [],
+  prompt: null
 };

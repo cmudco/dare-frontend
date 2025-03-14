@@ -51,12 +51,9 @@ const fileSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(
-                uploadNewFile.fulfilled,
-                (state, _action) => {
-                    state.loading = false;
-                }
-            )
+            .addCase(uploadNewFile.fulfilled, (state) => {
+                state.loading = false;
+            })
             .addCase(uploadNewFile.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
@@ -65,15 +62,12 @@ const fileSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(
-                deleteFile.fulfilled,
-                (state, action) => {
-                    state.loading = false;
-                    state.files = state.files.filter(
-                        (file) => file.id !== action.payload
-                    );
-                }
-            )
+            .addCase(deleteFile.fulfilled, (state, action) => {
+                state.loading = false;
+                state.files = state.files.filter(
+                    (file) => file.id !== action.payload
+                );
+            })
             .addCase(deleteFile.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;

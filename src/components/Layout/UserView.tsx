@@ -7,9 +7,9 @@ const UserView: React.FC = () => {
   return (
     <>
       <Header />
-      <div className='h-[90vh] flex '>
+      <div className='flex  '>
         <SideBar />
-        <div className='w-full  '>
+        <div className='w-full  min-h-[90vh]'>
           <Outlet />
 
         </div>

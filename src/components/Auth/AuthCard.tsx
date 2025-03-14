@@ -1,7 +1,7 @@
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form, FormikConfig, FormikValues } from "formik";
-import TextInput from "../UI/TextInput";
+import TextInput from "../ui/TextInput";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import Loader from "../Loader";
