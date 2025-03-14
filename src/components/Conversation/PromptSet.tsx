@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
-import { PlusIcon } from "@heroicons/react/24/outline";
+
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { GoCommandPalette } from "react-icons/go";
 import { formatDate } from "../../utils/constants/prompts";
@@ -16,6 +16,7 @@ import { Prompt } from "@/redux/types/prompt";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Plus } from "lucide-react";
 
 const PromptSet: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -60,7 +61,7 @@ const PromptSet: React.FC = () => {
             className="flex items-center px-3 py-1 rounded-xl text-white"
             onClick={handleCreatePrompt}
           >
-            <PlusIcon className="w-4 h-4 mr-1" />
+            <Plus />
             Create Prompt
           </Button>
         </div>

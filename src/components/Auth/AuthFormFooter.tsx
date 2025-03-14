@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Button } from "../ui/button";
 
 interface AuthFormFooterProps {
   text: string;
@@ -17,9 +18,9 @@ const AuthFormFooter: React.FC<AuthFormFooterProps> = ({ text, route, routeText,
           {routeText}
         </Link>
       ) : (
-        <button onClick={onClick} className="font-body font-bold">
+        <Button onClick={onClick} className="font-body font-bold">
           {routeText}
-        </button>
+        </Button>
       )}
     </p>
   );

@@ -4,12 +4,12 @@
 
 body {
     font-family: "Open Sans", sans-serif;
-    background-color: #fef8f9;
+    background-color: #fdffff;
 }
 
 input:-webkit-autofill {
     animation-name: onAutoFillStart;
-    transition: background-color 5000s ease-in-out 0s;
+transition: background-color 5000s ease-in-out 0s;
 }
 
 input:not(:-webkit-autofill) {
