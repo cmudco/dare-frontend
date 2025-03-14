@@ -3,8 +3,7 @@ import { initialState } from "./initialState/prompt";
 import {
     getPrompts,
     getPromptById,
-    createPrompt,
-    updatePrompt,
+    createOrUpdatePrompt,
     deletePrompt,
 } from "./aynscThunks/prompt";
 
@@ -60,42 +59,32 @@ const promptSlice = createSlice({
             state.loading = false;
             state.error = action.payload as string;
         });
-
-        builder.addCase(createPrompt.pending, (state) => {
+        builder.addCase(createOrUpdatePrompt.pending, (state) => {
             state.loading = true;
             state.error = null;
         });
-        builder.addCase(createPrompt.fulfilled, (state, action) => {
-            state.loading = false;
-            state.prompts.push(action.payload);
-        });
-        builder.addCase(createPrompt.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload as string;
-        });
-
-        builder.addCase(updatePrompt.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        });
-        builder.addCase(updatePrompt.fulfilled, (state, action) => {
+        builder.addCase(createOrUpdatePrompt.fulfilled, (state, action) => {
             state.loading = false;
             const updatedPrompt = action.payload;
+
             const index = state.prompts.findIndex(
                 (prompt) => prompt.id === updatedPrompt.id
             );
+
             if (index !== -1) {
                 state.prompts[index] = updatedPrompt;
+            } else {
+                state.prompts.push(updatedPrompt);
             }
+
             if (state.selectedPrompt?.id === updatedPrompt.id) {
                 state.selectedPrompt = updatedPrompt;
             }
         });
-        builder.addCase(updatePrompt.rejected, (state, action) => {
+        builder.addCase(createOrUpdatePrompt.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload as string;
         });
-
         builder.addCase(deletePrompt.pending, (state) => {
             state.loading = true;
             state.error = null;

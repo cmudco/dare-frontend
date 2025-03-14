@@ -31,28 +31,21 @@ export const getPromptById = createAsyncThunk(
     }
 );
 
-export const createPrompt = createAsyncThunk(
-    "prompts/createaPrompt",
+export const createOrUpdatePrompt = createAsyncThunk(
+    "prompts/createOrUpdatePrompt",
     async (
-        promptData: { title: string; content: string },
+        {
+            id,
+            promptData,
+        }: { id?: string; promptData: { title: string; content: string } },
         { rejectWithValue }
     ) => {
         try {
-            return await createPromptAPI(promptData);
-        } catch (error) {
-            return rejectWithValue((error as Error).message);
-        }
-    }
-);
-
-export const updatePrompt = createAsyncThunk(
-    "prompts/updatePrompt",
-    async (
-        { id, promptData }: { id: string; promptData: Partial<Prompt> },
-        { rejectWithValue }
-    ) => {
-        try {
-            return await updatePromptAPI(id, promptData);
+            if (id) {
+                return await updatePromptAPI(id, promptData);
+            } else {
+                return await createPromptAPI(promptData);
+            }
         } catch (error) {
             return rejectWithValue((error as Error).message);
         }

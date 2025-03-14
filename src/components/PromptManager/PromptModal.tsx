@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
-import { createPrompt, updatePrompt,  } from "../../redux/aynscThunks/prompt";
+import { createOrUpdatePrompt,  } from "../../redux/aynscThunks/prompt";
 import { clearSelectedPrompt, closeModal } from "../../redux/promptSlice";
 import {
   Dialog,
@@ -44,29 +44,21 @@ const PromptUploadModal: React.FC = () => {
 
   const handleSubmit = async (values: { title: string; content: string }) => {
     try {
-      if (isEditMode && selectedPrompt?.id) {
-        await dispatch(
-          updatePrompt({
-            id: selectedPrompt.id,
-            promptData: {
-              title: values.title,
-              content: values.content,
-            },
-          })
-        ).unwrap();
-      } else {
-        await dispatch(
-          createPrompt({
+      await dispatch(
+        createOrUpdatePrompt({
+          id: isEditMode ? selectedPrompt?.id : undefined,
+          promptData: {
             title: values.title,
             content: values.content,
-          })
-        ).unwrap();
-      }
+          },
+        })
+      ).unwrap();
       handleClose();
     } catch (error) {
       console.error("Failed to save prompt:", error);
     }
   };
+
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
