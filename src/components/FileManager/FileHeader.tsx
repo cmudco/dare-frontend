@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Tag } from "../../redux/types/tags";
 import { Badge } from "../ui/badge";
 import { getTagColor } from "@/utils/files";
+import { Upload } from "lucide-react";
 
 interface FileHeaderProps {
   onSearch: (query: string) => void;
@@ -41,14 +42,14 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onSearch, onTagsChange }) => {
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-2'>
           <div className='relative w-[300px] h-[40px] flex items-center'>
+            <MagnifyingGlassIcon className="absolute left-3 w-5 h-5 text-gray-500" />
             <Input
               type="text"
               placeholder="Search by Files"
-              className="bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
+              className="bg-white border pl-10 border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
               value={searchQuery}
               onChange={handleSearchChange}
             />
-            <MagnifyingGlassIcon className="absolute right-3 w-5 h-5 text-gray-500" />
           </div>
           <Button
             variant="outline"
@@ -60,12 +61,13 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onSearch, onTagsChange }) => {
           </Button>
         </div>
         <Button
-          className="py-2 rounded-md shadow-sm normal-case font-normal whitespace-nowrap !gap-6"
+          className="py-2 rounded-md shadow-sm normal-case font-normal whitespace-nowrap "
           variant="default"
           size="default"
           onClick={() => dispatch(openModal())}
         >
-          
+          <Upload />
+
           Upload File
         </Button>
       </div>

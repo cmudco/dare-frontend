@@ -8,10 +8,12 @@ import { updateConversationInput, updateConversation } from "../../redux/convers
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
 import { Card } from "../ui/card";
+import EmptyConversation from "./EmptyConversation";
 
 const ActiveConversation: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const activeConversation = useSelector((state: RootState) => state.conversation?.activeConversation);
+  const conversationHistory = useSelector((state: RootState) => state.conversation?.activeConversationMessages || []);
 
   const { id } = useParams<{ id: string }>();
   const conversations = useSelector((state: RootState) => state.conversation?.conversations || []);
@@ -47,17 +49,17 @@ const ActiveConversation: React.FC = () => {
           console.error("WebSocket connection failed:", error);
         }
       }
-
     };
 
     handleWebSocketConnection();
   }, [activeConversation?.conversationId, dispatch]);
 
   return (
-    <Card className="flex flex-col flex-2 w-full h-[90vh] justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5">
+    <Card className="flex flex-col flex-2 w-full h-[90vh] justify-end border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5">
       <div className={`flex flex-col justify-between h-full`}>
         {!activeConversation && <NewConversation />}
-        {activeConversation && <MessageList />}
+        {activeConversation && conversationHistory.length === 0 && <EmptyConversation />}
+        {activeConversation && conversationHistory.length > 0 && <MessageList />}
         <ConversationPill />
       </div>
     </Card>

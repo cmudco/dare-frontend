@@ -16,8 +16,8 @@ const Message: React.FC<MessageProps> = ({ message }) => {
   return (
     <div className={`flex ${message.isSender ? "justify-end" : "justify-start"} items-start`}>
       {!message.isSender && (
-        <div className="mr-2 mt-1 w-5 h-5 flex-shrink-0">
-          <img src="/icons/LogoWithoutText.png" alt="Placeholder Logo" className="w-5 h-5" />
+        <div className="mr-2 mt-1  flex-shrink-0 ">
+          <img src="/icons/Logo.svg" alt="Placeholder Logo" className="w-10 h-10" />
         </div>
       )}
       <div
@@ -31,8 +31,8 @@ const Message: React.FC<MessageProps> = ({ message }) => {
               {message.streaming? `${message.message}▋`: message.message}
             </ReactMarkdown>
             {/* {message.streaming && "▋"} */}
-            
-          </div>          
+
+          </div>
         </div>
 
         {!message.isSender && !message.streaming && (

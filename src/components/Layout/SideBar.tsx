@@ -2,13 +2,23 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   RectangleGroupIcon,
-  FolderIcon,
-  ChatBubbleBottomCenterIcon,
+
+   ChatBubbleLeftIcon,
   QuestionMarkCircleIcon,
   Cog8ToothIcon,
 } from "@heroicons/react/24/outline";
+
+import { FolderIcon } from "@heroicons/react/24/solid";
 import { ChevronLeftIcon } from "@heroicons/react/20/solid";
-import { GoCommandPalette } from "react-icons/go";
+import { Terminal } from "lucide-react";
+
+
+const GradientText = ({ children, className = "" }) => (
+  <span className={`bg-dare-gradient bg-clip-text text-transparent ${className}`}>
+    {children}
+  </span>
+);
+
 
 const Sidebar = () => {
   const location = useLocation();
@@ -31,9 +41,9 @@ const Sidebar = () => {
 
   const menuItems = [
     { name: "Dashboard", icon: RectangleGroupIcon, path: "/dashboard" },
-    { name: "Conversation", icon: ChatBubbleBottomCenterIcon, path: "/conversation" },
+    { name: "Conversation", icon: ChatBubbleLeftIcon, path: "/conversation" },
     { name: "Files", icon: FolderIcon, path: "/files" },
-    { name: "Prompts", icon: GoCommandPalette, path: "/prompts", },
+    { name: "Prompts", icon: Terminal, path: "/prompts", },
   ];
 
   const bottomItems = [
@@ -57,28 +67,41 @@ const Sidebar = () => {
           />
         </button>
       </div>
-      <nav className="flex flex-col gap-1 p-2 font-sans text-base font-normal text-blue-gray-700 flex-grow">
-        {menuItems.map((item) => (
-          <Link
-            key={item.name}
-            to={item.path}
-            onClick={undefined}
-            className={`flex items-center w-full p-3 leading-tight transition-all rounded-xl outline-none text-start ${location.pathname === item.path
-              ? "bg-pink-50 text-primary"
-              : "hover:bg-gray-200 hover:bg-opacity-80 hover:text--gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
-              }`}
-          >
-            <item.icon
-              className={`w-5 h-5 font-bold transition-all duration-300 shrink-0 ${isCollapsed ? "mx-auto" : "mr-4"}`}
-            />
-            <span
-              className={`whitespace-nowrap transition-all duration-300 ${isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+      <nav className="flex flex-col gap-1 p-2 font-sans text-base font-normal flex-grow">
+        {menuItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={item.name}
+              to={item.path}
+              onClick={undefined}
+              className={`flex items-center w-full p-3 leading-tight transition-all rounded-xl outline-none text-start ${isActive
+                ? "bg-sky-50"
+                : "hover:bg-gray-200 hover:bg-opacity-80 hover:text--gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
                 }`}
             >
-              {item.name}
-            </span>
-          </Link>
-        ))}
+              {isActive ? (
+                <item.icon
+                  className={`w-5 h-5 font-bold transition-all duration-300 shrink-0 ${isCollapsed ? "mx-auto" : "mr-2"}`}
+                />
+              ) : (
+                <item.icon
+                  className={`w-5 h-5 font-bold transition-all duration-300 shrink-0 ${isCollapsed ? "mx-auto" : "mr-2"}`}
+                />
+              )}
+              <span
+                className={`whitespace-nowrap transition-all duration-300 ${isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"}`}
+              >
+                {isActive ? (
+                  <GradientText>{item.name}</GradientText>
+                ) : (
+                  item.name
+                )}
+              </span>
+            </Link>
+          );
+        })}
+
         <div className="mt-auto sticky bottom-0">
           {bottomItems.map((item) => (
             <Link
