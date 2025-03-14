@@ -9,7 +9,6 @@ import { SignupFormValues, signupInitialValues, signupValidationSchema } from ".
 
 import { resetError } from "../../redux/userSlice";
 
-import RoleSelectionScreen from "../../components/RoleSelect";
 
 const RegistrationScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +25,7 @@ const RegistrationScreen: React.FC = () => {
       email: values.email,
       password1: values.password1,
       password2: values.password2,
-      role: values.role,
+      // role: values.role,
     };
 
     try {
@@ -74,7 +73,6 @@ const RegistrationScreen: React.FC = () => {
           />
         </>
       }
-      roleSelect={<RoleSelectionScreen />}
     >
 
     </AuthCard>

@@ -7,10 +7,11 @@ import {
     resetPassword,
     setup2FA,
     verifyCode,
-    fetchUserData,
+    getUserData,
     userLogout,
     verifyEmailRegistration,
     updateProfilePicture,
+    getUserStats,
 } from "./aynscThunks/user";
 
 const userSlice = createSlice({
@@ -62,26 +63,37 @@ const userSlice = createSlice({
                 state.error = action.payload as string;
             })
 
-            .addCase(fetchUserData.pending, (state) => {
+            .addCase(getUserData.pending, (state) => {
                 state.loading = true;
                 state.userLoading = true;
                 state.error = null;
             })
-            .addCase(fetchUserData.fulfilled, (state, action) => {
+            .addCase(getUserData.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload;
                 state.isAuthenticated = true;
                 state.userLoading = false;
                 state.error = null;
             })
-            .addCase(fetchUserData.rejected, (state, action) => {
+            .addCase(getUserData.rejected, (state, action) => {
                 state.loading = false;
                 state.userLoading = false;
                 state.error = action.payload as string;
                 localStorage.removeItem("token");
                 localStorage.removeItem("refresh_token");
             })
-
+            .addCase(getUserStats.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getUserStats.fulfilled, (state, action) => {
+                state.loading = false;
+                state.stats = action.payload;
+            })
+            .addCase(getUserStats.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
             .addCase(userLogout.pending, (state) => {
                 state.loading = true;
                 state.error = null;

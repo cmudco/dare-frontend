@@ -6,7 +6,7 @@ const getAuthToken = () => {
     return localStorage.getItem("token");
 };
 
-export const fetchTags = async (): Promise<any> => {
+export const getTagsAPI = async (): Promise<any> => {
     try {
         const response = await axiosInstance.get(`/api/tags/`, {
             headers: {

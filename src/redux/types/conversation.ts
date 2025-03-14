@@ -1,5 +1,6 @@
 import { SenderType } from "@/utils/constants/conversation";
 import { MyFile } from "./files";
+import { Prompt } from "./prompt";
 
 export interface Conversation {
     conversationId: string;
@@ -38,7 +39,8 @@ export interface ConversationState {
     showDropdown: boolean;
     hoveredModel: string | null;
     conversationInput: string;
-    availableModels: LLMModel[]
+    availableModels: LLMModel[];
+    prompt: Prompt | null
 }
 
 export interface ConversationResponse {

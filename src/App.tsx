@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUserData } from './redux/aynscThunks/user';
+import { getUserData } from './redux/aynscThunks/user';
 import { AppDispatch, RootState } from './redux/store';
 import AppRoutes from './routes/AppRoutes';
 import Loader from './components/Loader';
@@ -12,7 +12,7 @@ function App() {
   const { userLoading, user } = useSelector((state: RootState) => state.user);
   useEffect(() => {
     if (!user) {
-      dispatch(fetchUserData());
+      dispatch(getUserData());
     }
   }, []);
 

@@ -7,7 +7,7 @@ export const registerUser = async (data: {
     email: string;
     password1: string;
     password2: string;
-    role: string;
+    // role: string;
 }) => {
     try {
         const response = await userAxiosInstance.post(
@@ -44,7 +44,7 @@ export const loginUser = async (data: { email: string; password: string }) => {
     }
 };
 
-export const fetchUserDataFromAPI = async (): Promise<User | null> => {
+export const getUserDataFromAPI = async (): Promise<User | null> => {
     const token = localStorage.getItem("token");
     if (!token) {
         return null;
@@ -65,6 +65,25 @@ export const fetchUserDataFromAPI = async (): Promise<User | null> => {
         throw new Error(getErrorMessage(error));
     }
 };
+
+export const getUserStatsFromAPI = async () => {
+    try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            return null;
+        }
+
+        const response = await userAxiosInstance.get("/api/stats/", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+            },
+        });
+        return response.data;
+    } catch (error) {
+        throw new Error(getErrorMessage(error));
+    }
+}
 
 export const logoutUser = async () => {
     try {

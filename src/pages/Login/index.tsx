@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import AuthCard from "../../components/Auth/AuthCard";
 import AuthFormFooter from "../../components/Auth/AuthFormFooter";
-import { LoginFormValues, loginInitialValues, loginValidationSchema } from "./validation";
+import {
+  LoginFormValues,
+  loginInitialValues,
+  loginValidationSchema,
+} from "./validation";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
-import { fetchUserData, userLogin, resendVerification } from "../../redux/aynscThunks/user";
+import { getUserData, userLogin, resendVerification } from "../../redux/aynscThunks/user";
 import { resetError } from "../../redux/userSlice";
 import { useAppSelector } from "../../redux/hooks";
 
@@ -28,7 +32,7 @@ const LoginScreen: React.FC = () => {
   const handleSubmit = async (values: LoginFormValues) => {
     try {
       await dispatch(userLogin(values)).unwrap();
-      await dispatch(fetchUserData()).unwrap();
+      await dispatch(getUserData()).unwrap();
     } catch (err) {
       console.error("Login failed:", err);
     }

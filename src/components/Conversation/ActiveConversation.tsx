@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom";
 import { updateConversationInput, updateConversation } from "../../redux/conversationSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
-import { Card } from "../UI/card";
+import { Card } from "../ui/card";
 
 const ActiveConversation: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -54,7 +54,7 @@ const ActiveConversation: React.FC = () => {
   }, [activeConversation?.conversationId, dispatch]);
 
   return (
-    <Card className="flex flex-col flex-2 w-full h-full justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5">
+    <Card className="flex flex-col flex-2 w-full h-[90vh] justify-end  border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5">
       <div className={`flex flex-col justify-between h-full`}>
         {!activeConversation && <NewConversation />}
         {activeConversation && <MessageList />}

@@ -5,9 +5,10 @@ import AuthCard from "../../components/Auth/AuthCard";
 import { FormikValues } from "formik";
 import { AppDispatch, } from "../../redux/store";
 import { verifyCode } from "../../redux/aynscThunks/user";
-import { fetchUserDataFromAPI } from "../../api";
+
 import { updateUser } from "../../redux/userSlice";
 import { verifyCodeInitialValues, verifyCodeValidationSchema } from "./validation";
+import { getUserDataFromAPI } from "@/api";
 
 const VerifyCodeScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const VerifyCodeScreen: React.FC = () => {
     const resultAction = await dispatch(verifyCode(formData.otp));
 
     if (verifyCode.fulfilled.match(resultAction)) {
-      const user = await fetchUserDataFromAPI()
+      const user = await getUserDataFromAPI()
       dispatch(updateUser(user))
       navigate("/dashboard");
     }

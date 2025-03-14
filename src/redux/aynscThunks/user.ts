@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { User, UserState } from "../types/user";
+import { User, UserState, UserStats } from "../types/user";
 import {
     forgotPasswordUser,
     loginUser,
@@ -7,11 +7,12 @@ import {
     resetPasswordUser,
     verifyCodeUser,
     setup2FA as setup2FAAPI,
-    fetchUserDataFromAPI,
+    getUserDataFromAPI,
     verifyEmailKey,
     logoutUser,
     uploadProfilePicture,
     resendVerificationEmail,
+    getUserStatsFromAPI,
 } from "../../api/auth";
 
 export const userRegister = createAsyncThunk(
@@ -22,7 +23,7 @@ export const userRegister = createAsyncThunk(
             email: string;
             password1: string;
             password2: string;
-            role: string;
+            // role: string;
         },
         thunkAPI
     ) => {
@@ -63,13 +64,13 @@ export const userLogin = createAsyncThunk(
     }
 );
 
-export const fetchUserData = createAsyncThunk<
+export const getUserData = createAsyncThunk<
     User,
     void,
     { rejectValue: string }
->("user/fetchUserData", async (_, thunkAPI) => {
+>("user/getUserData", async (_, thunkAPI) => {
     try {
-        const user = await fetchUserDataFromAPI();
+        const user = await getUserDataFromAPI();
         if (!user) {
             return thunkAPI.rejectWithValue("No user data found");
         }
@@ -78,6 +79,22 @@ export const fetchUserData = createAsyncThunk<
         return thunkAPI.rejectWithValue((error as Error).message);
     }
 });
+
+export const getUserStats = createAsyncThunk<
+    UserStats,
+    void,
+    { rejectValue: string }
+>("user/getUserStats", async (_, thunkAPI) => {
+    try {
+
+        const response = await getUserStatsFromAPI();
+
+        return response;
+    } catch (error) {
+        return thunkAPI.rejectWithValue((error as Error).message);
+    }
+});
+
 
 export const userLogout = createAsyncThunk(
     "user/logoutUser",

@@ -1,3 +1,12 @@
+export interface UserStats {
+    promptCount: number;      
+    fileCount: number;         
+    conversationCount: number;
+    messageCount: number;     
+    aiMessageCount: number;
+    taggedFilesCount: number;
+}
+
 export interface User {
     id: number;
     email: string;
@@ -22,4 +31,5 @@ export interface UserState {
     token: string;
     userLoading: boolean;
     successMessage: string | null;
+    stats: UserStats | null;
 }
