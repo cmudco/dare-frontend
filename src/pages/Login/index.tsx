@@ -74,7 +74,7 @@ const LoginScreen: React.FC = () => {
           <AuthFormFooter
             text="Don't have an account?"
             route="/register"
-            routeText="Signup"
+            routeText="Sign up"
           />
 
           {resendSuccess && (

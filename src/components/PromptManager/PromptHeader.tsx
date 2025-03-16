@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useState } from "react";
 import { openModal } from "@/redux/promptSlice";
+import { Plus } from "lucide-react";
 
 
 interface PromptHeaderProps {
@@ -31,7 +32,8 @@ const PromptHeader: React.FC<PromptHeaderProps> = ({ onSearch }) => {
         <Input
           type="text"
           placeholder="Search prompts"
-          className="bg-white pl-10"
+          className="bg-white border pl-10 border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
+
           value={searchQuery}
           onChange={handleSearchChange}
         />
@@ -39,9 +41,10 @@ const PromptHeader: React.FC<PromptHeaderProps> = ({ onSearch }) => {
 
       <Button
         variant="default"
-        className="bg-primary text-white py-2 rounded-md shadow-sm normal-case font-normal whitespace-nowrap"
+        className="py-2 rounded-md shadow-sm normal-case font-normal whitespace-nowrap"
         onClick={handleCreatePrompt}
       >
+        <Plus />
         Create Prompt
       </Button>
     </div>
