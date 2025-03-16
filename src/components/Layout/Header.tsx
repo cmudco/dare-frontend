@@ -26,7 +26,7 @@ const Header: React.FC = () => {
   return (
     <header className="h-[80px] bg-white p-1 flex justify-between items-center w-full top-0 left-0 right-0 border border-pink-50">
       <div className="flex items-center">
-        <img src="/icons/TextLogo.svg" alt="Logo" className="w-20 h-auto mx-4" />
+        <img src="/icons/Logo.png" alt="Logo" className="w-12 h-auto mx-4" />
       </div>
 
       <div className="flex items-center gap-4">

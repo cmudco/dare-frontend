@@ -9,7 +9,7 @@ body {
 
 input:-webkit-autofill {
     animation-name: onAutoFillStart;
-transition: background-color 5000s ease-in-out 0s;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 input:not(:-webkit-autofill) {
@@ -17,30 +17,30 @@ input:not(:-webkit-autofill) {
 }
 
 @keyframes onAutoFillStart {
-    from {
-    }
-    to {
-    }
+    from {}
+
+    to {}
 }
 
 @keyframes onAutoFillCancel {
-    from {
-    }
-    to {
-    }
+    from {}
+
+    to {}
 }
 
-.autofilled + label,
-input:-webkit-autofill + label {
-}
+.autofilled+label,
+input:-webkit-autofill+label {}
 
 .scrollbar-hide {
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    /* Internet Explorer 10+ */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* WebKit browsers (Chrome, Safari) */
+    display: none;
+    /* WebKit browsers (Chrome, Safari) */
 }
 
 @layer base {
@@ -73,6 +73,7 @@ input:-webkit-autofill + label {
         --chart-5: 27 87% 67%;
         --radius: 0.5rem;
     }
+
     .dark {
         --background: 0 0% 3.9%;
         --foreground: 0 0% 98%;
@@ -107,7 +108,32 @@ input:-webkit-autofill + label {
     * {
         @apply border-border;
     }
+
     body {
         @apply bg-background text-foreground;
     }
+}
+
+.gradient-border {
+    position: relative;
+    background: white;
+    border-radius: 1rem;
+    padding: 1px;
+}
+
+.gradient-border::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    background: linear-gradient(180deg,
+            #EF3A47 0%,
+            #EF3A47 50%,
+            #023572 50%,
+            #023572 100%
+        );
+    border-radius: 1rem;
+    z-index: -1;
 }
