@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
-import { createOrUpdatePrompt,  } from "../../redux/aynscThunks/prompt";
+import { createOrUpdatePrompt, } from "../../redux/aynscThunks/prompt";
 import { clearSelectedPrompt, closeModal } from "../../redux/promptSlice";
 import {
   Dialog,

@@ -13,7 +13,7 @@ import { ChevronLeftIcon } from "@heroicons/react/20/solid";
 import { Terminal } from "lucide-react";
 
 
-const GradientText = ({ children, className = "" }) => (
+const GradientText = ({ children="", className = "" }) => (
   <span className={`bg-dare-gradient bg-clip-text text-transparent ${className}`}>
     {children}
   </span>

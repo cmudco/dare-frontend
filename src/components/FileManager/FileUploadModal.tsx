@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename } from "../../redux/fileSlice";
 import { getFiles, uploadNewFile } from "../../redux/aynscThunks/file";
-import { addTag, getTags,  } from "../../redux/aynscThunks/tag";
+import { addTag, getTags, } from "../../redux/aynscThunks/tag";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "../ui/dialog";

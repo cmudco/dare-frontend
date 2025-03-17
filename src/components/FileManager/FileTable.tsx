@@ -110,11 +110,11 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                                             <EllipsisVerticalIcon className="h-4 w-4 text-gray-500" />
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
-                                                <DropdownMenuItem
-                                                    className="text-red-500" onClick={() => handleDelete(id)}>
+                                            <DropdownMenuItem
+                                                className="text-red-500" onClick={() => handleDelete(id)}>
 
-                                                    <span>Delete</span>
-                                                </DropdownMenuItem>
+                                                <span>Delete</span>
+                                            </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
