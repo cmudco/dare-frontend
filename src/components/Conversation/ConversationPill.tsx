@@ -11,7 +11,7 @@ import { sendMessage, createConversation } from "../../redux/aynscThunks/convers
 import ConversationFileSelect from "./ConversationFileSelect";
 import { useEffect } from "react";
 
-  const ConversationPill: React.FC = () => {
+const ConversationPill: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const conversationInput = useSelector((state: RootState) => state.conversation.conversationInput);
   const activeConversation = useSelector((state: RootState) => state.conversation.activeConversation);
@@ -31,12 +31,15 @@ import { useEffect } from "react";
 
     if (!activeConversation) {
       dispatch(createConversation())
-        .then(({ payload }) => {
-          dispatch(updateConversation(payload));
-          navigate(`/conversation/${payload.conversationId}`);
+        .unwrap()
+        .then((newConversation) => {
+          dispatch(updateConversation(newConversation));
+          navigate(`/conversation/${newConversation.conversationId}`);
+        })
+        .catch((error) => {
+          console.error("Error creating conversation:", error);
         });
     } else {
-
       dispatch(sendMessage(newMessage));
       dispatch(updateConversationInput(""));
     }

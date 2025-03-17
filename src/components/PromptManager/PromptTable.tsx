@@ -96,11 +96,11 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                       <EllipsisVerticalIcon className="h-4 w-4 text-gray-500" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleEdit(id)}>
+                      <DropdownMenuItem onClick={() => handleEdit(id)}  className="cursor-pointer">
                         <span>Edit</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-red-500" onClick={() => handleDelete(id)}>
+                        className="text-red-500 cursor-pointer" onClick={() => handleDelete(id)}>
                         <span>Delete</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>

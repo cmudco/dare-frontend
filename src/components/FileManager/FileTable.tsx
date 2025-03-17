@@ -111,7 +111,7 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
                                             <DropdownMenuItem
-                                                className="text-red-500" onClick={() => handleDelete(id)}>
+                                                className="text-red-500 cursor-pointer" onClick={() => handleDelete(id)}>
 
                                                 <span>Delete</span>
                                             </DropdownMenuItem>

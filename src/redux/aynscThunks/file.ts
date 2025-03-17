@@ -31,7 +31,7 @@ export const uploadNewFile = createAsyncThunk(
 
         try {
             const response = await uploadFileAPI(formData);
-            return response.data;
+            return response;
         } catch (error) {
             return thunkAPI.rejectWithValue((error as Error).message);
         }

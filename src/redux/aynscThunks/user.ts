@@ -86,15 +86,15 @@ export const getUserStats = createAsyncThunk<
     { rejectValue: string }
 >("user/getUserStats", async (_, thunkAPI) => {
     try {
-
         const response = await getUserStatsFromAPI();
-
-        return response;
+        if (!response) {
+            return thunkAPI.rejectWithValue("No stats data found");
+        }
+        return response as unknown as UserStats;
     } catch (error) {
         return thunkAPI.rejectWithValue((error as Error).message);
     }
 });
-
 
 export const userLogout = createAsyncThunk(
     "user/logoutUser",

@@ -1,113 +1,57 @@
-import { getErrorMessage } from "../utils/errorHandler";
-import { Conversation, ConversationResponse, LLMModel, } from "../redux/types/conversation";
-import axiosInstance from "@/utils/axios";
-
-const getAuthToken = () => {
-    return localStorage.getItem("token");
-};
+import {
+    Conversation,
+    ConversationResponse,
+    LLMModel,
+} from "../redux/types/conversation";
+import { baseRequest } from "@/utils/requests";
+import { METHOD } from "@/utils/constants/requests";
 
 export const getConversationsAPI = async (): Promise<ConversationResponse> => {
-    try {
-        const response = await axiosInstance.get<ConversationResponse>(
-            "/api/conversations/",
-            {
-                headers: {
-                    Authorization: `Bearer ${getAuthToken()}`,
-                    Accept: "application/json",
-                },
-            }
-        );
-        return response.data;
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
-    }
+    return await baseRequest<ConversationResponse>({
+        url: "api/conversations/",
+        method: METHOD.GET,
+    });
 };
 
 export const createConversationAPI = async () => {
-    try {
-        const response = await axiosInstance.post(
-            "/api/conversations/",
-            {
-                headers: {
-                    Authorization: `Bearer ${getAuthToken()}`,
-                    Accept: "application/json",
-                },
-            }
-        );
-        return response.data;
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
-    }
+    return await baseRequest<Conversation>({
+        url: "api/conversations/",
+        method: METHOD.POST,
+    });
 };
 
-export const getConversationAPI = async (conversationId: string) => {
-    try {
-        const response = await axiosInstance.get(
-            `/api/conversations/${conversationId}/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${getAuthToken()}`,
-                    Accept: "application/json",
-                },
-            }
-        );
-        return response.data;
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
-    }
+export const getConversationAPI = async (
+    conversationId: string
+): Promise<Conversation> => {
+    return await baseRequest<Conversation>({
+        url: `api/conversations/${conversationId}/`,
+        method: METHOD.GET,
+    });
 };
 
 export const updateConversationAPI = async (
     conversationId: string,
     updates: Partial<Conversation>
-) => {
-    try {
-        const response = await axiosInstance.patch(
-            `/api/conversations/${conversationId}/`,
-            updates,
-            {
-                headers: {
-                    Authorization: `Bearer ${getAuthToken()}`,
-                    Accept: "application/json",
-                },
-            }
-        );
-        return response.data;
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
-    }
+): Promise<Conversation> => {
+    return await baseRequest<Conversation>({
+        url: `api/conversations/${conversationId}/`,
+        method: METHOD.PATCH,
+        data: updates,
+    });
 };
 
-export const deleteConversationAPI = async (conversationId: string) => {
-    try {
-        await axiosInstance.delete(`/api/conversations/${conversationId}/`, {
-            headers: {
-                Authorization: `Bearer ${getAuthToken()}`,
-                Accept: "application/json",
-            },
-        });
-        return conversationId;
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
-    }
+export const deleteConversationAPI = async (
+    conversationId: string
+): Promise<void> => {
+    await baseRequest<void>({
+        url: `api/conversations/${conversationId}/`,
+        method: METHOD.DELETE,
+    });
 };
 
-export const getModelsAPI = async (): Promise<LLMModel[]> => {
-    const token = getAuthToken();
-    if (!token) {
-        throw new Error("Authentication token is missing.");
-    }
-
-    try {
-        const response = await axiosInstance.get("/api/llms/", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        return response.data.results;
-    } catch (error) {
-        console.error("Error in getModelsAPI:", error);
-        throw error;
-    }
+export const getModelsAPI = async (): Promise<{ results: LLMModel[] }> => {
+    return await baseRequest<{ results: LLMModel[] }>({
+        url: "api/llms/",
+        method: METHOD.GET,
+    });
 };

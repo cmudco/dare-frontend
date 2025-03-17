@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { Message } from "../types/conversation";
+import { Conversation, Message } from "../types/conversation";
 import {
     getModelsAPI,
     createConversationAPI,
@@ -17,9 +17,9 @@ export const getAvailableModels = createAsyncThunk<
 >("conversation/getAvailableModels", async (_, thunkAPI) => {
     try {
         const response = await getModelsAPI();
-        return response || [];
+        return response.results || [];
     } catch (error) {
-        console.error("Error fetching models:", error); 
+        console.error("Error fetching models:", error);
         return thunkAPI.rejectWithValue((error as Error).message);
     }
 });
@@ -36,17 +36,18 @@ export const getConversations = createAsyncThunk(
     }
 );
 
-export const createConversation = createAsyncThunk(
-    "conversation/createConversation",
-    async (_, thunkAPI) => {
-        try {
-            const newConversation = await createConversationAPI();
-            return newConversation;
-        } catch (error) {
-            return thunkAPI.rejectWithValue((error as Error).message);
-        }
+export const createConversation = createAsyncThunk<
+    Conversation,
+    void,
+    { rejectValue: string }
+>("conversation/createConversation", async (_, thunkAPI) => {
+    try {
+        const newConversation = await createConversationAPI();
+        return newConversation;
+    } catch (error) {
+        return thunkAPI.rejectWithValue((error as Error).message);
     }
-);
+});
 
 export const deleteConversation = createAsyncThunk(
     "conversation/deleteConversation",
