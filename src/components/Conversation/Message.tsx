@@ -17,7 +17,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
     <div className={`flex ${message.isSender ? "justify-end" : "justify-start"} items-start`}>
       {!message.isSender && (
         <div className="mr-2 mt-1  flex-shrink-0 ">
-          <img src="/icons/Logo.png" alt="Placeholder Logo" className="w-10 h-10" />
+          <img src="/icons/Logo.png" alt="Placeholder Logo" className="w-8 h-8" />
         </div>
       )}
       <div

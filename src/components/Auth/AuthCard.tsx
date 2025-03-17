@@ -55,7 +55,7 @@ const AuthCard = <T extends FormikValues>({
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
 
-      <div className="p-8 mx-auto shadow-md rounded-2xl  border-6 gradient-border  xl:w-[40vw] lg:w-[50vw] md:w-[60vw] w-[80vw] flex flex-col items-center justify-center relative xl:min-h-[55vh] min-h-[50vh]"
+      <div className="p-8 mx-auto shadow-md rounded-2xl gap-3  border-6 gradient-border  xl:w-[40vw] lg:w-[50vw] md:w-[60vw] w-[80vw] flex flex-col items-center justify-center relative "
       >
         {showBackButton && (
           <div
@@ -67,14 +67,23 @@ const AuthCard = <T extends FormikValues>({
           </div>
         )}
 
-        <img
-          src="/icons/Logo.png"
-          alt="company icon"
-          className="absolute -top-10 w-16"
-        />
+        <div className="relative -top-10 h-[60px]" >
+          <div className="flex flex-col items-center gap-2 ">
+            <img
+              src="/icons/Logo.png"
+              alt="company icon"
+              className=" w-14"
+            />
+            <img
+              src="/icons/TextLogo.svg"
+              alt="company icon"
+              className=" w-16"
+            />
+          </div>
+        </div>
 
-        <h1 className="text-2xl font-black text-[#023572] text-center mb-8">{title}</h1>
-        {subtitle && <p className="text-center text-sm mb-6">{subtitle}</p>}
+        <h1 className="text-2xl font-black text-[#023572] text-center">{title}</h1>
+        {subtitle && <p className="text-start text-sm w-[80%]">{subtitle}</p>}
 
         {children}
 
@@ -147,13 +156,18 @@ const AuthCard = <T extends FormikValues>({
         </Formik>
 
         {footer && <div className="mt-4">{footer}</div>}
+        <div className="h-[50px]">
+        </div>
+
+        {showprivacyPolicy && (
+          <p className="absolute -bottom-10 text-center text-sm text-gray-500">
+            By signing up, you are agreeing to Dare's Terms of Service and Privacy Policy.
+          </p>
+        )}
       </div>
 
-      {showprivacyPolicy && (
-        <p className="text-center text-sm text-gray-500 pt-10">
-          By signing up, you are agreeing to Dare's Terms of Service and Privacy Policy.
-        </p>
-      )}
+
+
     </div>
   );
 };
