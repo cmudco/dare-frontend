@@ -31,10 +31,10 @@ const ConversationHistory = () => {
 
     const handleCreateConversation = () => {
         dispatch(createConversation())
-        .then(({payload}) => {
-            dispatch(updateConversation(payload));
-            navigate(`/conversation/${payload.conversationId}`);
-        });
+            .then(({ payload }) => {
+                dispatch(updateConversation(payload));
+                navigate(`/conversation/${payload.conversationId}`);
+            });
     };
 
     return (
