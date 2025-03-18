@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
-import { deletePrompt } from "../../redux/aynscThunks/prompt";
+import { createOrUpdatePrompt, deletePrompt } from "../../redux/aynscThunks/prompt";
 import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
 import { formatDate, PROMPTS_TABLE_HEAD } from "../../utils/constants/prompts";
 import { openEditModal } from "../../redux/promptSlice";
@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../ui/Table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from "../ui/dropdown-menu";
 import { EllipsisVerticalIcon } from "lucide-react";
-
+import { Prompt } from "@/redux/types/prompt";
+import { DeleteConfirmation } from "../DeleteConfirmation";
 
 interface PromptTableProps {
   searchQuery: string;
@@ -22,6 +23,8 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [deletePromptId, setDeletePromptId] = useState<string | null>(null);
+  const [deletePromptTitle, setDeletePromptTitle] = useState<string>("");
 
   const filteredPrompts = useMemo(() => {
     return prompts.filter(prompt => {
@@ -41,18 +44,40 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  const handleDelete = async (id: string) => {
-    try {
-      await dispatch(deletePrompt(id)).unwrap();
-    } catch (error) {
-      console.error("Failed to delete prompt:", error);
+  const handleDeleteConfirm = async () => {
+    if (deletePromptId) {
+      try {
+        await dispatch(deletePrompt(deletePromptId)).unwrap();
+      } catch (error) {
+        console.error("Failed to delete prompt:", error);
+      }
     }
+    setDeletePromptId(null);
+  };
+
+  const handleDelete = async (id: string, title: string) => {
+    setDeletePromptId(id);
+    setDeletePromptTitle(title || "Untitled");
   };
 
   const handleEdit = (id: string) => {
     dispatch(openEditModal(id));
   };
 
+  const handleClone = (values: { title: string; content: string }) => {
+    dispatch(
+      createOrUpdatePrompt({
+        id: undefined,
+        promptData: {
+          title: values.title,
+          content: values.content,
+        },
+      })
+    ).then((result) => {
+      const payload = result.payload as Prompt
+      dispatch(openEditModal(payload.id));
+    })
+  };
   return (
     <div className="overflow-auto">
       <Table className="mt-4 w-full min-w-max text-left bg-white">
@@ -96,11 +121,14 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                       <EllipsisVerticalIcon className="h-4 w-4 text-gray-500" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleEdit(id)}  className="cursor-pointer">
+                      <DropdownMenuItem onClick={() => handleEdit(id)} className="cursor-pointer">
                         <span>Edit</span>
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleClone({ title, content })} className="text-yellow-500 cursor-pointer">
+                        <span>Clone</span>
+                      </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-red-500 cursor-pointer" onClick={() => handleDelete(id)}>
+                        className="text-red-500 cursor-pointer" onClick={() => handleDelete(id, title)}>
                         <span>Delete</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -150,6 +178,16 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
           </TableFooter>
         )}
       </Table>
+
+      <DeleteConfirmation
+        isOpen={!!deletePromptId}
+        onClose={() => setDeletePromptId(null)}
+        onDelete={handleDeleteConfirm}
+        title="Delete Prompt"
+        description="Are you sure you want to delete this prompt? This action cannot be undone."
+        itemName={deletePromptTitle}
+        confirmText="Delete"
+      />
     </div>
   );
 };
