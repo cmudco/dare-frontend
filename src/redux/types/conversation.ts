@@ -42,6 +42,7 @@ export interface ConversationState {
     availableModels: LLMModel[];
     prompt: Prompt | null;
     temperature: number;
+    maxTokens: number;
 }
 
 export interface ConversationResponse {

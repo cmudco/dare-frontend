@@ -8,6 +8,12 @@ import {
 } from "./aynscThunks/conversation";
 import { Message, Conversation, LLMModel } from "./types/conversation";
 import { MyFile } from "./types/files";
+import {
+    getFromLocalStorage,
+    saveToLocalStorage,
+    STORAGE_KEYS,
+} from "../utils/localStorage";
+import { MODEL_CONFIG } from "@/config/modelConfig";
 
 export const conversationSlice = createSlice({
     name: "conversation",
@@ -18,6 +24,19 @@ export const conversationSlice = createSlice({
         },
         updateConversation(state, action: PayloadAction<Conversation | null>) {
             state.activeConversation = action.payload;
+
+            if (action.payload?.conversationId) {
+                state.temperature = getFromLocalStorage(
+                    STORAGE_KEYS.TEMPERATURE,
+                    MODEL_CONFIG.temperature,
+                    action.payload.conversationId
+                );
+                state.maxTokens = getFromLocalStorage(
+                    STORAGE_KEYS.MAX_TOKENS,
+                    MODEL_CONFIG.maxTokens,
+                    action.payload.conversationId
+                );
+            }
         },
         updateSelectedModel(state, action: PayloadAction<number>) {
             state.selectedModel = action.payload;
@@ -39,8 +58,26 @@ export const conversationSlice = createSlice({
         },
         updateTemperature(state, action: PayloadAction<number>) {
             state.temperature = action.payload;
+            saveToLocalStorage(STORAGE_KEYS.TEMPERATURE, action.payload);
+            if (state.activeConversation?.conversationId) {
+                saveToLocalStorage(
+                    STORAGE_KEYS.TEMPERATURE,
+                    action.payload,
+                    state.activeConversation.conversationId
+                );
+            }
         },
-
+        updateMaxTokens(state, action: PayloadAction<number>) {
+            state.maxTokens = action.payload;
+            saveToLocalStorage(STORAGE_KEYS.MAX_TOKENS, action.payload);
+            if (state.activeConversation?.conversationId) {
+                saveToLocalStorage(
+                    STORAGE_KEYS.MAX_TOKENS,
+                    action.payload,
+                    state.activeConversation.conversationId
+                );
+            }
+        },
         addMessage(state, action: PayloadAction<Message>) {
             const index = state.activeConversationMessages.findIndex(
                 (msg) => msg?.id === action.payload.id
@@ -126,10 +163,14 @@ export const conversationSlice = createSlice({
             .addCase(createConversation.pending, (state) => {
                 state.loading = true;
                 state.error = null;
+                state.temperature = MODEL_CONFIG.temperature;
+                state.maxTokens = MODEL_CONFIG.maxTokens;
             })
             .addCase(createConversation.fulfilled, (state, action) => {
                 state.loading = false;
                 state.conversations.unshift(action.payload);
+                state.temperature = MODEL_CONFIG.temperature;
+                state.maxTokens = MODEL_CONFIG.maxTokens;
             })
             .addCase(createConversation.rejected, (state, action) => {
                 state.loading = false;
@@ -158,6 +199,7 @@ export const {
     updateSelectedModel,
     updateSelectedFiles,
     updateTemperature,
+    updateMaxTokens,
     toggleDropdown,
     setHoveredModel,
     updateConversationInput,

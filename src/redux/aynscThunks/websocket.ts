@@ -80,6 +80,8 @@ export const sendWebSocketMessage = createAsyncThunk<
     const fileIds = state.conversation.selectedFiles.map((file) => file.id);
     const prompt = state.conversation.prompt;
     const temperature = state.conversation.temperature;
+    const maxTokens = state.conversation.maxTokens;
+
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(
             JSON.stringify({
@@ -89,6 +91,7 @@ export const sendWebSocketMessage = createAsyncThunk<
                 model_id: state.conversation.selectedModel,
                 prompt_id: prompt?.id,
                 temperature: temperature,
+                max_tokens: maxTokens,
             })
         );
     } else {

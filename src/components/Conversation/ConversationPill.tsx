@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { sendMessage, createConversation } from "../../redux/aynscThunks/conversation";
 import ConversationFileSelect from "./ConversationFileSelect";
 import { useEffect } from "react";
-import TemperaturePicker from "./TemperaturePicker";
+import ModelConfigurationPanel from "./ModelConfigurationPanel";
 
 const ConversationPill: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -85,7 +85,7 @@ const ConversationPill: React.FC = () => {
         </div>
         <PromptSet />
         <ModelPicker />
-        <TemperaturePicker />
+        <ModelConfigurationPanel />
       </div>
       <p className="text-sm text-center mt-2">
         Dare Chat can make mistakes. Check important information.

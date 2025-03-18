@@ -1,4 +1,5 @@
 import { ConversationState } from "../types/conversation";
+import { MODEL_CONFIG } from "../../config/modelConfig";
 
 export const initialState: ConversationState = {
     conversations: [],
@@ -14,5 +15,6 @@ export const initialState: ConversationState = {
     conversationInput: "",
     availableModels: [],
     prompt: null,
-    temperature: 0.7,
+    temperature: MODEL_CONFIG.temperature,
+    maxTokens: MODEL_CONFIG.maxTokens,
 };

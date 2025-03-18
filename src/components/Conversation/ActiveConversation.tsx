@@ -4,11 +4,13 @@ import { AppDispatch, RootState } from "../../redux/store";
 import ConversationPill from "./ConversationPill";
 import NewConversation from "./NewConversation";
 import { useParams } from "react-router-dom";
-import { updateConversationInput, updateConversation } from "../../redux/conversationSlice";
+import { updateConversationInput, updateConversation, updateTemperature, updateMaxTokens } from "../../redux/conversationSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
 import { Card } from "../ui/card";
 import EmptyConversation from "./EmptyConversation";
+import { getFromLocalStorage, STORAGE_KEYS } from "../../utils/localStorage";
+import { MODEL_CONFIG } from "../../config/modelConfig";
 
 const ActiveConversation: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -26,9 +28,27 @@ const ActiveConversation: React.FC = () => {
       const conversation = conversations.find((conversation) => conversation.conversationId === id);
       if (!activeConversation && conversation) {
         dispatch(updateConversation(conversation));
+
+        const savedTemperature = getFromLocalStorage(
+          STORAGE_KEYS.TEMPERATURE,
+          MODEL_CONFIG.temperature,
+          conversation.conversationId
+        );
+        const savedMaxTokens = getFromLocalStorage(
+          STORAGE_KEYS.MAX_TOKENS,
+          MODEL_CONFIG.maxTokens,
+          conversation.conversationId
+        );
+
+        dispatch(updateTemperature(savedTemperature));
+        dispatch(updateMaxTokens(savedMaxTokens));
       }
     } else {
       dispatch(updateConversation(null));
+
+
+      dispatch(updateTemperature(MODEL_CONFIG.temperature));
+      dispatch(updateMaxTokens(MODEL_CONFIG.maxTokens));
     }
   }, [id, conversations, dispatch]);
 
