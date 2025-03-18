@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { initialState } from "./initialState/conversation";
-import { getConversations, getAvailableModels, createConversation, deleteConversation } from "./aynscThunks/conversation";
 import {
-    Message,
-    Conversation,
-    LLMModel,
-} from "./types/conversation";
+    getConversations,
+    getAvailableModels,
+    createConversation,
+    deleteConversation,
+} from "./aynscThunks/conversation";
+import { Message, Conversation, LLMModel } from "./types/conversation";
 import { MyFile } from "./types/files";
 
 export const conversationSlice = createSlice({
@@ -36,8 +37,14 @@ export const conversationSlice = createSlice({
         clearConversation(state) {
             state.activeConversationMessages = [];
         },
+        updateTemperature(state, action: PayloadAction<number>) {
+            state.temperature = action.payload;
+        },
+
         addMessage(state, action: PayloadAction<Message>) {
-            const index = state.activeConversationMessages.findIndex((msg) => msg?.id === action.payload.id);
+            const index = state.activeConversationMessages.findIndex(
+                (msg) => msg?.id === action.payload.id
+            );
             if (index !== -1) {
                 state.activeConversationMessages[index] = action.payload;
             } else {
@@ -45,12 +52,14 @@ export const conversationSlice = createSlice({
             }
         },
         updateMessage(state, action: PayloadAction<Partial<Message>>) {
-            const index = state.activeConversationMessages.findIndex((msg) => msg?.id === action.payload.id);
+            const index = state.activeConversationMessages.findIndex(
+                (msg) => msg?.id === action.payload.id
+            );
             if (index !== -1) {
                 state.activeConversationMessages[index] = {
                     ...state.activeConversationMessages[index],
                     ...action.payload,
-                    message: `${state.activeConversationMessages[index].message}${action.payload.message}`
+                    message: `${state.activeConversationMessages[index].message}${action.payload.message}`,
                 };
             }
         },
@@ -58,14 +67,20 @@ export const conversationSlice = createSlice({
             state.availableModels = action.payload;
         },
         updateConversationTitle(state, action: PayloadAction<string>) {
-            if (!state.activeConversation) {return}
+            if (!state.activeConversation) {
+                return;
+            }
             state.activeConversation.title = action.payload;
-            const index = state.conversations.findIndex((conv) => conv.conversationId === state.activeConversation?.conversationId);
+            const index = state.conversations.findIndex(
+                (conv) =>
+                    conv.conversationId ===
+                    state.activeConversation?.conversationId
+            );
             if (index !== -1) {
                 state.conversations[index] = {
                     ...state.conversations[index],
-                    title: action.payload
-                }
+                    title: action.payload,
+                };
             }
         },
         updateConversationHistory(state, action: PayloadAction<Message[]>) {
@@ -73,7 +88,7 @@ export const conversationSlice = createSlice({
         },
         setPrompt(state, action) {
             state.prompt = action.payload;
-        }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -126,7 +141,9 @@ export const conversationSlice = createSlice({
             })
             .addCase(deleteConversation.fulfilled, (state, action) => {
                 state.loading = false;
-                state.conversations = state.conversations.filter((conv) => conv.conversationId !== action.payload);
+                state.conversations = state.conversations.filter(
+                    (conv) => conv.conversationId !== action.payload
+                );
             })
             .addCase(deleteConversation.rejected, (state, action) => {
                 state.loading = false;
@@ -140,6 +157,7 @@ export const {
     updateConversation,
     updateSelectedModel,
     updateSelectedFiles,
+    updateTemperature,
     toggleDropdown,
     setHoveredModel,
     updateConversationInput,

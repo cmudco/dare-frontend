@@ -40,7 +40,8 @@ export interface ConversationState {
     hoveredModel: string | null;
     conversationInput: string;
     availableModels: LLMModel[];
-    prompt: Prompt | null
+    prompt: Prompt | null;
+    temperature: number;
 }
 
 export interface ConversationResponse {
