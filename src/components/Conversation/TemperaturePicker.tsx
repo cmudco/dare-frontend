@@ -2,7 +2,6 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
-;
 import { AppDispatch, RootState } from "../../redux/store";
 import { updateTemperature } from "../../redux/conversationSlice";
 import { Slider } from "../ui/slider";
@@ -11,7 +10,7 @@ import { Thermometer } from "lucide-react";
 const TemperaturePicker: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const temperature = useSelector(
-    (state: RootState) => state.conversation.temperature || 0.7
+    (state: RootState) => state.conversation.temperature ?? 0.7
   );
 
   const handleTemperatureChange = (values: number[]) => {
@@ -33,7 +32,7 @@ const TemperaturePicker: React.FC = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button className="ml-4  flex justify-center items-center font-normal normal-case rounded-lg h-12 py-0 whitespace-nowrap " variant='outline'>
+        <Button className="ml-4 flex justify-center items-center font-normal normal-case rounded-lg w-12 h-12 py-0 whitespace-nowrap" variant='outline'>
           <Thermometer
             className={`!w-5 !h-5 ${getTemperatureColor()}`}
           />
@@ -49,7 +48,7 @@ const TemperaturePicker: React.FC = () => {
           </div>
 
           <Slider
-            defaultValue={[temperature]}
+            value={[temperature]}
             min={0}
             max={1}
             step={0.1}
