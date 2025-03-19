@@ -10,8 +10,9 @@ import { useNavigate } from "react-router-dom";
 import { sendMessage, createConversation } from "../../redux/aynscThunks/conversation";
 import ConversationFileSelect from "./ConversationFileSelect";
 import { useEffect } from "react";
+import ModelConfigurationPanel from "./ModelConfigurationPanel";
 
-  const ConversationPill: React.FC = () => {
+const ConversationPill: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const conversationInput = useSelector((state: RootState) => state.conversation.conversationInput);
   const activeConversation = useSelector((state: RootState) => state.conversation.activeConversation);
@@ -31,12 +32,15 @@ import { useEffect } from "react";
 
     if (!activeConversation) {
       dispatch(createConversation())
-        .then(({ payload }) => {
-          dispatch(updateConversation(payload));
-          navigate(`/conversation/${payload.conversationId}`);
+        .unwrap()
+        .then((newConversation) => {
+          dispatch(updateConversation(newConversation));
+          navigate(`/conversation/${newConversation.conversationId}`);
+        })
+        .catch((error) => {
+          console.error("Error creating conversation:", error);
         });
     } else {
-
       dispatch(sendMessage(newMessage));
       dispatch(updateConversationInput(""));
     }
@@ -81,6 +85,7 @@ import { useEffect } from "react";
         </div>
         <PromptSet />
         <ModelPicker />
+        <ModelConfigurationPanel />
       </div>
       <p className="text-sm text-center mt-2">
         Dare Chat can make mistakes. Check important information.

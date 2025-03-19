@@ -1,12 +1,19 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { initialState } from "./initialState/conversation";
-import { getConversations, getAvailableModels, createConversation, deleteConversation } from "./aynscThunks/conversation";
 import {
-    Message,
-    Conversation,
-    LLMModel,
-} from "./types/conversation";
+    getConversations,
+    getAvailableModels,
+    createConversation,
+    deleteConversation,
+} from "./aynscThunks/conversation";
+import { Message, Conversation, LLMModel } from "./types/conversation";
 import { MyFile } from "./types/files";
+import {
+    getFromLocalStorage,
+    saveToLocalStorage,
+    STORAGE_KEYS,
+} from "../utils/localStorage";
+import { MODEL_CONFIG } from "@/config/modelConfig";
 
 export const conversationSlice = createSlice({
     name: "conversation",
@@ -17,6 +24,19 @@ export const conversationSlice = createSlice({
         },
         updateConversation(state, action: PayloadAction<Conversation | null>) {
             state.activeConversation = action.payload;
+
+            if (action.payload?.conversationId) {
+                state.temperature = getFromLocalStorage(
+                    STORAGE_KEYS.TEMPERATURE,
+                    MODEL_CONFIG.temperature,
+                    action.payload.conversationId
+                );
+                state.maxTokens = getFromLocalStorage(
+                    STORAGE_KEYS.MAX_TOKENS,
+                    MODEL_CONFIG.maxTokens,
+                    action.payload.conversationId
+                );
+            }
         },
         updateSelectedModel(state, action: PayloadAction<number>) {
             state.selectedModel = action.payload;
@@ -36,8 +56,32 @@ export const conversationSlice = createSlice({
         clearConversation(state) {
             state.activeConversationMessages = [];
         },
+        updateTemperature(state, action: PayloadAction<number>) {
+            state.temperature = action.payload;
+            saveToLocalStorage(STORAGE_KEYS.TEMPERATURE, action.payload);
+            if (state.activeConversation?.conversationId) {
+                saveToLocalStorage(
+                    STORAGE_KEYS.TEMPERATURE,
+                    action.payload,
+                    state.activeConversation.conversationId
+                );
+            }
+        },
+        updateMaxTokens(state, action: PayloadAction<number>) {
+            state.maxTokens = action.payload;
+            saveToLocalStorage(STORAGE_KEYS.MAX_TOKENS, action.payload);
+            if (state.activeConversation?.conversationId) {
+                saveToLocalStorage(
+                    STORAGE_KEYS.MAX_TOKENS,
+                    action.payload,
+                    state.activeConversation.conversationId
+                );
+            }
+        },
         addMessage(state, action: PayloadAction<Message>) {
-            const index = state.activeConversationMessages.findIndex((msg) => msg?.id === action.payload.id);
+            const index = state.activeConversationMessages.findIndex(
+                (msg) => msg?.id === action.payload.id
+            );
             if (index !== -1) {
                 state.activeConversationMessages[index] = action.payload;
             } else {
@@ -45,12 +89,14 @@ export const conversationSlice = createSlice({
             }
         },
         updateMessage(state, action: PayloadAction<Partial<Message>>) {
-            const index = state.activeConversationMessages.findIndex((msg) => msg?.id === action.payload.id);
+            const index = state.activeConversationMessages.findIndex(
+                (msg) => msg?.id === action.payload.id
+            );
             if (index !== -1) {
                 state.activeConversationMessages[index] = {
                     ...state.activeConversationMessages[index],
                     ...action.payload,
-                    message: `${state.activeConversationMessages[index].message}${action.payload.message}`
+                    message: `${state.activeConversationMessages[index].message}${action.payload.message}`,
                 };
             }
         },
@@ -58,14 +104,20 @@ export const conversationSlice = createSlice({
             state.availableModels = action.payload;
         },
         updateConversationTitle(state, action: PayloadAction<string>) {
-            if (!state.activeConversation) {return}
+            if (!state.activeConversation) {
+                return;
+            }
             state.activeConversation.title = action.payload;
-            const index = state.conversations.findIndex((conv) => conv.conversationId === state.activeConversation?.conversationId);
+            const index = state.conversations.findIndex(
+                (conv) =>
+                    conv.conversationId ===
+                    state.activeConversation?.conversationId
+            );
             if (index !== -1) {
                 state.conversations[index] = {
                     ...state.conversations[index],
-                    title: action.payload
-                }
+                    title: action.payload,
+                };
             }
         },
         updateConversationHistory(state, action: PayloadAction<Message[]>) {
@@ -73,7 +125,7 @@ export const conversationSlice = createSlice({
         },
         setPrompt(state, action) {
             state.prompt = action.payload;
-        }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -111,10 +163,14 @@ export const conversationSlice = createSlice({
             .addCase(createConversation.pending, (state) => {
                 state.loading = true;
                 state.error = null;
+                state.temperature = MODEL_CONFIG.temperature;
+                state.maxTokens = MODEL_CONFIG.maxTokens;
             })
             .addCase(createConversation.fulfilled, (state, action) => {
                 state.loading = false;
                 state.conversations.unshift(action.payload);
+                state.temperature = MODEL_CONFIG.temperature;
+                state.maxTokens = MODEL_CONFIG.maxTokens;
             })
             .addCase(createConversation.rejected, (state, action) => {
                 state.loading = false;
@@ -126,7 +182,9 @@ export const conversationSlice = createSlice({
             })
             .addCase(deleteConversation.fulfilled, (state, action) => {
                 state.loading = false;
-                state.conversations = state.conversations.filter((conv) => conv.conversationId !== action.payload);
+                state.conversations = state.conversations.filter(
+                    (conv) => conv.conversationId !== action.payload
+                );
             })
             .addCase(deleteConversation.rejected, (state, action) => {
                 state.loading = false;
@@ -140,6 +198,8 @@ export const {
     updateConversation,
     updateSelectedModel,
     updateSelectedFiles,
+    updateTemperature,
+    updateMaxTokens,
     toggleDropdown,
     setHoveredModel,
     updateConversationInput,

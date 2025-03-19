@@ -31,11 +31,16 @@ const ConversationHistory = () => {
 
     const handleCreateConversation = () => {
         dispatch(createConversation())
-            .then(({ payload }) => {
-                dispatch(updateConversation(payload));
-                navigate(`/conversation/${payload.conversationId}`);
+            .unwrap()
+            .then((newConversation) => {
+                dispatch(updateConversation(newConversation));
+                navigate(`/conversation/${newConversation.conversationId}`);
+            })
+            .catch((error) => {
+                console.error("Error creating conversation:", error);
             });
     };
+
 
     return (
         <div

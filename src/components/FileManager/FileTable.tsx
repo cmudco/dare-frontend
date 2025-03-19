@@ -12,7 +12,7 @@ import { Badge } from "../ui/badge";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../ui/Table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { EllipsisVerticalIcon } from "lucide-react";
-
+import { DeleteConfirmation } from "../DeleteConfirmation";
 
 interface FileTableProps {
     searchQuery: string;
@@ -26,6 +26,8 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
+    const [deleteFileId, setDeleteFileId] = useState<number | null>(null);
+    const [deleteFileName, setDeleteFileName] = useState<string>("");
 
     const filteredFiles = useMemo(() => {
         return files.filter(file => {
@@ -46,12 +48,20 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
         setCurrentPage(1);
     }, [searchQuery, selectedTags]);
 
-    const handleDelete = async (id: number) => {
-        try {
-            await dispatch(deleteFile(id)).unwrap();
-        } catch (error) {
-            console.error("Failed to delete file:", error);
+    const handleDeleteConfirm = async () => {
+        if (deleteFileId !== null) {
+            try {
+                await dispatch(deleteFile(deleteFileId)).unwrap();
+            } catch (error) {
+                console.error("Failed to delete file:", error);
+            }
         }
+        setDeleteFileId(null);
+    };
+
+    const handleDelete = async (id: number, name: string) => {
+        setDeleteFileId(id);
+        setDeleteFileName(name || "Unnamed");
     };
 
     return (
@@ -111,8 +121,7 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
                                             <DropdownMenuItem
-                                                className="text-red-500" onClick={() => handleDelete(id)}>
-
+                                                className="text-red-500 cursor-pointer" onClick={() => handleDelete(id, name)}>
                                                 <span>Delete</span>
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -162,6 +171,16 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                     </TableFooter>
                 )}
             </Table>
+
+            <DeleteConfirmation
+                isOpen={deleteFileId !== null}
+                onClose={() => setDeleteFileId(null)}
+                onDelete={handleDeleteConfirm}
+                title="Delete File"
+                description="Are you sure you want to delete this file? This action cannot be undone."
+                itemName={deleteFileName}
+                confirmText="Delete"
+            />
         </div>
     );
 };
