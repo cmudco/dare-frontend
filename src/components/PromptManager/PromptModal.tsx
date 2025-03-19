@@ -14,9 +14,9 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
-import { Formik, Form } from "formik";
+import { Formik, Form, } from "formik";
 import * as Yup from "yup";
+import Tiptap from "../Tiptap";
 
 const promptValidationSchema = Yup.object().shape({
   title: Yup.string().required("Title is required"),
@@ -59,10 +59,9 @@ const PromptUploadModal: React.FC = () => {
     }
   };
 
-
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="p-6 mx-auto w-[90vw] max-w-md bg-white rounded-lg shadow-lg">
+      <DialogContent className="p-6 mx-auto w-[90vw] max-w-2xl bg-white rounded-lg shadow-lg">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-gray-900">
             {isEditMode ? "Edit Prompt" : "Create New Prompt"}
@@ -85,6 +84,7 @@ const PromptUploadModal: React.FC = () => {
             errors,
             touched,
             handleChange,
+            setFieldValue,
             isValid,
             dirty,
           }) => (
@@ -108,15 +108,13 @@ const PromptUploadModal: React.FC = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="content">Prompt Content</Label>
-                <Textarea
-                  id="content"
-                  name="content"
-                  value={values.content}
-                  onChange={handleChange}
-                  placeholder="Enter prompt content"
-                  className={`min-h-[150px] ${errors.content && touched.content ? "border-red-500" : ""
-                    }`}
-                />
+                <div className={errors.content && touched.content ? "border border-red-500 rounded-md overflow-y-scroll max-h-[50vh]" : "overflow-y-scroll  max-h-[50vh]"}>
+                  <Tiptap
+
+                    content={values.content}
+                    onChange={(newContent) => setFieldValue('content', newContent)}
+                  />
+                </div>
                 {errors.content && touched.content && (
                   <p className="text-red-500 text-xs mt-1">{errors.content}</p>
                 )}

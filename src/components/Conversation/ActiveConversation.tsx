@@ -3,16 +3,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import ConversationPill from "./ConversationPill";
 import NewConversation from "./NewConversation";
-import { useParams } from "react-router-dom";
-import { updateConversationInput, updateConversation, updateTemperature, updateMaxTokens } from "../../redux/conversationSlice";
+import { useNavigate, useParams } from "react-router-dom";
+import { updateConversationInput, updateConversation, } from "../../redux/conversationSlice";
 import MessageList from "./MessageList";
 import { connectWebSocket, disconnectWebSocket } from "../../redux/aynscThunks/websocket";
 import { Card } from "../ui/card";
 import EmptyConversation from "./EmptyConversation";
-import { getFromLocalStorage, STORAGE_KEYS } from "../../utils/localStorage";
-import { MODEL_CONFIG } from "../../config/modelConfig";
 
 const ActiveConversation: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const activeConversation = useSelector((state: RootState) => state.conversation?.activeConversation);
   const conversationHistory = useSelector((state: RootState) => state.conversation?.activeConversationMessages || []);
@@ -28,27 +27,9 @@ const ActiveConversation: React.FC = () => {
       const conversation = conversations.find((conversation) => conversation.conversationId === id);
       if (!activeConversation && conversation) {
         dispatch(updateConversation(conversation));
-
-        const savedTemperature = getFromLocalStorage(
-          STORAGE_KEYS.TEMPERATURE,
-          MODEL_CONFIG.temperature,
-          conversation.conversationId
-        );
-        const savedMaxTokens = getFromLocalStorage(
-          STORAGE_KEYS.MAX_TOKENS,
-          MODEL_CONFIG.maxTokens,
-          conversation.conversationId
-        );
-
-        dispatch(updateTemperature(savedTemperature));
-        dispatch(updateMaxTokens(savedMaxTokens));
       }
     } else {
       dispatch(updateConversation(null));
-
-
-      dispatch(updateTemperature(MODEL_CONFIG.temperature));
-      dispatch(updateMaxTokens(MODEL_CONFIG.maxTokens));
     }
   }, [id, conversations, dispatch]);
 
@@ -73,6 +54,12 @@ const ActiveConversation: React.FC = () => {
 
     handleWebSocketConnection();
   }, [activeConversation?.conversationId, dispatch]);
+
+  useEffect(() => {
+    if (activeConversation) {
+      navigate(`/conversation/${activeConversation.conversationId}`);
+    }
+  }, [activeConversation, dispatch]);
 
   return (
     <Card className="flex flex-col flex-2 w-full h-[90vh] justify-end border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5">
