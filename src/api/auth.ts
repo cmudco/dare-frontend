@@ -44,6 +44,7 @@ export const loginUser = async (data: {
 };
 
 export const getUserDataFromAPI = async (): Promise<User | null> => {
+    // farhat: it is only needed for this endpoint
     const token = localStorage.getItem("token");
     if (!token) {
         return null;

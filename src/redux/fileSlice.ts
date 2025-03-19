@@ -32,6 +32,9 @@ const fileSlice = createSlice({
         resetSelectedTags: (state) => {
             state.selectedTags = [];
         },
+        setError: (state, action: PayloadAction<string>) => {
+            state.error = action.payload;
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -83,6 +86,7 @@ export const {
     openModal,
     closeModal,
     resetSelectedTags,
+    setError,
 } = fileSlice.actions;
 
 export default fileSlice.reducer;
