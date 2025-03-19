@@ -1,22 +1,39 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
-
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { GoCommandPalette } from "react-icons/go";
 import { formatDate } from "../../utils/constants/prompts";
-
-
 import { openModal } from "@/redux/promptSlice";
 import { useNavigate } from "react-router-dom";
-
 import { setPrompt } from "@/redux/conversationSlice";
 import { Prompt } from "@/redux/types/prompt";
-
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Plus } from "lucide-react";
+import { stripHtml } from "../../utils/textUtils";
+
+const RichTextPreview = ({ content }: { content: string }) => {
+  const truncateHtml = (html: string, maxLength: number = 150): string => {
+    if (!html) return "";
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    const textContent = tempDiv.textContent || tempDiv.innerText || "";
+    if (textContent.length <= maxLength) return html;
+
+    return html.substring(0, Math.min(html.length, maxLength * 2)) + "...";
+  };
+
+  return (
+    <div
+      className="text-sm text-gray-600 prose dark:prose-invert prose-sm focus:outline-none w-full max-w-full"
+      dangerouslySetInnerHTML={{ __html: truncateHtml(content || "") }}
+    />
+  );
+};
 
 const PromptSet: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -41,11 +58,12 @@ const PromptSet: React.FC = () => {
 
   const filteredPrompts = prompts.filter(prompt => {
     const promptTitle = prompt.title?.toLowerCase() || "";
-    const promptContent = prompt.content?.toLowerCase() || "";
+    const promptContent = stripHtml(prompt.content?.toLowerCase() || "");
     return searchQuery === "" ||
       promptTitle.includes(searchQuery.toLowerCase()) ||
       promptContent.includes(searchQuery.toLowerCase());
   });
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -54,7 +72,7 @@ const PromptSet: React.FC = () => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="bg-white rounded-lg shadow-md p-6-4 w-full max-w-md [&>button]:hidden">
+      <DialogContent className="bg-white rounded-lg shadow-md p-6 w-[90vw] max-w-2xl [&>button]:hidden">
         <div className="flex justify-between items-center mb-4">
           <DialogTitle className="text-lg text-black font-bold">Select Prompt</DialogTitle>
           <Button
@@ -96,12 +114,12 @@ const PromptSet: React.FC = () => {
               onClick={() => handlePromptSelect(prompt)}
             >
               <div className="flex justify-between items-start mb-1">
-                <h4 className="font-medium text-base">{prompt.title || "Untitled"}</h4>
+                <h4 className="font-medium text-xl text-gray-800">{prompt.title || "Untitled"}</h4>
                 <span className="text-xs text-gray-500">{formatDate(prompt.createdAt)}</span>
               </div>
-              <p className="text-sm text-gray-600 line-clamp-2">
-                {prompt.content || "No content"}
-              </p>
+              <div className="max-h-[4.5em] overflow-hidden">
+                <RichTextPreview content={prompt.content || "No content"} />
+              </div>
             </div>
           ))}
         </div>

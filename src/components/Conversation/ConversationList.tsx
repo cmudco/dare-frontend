@@ -8,7 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { AppDispatch, RootState } from "../../redux/store";
 import { Conversation } from "../../redux/types/conversation";
-import { updateConversation, } from "../../redux/conversationSlice";
+import { updateConversation } from "../../redux/conversationSlice";
 import { deleteConversation } from "@/redux/aynscThunks/conversation";
 import { DeleteConfirmation } from "../DeleteConfirmation";
 
@@ -19,15 +19,21 @@ const ConversationList: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const searchQuery = useSelector((state: RootState) => state.conversation?.searchQuery || "");
+
 
     const bottomItems = [
         { name: "Clear Conversation", icon: TrashIcon, action: "clear" },
         { name: "Dark Mode", icon: MoonIcon },
     ];
 
+    const filteredConversations = conversations.filter((conversation) => {
+        const title = conversation.title || "New Chat";
+        return title.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+
     const handleConversationClick = (conversation: Conversation) => {
         dispatch(updateConversation(conversation));
-        navigate(`/conversation/${conversation.conversationId}`);
     };
 
     const handleBottomItemClick = (action?: string) => {
@@ -35,6 +41,7 @@ const ConversationList: React.FC = () => {
             setIsDeleteConfirmOpen(true);
         }
     };
+
     const handleDeleteConfirm = async () => {
         const conversationId = activeConversation?.conversationId;
         if (conversationId) {
@@ -44,11 +51,10 @@ const ConversationList: React.FC = () => {
     };
 
     return (
-        <nav className="flex flex-col  gap-1 font-sans text-base font-normal text-blue-gray-700 h-full">
-            <div className="flex flex-col h-[65vh] overflow-scroll  w-full">
-                {conversations.map((conversation) => {
-                    const conversationId = conversation.conversationId
-
+        <nav className="flex flex-col gap-1 font-sans text-base font-normal text-blue-gray-700 h-full">
+            <div className="flex flex-col h-[65vh] overflow-scroll w-full">
+                {filteredConversations.map((conversation) => {
+                    const conversationId = conversation.conversationId;
                     const isActive = location.pathname === `/conversation/${conversationId}`;
                     return (
                         <div
@@ -63,12 +69,12 @@ const ConversationList: React.FC = () => {
                             <div>
                                 <ChatBubbleLeftEllipsisIcon className="w-6 font-bold" />
                             </div>
-                            {isActive ? activeConversation?.title || `New Chat` : conversation.title || `New Chat`}
+                            { conversation.title || `New Chat`}
                         </div>
                     );
                 })}
             </div>
-            <hr className=" border-gray-200 mt-4" />
+            <hr className="border-gray-200 mt-4" />
             <div className="">
                 {bottomItems.map((item) => {
                     const isDisabled = item.action === "clear" && !activeConversation;
@@ -85,7 +91,7 @@ const ConversationList: React.FC = () => {
                                     ? "opacity-50 cursor-not-allowed"
                                     : "cursor-pointer"}`}
                         >
-                            <item.icon className="w-5 h-5 font-bold mr-4 " />
+                            <item.icon className="w-5 h-5 font-bold mr-4" />
                             {item.name}
                         </div>
                     );

@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { EllipsisVerticalIcon } from "lucide-react";
 import { Prompt } from "@/redux/types/prompt";
 import { DeleteConfirmation } from "../DeleteConfirmation";
+import { stripHtml } from '../../utils/textUtils';
 
 interface PromptTableProps {
   searchQuery: string;
@@ -78,6 +79,11 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
       dispatch(openEditModal(payload.id));
     })
   };
+
+  const renderPromptContent = (content: string) => {
+    return stripHtml(content);
+  };
+
   return (
     <div className="overflow-auto">
       <Table className="mt-4 w-full min-w-max text-left bg-white">
@@ -109,7 +115,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                   <div>
                     <h3 className="font-medium">{title || "Untitled"}</h3>
                     <p className="text-sm text-gray-500 truncate max-w-[300px]">
-                      {content || "No content"}
+                      {renderPromptContent(content) || "No content"}
                     </p>
                   </div>
                 </TableCell>
