@@ -13,7 +13,8 @@ export const getPrompts = createAsyncThunk(
     "prompts/getPrompts",
     async (_, { rejectWithValue }) => {
         try {
-            return (await getPromptsAPI()) as Prompt[];
+            const response = await getPromptsAPI();
+            return response.results; 
         } catch (error) {
             return rejectWithValue((error as Error).message);
         }

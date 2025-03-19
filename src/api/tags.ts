@@ -1,61 +1,36 @@
-import axiosInstance from "@/utils/axios";
 import { Tag } from "../redux/types/tags";
-import { getErrorMessage } from "../utils/errorHandler";
+import { baseRequest } from "@/utils/requests";
+import { METHOD } from "@/utils/constants/requests";
 
-const getAuthToken = () => {
-    return localStorage.getItem("token");
-};
-
-export const getTagsAPI = async (): Promise<any> => {
-    try {
-        const response = await axiosInstance.get(`/api/tags/`, {
-            headers: {
-                Authorization: `Bearer ${getAuthToken()}`,
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
-    }
+export const getTagsAPI = async (): Promise<{ results: Tag[] }> => {
+    return await baseRequest<{ results: Tag[] }>({
+        url: "api/tags/",
+        method: METHOD.GET,
+    });
 };
 
 export const createTag = async (label: string): Promise<Tag> => {
-    try {
-        const response = await axiosInstance.post(`/api/tags/`, {label}, {
-            headers: {
-                Authorization: `Bearer ${getAuthToken()}`,
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
-    }
+    return await baseRequest<Tag>({
+        url: "api/tags/",
+        method: METHOD.POST,
+        data: { label },
+    });
 };
 
 export const updateTag = async (
     id: number,
     tagData: Partial<Tag>
 ): Promise<Tag> => {
-    try {
-        const response = await axiosInstance.put(`/api/tags/${id}/`, tagData, {
-            headers: {
-                Authorization: `Bearer ${getAuthToken()}`,
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
-    }
+    return await baseRequest<Tag>({
+        url: `api/tags/${id}/`,
+        method: METHOD.PUT,
+        data: tagData,
+    });
 };
 
-export const deleteTag = async (id: number) => {
-    try {
-        await axiosInstance.delete(`/api/tags/${id}/`, {
-            headers: {
-                Authorization: `Bearer ${getAuthToken()}`,
-            },
-        });
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
-    }
+export const deleteTag = async (id: number): Promise<void> => {
+    await baseRequest<void>({
+        url: `api/tags/${id}/`,
+        method: METHOD.DELETE,
+    });
 };

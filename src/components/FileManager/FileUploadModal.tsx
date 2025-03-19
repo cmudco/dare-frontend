@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
-import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename } from "../../redux/fileSlice";
+import { resetSelectedTags, closeModal, updateTagChange, updateRemoveTag, updateFilename, setError } from "../../redux/fileSlice";
 import { getFiles, uploadNewFile } from "../../redux/aynscThunks/file";
 import { addTag, getTags, } from "../../redux/aynscThunks/tag";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";
@@ -12,6 +12,7 @@ import { Input } from "../ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
 import { Badge } from "../ui/badge";
 import { getTagColor } from "@/utils/files";
+import { MAX_FILE_SIZE } from "@/utils/constants/file";
 
 
 const FileUploadModal: React.FC = () => {
@@ -23,7 +24,7 @@ const FileUploadModal: React.FC = () => {
     dispatch(getTags());
   }, [dispatch]);
 
-  const { selectedTags, isModalOpen, filename, loading } = useSelector((state: RootState) => state.files);
+  const { selectedTags, isModalOpen, filename, loading, error } = useSelector((state: RootState) => state.files);
   const { tags } = useSelector((state: RootState) => state.tags);
 
   const handleUploadClick = async () => {
@@ -39,21 +40,24 @@ const FileUploadModal: React.FC = () => {
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileSelection = (file: File | undefined) => {
     if (file) {
+      if (file.size > MAX_FILE_SIZE) {
+        dispatch(setError("File size exceeds 15 MB. Please select a smaller file."))
+        return;
+      }
       setSelectedFile(file);
       dispatch(updateFilename(file.name));
     }
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileSelection(event.target.files?.[0]);
+  };
+
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    const file = event.dataTransfer.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      dispatch(updateFilename(file.name));
-    }
+    handleFileSelection(event.dataTransfer.files?.[0]);
   };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -160,9 +164,14 @@ const FileUploadModal: React.FC = () => {
               </div>
             )}
             <input id="fileInput" type="file" onChange={handleFileChange} className="hidden" />
-            <span className="text-xs text-gray-500 mt-2 block">Maximum size: 1 MB</span>
+            <span className="text-xs text-gray-500 mt-2 block">Maximum size: 15 MB</span>
           </div>
         </div>
+          {error && (
+            <div className=" text-red-500 text-sm text-center" >
+              {error}
+            </div>
+          )}
 
         <DialogFooter className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => dispatch(closeModal())}>

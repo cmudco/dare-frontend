@@ -1,20 +1,20 @@
-import { AxiosError, isAxiosError } from "axios";
-
+import axios, { AxiosError } from "axios";
 
 type ErrorResponse = {
-    error?: string;
+    message?: string;
     nonFieldErrors?: string[];
     [key: string]: string[] | string | undefined;
 };
 
 export const getErrorMessage = (error: unknown): string => {
-    if (isAxiosError(error)) {
+    if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ErrorResponse>;
+
         if (axiosError.response?.data) {
             const errorData = axiosError.response.data;
 
-            if (errorData.error) {
-                return errorData.error;
+            if (errorData.message) {
+                return errorData.message;
             }
 
             if (
@@ -33,7 +33,13 @@ export const getErrorMessage = (error: unknown): string => {
                 }
             }
         }
-        return "An unexpected error occurred";
+
+        return axiosError.message || "An unexpected error occurred";
     }
+
+    if (error instanceof Error) {
+        return error.message;
+    }
+
     return "An unexpected error occurred";
 };
