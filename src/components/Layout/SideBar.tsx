@@ -8,7 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { FolderIcon } from "@heroicons/react/24/solid";
 import { ChevronLeftIcon } from "@heroicons/react/20/solid";
-import { Terminal } from "lucide-react";
+import { Network, Terminal } from "lucide-react";
 
 const GradientText = ({ children = "", className = "" }) => (
   <span className={`bg-dare-gradient bg-clip-text text-transparent ${className}`}>
@@ -75,8 +75,8 @@ const Sidebar = () => {
               to={item.path}
               onClick={undefined}
               className={`flex items-center w-full p-3 leading-tight transition-all rounded-xl outline-none text-start ${isActive
-                  ? "bg-sky-50"
-                  : "hover:bg-gray-200 hover:bg-opacity-80 hover:text--gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
+                ? "bg-sky-50"
+                : "hover:bg-gray-200 hover:bg-opacity-80 hover:text--gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
                 }`}
             >
               {isActive ? (
@@ -99,6 +99,21 @@ const Sidebar = () => {
             </Link>
           );
         })}
+        <div
+          onClick={() => { }}
+          className={`flex items-center w-full p-3 leading-tight transition-all rounded-lg outline-none text-start cursor-default hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900`}
+        >
+          <Network
+            className={`w-5 h-5 font-bold transition-all duration-300 shrink-0 ${isCollapsed ? "mx-auto" : "mr-2"
+              }`}
+          />
+          <span
+            className={`whitespace-nowrap transition-all duration-300 ${isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+              }`}
+          >
+            Workflows
+          </span>
+        </div>
 
         <div className="mt-auto sticky bottom-0">
           {bottomItems.map((item) => (
@@ -106,8 +121,8 @@ const Sidebar = () => {
               key={item.name}
               to={item.path}
               className={`flex items-center w-full p-3 leading-tight transition-all rounded-lg outline-none text-start ${location.pathname === item.path
-                  ? "bg-primary text-white"
-                  : "hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
+                ? "bg-primary text-white"
+                : "hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
                 }`}
             >
               <item.icon
