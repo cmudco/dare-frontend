@@ -9,7 +9,7 @@ import {
 import { FolderIcon } from "@heroicons/react/24/solid";
 import { ChevronLeftIcon } from "@heroicons/react/20/solid";
 import { Network, Terminal } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { TooltipProvider } from "../ui/tooltip";
 
 const GradientText = ({ children = "", className = "" }) => (
   <span className={`bg-dare-gradient bg-clip-text text-transparent ${className}`}>
@@ -41,6 +41,7 @@ const Sidebar = () => {
     { name: "Conversation", icon: ChatBubbleLeftIcon, path: "/conversation" },
     { name: "Files", icon: FolderIcon, path: "/files" },
     { name: "Prompts", icon: Terminal, path: "/prompts" },
+    { name: "Workflows", icon: Network, path: "/workflows" },
   ];
 
   const bottomItems = [
@@ -50,7 +51,6 @@ const Sidebar = () => {
 
   return (
     <TooltipProvider>
-
       <div
         className={`relative flex ${isCollapsed ? "w-[80px]" : "w-[160px] md:w-[200px] lg:w-[260px]"
           } flex-col h-[auto] min-h-[90vh] bg-white bg-clip-border text-gray-700 shadow-blue-gray-900/5 transition-all duration-300 border border-t-0 border-pink-50`}
@@ -102,27 +102,6 @@ const Sidebar = () => {
               </Link>
             );
           })}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div
-                className={`flex items-center w-full p-3 leading-tight transition-all rounded-xl outline-none text-start opacity-70 cursor-not-allowed hover:bg-gray-200 hover:bg-opacity-80 hover:text--gray-900`}
-              >
-                <Network
-                  className={`w-5 h-5 font-bold transition-all duration-300 shrink-0 ${isCollapsed ? "mx-auto" : "mr-2"
-                    }`}
-                />
-                <span
-                  className={`whitespace-nowrap transition-all duration-300 ${isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
-                    }`}
-                >
-                  Workflows
-                </span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              Coming soon!
-            </TooltipContent>
-          </Tooltip>
 
           <div className="mt-auto sticky bottom-0">
             {bottomItems.map((item) => (
