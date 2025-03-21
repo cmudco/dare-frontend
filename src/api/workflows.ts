@@ -1,6 +1,7 @@
 import { baseRequest } from "@/utils/requests";
 import { METHOD } from "@/utils/constants/requests";
 import { Step, Workflow } from "@/redux/types/workflow";
+import { Prompt } from "@/redux/types/prompt";
 
 export const getWorkflowsAPI = async (): Promise<{ results: Workflow[] }> => {
     return await baseRequest<{ results: Workflow[] }>({
@@ -66,7 +67,7 @@ export const createStepAPI = async (stepData: {
 
 export const updateStepAPI = async (
     id: string,
-    stepData: Partial<Step> & { user?: string } 
+    stepData: Partial<Omit<Step, "prompt"> & { prompt: string | Prompt }> & { user?: string } 
 ): Promise<Step> => {
     return await baseRequest<Step>({
         url: `api/steps/${id}/`,

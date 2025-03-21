@@ -6,4 +6,6 @@ export const initialState: WorkflowState = {
     loading: false,
     error: null,
     isModalOpen: false,
-};
+    savedStepIds: [],
+    tempSteps: [],
+  };
