@@ -1,7 +1,6 @@
-// WorkflowFooter.tsx
 import React from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "../../redux/store";
+import {  useDispatch } from "react-redux";
+import {AppDispatch } from "../../redux/store";
 import { closeModal } from "../../redux/workflowSlice";
 import { DialogFooter } from "../ui/dialog";
 import { Button } from "../ui/button";
@@ -16,10 +15,6 @@ interface WorkflowFooterProps {
 
 const WorkflowFooter: React.FC<WorkflowFooterProps> = ({
   loading,
-  isValid,
-  dirty,
-  unsavedSteps,
-  stepsCount,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -35,7 +30,7 @@ const WorkflowFooter: React.FC<WorkflowFooterProps> = ({
       <Button
         type="submit"
         disabled={
-          !(isValid && dirty) || loading || unsavedSteps > 0 || stepsCount === 0
+          (loading)
         }
       >
         {loading ? "Saving..." : "Save"}

@@ -5,13 +5,8 @@ import {
     createWorkflowAPI,
     updateWorkflowAPI,
     deleteWorkflowAPI,
-    deleteStepAPI,
-    updateStepAPI,
-    createStepAPI,
 } from "@/api/workflows";
-import { Workflow, Step } from "../types/workflow";
-import { RootState } from "../store";
-import { Prompt } from "../types/prompt";
+import { Workflow } from "../types/workflow";
 
 export const getWorkflows = createAsyncThunk(
     "workflows/getWorkflows",
@@ -48,7 +43,7 @@ export const createOrUpdateWorkflow = createAsyncThunk(
                 title: string;
                 description: string;
                 mode: number;
-                steps_ids?: string[];
+                steps: { id?: string; order: number; prompt: string }[];
             };
         },
         { rejectWithValue }
@@ -75,79 +70,6 @@ export const deleteWorkflow = createAsyncThunk(
         try {
             await deleteWorkflowAPI(id);
             return id;
-        } catch (error) {
-            return rejectWithValue((error as Error).message);
-        }
-    }
-);
-
-export const createStep = createAsyncThunk(
-    "workflows/createStep",
-    async (
-        {
-            promptId,
-            order,
-        }: {
-            promptId: string;
-            order: number;
-        },
-        { rejectWithValue, getState }
-    ) => {
-        try {
-            const state = getState() as RootState;
-            const userId = state.user.user?.id;
-
-            return await createStepAPI({
-                prompt: promptId,
-                order,
-                user: userId,
-            });
-        } catch (error) {
-            return rejectWithValue((error as Error).message);
-        }
-    }
-);
-
-export const updateStep = createAsyncThunk(
-    "workflows/updateStep",
-    async (
-      {
-        stepId,
-        stepData,
-      }: {
-        stepId: string;
-        stepData: Partial<Omit<Step, "prompt"> & { prompt: string | Prompt }>; // Allow prompt as string or Prompt
-      },
-      { rejectWithValue, getState }
-    ) => {
-      try {
-        const state = getState() as RootState;
-        const userId = state.user.user?.id;
-  
-        const step = await updateStepAPI(stepId, {
-          ...stepData,
-          user: userId,
-        });
-        return step;
-      } catch (error) {
-        return rejectWithValue((error as Error).message);
-      }
-    }
-  );
-
-export const deleteStep = createAsyncThunk(
-    "workflows/deleteStep",
-    async (
-        {
-            stepId,
-        }: {
-            stepId: string;
-        },
-        { rejectWithValue }
-    ) => {
-        try {
-            await deleteStepAPI(stepId);
-            return { stepId };
         } catch (error) {
             return rejectWithValue((error as Error).message);
         }

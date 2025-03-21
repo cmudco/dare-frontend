@@ -15,13 +15,15 @@ import { WORKFLOW_MODES } from "../../utils/constants/workflows";
 import { ListOrdered, Layers, HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Button } from "../ui/button";
+import { FormValues, FormTouched } from "@/redux/types/workflow";
+import { FormikErrors } from "formik";
 
 interface WorkflowFieldsProps {
-  values: any;
-  errors: any;
-  touched: any;
-  handleChange: (e: React.ChangeEvent<any>) => void;
-  setFieldValue: (field: string, value: any) => void;
+  values: FormValues;
+  errors: FormikErrors<FormValues>;
+  touched: FormTouched;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  setFieldValue: <K extends keyof FormValues>(field: K, value: FormValues[K]) => void;
   isEditMode: boolean;
 }
 

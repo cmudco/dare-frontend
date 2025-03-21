@@ -1,4 +1,3 @@
-// WorkflowStep.tsx
 import React, { useState } from "react";
 import { Prompt } from "@/redux/types/prompt";
 import {
@@ -14,7 +13,6 @@ import {
   Trash2,
   ChevronsUpDown,
   GripVertical,
-  Save,
 } from "lucide-react";
 import { stripHtml } from "@/utils/textUtils";
 import {
@@ -22,9 +20,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../ui/collapsible";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
-import { createStep, updateStep } from "@/redux/asyncThunks/workflow";
 import { Step } from "@/redux/types/workflow";
 
 interface WorkflowStepProps {
@@ -33,10 +28,9 @@ interface WorkflowStepProps {
   prompts: Prompt[];
   onRemove: () => void;
   onMove: (direction: "up" | "down") => void;
-  onChange: (field: string, value: any) => void;
-  onStepSaved: (stepId: string) => void;
-  error?: any;
-  touched?: any;
+  onChange: (field: keyof Step, value: unknown) => void;
+  error?: { prompt?: string };
+  touched?: { prompt?: boolean };
 }
 
 export const WorkflowStep: React.FC<WorkflowStepProps> = ({
@@ -46,77 +40,18 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
   onRemove,
   onMove,
   onChange,
-  onStepSaved,
   error,
   touched,
 }) => {
-  const dispatch = useDispatch<AppDispatch>();
   const [isOpen, setIsOpen] = useState(false);
-  const [promptChanged, setPromptChanged] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-
   const selectedPrompt = step.prompt
-    ? prompts.find((p) => p.id === step.prompt?.id)
+    ? prompts.find((p) => p.id === (typeof step.prompt === "object" ? step.prompt?.id : step.prompt))
     : null;
-  const hasError = error && touched;
 
   const handlePromptChange = (value: string) => {
     const newPrompt = prompts.find((p) => p.id === value);
     if (newPrompt) {
-      onChange("prompt", newPrompt); // Store full Prompt object in tempSteps
-      setPromptChanged(true);
-      setSaveError(null);
-    }
-  };
-
-  const handleSaveStep = async () => {
-    if (!step.prompt) return;
-  
-    setSaving(true);
-    setSaveError(null);
-  
-    try {
-      const promptId = step.prompt.id; // Always use the ID for API calls
-  
-      if (step.id) {
-        const result = await dispatch(
-          updateStep({
-            stepId: step.id,
-            stepData: {
-              prompt: promptId, // Send only the ID
-              order: step.order,
-            },
-          })
-        ).unwrap();
-        onStepSaved(result.id!);
-        // If result.prompt is just an ID, map it back to a full Prompt object
-        console.log(result)
-        const updatedPrompt = prompts.find((p) => p.id === (typeof result.prompt === "string" ? result.prompt : result.prompt?.id));
-        if (updatedPrompt) {
-          onChange("prompt", updatedPrompt);
-        }
-      } else {
-        const result = await dispatch(
-          createStep({
-            promptId: promptId, // Send only the ID
-            order: step.order,
-          })
-        ).unwrap();
-        onStepSaved(result.id!);
-        onChange("id", result.id);
-        // If result.prompt is just an ID, map it back to a full Prompt object
-        const updatedPrompt = prompts.find((p) => p.id === (typeof result.prompt === "string" ? result.prompt : result.prompt?.id));
-        if (updatedPrompt) {
-          onChange("prompt", updatedPrompt);
-        }
-      }
-      setPromptChanged(false);
-    } catch (error) {
-      console.error("Failed to save step:", error);
-      setSaveError("Failed to save step. Please try again.");
-    } finally {
-      setSaving(false);
+      onChange("prompt", newPrompt);
     }
   };
 
@@ -185,12 +120,10 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Select Prompt</label>
             <Select
-              value={step.prompt?.id || ""}
+              value={typeof step.prompt === "object" ? step.prompt?.id : step.prompt || ""}
               onValueChange={handlePromptChange}
             >
-              <SelectTrigger
-                className={hasError?.prompt || saveError ? "border-red-500" : ""}
-              >
+              <SelectTrigger className={error?.prompt && touched?.prompt ? "border-red-500" : ""}>
                 <span className="truncate max-w-full">
                   {selectedPrompt ? selectedPrompt.title : "Select a prompt"}
                 </span>
@@ -203,11 +136,8 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {hasError?.prompt && (
-              <p className="text-red-500 text-xs mt-1">{error?.prompt}</p>
-            )}
-            {saveError && (
-              <p className="text-red-500 text-xs mt-1">{saveError}</p>
+            {error?.prompt && touched?.prompt && (
+              <p className="text-red-500 text-xs mt-1">{error.prompt}</p>
             )}
           </div>
 
@@ -220,19 +150,6 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
               </p>
             </div>
           )}
-
-          <div className="mt-3 flex justify-end">
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleSaveStep}
-              disabled={!promptChanged || saving || !step.prompt}
-              className="flex items-center"
-            >
-              <Save className="h-4 w-4 mr-1" />
-              {saving ? "Saving..." : "Save Step"}
-            </Button>
-          </div>
         </div>
       </CollapsibleContent>
     </Collapsible>

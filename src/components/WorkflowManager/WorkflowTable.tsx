@@ -4,16 +4,15 @@ import { RootState, AppDispatch } from "../../redux/store";
 import { deleteWorkflow } from "../../redux/asyncThunks/workflow";
 import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
 import { formatDate } from "../../utils/constants/prompts";
-import { WORKFLOWS_TABLE_HEAD, WORKFLOW_MODES } from "../../utils/constants/workflows";
+import { WORKFLOWS_TABLE_HEAD } from "../../utils/constants/workflows";
 import { openEditModal } from "../../redux/workflowSlice";
 import { Button } from "../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../ui/Table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { EllipsisVerticalIcon, ListOrdered, Layers } from "lucide-react";
-import { WorkflowMode } from "@/redux/types/workflow";
+import { EllipsisVerticalIcon,} from "lucide-react";
 import { DeleteConfirmation } from "../DeleteConfirmation";
-import { Badge } from "../ui/badge";
+import { getModeBadge, getStepCount } from "@/utils/constants/workflow";
 
 interface WorkflowTableProps {
     searchQuery: string;
@@ -66,56 +65,6 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
         dispatch(openEditModal(id));
     };
 
-    const getModeName = (mode: WorkflowMode) => {
-        return WORKFLOW_MODES.find(m => m.id === mode)?.name || "Unknown";
-    };
-
-    const getModeIcon = (mode: WorkflowMode) => {
-        switch (mode) {
-            case WorkflowMode.Serial:
-                return <ListOrdered className="h-4 w-4" />;
-            case WorkflowMode.Parallel:
-                return <Layers className="h-4 w-4" />;
-            default:
-                return null;
-        }
-    };
-
-    const getModeBadge = (mode: WorkflowMode) => {
-        switch (mode) {
-            case WorkflowMode.Serial:
-                return (
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        <ListOrdered className="h-3.5 w-3.5 mr-1" />
-                        Sequential
-                    </Badge>
-                );
-            case WorkflowMode.Parallel:
-                return (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        <Layers className="h-3.5 w-3.5 mr-1" />
-                        Parallel
-                    </Badge>
-                );
-            default:
-                return (
-                    <Badge variant="outline" className="bg-gray-100 text-gray-700">
-                        Unknown
-                    </Badge>
-                );
-        }
-    };
-
-    const getStepCount = (workflow: any) => {
-        if (workflow.stepsDetail && Array.isArray(workflow.stepsDetail)) {
-            return workflow.stepsDetail.length;
-        } else if (workflow.steps && Array.isArray(workflow.steps)) {
-            return workflow.steps.length;
-        } else {
-            return 0;
-        }
-    };
-
     return (
         <div className="overflow-auto">
             <Table className="mt-4 w-full min-w-max text-left bg-white">
@@ -157,7 +106,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                                 <TableCell className="p-4">
                                     {getStepCount(workflow)}
                                 </TableCell>
-                                <TableCell className="p-4">{formatDate(workflow.createdAt)}</TableCell>
+                                <TableCell className="p-4">{formatDate(workflow?.createdAt)}</TableCell>
                                 <TableCell className="p-4 text-center">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger className="hover:bg-gray-200 rounded-md p-2">

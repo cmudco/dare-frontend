@@ -1,6 +1,6 @@
 export const PROMPTS_TABLE_HEAD = ["Prompt", "Date Created", "Action"];
 
-export function formatDate(dateString: string): string {
+export function formatDate(dateString?: string): string {
     if (!dateString) return "Unknown date";
 
     const date = new Date(dateString);

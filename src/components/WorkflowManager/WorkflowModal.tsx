@@ -1,9 +1,8 @@
-// WorkflowModal.tsx
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { closeModal } from "../../redux/workflowSlice";
-import { getPrompts } from "../../redux/aynscThunks/prompt"; // Corrected typo in path
+import { getPrompts } from "../../redux/aynscThunks/prompt";
 import { Dialog, DialogContent } from "../ui/dialog";
 import WorkflowForm from "./WorkflowForm";
 
