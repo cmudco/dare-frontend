@@ -1,14 +1,14 @@
 export interface UserStats {
-    promptCount: number;      
-    fileCount: number;         
+    promptCount: number;
+    fileCount: number;
     conversationCount: number;
-    messageCount: number;     
+    messageCount: number;
     aiMessageCount: number;
     taggedFilesCount: number;
 }
 
 export interface User {
-    id: number;
+    id: string;
     email: string;
     username: string | null;
     name: string;

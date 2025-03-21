@@ -14,7 +14,6 @@ export interface PromptState {
     error: string | null;
 }
 
-
 export interface PromptTableProps {
     searchQuery: string;
 }

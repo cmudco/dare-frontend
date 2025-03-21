@@ -1,5 +1,4 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-
 import { Prompt } from "../types/prompt";
 import {
     createPromptAPI,
@@ -14,7 +13,7 @@ export const getPrompts = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const response = await getPromptsAPI();
-            return response.results; 
+            return response.results;
         } catch (error) {
             return rejectWithValue((error as Error).message);
         }

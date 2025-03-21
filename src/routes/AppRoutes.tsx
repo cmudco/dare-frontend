@@ -16,6 +16,7 @@ import Settings from "../pages/Settings/index.tsx";
 import ResetPasswordScreen from "../pages/ResetPassword";
 import ForgotPasswordSuccess from "../components/Success.tsx";
 import VerifyEmailScreen from "@/components/Auth/VerifyEmail.tsx";
+import Workflows from "@/pages/Workflows/index.tsx";
 
 const AppRoutes = () => {
   return (
@@ -30,6 +31,7 @@ const AppRoutes = () => {
           <Route path='/verify-code' element={<VerifyCodeScreen />} />
           <Route path='/password-reset/confirm/:uid/:token' element={<ResetPasswordScreen />} />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
+
           <Route
             path="/"
             element={
@@ -43,6 +45,7 @@ const AppRoutes = () => {
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/files' element={<Files />} />
             <Route path='/prompts' element={<Prompt />} />
+            <Route path='/workflows' element={<Workflows />} />
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
           </Route>
