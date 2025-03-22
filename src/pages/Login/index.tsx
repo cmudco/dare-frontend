@@ -63,7 +63,7 @@ const LoginScreen: React.FC = () => {
 
   return (
     <AuthCard<LoginFormValues>
-      title="Sign In to Dare Platform"
+      title="Sign In to DARE Platform"
       inputs={inputs}
       formikConfig={formikConfig}
       buttonText="Sign In"

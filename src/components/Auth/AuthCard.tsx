@@ -161,7 +161,7 @@ const AuthCard = <T extends FormikValues>({
 
         {showprivacyPolicy && (
           <p className="absolute -bottom-10 text-center text-sm text-gray-500">
-            By signing up, you are agreeing to Dare's Terms of Service and Privacy Policy.
+            By signing up, you are agreeing to DARE's Terms of Service and Privacy Policy.
           </p>
         )}
       </div>

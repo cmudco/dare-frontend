@@ -88,7 +88,7 @@ const ConversationPill: React.FC = () => {
         <ModelConfigurationPanel />
       </div>
       <p className="text-sm text-center mt-2">
-        Dare Chat can make mistakes. Check important information.
+        DARE Chat can make mistakes. Check important information.
       </p>
     </div>
   );
