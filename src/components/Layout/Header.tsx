@@ -37,7 +37,7 @@ const Header: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-x-2 p-0">
               <img
-                src={`https://avatar.iran.liara.run/public/job/teacher/male`}
+                src={`/avatar-image.svg`}
                 alt="User"
                 className="w-8 h-8 rounded-full"
               />
