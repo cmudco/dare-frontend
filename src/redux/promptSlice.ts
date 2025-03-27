@@ -6,6 +6,7 @@ import {
     createOrUpdatePrompt,
     deletePrompt,
 } from "./aynscThunks/prompt";
+import { sortPrompts } from "../utils/sortUtils";
 
 const promptSlice = createSlice({
     name: "prompts",
@@ -40,7 +41,7 @@ const promptSlice = createSlice({
         });
         builder.addCase(getPrompts.fulfilled, (state, action) => {
             state.loading = false;
-            state.prompts = action.payload;
+            state.prompts = sortPrompts(action.payload);
         });
         builder.addCase(getPrompts.rejected, (state, action) => {
             state.loading = false;
@@ -76,6 +77,9 @@ const promptSlice = createSlice({
             } else {
                 state.prompts.push(updatedPrompt);
             }
+
+            // Apply sorting after adding/updating a prompt
+            state.prompts = sortPrompts(state.prompts);
 
             if (state.selectedPrompt?.id === updatedPrompt.id) {
                 state.selectedPrompt = updatedPrompt;

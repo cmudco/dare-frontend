@@ -37,7 +37,15 @@ export const createOrUpdatePrompt = createAsyncThunk(
         {
             id,
             promptData,
-        }: { id?: string; promptData: { title: string; content: string } },
+        }: {
+            id?: string;
+            promptData: {
+                title: string;
+                content: string;
+                version?: number;
+                parent?: string;
+            };
+        },
         { rejectWithValue }
     ) => {
         try {
