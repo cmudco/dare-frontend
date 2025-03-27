@@ -32,8 +32,8 @@ const ModelPicker: React.FC = () => {
     dispatch(getAvailableModels());
   }, [dispatch]);
 
-  const handleModelSelect = (modelId: number) => {
-    dispatch(updateSelectedModel(modelId));
+  const handleModelSelect = (llmId: number) => {
+    dispatch(updateSelectedModel(llmId));
     dispatch(toggleDropdown());
   };
 

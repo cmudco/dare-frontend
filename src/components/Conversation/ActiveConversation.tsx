@@ -62,7 +62,7 @@ const ActiveConversation: React.FC = () => {
   }, [activeConversation, dispatch]);
 
   return (
-    <Card className="flex flex-col flex-2 w-full h-[90vh] justify-end border border-pink-50 rounded-none rounded-tl-[3.25rem] p-5">
+    <Card className="flex flex-col flex-2 w-[65vw] h-[90vh] justify-end border border-pink-50 rounded-none rounded-tl-[3.25rem] ">
       <div className={`flex flex-col justify-between h-full`}>
         {!activeConversation && <NewConversation />}
         {activeConversation && conversationHistory.length === 0 && <EmptyConversation />}

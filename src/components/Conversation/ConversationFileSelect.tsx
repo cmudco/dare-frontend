@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Check, FileIcon, Search, SlidersHorizontal } from "lucide-react";
 import type { RootState, AppDispatch } from "@/redux/store";
@@ -17,6 +17,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 const ConversationFileSelect: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const files = useSelector((state: RootState) => state.files.files);
+    const selectedFilesFromStore = useSelector(
+        (state: RootState) => state.conversation.selectedFiles
+    );
     const tags = useSelector((state: RootState) => state.tags?.tags || []);
     const [open, setOpen] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
@@ -24,13 +27,22 @@ const ConversationFileSelect: React.FC = () => {
     const [showTagFilter, setShowTagFilter] = useState(false);
     const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
+    useEffect(() => {
+        setSelectedFiles(selectedFilesFromStore.map((file) => file.id));
+    }, [selectedFilesFromStore]);
+
     const handleToggleFile = (fileId: number) => {
-        setSelectedFiles((prev) =>
-            prev.includes(fileId)
+        setSelectedFiles((prev) => {
+            const newSelectedFiles = prev.includes(fileId)
                 ? prev.filter((id) => id !== fileId)
-                : [...prev, fileId]
-        );
-        dispatch(updateSelectedFiles(files.filter((file) => file.id === fileId)));
+                : [...prev, fileId];
+
+                const selectedFileObjects = files.filter((file) =>
+                newSelectedFiles.includes(file.id)
+            );
+            dispatch(updateSelectedFiles(selectedFileObjects));
+            return newSelectedFiles;
+        });
     };
 
     const handleSaveSelection = () => {
@@ -43,6 +55,7 @@ const ConversationFileSelect: React.FC = () => {
 
     const handleClearSelection = () => {
         setSelectedFiles([]);
+        dispatch(updateSelectedFiles([]));
     };
 
     const handleTagToggle = (tagId: number) => {
@@ -68,7 +81,7 @@ const ConversationFileSelect: React.FC = () => {
                 <PopoverTrigger asChild>
                     <Button
                         variant="ghost"
-                        className="h-9 w-9 p-0  hover:bg-none bg-none "
+                        className="h-9 w-9 p-0 hover:bg-none bg-none"
                     >
                         <FolderIcon className="h-5 w-5 outline-none" />
                     </Button>
@@ -92,8 +105,8 @@ const ConversationFileSelect: React.FC = () => {
                                 variant="ghost"
                                 size="icon"
                                 className={`absolute right-1 h-7 w-7 ${showTagFilter
-                                    ? "text-primary"
-                                    : "text-muted-foreground"
+                                        ? "text-primary"
+                                        : "text-muted-foreground"
                                     }`}
                                 onClick={() => setShowTagFilter(!showTagFilter)}
                             >
