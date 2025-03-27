@@ -16,7 +16,7 @@ export interface Message {
     isSender: boolean;
     date: string;
     files?: MyFile[];
-    modelId?: number;
+    llmId?: number;
     streaming?: boolean;
 }
 
