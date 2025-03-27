@@ -66,7 +66,7 @@ const ConversationPill: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col justify-end">
+    <div className="flex flex-col justify-end px-5">
       <div className="flex items-center w-full ">
         <div className="relative flex items-center w-full rounded-md">
           <ConversationFileSelect />
