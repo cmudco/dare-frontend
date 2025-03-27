@@ -114,7 +114,12 @@ const PromptSet: React.FC = () => {
               onClick={() => handlePromptSelect(prompt)}
             >
               <div className="flex justify-between items-start mb-1">
-                <h4 className="font-medium text-xl text-gray-800">{prompt.title || "Untitled"}</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-medium text-xl text-gray-800">{prompt.title || "Untitled"}</h4>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    v{prompt.version || 1}
+                  </span>
+                </div>
                 <span className="text-xs text-gray-500">{formatDate(prompt.createdAt)}</span>
               </div>
               <div className="max-h-[4.5em] overflow-hidden">

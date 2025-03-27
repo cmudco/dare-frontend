@@ -96,6 +96,34 @@ const promptSlice = createSlice({
         builder.addCase(deletePrompt.fulfilled, (state, action) => {
             state.loading = false;
             const deletedPromptId = action.payload;
+
+            // // Find the deleted prompt before removing it from state
+            // const deletedPrompt = state.prompts.find(
+            //     (p) => p.id === deletedPromptId
+            // );
+
+            // // Find any prompts that had the deleted prompt as their parent
+            // if (deletedPrompt) {
+            //     const childPrompts = state.prompts.filter(
+            //         (p) => p.parent === deletedPromptId
+            //     );
+
+            //     // Update each child's parent to be the deleted prompt's parent
+            //     // This maintains the version chain
+            //     childPrompts.forEach((child) => {
+            //         const childIndex = state.prompts.findIndex(
+            //             (p) => p.id === child.id
+            //         );
+            //         if (childIndex !== -1) {
+            //             state.prompts[childIndex] = {
+            //                 ...state.prompts[childIndex],
+            //                 parent: deletedPrompt.parent, // Point to grandparent
+            //             };
+            //         }
+            //     });
+            // }
+
+            // Now remove the deleted prompt
             state.prompts = state.prompts.filter(
                 (prompt) => prompt.id !== deletedPromptId
             );
