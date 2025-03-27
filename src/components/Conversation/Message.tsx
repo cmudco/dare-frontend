@@ -1,11 +1,11 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store"; // Adjust path to your store
 import { Message as MessageModel } from "../../redux/types/conversation";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Bot } from "lucide-react";
+import { RootState } from "@/redux/store";
 
 interface MessageProps {
   message: MessageModel;
@@ -13,6 +13,7 @@ interface MessageProps {
 
 const Message: React.FC<MessageProps> = ({ message }) => {
   const llms = useSelector((state: RootState) => state.conversation.availableModels);
+  const user = useSelector((state: RootState) => state.user.user);
 
   if (!message) {
     return null;
@@ -20,6 +21,8 @@ const Message: React.FC<MessageProps> = ({ message }) => {
 
   const llm = llms.find((model) => model.id == message.llmId);
   const llmName = llm ? llm.name : "Unknown LLM";
+
+  const userInitial = user?.name?.charAt(0) || user?.username?.charAt(0) || "U";
 
   return (
     <div
@@ -65,6 +68,13 @@ const Message: React.FC<MessageProps> = ({ message }) => {
             </button>
           )}
         </div>
+        {message.isSender && (
+          <div className="ml-2 mt-1 flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+              {userInitial.toUpperCase()}
+            </div>
+          </div>
+        )}
       </div>
 
       {!message.isSender && !message.streaming && message.llmId && (
