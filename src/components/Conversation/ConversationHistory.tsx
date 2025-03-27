@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
     MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { updateConversation, updateSearchQuery, } from "../../redux/conversationSlice";
+import { resetConversation, updateConversation, updateSearchQuery, } from "../../redux/conversationSlice";
 import { createConversation } from "../../redux/aynscThunks/conversation";
 import { AppDispatch, RootState } from "../../redux/store";
 import ConversationList from "./ConversationList";
@@ -33,6 +33,7 @@ const ConversationHistory = () => {
         dispatch(createConversation())
             .unwrap()
             .then((newConversation) => {
+                dispatch(resetConversation())
                 dispatch(updateConversation(newConversation));
                 navigate(`/conversation/${newConversation.conversationId}`);
             })
@@ -44,7 +45,7 @@ const ConversationHistory = () => {
 
     return (
         <div
-            className={`flex flex-col flex-1 bg-white bg-clip-border text-gray-700  transition-width duration-300 border border-pink-50`}
+            className={`max-w-[20vw] flex flex-col flex-1 bg-white bg-clip-border text-gray-700  transition-width duration-300 border border-pink-50`}
         >
             <div className='flex items-center justify-between p-4  border-pink-50'>
                 <div className="flex items-center flex-grow border  border-gray-500 rounded-3xl p-2">
@@ -54,7 +55,7 @@ const ConversationHistory = () => {
                         placeholder="Search"
                         value={searchQuery}
                         onChange={handleSearchChange}
-                        className="flex-grow outline-none bg-transparent placeholder-gray-600 font-normal"
+                        className="w-20 outline-none bg-transparent placeholder-gray-600 font-normal"
                     />
                 </div>
                 <Button

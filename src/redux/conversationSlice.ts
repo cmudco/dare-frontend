@@ -126,6 +126,16 @@ export const conversationSlice = createSlice({
         setPrompt(state, action) {
             state.prompt = action.payload;
         },
+        resetConversation(state) {
+            state.activeConversation = null;
+            state.activeConversationMessages = [];
+            state.selectedFiles = [];
+            state.temperature = MODEL_CONFIG.temperature;
+            state.maxTokens = MODEL_CONFIG.maxTokens;
+            state.conversationInput = "";
+            state.prompt = null;
+            state.selectedModel = state.availableModels[0]?.id;
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -153,6 +163,7 @@ export const conversationSlice = createSlice({
                 (state, action: PayloadAction<LLMModel[]>) => {
                     state.loading = false;
                     state.availableModels = action.payload;
+                    state.selectedModel = action.payload[0]?.id;
                 }
             )
             .addCase(getAvailableModels.rejected, (state, action) => {
@@ -210,5 +221,6 @@ export const {
     updateConversationTitle,
     updateConversationHistory,
     setPrompt,
+    resetConversation,
 } = conversationSlice.actions;
 export default conversationSlice.reducer;

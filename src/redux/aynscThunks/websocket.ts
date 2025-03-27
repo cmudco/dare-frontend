@@ -88,7 +88,7 @@ export const sendWebSocketMessage = createAsyncThunk<
                 message: message.message,
                 sender_type: 1,
                 file_ids: fileIds,
-                model_id: state.conversation.selectedModel,
+                llm_id: state.conversation.selectedModel,
                 prompt_id: prompt?.id,
                 temperature: temperature,
                 max_tokens: maxTokens,
