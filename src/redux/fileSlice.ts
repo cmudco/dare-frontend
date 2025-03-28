@@ -34,7 +34,7 @@ const fileSlice = createSlice({
         },
         setError: (state, action: PayloadAction<string>) => {
             state.error = action.payload;
-        }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -59,7 +59,8 @@ const fileSlice = createSlice({
             })
             .addCase(uploadNewFile.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload as string;
+                state.error =
+                    (action.payload as string) || "Failed to upload file";
             })
             .addCase(deleteFile.pending, (state) => {
                 state.loading = true;
