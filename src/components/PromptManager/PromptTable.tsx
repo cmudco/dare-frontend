@@ -13,6 +13,8 @@ import { EllipsisVerticalIcon } from "lucide-react";
 import { Prompt } from "@/redux/types/prompt";
 import { DeleteConfirmation } from "../DeleteConfirmation";
 import { stripHtml } from '../../utils/textUtils';
+import { TrashIcon } from "@heroicons/react/24/outline";
+import { DocumentDuplicateIcon, PencilIcon } from "@heroicons/react/20/solid";
 
 interface PromptTableProps {
   searchQuery: string;
@@ -151,6 +153,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => handleEdit(id)} className="cursor-pointer">
+                        <PencilIcon className="w-4 h-4" />
                         <span>Edit</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -162,10 +165,13 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                         })}
                         className="text-yellow-500 cursor-pointer"
                       >
+                        <DocumentDuplicateIcon className="w-4 h-4" />
+
                         <span>Clone</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-500 cursor-pointer" onClick={() => handleDelete(id, title)}>
+                        <TrashIcon className="w-4 h-4" />
                         <span>Delete</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
