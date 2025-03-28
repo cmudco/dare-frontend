@@ -89,8 +89,13 @@ const PromptUploadModal: React.FC = () => {
             dirty,
           }) => (
             <Form className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-2 ">
                 <Label htmlFor="title">Prompt Title</Label>
+                {isEditMode && selectedPrompt && (
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    v{selectedPrompt.version || 1}
+                  </span>
+                )}
                 <Input
                   id="title"
                   name="title"
