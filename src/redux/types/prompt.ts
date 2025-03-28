@@ -5,6 +5,8 @@ export interface Prompt {
     createdAt: string;
     uploadedAt?: string;
     user: string;
+    version: number;
+    parent?: string;
 }
 
 export interface PromptState {

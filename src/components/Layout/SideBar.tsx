@@ -3,18 +3,46 @@ import { Link, useLocation } from "react-router-dom";
 import {
   RectangleGroupIcon,
   ChatBubbleLeftIcon,
+  FolderOpenIcon,
   QuestionMarkCircleIcon,
   Cog8ToothIcon,
 } from "@heroicons/react/24/outline";
-import { FolderIcon } from "@heroicons/react/24/solid";
 import { ChevronLeftIcon } from "@heroicons/react/20/solid";
-import { Network, Terminal } from "lucide-react";
 import { TooltipProvider } from "../ui/tooltip";
 
-const GradientText = ({ children = "", className = "" }) => (
-  <span className={`bg-dare-gradient bg-clip-text text-transparent ${className}`}>
-    {children}
-  </span>
+const PromptsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <polyline points="4 17 10 11 4 5" />
+    <line x1="12" x2="20" y1="19" y2="19" />
+  </svg>
+);
+
+const WorkflowsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <rect x="16" y="16" width="6" height="6" rx="1" />
+    <rect x="2" y="16" width="6" height="6" rx="1" />
+    <rect x="9" y="2" width="6" height="6" rx="1" />
+    <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" />
+    <path d="M12 12V8" />
+  </svg>
 );
 
 const Sidebar = () => {
@@ -36,12 +64,18 @@ const Sidebar = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const menuItems = [
+  interface MenuItem {
+    name: string;
+    icon: React.ElementType;
+    path: string;
+  }
+
+  const menuItems: MenuItem[] = [
     { name: "Dashboard", icon: RectangleGroupIcon, path: "/dashboard" },
     { name: "Conversations", icon: ChatBubbleLeftIcon, path: "/conversation" },
-    { name: "Files", icon: FolderIcon, path: "/files" },
-    { name: "Prompts", icon: Terminal, path: "/prompts" },
-    { name: "Workflows", icon: Network, path: "/workflows" },
+    { name: "Files", icon: FolderOpenIcon, path: "/files" },
+    { name: "Prompts", icon: PromptsIcon, path: "/prompts" },
+    { name: "Workflows", icon: WorkflowsIcon, path: "/workflows" },
   ];
 
   const bottomItems = [
@@ -51,6 +85,15 @@ const Sidebar = () => {
 
   return (
     <TooltipProvider>
+      <svg width="0" height="0" className="absolute">
+        <defs>
+          <linearGradient id="dare-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#EE183C" />
+            <stop offset="100%" stopColor="#023572" />
+          </linearGradient>
+        </defs>
+      </svg>
+
       <div
         className={`relative flex ${isCollapsed ? "w-[5.5vw]" : "w-[11vw] md:w-[14vw] lg:w-[18vw]"
           } flex-col h-[auto] min-h-[90vh] bg-white bg-clip-border text-gray-700 shadow-blue-gray-900/5 transition-all duration-300 border border-t-0 border-pink-50`}
@@ -76,55 +119,82 @@ const Sidebar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                onClick={undefined}
                 className={`flex items-center w-full p-3 leading-tight transition-all rounded-xl outline-none text-start ${isActive
-                  ? "bg-sky-50"
-                  : "hover:bg-gray-200 hover:bg-opacity-80 hover:text--gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
+                    ? "bg-sky-50"
+                    : "hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gradient-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
                   }`}
               >
-                {isActive ? (
-                  <item.icon
-                    className={`w-5 h-5 font-bold transition-all duration-300 shrink-0 ${isCollapsed ? "mx-auto" : "mr-2"
-                      }`}
-                  />
-                ) : (
-                  <item.icon
-                    className={`w-5 h-5 font-bold transition-all duration-300 shrink-0 ${isCollapsed ? "mx-auto" : "mr-2"
-                      }`}
-                  />
-                )}
+                <div className={`${isCollapsed ? "mx-auto" : "mr-2"} relative`}>
+                  {isActive ? (
+                    <item.icon
+                      className="w-5 h-5 font-bold transition-all duration-300 shrink-0"
+                      style={{
+                        fill: "none",
+                        stroke: "url(#dare-gradient)",
+                        color: "url(#dare-gradient)",
+                      }}
+                    />
+                  ) : (
+                    <item.icon className="w-5 h-5 font-bold transition-all duration-300 shrink-0" />
+                  )}
+                </div>
                 <span
                   className={`whitespace-nowrap transition-all duration-300 ${isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
                     }`}
                 >
-                  {isActive ? <GradientText>{item.name}</GradientText> : item.name}
+                  {isActive ? (
+                    <span className="bg-dare-gradient bg-clip-text text-transparent">
+                      {item.name}
+                    </span>
+                  ) : (
+                    item.name
+                  )}
                 </span>
               </Link>
             );
           })}
 
-          <div className="mt-auto sticky bottom-0">
-            {bottomItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`flex items-center w-full p-3 leading-tight transition-all rounded-lg outline-none text-start ${location.pathname === item.path
-                  ? "bg-primary text-white"
-                  : "hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900"
-                  }`}
-              >
-                <item.icon
-                  className={`w-5 h-5 font-bold transition-all duration-300 shrink-0 ${isCollapsed ? "mx-auto" : "mr-4"
-                    }`}
-                />
-                <span
-                  className={`whitespace-nowrap transition-all duration-300 ${isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+          <div className="mt-auto sticky bottom-0 bg-white z-10">
+            {bottomItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`flex items-center w-full p-3 leading-tight transition-all rounded-lg outline-none text-start ${isActive
+                      ? "bg-sky-50"
+                      : "hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gradient-50 active:bg-opacity-80 active:text-blue-gray-900"
                     }`}
                 >
-                  {item.name}
-                </span>
-              </Link>
-            ))}
+                  <div className={`${isCollapsed ? "mx-auto" : "mr-4"} relative`}>
+                    {isActive ? (
+                      <item.icon
+                        className="w-5 h-5 font-bold transition-all duration-300 shrink-0"
+                        style={{
+                          fill: "none",
+                          stroke: "url(#dare-gradient)",
+                          color: "url(#dare-gradient)",
+                        }}
+                      />
+                    ) : (
+                      <item.icon className="w-5 h-5 font-bold transition-all duration-300 shrink-0" />
+                    )}
+                  </div>
+                  <span
+                    className={`whitespace-nowrap transition-all duration-300 ${isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+                      }`}
+                  >
+                    {isActive ? (
+                      <span className="bg-dare-gradient bg-clip-text text-transparent">
+                        {item.name}
+                      </span>
+                    ) : (
+                      item.name
+                    )}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </nav>
       </div>
