@@ -19,6 +19,8 @@ export const getPromptByIdAPI = async (id: string): Promise<Prompt> => {
 export const createPromptAPI = async (promptData: {
     title: string;
     content: string;
+    version?: number;
+    parent?: string;
 }): Promise<Prompt> => {
     return await baseRequest<Prompt>({
         url: "api/prompts/",

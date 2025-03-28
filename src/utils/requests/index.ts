@@ -34,7 +34,7 @@ export const baseRequest = async <T>({
             const authToken = localStorage.getItem("token");
             if (authToken) {
                 axiosOptions.headers = {
-                    ...axiosOptions.headers, //content type will default to application/json if not explicitly set
+                    ...axiosOptions.headers,
                     Authorization: `Bearer ${authToken}`,
                 };
             }

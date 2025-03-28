@@ -24,13 +24,13 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="h-[80px] bg-white p-1 flex justify-between items-center w-full top-0 left-0 right-0 border border-pink-50">
+    <header className="h-[80px] bg-white p-1 flex justify-between items-center w-full top-0 left-0 right-0 border border-pink-50 px-2">
       <div className="flex items-center gap-2 mx-2">
         <img src="/icons/Logo.png" alt="Logo" className="w-10 h-auto" />
         <img src="/icons/TextLogo.svg" alt="Logo" className="w-16 h-auto" />
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 mr-3">
         <BellIcon className="h-6 w-6 text-gray-600" />
 
         <DropdownMenu>
@@ -41,7 +41,7 @@ const Header: React.FC = () => {
                 alt="User"
                 className="w-8 h-8 rounded-full"
               />
-              <div className="flex flex-col items-start normal-case">
+              <div className="flex flex-col items-start normal-case ">
                 <span className="text-sm font-medium text-gray-900">{user?.name || "John Doe"}</span>
                 <span className="text-xs text-gray-500">{user?.email || "Loading..."}</span>
               </div>

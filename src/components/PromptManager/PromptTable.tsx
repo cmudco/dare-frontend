@@ -13,6 +13,8 @@ import { EllipsisVerticalIcon } from "lucide-react";
 import { Prompt } from "@/redux/types/prompt";
 import { DeleteConfirmation } from "../DeleteConfirmation";
 import { stripHtml } from '../../utils/textUtils';
+import { TrashIcon } from "@heroicons/react/24/outline";
+import { DocumentDuplicateIcon, PencilIcon } from "@heroicons/react/20/solid";
 
 interface PromptTableProps {
   searchQuery: string;
@@ -65,19 +67,37 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
     dispatch(openEditModal(id));
   };
 
-  const handleClone = (values: { title: string; content: string }) => {
+  const handleClone = (values: { title: string; content: string; id: string; version: number }) => {
+    // Find the original parent prompt to determine correct version numbering
+    const originalPrompt = prompts.find(p => p.id === values.id);
+
+    // Find all existing versions of this prompt family
+    const promptFamily = prompts.filter(p =>
+      p.parent === values.id ||
+      p.id === values.id ||
+      (originalPrompt?.parent && (p.parent === originalPrompt.parent || p.id === originalPrompt.parent))
+    );
+
+    // Calculate the next version number
+    const highestExistingVersion = Math.max(...promptFamily.map(p => p.version || 1));
+    const nextVersion = highestExistingVersion + 1;
+
     dispatch(
       createOrUpdatePrompt({
         id: undefined,
         promptData: {
           title: values.title,
           content: values.content,
+          // Set explicit version number
+          version: nextVersion,
+          // Track parent relationship
+          parent: values.id,
         },
       })
     ).then((result) => {
-      const payload = result.payload as Prompt
+      const payload = result.payload as Prompt;
       dispatch(openEditModal(payload.id));
-    })
+    });
   };
 
   const renderPromptContent = (content: string) => {
@@ -109,11 +129,16 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
               <TableCell colSpan={3} className="text-center p-4">No matching prompts found</TableCell>
             </TableRow>
           ) : (
-            paginatedPrompts.map(({ id, title, content, createdAt }) => (
+            paginatedPrompts.map(({ id, title, content, createdAt, version }) => (
               <TableRow key={id}>
                 <TableCell className="p-4">
                   <div>
-                    <h3 className="font-medium">{title || "Untitled"}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium">{title || "Untitled"}</h3>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        v{version || 1}
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-500 truncate max-w-[300px]">
                       {renderPromptContent(content) || "No content"}
                     </p>
@@ -128,13 +153,25 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => handleEdit(id)} className="cursor-pointer">
+                        <PencilIcon className="w-4 h-4" />
                         <span>Edit</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleClone({ title, content })} className="text-yellow-500 cursor-pointer">
+                      <DropdownMenuItem
+                        onClick={() => handleClone({
+                          title,
+                          content,
+                          id,
+                          version: version || 1
+                        })}
+                        className="text-yellow-500 cursor-pointer"
+                      >
+                        <DocumentDuplicateIcon className="w-4 h-4" />
+
                         <span>Clone</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-500 cursor-pointer" onClick={() => handleDelete(id, title)}>
+                        <TrashIcon className="w-4 h-4" />
                         <span>Delete</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>

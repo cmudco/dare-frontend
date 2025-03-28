@@ -11,9 +11,8 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
 import { Badge } from "../ui/badge";
-import { getTagColor } from "@/utils/files";
+import { getTagColor, isAllowedFileType } from "@/utils/files";
 import { MAX_FILE_SIZE } from "@/utils/constants/file";
-
 
 const FileUploadModal: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -42,10 +41,23 @@ const FileUploadModal: React.FC = () => {
 
   const handleFileSelection = (file: File | undefined) => {
     if (file) {
+      if (error) {
+        dispatch(setError(""));
+      }
+
       if (file.size > MAX_FILE_SIZE) {
-        dispatch(setError("File size exceeds 15 MB. Please select a smaller file."))
+        dispatch(setError("File size exceeds 15 MB. Please select a smaller file."));
+        setSelectedFile(null);
         return;
       }
+      if (!isAllowedFileType(file)) {
+        dispatch(setError(
+          "File type not allowed. Allowed types are: docx, doc, pdf, txt, md, json"
+        ));
+        setSelectedFile(null);
+        return;
+      }
+
       setSelectedFile(file);
       dispatch(updateFilename(file.name));
     }
@@ -148,7 +160,8 @@ const FileUploadModal: React.FC = () => {
           </div>
 
           <div
-            className="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
+            className={`border-2 border-dashed ${error ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+              } p-4 rounded-lg text-center transition cursor-pointer`}
             onClick={() => document.getElementById("fileInput")?.click()}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -167,11 +180,11 @@ const FileUploadModal: React.FC = () => {
             <span className="text-xs text-gray-500 mt-2 block">Maximum size: 15 MB</span>
           </div>
         </div>
-          {error && (
-            <div className=" text-red-500 text-sm text-center" >
-              {error}
-            </div>
-          )}
+        {error && (
+          <div className=" text-red-500 text-sm text-center" >
+            {error}
+          </div>
+        )}
 
         <DialogFooter className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => dispatch(closeModal())}>

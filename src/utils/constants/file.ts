@@ -17,4 +17,13 @@ export const TAG_COLORS: {
 
 };
 
+export const ALLOWED_FILE_TYPES = [
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+  'application/pdf',
+  'text/plain',
+  'text/markdown',
+  'application/json',
+];
+
 export const MAX_FILE_SIZE = 15 * 1024 * 1024;
