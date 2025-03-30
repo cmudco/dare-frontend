@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { deleteFile } from "../../redux/aynscThunks/file";
 import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
-import { TABLE_HEAD, TAG_COLORS } from "../../utils/constants/file";
+import { TAG_COLORS } from "../../utils/constants/file";
 import { formatFileSize } from "@/utils/files";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { EllipsisVerticalIcon } from "lucide-react";
 import { DeleteConfirmation } from "../DeleteConfirmation";
+import { getStatusDisplay } from "@/utils/constants/files";
 
 interface FileTableProps {
     searchQuery: string;
@@ -33,10 +34,8 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
         return files.filter(file => {
             const fileName = file.name?.toLowerCase() || "";
             const matchesSearch = searchQuery === "" || fileName.includes(searchQuery.toLowerCase());
-
             const matchesTags = selectedTags.length === 0 ||
                 (file.tags && file.tags.some(tagId => selectedTags.includes(tagId)));
-
             return matchesSearch && matchesTags;
         });
     }, [files, searchQuery, selectedTags]);
@@ -69,7 +68,7 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
             <Table className="mt-4 w-full min-w-max text-left bg-white">
                 <TableHeader>
                     <TableRow className="bg-muted">
-                        {TABLE_HEAD.map((head) => (
+                        {["Name", "Type", "Size", "Tags", "Status", "Actions"].map((head) => (
                             <TableHead key={head} className="cursor-pointer p-4 font-semibold text-sm">
                                 <div className="flex items-center justify-between gap-2 opacity-70">
                                     {head}
@@ -82,14 +81,14 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                 <TableBody>
                     {files.length === 0 && loading ? (
                         <TableRow>
-                            <TableCell colSpan={5} className="text-center p-4">Loading files...</TableCell>
+                            <TableCell colSpan={6} className="text-center p-4">Loading files...</TableCell>
                         </TableRow>
                     ) : filteredFiles.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={5} className="text-center p-4">No matching files found</TableCell>
+                            <TableCell colSpan={6} className="text-center p-4">No matching files found</TableCell>
                         </TableRow>
                     ) : (
-                        paginatedFiles.map(({ id, name, fileType, size, tags }) => (
+                        paginatedFiles.map(({ id, name, fileType, size, tags, status }) => (
                             <TableRow key={id}>
                                 <TableCell className="p-4">{name || "Unnamed"}</TableCell>
                                 <TableCell className="p-4">{fileType || "Unknown"}</TableCell>
@@ -100,8 +99,7 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                                             tags.map((tagId, i) => {
                                                 const tag = allTags.find((t) => t.id === tagId);
                                                 if (!tag) return null;
-
-                                                const colorVariant = TAG_COLORS[tag.label]
+                                                const colorVariant = TAG_COLORS[tag.label];
                                                 return (
                                                     <Badge
                                                         key={`${id}-${i}`}
@@ -114,14 +112,17 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                                             })}
                                     </div>
                                 </TableCell>
+                                <TableCell className="p-4">{getStatusDisplay(status)}</TableCell>
                                 <TableCell className="p-4 text-center">
-                                    <DropdownMenu >
-                                        <DropdownMenuTrigger className="hover:bg-gray-200 rounded-md p-2" >
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger className="hover:bg-gray-200 rounded-md p-2">
                                             <EllipsisVerticalIcon className="h-4 w-4 text-gray-500" />
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
                                             <DropdownMenuItem
-                                                className="text-red-500 cursor-pointer" onClick={() => handleDelete(id, name)}>
+                                                className="text-red-500 cursor-pointer"
+                                                onClick={() => handleDelete(id, name)}
+                                            >
                                                 <span>Delete</span>
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -132,13 +133,11 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                     )}
                 </TableBody>
 
-                {/* Footer for Pagination & Controls */}
                 {filteredFiles.length > 0 && (
                     <TableFooter>
                         <TableRow>
-                            <TableCell colSpan={TABLE_HEAD.length} className="p-4 w-full">
+                            <TableCell colSpan={6} className="p-4 w-full">
                                 <div className="flex justify-between items-center w-full">
-                                    {/* Rows per page dropdown */}
                                     <div className="flex items-center gap-4">
                                         <span className="text-sm">Rows per page:</span>
                                         <Select value={String(itemsPerPage)} onValueChange={(val) => setItemsPerPage(Number(val))}>
@@ -152,8 +151,6 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                                             </SelectContent>
                                         </Select>
                                     </div>
-
-                                    {/* Pagination Controls */}
                                     <div className="flex items-center gap-4">
                                         <Button variant="secondary" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
                                             Previous
