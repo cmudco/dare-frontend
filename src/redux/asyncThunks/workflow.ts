@@ -43,7 +43,13 @@ export const createOrUpdateWorkflow = createAsyncThunk(
                 title: string;
                 description: string;
                 mode: number;
-                steps: { id?: string; order: number; prompt: string }[];
+                steps: {
+                    id?: string;
+                    order: number;
+                    prompt: string | null;
+                    file?: number | null; 
+                    llm?: number | null;
+                }[];
             };
         },
         { rejectWithValue }

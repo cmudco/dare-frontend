@@ -5,6 +5,7 @@ import {
   SelectTrigger,
   SelectContent,
   SelectItem,
+  SelectValue,
 } from "../ui/select";
 import { Button } from "../ui/button";
 import {
@@ -14,44 +15,65 @@ import {
   ChevronsUpDown,
   GripVertical,
 } from "lucide-react";
-import { stripHtml } from "@/utils/textUtils";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../ui/collapsible";
-import { Step } from "@/redux/types/workflow";
+import { Step, StepError, StepTouched } from "@/redux/types/workflow";
+import { LLMModel } from "@/redux/types/conversation";
+import { MyFile } from "@/redux/types/files";
 
 interface WorkflowStepProps {
   index: number;
   step: Step;
   prompts: Prompt[];
+  files: MyFile[];
+  llms: LLMModel[];
   onRemove: () => void;
   onMove: (direction: "up" | "down") => void;
   onChange: (field: keyof Step, value: unknown) => void;
-  error?: { prompt?: string };
-  touched?: { prompt?: boolean };
+  error?: StepError;
+  touched?: StepTouched;
+  totalSteps?: number;
 }
 
 export const WorkflowStep: React.FC<WorkflowStepProps> = ({
   index,
   step,
   prompts,
+  files,
+  llms,
   onRemove,
   onMove,
   onChange,
   error,
   touched,
+  totalSteps,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const selectedPrompt = step.prompt
-    ? prompts.find((p) => p.id === (typeof step.prompt === "object" ? step.prompt?.id : step.prompt))
-    : null;
 
   const handlePromptChange = (value: string) => {
-    const newPrompt = prompts.find((p) => p.id === value);
-    if (newPrompt) {
-      onChange("prompt", newPrompt);
+    const newPrompt = prompts.find((p) => p.id == value);
+    onChange("prompt", newPrompt || null);
+  };
+
+  const handleFileChange = (value: string) => {
+    console.log(value)
+    if (value === "none") {
+      onChange("file", null);
+    } else {
+      const newFile = files.find((f) => f.id === parseInt(value));
+      onChange("file", newFile || null);
+    }
+  };
+
+  const handleLLMChange = (value: string) => {
+    if (value === "none") {
+      onChange("llm", null);
+    } else {
+      const newLLM = llms.find((l) => l.id === parseInt(value));
+      onChange("llm", newLLM || null);
     }
   };
 
@@ -81,6 +103,7 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
             size="sm"
             onClick={() => onMove("up")}
             className="h-8 w-8 p-0"
+            disabled={index === 0}
           >
             <ChevronUp className="h-4 w-4" />
           </Button>
@@ -90,6 +113,7 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
             size="sm"
             onClick={() => onMove("down")}
             className="h-8 w-8 p-0"
+            disabled={index === totalSteps! - 1} // Note: steps not in props, adjust as needed
           >
             <ChevronDown className="h-4 w-4" />
           </Button>
@@ -116,21 +140,19 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
       </div>
 
       <CollapsibleContent>
-        <div className="p-4 border-t">
+        <div className="p-4 border-t space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Select Prompt</label>
             <Select
-              value={typeof step.prompt === "object" ? step.prompt?.id : step.prompt || ""}
+              value={step.prompt?.id.toString() || ""}
               onValueChange={handlePromptChange}
             >
               <SelectTrigger className={error?.prompt && touched?.prompt ? "border-red-500" : ""}>
-                <span className="truncate max-w-full">
-                  {selectedPrompt ? selectedPrompt.title : "Select a prompt"}
-                </span>
+                <SelectValue placeholder="Select a prompt" />
               </SelectTrigger>
               <SelectContent>
                 {prompts.map((prompt) => (
-                  <SelectItem key={prompt.id} value={prompt.id}>
+                  <SelectItem key={prompt.id} value={prompt.id.toString()}>
                     {prompt.title}
                   </SelectItem>
                 ))}
@@ -141,7 +163,53 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
             )}
           </div>
 
-          {selectedPrompt && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Select File</label>
+            <Select
+              value={step.file?.id?.toString() || "none"}
+              onValueChange={handleFileChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a file" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {files.map((file) => (
+                  <SelectItem key={file.id} value={file.id.toString()}>
+                    {file.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {error?.file && touched?.file && (
+              <p className="text-red-500 text-xs mt-1">{error.file}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Select LLM</label>
+            <Select
+              value={step.llm?.id?.toString() || "none"}
+              onValueChange={handleLLMChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select an LLM" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {llms.map((llm) => (
+                  <SelectItem key={llm.id} value={llm.id.toString()}>
+                    {llm.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {error?.llm && touched?.llm && (
+              <p className="text-red-500 text-xs mt-1">{error.llm}</p>
+            )}
+          </div>
+
+          {/* {selectedPrompt && (
             <div className="mt-3 p-3 bg-gray-50 rounded-md">
               <h4 className="text-sm font-medium">Prompt Preview</h4>
               <p className="text-xs text-gray-600 mt-1">
@@ -149,7 +217,7 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
                 {selectedPrompt.content.length > 150 ? "..." : ""}
               </p>
             </div>
-          )}
+          )} */}
         </div>
       </CollapsibleContent>
     </Collapsible>
