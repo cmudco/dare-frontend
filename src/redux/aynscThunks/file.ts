@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { uploadFileAPI, deleteFileAPI, getFilesAPI } from "../../api/files";
+import { uploadFileAPI, deleteFileAPI, getFilesAPI, checkJobStatusesAPI } from "../../api/files";
 
 export const getFiles = createAsyncThunk(
     "files/getFiles",
@@ -44,6 +44,23 @@ export const deleteFile = createAsyncThunk(
         try {
             await deleteFileAPI(id);
             return id;
+        } catch (error) {
+            return thunkAPI.rejectWithValue((error as Error).message);
+        }
+    }
+);
+
+export const checkJobStatuses = createAsyncThunk(
+    "files/checkJobStatuses",
+    async (fileIds: number[], thunkAPI) => {
+        try {
+            const response = await checkJobStatusesAPI(fileIds);
+            return response.map(item => ({
+                fileId: item.fileId,
+                status: item.statusCode,
+                jobId: item.jobId,
+                jobStatus: item.jobStatus
+            }));
         } catch (error) {
             return thunkAPI.rejectWithValue((error as Error).message);
         }

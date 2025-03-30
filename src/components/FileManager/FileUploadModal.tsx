@@ -12,7 +12,7 @@ import { Input } from "../ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
 import { Badge } from "../ui/badge";
 import { getTagColor, isAllowedFileType } from "@/utils/files";
-import { MAX_FILE_SIZE } from "@/utils/constants/file";
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/utils/constants/file";
 
 const FileUploadModal: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -46,7 +46,7 @@ const FileUploadModal: React.FC = () => {
       }
 
       if (file.size > MAX_FILE_SIZE) {
-        dispatch(setError("File size exceeds 15 MB. Please select a smaller file."));
+        dispatch(setError(`File size exceeds ${MAX_FILE_SIZE_MB} MB. Please select a smaller file.`));
         setSelectedFile(null);
         return;
       }
@@ -177,7 +177,7 @@ const FileUploadModal: React.FC = () => {
               </div>
             )}
             <input id="fileInput" type="file" onChange={handleFileChange} className="hidden" />
-            <span className="text-xs text-gray-500 mt-2 block">Maximum size: 15 MB</span>
+            <span className="text-xs text-gray-500 mt-2 block">Maximum size: {MAX_FILE_SIZE_MB} MB</span>
           </div>
         </div>
         {error && (

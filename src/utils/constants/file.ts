@@ -26,4 +26,12 @@ export const ALLOWED_FILE_TYPES = [
   'application/json',
 ];
 
-export const MAX_FILE_SIZE = 15 * 1024 * 1024;
+export const MAX_FILE_SIZE_MB = 30;
+
+export const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+export enum FileStatus {
+  PROCESSING = 0,
+  PROCESSED = 1,
+  FAILED = 2,
+}

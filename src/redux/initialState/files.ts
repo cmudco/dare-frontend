@@ -7,4 +7,5 @@ export const initialState: FileState = {
   selectedTags: [],
   isModalOpen: false,
   filename: "",
+  jobStatuses: {},
 };

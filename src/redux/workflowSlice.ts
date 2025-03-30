@@ -34,8 +34,8 @@ const workflowSlice = createSlice({
         },
         setSteps: (state, action: PayloadAction<Step[]>) => {
             if (state.selectedWorkflow) {
-                if (state.selectedWorkflow.stepsDetail) {
-                    state.selectedWorkflow.stepsDetail = action.payload;
+                if (state.selectedWorkflow.steps) {
+                    state.selectedWorkflow.steps = action.payload;
                 } else if (state.selectedWorkflow.steps) {
                     state.selectedWorkflow.steps = action.payload;
                 }

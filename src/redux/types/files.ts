@@ -1,3 +1,5 @@
+import { FileStatus } from "@/utils/constants/file";
+
 export interface MyFile {
     id: number;
     user: string;
@@ -6,6 +8,8 @@ export interface MyFile {
     fileType: string;
     size: number;
     tags: number[];
+    jobId?: string;
+    status: FileStatus;
 }
 
 export interface FileState {
@@ -15,4 +19,5 @@ export interface FileState {
     selectedTags: number[];
     isModalOpen: boolean;
     filename: string;
+    jobStatuses: { [fileId: number]: { status: FileStatus; jobId?: string; jobStatus?: string } };
 }

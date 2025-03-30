@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { getFiles, deleteFile, uploadNewFile } from "./aynscThunks/file";
+import { getFiles, deleteFile, uploadNewFile, checkJobStatuses } from "./aynscThunks/file";
 import { initialState } from "./initialState/files";
 
 const fileSlice = createSlice({
@@ -54,8 +54,13 @@ const fileSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(uploadNewFile.fulfilled, (state) => {
+            .addCase(uploadNewFile.fulfilled, (state, action) => {
                 state.loading = false;
+                state.files.push(action.payload);
+                state.jobStatuses[action.payload.id] = {
+                    status: action.payload.status,
+                    jobId: action.payload.jobId,
+                };
             })
             .addCase(uploadNewFile.rejected, (state, action) => {
                 state.loading = false;
@@ -73,6 +78,28 @@ const fileSlice = createSlice({
                 );
             })
             .addCase(deleteFile.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            .addCase(checkJobStatuses.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(checkJobStatuses.fulfilled, (state, action) => {
+                state.loading = false;
+                action.payload.forEach(item => {
+                    state.jobStatuses[item.fileId] = {
+                        status: item.status,
+                        jobId: item.jobId,
+                        jobStatus: item.jobStatus,
+                    };
+                    const fileIndex = state.files.findIndex(f => f.id === item.fileId);
+                    if (fileIndex !== -1) {
+                        state.files[fileIndex].status = item.status;
+                        state.files[fileIndex].jobId = item.jobId;
+                    }
+                });
+            })
+            .addCase(checkJobStatuses.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
