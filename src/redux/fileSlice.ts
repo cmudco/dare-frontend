@@ -56,7 +56,6 @@ const fileSlice = createSlice({
             })
             .addCase(uploadNewFile.fulfilled, (state, action) => {
                 state.loading = false;
-                console.log(action)
                 state.files.push(action.payload);
                 state.jobStatuses[action.payload.id] = {
                     status: action.payload.status,

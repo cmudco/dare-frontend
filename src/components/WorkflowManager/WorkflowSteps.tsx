@@ -16,10 +16,12 @@ interface WorkflowStepsProps {
 
 const WorkflowSteps: React.FC<WorkflowStepsProps> = ({ steps, setSteps, errors, touched }) => {
     const prompts = useSelector((state: RootState) => state.prompt.prompts);
+    const files = useSelector((state: RootState) => state.files.files);
+    const llms = useSelector((state: RootState) => state.conversation.availableModels);
 
     const handleAddStep = () => {
         const newOrder = steps.length > 0 ? Math.max(...steps.map((s) => s.order)) + 1 : 1;
-        const newSteps = [...steps, { prompt: null, order: newOrder }];
+        const newSteps = [...steps, { prompt: null, file: null, llm: null, order: newOrder }];
         setSteps(newSteps);
     };
 
@@ -72,6 +74,8 @@ const WorkflowSteps: React.FC<WorkflowStepsProps> = ({ steps, setSteps, errors, 
                             index={index}
                             step={step}
                             prompts={prompts}
+                            files={files}
+                            llms={llms}
                             onRemove={() => handleRemoveStep(index)}
                             onMove={(dir) => {
                                 if (dir === "up" && index > 0) {
@@ -83,6 +87,7 @@ const WorkflowSteps: React.FC<WorkflowStepsProps> = ({ steps, setSteps, errors, 
                             onChange={(field, value) => handleChangeStep(index, field, value)}
                             error={stepErrors?.[index]}
                             touched={touched.steps?.[index]}
+                            totalSteps={steps.length}
                         />
                     ))
                 )}

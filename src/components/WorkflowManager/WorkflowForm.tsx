@@ -19,7 +19,7 @@ const WorkflowForm: React.FC = () => {
         title: selectedWorkflow?.title || "",
         description: selectedWorkflow?.description || "",
         mode: selectedWorkflow?.mode || 0,
-        steps: selectedWorkflow?.stepsDetail || selectedWorkflow?.steps || [],
+        steps: selectedWorkflow?.steps || [],
     };
 
     const handleSubmit = async (
@@ -30,9 +30,9 @@ const WorkflowForm: React.FC = () => {
             const stepsPayload = values.steps.map((step) => ({
                 id: step.id,
                 order: step.order,
-                prompt: typeof step.prompt === "object" && step.prompt?.id
-                    ? step.prompt.id
-                    : step.prompt as string,
+                prompt: step.prompt?.id || null,
+                file: step.file?.id || null,
+                llm: step.llm?.id || null,
             }));
 
 

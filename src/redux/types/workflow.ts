@@ -1,3 +1,5 @@
+import { LLMModel } from "./conversation";
+import { MyFile } from "./files";
 import { Prompt } from "./prompt";
 import * as Yup from "yup";
 
@@ -9,7 +11,9 @@ export enum WorkflowMode {
 export interface Step {
     id?: string;
     workflow?: string;
-    prompt: Prompt | null | string;
+    prompt: Prompt | null;
+    file: MyFile | null;
+    llm: LLMModel | null;
     order: number;
     createdAt?: string;
 }
@@ -23,7 +27,6 @@ export interface Workflow {
     created_at?: string;
     user: string;
     steps?: Step[];
-    stepsDetail?: Step[];
 }
 
 export interface WorkflowState {
@@ -62,6 +65,8 @@ export const workflowValidationSchema = Yup.object().shape({
         Yup.object().shape({
             prompt: Yup.mixed().nullable().required("Prompt is required"),
             order: Yup.number().required("Order is required"),
+            file: Yup.object().required("File is required"),
+            llm: Yup.object().required("LLM is required"),
         })
     ),
 });
@@ -84,9 +89,13 @@ export interface FormTouched {
 export interface StepError {
     prompt?: string;
     order?: string;
+    file?: string;
+    llm?: string;
 }
 
 export interface StepTouched {
     prompt?: boolean;
     order?: boolean;
+    file?: boolean;
+    llm?: boolean;
 }
