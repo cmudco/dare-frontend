@@ -7,6 +7,8 @@ import { getTags } from "../../redux/aynscThunks/tag";
 import FileUploadModal from "./FileUploadModal";
 import FileHeader from "./FileHeader";
 import FileTable from "./FileTable";
+import FileStatusPoller from "./FileStatusPoller";
+import ProcessingFilesPopover from "./ProcessingFilesPopover";
 
 const FileManagerLayout = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -28,7 +30,7 @@ const FileManagerLayout = () => {
 
   return (
     <div className='flex flex-col h-full'>
-      <div className='p-8 flex-grow overflow-auto'>
+      <div className='p-8 flex-grow overflow-auto relative'>
         <div className='h-full w-full shadow-none bg-transparent'>
           <div className='px-0'>
             <FileHeader
@@ -43,6 +45,8 @@ const FileManagerLayout = () => {
         </div>
 
         <FileUploadModal />
+        <FileStatusPoller />
+        <ProcessingFilesPopover />
       </div>
     </div>
   );

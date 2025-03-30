@@ -1,18 +1,21 @@
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "../../redux/store";
 import { getWorkflows } from "../../redux/asyncThunks/workflow";
 import WorkflowHeader from "./WorkflowHeader";
 import WorkflowTable from "./WorkflowTable";
 import WorkflowModal from "./WorkflowModal";
+import { useAppDispatch } from "@/redux/hooks";
+import { getFiles } from "@/redux/aynscThunks/file";
+import { getAvailableModels } from "@/redux/aynscThunks/conversation";
 
 
 const WorkflowManagerLayout = () => {
-    const dispatch = useDispatch<AppDispatch>();
+    const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         dispatch(getWorkflows());
+        dispatch(getFiles());
+        dispatch(getAvailableModels());
     }, [dispatch]);
 
     const handleSearch = (query: string) => {
