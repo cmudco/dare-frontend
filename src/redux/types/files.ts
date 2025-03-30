@@ -15,6 +15,7 @@ export interface MyFile {
 export interface FileState {
     files: MyFile[];
     loading: boolean;
+    pollingLoading: boolean;
     error: string | null;
     selectedTags: number[];
     isModalOpen: boolean;
