@@ -8,13 +8,12 @@ import { getConversations } from "@/redux/aynscThunks/conversation";
 import { getPrompts } from "@/redux/aynscThunks/prompt";
 import { Conversation } from "@/redux/types/conversation";
 import { updateConversation } from "@/redux/conversationSlice";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 
 const ConversationLayout: React.FC = () => {
-
   const dispatch = useAppDispatch()
-  // get the conversation id
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
 
   useEffect(() => {
     dispatch(getFiles())
@@ -22,12 +21,12 @@ const ConversationLayout: React.FC = () => {
     dispatch(getConversations())
       .unwrap()
       .then((conversations: Conversation[]) => {
-        if (!id) {
+        if (!id && conversations.length > 0) {
           dispatch(updateConversation(conversations[0] || null));
         }
       })
     dispatch(getPrompts())
-  }, [dispatch])
+  }, [dispatch, location.pathname])
 
   return (
     <div className='flex h-full'>

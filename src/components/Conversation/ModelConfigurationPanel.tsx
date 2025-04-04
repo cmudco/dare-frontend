@@ -110,7 +110,7 @@ const ModelConfigurationPanel: React.FC = () => {
 
                         <Slider
                             value={[maxTokens]}
-                            min={256}
+                            min={1}
                             max={8192}
                             step={256}
                             onValueChange={handleMaxTokensChange}
