@@ -17,4 +17,5 @@ export const initialState: ConversationState = {
     prompt: null,
     temperature: MODEL_CONFIG.temperature,
     maxTokens: MODEL_CONFIG.maxTokens,
+    selectedTags: [],
 };

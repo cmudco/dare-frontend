@@ -8,6 +8,7 @@ import {
 } from "./aynscThunks/conversation";
 import { Message, Conversation, LLMModel } from "./types/conversation";
 import { MyFile } from "./types/files";
+import { Tag } from "./types/tags";
 import {
     getFromLocalStorage,
     saveToLocalStorage,
@@ -43,6 +44,9 @@ export const conversationSlice = createSlice({
         },
         updateSelectedFiles(state, action: PayloadAction<MyFile[]>) {
             state.selectedFiles = action.payload;
+        },
+        updateSelectedTags(state, action: PayloadAction<Tag[]>) {
+            state.selectedTags = action.payload;
         },
         toggleDropdown(state) {
             state.showDropdown = !state.showDropdown;
@@ -135,7 +139,7 @@ export const conversationSlice = createSlice({
             state.conversationInput = "";
             state.prompt = null;
             state.selectedModel = state.availableModels[0]?.id;
-        }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -209,6 +213,7 @@ export const {
     updateConversation,
     updateSelectedModel,
     updateSelectedFiles,
+    updateSelectedTags,
     updateTemperature,
     updateMaxTokens,
     toggleDropdown,

@@ -78,6 +78,7 @@ export const sendWebSocketMessage = createAsyncThunk<
 >("websocket/sendMessage", async (message, { rejectWithValue, getState }) => {
     const state = getState();
     const fileIds = state.conversation.selectedFiles.map((file) => file.id);
+    const tagIds = state.conversation.selectedTags.map((tag) => tag.id);
     const prompt = state.conversation.prompt;
     const temperature = state.conversation.temperature;
     const maxTokens = state.conversation.maxTokens;
@@ -88,6 +89,7 @@ export const sendWebSocketMessage = createAsyncThunk<
                 message: message.message,
                 sender_type: 1,
                 file_ids: fileIds,
+                tag_ids: tagIds,
                 llm_id: state.conversation.selectedModel,
                 prompt_id: prompt?.id,
                 temperature: temperature,

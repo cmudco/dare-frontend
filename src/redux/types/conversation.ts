@@ -1,6 +1,7 @@
 import { SenderType } from "@/utils/constants/conversation";
 import { MyFile } from "./files";
 import { Prompt } from "./prompt";
+import { Tag } from "./tags";
 
 export interface Conversation {
     conversationId: string;
@@ -36,6 +37,7 @@ export interface ConversationState {
     activeConversationMessages: Message[];
     selectedModel: number | null;
     selectedFiles: MyFile[];
+    selectedTags: Tag[];
     showDropdown: boolean;
     hoveredModel: string | null;
     conversationInput: string;
