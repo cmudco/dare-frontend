@@ -28,13 +28,13 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className='h-[80px] bg-white p-1 flex justify-between items-center w-full top-0 left-0 right-0 border border-pink-50 px-2'>
-      <div className='flex items-center gap-2 mx-2'>
-        <img src='/icons/Logo.png' alt='Logo' className='w-10 h-auto' />
-        <img src='/icons/TextLogo.svg' alt='Logo' className='w-16 h-auto' />
+    <header className='left-0 right-0 top-0 flex h-[80px] w-full items-center justify-between border border-pink-50 bg-white p-1 px-2'>
+      <div className='mx-2 flex items-center gap-2'>
+        <img src='/icons/Logo.png' alt='Logo' className='h-auto w-10' />
+        <img src='/icons/TextLogo.svg' alt='Logo' className='h-auto w-16' />
       </div>
 
-      <div className='flex items-center gap-4 mr-3'>
+      <div className='mr-3 flex items-center gap-4'>
         <BellIcon className='h-6 w-6 text-gray-600' />
 
         <DropdownMenu>
@@ -43,9 +43,9 @@ const Header: React.FC = () => {
               <img
                 src={`/avatar-image.svg`}
                 alt='User'
-                className='w-8 h-8 rounded-full'
+                className='h-8 w-8 rounded-full'
               />
-              <div className='flex flex-col items-start normal-case '>
+              <div className='flex flex-col items-start normal-case'>
                 <span className='text-sm font-medium text-gray-900'>
                   {user?.name || 'John Doe'}
                 </span>
@@ -58,7 +58,7 @@ const Header: React.FC = () => {
 
           <DropdownMenuContent
             align='end'
-            className='p-1 border border-gray-100 w-[200px]'
+            className='w-[200px] border border-gray-100 p-1'
           >
             {/* Optional Profile & Settings */}
             {/* <DropdownMenuItem className="cursor-pointer hover:bg-gray-100">Your Profile</DropdownMenuItem>
@@ -67,7 +67,7 @@ const Header: React.FC = () => {
 
             <DropdownMenuItem
               onClick={handleLogout}
-              className='text-red-500 cursor-pointer hover:bg-gray-100 py-3 '
+              className='cursor-pointer py-3 text-red-500 hover:bg-gray-100'
             >
               Sign Out
             </DropdownMenuItem>

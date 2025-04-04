@@ -47,7 +47,7 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
 }) => (
   <>
     <DialogHeader>
-      <DialogTitle className='text-lg text-left font-semibold text-gray-900'>
+      <DialogTitle className='text-left text-lg font-semibold text-gray-900'>
         {isEditMode ? 'Edit Workflow' : 'Create New Workflow'}
       </DialogTitle>
       <DialogDescription className='text-sm text-gray-500'>
@@ -68,7 +68,7 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
         className={errors.title && touched.title ? 'border-red-500' : ''}
       />
       {errors.title && touched.title && (
-        <p className='text-red-500 text-xs mt-1'>{errors.title}</p>
+        <p className='mt-1 text-xs text-red-500'>{errors.title}</p>
       )}
     </div>
 
@@ -88,7 +88,7 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
       />
       <div className='flex justify-between'>
         {errors.description && touched.description ? (
-          <p className='text-red-500 text-xs'>{errors.description}</p>
+          <p className='text-xs text-red-500'>{errors.description}</p>
         ) : (
           <span />
         )}
@@ -117,9 +117,9 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
                 >
                   <div className='flex items-center'>
                     {mode.id === 1 ? (
-                      <ListOrdered className='h-4 w-4 mr-2' />
+                      <ListOrdered className='mr-2 h-4 w-4' />
                     ) : (
-                      <Layers className='h-4 w-4 mr-2' />
+                      <Layers className='mr-2 h-4 w-4' />
                     )}
                     <span>{mode.name}</span>
                   </div>
@@ -130,7 +130,7 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
                       type='button'
                       variant='ghost'
                       size='sm'
-                      className='absolute right-2 h-5 w-5 p-0 cursor-help'
+                      className='absolute right-2 h-5 w-5 cursor-help p-0'
                       onClick={(e) => e.preventDefault()}
                     >
                       <HelpCircle className='h-4 w-4 text-gray-400' />
@@ -150,7 +150,7 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
         </Select>
       </TooltipProvider>
       {errors.mode && touched.mode && (
-        <p className='text-red-500 text-xs mt-1'>{errors.mode}</p>
+        <p className='mt-1 text-xs text-red-500'>{errors.mode}</p>
       )}
     </div>
   </>

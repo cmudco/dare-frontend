@@ -16,7 +16,7 @@ const MessageList = () => {
   }, [messages])
 
   return (
-    <div className='flex flex-col gap-2 max-h-[90%] overflow-y-auto pt-2'>
+    <div className='flex max-h-[90%] flex-col gap-2 overflow-y-auto pt-2'>
       {messages.map(
         (message, idx) => message && <Message key={idx} message={message} />
       )}

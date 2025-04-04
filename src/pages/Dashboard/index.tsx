@@ -78,7 +78,7 @@ const Dashboard = () => {
   ]
 
   return (
-    <div className='container mx-auto p-6 space-y-6 over'>
+    <div className='over container mx-auto space-y-6 p-6'>
       <div className='flex flex-col space-y-2'>
         <h1 className='text-3xl font-bold tracking-tight'>Dashboard</h1>
         <p className='text-muted-foreground'>
@@ -87,7 +87,7 @@ const Dashboard = () => {
       </div>
 
       {loading ? (
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+        <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
           {[...Array(6)].map((_, i) => (
             <Card key={i} className='overflow-hidden'>
               <CardHeader className='pb-2'>
@@ -104,11 +104,11 @@ const Dashboard = () => {
           ))}
         </div>
       ) : (
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+        <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
           {statCards.map((card, index) => (
             <Card
               key={index}
-              className='overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-1'
+              className='overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md'
             >
               <div className={`h-1 w-full bg-gradient-to-r ${card.color}`} />
               <CardHeader className='pb-2'>
@@ -133,7 +133,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      <Card className='bg-gradient-to-br bg-white dark:from-slate-900 dark:to-slate-800 border-none'>
+      <Card className='border-none bg-white bg-gradient-to-br dark:from-slate-900 dark:to-slate-800'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2'>
             <Clock className='h-5 w-5' />
@@ -142,7 +142,7 @@ const Dashboard = () => {
           <CardDescription>Your overall platform engagement</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
             <div className='flex flex-col space-y-1'>
               <span className='text-sm font-medium text-muted-foreground'>
                 Message Ratio
@@ -161,9 +161,9 @@ const Dashboard = () => {
                   AI messages
                 </span>
               </div>
-              <div className='w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden'>
+              <div className='h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700'>
                 <div
-                  className='h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full'
+                  className='h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500'
                   style={{
                     width: `${stats?.messageCount ? (stats.aiMessageCount / stats.messageCount) * 100 : 0}%`,
                   }}
@@ -182,9 +182,9 @@ const Dashboard = () => {
                 </span>
                 <span className='text-sm text-muted-foreground'>average</span>
               </div>
-              <div className='w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden'>
+              <div className='h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700'>
                 <div
-                  className='h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full'
+                  className='h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500'
                   style={{
                     width: `${stats?.conversationCount ? Math.min((stats.fileCount / stats.conversationCount / 5) * 100, 100) : 0}%`,
                   }}

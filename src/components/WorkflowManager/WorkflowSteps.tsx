@@ -59,8 +59,8 @@ const WorkflowSteps: React.FC<WorkflowStepsProps> = ({
   const stepErrors = errors.steps as Array<{ prompt?: string }> | undefined
 
   return (
-    <div className='space-y-4 pt-4 border-t'>
-      <div className='flex justify-between items-center'>
+    <div className='space-y-4 border-t pt-4'>
+      <div className='flex items-center justify-between'>
         <Button
           type='button'
           variant='outline'
@@ -68,14 +68,14 @@ const WorkflowSteps: React.FC<WorkflowStepsProps> = ({
           onClick={handleAddStep}
           className='flex items-center'
         >
-          <Plus className='h-4 w-4 mr-1' />
+          <Plus className='mr-1 h-4 w-4' />
           Add Step
         </Button>
       </div>
 
       <div className='space-y-3'>
         {steps.length === 0 ? (
-          <div className='text-center py-8 border border-dashed rounded-md text-gray-500'>
+          <div className='rounded-md border border-dashed py-8 text-center text-gray-500'>
             No steps added yet. Click "Add Step" to begin.
           </div>
         ) : (

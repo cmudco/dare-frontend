@@ -92,13 +92,13 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
 
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max text-left bg-white'>
+      <Table className='mt-4 w-full min-w-max bg-white text-left'>
         <TableHeader>
           <TableRow className='bg-muted'>
             {WORKFLOWS_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className='cursor-pointer p-4 font-semibold text-sm'
+                className='cursor-pointer p-4 text-sm font-semibold'
               >
                 <div className='flex items-center justify-between gap-2 opacity-70'>
                   {head}
@@ -113,7 +113,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={WORKFLOWS_TABLE_HEAD.length}
-                className='text-center p-4'
+                className='p-4 text-center'
               >
                 Loading workflows...
               </TableCell>
@@ -122,7 +122,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={WORKFLOWS_TABLE_HEAD.length}
-                className='text-center p-4'
+                className='p-4 text-center'
               >
                 No matching workflows found
               </TableCell>
@@ -136,7 +136,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                   </h3>
                 </TableCell>
                 <TableCell className='p-4'>
-                  <p className='text-sm text-gray-500 truncate max-w-[300px]'>
+                  <p className='max-w-[300px] truncate text-sm text-gray-500'>
                     {workflow.description || 'No description'}
                   </p>
                 </TableCell>
@@ -149,7 +149,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                 </TableCell>
                 <TableCell className='p-4 text-center'>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className='hover:bg-gray-200 rounded-md p-2'>
+                    <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
                       <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
@@ -163,7 +163,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                         <span>Edit</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className='text-red-500 cursor-pointer'
+                        className='cursor-pointer text-red-500'
                         onClick={() =>
                           handleDelete(workflow.id, workflow.title)
                         }
@@ -184,9 +184,9 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={WORKFLOWS_TABLE_HEAD.length}
-                className='p-4 w-full'
+                className='w-full p-4'
               >
-                <div className='flex justify-between items-center w-full'>
+                <div className='flex w-full items-center justify-between'>
                   {/* Rows per page dropdown */}
                   <div className='flex items-center gap-4'>
                     <span className='text-sm'>Rows per page:</span>

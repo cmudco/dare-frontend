@@ -79,8 +79,8 @@ const ActiveConversation: React.FC = () => {
   }, [activeConversation, dispatch])
 
   return (
-    <Card className='flex flex-col flex-2 w-[65vw] h-[90vh] justify-end border border-pink-50 rounded-none rounded-tl-[3.25rem] '>
-      <div className={`flex flex-col justify-between h-full`}>
+    <Card className='flex-2 flex h-[90vh] w-[65vw] flex-col justify-end rounded-none rounded-tl-[3.25rem] border border-pink-50'>
+      <div className={`flex h-full flex-col justify-between`}>
         {!activeConversation && <NewConversation />}
         {activeConversation && conversationHistory.length === 0 && (
           <EmptyConversation />

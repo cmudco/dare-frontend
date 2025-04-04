@@ -63,7 +63,7 @@ const ConversationFileSelect: React.FC = () => {
   }
 
   return (
-    <div className='absolute left-3 flex items-center h-full'>
+    <div className='absolute left-3 flex h-full items-center'>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button variant='ghost' className='h-9 w-9 p-0 hover:bg-transparent'>
@@ -78,7 +78,7 @@ const ConversationFileSelect: React.FC = () => {
         >
           <div className='space-y-4'>
             <div className='relative'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
               <Input
                 placeholder={`Search ${activeTab}`}
                 value={searchQuery}
@@ -97,15 +97,15 @@ const ConversationFileSelect: React.FC = () => {
               </TabsList>
 
               <TabsContent value='files' className='mt-4'>
-                <div className='max-h-[300px] overflow-y-auto space-y-1'>
+                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
                   {filteredFiles.map((file) => (
                     <div
                       key={file.id}
                       onClick={() => handleToggleFile(file)}
-                      className='flex items-center p-2 hover:bg-muted rounded-md cursor-pointer'
+                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-muted'
                     >
                       <div
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center mr-3 ${
+                        className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
                           selectedFiles.some((f) => f.id === file.id)
                             ? 'border-primary bg-primary'
                             : 'border-input hover:border-muted-foreground'
@@ -115,12 +115,12 @@ const ConversationFileSelect: React.FC = () => {
                           <Check className='h-3 w-3 text-primary-foreground' />
                         )}
                       </div>
-                      <FileIcon className='h-4 w-4 text-muted-foreground mr-2' />
+                      <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
                       <span className='text-sm'>{file.name}</span>
                     </div>
                   ))}
                   {filteredFiles.length === 0 && (
-                    <p className='text-center text-muted-foreground py-4'>
+                    <p className='py-4 text-center text-muted-foreground'>
                       No files found
                     </p>
                   )}
@@ -128,7 +128,7 @@ const ConversationFileSelect: React.FC = () => {
               </TabsContent>
 
               <TabsContent value='tags' className='mt-4'>
-                <div className='max-h-[300px] overflow-y-auto space-y-1'>
+                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
                   {filteredTags.map((tag) => {
                     const isSelected = selectedTags.some((t) => t.id === tag.id)
                     const hasFiles = (tag.fileCount || 0) > 0
@@ -136,14 +136,14 @@ const ConversationFileSelect: React.FC = () => {
                       <div
                         key={tag.id}
                         onClick={() => hasFiles && handleToggleTag(tag)}
-                        className={`flex items-center p-2 rounded-md ${
+                        className={`flex items-center rounded-md p-2 ${
                           hasFiles
-                            ? 'hover:bg-muted cursor-pointer'
-                            : 'opacity-50 cursor-not-allowed'
+                            ? 'cursor-pointer hover:bg-muted'
+                            : 'cursor-not-allowed opacity-50'
                         }`}
                       >
                         <div
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center mr-3 ${
+                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
                             isSelected
                               ? 'border-primary bg-primary'
                               : 'border-input hover:border-muted-foreground'
@@ -153,7 +153,7 @@ const ConversationFileSelect: React.FC = () => {
                             <Check className='h-3 w-3 text-primary-foreground' />
                           )}
                         </div>
-                        <TagIcon className='h-4 w-4 text-muted-foreground mr-2' />
+                        <TagIcon className='mr-2 h-4 w-4 text-muted-foreground' />
                         <span
                           className={`text-sm ${isSelected ? `text-${getTagColor(tag.label)}-600` : ''}`}
                         >
@@ -166,7 +166,7 @@ const ConversationFileSelect: React.FC = () => {
                     )
                   })}
                   {filteredTags.length === 0 && (
-                    <p className='text-center text-muted-foreground py-4'>
+                    <p className='py-4 text-center text-muted-foreground'>
                       No tags found
                     </p>
                   )}
@@ -176,7 +176,7 @@ const ConversationFileSelect: React.FC = () => {
 
             <Separator />
 
-            <div className='flex justify-between items-center'>
+            <div className='flex items-center justify-between'>
               <Button variant='ghost' size='sm' onClick={clearSelections}>
                 Clear
               </Button>

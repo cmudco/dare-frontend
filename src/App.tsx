@@ -16,11 +16,11 @@ function App() {
   }, [])
 
   const BackgroundCircle = () => (
-    <div className='fixed top-0 left-0 w-full h-full z-[-1] overflow-hidden pointer-events-none backdrop-blur'>
+    <div className='pointer-events-none fixed left-0 top-0 z-[-1] h-full w-full overflow-hidden backdrop-blur'>
       <img
         src='/shapes/BgCircle.svg'
         alt='Background Circle'
-        className='absolute top-0 left-0 w-full h-auto object-cover'
+        className='absolute left-0 top-0 h-auto w-full object-cover'
       />
     </div>
   )
@@ -29,8 +29,8 @@ function App() {
     return (
       <div className='fixed inset-0 flex items-center justify-center'>
         <BackgroundCircle />
-        <div className='flex items-center justify-center h-full'>
-          <Loader className='w-16 h-16 text-red-500' />
+        <div className='flex h-full items-center justify-center'>
+          <Loader className='h-16 w-16 text-red-500' />
         </div>
       </div>
     )

@@ -97,21 +97,21 @@ const Sidebar = () => {
       <div
         className={`relative flex ${
           isCollapsed ? 'w-[80px]' : 'w-[160px] md:w-[200px] lg:w-[18vw]'
-        } flex-col h-[auto] min-h-[90vh] bg-white bg-clip-border text-gray-700 shadow-blue-gray-900/5 transition-all duration-300 border border-t-0 border-pink-50`}
+        } shadow-blue-gray-900/5 h-[auto] min-h-[90vh] flex-col border border-t-0 border-pink-50 bg-white bg-clip-border text-gray-700 transition-all duration-300`}
       >
         <div className='flex items-center justify-between p-4'>
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`absolute top-4 transition-all -right-4 transform translate-x-0 mt-1 p-1 rounded-full bg-white hover:bg-primary-dark border-2 border-border-gray`}
+            className={`hover:bg-primary-dark border-border-gray absolute -right-4 top-4 mt-1 translate-x-0 transform rounded-full border-2 bg-white p-1 transition-all`}
           >
             <ChevronLeftIcon
-              className={`w-5 h-5 text-primary font-bold transition-transform duration-300 ${
+              className={`h-5 w-5 font-bold text-primary transition-transform duration-300 ${
                 isCollapsed ? 'rotate-180' : ''
               }`}
             />
           </button>
         </div>
-        <nav className='flex flex-col gap-1 p-2 font-sans text-base font-normal flex-grow'>
+        <nav className='flex flex-grow flex-col gap-1 p-2 font-sans text-base font-normal'>
           {menuItems.map((item) => {
             const isActive =
               item.path === '/conversation'
@@ -121,16 +121,16 @@ const Sidebar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex items-center w-full p-3 leading-tight transition-all rounded-xl outline-none text-start ${
+                className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-none transition-all ${
                   isActive
                     ? 'bg-sky-50'
-                    : 'hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gradient-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900'
+                    : 'focus:bg-blue-gray-50 focus:text-blue-gradient-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-opacity-80 active:bg-opacity-80'
                 }`}
               >
                 <div className={`${isCollapsed ? 'mx-auto' : 'mr-2'} relative`}>
                   {isActive ? (
                     <item.icon
-                      className='w-5 h-5 font-bold transition-all duration-300 shrink-0'
+                      className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
                       style={{
                         fill: 'none',
                         stroke: 'url(#dare-gradient)',
@@ -138,14 +138,14 @@ const Sidebar = () => {
                       }}
                     />
                   ) : (
-                    <item.icon className='w-5 h-5 font-bold transition-all duration-300 shrink-0' />
+                    <item.icon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
                   )}
                 </div>
                 <span
                   className={`whitespace-nowrap transition-all duration-300 ${
                     isCollapsed
-                      ? 'opacity-0 w-0 overflow-hidden'
-                      : 'opacity-100 w-auto'
+                      ? 'w-0 overflow-hidden opacity-0'
+                      : 'w-auto opacity-100'
                   }`}
                 >
                   {isActive ? (
@@ -160,17 +160,17 @@ const Sidebar = () => {
             )
           })}
 
-          <div className='mt-auto sticky bottom-0 bg-white z-10'>
+          <div className='sticky bottom-0 z-10 mt-auto bg-white'>
             {bottomItems.map((item) => {
               const isActive = location.pathname === item.path
               return (
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex items-center w-full p-3 leading-tight transition-all rounded-lg outline-none text-start ${
+                  className={`flex w-full items-center rounded-lg p-3 text-start leading-tight outline-none transition-all ${
                     isActive
                       ? 'bg-sky-50'
-                      : 'hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gradient-50 active:bg-opacity-80 active:text-blue-gray-900'
+                      : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gradient-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80'
                   }`}
                 >
                   <div
@@ -178,7 +178,7 @@ const Sidebar = () => {
                   >
                     {isActive ? (
                       <item.icon
-                        className='w-5 h-5 font-bold transition-all duration-300 shrink-0'
+                        className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
                         style={{
                           fill: 'none',
                           stroke: 'url(#dare-gradient)',
@@ -186,14 +186,14 @@ const Sidebar = () => {
                         }}
                       />
                     ) : (
-                      <item.icon className='w-5 h-5 font-bold transition-all duration-300 shrink-0' />
+                      <item.icon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
                     )}
                   </div>
                   <span
                     className={`whitespace-nowrap transition-all duration-300 ${
                       isCollapsed
-                        ? 'opacity-0 w-0 overflow-hidden'
-                        : 'opacity-100 w-auto'
+                        ? 'w-0 overflow-hidden opacity-0'
+                        : 'w-auto opacity-100'
                     }`}
                   >
                     {isActive ? (

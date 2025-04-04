@@ -22,7 +22,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
   }
 
   return (
-    <div className='border-b p-2 flex flex-wrap gap-1 bg-gray-50'>
+    <div className='flex flex-wrap gap-1 border-b bg-gray-50 p-2'>
       <Button
         type='button'
         variant='ghost'

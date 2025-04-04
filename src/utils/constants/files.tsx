@@ -22,19 +22,19 @@ export const getStatusDisplay = (status: FileStatus) => {
     case FileStatus.PROCESSING:
       return (
         <Badge variant='secondary'>
-          <Loader2 className='w-4 h-4 animate-spin mr-1' /> Processing
+          <Loader2 className='mr-1 h-4 w-4 animate-spin' /> Processing
         </Badge>
       )
     case FileStatus.PROCESSED:
       return (
         <Badge variant='green'>
-          <CheckCircle className='w-4 h-4 mr-1' /> Processed
+          <CheckCircle className='mr-1 h-4 w-4' /> Processed
         </Badge>
       )
     case FileStatus.FAILED:
       return (
         <Badge variant='destructive'>
-          <XCircle className='w-4 h-4 mr-1' /> Failed
+          <XCircle className='mr-1 h-4 w-4' /> Failed
         </Badge>
       )
     default:

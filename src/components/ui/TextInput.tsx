@@ -28,7 +28,7 @@ const TextInput: React.FC<TextInputProps> = ({
   }
 
   return (
-    <div className='w-full mb-5 relative'>
+    <div className='relative mb-5 w-full'>
       <label htmlFor={name} className='block text-sm font-medium text-gray-700'>
         {label}
       </label>
@@ -44,7 +44,7 @@ const TextInput: React.FC<TextInputProps> = ({
         />
         {type === 'password' && (
           <div
-            className='absolute inset-y-0 right-3 flex items-center cursor-pointer'
+            className='absolute inset-y-0 right-3 flex cursor-pointer items-center'
             onClick={togglePasswordVisibility}
           >
             {showPassword ? (
@@ -55,7 +55,7 @@ const TextInput: React.FC<TextInputProps> = ({
           </div>
         )}
       </div>
-      {error && <p className='text-xs text-red-500 mt-1'>{String(error)}</p>}
+      {error && <p className='mt-1 text-xs text-red-500'>{String(error)}</p>}
     </div>
   )
 }

@@ -81,16 +81,16 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className='border rounded-md overflow-hidden bg-white'
+      className='overflow-hidden rounded-md border bg-white'
     >
-      <div className='flex items-center justify-between p-3 bg-gray-50'>
+      <div className='flex items-center justify-between bg-gray-50 p-3'>
         <div className='flex items-center'>
           <div className='mr-3 cursor-move'>
             <GripVertical className='h-5 w-5 text-gray-400' />
           </div>
-          <span className='font-medium text-sm'>Step {index + 1}</span>
+          <span className='text-sm font-medium'>Step {index + 1}</span>
           {step.id && (
-            <span className='ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full'>
+            <span className='ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800'>
               Saved
             </span>
           )}
@@ -122,7 +122,7 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
             variant='ghost'
             size='sm'
             onClick={onRemove}
-            className='h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50'
+            className='h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-600'
           >
             <Trash2 className='h-4 w-4' />
           </Button>
@@ -140,7 +140,7 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
       </div>
 
       <CollapsibleContent>
-        <div className='p-4 border-t space-y-4'>
+        <div className='space-y-4 border-t p-4'>
           <div className='space-y-2'>
             <label className='text-sm font-medium'>Select Prompt</label>
             <Select
@@ -163,7 +163,7 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
               </SelectContent>
             </Select>
             {error?.prompt && touched?.prompt && (
-              <p className='text-red-500 text-xs mt-1'>{error.prompt}</p>
+              <p className='mt-1 text-xs text-red-500'>{error.prompt}</p>
             )}
           </div>
 
@@ -186,7 +186,7 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
               </SelectContent>
             </Select>
             {error?.file && touched?.file && (
-              <p className='text-red-500 text-xs mt-1'>{error.file}</p>
+              <p className='mt-1 text-xs text-red-500'>{error.file}</p>
             )}
           </div>
 
@@ -209,7 +209,7 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
               </SelectContent>
             </Select>
             {error?.llm && touched?.llm && (
-              <p className='text-red-500 text-xs mt-1'>{error.llm}</p>
+              <p className='mt-1 text-xs text-red-500'>{error.llm}</p>
             )}
           </div>
 

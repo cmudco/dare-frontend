@@ -51,7 +51,7 @@ export function DeleteConfirmation({
           <DialogDescription>
             {description}
             {itemName && (
-              <span className='font-medium text-foreground block mt-1'>
+              <span className='mt-1 block font-medium text-foreground'>
                 "{itemName}"
               </span>
             )}

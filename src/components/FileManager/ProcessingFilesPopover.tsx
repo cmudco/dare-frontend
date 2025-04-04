@@ -22,8 +22,8 @@ const ProcessingFilesPopover: React.FC = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant='outline' className='fixed top-24 right-4'>
-          <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+        <Button variant='outline' className='fixed right-4 top-24'>
+          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
           Processing: <Badge className='ml-2'>{processingFiles.length}</Badge>
         </Button>
       </PopoverTrigger>
@@ -33,7 +33,7 @@ const ProcessingFilesPopover: React.FC = () => {
           <ul className='space-y-2'>
             {processingFiles.map((file) => (
               <li key={file.id} className='flex items-center space-x-2'>
-                <span className='text-sm truncate'>{file.name}</span>
+                <span className='truncate text-sm'>{file.name}</span>
                 {getJobStatusDisplay(jobStatuses[file.id]?.jobStatus)}
               </li>
             ))}

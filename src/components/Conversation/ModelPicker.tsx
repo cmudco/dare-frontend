@@ -44,17 +44,17 @@ const ModelPicker: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className='ml-4 p-4  rounded-lg h-12 min-w-40 w-min flex items-center justify-center'>
+        <Button className='ml-4 flex h-12 w-min min-w-40 items-center justify-center rounded-lg p-4'>
           {getModelButtonText()}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align='end'
-        className='w-64 bg-white borderrounded-md p-2 shadow-lg'
+        className='borderrounded-md w-64 bg-white p-2 shadow-lg'
       >
-        {loading && <p className='text-center py-2'>Loading models...</p>}
+        {loading && <p className='py-2 text-center'>Loading models...</p>}
         {error && (
-          <p className='text-center py-2 text-red-500'>
+          <p className='py-2 text-center text-red-500'>
             Error loading models: {error}
           </p>
         )}
@@ -63,7 +63,7 @@ const ModelPicker: React.FC = () => {
             <DropdownMenuItem
               key={model.id}
               onClick={() => handleModelSelect(model.id)}
-              className={`cursor-pointer mt-1 px-4 py-2 outlin rounded ${
+              className={`outlin mt-1 cursor-pointer rounded px-4 py-2 ${
                 model.id === selectedModel
                   ? 'bg-pink-50 font-bold'
                   : 'hover:bg-gray-100'
@@ -78,7 +78,7 @@ const ModelPicker: React.FC = () => {
             </DropdownMenuItem>
           ))
         ) : (
-          <p className='text-center py-2 text-gray-500'>No models available</p>
+          <p className='py-2 text-center text-gray-500'>No models available</p>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

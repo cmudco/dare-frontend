@@ -29,7 +29,7 @@ const RichTextPreview = ({ content }: { content: string }) => {
 
   return (
     <div
-      className='text-sm text-gray-600 prose dark:prose-invert prose-sm focus:outline-none w-full max-w-full'
+      className='prose prose-sm w-full max-w-full text-sm text-gray-600 dark:prose-invert focus:outline-none'
       dangerouslySetInnerHTML={{ __html: truncateHtml(content || '') }}
     />
   )
@@ -71,18 +71,18 @@ const PromptSet: React.FC = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className='ml-4 bg-primary flex justify-center items-center font-normal normal-case rounded-lg h-12 py-0 whitespace-nowrap px-4'>
-          <GoCommandPalette className='font-extrabold text-xl' />
+        <Button className='ml-4 flex h-12 items-center justify-center whitespace-nowrap rounded-lg bg-primary px-4 py-0 font-normal normal-case'>
+          <GoCommandPalette className='text-xl font-extrabold' />
         </Button>
       </DialogTrigger>
 
-      <DialogContent className='bg-white rounded-lg shadow-md p-6 w-[90vw] max-w-2xl [&>button]:hidden'>
-        <div className='flex justify-between items-center mb-4'>
-          <DialogTitle className='text-lg text-black font-bold'>
+      <DialogContent className='w-[90vw] max-w-2xl rounded-lg bg-white p-6 shadow-md [&>button]:hidden'>
+        <div className='mb-4 flex items-center justify-between'>
+          <DialogTitle className='text-lg font-bold text-black'>
             Select Prompt
           </DialogTitle>
           <Button
-            className='flex items-center px-3 py-1 rounded-xl text-white'
+            className='flex items-center rounded-xl px-3 py-1 text-white'
             onClick={handleCreatePrompt}
           >
             <Plus />
@@ -90,22 +90,22 @@ const PromptSet: React.FC = () => {
           </Button>
         </div>
 
-        <div className='mb-2 relative'>
-          <MagnifyingGlassIcon className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500' />
+        <div className='relative mb-2'>
+          <MagnifyingGlassIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-500' />
           <Input
             type='text'
             placeholder='Search prompts'
-            className='bg-white pl-9 w-full'
+            className='w-full bg-white pl-9'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <hr className='border-gray-200 mx-1 mb-4' />
+        <hr className='mx-1 mb-4 border-gray-200' />
 
         <div className='max-h-[50vh] overflow-y-auto'>
           {filteredPrompts.length === 0 && (
-            <div className='text-center py-6 text-gray-500'>
+            <div className='py-6 text-center text-gray-500'>
               {prompts.length === 0
                 ? 'No prompts available'
                 : 'No matching prompts found'}
@@ -115,20 +115,19 @@ const PromptSet: React.FC = () => {
           {filteredPrompts.map((prompt) => (
             <div
               key={prompt.id}
-              className={`mb-3 p-3 text-black border border-gray-100 rounded-lg cursor-pointer transition-colors
-                ${
-                  selectedPrompt?.id === prompt?.id
-                    ? 'bg-pink-50 hover:bg-pink-50 '
-                    : 'bg-muted hover:bg-pink-50 text-foreground'
-                }`}
+              className={`mb-3 cursor-pointer rounded-lg border border-gray-100 p-3 text-black transition-colors ${
+                selectedPrompt?.id === prompt?.id
+                  ? 'bg-pink-50 hover:bg-pink-50'
+                  : 'bg-muted text-foreground hover:bg-pink-50'
+              }`}
               onClick={() => handlePromptSelect(prompt)}
             >
-              <div className='flex justify-between items-start mb-1'>
+              <div className='mb-1 flex items-start justify-between'>
                 <div className='flex items-center gap-2'>
-                  <h4 className='font-medium text-xl text-gray-800'>
+                  <h4 className='text-xl font-medium text-gray-800'>
                     {prompt.title || 'Untitled'}
                   </h4>
-                  <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                  <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
                     v{prompt.version || 1}
                   </span>
                 </div>

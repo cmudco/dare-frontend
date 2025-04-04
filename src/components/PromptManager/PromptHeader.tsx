@@ -26,12 +26,12 @@ const PromptHeader: React.FC<PromptHeaderProps> = ({ onSearch }) => {
 
   return (
     <div className='flex items-center justify-between px-2.5'>
-      <div className='w-[300px] h-[40px] relative flex items-center'>
+      <div className='relative flex h-[40px] w-[300px] items-center'>
         <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-gray-500' />
         <Input
           type='text'
           placeholder='Search prompts'
-          className='bg-white border pl-10 border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary'
+          className='rounded-md border border-gray-300 bg-white pl-10 focus:border-primary focus:ring-2 focus:ring-primary'
           value={searchQuery}
           onChange={handleSearchChange}
         />
@@ -39,7 +39,7 @@ const PromptHeader: React.FC<PromptHeaderProps> = ({ onSearch }) => {
 
       <Button
         variant='default'
-        className='py-2 rounded-md shadow-sm normal-case font-normal whitespace-nowrap'
+        className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
         onClick={handleCreatePrompt}
       >
         <Plus />

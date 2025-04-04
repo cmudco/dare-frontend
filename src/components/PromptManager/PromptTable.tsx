@@ -142,13 +142,13 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
 
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max text-left bg-white'>
+      <Table className='mt-4 w-full min-w-max bg-white text-left'>
         <TableHeader>
           <TableRow className='bg-muted'>
             {PROMPTS_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className='cursor-pointer p-4 font-semibold text-sm'
+                className='cursor-pointer p-4 text-sm font-semibold'
               >
                 <div className='flex items-center justify-between gap-2 opacity-70'>
                   {head}
@@ -161,13 +161,13 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
         <TableBody>
           {prompts.length === 0 && loading ? (
             <TableRow>
-              <TableCell colSpan={3} className='text-center p-4'>
+              <TableCell colSpan={3} className='p-4 text-center'>
                 Loading prompts...
               </TableCell>
             </TableRow>
           ) : filteredPrompts.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} className='text-center p-4'>
+              <TableCell colSpan={3} className='p-4 text-center'>
                 No matching prompts found
               </TableCell>
             </TableRow>
@@ -179,20 +179,20 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                     <div>
                       <div className='flex items-center gap-2'>
                         <h3 className='font-medium'>{title || 'Untitled'}</h3>
-                        <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                        <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
                           v{version || 1}
                         </span>
                       </div>
-                      <p className='text-sm text-gray-500 truncate max-w-[300px]'>
+                      <p className='max-w-[300px] truncate text-sm text-gray-500'>
                         {renderPromptContent(content) || 'No content'}
                       </p>
                     </div>
                   </TableCell>
                   <TableCell className='p-4'>{formatDate(createdAt)}</TableCell>
 
-                  <TableCell className='p-4 text-center '>
+                  <TableCell className='p-4 text-center'>
                     <DropdownMenu>
-                      <DropdownMenuTrigger className='hover:bg-gray-200 rounded-md p-2'>
+                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
                         <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
@@ -200,7 +200,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                           onClick={() => handleEdit(id)}
                           className='cursor-pointer'
                         >
-                          <PencilIcon className='w-4 h-4' />
+                          <PencilIcon className='h-4 w-4' />
                           <span>Edit</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -212,17 +212,17 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                               version: version || 1,
                             })
                           }
-                          className='text-yellow-500 cursor-pointer'
+                          className='cursor-pointer text-yellow-500'
                         >
-                          <DocumentDuplicateIcon className='w-4 h-4' />
+                          <DocumentDuplicateIcon className='h-4 w-4' />
 
                           <span>Clone</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className='text-red-500 cursor-pointer'
+                          className='cursor-pointer text-red-500'
                           onClick={() => handleDelete(id, title)}
                         >
-                          <TrashIcon className='w-4 h-4' />
+                          <TrashIcon className='h-4 w-4' />
                           <span>Delete</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -240,9 +240,9 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={PROMPTS_TABLE_HEAD.length}
-                className='p-4 w-full'
+                className='w-full p-4'
               >
-                <div className='flex justify-between items-center w-full'>
+                <div className='flex w-full items-center justify-between'>
                   {/* Rows per page dropdown */}
                   <div className='flex items-center gap-4'>
                     <span className='text-sm'>Rows per page:</span>

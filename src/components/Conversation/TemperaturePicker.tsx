@@ -33,17 +33,17 @@ const TemperaturePicker: React.FC = () => {
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          className='ml-4 flex justify-center items-center font-normal normal-case rounded-lg w-12 h-12 py-0 whitespace-nowrap'
+          className='ml-4 flex h-12 w-12 items-center justify-center whitespace-nowrap rounded-lg py-0 font-normal normal-case'
           variant='outline'
         >
-          <Thermometer className={`!w-5 !h-5 ${getTemperatureColor()}`} />
+          <Thermometer className={`!h-5 !w-5 ${getTemperatureColor()}`} />
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-80 p-4'>
         <div className='space-y-4'>
-          <div className='flex justify-between items-center'>
+          <div className='flex items-center justify-between'>
             <h4 className='font-medium'>Temperature</h4>
-            <span className='bg-gray-100 px-2 py-1 rounded-md text-sm font-mono'>
+            <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
               {temperature.toFixed(1)}
             </span>
           </div>
@@ -57,7 +57,7 @@ const TemperaturePicker: React.FC = () => {
             className='my-4 cursor-pointer'
           />
 
-          <div className='flex justify-between text-xs text-gray-500 px-1'>
+          <div className='flex justify-between px-1 text-xs text-gray-500'>
             <span>Precise</span>
             <span>Balanced</span>
             <span>Creative</span>
@@ -67,7 +67,7 @@ const TemperaturePicker: React.FC = () => {
             {getTemperatureDescription()}
           </div>
 
-          <p className='text-xs text-gray-500 mt-2'>
+          <p className='mt-2 text-xs text-gray-500'>
             Temperature controls randomness. Lower values are more
             deterministic, while higher values produce more varied responses.
           </p>

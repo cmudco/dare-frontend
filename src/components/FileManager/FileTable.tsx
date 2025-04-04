@@ -89,14 +89,14 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
 
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max text-left bg-white'>
+      <Table className='mt-4 w-full min-w-max bg-white text-left'>
         <TableHeader>
           <TableRow className='bg-muted'>
             {['Name', 'Type', 'Size', 'Tags', 'Status', 'Actions'].map(
               (head) => (
                 <TableHead
                   key={head}
-                  className='cursor-pointer p-4 font-semibold text-sm'
+                  className='cursor-pointer p-4 text-sm font-semibold'
                 >
                   <div className='flex items-center justify-between gap-2 opacity-70'>
                     {head}
@@ -110,13 +110,13 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
         <TableBody>
           {files.length === 0 && loading ? (
             <TableRow>
-              <TableCell colSpan={6} className='text-center p-4'>
+              <TableCell colSpan={6} className='p-4 text-center'>
                 Loading files...
               </TableCell>
             </TableRow>
           ) : filteredFiles.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className='text-center p-4'>
+              <TableCell colSpan={6} className='p-4 text-center'>
                 No matching files found
               </TableCell>
             </TableRow>
@@ -127,7 +127,7 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                 <TableCell className='p-4'>{fileType || 'Unknown'}</TableCell>
                 <TableCell className='p-4'>{formatFileSize(size)}</TableCell>
                 <TableCell className='p-4'>
-                  <div className='flex flex-wrap gap-2 max-w-[150px]'>
+                  <div className='flex max-w-[150px] flex-wrap gap-2'>
                     {Array.isArray(tags) &&
                       tags.map((tagId, i) => {
                         const tag = allTags.find((t) => t.id === tagId)
@@ -150,12 +150,12 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                 </TableCell>
                 <TableCell className='p-4 text-center'>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className='hover:bg-gray-200 rounded-md p-2'>
+                    <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
                       <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem
-                        className='text-red-500 cursor-pointer'
+                        className='cursor-pointer text-red-500'
                         onClick={() => handleDelete(id, name)}
                       >
                         <span>Delete</span>
@@ -171,8 +171,8 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
         {filteredFiles.length > 0 && (
           <TableFooter>
             <TableRow>
-              <TableCell colSpan={6} className='p-4 w-full'>
-                <div className='flex justify-between items-center w-full'>
+              <TableCell colSpan={6} className='w-full p-4'>
+                <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
                     <span className='text-sm'>Rows per page:</span>
                     <Select

@@ -39,16 +39,16 @@ const Message: React.FC<MessageProps> = ({ message }) => {
       >
         {!message.isSender && (
           <div className='mr-2 mt-1 flex-shrink-0'>
-            <Bot className='w-8 h-8' />
+            <Bot className='h-8 w-8' />
           </div>
         )}
         <div
-          className={`relative px-5 py-3 rounded-xl text-wrap max-w-[95%] ${
+          className={`relative max-w-[95%] text-wrap rounded-xl px-5 py-3 ${
             message.isSender ? 'bg-gray-100' : 'bg-gray-100'
-          } inline-block group`}
+          } group inline-block`}
         >
           <div
-            className={`font-normal text-wrap ${
+            className={`text-wrap font-normal ${
               message.streaming ? 'animate-pulse' : ''
             }`}
           >
@@ -63,14 +63,14 @@ const Message: React.FC<MessageProps> = ({ message }) => {
           </div>
 
           {!message.isSender && !message.streaming && (
-            <button className='absolute -right-8 -top-2 mt-2 mr-2 text-gray-500 hover:text-gray-700 hidden group-hover:block'>
-              <ArrowPathIcon className='w-5 h-5 text-gray-900' />
+            <button className='absolute -right-8 -top-2 mr-2 mt-2 hidden text-gray-500 hover:text-gray-700 group-hover:block'>
+              <ArrowPathIcon className='h-5 w-5 text-gray-900' />
             </button>
           )}
         </div>
         {message.isSender && (
           <div className='ml-2 mt-1 flex-shrink-0'>
-            <div className='w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium'>
+            <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 font-medium text-white'>
               {userInitial.toUpperCase()}
             </div>
           </div>
@@ -79,8 +79,8 @@ const Message: React.FC<MessageProps> = ({ message }) => {
 
       {!message.isSender && !message.streaming && message.llmId && (
         <div
-          className={`text-xs text-gray-500 mt-1 ${
-            message.isSender ? 'text-right' : 'text-left pl-10'
+          className={`mt-1 text-xs text-gray-500 ${
+            message.isSender ? 'text-right' : 'pl-10 text-left'
           }`}
         >
           {llmName}

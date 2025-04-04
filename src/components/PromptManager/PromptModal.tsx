@@ -61,7 +61,7 @@ const PromptUploadModal: React.FC = () => {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className='p-6 mx-auto w-[90vw] max-w-2xl bg-white rounded-lg shadow-lg'>
+      <DialogContent className='mx-auto w-[90vw] max-w-2xl rounded-lg bg-white p-6 shadow-lg'>
         <DialogHeader>
           <DialogTitle className='text-lg font-semibold text-gray-900'>
             {isEditMode ? 'Edit Prompt' : 'Create New Prompt'}
@@ -89,10 +89,10 @@ const PromptUploadModal: React.FC = () => {
             dirty,
           }) => (
             <Form className='space-y-4'>
-              <div className='space-y-2 '>
+              <div className='space-y-2'>
                 <Label htmlFor='title'>Prompt Title</Label>
                 {isEditMode && selectedPrompt && (
-                  <span className='ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                  <span className='ml-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
                     v{selectedPrompt.version || 1}
                   </span>
                 )}
@@ -107,7 +107,7 @@ const PromptUploadModal: React.FC = () => {
                   }
                 />
                 {errors.title && touched.title && (
-                  <p className='text-red-500 text-xs mt-1'>{errors.title}</p>
+                  <p className='mt-1 text-xs text-red-500'>{errors.title}</p>
                 )}
               </div>
 
@@ -116,8 +116,8 @@ const PromptUploadModal: React.FC = () => {
                 <div
                   className={
                     errors.content && touched.content
-                      ? 'border border-red-500 rounded-md overflow-y-scroll max-h-[50vh]'
-                      : 'overflow-y-scroll  max-h-[50vh]'
+                      ? 'max-h-[50vh] overflow-y-scroll rounded-md border border-red-500'
+                      : 'max-h-[50vh] overflow-y-scroll'
                   }
                 >
                   <Tiptap
@@ -128,7 +128,7 @@ const PromptUploadModal: React.FC = () => {
                   />
                 </div>
                 {errors.content && touched.content && (
-                  <p className='text-red-500 text-xs mt-1'>{errors.content}</p>
+                  <p className='mt-1 text-xs text-red-500'>{errors.content}</p>
                 )}
               </div>
 

@@ -47,27 +47,27 @@ const ConversationHistory = () => {
 
   return (
     <div
-      className={`max-w-[20vw] flex flex-col flex-1 bg-white bg-clip-border text-gray-700  transition-width duration-300 border border-pink-50`}
+      className={`transition-width flex max-w-[20vw] flex-1 flex-col border border-pink-50 bg-white bg-clip-border text-gray-700 duration-300`}
     >
-      <div className='flex items-center justify-between p-4  border-pink-50'>
-        <div className='flex items-center flex-grow border  border-gray-500 rounded-3xl p-2'>
-          <MagnifyingGlassIcon className='w-5 h-5 text-gray-600 mr-2 ' />
+      <div className='flex items-center justify-between border-pink-50 p-4'>
+        <div className='flex flex-grow items-center rounded-3xl border border-gray-500 p-2'>
+          <MagnifyingGlassIcon className='mr-2 h-5 w-5 text-gray-600' />
           <input
             type='text'
             placeholder='Search'
             value={searchQuery}
             onChange={handleSearchChange}
-            className='w-20 outline-none bg-transparent placeholder-gray-600 font-normal'
+            className='w-20 bg-transparent font-normal placeholder-gray-600 outline-none'
           />
         </div>
         <Button
           onClick={handleCreateConversation}
-          className='ml-2 min-w-5  rounded-xl w-10 h-10 flex items-center justify-center'
+          className='ml-2 flex h-10 w-10 min-w-5 items-center justify-center rounded-xl'
         >
           <span className='text-xl'>+</span>
         </Button>
       </div>
-      <hr className=' border-gray-200 mx-1' />
+      <hr className='mx-1 border-gray-200' />
       <ConversationList />
     </div>
   )

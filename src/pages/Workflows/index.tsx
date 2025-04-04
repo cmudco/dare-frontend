@@ -2,7 +2,7 @@ import WorkflowManagerLayout from '../../components/WorkflowManager/WorkflowMana
 
 const Workflows = () => {
   return (
-    <div className='flex flex-col h-full'>
+    <div className='flex h-full flex-col'>
       <div className='flex flex-col space-y-2 px-10 pt-8'>
         <h1 className='text-3xl font-bold tracking-tight'>
           Multi-Agent Workflow

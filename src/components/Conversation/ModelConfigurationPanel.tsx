@@ -53,16 +53,16 @@ const ModelConfigurationPanel: React.FC = () => {
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          className='ml-4 flex justify-center items-center font-normal normal-case rounded-lg w-12 h-12 py-0 whitespace-nowrap'
+          className='ml-4 flex h-12 w-12 items-center justify-center whitespace-nowrap rounded-lg py-0 font-normal normal-case'
           variant='outline'
         >
-          <Settings className='!w-5 !h-5' />
+          <Settings className='!h-5 !w-5' />
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-80 p-4'>
         <div className='space-y-6'>
           {activeConversation?.conversationId && (
-            <div className='flex justify-between items-center pb-2 border-b'>
+            <div className='flex items-center justify-between border-b pb-2'>
               <h3 className='font-medium'>Model Configuration</h3>
               <Button size='sm' onClick={resetToDefaults} className='text-xs'>
                 Reset to Defaults
@@ -71,9 +71,9 @@ const ModelConfigurationPanel: React.FC = () => {
           )}
 
           <div className='space-y-4'>
-            <div className='flex justify-between items-center'>
+            <div className='flex items-center justify-between'>
               <h4 className='font-medium'>Temperature</h4>
-              <span className='bg-gray-100 px-2 py-1 rounded-md text-sm font-mono'>
+              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
                 {temperature.toFixed(1)}
               </span>
             </div>
@@ -87,7 +87,7 @@ const ModelConfigurationPanel: React.FC = () => {
               className='my-4 cursor-pointer'
             />
 
-            <div className='flex justify-between text-xs text-gray-500 px-1'>
+            <div className='flex justify-between px-1 text-xs text-gray-500'>
               <span>Precise</span>
               <span>Balanced</span>
               <span>Creative</span>
@@ -97,17 +97,17 @@ const ModelConfigurationPanel: React.FC = () => {
               {getTemperatureDescription(temperature)}
             </div>
 
-            <p className='text-xs text-gray-500 mt-2'>
+            <p className='mt-2 text-xs text-gray-500'>
               Temperature controls randomness. Lower values are more
               deterministic, while higher values produce more varied responses.
               Settings are saved automatically.
             </p>
           </div>
 
-          <div className='space-y-4 pt-2 border-t'>
-            <div className='flex justify-between items-center'>
+          <div className='space-y-4 border-t pt-2'>
+            <div className='flex items-center justify-between'>
               <h4 className='font-medium'>Max Tokens</h4>
-              <span className='bg-gray-100 px-2 py-1 rounded-md text-sm font-mono'>
+              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
                 {maxTokens}
               </span>
             </div>
@@ -134,7 +134,7 @@ const ModelConfigurationPanel: React.FC = () => {
               {getMaxTokensDescription(maxTokens)}
             </div>
 
-            <p className='text-xs text-gray-500 mt-2'>
+            <p className='mt-2 text-xs text-gray-500'>
               Max tokens controls the maximum length of the model's response.
               Higher values allow for longer, more detailed answers. Settings
               are saved automatically.
@@ -142,7 +142,7 @@ const ModelConfigurationPanel: React.FC = () => {
           </div>
 
           {activeConversation?.conversationId && (
-            <p className='text-xs text-gray-500 mt-2 pt-2 border-t'>
+            <p className='mt-2 border-t pt-2 text-xs text-gray-500'>
               These settings are specific to this conversation and will be
               remembered when you return.
             </p>

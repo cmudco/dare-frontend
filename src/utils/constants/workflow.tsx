@@ -13,9 +13,9 @@ export const getModeBadge = (mode: WorkflowMode) => {
       return (
         <Badge
           variant='outline'
-          className='bg-blue-50 text-blue-700 border-blue-200'
+          className='border-blue-200 bg-blue-50 text-blue-700'
         >
-          <ListOrdered className='h-3.5 w-3.5 mr-1' />
+          <ListOrdered className='mr-1 h-3.5 w-3.5' />
           Sequential
         </Badge>
       )
@@ -23,9 +23,9 @@ export const getModeBadge = (mode: WorkflowMode) => {
       return (
         <Badge
           variant='outline'
-          className='bg-green-50 text-green-700 border-green-200'
+          className='border-green-200 bg-green-50 text-green-700'
         >
-          <Layers className='h-3.5 w-3.5 mr-1' />
+          <Layers className='mr-1 h-3.5 w-3.5' />
           Parallel
         </Badge>
       )

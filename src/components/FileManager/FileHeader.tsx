@@ -44,12 +44,12 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onSearch, onTagsChange }) => {
     <div className='flex flex-col gap-4 px-2.5'>
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-2'>
-          <div className='relative w-[300px] h-[40px] flex items-center'>
-            <MagnifyingGlassIcon className='absolute left-3 w-5 h-5 text-gray-500' />
+          <div className='relative flex h-[40px] w-[300px] items-center'>
+            <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-gray-500' />
             <Input
               type='text'
               placeholder='Search by Files'
-              className='bg-white border pl-10 border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary'
+              className='rounded-md border border-gray-300 bg-white pl-10 focus:border-primary focus:ring-2 focus:ring-primary'
               value={searchQuery}
               onChange={handleSearchChange}
             />
@@ -60,13 +60,13 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onSearch, onTagsChange }) => {
             onClick={() => setShowTagFilter(!showTagFilter)}
           >
             <AdjustmentsVerticalIcon
-              className={`w-5 h-5 ${showTagFilter ? 'text-primary' : 'text-gray-500'}`}
+              className={`h-5 w-5 ${showTagFilter ? 'text-primary' : 'text-gray-500'}`}
             />
             Filter by Tags
           </Button>
         </div>
         <Button
-          className='py-2 rounded-md shadow-sm normal-case font-normal whitespace-nowrap '
+          className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
           variant='default'
           size='default'
           onClick={() => dispatch(openModal())}

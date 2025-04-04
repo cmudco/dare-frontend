@@ -56,8 +56,8 @@ const ConversationList: React.FC = () => {
   }
 
   return (
-    <nav className='flex flex-col gap-1 font-sans text-base font-normal text-blue-gray-700 h-full'>
-      <div className='flex flex-col h-[65vh] overflow-scroll w-full'>
+    <nav className='text-blue-gray-700 flex h-full flex-col gap-1 font-sans text-base font-normal'>
+      <div className='flex h-[65vh] w-full flex-col overflow-scroll'>
         {filteredConversations.map((conversation) => {
           const conversationId = conversation.conversationId
           const isActive =
@@ -66,12 +66,11 @@ const ConversationList: React.FC = () => {
             <div
               key={conversationId}
               onClick={() => handleConversationClick(conversation)}
-              className={`flex items-center w-full p-3 gap-3 leading-tight transition-all outline-none text-start cursor-pointer rounded-md
-                            ${
-                              isActive
-                                ? 'bg-pink-50 text-primary'
-                                : 'hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900'
-                            }`}
+              className={`flex w-full cursor-pointer items-center gap-3 rounded-md p-3 text-start leading-tight outline-none transition-all ${
+                isActive
+                  ? 'bg-pink-50 text-primary'
+                  : 'focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-opacity-80 active:bg-opacity-80'
+              }`}
             >
               <div>
                 <ChatBubbleLeftEllipsisIcon className='w-6 font-bold' />
@@ -81,7 +80,7 @@ const ConversationList: React.FC = () => {
           )
         })}
       </div>
-      <hr className='border-gray-200 mt-4' />
+      <hr className='mt-4 border-gray-200' />
       <div className=''>
         {bottomItems.map((item) => {
           const isDisabled = item.action === 'clear' && !activeConversation
@@ -89,19 +88,15 @@ const ConversationList: React.FC = () => {
             <div
               key={item.name}
               onClick={() => !isDisabled && handleBottomItemClick(item.action)}
-              className={`flex items-center w-full p-3 leading-tight transition-all outline-none text-start font-normal rounded-md
-                            ${
-                              location.pathname === item.name
-                                ? 'bg-pink-50 text-primary'
-                                : 'hover:bg-blue-gray-50 hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 active:bg-opacity-80 active:text-blue-gray-900'
-                            }
-                            ${
-                              isDisabled
-                                ? 'opacity-50 cursor-not-allowed'
-                                : 'cursor-pointer'
-                            }`}
+              className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight outline-none transition-all ${
+                location.pathname === item.name
+                  ? 'bg-pink-50 text-primary'
+                  : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80'
+              } ${
+                isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+              }`}
             >
-              <item.icon className='w-5 h-5 font-bold mr-4' />
+              <item.icon className='mr-4 h-5 w-5 font-bold' />
               {item.name}
             </div>
           )

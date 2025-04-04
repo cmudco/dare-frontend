@@ -140,7 +140,7 @@ const FileUploadModal: React.FC = () => {
             onChange={(e) => dispatch(updateFilename(e.target.value))}
           />
 
-          <div className='flex flex-col gap-2 x-2'>
+          <div className='x-2 flex flex-col gap-2'>
             <Select
               onValueChange={(value) =>
                 dispatch(updateTagChange(parseInt(value)))
@@ -174,15 +174,15 @@ const FileUploadModal: React.FC = () => {
                     key={tagId}
                     variant={colorVariant}
                     selected={true}
-                    className='px-2 py-1 text-sm flex items-center'
+                    className='flex items-center px-2 py-1 text-sm'
                   >
                     {tag.label}
                     <button
-                      className='ml-1.5 hover:bg-white/20 rounded-full p-0.5 flex items-center justify-center'
+                      className='ml-1.5 flex items-center justify-center rounded-full p-0.5 hover:bg-white/20'
                       onClick={() => dispatch(updateRemoveTag(tagId))}
                       aria-label='Remove tag'
                     >
-                      <XMarkIcon className='w-3 h-3' />
+                      <XMarkIcon className='h-3 w-3' />
                     </button>
                   </Badge>
                 )
@@ -211,7 +211,7 @@ const FileUploadModal: React.FC = () => {
               error
                 ? 'border-red-300 bg-red-50'
                 : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-            } p-4 rounded-lg text-center transition cursor-pointer`}
+            } cursor-pointer rounded-lg p-4 text-center transition`}
             onClick={() => document.getElementById('fileInput')?.click()}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -238,13 +238,13 @@ const FileUploadModal: React.FC = () => {
               onChange={handleFileChange}
               className='hidden'
             />
-            <span className='text-xs text-gray-500 mt-2 block'>
+            <span className='mt-2 block text-xs text-gray-500'>
               Maximum size: {MAX_FILE_SIZE_MB} MB
             </span>
           </div>
         </div>
         {error && (
-          <div className=' text-red-500 text-sm text-center'>{error}</div>
+          <div className='text-center text-sm text-red-500'>{error}</div>
         )}
 
         <DialogFooter className="flex justify-end gap-2">

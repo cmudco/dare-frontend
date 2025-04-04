@@ -51,8 +51,8 @@ const ConversationPill: React.FC = () => {
 
   return (
     <div className='flex flex-col justify-end px-5'>
-      <div className='flex items-center w-full '>
-        <div className='relative flex items-center w-full rounded-md'>
+      <div className='flex w-full items-center'>
+        <div className='relative flex w-full items-center rounded-md'>
           <ConversationFileSelect />
           <input
             type='text'
@@ -60,10 +60,10 @@ const ConversationPill: React.FC = () => {
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder='Type message'
-            className='w-full h-14 pl-12 pr-10 py-4 bg-gray-200 rounded-2xl focus:outline-none font-normal text-sm'
+            className='h-14 w-full rounded-2xl bg-gray-200 py-4 pl-12 pr-10 text-sm font-normal focus:outline-none'
           />
           <PaperAirplaneIcon
-            className='absolute right-3 w-5 h-5 cursor-pointer'
+            className='absolute right-3 h-5 w-5 cursor-pointer'
             onClick={handleSendMessage}
           />
         </div>
@@ -71,7 +71,7 @@ const ConversationPill: React.FC = () => {
         <ModelPicker />
         <ModelConfigurationPanel />
       </div>
-      <p className='text-sm text-center mt-2'>
+      <p className='mt-2 text-center text-sm'>
         DARE Chat can make mistakes. Check important information.
       </p>
     </div>
