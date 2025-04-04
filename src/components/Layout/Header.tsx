@@ -1,67 +1,81 @@
-import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { BellIcon } from "@heroicons/react/24/solid";
-import { useNavigate } from "react-router-dom";
-import { AppDispatch, RootState } from "../../redux/store";
-import { userLogout } from "../../redux/aynscThunks/user";
+import React from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { BellIcon } from '@heroicons/react/24/solid'
+import { useNavigate } from 'react-router-dom'
+import { AppDispatch, RootState } from '../../redux/store'
+import { userLogout } from '../../redux/aynscThunks/user'
 
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
-import { Button } from "../ui/button";
-
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '../ui/dropdown-menu'
+import { Button } from '../ui/button'
 
 const Header: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
-  const user = useSelector((state: RootState) => state.user.user);
+  const dispatch = useDispatch<AppDispatch>()
+  const navigate = useNavigate()
+  const user = useSelector((state: RootState) => state.user.user)
 
   const handleLogout = async () => {
     try {
-      await dispatch(userLogout()).unwrap();
-      navigate("/login");
+      await dispatch(userLogout()).unwrap()
+      navigate('/login')
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error('Logout failed:', error)
     }
-  };
+  }
 
   return (
-    <header className="h-[80px] bg-white p-1 flex justify-between items-center w-full top-0 left-0 right-0 border border-pink-50 px-2">
-      <div className="flex items-center gap-2 mx-2">
-        <img src="/icons/Logo.png" alt="Logo" className="w-10 h-auto" />
-        <img src="/icons/TextLogo.svg" alt="Logo" className="w-16 h-auto" />
+    <header className='h-[80px] bg-white p-1 flex justify-between items-center w-full top-0 left-0 right-0 border border-pink-50 px-2'>
+      <div className='flex items-center gap-2 mx-2'>
+        <img src='/icons/Logo.png' alt='Logo' className='w-10 h-auto' />
+        <img src='/icons/TextLogo.svg' alt='Logo' className='w-16 h-auto' />
       </div>
 
-      <div className="flex items-center gap-4 mr-3">
-        <BellIcon className="h-6 w-6 text-gray-600" />
+      <div className='flex items-center gap-4 mr-3'>
+        <BellIcon className='h-6 w-6 text-gray-600' />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-x-2 p-0">
+            <Button variant='ghost' className='flex items-center gap-x-2 p-0'>
               <img
                 src={`/avatar-image.svg`}
-                alt="User"
-                className="w-8 h-8 rounded-full"
+                alt='User'
+                className='w-8 h-8 rounded-full'
               />
-              <div className="flex flex-col items-start normal-case ">
-                <span className="text-sm font-medium text-gray-900">{user?.name || "John Doe"}</span>
-                <span className="text-xs text-gray-500">{user?.email || "Loading..."}</span>
+              <div className='flex flex-col items-start normal-case '>
+                <span className='text-sm font-medium text-gray-900'>
+                  {user?.name || 'John Doe'}
+                </span>
+                <span className='text-xs text-gray-500'>
+                  {user?.email || 'Loading...'}
+                </span>
               </div>
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="p-1 border border-gray-100 w-[200px]">
+          <DropdownMenuContent
+            align='end'
+            className='p-1 border border-gray-100 w-[200px]'
+          >
             {/* Optional Profile & Settings */}
             {/* <DropdownMenuItem className="cursor-pointer hover:bg-gray-100">Your Profile</DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer hover:bg-gray-100">Settings</DropdownMenuItem>
             <Separator className="my-2" /> */}
 
-            <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer hover:bg-gray-100 py-3 ">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className='text-red-500 cursor-pointer hover:bg-gray-100 py-3 '
+            >
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </header>
-  );
-};
+  )
+}
 
-export default Header;
+export default Header

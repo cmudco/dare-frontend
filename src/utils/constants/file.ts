@@ -1,4 +1,4 @@
-export const TABLE_HEAD = ["File Name", "File Type", "Size", "Tags", "Action"];
+export const TABLE_HEAD = ['File Name', 'File Type', 'Size', 'Tags', 'Action']
 
 export const TAG_COLORS: {
   [key: string]: "yellow" | "red" | "blue" | "green" | "purple" | "gray";
@@ -27,11 +27,11 @@ export const ALLOWED_FILE_TYPES = [
   'application/markdown',
   'text/x-markdown',
   'application/json',
-];
+]
 
-export const MAX_FILE_SIZE_MB = 30;
+export const MAX_FILE_SIZE_MB = 30
 
-export const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
+export const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024
 
 export enum FileStatus {
   PROCESSING = 0,

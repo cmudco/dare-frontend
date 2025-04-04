@@ -33,7 +33,7 @@ const ConversationLayout: React.FC = () => {
       <ActiveConversation />
       <ConversationHistory />
     </div>
-  );
-};
+  )
+}
 
-export default ConversationLayout;
+export default ConversationLayout

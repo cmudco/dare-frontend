@@ -1,32 +1,32 @@
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "../../redux/store";
-import { getFiles } from "../../redux/aynscThunks/file";
-import { getTags } from "../../redux/aynscThunks/tag";
+import { useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
+import { AppDispatch } from '../../redux/store'
+import { getFiles } from '../../redux/aynscThunks/file'
+import { getTags } from '../../redux/aynscThunks/tag'
 
-import FileUploadModal from "./FileUploadModal";
-import FileHeader from "./FileHeader";
-import FileTable from "./FileTable";
-import FileStatusPoller from "./FileStatusPoller";
-import ProcessingFilesPopover from "./ProcessingFilesPopover";
+import FileUploadModal from './FileUploadModal'
+import FileHeader from './FileHeader'
+import FileTable from './FileTable'
+import FileStatusPoller from './FileStatusPoller'
+import ProcessingFilesPopover from './ProcessingFilesPopover'
 
 const FileManagerLayout = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const dispatch = useDispatch<AppDispatch>()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTags, setSelectedTags] = useState<number[]>([])
 
   useEffect(() => {
-    dispatch(getFiles());
-    dispatch(getTags());
-  }, [dispatch]);
+    dispatch(getFiles())
+    dispatch(getTags())
+  }, [dispatch])
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
+    setSearchQuery(query)
+  }
 
   const handleTagsChange = (tags: number[]) => {
-    setSelectedTags(tags);
-  };
+    setSelectedTags(tags)
+  }
 
   return (
     <div className='flex flex-col h-full'>
@@ -37,10 +37,7 @@ const FileManagerLayout = () => {
               onSearch={handleSearch}
               onTagsChange={handleTagsChange}
             />
-            <FileTable
-              searchQuery={searchQuery}
-              selectedTags={selectedTags}
-            />
+            <FileTable searchQuery={searchQuery} selectedTags={selectedTags} />
           </div>
         </div>
 
@@ -49,7 +46,7 @@ const FileManagerLayout = () => {
         <ProcessingFilesPopover />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default FileManagerLayout;
+export default FileManagerLayout

@@ -17,53 +17,53 @@ const ConversationPill: React.FC = () => {
   const navigate = useNavigate();
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(updateConversationInput(event.target.value));
-  };
+    dispatch(updateConversationInput(event.target.value))
+  }
 
   const handleSendMessage = () => {
-    if (conversationInput.trim() === "") return;
+    if (conversationInput.trim() === '') return
 
     const newMessage: Partial<Message> = {
       message: conversationInput,
-    };
+    }
 
     if (!activeConversation) {
       dispatch(createConversation())
         .unwrap()
         .then((newConversation) => {
-          dispatch(updateConversation(newConversation));
-          navigate(`/conversation/${newConversation.conversationId}`);
+          dispatch(updateConversation(newConversation))
+          navigate(`/conversation/${newConversation.conversationId}`)
         })
         .catch((error) => {
-          console.error("Error creating conversation:", error);
-        });
+          console.error('Error creating conversation:', error)
+        })
     } else {
-      dispatch(sendMessage(newMessage));
-      dispatch(updateConversationInput(""));
+      dispatch(sendMessage(newMessage))
+      dispatch(updateConversationInput(''))
     }
-  };
+  }
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      handleSendMessage();
+    if (event.key === 'Enter') {
+      handleSendMessage()
     }
-  };
+  }
 
   return (
-    <div className="flex flex-col justify-end px-5">
-      <div className="flex items-center w-full ">
-        <div className="relative flex items-center w-full rounded-md">
+    <div className='flex flex-col justify-end px-5'>
+      <div className='flex items-center w-full '>
+        <div className='relative flex items-center w-full rounded-md'>
           <ConversationFileSelect />
           <input
-            type="text"
+            type='text'
             value={conversationInput}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            placeholder="Type message"
-            className="w-full h-14 pl-12 pr-10 py-4 bg-gray-200 rounded-2xl focus:outline-none font-normal text-sm"
+            placeholder='Type message'
+            className='w-full h-14 pl-12 pr-10 py-4 bg-gray-200 rounded-2xl focus:outline-none font-normal text-sm'
           />
           <PaperAirplaneIcon
-            className="absolute right-3 w-5 h-5 cursor-pointer"
+            className='absolute right-3 w-5 h-5 cursor-pointer'
             onClick={handleSendMessage}
           />
         </div>
@@ -71,11 +71,11 @@ const ConversationPill: React.FC = () => {
         <ModelPicker />
         <ModelConfigurationPanel />
       </div>
-      <p className="text-sm text-center mt-2">
+      <p className='text-sm text-center mt-2'>
         DARE Chat can make mistakes. Check important information.
       </p>
     </div>
-  );
-};
+  )
+}
 
-export default ConversationPill;
+export default ConversationPill

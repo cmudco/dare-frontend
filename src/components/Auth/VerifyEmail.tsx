@@ -30,14 +30,18 @@ const VerifyEmailScreen = () => {
 
   return (
     <AuthCard
-      title="Email Verification"
-      subtitle={successMessage ? "Your email has been verified successfully." : "Verifying your email..."}
+      title='Email Verification'
+      subtitle={
+        successMessage
+          ? 'Your email has been verified successfully.'
+          : 'Verifying your email...'
+      }
       inputs={[]}
       formikConfig={{
         initialValues: {},
-        onSubmit: () => { },
+        onSubmit: () => {},
       }}
-      buttonText=""
+      buttonText=''
       showBackButton={false}
       showForgotPassword={false}
       showprivacyPolicy={false}

@@ -1,30 +1,40 @@
 // WorkflowFields.tsx
-import React from "react";
-import { DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
+import React from 'react'
+import { DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Textarea } from '../ui/textarea'
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "../ui/select";
-import { WORKFLOW_MODES } from "../../utils/constants/workflows";
-import { ListOrdered, Layers, HelpCircle } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Button } from "../ui/button";
-import { FormValues, FormTouched } from "@/redux/types/workflow";
-import { FormikErrors } from "formik";
+} from '../ui/select'
+import { WORKFLOW_MODES } from '../../utils/constants/workflows'
+import { ListOrdered, Layers, HelpCircle } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip'
+import { Button } from '../ui/button'
+import { FormValues, FormTouched } from '@/redux/types/workflow'
+import { FormikErrors } from 'formik'
 
 interface WorkflowFieldsProps {
-  values: FormValues;
-  errors: FormikErrors<FormValues>;
-  touched: FormTouched;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  setFieldValue: <K extends keyof FormValues>(field: K, value: FormValues[K]) => void;
-  isEditMode: boolean;
+  values: FormValues
+  errors: FormikErrors<FormValues>
+  touched: FormTouched
+  handleChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void
+  setFieldValue: <K extends keyof FormValues>(
+    field: K,
+    value: FormValues[K]
+  ) => void
+  isEditMode: boolean
 }
 
 const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
@@ -37,72 +47,79 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
 }) => (
   <>
     <DialogHeader>
-      <DialogTitle className="text-lg text-left font-semibold text-gray-900">
-        {isEditMode ? "Edit Workflow" : "Create New Workflow"}
+      <DialogTitle className='text-lg text-left font-semibold text-gray-900'>
+        {isEditMode ? 'Edit Workflow' : 'Create New Workflow'}
       </DialogTitle>
-      <DialogDescription className="text-sm text-gray-500">
+      <DialogDescription className='text-sm text-gray-500'>
         {isEditMode
-          ? "Update your workflow details and steps below."
-          : "Create steps first, then save your workflow."}
+          ? 'Update your workflow details and steps below.'
+          : 'Create steps first, then save your workflow.'}
       </DialogDescription>
     </DialogHeader>
 
-    <div className="space-y-2">
-      <Label htmlFor="title">Title</Label>
+    <div className='space-y-2'>
+      <Label htmlFor='title'>Title</Label>
       <Input
-        id="title"
-        name="title"
+        id='title'
+        name='title'
         value={values.title}
         onChange={handleChange}
-        placeholder="Enter workflow title"
-        className={errors.title && touched.title ? "border-red-500" : ""}
+        placeholder='Enter workflow title'
+        className={errors.title && touched.title ? 'border-red-500' : ''}
       />
       {errors.title && touched.title && (
-        <p className="text-red-500 text-xs mt-1">{errors.title}</p>
+        <p className='text-red-500 text-xs mt-1'>{errors.title}</p>
       )}
     </div>
 
-    <div className="space-y-2">
-      <Label htmlFor="description">Description</Label>
+    <div className='space-y-2'>
+      <Label htmlFor='description'>Description</Label>
       <Textarea
-        id="description"
-        name="description"
+        id='description'
+        name='description'
         value={values.description}
         onChange={handleChange}
-        placeholder="Enter your description here."
-        className={errors.description && touched.description ? "border-red-500" : ""}
+        placeholder='Enter your description here.'
+        className={
+          errors.description && touched.description ? 'border-red-500' : ''
+        }
         maxLength={500}
         rows={3}
       />
-      <div className="flex justify-between">
+      <div className='flex justify-between'>
         {errors.description && touched.description ? (
-          <p className="text-red-500 text-xs">{errors.description}</p>
+          <p className='text-red-500 text-xs'>{errors.description}</p>
         ) : (
           <span />
         )}
-        <span className="text-xs text-gray-500">{values.description.length}/500</span>
+        <span className='text-xs text-gray-500'>
+          {values.description.length}/500
+        </span>
       </div>
     </div>
 
-    <div className="space-y-2">
-      <Label htmlFor="mode">Mode</Label>
+    <div className='space-y-2'>
+      <Label htmlFor='mode'>Mode</Label>
       <TooltipProvider>
         <Select
-          value={values.mode ? values.mode.toString() : ""}
-          onValueChange={(value) => setFieldValue("mode", parseInt(value))}
+          value={values.mode ? values.mode.toString() : ''}
+          onValueChange={(value) => setFieldValue('mode', parseInt(value))}
         >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select Mode" />
+          <SelectTrigger className='w-full'>
+            <SelectValue placeholder='Select Mode' />
           </SelectTrigger>
           <SelectContent>
             {WORKFLOW_MODES.map((mode) => (
-              <div key={mode.id} className="relative flex">
-                <SelectItem value={mode.id.toString()} className="flex-grow pr-8">
-                  <div className="flex items-center">
+              <div key={mode.id} className='relative flex'>
+                <SelectItem
+                  value={mode.id.toString()}
+                  className='flex-grow pr-8'
+                >
+                  <div className='flex items-center'>
                     {mode.id === 1 ? (
-                      <ListOrdered className="h-4 w-4 mr-2" />
+                      <ListOrdered className='h-4 w-4 mr-2' />
                     ) : (
-                      <Layers className="h-4 w-4 mr-2" />
+                      <Layers className='h-4 w-4 mr-2' />
                     )}
                     <span>{mode.name}</span>
                   </div>
@@ -110,20 +127,20 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 h-5 w-5 p-0 cursor-help"
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      className='absolute right-2 h-5 w-5 p-0 cursor-help'
                       onClick={(e) => e.preventDefault()}
                     >
-                      <HelpCircle className="h-4 w-4 text-gray-400" />
+                      <HelpCircle className='h-4 w-4 text-gray-400' />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="z-50">
-                    <p className="w-[280px] text-xs">
+                  <TooltipContent side='right' className='z-50'>
+                    <p className='w-[280px] text-xs'>
                       {mode.id === 1
-                        ? "Tasks execute one after another, ensuring each step completes before the next begins."
-                        : "Tasks execute simultaneously, allowing multiple steps to run concurrently for faster processing."}
+                        ? 'Tasks execute one after another, ensuring each step completes before the next begins.'
+                        : 'Tasks execute simultaneously, allowing multiple steps to run concurrently for faster processing.'}
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -133,10 +150,10 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
         </Select>
       </TooltipProvider>
       {errors.mode && touched.mode && (
-        <p className="text-red-500 text-xs mt-1">{errors.mode}</p>
+        <p className='text-red-500 text-xs mt-1'>{errors.mode}</p>
       )}
     </div>
   </>
-);
+)
 
-export default WorkflowFields;
+export default WorkflowFields
