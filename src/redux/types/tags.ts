@@ -1,6 +1,7 @@
 export interface Tag {
     id: number;
     label: string;
+    fileCount?: number;
 }
 
 export interface TagState {
