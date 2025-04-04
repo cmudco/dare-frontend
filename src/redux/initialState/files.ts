@@ -8,4 +8,5 @@ export const initialState: FileState = {
   isModalOpen: false,
   filename: "",
   jobStatuses: {},
+  pollingLoading: false,
 };

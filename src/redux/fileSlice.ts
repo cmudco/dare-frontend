@@ -82,10 +82,10 @@ const fileSlice = createSlice({
                 state.error = action.payload as string;
             })
             .addCase(checkJobStatuses.pending, (state) => {
-                state.loading = true;
+                state.pollingLoading = true;
             })
             .addCase(checkJobStatuses.fulfilled, (state, action) => {
-                state.loading = false;
+                state.pollingLoading = false;
                 action.payload.forEach(item => {
                     state.jobStatuses[item.fileId] = {
                         status: item.status,
@@ -100,7 +100,7 @@ const fileSlice = createSlice({
                 });
             })
             .addCase(checkJobStatuses.rejected, (state, action) => {
-                state.loading = false;
+                state.pollingLoading = false;
                 state.error = action.payload as string;
             });
     },
