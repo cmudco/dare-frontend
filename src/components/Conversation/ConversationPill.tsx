@@ -1,5 +1,4 @@
-import { PaperAirplaneIcon, } from "@heroicons/react/24/outline";
-
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { useDispatch, useSelector } from "react-redux";
 import { updateConversationInput, updateConversation } from "../../redux/conversationSlice";
 import { AppDispatch, RootState } from "../../redux/store";
@@ -9,14 +8,12 @@ import { Message } from "../../redux/types/conversation";
 import { useNavigate } from "react-router-dom";
 import { sendMessage, createConversation } from "../../redux/aynscThunks/conversation";
 import ConversationFileSelect from "./ConversationFileSelect";
-import { useEffect } from "react";
 import ModelConfigurationPanel from "./ModelConfigurationPanel";
 
 const ConversationPill: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const conversationInput = useSelector((state: RootState) => state.conversation.conversationInput);
   const activeConversation = useSelector((state: RootState) => state.conversation.activeConversation);
-  const isConnected = useSelector((state: RootState) => state.websocket.isConnected);
   const navigate = useNavigate();
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,19 +42,6 @@ const ConversationPill: React.FC = () => {
       dispatch(updateConversationInput(""));
     }
   };
-
-  useEffect(() => {
-    if (conversationInput.trim() === "") return;
-
-    if (isConnected) {
-      const newMessage: Partial<Message> = {
-        message: conversationInput,
-      };
-      dispatch(sendMessage(newMessage));
-      dispatch(updateConversationInput(""));
-    }
-  }, [isConnected, dispatch]);
-
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {

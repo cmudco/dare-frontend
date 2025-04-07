@@ -1,4 +1,8 @@
-import { ALLOWED_FILE_TYPES, TAG_COLORS } from "./constants/file";
+import {
+    ALLOWED_FILE_EXTENSIONS,
+    ALLOWED_FILE_TYPES,
+    TAG_COLORS,
+} from "./constants/file";
 
 export const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return "0 Bytes";
@@ -30,12 +34,17 @@ export const getFileExtension = (filename: string): string => {
     return filename.split(".").pop()?.toLowerCase() || "";
 };
 
-export const isAllowedFileType = (file: File): boolean => {
-    if (ALLOWED_FILE_TYPES.includes(file.type)) {
+export function isAllowedFileType(file: File): boolean {
+    const fileName = file.name.toLowerCase();
+    const hasValidExtension = ALLOWED_FILE_EXTENSIONS.some((ext) =>
+        fileName.endsWith(ext)
+    );
+
+    const hasValidMimeType = ALLOWED_FILE_TYPES.includes(file.type);
+
+    if (fileName.endsWith(".md") && !hasValidMimeType) {
         return true;
     }
 
-    const extension = getFileExtension(file.name);
-    const allowedExtensions = ["docx", "doc", "pdf", "txt", "md", "json"];
-    return allowedExtensions.includes(extension);
-};
+    return hasValidExtension || hasValidMimeType;
+}

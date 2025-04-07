@@ -31,7 +31,7 @@ export const getMaxTokensDescription = (maxTokens: number): string => {
 };
 
 export const getMaxTokensPercentage = (maxTokens: number): number => {
-    const min = 256;
+    const min = 1;
     const max = 8192;
     return ((maxTokens - min) / (max - min)) * 100;
 };
