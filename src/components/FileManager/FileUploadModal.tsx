@@ -34,6 +34,7 @@ const FileUploadModal: React.FC = () => {
       dispatch(getFiles());
       dispatch(updateFilename(""));
       setSelectedFile(null);
+      dispatch(setError(""));
     } else {
       console.error("No file selected");
     }
@@ -84,7 +85,15 @@ const FileUploadModal: React.FC = () => {
   };
 
   return (
-    <Dialog open={isModalOpen} onOpenChange={() => dispatch(closeModal())}>
+    <Dialog
+      open={isModalOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          setSelectedFile(null);
+          dispatch(closeModal());
+        }
+      }}
+    >
       <DialogContent className="p-6 mx-auto w-[90vw] max-w-md bg-white rounded-lg shadow-lg">
         {/* Header */}
         <DialogHeader>
@@ -166,10 +175,15 @@ const FileUploadModal: React.FC = () => {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
           >
-            {selectedFile ? (
+            {selectedFile && !error ? (
               <div className="flex items-center justify-center space-x-2">
                 <CheckCircleIcon className="w-6 h-6 text-green-600" />
-                <span className="text-sm font-medium text-green-700">{selectedFile.name} uploaded</span>
+                <span className="text-sm font-medium text-green-700">{selectedFile.name} ready to upload</span>
+              </div>
+            ) : error && selectedFile ? (
+              <div className="flex items-center justify-center space-x-2">
+                <XMarkIcon className="w-6 h-6 text-red-600" />
+                <span className="text-sm font-medium text-red-700">{selectedFile.name} not uploaded</span>
               </div>
             ) : (
               <div className="font-medium text-gray-600">
@@ -187,9 +201,12 @@ const FileUploadModal: React.FC = () => {
         )}
 
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => dispatch(closeModal())}>
+            <Button variant="outline" onClick={() => {
+            setSelectedFile(null);
+            dispatch(closeModal());
+            }}>
             Cancel
-          </Button>
+            </Button>
           <Button
             onClick={handleUploadClick}
             disabled={!selectedFile || loading}

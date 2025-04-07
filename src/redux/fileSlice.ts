@@ -28,6 +28,8 @@ const fileSlice = createSlice({
         },
         closeModal: (state) => {
             state.isModalOpen = false;
+            state.error = "";
+            state.filename = "";
         },
         resetSelectedTags: (state) => {
             state.selectedTags = [];
