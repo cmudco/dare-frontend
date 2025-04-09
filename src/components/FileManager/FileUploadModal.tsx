@@ -50,13 +50,19 @@ const FileUploadModal: React.FC = () => {
 
   const handleUploadClick = async () => {
     if (selectedFile) {
-      await dispatch(uploadNewFile({ files: [selectedFile], name: filename, tags: selectedTags })).unwrap();
-      dispatch(resetSelectedTags());
-      dispatch(closeModal());
-      dispatch(getFiles());
-      dispatch(updateFilename(""));
-      setSelectedFile(null);
-      dispatch(setError(""));
+      await dispatch(
+        uploadNewFile({
+          files: [selectedFile],
+          name: filename,
+          tags: selectedTags,
+        })
+      ).unwrap()
+      dispatch(resetSelectedTags())
+      dispatch(closeModal())
+      dispatch(getFiles())
+      dispatch(updateFilename(''))
+      setSelectedFile(null)
+      dispatch(setError(''))
     } else {
       console.error('No file selected')
     }
@@ -117,12 +123,12 @@ const FileUploadModal: React.FC = () => {
       open={isModalOpen}
       onOpenChange={(open) => {
         if (!open) {
-          setSelectedFile(null);
-          dispatch(closeModal());
+          setSelectedFile(null)
+          dispatch(closeModal())
         }
       }}
     >
-      <DialogContent className="p-6 mx-auto w-[90vw] max-w-md bg-white rounded-lg shadow-lg">
+      <DialogContent className='mx-auto w-[90vw] max-w-md rounded-lg bg-white p-6 shadow-lg'>
         {/* Header */}
         <DialogHeader>
           <DialogTitle className='text-lg font-semibold text-gray-900'>
@@ -217,14 +223,18 @@ const FileUploadModal: React.FC = () => {
             onDragOver={handleDragOver}
           >
             {selectedFile && !error ? (
-              <div className="flex items-center justify-center space-x-2">
-                <CheckCircleIcon className="w-6 h-6 text-green-600" />
-                <span className="text-sm font-medium text-green-700">{selectedFile.name} ready to upload</span>
+              <div className='flex items-center justify-center space-x-2'>
+                <CheckCircleIcon className='h-6 w-6 text-green-600' />
+                <span className='text-sm font-medium text-green-700'>
+                  {selectedFile.name} ready to upload
+                </span>
               </div>
             ) : error && selectedFile ? (
-              <div className="flex items-center justify-center space-x-2">
-                <XMarkIcon className="w-6 h-6 text-red-600" />
-                <span className="text-sm font-medium text-red-700">{selectedFile.name} not uploaded</span>
+              <div className='flex items-center justify-center space-x-2'>
+                <XMarkIcon className='h-6 w-6 text-red-600' />
+                <span className='text-sm font-medium text-red-700'>
+                  {selectedFile.name} not uploaded
+                </span>
               </div>
             ) : (
               <div className='font-medium text-gray-600'>
@@ -247,13 +257,16 @@ const FileUploadModal: React.FC = () => {
           <div className='text-center text-sm text-red-500'>{error}</div>
         )}
 
-        <DialogFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => {
-            setSelectedFile(null);
-            dispatch(closeModal());
-            }}>
+        <DialogFooter className='flex justify-end gap-2'>
+          <Button
+            variant='outline'
+            onClick={() => {
+              setSelectedFile(null)
+              dispatch(closeModal())
+            }}
+          >
             Cancel
-            </Button>
+          </Button>
           <Button
             onClick={handleUploadClick}
             disabled={!selectedFile || loading}

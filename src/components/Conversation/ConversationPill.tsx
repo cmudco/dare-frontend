@@ -1,20 +1,30 @@
-import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
-import { useDispatch, useSelector } from "react-redux";
-import { updateConversationInput, updateConversation } from "../../redux/conversationSlice";
-import { AppDispatch, RootState } from "../../redux/store";
-import ModelPicker from "./ModelPicker";
-import PromptSet from "./PromptSet";
-import { Message } from "../../redux/types/conversation";
-import { useNavigate } from "react-router-dom";
-import { sendMessage, createConversation } from "../../redux/aynscThunks/conversation";
-import ConversationFileSelect from "./ConversationFileSelect";
-import ModelConfigurationPanel from "./ModelConfigurationPanel";
+import { PaperAirplaneIcon } from '@heroicons/react/24/outline'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  updateConversationInput,
+  updateConversation,
+} from '../../redux/conversationSlice'
+import { AppDispatch, RootState } from '../../redux/store'
+import ModelPicker from './ModelPicker'
+import PromptSet from './PromptSet'
+import { Message } from '../../redux/types/conversation'
+import { useNavigate } from 'react-router-dom'
+import {
+  sendMessage,
+  createConversation,
+} from '../../redux/aynscThunks/conversation'
+import ConversationFileSelect from './ConversationFileSelect'
+import ModelConfigurationPanel from './ModelConfigurationPanel'
 
 const ConversationPill: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const conversationInput = useSelector((state: RootState) => state.conversation.conversationInput);
-  const activeConversation = useSelector((state: RootState) => state.conversation.activeConversation);
-  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>()
+  const conversationInput = useSelector(
+    (state: RootState) => state.conversation.conversationInput
+  )
+  const activeConversation = useSelector(
+    (state: RootState) => state.conversation.activeConversation
+  )
+  const navigate = useNavigate()
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(updateConversationInput(event.target.value))

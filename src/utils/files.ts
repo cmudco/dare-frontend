@@ -1,8 +1,8 @@
 import {
-    ALLOWED_FILE_EXTENSIONS,
-    ALLOWED_FILE_TYPES,
-    TAG_COLORS,
-} from "./constants/file";
+  ALLOWED_FILE_EXTENSIONS,
+  ALLOWED_FILE_TYPES,
+  TAG_COLORS,
+} from './constants/file'
 
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes'
@@ -34,16 +34,16 @@ export const getFileExtension = (filename: string): string => {
 }
 
 export function isAllowedFileType(file: File): boolean {
-    const fileName = file.name.toLowerCase();
-    const hasValidExtension = ALLOWED_FILE_EXTENSIONS.some((ext) =>
-        fileName.endsWith(ext)
-    );
+  const fileName = file.name.toLowerCase()
+  const hasValidExtension = ALLOWED_FILE_EXTENSIONS.some((ext) =>
+    fileName.endsWith(ext)
+  )
 
-    const hasValidMimeType = ALLOWED_FILE_TYPES.includes(file.type);
+  const hasValidMimeType = ALLOWED_FILE_TYPES.includes(file.type)
 
-    if (fileName.endsWith(".md") && !hasValidMimeType) {
-        return true;
-    }
+  if (fileName.endsWith('.md') && !hasValidMimeType) {
+    return true
+  }
 
-    return hasValidExtension || hasValidMimeType;
+  return hasValidExtension || hasValidMimeType
 }

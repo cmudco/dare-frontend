@@ -121,14 +121,14 @@ const ModelConfigurationPanel: React.FC = () => {
               className='my-4 cursor-pointer'
             />
 
-                        <Slider
-                            value={[maxTokens]}
-                            min={1}
-                            max={8192}
-                            step={256}
-                            onValueChange={handleMaxTokensChange}
-                            className="my-4 cursor-pointer"
-                        />
+            <Slider
+              value={[maxTokens]}
+              min={1}
+              max={8192}
+              step={256}
+              onValueChange={handleMaxTokensChange}
+              className='my-4 cursor-pointer'
+            />
 
             <div className={`mt-2 text-sm ${getMaxTokensColor(maxTokens)}`}>
               {getMaxTokensDescription(maxTokens)}

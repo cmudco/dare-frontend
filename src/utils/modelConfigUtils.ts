@@ -31,10 +31,10 @@ export const getMaxTokensDescription = (maxTokens: number): string => {
 }
 
 export const getMaxTokensPercentage = (maxTokens: number): number => {
-    const min = 1;
-    const max = 8192;
-    return ((maxTokens - min) / (max - min)) * 100;
-};
+  const min = 1
+  const max = 8192
+  return ((maxTokens - min) / (max - min)) * 100
+}
 
 export const DEFAULT_TEMPERATURE = MODEL_CONFIG.temperature
 export const DEFAULT_MAX_TOKENS = MODEL_CONFIG.maxTokens
