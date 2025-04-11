@@ -138,3 +138,15 @@ export const uploadProfilePicture = async (
     },
   })
 }
+
+export const changePasswordUser = async (data: {
+  old_password: string
+  new_password1: string
+  new_password2: string
+}): Promise<{ detail: string }> => {
+  return await baseRequest<{ detail: string }>({
+    url: 'users/api/dj-rest-auth/password/change/',
+    method: METHOD.POST,
+    data,
+  })
+}

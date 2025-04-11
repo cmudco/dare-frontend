@@ -60,11 +60,12 @@ const Header: React.FC = () => {
             align='end'
             className='w-[200px] border border-gray-100 p-1'
           >
-            {/* Optional Profile & Settings */}
-            {/* <DropdownMenuItem className="cursor-pointer hover:bg-gray-100">Your Profile</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer hover:bg-gray-100">Settings</DropdownMenuItem>
-            <Separator className="my-2" /> */}
-
+            <DropdownMenuItem
+              onClick={() => navigate('/profile')}
+              className='cursor-pointer py-3 hover:bg-gray-100'
+            >
+              Profile
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleLogout}
               className='cursor-pointer py-3 text-red-500 hover:bg-gray-100'
