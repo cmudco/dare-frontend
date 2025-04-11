@@ -1,4 +1,4 @@
 export enum SenderType {
-    PLAYER = 1,
-    AI_ASSISTANT = 2,
+  PLAYER = 1,
+  AI_ASSISTANT = 2,
 }

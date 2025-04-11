@@ -1,22 +1,22 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Dashboard from "../pages/Dashboard";
-import Files from "../pages/Files";
-import VerifyCodeScreen from "../pages/VerifyCode";
-import LoginScreen from "../pages/Login";
-import ForgotScreen from "../pages/ForgotPassword";
-import RegistrationScreen from "../pages/Registration";
-import CoversationScreen from "../pages/Conversation/index.tsx";
-import UserView from "../components/Layout/UserView";
-import EmailConfirmationScreen from "../pages/EmailConfirmation";
-import RouteListener from "./RouteListener";
-import Prompt from "../pages/Prompts";
-import ProtectedRoute from "./ProtectedRoute";
-import Help from "../pages/Help";
-import Settings from "../pages/Settings/index.tsx";
-import ResetPasswordScreen from "../pages/ResetPassword";
-import ForgotPasswordSuccess from "../components/Success.tsx";
-import VerifyEmailScreen from "@/components/Auth/VerifyEmail.tsx";
-import Workflows from "@/pages/Workflows/index.tsx";
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Dashboard from '../pages/Dashboard'
+import Files from '../pages/Files'
+import VerifyCodeScreen from '../pages/VerifyCode'
+import LoginScreen from '../pages/Login'
+import ForgotScreen from '../pages/ForgotPassword'
+import RegistrationScreen from '../pages/Registration'
+import CoversationScreen from '../pages/Conversation/index.tsx'
+import UserView from '../components/Layout/UserView'
+import EmailConfirmationScreen from '../pages/EmailConfirmation'
+import RouteListener from './RouteListener'
+import Prompt from '../pages/Prompts'
+import ProtectedRoute from './ProtectedRoute'
+import Help from '../pages/Help'
+import Settings from '../pages/Settings/index.tsx'
+import ResetPasswordScreen from '../pages/ResetPassword'
+import ForgotPasswordSuccess from '../components/Success.tsx'
+import VerifyEmailScreen from '@/components/Auth/VerifyEmail.tsx'
+import Workflows from '@/pages/Workflows/index.tsx'
 
 const AppRoutes = () => {
   return (
@@ -27,13 +27,19 @@ const AppRoutes = () => {
           <Route path='/register' element={<RegistrationScreen />} />
           <Route path='/users/confirm-email' element={<VerifyEmailScreen />} />
           <Route path='/forgot-password' element={<ForgotScreen />} />
-          <Route path='/forgot-password-success' element={<ForgotPasswordSuccess />} />
+          <Route
+            path='/forgot-password-success'
+            element={<ForgotPasswordSuccess />}
+          />
           <Route path='/verify-code' element={<VerifyCodeScreen />} />
-          <Route path='/password-reset/confirm/:uid/:token' element={<ResetPasswordScreen />} />
+          <Route
+            path='/password-reset/confirm/:uid/:token'
+            element={<ResetPasswordScreen />}
+          />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
 
           <Route
-            path="/"
+            path='/'
             element={
               <ProtectedRoute>
                 <UserView />
@@ -54,7 +60,7 @@ const AppRoutes = () => {
         </Routes>
       </RouteListener>
     </BrowserRouter>
-  );
-};
+  )
+}
 
-export default AppRoutes;
+export default AppRoutes

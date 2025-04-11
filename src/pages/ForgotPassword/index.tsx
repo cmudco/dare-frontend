@@ -1,37 +1,40 @@
-import React from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import AuthCard from "../../components/Auth/AuthCard";
-import { FormikValues } from "formik";
-import { AppDispatch } from "../../redux/store";
-import { forgotPassword } from "../../redux/aynscThunks/user";
-import { forgotPasswordInitialValues, forgotPasswordValidationSchema } from "./validation";
+import React from 'react'
+import { useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import AuthCard from '../../components/Auth/AuthCard'
+import { FormikValues } from 'formik'
+import { AppDispatch } from '../../redux/store'
+import { forgotPassword } from '../../redux/aynscThunks/user'
+import {
+  forgotPasswordInitialValues,
+  forgotPasswordValidationSchema,
+} from './validation'
 
 const ForgotPasswordScreen: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>()
+  const navigate = useNavigate()
 
   const handleSubmit = async (values: FormikValues) => {
     const formData = {
       email: values.email,
-    };
+    }
 
-    const resultAction = await dispatch(forgotPassword(formData));
+    const resultAction = await dispatch(forgotPassword(formData))
 
     if (forgotPassword.fulfilled.match(resultAction)) {
-      navigate("/forgot-password-success");
+      navigate('/forgot-password-success')
     } else {
-      console.error("Password reset failed:", resultAction.payload);
+      console.error('Password reset failed:', resultAction.payload)
     }
-  };
+  }
 
   const formikConfig = {
     initialValues: forgotPasswordInitialValues,
     validationSchema: forgotPasswordValidationSchema,
     onSubmit: handleSubmit,
-  };
+  }
 
-  const input = [{ name: "email", label: "Email", type: "email" }];
+  const input = [{ name: 'email', label: 'Email', type: 'email' }]
 
   return (
     <AuthCard
@@ -42,7 +45,7 @@ const ForgotPasswordScreen: React.FC = () => {
       buttonText='Recover Password'
       showBackButton
     />
-  );
-};
+  )
+}
 
-export default ForgotPasswordScreen;
+export default ForgotPasswordScreen

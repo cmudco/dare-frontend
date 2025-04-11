@@ -1,86 +1,122 @@
-import { useState, useMemo, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "../../redux/store";
-import { createOrUpdatePrompt, deletePrompt } from "../../redux/aynscThunks/prompt";
-import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
-import { formatDate, PROMPTS_TABLE_HEAD } from "../../utils/constants/prompts";
-import { openEditModal } from "../../redux/promptSlice";
-import { Button } from "../ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "../ui/Table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from "../ui/dropdown-menu";
-import { EllipsisVerticalIcon } from "lucide-react";
-import { Prompt } from "@/redux/types/prompt";
-import { DeleteConfirmation } from "../DeleteConfirmation";
-import { stripHtml } from '../../utils/textUtils';
-import { TrashIcon } from "@heroicons/react/24/outline";
-import { DocumentDuplicateIcon, PencilIcon } from "@heroicons/react/20/solid";
+import { useState, useMemo, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState, AppDispatch } from '../../redux/store'
+import {
+  createOrUpdatePrompt,
+  deletePrompt,
+} from '../../redux/aynscThunks/prompt'
+import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
+import { formatDate, PROMPTS_TABLE_HEAD } from '../../utils/constants/prompts'
+import { openEditModal } from '../../redux/promptSlice'
+import { Button } from '../ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../ui/Table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu'
+import { EllipsisVerticalIcon } from 'lucide-react'
+import { Prompt } from '@/redux/types/prompt'
+import { DeleteConfirmation } from '../DeleteConfirmation'
+import { stripHtml } from '../../utils/textUtils'
+import { TrashIcon } from '@heroicons/react/24/outline'
+import { DocumentDuplicateIcon, PencilIcon } from '@heroicons/react/20/solid'
 
 interface PromptTableProps {
-  searchQuery: string;
+  searchQuery: string
 }
 
 const PromptTable = ({ searchQuery }: PromptTableProps) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { prompts, loading } = useSelector((state: RootState) => state.prompt);
+  const dispatch = useDispatch<AppDispatch>()
+  const { prompts, loading } = useSelector((state: RootState) => state.prompt)
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [deletePromptId, setDeletePromptId] = useState<string | null>(null);
-  const [deletePromptTitle, setDeletePromptTitle] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [deletePromptId, setDeletePromptId] = useState<string | null>(null)
+  const [deletePromptTitle, setDeletePromptTitle] = useState<string>('')
 
   const filteredPrompts = useMemo(() => {
-    return prompts.filter(prompt => {
-      const promptTitle = prompt.title?.toLowerCase() || "";
-      const promptContent = prompt.content?.toLowerCase() || "";
-      const matchesSearch = searchQuery === "" ||
+    return prompts.filter((prompt) => {
+      const promptTitle = prompt.title?.toLowerCase() || ''
+      const promptContent = prompt.content?.toLowerCase() || ''
+      const matchesSearch =
+        searchQuery === '' ||
         promptTitle.includes(searchQuery.toLowerCase()) ||
-        promptContent.includes(searchQuery.toLowerCase());
-      return matchesSearch;
-    });
-  }, [prompts, searchQuery]);
+        promptContent.includes(searchQuery.toLowerCase())
+      return matchesSearch
+    })
+  }, [prompts, searchQuery])
 
-  const totalPages = Math.ceil(filteredPrompts.length / itemsPerPage);
-  const paginatedPrompts = filteredPrompts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.ceil(filteredPrompts.length / itemsPerPage)
+  const paginatedPrompts = filteredPrompts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+    setCurrentPage(1)
+  }, [searchQuery])
 
   const handleDeleteConfirm = async () => {
     if (deletePromptId) {
       try {
-        await dispatch(deletePrompt(deletePromptId)).unwrap();
+        await dispatch(deletePrompt(deletePromptId)).unwrap()
       } catch (error) {
-        console.error("Failed to delete prompt:", error);
+        console.error('Failed to delete prompt:', error)
       }
     }
-    setDeletePromptId(null);
-  };
+    setDeletePromptId(null)
+  }
 
   const handleDelete = async (id: string, title: string) => {
-    setDeletePromptId(id);
-    setDeletePromptTitle(title || "Untitled");
-  };
+    setDeletePromptId(id)
+    setDeletePromptTitle(title || 'Untitled')
+  }
 
   const handleEdit = (id: string) => {
-    dispatch(openEditModal(id));
-  };
+    dispatch(openEditModal(id))
+  }
 
-  const handleClone = (values: { title: string; content: string; id: string; version: number }) => {
+  const handleClone = (values: {
+    title: string
+    content: string
+    id: string
+    version: number
+  }) => {
     // Find the original parent prompt to determine correct version numbering
-    const originalPrompt = prompts.find(p => p.id === values.id);
+    const originalPrompt = prompts.find((p) => p.id === values.id)
 
     // Find all existing versions of this prompt family
-    const promptFamily = prompts.filter(p =>
-      p.parent === values.id ||
-      p.id === values.id ||
-      (originalPrompt?.parent && (p.parent === originalPrompt.parent || p.id === originalPrompt.parent))
-    );
+    const promptFamily = prompts.filter(
+      (p) =>
+        p.parent === values.id ||
+        p.id === values.id ||
+        (originalPrompt?.parent &&
+          (p.parent === originalPrompt.parent ||
+            p.id === originalPrompt.parent))
+    )
 
     // Calculate the next version number
-    const highestExistingVersion = Math.max(...promptFamily.map(p => p.version || 1));
-    const nextVersion = highestExistingVersion + 1;
+    const highestExistingVersion = Math.max(
+      ...promptFamily.map((p) => p.version || 1)
+    )
+    const nextVersion = highestExistingVersion + 1
 
     dispatch(
       createOrUpdatePrompt({
@@ -95,25 +131,28 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
         },
       })
     ).then((result) => {
-      const payload = result.payload as Prompt;
-      dispatch(openEditModal(payload.id));
-    });
-  };
+      const payload = result.payload as Prompt
+      dispatch(openEditModal(payload.id))
+    })
+  }
 
   const renderPromptContent = (content: string) => {
-    return stripHtml(content);
-  };
+    return stripHtml(content)
+  }
 
   return (
-    <div className="overflow-auto">
-      <Table className="mt-4 w-full min-w-max text-left bg-white">
+    <div className='overflow-auto'>
+      <Table className='mt-4 w-full min-w-max bg-white text-left'>
         <TableHeader>
-          <TableRow className="bg-muted">
+          <TableRow className='bg-muted'>
             {PROMPTS_TABLE_HEAD.map((head) => (
-              <TableHead key={head} className="cursor-pointer p-4 font-semibold text-sm">
-                <div className="flex items-center justify-between gap-2 opacity-70">
+              <TableHead
+                key={head}
+                className='cursor-pointer p-4 text-sm font-semibold'
+              >
+                <div className='flex items-center justify-between gap-2 opacity-70'>
                   {head}
-                  <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
+                  <ChevronUpDownIcon strokeWidth={2} className='h-4 w-4' />
                 </div>
               </TableHead>
             ))}
@@ -122,63 +161,76 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
         <TableBody>
           {prompts.length === 0 && loading ? (
             <TableRow>
-              <TableCell colSpan={3} className="text-center p-4">Loading prompts...</TableCell>
+              <TableCell colSpan={3} className='p-4 text-center'>
+                Loading prompts...
+              </TableCell>
             </TableRow>
           ) : filteredPrompts.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} className="text-center p-4">No matching prompts found</TableCell>
+              <TableCell colSpan={3} className='p-4 text-center'>
+                No matching prompts found
+              </TableCell>
             </TableRow>
           ) : (
-            paginatedPrompts.map(({ id, title, content, createdAt, version }) => (
-              <TableRow key={id}>
-                <TableCell className="p-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium">{title || "Untitled"}</h3>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        v{version || 1}
-                      </span>
+            paginatedPrompts.map(
+              ({ id, title, content, createdAt, version }) => (
+                <TableRow key={id}>
+                  <TableCell className='p-4'>
+                    <div>
+                      <div className='flex items-center gap-2'>
+                        <h3 className='font-medium'>{title || 'Untitled'}</h3>
+                        <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+                          v{version || 1}
+                        </span>
+                      </div>
+                      <p className='max-w-[300px] truncate text-sm text-gray-500'>
+                        {renderPromptContent(content) || 'No content'}
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-500 truncate max-w-[300px]">
-                      {renderPromptContent(content) || "No content"}
-                    </p>
-                  </div>
-                </TableCell>
-                <TableCell className="p-4">{formatDate(createdAt)}</TableCell>
+                  </TableCell>
+                  <TableCell className='p-4'>{formatDate(createdAt)}</TableCell>
 
-                <TableCell className="p-4 text-center ">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="hover:bg-gray-200 rounded-md p-2" >
-                      <EllipsisVerticalIcon className="h-4 w-4 text-gray-500" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleEdit(id)} className="cursor-pointer">
-                        <PencilIcon className="w-4 h-4" />
-                        <span>Edit</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleClone({
-                          title,
-                          content,
-                          id,
-                          version: version || 1
-                        })}
-                        className="text-yellow-500 cursor-pointer"
-                      >
-                        <DocumentDuplicateIcon className="w-4 h-4" />
+                  <TableCell className='p-4 text-center'>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
+                        <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem
+                          onClick={() => handleEdit(id)}
+                          className='cursor-pointer'
+                        >
+                          <PencilIcon className='h-4 w-4' />
+                          <span>Edit</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleClone({
+                              title,
+                              content,
+                              id,
+                              version: version || 1,
+                            })
+                          }
+                          className='cursor-pointer text-yellow-500'
+                        >
+                          <DocumentDuplicateIcon className='h-4 w-4' />
 
-                        <span>Clone</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-red-500 cursor-pointer" onClick={() => handleDelete(id, title)}>
-                        <TrashIcon className="w-4 h-4" />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))
+                          <span>Clone</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className='cursor-pointer text-red-500'
+                          onClick={() => handleDelete(id, title)}
+                        >
+                          <TrashIcon className='h-4 w-4' />
+                          <span>Delete</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              )
+            )
           )}
         </TableBody>
 
@@ -186,32 +238,48 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
         {filteredPrompts.length > 0 && (
           <TableFooter>
             <TableRow>
-              <TableCell colSpan={PROMPTS_TABLE_HEAD.length} className="p-4 w-full">
-                <div className="flex justify-between items-center w-full">
+              <TableCell
+                colSpan={PROMPTS_TABLE_HEAD.length}
+                className='w-full p-4'
+              >
+                <div className='flex w-full items-center justify-between'>
                   {/* Rows per page dropdown */}
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm">Rows per page:</span>
-                    <Select value={String(itemsPerPage)} onValueChange={(val) => setItemsPerPage(Number(val))}>
-                      <SelectTrigger className="w-[80px]">
-                        <SelectValue placeholder="Rows" />
+                  <div className='flex items-center gap-4'>
+                    <span className='text-sm'>Rows per page:</span>
+                    <Select
+                      value={String(itemsPerPage)}
+                      onValueChange={(val) => setItemsPerPage(Number(val))}
+                    >
+                      <SelectTrigger className='w-[80px]'>
+                        <SelectValue placeholder='Rows' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="5">5</SelectItem>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value='5'>5</SelectItem>
+                        <SelectItem value='10'>10</SelectItem>
+                        <SelectItem value='20'>20</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Pagination Controls */}
-                  <div className="flex items-center gap-4">
-                    <Button variant="secondary" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+                  <div className='flex items-center gap-4'>
+                    <Button
+                      variant='secondary'
+                      size='sm'
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => p - 1)}
+                    >
                       Previous
                     </Button>
-                    <span className="text-sm">
+                    <span className='text-sm'>
                       Page {currentPage} of {totalPages || 1}
                     </span>
-                    <Button variant="secondary" size="sm" disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage((p) => p + 1)}>
+                    <Button
+                      variant='secondary'
+                      size='sm'
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                    >
                       Next
                     </Button>
                   </div>
@@ -226,13 +294,13 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
         isOpen={!!deletePromptId}
         onClose={() => setDeletePromptId(null)}
         onDelete={handleDeleteConfirm}
-        title="Delete Prompt"
-        description="Are you sure you want to delete this prompt? This action cannot be undone."
+        title='Delete Prompt'
+        description='Are you sure you want to delete this prompt? This action cannot be undone.'
         itemName={deletePromptTitle}
-        confirmText="Delete"
+        confirmText='Delete'
       />
     </div>
-  );
-};
+  )
+}
 
-export default PromptTable;
+export default PromptTable

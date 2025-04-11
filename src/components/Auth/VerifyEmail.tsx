@@ -30,33 +30,37 @@ const VerifyEmailScreen = () => {
 
   return (
     <AuthCard
-      title="Email Verification"
-      subtitle={successMessage ? "Your email has been verified successfully." : "Verifying your email..."}
+      title='Email Verification'
+      subtitle={
+        successMessage
+          ? 'Your email has been verified successfully.'
+          : 'Verifying your email...'
+      }
       inputs={[]}
       formikConfig={{
         initialValues: {},
-        onSubmit: () => { },
+        onSubmit: () => {},
       }}
-      buttonText=""
+      buttonText=''
       showBackButton={false}
       showForgotPassword={false}
       showprivacyPolicy={false}
     >
       {loading && (
         <div className='flex flex-col items-center justify-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900'></div>
+          <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900'></div>
           <p className='mt-4 text-gray-600'>Verifying your email...</p>
         </div>
       )}
 
       {error && (
-        <div className='text-red-500 text-sm flex justify-center gap-2'>
+        <div className='flex justify-center gap-2 text-sm text-red-500'>
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className='text-green-500 text-sm flex flex-col items-center gap-2'>
+        <div className='flex flex-col items-center gap-2 text-sm text-green-500'>
           <p>{successMessage}</p>
           <p className='text-gray-600'>Redirecting to login...</p>
         </div>

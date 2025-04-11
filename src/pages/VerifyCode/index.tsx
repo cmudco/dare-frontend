@@ -1,43 +1,43 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import AuthCard from "../../components/Auth/AuthCard";
-import { FormikValues } from "formik";
-import { AppDispatch, } from "../../redux/store";
-import { verifyCode } from "../../redux/aynscThunks/user";
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import AuthCard from '../../components/Auth/AuthCard'
+import { FormikValues } from 'formik'
+import { AppDispatch } from '../../redux/store'
+import { verifyCode } from '../../redux/aynscThunks/user'
 
-import { updateUser } from "../../redux/userSlice";
-import { verifyCodeInitialValues, verifyCodeValidationSchema } from "./validation";
-import { getUserDataFromAPI } from "@/api";
+import { updateUser } from '../../redux/userSlice'
+import {
+  verifyCodeInitialValues,
+  verifyCodeValidationSchema,
+} from './validation'
+import { getUserDataFromAPI } from '@/api'
 
 const VerifyCodeScreen: React.FC = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate()
+  const dispatch = useDispatch<AppDispatch>()
 
   const handleSubmit = async (values: FormikValues) => {
     const formData = {
       otp: values.otp,
-    };
+    }
 
-    const resultAction = await dispatch(verifyCode(formData.otp));
+    const resultAction = await dispatch(verifyCode(formData.otp))
 
     if (verifyCode.fulfilled.match(resultAction)) {
       const user = await getUserDataFromAPI()
       dispatch(updateUser(user))
-      navigate("/dashboard");
+      navigate('/dashboard')
     }
-  };
+  }
 
   const formikConfig = {
     initialValues: verifyCodeInitialValues,
     validationSchema: verifyCodeValidationSchema,
     onSubmit: handleSubmit,
-  };
+  }
 
-  const inputs = [
-    { name: "otp", label: "Code", type: "text" },
-  ]
-
+  const inputs = [{ name: 'otp', label: 'Code', type: 'text' }]
 
   return (
     <AuthCard
@@ -48,7 +48,7 @@ const VerifyCodeScreen: React.FC = () => {
       buttonText='Verify'
       showBackButton
     />
-  );
-};
+  )
+}
 
-export default VerifyCodeScreen;
+export default VerifyCodeScreen

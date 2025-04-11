@@ -1,8 +1,8 @@
-import { PromptState } from "../types/prompt";
+import { PromptState } from '../types/prompt'
 
 export const initialState: PromptState = {
-    prompts: [],
-    selectedPrompt: null,
-    loading: false,
-    error: null,
-};
+  prompts: [],
+  selectedPrompt: null,
+  loading: false,
+  error: null,
+}
