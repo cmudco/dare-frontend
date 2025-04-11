@@ -13,6 +13,7 @@ import {
   uploadProfilePicture,
   resendVerificationEmail,
   getUserStatsFromAPI,
+  changePasswordUser,
 } from '../../api/auth'
 
 export const userRegister = createAsyncThunk(
@@ -191,6 +192,25 @@ export const updateProfilePicture = createAsyncThunk(
     try {
       const response = await uploadProfilePicture(formData)
       return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const changePassword = createAsyncThunk(
+  'user/changePassword',
+  async (
+    formData: {
+      old_password: string
+      new_password1: string
+      new_password2: string
+    },
+    thunkAPI
+  ) => {
+    try {
+      const data = await changePasswordUser(formData)
+      return data
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

@@ -33,3 +33,14 @@ export interface UserState {
   successMessage: string | null
   stats: UserStats | null
 }
+
+export type ChangePasswordValues = {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
+export interface ProfileSettings {
+  first_name: string
+  last_name: string
+}
