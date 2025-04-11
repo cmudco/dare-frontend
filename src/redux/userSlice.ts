@@ -12,6 +12,7 @@ import {
   verifyEmailRegistration,
   updateProfilePicture,
   getUserStats,
+  changePassword,
 } from './aynscThunks/user'
 
 const userSlice = createSlice({
@@ -187,6 +188,19 @@ const userSlice = createSlice({
         state.error = null
       })
       .addCase(updateProfilePicture.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(changePassword.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.loading = false
+        state.error = null
+        state.successMessage = 'Password changed successfully'
+      })
+      .addCase(changePassword.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })
