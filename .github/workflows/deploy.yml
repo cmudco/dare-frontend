@@ -29,21 +29,21 @@ jobs:
         run: |
           sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
           set -e  # Exit immediately if a command fails
-          
+
           echo "Connected to the server"
 
           echo "Navigating to frontend directory..."
           cd ~/dare-frontend
-          
+
           echo "Pulling latest changes..."
           git pull origin main
-          
+
           echo "Installing dependencies..."
           npm install --frozen-lockfile
-          
+
           echo "Building the project..."
           npm run build
-          
+
           echo "Clearing existing frontend files..."
           sudo rm -rf /var/www/dare-frontend/*
 

@@ -5,6 +5,7 @@ This script automates the deployment of the frontend application to a remote ser
 ## **Setup Instructions**
 
 ### **Step 1: Copy the Deployment Script**
+
 Navigate to the project root directory and copy the script:
 
 ```bash
@@ -13,6 +14,7 @@ cp deploy.sh ~/deploy_fe.sh
 ```
 
 ### **Step 2: Make the Script Executable**
+
 Change the file permissions to allow execution:
 
 ```bash
@@ -20,6 +22,7 @@ chmod +x ~/deploy_fe.sh
 ```
 
 ### **Step 3: Execute the Deployment Script**
+
 Run the script to deploy the frontend:
 
 ```bash
@@ -29,6 +32,7 @@ Run the script to deploy the frontend:
 ---
 
 ## **What This Script Does**
+
 1. **Installs `sshpass`** (if not already installed) to facilitate SSH authentication.
 2. **Connects to the remote server** securely using SSH.
 3. **Navigates to the frontend directory** (`~/dare-frontend`).
@@ -43,16 +47,17 @@ Run the script to deploy the frontend:
 ---
 
 ## **Troubleshooting**
+
 - **Permission Denied?**  
-  Ensure the script has execution permissions:  
+  Ensure the script has execution permissions:
   ```bash
   chmod +x ~/deploy_fe.sh
   ```
-- **SSH Authentication Issues?**  
+- **SSH Authentication Issues?**
   - Ensure the SSH credentials (user, host, and password) are correct.
   - If using an SSH key instead of a password, modify the script to use `ssh -i /path/to/private_key`.
 - **Nginx Not Restarting?**  
-  Check for errors in the Nginx logs:  
+  Check for errors in the Nginx logs:
   ```bash
   sudo journalctl -xeu nginx
   ```

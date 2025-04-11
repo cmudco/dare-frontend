@@ -1,32 +1,31 @@
-import { ArrowLeftIcon } from "@heroicons/react/20/solid";
-import { Link, useNavigate } from "react-router-dom";
-import { Formik, Form, FormikConfig, FormikValues } from "formik";
-import TextInput from "../ui/TextInput";
-import { RootState } from "../../redux/store";
-import { useSelector } from "react-redux";
-import Loader from "../Loader";
-import { Button } from "../ui/button";
+import { ArrowLeftIcon } from '@heroicons/react/20/solid'
+import { Link, useNavigate } from 'react-router-dom'
+import { Formik, Form, FormikConfig, FormikValues } from 'formik'
+import TextInput from '../ui/TextInput'
+import { RootState } from '../../redux/store'
+import { useSelector } from 'react-redux'
+import Loader from '../Loader'
+import { Button } from '../ui/button'
 
 interface InputField {
-  name: string;
-  label: string;
-  type: string;
+  name: string
+  label: string
+  type: string
 }
 
 interface AuthCardProps<T extends FormikValues> {
-  title: string;
-  subtitle?: string;
-  inputs: InputField[];
-  formikConfig: FormikConfig<T>;
-  buttonText: string;
-  showBackButton?: boolean;
-  showForgotPassword?: boolean;
-  showprivacyPolicy?: boolean;
-  footer?: React.ReactNode;
-  children?: React.ReactNode;
-  roleSelect?: React.ReactNode;
-  onResendVerification?: (values: T) => void;
-
+  title: string
+  subtitle?: string
+  inputs: InputField[]
+  formikConfig: FormikConfig<T>
+  buttonText: string
+  showBackButton?: boolean
+  showForgotPassword?: boolean
+  showprivacyPolicy?: boolean
+  footer?: React.ReactNode
+  children?: React.ReactNode
+  roleSelect?: React.ReactNode
+  onResendVerification?: (values: T) => void
 }
 
 const AuthCard = <T extends FormikValues>({
@@ -43,66 +42,62 @@ const AuthCard = <T extends FormikValues>({
   roleSelect,
   onResendVerification,
 }: AuthCardProps<T>) => {
-  const navigate = useNavigate();
-  const error = useSelector((state: RootState) => state.user.error);
-  const loading = useSelector((state: RootState) => state.user.loading);
+  const navigate = useNavigate()
+  const error = useSelector((state: RootState) => state.user.error)
+  const loading = useSelector((state: RootState) => state.user.loading)
 
   const showResendButton =
     onResendVerification &&
     error &&
-    error.toLowerCase().includes("e-mail is not verified");
+    error.toLowerCase().includes('e-mail is not verified')
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-
-      <div className="p-8 mx-auto shadow-md rounded-2xl gap-3  border-6 gradient-border  xl:w-[40vw] lg:w-[50vw] md:w-[60vw] w-[80vw] flex flex-col items-center justify-center relative "
-      >
+    <div className='flex min-h-screen flex-col items-center justify-center'>
+      <div className='border-6 gradient-border relative mx-auto flex w-[80vw] flex-col items-center justify-center gap-3 rounded-2xl p-8 shadow-md md:w-[60vw] lg:w-[50vw] xl:w-[40vw]'>
         {showBackButton && (
           <div
-            className="absolute top-5 left-9 w-full text-xs mt-4 cursor-pointer text-left flex items-center gap-1"
-            onClick={() => navigate("/login")}
+            className='absolute left-9 top-5 mt-4 flex w-full cursor-pointer items-center gap-1 text-left text-xs'
+            onClick={() => navigate('/login')}
           >
-            <ArrowLeftIcon className="h-5 w-5" />
-            <span className="hidden lg:block">Back to login</span>
+            <ArrowLeftIcon className='h-5 w-5' />
+            <span className='hidden lg:block'>Back to login</span>
           </div>
         )}
 
-        <div className="relative -top-10 h-[60px]" >
-          <div className="flex flex-col items-center gap-2 ">
+        <div className='relative -top-10 h-[60px]'>
+          <div className='flex flex-col items-center gap-2'>
+            <img src='/icons/Logo.png' alt='company icon' className='w-14' />
             <img
-              src="/icons/Logo.png"
-              alt="company icon"
-              className=" w-14"
-            />
-            <img
-              src="/icons/TextLogo.svg"
-              alt="company icon"
-              className=" w-16"
+              src='/icons/TextLogo.svg'
+              alt='company icon'
+              className='w-16'
             />
           </div>
         </div>
 
-        <h1 className="text-2xl font-black text-[#023572] text-center">{title}</h1>
-        {subtitle && <p className="text-start text-sm w-[80%]">{subtitle}</p>}
+        <h1 className='text-center text-2xl font-black text-[#023572]'>
+          {title}
+        </h1>
+        {subtitle && <p className='w-[80%] text-start text-sm'>{subtitle}</p>}
 
         {children}
 
         <Formik {...formikConfig}>
           {({ values, errors, touched, handleChange, handleBlur }) => (
-            <Form className="lg:w-[70%] md:w-[70%] w-[80%]">
+            <Form className='w-[80%] md:w-[70%] lg:w-[70%]'>
               {inputs.map((input) => (
                 <TextInput
                   key={input.name}
                   name={input.name}
                   label={input.label}
                   type={input.type}
-                  value={values[input.name] || ""}
+                  value={values[input.name] || ''}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   error={
                     errors[input.name] && touched[input.name]
                       ? String(errors[input.name])
-                      : ""
+                      : ''
                   }
                 />
               ))}
@@ -110,8 +105,11 @@ const AuthCard = <T extends FormikValues>({
               {roleSelect}
 
               {showForgotPassword && (
-                <div className="flex justify-end text-sm mb-4">
-                  <Link to="/forgot-password" className="text-red-500 font-medium">
+                <div className='mb-4 flex justify-end text-sm'>
+                  <Link
+                    to='/forgot-password'
+                    className='font-medium text-red-500'
+                  >
                     Forgot Password?
                   </Link>
                 </div>
@@ -119,31 +117,28 @@ const AuthCard = <T extends FormikValues>({
 
               {buttonText && (
                 <Button
-                  type="submit"
-                  variant="default"
-                  className="w-full mt-3 py-2 px-4 rounded-md text-md font-medium flex justify-center items-center"
+                  type='submit'
+                  variant='default'
+                  className='text-md mt-3 flex w-full items-center justify-center rounded-md px-4 py-2 font-medium'
                 >
-                  {loading ? (
-                    <Loader />
-                  ) : (
-                    buttonText
-                  )}
+                  {loading ? <Loader /> : buttonText}
                 </Button>
               )}
 
               {error && (
-                <div className="mt-3">
-                  <p className="text-red-500 text-xs font-medium text-center">
+                <div className='mt-3'>
+                  <p className='text-center text-xs font-medium text-red-500'>
                     {error}
                   </p>
                   {showResendButton && (
-                    <div className="flex justify-center">
+                    <div className='flex justify-center'>
                       <Button
-                        type="button"
-                        onClick={() => onResendVerification && onResendVerification(values)}
+                        type='button'
+                        onClick={() =>
+                          onResendVerification && onResendVerification(values)
+                        }
                         disabled={loading}
-                        className="text-xs w-max mt-3 bg-gray-500 text-white rounded-md shadow-sm font-medium"
-
+                        className='mt-3 w-max rounded-md bg-gray-500 text-xs font-medium text-white shadow-sm'
                       >
                         Resend Verification Email?
                       </Button>
@@ -155,21 +150,18 @@ const AuthCard = <T extends FormikValues>({
           )}
         </Formik>
 
-        {footer && <div className="mt-4">{footer}</div>}
-        <div className="h-[50px]">
-        </div>
+        {footer && <div className='mt-4'>{footer}</div>}
+        <div className='h-[50px]'></div>
 
         {showprivacyPolicy && (
-          <p className="absolute -bottom-10 text-center text-sm text-gray-500">
-            By signing up, you are agreeing to DARE's Terms of Service and Privacy Policy.
+          <p className='absolute -bottom-10 text-center text-sm text-gray-500'>
+            By signing up, you are agreeing to DARE's Terms of Service and
+            Privacy Policy.
           </p>
         )}
       </div>
-
-
-
     </div>
-  );
-};
+  )
+}
 
-export default AuthCard;
+export default AuthCard

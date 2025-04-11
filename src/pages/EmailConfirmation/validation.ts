@@ -1,11 +1,11 @@
-import * as Yup from "yup";
+import * as Yup from 'yup'
 
 export const EmailConfirmationValues = {
-    verificationCode: "",
-};
+  verificationCode: '',
+}
 
 export const EmailConfirmationSchema = Yup.object({
-    verificationCode: Yup.string()
-        .required("Enter verification code")
-        .matches(/^\d+$/, "Incorrect verification code"),
-});
+  verificationCode: Yup.string()
+    .required('Enter verification code')
+    .matches(/^\d+$/, 'Incorrect verification code'),
+})

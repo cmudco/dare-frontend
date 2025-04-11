@@ -1,22 +1,20 @@
-import React from "react";
-import { Outlet } from "react-router-dom";
-import SideBar from "./SideBar";
-import Header from "./Header";
+import React from 'react'
+import { Outlet } from 'react-router-dom'
+import SideBar from './SideBar'
+import Header from './Header'
 
 const UserView: React.FC = () => {
   return (
     <>
       <Header />
-      <div className='flex  '>
+      <div className='flex'>
         <SideBar />
-        <div className='w-full  min-h-[90vh]'>
+        <div className='min-h-[90vh] w-full'>
           <Outlet />
-
         </div>
-
       </div>
     </>
-  );
-};
+  )
+}
 
-export default UserView;
+export default UserView

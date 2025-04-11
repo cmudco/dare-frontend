@@ -1,4 +1,4 @@
-import { FileState } from "../types/files";
+import { FileState } from '../types/files'
 
 export const initialState: FileState = {
   files: [],
@@ -6,7 +6,7 @@ export const initialState: FileState = {
   error: null,
   selectedTags: [],
   isModalOpen: false,
-  filename: "",
+  filename: '',
   jobStatuses: {},
   pollingLoading: false,
-};
+}
