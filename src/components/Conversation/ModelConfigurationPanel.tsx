@@ -6,6 +6,8 @@ import { AppDispatch, RootState } from '../../redux/store'
 import {
   updateTemperature,
   updateMaxTokens,
+  updateMaxContextSnippets,
+  updateDocumentSimilarityThreshold,
 } from '../../redux/conversationSlice'
 import { Slider } from '../ui/slider'
 import { Settings } from 'lucide-react'
@@ -17,6 +19,13 @@ import {
   getMaxTokensColor,
   getMaxTokensDescription,
 } from '@/utils/modelConfigUtils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select'
 
 const ModelConfigurationPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -33,6 +42,17 @@ const ModelConfigurationPanel: React.FC = () => {
     (state: RootState) => state.conversation.maxTokens ?? MODEL_CONFIG.maxTokens
   )
 
+  const maxContextSnippets = useSelector(
+    (state: RootState) =>
+      state.conversation.maxContextSnippets ?? MODEL_CONFIG.maxContextSnippets
+  )
+
+  const documentSimilarityThreshold = useSelector(
+    (state: RootState) =>
+      state.conversation.documentSimilarityThreshold ??
+      MODEL_CONFIG.documentSimilarityThreshold
+  )
+
   const handleTemperatureChange = (values: number[]) => {
     dispatch(updateTemperature(values[0]))
   }
@@ -41,11 +61,26 @@ const ModelConfigurationPanel: React.FC = () => {
     dispatch(updateMaxTokens(values[0]))
   }
 
+  const handleMaxContextSnippetsChange = (value: number) => {
+    dispatch(updateMaxContextSnippets(value))
+  }
+
+  const handleDocumentSimilarityThresholdChange = (value: string) => {
+    const threshold = parseFloat(value)
+    dispatch(updateDocumentSimilarityThreshold(threshold))
+  }
+
   const resetToDefaults = () => {
     if (activeConversation?.conversationId) {
       clearConversationSettings(activeConversation.conversationId)
       dispatch(updateTemperature(MODEL_CONFIG.temperature))
       dispatch(updateMaxTokens(MODEL_CONFIG.maxTokens))
+      dispatch(updateMaxContextSnippets(MODEL_CONFIG.maxContextSnippets))
+      dispatch(
+        updateDocumentSimilarityThreshold(
+          MODEL_CONFIG.documentSimilarityThreshold
+        )
+      )
     }
   }
 
@@ -60,10 +95,10 @@ const ModelConfigurationPanel: React.FC = () => {
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-80 p-4'>
-        <div className='space-y-6'>
+        <div className='flex flex-col justify-center gap-4'>
           {activeConversation?.conversationId && (
             <div className='flex items-center justify-between border-b pb-2'>
-              <h3 className='font-medium'>Model Configuration</h3>
+              <h3 className='font-medium'>Configuration</h3>
               <Button size='sm' onClick={resetToDefaults} className='text-xs'>
                 Reset to Defaults
               </Button>
@@ -96,12 +131,6 @@ const ModelConfigurationPanel: React.FC = () => {
             <div className={`mt-2 text-sm ${getTemperatureColor(temperature)}`}>
               {getTemperatureDescription(temperature)}
             </div>
-
-            <p className='mt-2 text-xs text-gray-500'>
-              Temperature controls randomness. Lower values are more
-              deterministic, while higher values produce more varied responses.
-              Settings are saved automatically.
-            </p>
           </div>
 
           <div className='space-y-4 border-t pt-2'>
@@ -111,15 +140,6 @@ const ModelConfigurationPanel: React.FC = () => {
                 {maxTokens}
               </span>
             </div>
-
-            <Slider
-              value={[maxTokens]}
-              min={256}
-              max={8192}
-              step={256}
-              onValueChange={handleMaxTokensChange}
-              className='my-4 cursor-pointer'
-            />
 
             <Slider
               value={[maxTokens]}
@@ -133,12 +153,66 @@ const ModelConfigurationPanel: React.FC = () => {
             <div className={`mt-2 text-sm ${getMaxTokensColor(maxTokens)}`}>
               {getMaxTokensDescription(maxTokens)}
             </div>
+          </div>
 
-            <p className='mt-2 text-xs text-gray-500'>
-              Max tokens controls the maximum length of the model's response.
-              Higher values allow for longer, more detailed answers. Settings
-              are saved automatically.
-            </p>
+          <hr />
+
+          <div className='space-y-2'>
+            <div className='flex items-center justify-between'>
+              <h4 className='font-medium'>Max Context Snippets</h4>
+              <div className='flex items-center space-x-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    handleMaxContextSnippetsChange(
+                      Math.max(1, maxContextSnippets - 1)
+                    )
+                  }
+                >
+                  -
+                </Button>
+                <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
+                  {maxContextSnippets}
+                </span>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    handleMaxContextSnippetsChange(maxContextSnippets + 1)
+                  }
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div className='space-y-2'>
+            <div className='flex items-center justify-between'>
+              <h4 className='font-medium'>Document Similarity Threshold</h4>
+            </div>
+            <Select
+              onValueChange={handleDocumentSimilarityThresholdChange}
+              value={documentSimilarityThreshold.toString()}
+            >
+              <SelectTrigger className='w-full'>
+                <SelectValue placeholder='Select similarity threshold' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='0.2'>
+                  Low (similarity score ≥ .20)
+                </SelectItem>
+                <SelectItem value='0.5'>
+                  Medium (similarity score ≥ .50)
+                </SelectItem>
+                <SelectItem value='0.8'>
+                  High (similarity score ≥ .80)
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {activeConversation?.conversationId && (

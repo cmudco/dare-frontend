@@ -19,6 +19,7 @@ export interface Message {
   files?: MyFile[]
   llmId?: number
   streaming?: boolean
+  snippets?: Snippet[]
 }
 
 export interface LLMModel {
@@ -26,6 +27,14 @@ export interface LLMModel {
   name: string
   identifier?: string
   description: string | null
+}
+
+export interface Snippet {
+  id: number
+  file: MyFile
+  text: string
+  similarityScore: number
+  chunkIndex: number
 }
 
 export interface ConversationState {
@@ -45,6 +54,8 @@ export interface ConversationState {
   prompt: Prompt | null
   temperature: number
   maxTokens: number
+  maxContextSnippets: number
+  documentSimilarityThreshold: number
 }
 
 export interface ConversationResponse {

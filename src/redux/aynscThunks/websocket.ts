@@ -80,6 +80,9 @@ export const sendWebSocketMessage = createAsyncThunk<
   const prompt = state.conversation.prompt
   const temperature = state.conversation.temperature
   const maxTokens = state.conversation.maxTokens
+  const maxContextSnippets = state.conversation.maxContextSnippets
+  const documentSimilarityThreshold =
+    state.conversation.documentSimilarityThreshold
 
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(
@@ -92,6 +95,8 @@ export const sendWebSocketMessage = createAsyncThunk<
         prompt_id: prompt?.id,
         temperature: temperature,
         max_tokens: maxTokens,
+        max_context_snippets: maxContextSnippets,
+        document_similarity_threshold: documentSimilarityThreshold,
       })
     )
   } else {

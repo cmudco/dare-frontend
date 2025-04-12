@@ -37,6 +37,16 @@ export const conversationSlice = createSlice({
           MODEL_CONFIG.maxTokens,
           action.payload.conversationId
         )
+        state.maxContextSnippets = getFromLocalStorage(
+          STORAGE_KEYS.MAX_CONTEXT_SNIPPETS,
+          MODEL_CONFIG.maxContextSnippets,
+          action.payload.conversationId
+        )
+        state.documentSimilarityThreshold = getFromLocalStorage(
+          STORAGE_KEYS.DOCUMENT_SIMILARITY_THRESHOLD,
+          MODEL_CONFIG.documentSimilarityThreshold,
+          action.payload.conversationId
+        )
       }
     },
     updateSelectedModel(state, action: PayloadAction<number>) {
@@ -77,6 +87,31 @@ export const conversationSlice = createSlice({
       if (state.activeConversation?.conversationId) {
         saveToLocalStorage(
           STORAGE_KEYS.MAX_TOKENS,
+          action.payload,
+          state.activeConversation.conversationId
+        )
+      }
+    },
+    updateMaxContextSnippets(state, action: PayloadAction<number>) {
+      state.maxContextSnippets = action.payload
+      saveToLocalStorage(STORAGE_KEYS.MAX_CONTEXT_SNIPPETS, action.payload)
+      if (state.activeConversation?.conversationId) {
+        saveToLocalStorage(
+          STORAGE_KEYS.MAX_CONTEXT_SNIPPETS,
+          action.payload,
+          state.activeConversation.conversationId
+        )
+      }
+    },
+    updateDocumentSimilarityThreshold(state, action: PayloadAction<number>) {
+      state.documentSimilarityThreshold = action.payload
+      saveToLocalStorage(
+        STORAGE_KEYS.DOCUMENT_SIMILARITY_THRESHOLD,
+        action.payload
+      )
+      if (state.activeConversation?.conversationId) {
+        saveToLocalStorage(
+          STORAGE_KEYS.DOCUMENT_SIMILARITY_THRESHOLD,
           action.payload,
           state.activeConversation.conversationId
         )
@@ -135,6 +170,9 @@ export const conversationSlice = createSlice({
       state.selectedFiles = []
       state.temperature = MODEL_CONFIG.temperature
       state.maxTokens = MODEL_CONFIG.maxTokens
+      state.maxContextSnippets = MODEL_CONFIG.maxContextSnippets
+      state.documentSimilarityThreshold =
+        MODEL_CONFIG.documentSimilarityThreshold
       state.conversationInput = ''
       state.prompt = null
       state.selectedModel = state.availableModels[0]?.id
@@ -179,12 +217,18 @@ export const conversationSlice = createSlice({
         state.error = null
         state.temperature = MODEL_CONFIG.temperature
         state.maxTokens = MODEL_CONFIG.maxTokens
+        state.maxContextSnippets = MODEL_CONFIG.maxContextSnippets
+        state.documentSimilarityThreshold =
+          MODEL_CONFIG.documentSimilarityThreshold
       })
       .addCase(createConversation.fulfilled, (state, action) => {
         state.loading = false
         state.conversations.unshift(action.payload)
         state.temperature = MODEL_CONFIG.temperature
         state.maxTokens = MODEL_CONFIG.maxTokens
+        state.maxContextSnippets = MODEL_CONFIG.maxContextSnippets
+        state.documentSimilarityThreshold =
+          MODEL_CONFIG.documentSimilarityThreshold
       })
       .addCase(createConversation.rejected, (state, action) => {
         state.loading = false
@@ -215,6 +259,8 @@ export const {
   updateSelectedTags,
   updateTemperature,
   updateMaxTokens,
+  updateMaxContextSnippets,
+  updateDocumentSimilarityThreshold,
   toggleDropdown,
   setHoveredModel,
   updateConversationInput,

@@ -1,7 +1,17 @@
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue }
+
 export const STORAGE_KEYS = {
   TEMPERATURE: 'dare_temperature',
   MAX_TOKENS: 'dare_max_tokens',
-}
+  MAX_CONTEXT_SNIPPETS: 'dare_max_context_snippets',
+  DOCUMENT_SIMILARITY_THRESHOLD: 'dare_document_similarity_threshold',
+} as const
 
 export const getConversationStorageKey = (
   baseKey: string,
@@ -12,7 +22,7 @@ export const getConversationStorageKey = (
 
 export const saveToLocalStorage = (
   key: string,
-  value: any,
+  value: JsonValue,
   conversationId?: string
 ): void => {
   try {
@@ -23,7 +33,7 @@ export const saveToLocalStorage = (
   }
 }
 
-export const getFromLocalStorage = <T>(
+export const getFromLocalStorage = <T extends JsonValue>(
   key: string,
   defaultValue: T,
   conversationId?: string
