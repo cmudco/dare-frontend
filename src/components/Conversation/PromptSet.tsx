@@ -71,8 +71,8 @@ const PromptSet: React.FC = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className='ml-4 flex h-12 items-center justify-center whitespace-nowrap rounded-lg bg-primary px-4 py-0 font-normal normal-case'>
-          <GoCommandPalette className='text-xl font-extrabold' />
+        <Button variant='ghost' className='h-9 w-9 p-0 hover:bg-gray-200'>
+          <GoCommandPalette className='h-5 w-5 text-gray-600' />
         </Button>
       </DialogTrigger>
 
@@ -117,7 +117,7 @@ const PromptSet: React.FC = () => {
               key={prompt.id}
               className={`mb-3 cursor-pointer rounded-lg border border-gray-100 p-3 text-black transition-colors ${
                 selectedPrompt?.id === prompt?.id
-                  ? 'bg-pink-50 hover:bg-pink-50'
+                  ? 'bg-red-200'
                   : 'bg-muted text-foreground hover:bg-pink-50'
               }`}
               onClick={() => handlePromptSelect(prompt)}

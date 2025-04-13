@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Message as MessageModel } from '../../redux/types/conversation'
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Bot } from 'lucide-react'
+import { Bot, ChevronDown, ChevronUp } from 'lucide-react'
 import { RootState } from '@/redux/store'
 
 interface MessageProps {
@@ -16,6 +16,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
     (state: RootState) => state.conversation.availableModels
   )
   const user = useSelector((state: RootState) => state.user.user)
+  const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
 
   if (!message) {
     return null
@@ -25,6 +26,10 @@ const Message: React.FC<MessageProps> = ({ message }) => {
   const llmName = llm ? llm.name : 'Unknown LLM'
 
   const userInitial = user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'
+
+  const toggleSnippets = () => {
+    setIsSnippetsOpen(!isSnippetsOpen)
+  }
 
   return (
     <div
@@ -86,6 +91,48 @@ const Message: React.FC<MessageProps> = ({ message }) => {
           {llmName}
         </div>
       )}
+
+      {!message.isSender &&
+        !message.streaming &&
+        message.snippets &&
+        message.snippets.length > 0 && (
+          <div className='mt-2 w-full max-w-[95%] pl-10'>
+            <button
+              onClick={toggleSnippets}
+              className='flex items-center text-sm text-gray-600 hover:text-gray-800'
+            >
+              {isSnippetsOpen ? (
+                <ChevronUp className='mr-1 h-4 w-4' />
+              ) : (
+                <ChevronDown className='mr-1 h-4 w-4' />
+              )}
+              {isSnippetsOpen
+                ? 'Hide Matched Snippets'
+                : `Show Matched Snippets (${message.snippets.length})`}
+            </button>
+            {isSnippetsOpen && (
+              <div className='mt-2 space-y-3'>
+                {message.snippets.map((snippet) => (
+                  <div
+                    key={snippet.id}
+                    className='rounded-r-lg border-l-4 border-gray-300 bg-gray-50 p-3 pl-4'
+                  >
+                    <div className='mb-1 flex items-center justify-between'>
+                      <span className='text-sm font-medium text-gray-700'>
+                        From {snippet.file.name} (Score:{' '}
+                        {snippet.similarityScore.toFixed(2)})
+                      </span>
+                      <span className='text-xs text-gray-500'>
+                        Chunk {snippet.chunkIndex}
+                      </span>
+                    </div>
+                    <p className='text-sm text-gray-600'>{snippet.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
     </div>
   )
 }

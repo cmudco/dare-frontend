@@ -63,18 +63,18 @@ const ConversationFileSelect: React.FC = () => {
   }
 
   return (
-    <div className='absolute left-3 flex h-full items-center'>
+    <div className='left-3 flex h-full items-center'>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant='ghost' className='h-9 w-9 p-0 hover:bg-transparent'>
-            <FolderIcon className='h-5 w-5' />
+          <Button variant='ghost' className='h-9 w-9 p-0 hover:bg-gray-200'>
+            <FolderIcon className='h-5 w-5 text-gray-600' />
           </Button>
         </PopoverTrigger>
         <PopoverContent
           className='w-[400px] p-4'
           align='start'
           side='top'
-          sideOffset={16}
+          sideOffset={8}
         >
           <div className='space-y-4'>
             <div className='relative'>
