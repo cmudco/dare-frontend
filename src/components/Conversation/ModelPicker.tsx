@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { Button } from '../ui/button'
+import { Box } from 'lucide-react'
 
 const ModelPicker: React.FC = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -37,22 +38,25 @@ const ModelPicker: React.FC = () => {
 
   const getModelButtonText = () => {
     const model = models.find((m: LLMModel) => m.id === selectedModel)
-    return model ? model.name : 'Select'
+    return model ? model.name : 'Select Model'
   }
   const hasModels = Array.isArray(models) && models.length > 0
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className='ml-4 flex h-12 w-min min-w-40 items-center justify-center rounded-lg p-4'>
+        <Button className='flex h-10 border-gray-200 bg-white px-2 text-sm text-gray-600 hover:bg-gray-100'>
+          <Box className='h-4 w-4' />
           {getModelButtonText()}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align='end'
-        className='borderrounded-md w-64 bg-white p-2 shadow-lg'
+        className='w-64 rounded-md bg-white p-2 shadow-lg'
       >
-        {loading && <p className='py-2 text-center'>Loading models...</p>}
+        {loading && (
+          <p className='py-2 text-center text-gray-500'>Loading models...</p>
+        )}
         {error && (
           <p className='py-2 text-center text-red-500'>
             Error loading models: {error}
@@ -63,7 +67,7 @@ const ModelPicker: React.FC = () => {
             <DropdownMenuItem
               key={model.id}
               onClick={() => handleModelSelect(model.id)}
-              className={`outlin mt-1 cursor-pointer rounded px-4 py-2 ${
+              className={`mt-1 cursor-pointer rounded px-4 py-2 ${
                 model.id === selectedModel
                   ? 'bg-pink-50 font-bold'
                   : 'hover:bg-gray-100'

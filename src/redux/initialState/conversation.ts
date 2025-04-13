@@ -18,4 +18,6 @@ export const initialState: ConversationState = {
   temperature: MODEL_CONFIG.temperature,
   maxTokens: MODEL_CONFIG.maxTokens,
   selectedTags: [],
+  maxContextSnippets: MODEL_CONFIG.maxContextSnippets,
+  documentSimilarityThreshold: MODEL_CONFIG.documentSimilarityThreshold,
 }

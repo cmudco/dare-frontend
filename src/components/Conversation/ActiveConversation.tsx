@@ -88,7 +88,9 @@ const ActiveConversation: React.FC = () => {
         {activeConversation && conversationHistory.length > 0 && (
           <MessageList />
         )}
-        <ConversationPill />
+        <div className='flex flex-col items-center justify-center'>
+          <ConversationPill />
+        </div>
       </div>
     </Card>
   )
