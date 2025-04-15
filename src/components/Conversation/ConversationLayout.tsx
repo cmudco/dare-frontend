@@ -26,7 +26,7 @@ const ConversationLayout: React.FC = () => {
         }
       })
     dispatch(getPrompts())
-  }, [dispatch, location.pathname])
+  }, [dispatch, id, location.pathname])
 
   return (
     <div className='flex h-full'>
