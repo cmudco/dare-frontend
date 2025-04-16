@@ -62,10 +62,6 @@ export const connectWebSocket = createAsyncThunk<
       dispatch(setConnectionStatus(false))
       reject(new Error('WebSocket error'))
     }
-
-    socket.onclose = () => {
-      dispatch(setConnectionStatus(false))
-    }
   })
 })
 
