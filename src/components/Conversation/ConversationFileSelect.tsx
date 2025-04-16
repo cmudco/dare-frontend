@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Check, FileIcon, Search, Tag as TagIcon } from 'lucide-react'
+import { Check, FileIcon, Search, Tag as TagIcon, Settings } from 'lucide-react'
 import type { RootState, AppDispatch } from '@/redux/store'
 import {
   updateSelectedFiles,
@@ -14,7 +14,13 @@ import { Input } from '../ui/input'
 import { FolderIcon } from '@heroicons/react/24/outline'
 import { Separator } from '../ui/separator'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import {
+  Popover as SettingsPopover,
+  PopoverContent as SettingsPopoverContent,
+  PopoverTrigger as SettingsPopoverTrigger,
+} from '../ui/popover'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs'
+import ModelContextSettings from './ModelContextSettings'
 
 const ConversationFileSelect: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -28,6 +34,7 @@ const ConversationFileSelect: React.FC = () => {
   )
 
   const [open, setOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'files' | 'tags'>('files')
 
@@ -83,8 +90,31 @@ const ConversationFileSelect: React.FC = () => {
                 placeholder={`Search ${activeTab}`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='pl-9'
+                className='pl-9 pr-10'
               />
+              <SettingsPopover
+                open={settingsOpen}
+                onOpenChange={setSettingsOpen}
+              >
+                <SettingsPopoverTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    className='absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0'
+                  >
+                    <Settings className='h-4 w-4 text-gray-600' />
+                  </Button>
+                </SettingsPopoverTrigger>
+                <SettingsPopoverContent
+                  align='start'
+                  side='right'
+                  sideOffset={8}
+                  className='w-[25rem] p-4'
+                >
+                  <ModelContextSettings
+                    onClose={() => setSettingsOpen(false)}
+                  />
+                </SettingsPopoverContent>
+              </SettingsPopover>
             </div>
 
             <Tabs
