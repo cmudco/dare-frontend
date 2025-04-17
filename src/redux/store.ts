@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit'
+import * as Sentry from '@sentry/react'
 import userReducer from './userSlice'
 import fileReducer from './fileSlice'
 import conversationReducer from './conversationSlice'
@@ -6,6 +7,8 @@ import promptReducer from './promptSlice'
 import websocketReducer from './websocketSlice'
 import tagsReducer from './tagslice'
 import workflowReducer from './workflowSlice'
+
+const sentryReduxEnhancer = Sentry.createReduxEnhancer({})
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +20,8 @@ export const store = configureStore({
     tags: tagsReducer,
     workflow: workflowReducer,
   },
+  enhancers: (getDefaultEnhancers) =>
+    getDefaultEnhancers().concat(sentryReduxEnhancer),
 })
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
