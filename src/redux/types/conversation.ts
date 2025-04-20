@@ -8,7 +8,14 @@ export interface Conversation {
   title?: string
   createdAt: string
   user?: string
+  maxContextSnippets: number
+  documentSimilarityThreshold: number
+  temperature: number
+  maxTokens: number
+  prompt?: Prompt | null
+  promptId?: string | null
 }
+
 export interface Message {
   id: string
   message: string
@@ -51,11 +58,6 @@ export interface ConversationState {
   hoveredModel: string | null
   conversationInput: string
   availableModels: LLMModel[]
-  prompt: Prompt | null
-  temperature: number
-  maxTokens: number
-  maxContextSnippets: number
-  documentSimilarityThreshold: number
 }
 
 export interface ConversationResponse {

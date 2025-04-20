@@ -13,6 +13,7 @@ import { Input } from '../ui/input'
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../ui/dialog'
 import { Plus } from 'lucide-react'
 import { stripHtml } from '../../utils/textUtils'
+import { updateConversation } from '@/redux/aynscThunks/conversation'
 
 const RichTextPreview = ({ content }: { content: string }) => {
   const truncateHtml = (html: string, maxLength: number = 150): string => {
@@ -40,16 +41,24 @@ const PromptSet: React.FC = () => {
   const prompts = useSelector((state: RootState) => state.prompt.prompts)
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
-  const { prompt: selectedPrompt } = useSelector(
-    (state: RootState) => state.conversation
+  const { prompt: selectedPrompt, activeConversation } = useSelector(
+    (state: RootState) => ({
+      prompt: state.conversation.activeConversation?.prompt,
+      activeConversation: state.conversation.activeConversation,
+    })
   )
 
   const handlePromptSelect = (prompt: Prompt) => {
-    dispatch(setPrompt(prompt))
-    if (selectedPrompt?.id === prompt.id) {
-      dispatch(setPrompt(null))
-    } else {
-      dispatch(setPrompt(prompt))
+    const isSamePrompt = selectedPrompt?.id === prompt.id
+    const newPrompt = isSamePrompt ? null : prompt
+    dispatch(setPrompt(newPrompt))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { promptId: newPrompt?.id },
+        })
+      )
     }
   }
 
@@ -116,7 +125,7 @@ const PromptSet: React.FC = () => {
             <div
               key={prompt.id}
               className={`mb-3 cursor-pointer rounded-lg border border-gray-100 p-3 text-black transition-colors ${
-                selectedPrompt?.id === prompt?.id
+                selectedPrompt?.id === prompt.id
                   ? 'bg-red-200'
                   : 'bg-muted text-foreground hover:bg-pink-50'
               }`}

@@ -6,7 +6,7 @@ import NewConversation from './NewConversation'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   updateConversationInput,
-  updateConversation,
+  updateActiveConversation,
 } from '../../redux/conversationSlice'
 import MessageList from './MessageList'
 import {
@@ -41,10 +41,10 @@ const ActiveConversation: React.FC = () => {
         (conversation) => conversation.conversationId === id
       )
       if (!activeConversation && conversation) {
-        dispatch(updateConversation(conversation))
+        dispatch(updateActiveConversation(conversation))
       }
     } else {
-      dispatch(updateConversation(null))
+      dispatch(updateActiveConversation(null))
     }
   }, [id, conversations, dispatch])
 

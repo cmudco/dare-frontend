@@ -10,13 +10,13 @@ import {
 import { Slider } from '../ui/slider'
 import { Settings } from 'lucide-react'
 import { MODEL_CONFIG } from '../../config/modelConfig'
-import { clearConversationSettings } from '@/utils/localStorage'
 import {
   getTemperatureColor,
   getTemperatureDescription,
   getMaxTokensColor,
   getMaxTokensDescription,
 } from '@/utils/modelConfigUtils'
+import { updateConversation } from '@/redux/aynscThunks/conversation'
 
 const ModelConfigurationPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -24,28 +24,47 @@ const ModelConfigurationPanel: React.FC = () => {
     (state: RootState) => state.conversation.activeConversation
   )
 
-  const temperature = useSelector(
-    (state: RootState) =>
-      state.conversation.temperature ?? MODEL_CONFIG.temperature
-  )
-
-  const maxTokens = useSelector(
-    (state: RootState) => state.conversation.maxTokens ?? MODEL_CONFIG.maxTokens
-  )
+  const temperature =
+    activeConversation?.temperature ?? MODEL_CONFIG.temperature
+  const maxTokens = activeConversation?.maxTokens ?? MODEL_CONFIG.maxTokens
 
   const handleTemperatureChange = (values: number[]) => {
     dispatch(updateTemperature(values[0]))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { temperature: values[0] },
+        })
+      )
+    }
   }
 
   const handleMaxTokensChange = (values: number[]) => {
     dispatch(updateMaxTokens(values[0]))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { maxTokens: values[0] },
+        })
+      )
+    }
   }
 
   const resetToDefaults = () => {
-    if (activeConversation?.conversationId) {
-      clearConversationSettings(activeConversation.conversationId)
+    if (activeConversation) {
       dispatch(updateTemperature(MODEL_CONFIG.temperature))
       dispatch(updateMaxTokens(MODEL_CONFIG.maxTokens))
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: {
+            temperature: MODEL_CONFIG.temperature,
+            maxTokens: MODEL_CONFIG.maxTokens,
+          },
+        })
+      )
     }
   }
 
