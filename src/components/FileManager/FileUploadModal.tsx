@@ -6,7 +6,6 @@ import {
   closeModal,
   updateTagChange,
   updateRemoveTag,
-  updateFilename,
   setError,
 } from '../../redux/fileSlice'
 import { getFiles, uploadNewFile } from '../../redux/aynscThunks/file'
@@ -35,7 +34,8 @@ import { getTagColor, isAllowedFileType } from '@/utils/files'
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from '@/utils/constants/file'
 
 const FileUploadModal: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [fileErrors, setFileErrors] = useState<string[]>([])
   const [newTag, setNewTag] = useState<string>('')
   const dispatch = useDispatch<AppDispatch>()
 
@@ -43,68 +43,74 @@ const FileUploadModal: React.FC = () => {
     dispatch(getTags())
   }, [dispatch])
 
-  const { selectedTags, isModalOpen, filename, loading, error } = useSelector(
+  const { selectedTags, isModalOpen, loading, error } = useSelector(
     (state: RootState) => state.files
   )
   const { tags } = useSelector((state: RootState) => state.tags)
 
   const handleUploadClick = async () => {
-    if (selectedFile) {
+    if (selectedFiles.length > 0) {
       await dispatch(
         uploadNewFile({
-          files: [selectedFile],
-          name: filename,
+          files: selectedFiles,
           tags: selectedTags,
         })
       ).unwrap()
       dispatch(resetSelectedTags())
       dispatch(closeModal())
       dispatch(getFiles())
-      dispatch(updateFilename(''))
-      setSelectedFile(null)
+      setSelectedFiles([])
+      setFileErrors([])
       dispatch(setError(''))
     } else {
-      console.error('No file selected')
+      dispatch(setError('No valid files selected'))
     }
   }
 
-  const handleFileSelection = (file: File | undefined) => {
-    if (file) {
+  const handleFileSelection = (files: FileList | null) => {
+    if (files && files.length > 0) {
       if (error) {
         dispatch(setError(''))
       }
 
-      if (file.size > MAX_FILE_SIZE) {
-        dispatch(
-          setError(
-            `File size exceeds ${MAX_FILE_SIZE_MB} MB. Please select a smaller file.`
+      const validFiles: File[] = []
+      const errors: string[] = []
+
+      for (const file of Array.from(files)) {
+        if (file.size === 0) {
+          errors.push(`File "${file.name}" is empty and has been discarded.`)
+          continue
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          errors.push(
+            `File "${file.name}" exceeds ${MAX_FILE_SIZE_MB} MB and has been discarded.`
           )
-        )
-        setSelectedFile(null)
-        return
-      }
-      if (!isAllowedFileType(file)) {
-        dispatch(
-          setError(
-            'File type not allowed. Allowed types are: docx, doc, pdf, txt, md, json'
+          continue
+        }
+        if (!isAllowedFileType(file)) {
+          errors.push(
+            `File "${file.name}" type not allowed and has been discarded. Allowed types are: docx, doc, pdf, txt, md, json`
           )
-        )
-        setSelectedFile(null)
-        return
+          continue
+        }
+        validFiles.push(file)
       }
 
-      setSelectedFile(file)
-      dispatch(updateFilename(file.name))
+      setSelectedFiles(validFiles)
+      setFileErrors(errors)
+    } else {
+      setSelectedFiles([])
+      setFileErrors([])
     }
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    handleFileSelection(event.target.files?.[0])
+    handleFileSelection(event.target.files)
   }
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault()
-    handleFileSelection(event.dataTransfer.files?.[0])
+    handleFileSelection(event.dataTransfer.files)
   }
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -123,7 +129,8 @@ const FileUploadModal: React.FC = () => {
       open={isModalOpen}
       onOpenChange={(open) => {
         if (!open) {
-          setSelectedFile(null)
+          setSelectedFiles([])
+          setFileErrors([])
           dispatch(closeModal())
         }
       }}
@@ -135,17 +142,11 @@ const FileUploadModal: React.FC = () => {
             File Upload
           </DialogTitle>
           <DialogDescription className='text-sm text-gray-500'>
-            Upload a file and add tags to categorize it.
+            Upload multiple files and add tags to categorize them.
           </DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4'>
-          <Input
-            value={filename}
-            placeholder='File Name'
-            onChange={(e) => dispatch(updateFilename(e.target.value))}
-          />
-
           <div className='x-2 flex flex-col gap-2'>
             <Select
               onValueChange={(value) =>
@@ -222,18 +223,23 @@ const FileUploadModal: React.FC = () => {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
           >
-            {selectedFile && !error ? (
-              <div className='flex items-center justify-center space-x-2'>
+            {selectedFiles.length > 0 && !error ? (
+              <div className='flex flex-col items-center justify-center space-y-2'>
                 <CheckCircleIcon className='h-6 w-6 text-green-600' />
                 <span className='text-sm font-medium text-green-700'>
-                  {selectedFile.name} ready to upload
+                  {selectedFiles.length} file(s) ready to upload
                 </span>
+                <ul className='max-h-24 w-full overflow-auto text-xs text-gray-600'>
+                  {selectedFiles.map((file, index) => (
+                    <li key={index}>{file.name}</li>
+                  ))}
+                </ul>
               </div>
-            ) : error && selectedFile ? (
+            ) : error ? (
               <div className='flex items-center justify-center space-x-2'>
                 <XMarkIcon className='h-6 w-6 text-red-600' />
                 <span className='text-sm font-medium text-red-700'>
-                  {selectedFile.name} not uploaded
+                  File(s) not uploaded
                 </span>
               </div>
             ) : (
@@ -245,23 +251,35 @@ const FileUploadModal: React.FC = () => {
             <input
               id='fileInput'
               type='file'
+              multiple
               onChange={handleFileChange}
               className='hidden'
             />
             <span className='mt-2 block text-xs text-gray-500'>
-              Maximum size: {MAX_FILE_SIZE_MB} MB
+              Maximum size per file: {MAX_FILE_SIZE_MB} MB
             </span>
           </div>
+          {fileErrors.length > 0 && (
+            <div className='text-center text-sm text-red-500'>
+              <p>Some files were discarded due to errors:</p>
+              <ul className='max-h-24 w-full list-inside list-disc overflow-auto'>
+                {fileErrors.map((err, index) => (
+                  <li key={index}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {error && (
+            <div className='text-center text-sm text-red-500'>{error}</div>
+          )}
         </div>
-        {error && (
-          <div className='text-center text-sm text-red-500'>{error}</div>
-        )}
 
         <DialogFooter className='flex justify-end gap-2'>
           <Button
             variant='outline'
             onClick={() => {
-              setSelectedFile(null)
+              setSelectedFiles([])
+              setFileErrors([])
               dispatch(closeModal())
             }}
           >
@@ -269,7 +287,7 @@ const FileUploadModal: React.FC = () => {
           </Button>
           <Button
             onClick={handleUploadClick}
-            disabled={!selectedFile || loading}
+            disabled={selectedFiles.length === 0 || loading}
           >
             {loading ? 'Saving...' : 'Save'}
           </Button>

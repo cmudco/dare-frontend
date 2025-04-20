@@ -5,6 +5,9 @@ import {
   getFilesAPI,
   checkJobStatusesAPI,
 } from '../../api/files'
+import { MyFile } from '../types/files'
+
+const BATCH_SIZE = 5
 
 export const getFiles = createAsyncThunk(
   'files/getFiles',
@@ -20,23 +23,30 @@ export const getFiles = createAsyncThunk(
 
 export const uploadNewFile = createAsyncThunk(
   'files/uploadNewFile',
-  async (
-    { files, name, tags }: { files: File[]; name: string; tags: number[] },
-    thunkAPI
-  ) => {
-    const formData = new FormData()
-    files.forEach((file) => formData.append('file', file))
-    formData.append('name', name)
-
-    if (tags && tags.length > 0) {
-      tags.forEach((tagId) => {
-        formData.append('tags', tagId.toString())
-      })
-    }
-
+  async ({ files, tags }: { files: File[]; tags: number[] }, thunkAPI) => {
     try {
-      const response = await uploadFileAPI(formData)
-      return response
+      const batches: File[][] = []
+      for (let i = 0; i < files.length; i += BATCH_SIZE) {
+        batches.push(files.slice(i, i + BATCH_SIZE))
+      }
+
+      const responses: MyFile[] = []
+      for (const batch of batches) {
+        const formData = new FormData()
+        batch.forEach((file) => {
+          formData.append('files', file)
+          formData.append('names', file.name)
+        })
+        if (tags && tags.length > 0) {
+          formData.append('tags', JSON.stringify(tags))
+        }
+        const response = await uploadFileAPI(formData)
+        response.forEach((file) => {
+          responses.push(file)
+        })
+      }
+
+      return responses
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }
