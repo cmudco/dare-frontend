@@ -30,7 +30,7 @@ const ProcessingFilesPopover: React.FC = () => {
       <PopoverContent className='w-80'>
         <div className='space-y-2'>
           <h4 className='font-medium'>Processing Files</h4>
-          <ul className='space-y-2'>
+          <ul className='max-h-[50vh] space-y-2 overflow-y-auto'>
             {processingFiles.map((file) => (
               <li key={file.id} className='flex items-center space-x-2'>
                 <span className='truncate text-sm'>{file.name}</span>

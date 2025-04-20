@@ -10,8 +10,8 @@ export const getFilesAPI = async (): Promise<{ results: MyFile[] }> => {
   })
 }
 
-export const uploadFileAPI = async (data: FormData): Promise<MyFile> => {
-  return await baseRequest<MyFile>({
+export const uploadFileAPI = async (data: FormData): Promise<MyFile[]> => {
+  return await baseRequest<MyFile[]>({
     url: 'api/files/',
     method: METHOD.POST,
     data,

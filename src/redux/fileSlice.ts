@@ -61,15 +61,17 @@ const fileSlice = createSlice({
       })
       .addCase(uploadNewFile.fulfilled, (state, action) => {
         state.loading = false
-        state.files.push(action.payload)
-        state.jobStatuses[action.payload.id] = {
-          status: action.payload.status,
-          jobId: action.payload.jobId,
-        }
+        state.files.push(...action.payload)
+        action.payload.forEach((file) => {
+          state.jobStatuses[file.id] = {
+            status: file.status,
+            jobId: file.jobId,
+          }
+        })
       })
       .addCase(uploadNewFile.rejected, (state, action) => {
         state.loading = false
-        state.error = (action.payload as string) || 'Failed to upload file'
+        state.error = (action.payload as string) || 'Failed to upload files'
       })
       .addCase(deleteFile.pending, (state) => {
         state.loading = true
