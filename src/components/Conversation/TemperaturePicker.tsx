@@ -10,7 +10,8 @@ import { Thermometer } from 'lucide-react'
 const TemperaturePicker: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const temperature = useSelector(
-    (state: RootState) => state.conversation.temperature ?? 0.7
+    (state: RootState) =>
+      state.conversation.activeConversation?.temperature ?? 0.7
   )
 
   const handleTemperatureChange = (values: number[]) => {

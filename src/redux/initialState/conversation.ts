@@ -1,5 +1,6 @@
 import { ConversationState } from '../types/conversation'
-import { MODEL_CONFIG } from '../../config/modelConfig'
+import { MyFile } from '../types/files'
+import { Tag } from '../types/tags'
 
 export const initialState: ConversationState = {
   conversations: [],
@@ -9,15 +10,10 @@ export const initialState: ConversationState = {
   searchQuery: '',
   activeConversationMessages: [],
   selectedModel: null,
-  selectedFiles: [],
+  selectedFiles: [] as MyFile[],
+  selectedTags: [] as Tag[],
   showDropdown: false,
   hoveredModel: null,
   conversationInput: '',
   availableModels: [],
-  prompt: null,
-  temperature: MODEL_CONFIG.temperature,
-  maxTokens: MODEL_CONFIG.maxTokens,
-  selectedTags: [],
-  maxContextSnippets: MODEL_CONFIG.maxContextSnippets,
-  documentSimilarityThreshold: MODEL_CONFIG.documentSimilarityThreshold,
 }

@@ -5,49 +5,27 @@ import {
   getAvailableModels,
   createConversation,
   deleteConversation,
+  updateConversation,
 } from './aynscThunks/conversation'
 import { Message, Conversation, LLMModel } from './types/conversation'
 import { MyFile } from './types/files'
 import { Tag } from './types/tags'
-import {
-  getFromLocalStorage,
-  saveToLocalStorage,
-  STORAGE_KEYS,
-} from '../utils/localStorage'
-import { MODEL_CONFIG } from '@/config/modelConfig'
+import { Prompt } from './types/prompt'
 
 export const conversationSlice = createSlice({
   name: 'conversation',
-  initialState,
+  initialState: {
+    ...initialState,
+  },
   reducers: {
     updateSearchQuery(state, action: PayloadAction<string>) {
       state.searchQuery = action.payload
     },
-    updateConversation(state, action: PayloadAction<Conversation | null>) {
+    updateActiveConversation(
+      state,
+      action: PayloadAction<Conversation | null>
+    ) {
       state.activeConversation = action.payload
-
-      if (action.payload?.conversationId) {
-        state.temperature = getFromLocalStorage(
-          STORAGE_KEYS.TEMPERATURE,
-          MODEL_CONFIG.temperature,
-          action.payload.conversationId
-        )
-        state.maxTokens = getFromLocalStorage(
-          STORAGE_KEYS.MAX_TOKENS,
-          MODEL_CONFIG.maxTokens,
-          action.payload.conversationId
-        )
-        state.maxContextSnippets = getFromLocalStorage(
-          STORAGE_KEYS.MAX_CONTEXT_SNIPPETS,
-          MODEL_CONFIG.maxContextSnippets,
-          action.payload.conversationId
-        )
-        state.documentSimilarityThreshold = getFromLocalStorage(
-          STORAGE_KEYS.DOCUMENT_SIMILARITY_THRESHOLD,
-          MODEL_CONFIG.documentSimilarityThreshold,
-          action.payload.conversationId
-        )
-      }
     },
     updateSelectedModel(state, action: PayloadAction<number>) {
       state.selectedModel = action.payload
@@ -71,50 +49,23 @@ export const conversationSlice = createSlice({
       state.activeConversationMessages = []
     },
     updateTemperature(state, action: PayloadAction<number>) {
-      state.temperature = action.payload
-      saveToLocalStorage(STORAGE_KEYS.TEMPERATURE, action.payload)
-      if (state.activeConversation?.conversationId) {
-        saveToLocalStorage(
-          STORAGE_KEYS.TEMPERATURE,
-          action.payload,
-          state.activeConversation.conversationId
-        )
+      if (state.activeConversation) {
+        state.activeConversation.temperature = action.payload
       }
     },
     updateMaxTokens(state, action: PayloadAction<number>) {
-      state.maxTokens = action.payload
-      saveToLocalStorage(STORAGE_KEYS.MAX_TOKENS, action.payload)
-      if (state.activeConversation?.conversationId) {
-        saveToLocalStorage(
-          STORAGE_KEYS.MAX_TOKENS,
-          action.payload,
-          state.activeConversation.conversationId
-        )
+      if (state.activeConversation) {
+        state.activeConversation.maxTokens = action.payload
       }
     },
     updateMaxContextSnippets(state, action: PayloadAction<number>) {
-      state.maxContextSnippets = action.payload
-      saveToLocalStorage(STORAGE_KEYS.MAX_CONTEXT_SNIPPETS, action.payload)
-      if (state.activeConversation?.conversationId) {
-        saveToLocalStorage(
-          STORAGE_KEYS.MAX_CONTEXT_SNIPPETS,
-          action.payload,
-          state.activeConversation.conversationId
-        )
+      if (state.activeConversation) {
+        state.activeConversation.maxContextSnippets = action.payload
       }
     },
     updateDocumentSimilarityThreshold(state, action: PayloadAction<number>) {
-      state.documentSimilarityThreshold = action.payload
-      saveToLocalStorage(
-        STORAGE_KEYS.DOCUMENT_SIMILARITY_THRESHOLD,
-        action.payload
-      )
-      if (state.activeConversation?.conversationId) {
-        saveToLocalStorage(
-          STORAGE_KEYS.DOCUMENT_SIMILARITY_THRESHOLD,
-          action.payload,
-          state.activeConversation.conversationId
-        )
+      if (state.activeConversation) {
+        state.activeConversation.documentSimilarityThreshold = action.payload
       }
     },
     addMessage(state, action: PayloadAction<Message>) {
@@ -161,20 +112,16 @@ export const conversationSlice = createSlice({
     updateConversationHistory(state, action: PayloadAction<Message[]>) {
       state.activeConversationMessages = action.payload
     },
-    setPrompt(state, action) {
-      state.prompt = action.payload
+    setPrompt(state, action: PayloadAction<Prompt | null>) {
+      if (state.activeConversation) {
+        state.activeConversation.prompt = action.payload
+      }
     },
     resetConversation(state) {
       state.activeConversation = null
       state.activeConversationMessages = []
       state.selectedFiles = []
-      state.temperature = MODEL_CONFIG.temperature
-      state.maxTokens = MODEL_CONFIG.maxTokens
-      state.maxContextSnippets = MODEL_CONFIG.maxContextSnippets
-      state.documentSimilarityThreshold =
-        MODEL_CONFIG.documentSimilarityThreshold
       state.conversationInput = ''
-      state.prompt = null
       state.selectedModel = state.availableModels[0]?.id
     },
   },
@@ -215,20 +162,10 @@ export const conversationSlice = createSlice({
       .addCase(createConversation.pending, (state) => {
         state.loading = true
         state.error = null
-        state.temperature = MODEL_CONFIG.temperature
-        state.maxTokens = MODEL_CONFIG.maxTokens
-        state.maxContextSnippets = MODEL_CONFIG.maxContextSnippets
-        state.documentSimilarityThreshold =
-          MODEL_CONFIG.documentSimilarityThreshold
       })
       .addCase(createConversation.fulfilled, (state, action) => {
         state.loading = false
         state.conversations.unshift(action.payload)
-        state.temperature = MODEL_CONFIG.temperature
-        state.maxTokens = MODEL_CONFIG.maxTokens
-        state.maxContextSnippets = MODEL_CONFIG.maxContextSnippets
-        state.documentSimilarityThreshold =
-          MODEL_CONFIG.documentSimilarityThreshold
       })
       .addCase(createConversation.rejected, (state, action) => {
         state.loading = false
@@ -248,12 +185,35 @@ export const conversationSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
+      .addCase(updateConversation.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateConversation.fulfilled, (state, action) => {
+        state.loading = false
+        const index = state.conversations.findIndex(
+          (conv) => conv.conversationId === action.payload.conversationId
+        )
+        if (index !== -1) {
+          state.conversations[index] = action.payload
+        }
+        if (
+          state.activeConversation?.conversationId ===
+          action.payload.conversationId
+        ) {
+          state.activeConversation = action.payload
+        }
+      })
+      .addCase(updateConversation.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
   },
 })
 
 export const {
   updateSearchQuery,
-  updateConversation,
+  updateActiveConversation,
   updateSelectedModel,
   updateSelectedFiles,
   updateSelectedTags,

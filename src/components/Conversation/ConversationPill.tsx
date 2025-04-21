@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux'
 import {
   updateConversationInput,
-  updateConversation,
+  updateActiveConversation,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker'
@@ -43,7 +43,7 @@ const ConversationPill: React.FC = () => {
       dispatch(createConversation())
         .unwrap()
         .then((newConversation) => {
-          dispatch(updateConversation(newConversation))
+          dispatch(updateActiveConversation(newConversation))
           navigate(`/conversation/${newConversation.conversationId}`)
         })
         .catch((error) => {

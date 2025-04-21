@@ -8,7 +8,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { AppDispatch, RootState } from '../../redux/store'
 import { Conversation } from '../../redux/types/conversation'
-import { updateConversation } from '../../redux/conversationSlice'
+import { updateActiveConversation } from '../../redux/conversationSlice'
 import { deleteConversation } from '@/redux/aynscThunks/conversation'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 
@@ -38,7 +38,7 @@ const ConversationList: React.FC = () => {
   })
 
   const handleConversationClick = (conversation: Conversation) => {
-    dispatch(updateConversation(conversation))
+    dispatch(updateActiveConversation(conversation))
   }
 
   const handleBottomItemClick = (action?: string) => {
