@@ -15,6 +15,7 @@ import {
 } from '../ui/select'
 import { MODEL_CONFIG } from '../../config/modelConfig'
 import { RotateCw, X } from 'lucide-react'
+import { updateConversation } from '@/redux/aynscThunks/conversation'
 
 interface ModelContextSettingsProps {
   onClose: () => void
@@ -24,27 +25,50 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   onClose,
 }) => {
   const dispatch = useDispatch<AppDispatch>()
-  const maxContextSnippets = useSelector(
-    (state: RootState) =>
-      state.conversation.maxContextSnippets ?? MODEL_CONFIG.maxContextSnippets
+  const activeConversation = useSelector(
+    (state: RootState) => state.conversation.activeConversation
   )
-  const documentSimilarityThreshold = useSelector(
-    (state: RootState) =>
-      state.conversation.documentSimilarityThreshold ??
-      MODEL_CONFIG.documentSimilarityThreshold
-  )
+  const maxContextSnippets =
+    activeConversation?.maxContextSnippets ?? MODEL_CONFIG.maxContextSnippets
+  const documentSimilarityThreshold =
+    activeConversation?.documentSimilarityThreshold ??
+    MODEL_CONFIG.documentSimilarityThreshold
 
   const handleMaxContextSnippetsChange = (value: number) => {
     dispatch(updateMaxContextSnippets(value))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { maxContextSnippets: value },
+        })
+      )
+    }
   }
 
   const handleDocumentSimilarityThresholdChange = (value: string) => {
     const threshold = parseFloat(value)
     dispatch(updateDocumentSimilarityThreshold(threshold))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { documentSimilarityThreshold: threshold },
+        })
+      )
+    }
   }
 
   const handleResetMaxContextSnippets = () => {
     dispatch(updateMaxContextSnippets(MODEL_CONFIG.maxContextSnippets))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { maxContextSnippets: MODEL_CONFIG.maxContextSnippets },
+        })
+      )
+    }
   }
 
   const handleResetDocumentSimilarityThreshold = () => {
@@ -53,6 +77,17 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
         MODEL_CONFIG.documentSimilarityThreshold
       )
     )
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: {
+            documentSimilarityThreshold:
+              MODEL_CONFIG.documentSimilarityThreshold,
+          },
+        })
+      )
+    }
   }
 
   return (

@@ -5,6 +5,7 @@ import {
   createConversationAPI,
   getConversationsAPI,
   deleteConversationAPI,
+  updateConversationAPI,
 } from '../../api/conversation'
 import { AppDispatch } from '../store'
 import { sendWebSocketMessage } from './websocket'
@@ -55,6 +56,25 @@ export const deleteConversation = createAsyncThunk(
     try {
       await deleteConversationAPI(conversationId)
       return conversationId
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateConversation = createAsyncThunk<
+  Conversation,
+  { conversationId: string; updates: Partial<Conversation> },
+  { rejectValue: string }
+>(
+  'conversation/updateConversation',
+  async ({ conversationId, updates }, thunkAPI) => {
+    try {
+      const updatedConversation = await updateConversationAPI(
+        conversationId,
+        updates
+      )
+      return updatedConversation
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

@@ -73,12 +73,13 @@ export const sendWebSocketMessage = createAsyncThunk<
   const state = getState()
   const fileIds = state.conversation.selectedFiles.map((file) => file.id)
   const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
-  const prompt = state.conversation.prompt
-  const temperature = state.conversation.temperature
-  const maxTokens = state.conversation.maxTokens
-  const maxContextSnippets = state.conversation.maxContextSnippets
+  const prompt = state.conversation.activeConversation?.prompt
+  const temperature = state.conversation.activeConversation?.temperature
+  const maxTokens = state.conversation.activeConversation?.maxTokens
+  const maxContextSnippets =
+    state.conversation.activeConversation?.maxContextSnippets
   const documentSimilarityThreshold =
-    state.conversation.documentSimilarityThreshold
+    state.conversation.activeConversation?.documentSimilarityThreshold
 
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(
