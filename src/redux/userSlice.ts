@@ -13,6 +13,8 @@ import {
   updateProfilePicture,
   getUserStats,
   changePassword,
+  updateVectorDBSetting,
+  fetchVectorDBSetting,
 } from './aynscThunks/user'
 
 const userSlice = createSlice({
@@ -201,6 +203,42 @@ const userSlice = createSlice({
         state.successMessage = 'Password changed successfully'
       })
       .addCase(changePassword.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(updateVectorDBSetting.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateVectorDBSetting.fulfilled, (state, action) => {
+        state.loading = false
+        // Preserve existing user data when updating vector database
+        if (state.user && action.payload) {
+          state.user = {
+            ...state.user,
+            vector_db: action.payload.vector_db,
+          }
+        }
+        state.error = null
+        state.successMessage = 'Vector database updated successfully'
+      })
+      .addCase(updateVectorDBSetting.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+
+      .addCase(fetchVectorDBSetting.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchVectorDBSetting.fulfilled, (state, action) => {
+        state.loading = false
+        state.error = null
+        if (state.user) {
+          state.user.vector_db = action.payload.vectorDb
+        }
+      })
+      .addCase(fetchVectorDBSetting.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })
