@@ -21,6 +21,7 @@ import {
 } from '../ui/popover'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs'
 import ModelContextSettings from './ModelContextSettings'
+import { FileStatus } from '@/utils/constants/file'
 
 const ConversationFileSelect: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -32,6 +33,7 @@ const ConversationFileSelect: React.FC = () => {
   const selectedTags = useSelector(
     (state: RootState) => state.conversation.selectedTags
   )
+  const user = useSelector((state: RootState) => state.user.user)
 
   const [open, setOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -39,10 +41,19 @@ const ConversationFileSelect: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'files' | 'tags'>('files')
 
   const filteredFiles = useMemo(() => {
-    return files.filter((file) =>
-      file.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [files, searchQuery])
+    if (!user || user.vectorDb === undefined) {
+      return []
+    }
+
+    return files.filter((file) => {
+      const matchesSearch = file.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+      const matchesVectorDb = file.vectorDbSource === user.vectorDb
+      const isProcessed = file.status === FileStatus.PROCESSED
+      return matchesSearch && matchesVectorDb && isProcessed
+    })
+  }, [files, searchQuery, user])
 
   const filteredTags = useMemo(() => {
     return tags.filter((tag) =>
