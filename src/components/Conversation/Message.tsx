@@ -112,23 +112,34 @@ const Message: React.FC<MessageProps> = ({ message }) => {
             </button>
             {isSnippetsOpen && (
               <div className='mt-2 space-y-3'>
-                {message.snippets.map((snippet) => (
-                  <div
-                    key={snippet.id}
-                    className='rounded-r-lg border-l-4 border-gray-300 bg-gray-50 p-3 pl-4'
-                  >
-                    <div className='mb-1 flex items-center justify-between'>
-                      <span className='text-sm font-medium text-gray-700'>
-                        From {snippet.file.name} (Score:{' '}
-                        {snippet.similarityScore.toFixed(2)})
-                      </span>
-                      <span className='text-xs text-gray-500'>
-                        Chunk {snippet.chunkIndex}
-                      </span>
+                {[...message.snippets]
+                  .sort((a, b) => a.chunkIndex - b.chunkIndex)
+                  .map((snippet) => (
+                    <div
+                      key={snippet.id}
+                      className='rounded-r-lg border-l-4 border-gray-300 bg-gray-50 p-3 pl-4'
+                    >
+                      <div className='mb-1 flex items-center justify-between'>
+                        <span className='text-sm font-medium text-gray-700'>
+                          From {snippet.file.name} (Score:{' '}
+                          {snippet.similarityScore.toFixed(2)})
+                        </span>
+                        <span className='text-xs text-gray-500'>
+                          {snippet.vectorDbSource ? (
+                            <>
+                              <span className='font-medium'>
+                                {snippet.vectorDbSource}
+                              </span>{' '}
+                              - Chunk {snippet.chunkIndex}
+                            </>
+                          ) : (
+                            <>Chunk {snippet.chunkIndex}</>
+                          )}
+                        </span>
+                      </div>
+                      <p className='text-sm text-gray-600'>{snippet.text}</p>
                     </div>
-                    <p className='text-sm text-gray-600'>{snippet.text}</p>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </div>
