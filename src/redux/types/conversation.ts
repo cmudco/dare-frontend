@@ -42,6 +42,7 @@ export interface Snippet {
   text: string
   similarityScore: number
   chunkIndex: number
+  vectorDbSource: string
 }
 
 export interface ConversationState {

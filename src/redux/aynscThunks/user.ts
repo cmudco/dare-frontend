@@ -15,6 +15,7 @@ import {
   getUserStatsFromAPI,
   changePasswordUser,
 } from '../../api/auth'
+import { getVectorDBPreference, updateVectorDBPreference } from '@/api/user'
 
 export const userRegister = createAsyncThunk(
   'user/register',
@@ -210,6 +211,33 @@ export const changePassword = createAsyncThunk(
   ) => {
     try {
       const data = await changePasswordUser(formData)
+
+      return data
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateVectorDBSetting = createAsyncThunk(
+  'user/updateVectorDBSetting',
+  async (formData: { vectorDb: number }, thunkAPI) => {
+    try {
+      const data = await updateVectorDBPreference(formData)
+
+      return data
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const fetchVectorDBSetting = createAsyncThunk(
+  'user/fetchVectorDBSetting',
+  async (_, thunkAPI) => {
+    try {
+      const data = await getVectorDBPreference()
+
       return data
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import {
+  resetConversation,
   updateActiveConversation,
   updateSearchQuery,
 } from '../../redux/conversationSlice'
@@ -35,6 +36,7 @@ const ConversationHistory = () => {
     dispatch(createConversation())
       .unwrap()
       .then((newConversation) => {
+        dispatch(resetConversation())
         dispatch(updateActiveConversation(newConversation))
         navigate(`/conversation/${newConversation.conversationId}`)
       })

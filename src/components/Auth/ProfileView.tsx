@@ -1,6 +1,6 @@
 import React from 'react'
-// import { ProfileForm } from './ProfileForm'
 import { ChangePasswordForm } from './ChangePasswordForm'
+// import { VectorDBConfigForm } from './VectorDBConfigForm'
 
 const ProfileView: React.FC = () => {
   return (
@@ -9,8 +9,8 @@ const ProfileView: React.FC = () => {
         <h1 className='text-3xl font-bold tracking-tight'>Profile</h1>
       </div>
       <div className='p-8'>
-        {/* <ProfileForm /> */}
         <ChangePasswordForm />
+        {/* <VectorDBConfigForm /> */}
       </div>
     </div>
   )

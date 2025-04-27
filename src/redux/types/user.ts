@@ -7,6 +7,25 @@ export interface UserStats {
   taggedFilesCount: number
 }
 
+export enum VectorDBChoice {
+  PINECONE = 0,
+  WEAVIATE = 1,
+  CUSTOM = 2,
+}
+
+export const getVectorDBName = (value: number): string => {
+  switch (value) {
+    case VectorDBChoice.PINECONE:
+      return 'Pinecone'
+    case VectorDBChoice.WEAVIATE:
+      return 'Weaviate'
+    case VectorDBChoice.CUSTOM:
+      return 'Custom DB'
+    default:
+      return 'Unknown'
+  }
+}
+
 export interface User {
   id: string
   email: string
@@ -20,6 +39,7 @@ export interface User {
   roomid?: string
   invite_code?: string
   profile_picture?: string
+  vector_db?: number
 }
 
 export interface UserState {
@@ -43,4 +63,7 @@ export type ChangePasswordValues = {
 export interface ProfileSettings {
   first_name: string
   last_name: string
+}
+export interface VectorDBSettings {
+  vector_db: number
 }
