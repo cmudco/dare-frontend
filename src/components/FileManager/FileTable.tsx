@@ -43,6 +43,7 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
   const { files, loading } = useSelector((state: RootState) => state.files)
   const { tags: allTags } = useSelector((state: RootState) => state.tags)
+  const user = useSelector((state: RootState) => state.user.user)
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
@@ -50,6 +51,10 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
   const [deleteFileName, setDeleteFileName] = useState<string>('')
 
   const filteredFiles = useMemo(() => {
+    if (!user || user.vectorDb === undefined) {
+      return []
+    }
+
     return files.filter((file) => {
       const fileName = file.name?.toLowerCase() || ''
       const matchesSearch =
@@ -57,9 +62,10 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
       const matchesTags =
         selectedTags.length === 0 ||
         (file.tags && file.tags.some((tagId) => selectedTags.includes(tagId)))
-      return matchesSearch && matchesTags
+      const matchesVectorDb = file.vectorDbSource === user.vectorDb
+      return matchesSearch && matchesTags && matchesVectorDb
     })
-  }, [files, searchQuery, selectedTags])
+  }, [files, searchQuery, selectedTags, user])
 
   const totalPages = Math.ceil(filteredFiles.length / itemsPerPage)
   const paginatedFiles = filteredFiles.slice(

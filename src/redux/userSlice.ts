@@ -216,7 +216,7 @@ const userSlice = createSlice({
         if (state.user && action.payload) {
           state.user = {
             ...state.user,
-            vector_db: action.payload.vector_db,
+            vectorDb: action.payload.vectorDb,
           }
         }
         state.error = null
@@ -235,7 +235,7 @@ const userSlice = createSlice({
         state.loading = false
         state.error = null
         if (state.user) {
-          state.user.vector_db = action.payload.vectorDb
+          state.user.vectorDb = action.payload.vectorDb
         }
       })
       .addCase(fetchVectorDBSetting.rejected, (state, action) => {

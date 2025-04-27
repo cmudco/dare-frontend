@@ -1,3 +1,5 @@
+import { VectorDbSource } from '@/utils/constants/user'
+
 export interface UserStats {
   promptCount: number
   fileCount: number
@@ -5,25 +7,6 @@ export interface UserStats {
   messageCount: number
   aiMessageCount: number
   taggedFilesCount: number
-}
-
-export enum VectorDBChoice {
-  PINECONE = 0,
-  WEAVIATE = 1,
-  CUSTOM = 2,
-}
-
-export const getVectorDBName = (value: number): string => {
-  switch (value) {
-    case VectorDBChoice.PINECONE:
-      return 'Pinecone'
-    case VectorDBChoice.WEAVIATE:
-      return 'Weaviate'
-    case VectorDBChoice.CUSTOM:
-      return 'Custom DB'
-    default:
-      return 'Unknown'
-  }
 }
 
 export interface User {
@@ -39,7 +22,7 @@ export interface User {
   roomid?: string
   invite_code?: string
   profile_picture?: string
-  vector_db?: number
+  vectorDb?: VectorDbSource
 }
 
 export interface UserState {

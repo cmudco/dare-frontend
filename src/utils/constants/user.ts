@@ -1,13 +1,13 @@
-export enum VectorDBChoice {
+export enum VectorDbSource {
   PINECONE = 0,
   WEAVIATE = 1,
 }
 
 export const getVectorDBName = (value: number): string => {
   switch (value) {
-    case VectorDBChoice.PINECONE:
+    case VectorDbSource.PINECONE:
       return 'Pinecone (public)'
-    case VectorDBChoice.WEAVIATE:
+    case VectorDbSource.WEAVIATE:
       return 'Weaviate (private)'
     default:
       return 'Unknown'

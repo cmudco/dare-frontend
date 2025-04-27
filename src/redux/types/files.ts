@@ -1,4 +1,5 @@
 import { FileStatus } from '@/utils/constants/file'
+import { VectorDbSource } from '@/utils/constants/user'
 
 export interface MyFile {
   id: number
@@ -10,6 +11,7 @@ export interface MyFile {
   tags: number[]
   jobId?: string
   status: FileStatus
+  vectorDbSource: VectorDbSource
 }
 
 export interface FileState {
