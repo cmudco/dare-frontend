@@ -13,7 +13,7 @@ import {
 } from '../ui/select'
 
 import { Database, DollarSign } from 'lucide-react'
-import { getVectorDBName, VectorDBChoice } from '@/utils/constants/user'
+import { getVectorDBName, VectorDbSource } from '@/utils/constants/user'
 import {
   updateVectorDBSetting,
   fetchVectorDBSetting,
@@ -33,8 +33,8 @@ export const VectorDBConfigForm: React.FC = () => {
   }, [dispatch])
 
   useEffect(() => {
-    if (user && user.vector_db !== undefined) {
-      const userVectorDB = user.vector_db
+    if (user && user.vectorDb !== undefined) {
+      const userVectorDB = user.vectorDb
       setVectorDBValue(userVectorDB)
       setInitialVectorDBValue(userVectorDB)
     }
@@ -71,7 +71,7 @@ export const VectorDBConfigForm: React.FC = () => {
         >
           <SelectTrigger className='h-10'>
             <div className='flex items-center gap-2'>
-              {vectorDBValue == VectorDBChoice.PINECONE ? (
+              {vectorDBValue == VectorDbSource.PINECONE ? (
                 <DollarSign className='h-4 w-4 text-gray-500' />
               ) : (
                 <Database className='h-4 w-4 text-gray-500' />
@@ -83,14 +83,14 @@ export const VectorDBConfigForm: React.FC = () => {
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={VectorDBChoice.PINECONE.toString()}>
+            <SelectItem value={VectorDbSource.PINECONE.toString()}>
               <div className='flex items-center gap-2'>
                 <span className='flex items-center gap-2'>
                   Pinecone (public)
                 </span>
               </div>
             </SelectItem>
-            <SelectItem value={VectorDBChoice.WEAVIATE.toString()}>
+            <SelectItem value={VectorDbSource.WEAVIATE.toString()}>
               <div className='flex items-center gap-2'>
                 <span>Weaviate (private)</span>
               </div>
