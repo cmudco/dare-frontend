@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   updateConversationInput,
   updateActiveConversation,
+  updateSelectedTags,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker'
@@ -40,6 +41,7 @@ const ConversationPill: React.FC = () => {
     }
 
     if (!activeConversation) {
+      dispatch(updateSelectedTags([]))
       dispatch(createConversation())
         .unwrap()
         .then((newConversation) => {
