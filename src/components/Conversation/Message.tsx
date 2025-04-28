@@ -113,7 +113,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
             {isSnippetsOpen && (
               <div className='mt-2 space-y-3'>
                 {[...message.snippets]
-                  .sort((a, b) => a.chunkIndex - b.chunkIndex)
+                  .sort((a, b) => b.similarityScore - a.similarityScore)
                   .map((snippet) => (
                     <div
                       key={snippet.id}
