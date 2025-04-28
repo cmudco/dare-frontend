@@ -161,6 +161,14 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
     setVersionHistoryPromptId(null)
   }
 
+  const handleViewVersions = (id: string) => {
+    setVersionHistoryPromptId(id)
+  }
+
+  const handleCloseVersionHistory = () => {
+    setVersionHistoryPromptId(null)
+  }
+
   const renderPromptContent = (content: string) => {
     return stripHtml(content)
   }
