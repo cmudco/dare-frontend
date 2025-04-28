@@ -1,14 +1,48 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { Message as MessageModel } from '../../redux/types/conversation'
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeRaw from 'rehype-raw'
+import 'katex/dist/katex.min.css'
+import 'highlight.js/styles/atom-one-light.css'
+
 import { Bot, ChevronDown, ChevronUp } from 'lucide-react'
 import { RootState } from '@/redux/store'
+import mermaid from 'mermaid'
+import rehypeKatex from 'rehype-katex'
+import rehypeHighlight from 'rehype-highlight'
+import { CodeBlock } from './CodeBlock'
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'default',
+  securityLevel: 'loose',
+})
 
 interface MessageProps {
   message: MessageModel
+}
+
+const MermaidBlock: React.FC<{ code: string }> = ({ code }) => {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (ref.current) {
+      try {
+        mermaid.parse(code)
+        const id = 'mermaid_svg_' + Math.random().toString(36).substring(2, 10)
+        mermaid.render(id, code).then(({ svg }) => {
+          ref.current!.innerHTML = svg
+        })
+      } catch {
+        if (ref.current)
+          ref.current.innerHTML = `<pre style='color:red'>Invalid mermaid diagram</pre>`
+      }
+    }
+  }, [code])
+  return <div ref={ref} className='not-prose my-4' />
 }
 
 const Message: React.FC<MessageProps> = ({ message }) => {
@@ -57,12 +91,37 @@ const Message: React.FC<MessageProps> = ({ message }) => {
               message.streaming ? 'animate-pulse' : ''
             }`}
           >
-            <div>
+            <div className='prose prose-sm max-w-none text-sm text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none'>
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                className='prose !max-w-none'
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
+                components={{
+                  code({ className, children, ...props }) {
+                    const match = /language-(\w+)/.exec(className || '')
+                    if (match && match[1] === 'mermaid') {
+                      return <MermaidBlock code={String(children).trim()} />
+                    }
+                    if (match) {
+                      return (
+                        <CodeBlock className={className} props={props}>
+                          {children}
+                        </CodeBlock>
+                      )
+                    }
+                    return (
+                      <code
+                        className='not-prose rounded bg-gray-100 px-1'
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    )
+                  },
+                }}
               >
-                {message.streaming ? `${message.message}▋` : message.message}
+                {message.streaming
+                  ? `${message.message}\u258b`
+                  : message.message}
               </ReactMarkdown>
             </div>
           </div>
