@@ -4,7 +4,7 @@ import { AppDispatch, RootState } from '../../redux/store'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid'
 import { GoCommandPalette } from 'react-icons/go'
 import { formatDate } from '../../utils/constants/prompts'
-import { openModal } from '@/redux/promptSlice'
+import { openModal, clearSelectedPrompt } from '@/redux/promptSlice'
 import { useNavigate } from 'react-router-dom'
 import { setPrompt } from '@/redux/conversationSlice'
 import { Prompt } from '@/redux/types/prompt'
@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../ui/dialog'
 import { Plus } from 'lucide-react'
 import { stripHtml } from '../../utils/textUtils'
 import { updateConversation } from '@/redux/aynscThunks/conversation'
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
 
 const RichTextPreview = ({ content }: { content: string }) => {
   const truncateHtml = (html: string, maxLength: number = 150): string => {
@@ -49,16 +50,26 @@ const PromptSet: React.FC = () => {
   )
 
   const handlePromptSelect = (prompt: Prompt) => {
-    const isSamePrompt = selectedPrompt?.id === prompt.id
-    const newPrompt = isSamePrompt ? null : prompt
-    dispatch(setPrompt(newPrompt))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { promptId: newPrompt?.id },
-        })
-      )
+    if (selectedPrompt?.id === prompt.id) {
+      dispatch(clearSelectedPrompt())
+      if (activeConversation) {
+        dispatch(
+          updateConversation({
+            conversationId: activeConversation.conversationId,
+            updates: { promptId: null },
+          })
+        )
+      }
+    } else {
+      dispatch(setPrompt(prompt))
+      if (activeConversation) {
+        dispatch(
+          updateConversation({
+            conversationId: activeConversation.conversationId,
+            updates: { promptId: prompt?.id },
+          })
+        )
+      }
     }
   }
 
@@ -121,34 +132,47 @@ const PromptSet: React.FC = () => {
             </div>
           )}
 
-          {filteredPrompts.map((prompt) => (
-            <div
-              key={prompt.id}
-              className={`mb-3 cursor-pointer rounded-lg border border-gray-100 p-3 text-black transition-colors ${
-                selectedPrompt?.id === prompt.id
-                  ? 'bg-red-200'
-                  : 'bg-muted text-foreground hover:bg-pink-50'
-              }`}
-              onClick={() => handlePromptSelect(prompt)}
-            >
-              <div className='mb-1 flex items-start justify-between'>
-                <div className='flex items-center gap-2'>
-                  <h4 className='text-xl font-medium text-gray-800'>
-                    {prompt.title || 'Untitled'}
-                  </h4>
-                  <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
-                    v{prompt.version || 1}
+          <RadioGroup
+            value={selectedPrompt?.id || ''}
+            onValueChange={(id) => {
+              const prompt = filteredPrompts.find((p) => p.id === id)
+              if (prompt) handlePromptSelect(prompt)
+            }}
+            className='space-y-2'
+          >
+            {filteredPrompts.map((prompt) => (
+              <div
+                key={prompt.id}
+                className={`mb-3 cursor-pointer rounded-lg border border-gray-100 p-3 text-black transition-colors ${
+                  selectedPrompt?.id === prompt.id
+                    ? 'bg-red-200'
+                    : 'bg-muted text-foreground hover:bg-pink-50'
+                }`}
+                onClick={() => handlePromptSelect(prompt)}
+              >
+                <div className='mb-1 flex items-start justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <RadioGroupItem
+                      value={prompt.id}
+                      aria-label={`Select ${prompt.title || 'Untitled'} prompt`}
+                    />
+                    <h4 className='text-xl font-medium text-gray-800'>
+                      {prompt.title || 'Untitled'}
+                    </h4>
+                    <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+                      v{prompt.version || 1}
+                    </span>
+                  </div>
+                  <span className='text-xs text-gray-500'>
+                    {formatDate(prompt.createdAt)}
                   </span>
                 </div>
-                <span className='text-xs text-gray-500'>
-                  {formatDate(prompt.createdAt)}
-                </span>
+                <div className='max-h-[4.5em] overflow-hidden'>
+                  <RichTextPreview content={prompt.content || 'No content'} />
+                </div>
               </div>
-              <div className='max-h-[4.5em] overflow-hidden'>
-                <RichTextPreview content={prompt.content || 'No content'} />
-              </div>
-            </div>
-          ))}
+            ))}
+          </RadioGroup>
         </div>
       </DialogContent>
     </Dialog>
