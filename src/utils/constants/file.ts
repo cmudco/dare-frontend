@@ -1,4 +1,11 @@
-export const TABLE_HEAD = ['File Name', 'File Type', 'Size', 'Tags', 'Action']
+export const TABLE_HEAD = [
+  'File Name',
+  'File Type',
+  'Size',
+  'Tags',
+  'Status',
+  'Action',
+]
 
 export const TAG_COLORS: {
   [key: string]: 'yellow' | 'red' | 'blue' | 'green' | 'purple' | 'gray'
@@ -45,3 +52,12 @@ export enum FileStatus {
   PROCESSED = 1,
   FAILED = 2,
 }
+
+export const FILE_TABLE_HEADER_TO_KEY = {
+  'File Name': 'name',
+  'File Type': 'fileType',
+  Size: 'size',
+  Tags: 'tags',
+  Status: 'status',
+  Action: null,
+} as const

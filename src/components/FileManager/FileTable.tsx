@@ -3,8 +3,9 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
 import { deleteFile } from '../../redux/aynscThunks/file'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
-import { TAG_COLORS } from '../../utils/constants/file'
+import { TABLE_HEAD, TAG_COLORS } from '../../utils/constants/file'
 import { formatFileSize } from '@/utils/files'
+import { sortFiles } from '@/utils/sortUtils'
 
 import {
   Select,
@@ -49,12 +50,13 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
   const [itemsPerPage, setItemsPerPage] = useState(5)
   const [deleteFileId, setDeleteFileId] = useState<number | null>(null)
   const [deleteFileName, setDeleteFileName] = useState<string>('')
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
   const filteredFiles = useMemo(() => {
     if (!user || user.vectorDb === undefined) {
       return []
     }
-
     return files.filter((file) => {
       const fileName = file.name?.toLowerCase() || ''
       const matchesSearch =
@@ -67,8 +69,12 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
     })
   }, [files, searchQuery, selectedTags, user])
 
-  const totalPages = Math.ceil(filteredFiles.length / itemsPerPage)
-  const paginatedFiles = filteredFiles.slice(
+  const sortedFiles = useMemo(() => {
+    return sortFiles(filteredFiles, sortColumn, sortDirection, allTags)
+  }, [filteredFiles, sortColumn, sortDirection, allTags])
+
+  const totalPages = Math.ceil(sortedFiles.length / itemsPerPage)
+  const paginatedFiles = sortedFiles.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   )
@@ -93,36 +99,62 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
     setDeleteFileName(name || 'Unnamed')
   }
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
   return (
     <div className='overflow-auto'>
       <Table className='mt-4 w-full min-w-max bg-white text-left'>
         <TableHeader>
           <TableRow className='bg-muted'>
-            {['Name', 'Type', 'Size', 'Tags', 'Status', 'Actions'].map(
-              (head) => (
-                <TableHead
-                  key={head}
-                  className='cursor-pointer p-4 text-sm font-semibold'
-                >
-                  <div className='flex items-center justify-between gap-2 opacity-70'>
-                    {head}
-                    <ChevronUpDownIcon strokeWidth={2} className='h-4 w-4' />
-                  </div>
-                </TableHead>
-              )
-            )}
+            {TABLE_HEAD.map((head) => (
+              <TableHead
+                key={head}
+                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 ${head !== 'Action' ? 'hover:bg-gray-100 hover:opacity-100' : ''}`}
+                onClick={() => head !== 'Action' && handleSort(head)}
+              >
+                <div className='flex items-center gap-2 opacity-70'>
+                  {head}
+                  {head !== 'Action' && (
+                    <ChevronUpDownIcon
+                      strokeWidth={2}
+                      className={`h-4 w-4 ${sortColumn === head ? 'text-blue-500' : ''}`}
+                      style={{
+                        transform:
+                          sortColumn === head && sortDirection === 'desc'
+                            ? 'rotate(180deg)'
+                            : 'none',
+                        transition: 'transform 0.2s',
+                      }}
+                    />
+                  )}
+                </div>
+              </TableHead>
+            ))}
           </TableRow>
         </TableHeader>
         <TableBody>
           {files.length === 0 && loading ? (
             <TableRow>
-              <TableCell colSpan={6} className='p-4 text-center'>
+              <TableCell
+                colSpan={TABLE_HEAD.length}
+                className='p-4 text-center'
+              >
                 Loading files...
               </TableCell>
             </TableRow>
-          ) : filteredFiles.length === 0 ? (
+          ) : sortedFiles.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className='p-4 text-center'>
+              <TableCell
+                colSpan={TABLE_HEAD.length}
+                className='p-4 text-center'
+              >
                 No matching files found
               </TableCell>
             </TableRow>
@@ -174,10 +206,10 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
           )}
         </TableBody>
 
-        {filteredFiles.length > 0 && (
+        {sortedFiles.length > 0 && (
           <TableFooter>
             <TableRow>
-              <TableCell colSpan={6} className='w-full p-4'>
+              <TableCell colSpan={TABLE_HEAD.length} className='w-full p-4'>
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
                     <span className='text-sm'>Rows per page:</span>

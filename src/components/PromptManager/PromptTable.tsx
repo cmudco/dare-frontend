@@ -37,6 +37,7 @@ import { DeleteConfirmation } from '../DeleteConfirmation'
 import { stripHtml } from '../../utils/textUtils'
 import { TrashIcon } from '@heroicons/react/24/outline'
 import { DocumentDuplicateIcon, PencilIcon } from '@heroicons/react/20/solid'
+import { sortPrompts } from '@/utils/sortUtils'
 
 interface PromptTableProps {
   searchQuery: string
@@ -51,6 +52,9 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
   const [deletePromptId, setDeletePromptId] = useState<string | null>(null)
   const [deletePromptTitle, setDeletePromptTitle] = useState<string>('')
 
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+
   const filteredPrompts = useMemo(() => {
     return prompts.filter((prompt) => {
       const promptTitle = prompt.title?.toLowerCase() || ''
@@ -63,8 +67,21 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
     })
   }, [prompts, searchQuery])
 
-  const totalPages = Math.ceil(filteredPrompts.length / itemsPerPage)
-  const paginatedPrompts = filteredPrompts.slice(
+  const sortedPrompts = useMemo(() => {
+    return sortPrompts(filteredPrompts, sortColumn, sortDirection)
+  }, [filteredPrompts, sortColumn, sortDirection])
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  const totalPages = Math.ceil(sortedPrompts.length / itemsPerPage)
+  const paginatedPrompts = sortedPrompts.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   )
@@ -99,10 +116,8 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
     id: string
     version: number
   }) => {
-    // Find the original parent prompt to determine correct version numbering
     const originalPrompt = prompts.find((p) => p.id === values.id)
 
-    // Find all existing versions of this prompt family
     const promptFamily = prompts.filter(
       (p) =>
         p.parent === values.id ||
@@ -112,7 +127,6 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
             p.id === originalPrompt.parent))
     )
 
-    // Calculate the next version number
     const highestExistingVersion = Math.max(
       ...promptFamily.map((p) => p.version || 1)
     )
@@ -124,9 +138,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
         promptData: {
           title: values.title,
           content: values.content,
-          // Set explicit version number
           version: nextVersion,
-          // Track parent relationship
           parent: values.id,
         },
       })
@@ -148,11 +160,28 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
             {PROMPTS_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className='cursor-pointer p-4 text-sm font-semibold'
+                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 ${
+                  head !== 'Action' ? 'hover:bg-gray-100 hover:opacity-100' : ''
+                }`}
+                onClick={() => head !== 'Action' && handleSort(head)}
               >
                 <div className='flex items-center justify-between gap-2 opacity-70'>
                   {head}
-                  <ChevronUpDownIcon strokeWidth={2} className='h-4 w-4' />
+                  {head !== 'Action' && (
+                    <ChevronUpDownIcon
+                      strokeWidth={2}
+                      className={`h-4 w-4 ${
+                        sortColumn === head ? 'text-blue-500' : ''
+                      }`}
+                      style={{
+                        transform:
+                          sortColumn === head && sortDirection === 'desc'
+                            ? 'rotate(180deg)'
+                            : 'none',
+                        transition: 'transform 0.2s',
+                      }}
+                    />
+                  )}
                 </div>
               </TableHead>
             ))}
@@ -161,13 +190,19 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
         <TableBody>
           {prompts.length === 0 && loading ? (
             <TableRow>
-              <TableCell colSpan={3} className='p-4 text-center'>
+              <TableCell
+                colSpan={PROMPTS_TABLE_HEAD.length}
+                className='p-4 text-center'
+              >
                 Loading prompts...
               </TableCell>
             </TableRow>
-          ) : filteredPrompts.length === 0 ? (
+          ) : sortedPrompts.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} className='p-4 text-center'>
+              <TableCell
+                colSpan={PROMPTS_TABLE_HEAD.length}
+                className='p-4 text-center'
+              >
                 No matching prompts found
               </TableCell>
             </TableRow>
@@ -235,7 +270,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
         </TableBody>
 
         {/* Footer for Pagination & Controls */}
-        {filteredPrompts.length > 0 && (
+        {sortedPrompts.length > 0 && (
           <TableFooter>
             <TableRow>
               <TableCell
