@@ -1,6 +1,7 @@
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Button } from '../ui/button'
+import { Input } from '../ui/input'
 import { AppDispatch, RootState } from '../../redux/store'
 import {
   updateMaxContextSnippets,
@@ -34,6 +35,14 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
     activeConversation?.documentSimilarityThreshold ??
     MODEL_CONFIG.documentSimilarityThreshold
 
+  const [snippetInput, setSnippetInput] = React.useState(
+    maxContextSnippets.toString()
+  )
+
+  React.useEffect(() => {
+    setSnippetInput(maxContextSnippets.toString())
+  }, [maxContextSnippets])
+
   const handleMaxContextSnippetsChange = (value: number) => {
     dispatch(updateMaxContextSnippets(value))
     if (activeConversation) {
@@ -43,6 +52,28 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
           updates: { maxContextSnippets: value },
         })
       )
+    }
+  }
+
+  const handleSnippetInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^0-9]/g, '')
+    setSnippetInput(val)
+  }
+
+  const handleSnippetInputBlur = () => {
+    const num = Math.max(1, parseInt(snippetInput, 10) || 1)
+    if (num !== maxContextSnippets) {
+      handleMaxContextSnippetsChange(num)
+    } else {
+      setSnippetInput(num.toString())
+    }
+  }
+
+  const handleSnippetInputKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === 'Enter') {
+      ;(e.target as HTMLInputElement).blur()
     }
   }
 
@@ -133,9 +164,18 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
             >
               -
             </Button>
-            <span className='min-w-[30px] rounded-md border border-input bg-transparent px-2 py-1 text-center font-mono text-sm'>
-              {maxContextSnippets}
-            </span>
+            <Input
+              type='number'
+              min={1}
+              value={snippetInput}
+              onChange={handleSnippetInputChange}
+              onBlur={handleSnippetInputBlur}
+              onKeyDown={handleSnippetInputKeyDown}
+              className='hide-number-arrows h-8 w-16 text-center font-mono text-sm focus:outline-none focus-visible:outline-none'
+              aria-label='Max Context Snippets'
+              inputMode='numeric'
+              pattern='[0-9]*'
+            />
             <Button
               variant='outline'
               className='h-auto px-2 py-1'
@@ -178,6 +218,21 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
           </Select>
         </div>
       </div>
+      <style>{`
+        input.hide-number-arrows::-webkit-outer-spin-button,
+        input.hide-number-arrows::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input.hide-number-arrows[type='number'] {
+          -moz-appearance: textfield;
+        }
+        input.hide-number-arrows:focus,
+        input.hide-number-arrows:focus-visible {
+          outline: none !important;
+          box-shadow: none !important;
+        }
+      `}</style>
     </div>
   )
 }
