@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { Message as MessageModel } from '../../redux/types/conversation'
-import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -9,7 +8,7 @@ import rehypeRaw from 'rehype-raw'
 import 'katex/dist/katex.min.css'
 import 'highlight.js/styles/atom-one-light.css'
 
-import { Bot, ChevronDown, ChevronUp } from 'lucide-react'
+import { Bot, ChevronDown, ChevronUp, Copy, Pencil } from 'lucide-react'
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
 import rehypeKatex from 'rehype-katex'
@@ -24,6 +23,7 @@ mermaid.initialize({
 
 interface MessageProps {
   message: MessageModel
+  onEditMessage?: (id: string, content: string) => void
 }
 
 const MermaidBlock: React.FC<{ code: string }> = ({ code }) => {
@@ -45,7 +45,7 @@ const MermaidBlock: React.FC<{ code: string }> = ({ code }) => {
   return <div ref={ref} className='not-prose my-4' />
 }
 
-const Message: React.FC<MessageProps> = ({ message }) => {
+const Message: React.FC<MessageProps> = ({ message, onEditMessage }) => {
   const llms = useSelector(
     (state: RootState) => state.conversation.availableModels
   )
@@ -82,9 +82,9 @@ const Message: React.FC<MessageProps> = ({ message }) => {
           </div>
         )}
         <div
-          className={`relative max-w-[95%] text-wrap rounded-xl px-5 py-3 ${
+          className={`relative mb-2 max-w-[95%] text-wrap rounded-xl px-5 py-3 ${
             message.isSender ? 'bg-gray-100' : 'bg-gray-100'
-          } group inline-block`}
+          } group inline-block hover:z-20`}
         >
           <div
             className={`text-wrap font-normal ${
@@ -125,11 +125,25 @@ const Message: React.FC<MessageProps> = ({ message }) => {
               </ReactMarkdown>
             </div>
           </div>
-
-          {!message.isSender && !message.streaming && (
-            <button className='absolute -right-8 -top-2 mr-2 mt-2 hidden text-gray-500 hover:text-gray-700 group-hover:block'>
-              <ArrowPathIcon className='h-5 w-5 text-gray-900' />
-            </button>
+          {message.isSender && !message.streaming && (
+            <div className='pointer-events-auto absolute right-1 flex h-7 items-center pt-6 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
+              <button
+                className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+                onClick={() => navigator.clipboard.writeText(message.message)}
+                aria-label='Copy message'
+              >
+                <Copy className='h-3 w-3' />
+              </button>
+              <button
+                className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+                onClick={() =>
+                  onEditMessage && onEditMessage(message.id, message.message)
+                }
+                aria-label='Edit message'
+              >
+                <Pencil className='h-3 w-3' />
+              </button>
+            </div>
           )}
         </div>
         {message.isSender && (

@@ -47,6 +47,7 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           >
+            <Route index element={<Dashboard />} />
             <Route path='/conversation' element={<CoversationScreen />} />
             <Route path='/conversation/:id' element={<CoversationScreen />} />
             <Route path='/dashboard' element={<Dashboard />} />
