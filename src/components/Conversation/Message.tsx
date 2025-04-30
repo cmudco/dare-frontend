@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState } from 'react'
 import { useSelector } from 'react-redux'
-import { Message as MessageModel } from '../../redux/types/conversation'
+import { MessageProps } from '../../redux/types/conversation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -8,12 +8,15 @@ import rehypeRaw from 'rehype-raw'
 import 'katex/dist/katex.min.css'
 import 'highlight.js/styles/atom-one-light.css'
 
-import { Bot, ChevronDown, ChevronUp, Copy, Pencil } from 'lucide-react'
+import { Bot, ChevronDown, ChevronUp, Copy, RefreshCw } from 'lucide-react'
+
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
 import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import { CodeBlock } from './CodeBlock'
+import { MermaidBlock } from './MermaidBlock'
+import { PencilIcon } from '@heroicons/react/20/solid'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -21,31 +24,11 @@ mermaid.initialize({
   securityLevel: 'loose',
 })
 
-interface MessageProps {
-  message: MessageModel
-  onEditMessage?: (id: string, content: string) => void
-}
-
-const MermaidBlock: React.FC<{ code: string }> = ({ code }) => {
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (ref.current) {
-      try {
-        mermaid.parse(code)
-        const id = 'mermaid_svg_' + Math.random().toString(36).substring(2, 10)
-        mermaid.render(id, code).then(({ svg }) => {
-          ref.current!.innerHTML = svg
-        })
-      } catch {
-        if (ref.current)
-          ref.current.innerHTML = `<pre style='color:red'>Invalid mermaid diagram</pre>`
-      }
-    }
-  }, [code])
-  return <div ref={ref} className='not-prose my-4' />
-}
-
-const Message: React.FC<MessageProps> = ({ message, onEditMessage }) => {
+const Message: React.FC<MessageProps> = ({
+  message,
+  onEditMessage,
+  onContentRendered,
+}) => {
   const llms = useSelector(
     (state: RootState) => state.conversation.availableModels
   )
@@ -69,7 +52,7 @@ const Message: React.FC<MessageProps> = ({ message, onEditMessage }) => {
     <div
       className={`flex flex-col px-5 ${
         message.isSender ? 'items-end' : 'items-start'
-      } mb-4`}
+      } group mb-4`}
     >
       <div
         className={`flex w-full max-w-[100%] ${
@@ -81,10 +64,32 @@ const Message: React.FC<MessageProps> = ({ message, onEditMessage }) => {
             <Bot className='h-8 w-8' />
           </div>
         )}
+
+        {message.isSender && !message.streaming && (
+          <div className='mr-2 mt-2 flex flex-shrink-0 items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
+            <button
+              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+              onClick={() => navigator.clipboard.writeText(message.message)}
+              aria-label='Copy message'
+            >
+              <Copy className='h-4 w-4' />
+            </button>
+            <button
+              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+              onClick={() =>
+                onEditMessage && onEditMessage(message.id, message.message)
+              }
+              aria-label='Edit message'
+            >
+              <PencilIcon className='h-4 w-4' />
+            </button>
+          </div>
+        )}
+
         <div
           className={`relative mb-2 max-w-[95%] text-wrap rounded-xl px-5 py-3 ${
             message.isSender ? 'bg-gray-100' : 'bg-gray-100'
-          } group inline-block hover:z-20`}
+          } inline-block hover:z-20`}
         >
           <div
             className={`text-wrap font-normal ${
@@ -99,7 +104,20 @@ const Message: React.FC<MessageProps> = ({ message, onEditMessage }) => {
                   code({ className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || '')
                     if (match && match[1] === 'mermaid') {
-                      return <MermaidBlock code={String(children).trim()} />
+                      if (message.streaming) {
+                        return (
+                          <div className='not-prose my-4'>
+                            Loading diagram...
+                          </div>
+                        )
+                      }
+                      return (
+                        <MermaidBlock
+                          code={String(children).trim()}
+                          onRendered={onContentRendered}
+                          streaming={message.streaming}
+                        />
+                      )
                     }
                     if (match) {
                       return (
@@ -125,27 +143,8 @@ const Message: React.FC<MessageProps> = ({ message, onEditMessage }) => {
               </ReactMarkdown>
             </div>
           </div>
-          {message.isSender && !message.streaming && (
-            <div className='pointer-events-auto absolute right-1 flex h-7 items-center pt-6 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
-              <button
-                className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
-                onClick={() => navigator.clipboard.writeText(message.message)}
-                aria-label='Copy message'
-              >
-                <Copy className='h-3 w-3' />
-              </button>
-              <button
-                className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
-                onClick={() =>
-                  onEditMessage && onEditMessage(message.id, message.message)
-                }
-                aria-label='Edit message'
-              >
-                <Pencil className='h-3 w-3' />
-              </button>
-            </div>
-          )}
         </div>
+
         {message.isSender && (
           <div className='ml-2 mt-1 flex-shrink-0'>
             <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 font-medium text-white'>
@@ -154,6 +153,25 @@ const Message: React.FC<MessageProps> = ({ message, onEditMessage }) => {
           </div>
         )}
       </div>
+
+      {!message.isSender && !message.streaming && (
+        <div className='flex w-full max-w-[95%] pl-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
+          <button
+            className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+            onClick={() => {}}
+            aria-label='Regenerate AI response'
+          >
+            <RefreshCw className='h-4 w-4' />
+          </button>
+          <button
+            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+            onClick={() => navigator.clipboard.writeText(message.message)}
+            aria-label='Copy AI response'
+          >
+            <Copy className='h-4 w-4' />
+          </button>
+        </div>
+      )}
 
       {!message.isSender && !message.streaming && message.llmId && (
         <div

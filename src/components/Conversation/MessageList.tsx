@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { RootState } from '../../redux/store'
 import Message from './Message'
 
@@ -13,11 +13,21 @@ const MessageList = ({
   )
   const messageEndRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  // Scroll to bottom utility
+  const scrollToBottom = useCallback(() => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages])
+  }, [])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, scrollToBottom])
+
+  // Callback for when mermaid SVG is rendered
+  const handleContentRendered = useCallback(() => {
+    scrollToBottom()
+  }, [scrollToBottom])
 
   return (
     <div className='flex max-h-[90%] flex-col gap-2 overflow-y-auto pt-2'>
@@ -28,6 +38,7 @@ const MessageList = ({
               key={idx}
               message={message}
               onEditMessage={onEditMessage}
+              onContentRendered={handleContentRendered}
             />
           )
       )}
