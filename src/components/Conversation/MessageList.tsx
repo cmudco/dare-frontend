@@ -13,7 +13,6 @@ const MessageList = ({
   )
   const messageEndRef = useRef<HTMLDivElement>(null)
 
-  // Scroll to bottom utility
   const scrollToBottom = useCallback(() => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: 'smooth' })
@@ -24,7 +23,6 @@ const MessageList = ({
     scrollToBottom()
   }, [messages, scrollToBottom])
 
-  // Callback for when mermaid SVG is rendered
   const handleContentRendered = useCallback(() => {
     scrollToBottom()
   }, [scrollToBottom])

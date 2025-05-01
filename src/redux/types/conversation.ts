@@ -27,6 +27,8 @@ export interface Message {
   llmId?: number
   streaming?: boolean
   snippets?: Snippet[]
+  isLiked?: boolean
+  isDisliked?: boolean
 }
 
 export interface MessageProps {
@@ -69,4 +71,9 @@ export interface ConversationState {
 
 export interface ConversationResponse {
   results: Conversation[]
+}
+
+export interface MessageReaction {
+  isLiked: boolean
+  isDisliked: boolean
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { MessageProps } from '../../redux/types/conversation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -8,7 +8,15 @@ import rehypeRaw from 'rehype-raw'
 import 'katex/dist/katex.min.css'
 import 'highlight.js/styles/atom-one-light.css'
 
-import { Bot, ChevronDown, ChevronUp, Copy, RefreshCw } from 'lucide-react'
+import {
+  Bot,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  RefreshCw,
+  ThumbsUp,
+  ThumbsDown,
+} from 'lucide-react'
 
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
@@ -17,6 +25,8 @@ import rehypeHighlight from 'rehype-highlight'
 import { CodeBlock } from './CodeBlock'
 import { MermaidBlock } from './MermaidBlock'
 import { PencilIcon } from '@heroicons/react/20/solid'
+import { updateMessageThunk } from '../../redux/aynscThunks/conversation'
+import { AppDispatch } from '../../redux/store'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -29,6 +39,7 @@ const Message: React.FC<MessageProps> = ({
   onEditMessage,
   onContentRendered,
 }) => {
+  const dispatch = useDispatch<AppDispatch>()
   const llms = useSelector(
     (state: RootState) => state.conversation.availableModels
   )
@@ -46,6 +57,20 @@ const Message: React.FC<MessageProps> = ({
 
   const toggleSnippets = () => {
     setIsSnippetsOpen(!isSnippetsOpen)
+  }
+
+  const handleReaction = (isLike: boolean) => {
+    if (message.id) {
+      const isLiked = isLike
+      const isDisliked = !isLike
+
+      dispatch(
+        updateMessageThunk({
+          messageId: message.id,
+          reaction: { isLiked, isDisliked },
+        })
+      )
+    }
   }
 
   return (
@@ -163,6 +188,33 @@ const Message: React.FC<MessageProps> = ({
           >
             <RefreshCw className='h-4 w-4' />
           </button>
+
+          <button
+            className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 ${
+              message.isLiked
+                ? 'text-blue-500'
+                : 'text-gray-400 hover:text-gray-800'
+            }`}
+            onClick={() => handleReaction(true)}
+            aria-label={message.isLiked ? 'Unlike response' : 'Like response'}
+          >
+            <ThumbsUp className='h-4 w-4' />
+          </button>
+
+          <button
+            className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 ${
+              message.isDisliked
+                ? 'text-red-500'
+                : 'text-gray-400 hover:text-gray-800'
+            }`}
+            onClick={() => handleReaction(false)}
+            aria-label={
+              message.isDisliked ? 'Remove dislike' : 'Dislike response'
+            }
+          >
+            <ThumbsDown className='h-4 w-4' />
+          </button>
+
           <button
             className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
             onClick={() => navigator.clipboard.writeText(message.message)}

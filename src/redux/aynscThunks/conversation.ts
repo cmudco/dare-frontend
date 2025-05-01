@@ -1,11 +1,12 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { Conversation, Message } from '../types/conversation'
+import { Conversation, Message, MessageReaction } from '../types/conversation'
 import {
   getModelsAPI,
   createConversationAPI,
   getConversationsAPI,
   deleteConversationAPI,
   updateConversationAPI,
+  updateMessageAPI,
 } from '../../api/conversation'
 import { AppDispatch } from '../store'
 import { sendWebSocketMessage } from './websocket'
@@ -80,6 +81,20 @@ export const updateConversation = createAsyncThunk<
     }
   }
 )
+
+export const updateMessageThunk = createAsyncThunk<
+  Message,
+  { messageId: string; reaction: MessageReaction },
+  { rejectValue: string }
+>('conversation/updateMessage', async ({ messageId, reaction }, thunkAPI) => {
+  try {
+    const updatedMessage = await updateMessageAPI(messageId, reaction)
+    return updatedMessage
+  } catch (error) {
+    console.error('Error updating message:', error)
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
 
 export const sendMessage = createAsyncThunk(
   'conversation/sendMessage',
