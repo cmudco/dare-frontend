@@ -7,7 +7,6 @@ import remarkMath from 'remark-math'
 import rehypeRaw from 'rehype-raw'
 import 'katex/dist/katex.min.css'
 import 'highlight.js/styles/atom-one-light.css'
-
 import {
   Bot,
   ChevronDown,
@@ -17,7 +16,6 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from 'lucide-react'
-
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
 import rehypeKatex from 'rehype-katex'
@@ -27,6 +25,7 @@ import { MermaidBlock } from './MermaidBlock'
 import { PencilIcon } from '@heroicons/react/20/solid'
 import { updateMessageThunk } from '../../redux/aynscThunks/conversation'
 import { AppDispatch } from '../../redux/store'
+import { regenerateResponse } from '@/redux/aynscThunks/websocket'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -45,33 +44,55 @@ const Message: React.FC<MessageProps> = ({
   )
   const user = useSelector((state: RootState) => state.user.user)
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
+  const [showOriginal, setShowOriginal] = useState(false)
 
-  if (!message) {
-    return null
-  }
+  if (!message) return null
 
-  const llm = llms.find((model) => model.id == message.llmId)
+  const llm = llms.find((model) => model.id === message.llmId)
   const llmName = llm ? llm.name : 'Unknown LLM'
-
   const userInitial = user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'
 
-  const toggleSnippets = () => {
-    setIsSnippetsOpen(!isSnippetsOpen)
+  const toggleSnippets = () => setIsSnippetsOpen(!isSnippetsOpen)
+  const toggleVersion = () => {
+    setShowOriginal(!showOriginal)
   }
 
   const handleReaction = (isLike: boolean) => {
     if (message.id) {
-      const isLiked = isLike
-      const isDisliked = !isLike
-
       dispatch(
         updateMessageThunk({
           messageId: message.id,
-          reaction: { isLiked, isDisliked },
+          reaction: { isLiked: isLike, isDisliked: !isLike },
         })
       )
     }
   }
+
+  const handleEdit = () => {
+    if (message.isSender && onEditMessage) {
+      onEditMessage(message.id, message.message)
+    }
+  }
+
+  const handleRegenerate = () => {
+    if (!message.isSender) {
+      dispatch(regenerateResponse({ messageId: message.id }))
+    }
+  }
+
+  const displayMessage =
+    showOriginal && message.originalMessage
+      ? message.originalMessage
+      : message.message
+  const buttonLabel = message.isRegenerated
+    ? showOriginal
+      ? 'Regenerated'
+      : 'Original'
+    : message.isEdited
+      ? showOriginal
+        ? 'Edited'
+        : 'Original'
+      : ''
 
   return (
     <div
@@ -101,13 +122,26 @@ const Message: React.FC<MessageProps> = ({
             </button>
             <button
               className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
-              onClick={() =>
-                onEditMessage && onEditMessage(message.id, message.message)
-              }
+              onClick={handleEdit}
               aria-label='Edit message'
             >
               <PencilIcon className='h-4 w-4' />
             </button>
+            {(message.isEdited || message.isRegenerated) && buttonLabel && (
+              <button
+                className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+                onClick={toggleVersion}
+                aria-label={
+                  showOriginal
+                    ? message.isRegenerated
+                      ? 'Show Regenerated'
+                      : 'Show Edited'
+                    : 'Show Original'
+                }
+              >
+                {buttonLabel}
+              </button>
+            )}
           </div>
         )}
 
@@ -162,9 +196,7 @@ const Message: React.FC<MessageProps> = ({
                   },
                 }}
               >
-                {message.streaming
-                  ? `${message.message}\u258b`
-                  : message.message}
+                {message.streaming ? `${displayMessage}\u258b` : displayMessage}
               </ReactMarkdown>
             </div>
           </div>
@@ -183,7 +215,7 @@ const Message: React.FC<MessageProps> = ({
         <div className='flex w-full max-w-[95%] pl-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
           <button
             className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
-            onClick={() => {}}
+            onClick={handleRegenerate}
             aria-label='Regenerate AI response'
           >
             <RefreshCw className='h-4 w-4' />
@@ -222,6 +254,21 @@ const Message: React.FC<MessageProps> = ({
           >
             <Copy className='h-4 w-4' />
           </button>
+          {(message.isEdited || message.isRegenerated) && buttonLabel && (
+            <button
+              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+              onClick={toggleVersion}
+              aria-label={
+                showOriginal
+                  ? message.isRegenerated
+                    ? 'Show Regenerated'
+                    : 'Show Edited'
+                  : 'Show Original'
+              }
+            >
+              {buttonLabel}
+            </button>
+          )}
         </div>
       )}
 

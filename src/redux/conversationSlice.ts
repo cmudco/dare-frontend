@@ -81,23 +81,22 @@ export const conversationSlice = createSlice({
     },
     updateMessage(state, action: PayloadAction<Partial<Message>>) {
       const index = state.activeConversationMessages.findIndex(
-        (msg) => msg?.id === action.payload.id
+        (msg) => msg?.id == action.payload.id
       )
       if (index !== -1) {
         state.activeConversationMessages[index] = {
           ...state.activeConversationMessages[index],
           ...action.payload,
-          message: `${state.activeConversationMessages[index].message}${action.payload.message}`,
+          message: `${action.payload.message}`,
         }
       }
     },
     setAvailableModels(state, action: PayloadAction<LLMModel[]>) {
       state.availableModels = action.payload
+      state.selectedModel = action.payload[0]?.id
     },
     updateConversationTitle(state, action: PayloadAction<string>) {
-      if (!state.activeConversation) {
-        return
-      }
+      if (!state.activeConversation) return
       state.activeConversation.title = action.payload
       const index = state.conversations.findIndex(
         (conv) =>
@@ -211,7 +210,7 @@ export const conversationSlice = createSlice({
       })
       .addCase(updateMessageThunk.fulfilled, (state, action) => {
         const messageIndex = state.activeConversationMessages.findIndex(
-          (msg) => msg.id === action.payload.id
+          (msg) => msg?.id == action.payload.id
         )
         if (messageIndex !== -1) {
           state.activeConversationMessages[messageIndex] = {

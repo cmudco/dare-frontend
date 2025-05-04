@@ -40,18 +40,34 @@ export const connectWebSocket = createAsyncThunk<
           if (data.conversationHistory)
             dispatch(updateConversationHistory(data.conversationHistory))
           break
-
         case 'message':
-          dispatch(addMessage(data as Message))
+          if (data.regenerate) {
+            dispatch(
+              updateMessage({
+                ...(data as Partial<Message>),
+                message: data.message || '',
+                streaming: false,
+              })
+            )
+          } else {
+            dispatch(addMessage(data as Message))
+          }
           break
         case 'ai_stream':
-          dispatch(updateMessage(data as Partial<Message>))
+          dispatch(
+            updateMessage({
+              ...(data as Partial<Message>),
+              message: (data as Partial<Message>).message || '',
+            })
+          )
           break
-
         case 'conversation_title':
           dispatch(updateConversationTitle(data.title))
           break
-
+        case 'edit_message':
+        case 'regenerate_response':
+          dispatch(updateMessage(data as Partial<Message>))
+          break
         default:
           console.warn('Unknown WebSocket message type:', data.type)
       }
@@ -100,6 +116,47 @@ export const sendWebSocketMessage = createAsyncThunk<
     return rejectWithValue('WebSocket is not connected')
   }
 })
+
+export const editMessage = createAsyncThunk<
+  void,
+  { messageId: string; newContent: string },
+  { dispatch: AppDispatch; state: RootState }
+>(
+  'websocket/editMessage',
+  async ({ messageId, newContent }, { rejectWithValue }) => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          action: 'edit_message',
+          message_id: messageId,
+          message: newContent,
+        })
+      )
+    } else {
+      return rejectWithValue('WebSocket is not connected')
+    }
+  }
+)
+
+export const regenerateResponse = createAsyncThunk<
+  void,
+  { messageId: string },
+  { dispatch: AppDispatch; state: RootState }
+>(
+  'websocket/regenerateResponse',
+  async ({ messageId }, { rejectWithValue }) => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          action: 'regenerate_response',
+          message_id: messageId,
+        })
+      )
+    } else {
+      return rejectWithValue('WebSocket is not connected')
+    }
+  }
+)
 
 export const disconnectWebSocket = createAsyncThunk<
   void,

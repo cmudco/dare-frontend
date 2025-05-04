@@ -29,6 +29,9 @@ export interface Message {
   snippets?: Snippet[]
   isLiked?: boolean
   isDisliked?: boolean
+  isEdited?: boolean
+  isRegenerated?: boolean
+  originalMessage?: string
 }
 
 export interface MessageProps {
