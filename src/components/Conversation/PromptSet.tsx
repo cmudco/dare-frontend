@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../../redux/store'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid'
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid'
 import { GoCommandPalette } from 'react-icons/go'
-import { formatDate } from '../../utils/constants/prompts'
+import { formatDate, groupPrompts } from '../../utils/constants/prompts'
 import { openModal, clearSelectedPrompt } from '@/redux/promptSlice'
 import { useNavigate } from 'react-router-dom'
 import { setPrompt } from '@/redux/conversationSlice'
@@ -14,7 +15,6 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../ui/dialog'
 import { Plus } from 'lucide-react'
 import { stripHtml } from '../../utils/textUtils'
 import { updateConversation } from '@/redux/aynscThunks/conversation'
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
 
 const RichTextPreview = ({ content }: { content: string }) => {
   const truncateHtml = (html: string, maxLength: number = 150): string => {
@@ -48,6 +48,27 @@ const PromptSet: React.FC = () => {
       activeConversation: state.conversation.activeConversation,
     })
   )
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    if (selectedPrompt) {
+      const groupedPrompts = groupPrompts(prompts)
+      const group = groupedPrompts.find((g) =>
+        g.versions.some((v) => v.id === selectedPrompt.id)
+      )
+      if (
+        group &&
+        group.versions.length > 1 &&
+        group.versions[0].id !== selectedPrompt.id
+      ) {
+        setExpandedGroups((prev) => {
+          const newSet = new Set(prev)
+          newSet.add(group.rootPrompt.id)
+          return newSet
+        })
+      }
+    }
+  }, [selectedPrompt, prompts])
 
   const handlePromptSelect = (prompt: Prompt) => {
     if (selectedPrompt?.id === prompt.id) {
@@ -78,15 +99,31 @@ const PromptSet: React.FC = () => {
     dispatch(openModal())
   }
 
-  const filteredPrompts = prompts.filter((prompt) => {
-    const promptTitle = prompt.title?.toLowerCase() || ''
-    const promptContent = stripHtml(prompt.content?.toLowerCase() || '')
+  const groupedPrompts = React.useMemo(() => groupPrompts(prompts), [prompts])
+
+  const filteredPrompts = groupedPrompts.filter((group) => {
+    const rootTitle = group.rootPrompt.title?.toLowerCase() || ''
+    const latestContent = stripHtml(
+      group.versions[0].content?.toLowerCase() || ''
+    )
     return (
       searchQuery === '' ||
-      promptTitle.includes(searchQuery.toLowerCase()) ||
-      promptContent.includes(searchQuery.toLowerCase())
+      rootTitle.includes(searchQuery.toLowerCase()) ||
+      latestContent.includes(searchQuery.toLowerCase())
     )
   })
+
+  const toggleExpand = (rootId: string) => {
+    setExpandedGroups((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(rootId)) {
+        newSet.delete(rootId)
+      } else {
+        newSet.add(rootId)
+      }
+      return newSet
+    })
+  }
 
   return (
     <Dialog>
@@ -132,47 +169,88 @@ const PromptSet: React.FC = () => {
             </div>
           )}
 
-          <RadioGroup
-            value={selectedPrompt?.id || ''}
-            onValueChange={(id) => {
-              const prompt = filteredPrompts.find((p) => p.id === id)
-              if (prompt) handlePromptSelect(prompt)
-            }}
-            className='space-y-2'
-          >
-            {filteredPrompts.map((prompt) => (
-              <div
-                key={prompt.id}
-                className={`mb-3 cursor-pointer rounded-lg border border-gray-100 p-3 text-black transition-colors ${
-                  selectedPrompt?.id === prompt.id
-                    ? 'bg-red-200'
-                    : 'bg-muted text-foreground hover:bg-pink-50'
-                }`}
-                onClick={() => handlePromptSelect(prompt)}
-              >
-                <div className='mb-1 flex items-start justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <RadioGroupItem
-                      value={prompt.id}
-                      aria-label={`Select ${prompt.title || 'Untitled'} prompt`}
-                    />
-                    <h4 className='text-xl font-medium text-gray-800'>
-                      {prompt.title || 'Untitled'}
-                    </h4>
-                    <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
-                      v{prompt.version || 1}
-                    </span>
+          {filteredPrompts.map((group) => {
+            const isExpanded = expandedGroups.has(group.rootPrompt.id)
+            const latestVersion = group.versions[0]
+
+            return (
+              <div key={group.rootPrompt.id}>
+                <div
+                  className={`mb-3 rounded-lg border border-gray-100 p-3 text-black transition-colors ${
+                    selectedPrompt?.id === latestVersion.id
+                      ? 'bg-red-200'
+                      : 'bg-muted text-foreground hover:bg-pink-50'
+                  }`}
+                  onClick={() => handlePromptSelect(latestVersion)}
+                >
+                  <div className='mb-1 flex items-start justify-between'>
+                    <div className='flex items-center gap-2'>
+                      <h4 className='text-xl font-medium text-gray-800'>
+                        {latestVersion.title || 'Untitled'}
+                      </h4>
+                      <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+                        v{latestVersion.version || 1}
+                      </span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <span className='text-xs text-gray-500'>
+                        {formatDate(latestVersion.createdAt)}
+                      </span>
+                      {group.versions.length > 1 && (
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleExpand(group.rootPrompt.id)
+                          }}
+                        >
+                          {isExpanded ? (
+                            <ChevronUpIcon className='h-4 w-4' />
+                          ) : (
+                            <ChevronDownIcon className='h-4 w-4' />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <span className='text-xs text-gray-500'>
-                    {formatDate(prompt.createdAt)}
-                  </span>
+                  <div className='max-h-[4.5em] overflow-hidden'>
+                    <RichTextPreview
+                      content={latestVersion.content || 'No content'}
+                    />
+                  </div>
                 </div>
-                <div className='max-h-[4.5em] overflow-hidden'>
-                  <RichTextPreview content={prompt.content || 'No content'} />
-                </div>
+                {isExpanded && (
+                  <div className='mb-4 space-y-2 pl-4'>
+                    {group.versions.slice(1).map((version) => (
+                      <div
+                        key={version.id}
+                        className={`flex items-center justify-between rounded-md p-2 text-sm transition-colors ${
+                          selectedPrompt?.id === version.id
+                            ? 'bg-red-200'
+                            : 'bg-gray-50 hover:bg-gray-100'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handlePromptSelect(version)
+                        }}
+                      >
+                        <div className='flex items-center gap-2'>
+                          <span>{version.title || 'Untitled'}</span>
+                          <span className='inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800'>
+                            v{version.version || 1}
+                          </span>
+                        </div>
+                        <span className='text-xs text-gray-500'>
+                          {formatDate(version.createdAt)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            ))}
-          </RadioGroup>
+            )
+          })}
         </div>
       </DialogContent>
     </Dialog>

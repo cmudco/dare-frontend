@@ -5,6 +5,7 @@ import {
   getPromptById,
   createOrUpdatePrompt,
   deletePrompt,
+  clonePrompt,
 } from './aynscThunks/prompt'
 import { sortPrompts } from '../utils/sortUtils'
 
@@ -40,7 +41,7 @@ const promptSlice = createSlice({
     })
     builder.addCase(getPrompts.fulfilled, (state, action) => {
       state.loading = false
-      state.prompts = sortPrompts(action.payload)
+      state.prompts = sortPrompts(action.payload, null, 'desc')
     })
     builder.addCase(getPrompts.rejected, (state, action) => {
       state.loading = false
@@ -78,13 +79,27 @@ const promptSlice = createSlice({
       }
 
       // Apply sorting after adding/updating a prompt
-      state.prompts = sortPrompts(state.prompts)
+      state.prompts = sortPrompts(state.prompts, null, 'desc')
 
       if (state.selectedPrompt?.id === updatedPrompt.id) {
         state.selectedPrompt = updatedPrompt
       }
     })
     builder.addCase(createOrUpdatePrompt.rejected, (state, action) => {
+      state.loading = false
+      state.error = action.payload as string
+    })
+    builder.addCase(clonePrompt.pending, (state) => {
+      state.loading = true
+      state.error = null
+    })
+    builder.addCase(clonePrompt.fulfilled, (state, action) => {
+      state.loading = false
+      const clonedPrompt = action.payload
+      state.prompts.push(clonedPrompt)
+      state.prompts = sortPrompts(state.prompts, null, 'desc')
+    })
+    builder.addCase(clonePrompt.rejected, (state, action) => {
       state.loading = false
       state.error = action.payload as string
     })
@@ -96,33 +111,6 @@ const promptSlice = createSlice({
       state.loading = false
       const deletedPromptId = action.payload
 
-      // // Find the deleted prompt before removing it from state
-      // const deletedPrompt = state.prompts.find(
-      //     (p) => p.id === deletedPromptId
-      // );
-
-      // // Find any prompts that had the deleted prompt as their parent
-      // if (deletedPrompt) {
-      //     const childPrompts = state.prompts.filter(
-      //         (p) => p.parent === deletedPromptId
-      //     );
-
-      //     // Update each child's parent to be the deleted prompt's parent
-      //     // This maintains the version chain
-      //     childPrompts.forEach((child) => {
-      //         const childIndex = state.prompts.findIndex(
-      //             (p) => p.id === child.id
-      //         );
-      //         if (childIndex !== -1) {
-      //             state.prompts[childIndex] = {
-      //                 ...state.prompts[childIndex],
-      //                 parent: deletedPrompt.parent, // Point to grandparent
-      //             };
-      //         }
-      //     });
-      // }
-
-      // Now remove the deleted prompt
       state.prompts = state.prompts.filter(
         (prompt) => prompt.id !== deletedPromptId
       )

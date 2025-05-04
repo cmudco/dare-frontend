@@ -1,4 +1,5 @@
 import { VectorDbSource } from '@/utils/constants/user'
+import { Prompt } from './prompt'
 
 export interface UserStats {
   promptCount: number
@@ -23,6 +24,7 @@ export interface User {
   invite_code?: string
   profile_picture?: string
   vectorDb?: VectorDbSource
+  defaultPrompt?: Prompt
 }
 
 export interface UserState {

@@ -82,10 +82,18 @@ export function sortPrompts(
   sortColumn: string | null,
   sortDirection: 'asc' | 'desc'
 ): Prompt[] {
-  if (!sortColumn) return prompts
+  const sortedPrompts = [...prompts]
+  if (!sortColumn) {
+    // Default sort by createdAt (newest first)
+    return sortedPrompts.sort((a, b) => {
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return bDate - aDate // Descending order (newest first)
+    })
+  }
   const prop = getPromptProp(sortColumn)
-  if (!prop) return prompts
-  return [...prompts].sort((a, b) => {
+  if (!prop) return sortedPrompts
+  return sortedPrompts.sort((a, b) => {
     if (prop === 'createdAt') {
       const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0

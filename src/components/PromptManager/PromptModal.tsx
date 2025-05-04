@@ -17,6 +17,8 @@ import { Label } from '../ui/label'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import Tiptap from '../Tiptap'
+import { getUserData } from '@/redux/aynscThunks/user'
+import { Switch } from '@/components/ui/switch' // Adjust the import path based on your project structure
 
 const promptValidationSchema = Yup.object().shape({
   title: Yup.string().required('Title is required'),
@@ -28,11 +30,13 @@ const PromptUploadModal: React.FC = () => {
   const { selectedPrompt, loading, isModalOpen } = useSelector(
     (state: RootState) => state.prompt
   )
+  const user = useSelector((state: RootState) => state.user.user)
   const isEditMode = !!selectedPrompt
 
   const initialValues = {
     title: selectedPrompt?.title || '',
     content: selectedPrompt?.content || '',
+    isDefault: isEditMode && selectedPrompt?.id === user?.defaultPrompt?.id,
   }
 
   const handleClose = () => {
@@ -42,22 +46,38 @@ const PromptUploadModal: React.FC = () => {
     }
   }
 
-  const handleSubmit = async (values: { title: string; content: string }) => {
+  const handleSubmit = async (
+    values: { title: string; content: string; isDefault: boolean },
+    { bumpVersion = false }: { bumpVersion?: boolean }
+  ) => {
     try {
+      const promptData = {
+        title: values.title,
+        content: values.content,
+        isDefault:
+          values.isDefault ||
+          (isEditMode &&
+            selectedPrompt?.id === user?.defaultPrompt?.id &&
+            bumpVersion),
+      }
       await dispatch(
         createOrUpdatePrompt({
           id: isEditMode ? selectedPrompt?.id : undefined,
-          promptData: {
-            title: values.title,
-            content: values.content,
-          },
+          promptData,
+          bumpVersion,
         })
-      ).unwrap()
-      handleClose()
+      )
+        .unwrap()
+        .then(() => {
+          dispatch(getUserData())
+          handleClose()
+        })
     } catch (error) {
       console.error('Failed to save prompt:', error)
     }
   }
+
+  const currentDefaultTitle = user?.defaultPrompt?.title || null
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
@@ -76,7 +96,10 @@ const PromptUploadModal: React.FC = () => {
         <Formik
           initialValues={initialValues}
           validationSchema={promptValidationSchema}
-          onSubmit={handleSubmit}
+          onSubmit={(values, { setSubmitting }) => {
+            handleSubmit(values, { bumpVersion: false })
+            setSubmitting(false)
+          }}
           enableReinitialize
         >
           {({
@@ -132,13 +155,43 @@ const PromptUploadModal: React.FC = () => {
                 )}
               </div>
 
+              <div className='space-y-2'>
+                <div className='flex items-center space-x-2'>
+                  <Label htmlFor='isDefault'>Set as Default Prompt</Label>
+                  <Switch
+                    id='isDefault'
+                    name='isDefault'
+                    checked={values.isDefault}
+                    onCheckedChange={(checked) =>
+                      setFieldValue('isDefault', checked)
+                    }
+                  />
+                </div>
+                {currentDefaultTitle && values.isDefault && (
+                  <p className='text-xs text-yellow-600'>
+                    You already have '{currentDefaultTitle}' as default prompt.
+                    Setting this will override it.
+                  </p>
+                )}
+              </div>
+
               <DialogFooter className='flex justify-end gap-2 pt-4'>
                 <Button type='button' variant='outline' onClick={handleClose}>
                   Cancel
                 </Button>
                 <Button type='submit' disabled={!(isValid && dirty) || loading}>
-                  {loading ? 'Saving...' : isEditMode ? 'Update' : 'Create'}
+                  {loading ? 'Saving...' : 'Save'}
                 </Button>
+                {isEditMode && (
+                  <Button
+                    type='button'
+                    onClick={() => handleSubmit(values, { bumpVersion: true })}
+                    disabled={loading}
+                    variant='secondary'
+                  >
+                    {loading ? 'Saving...' : 'Save & Bump Version'}
+                  </Button>
+                )}
               </DialogFooter>
             </Form>
           )}
