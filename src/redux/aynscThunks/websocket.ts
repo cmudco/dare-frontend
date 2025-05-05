@@ -144,12 +144,31 @@ export const regenerateResponse = createAsyncThunk<
   { dispatch: AppDispatch; state: RootState }
 >(
   'websocket/regenerateResponse',
-  async ({ messageId }, { rejectWithValue }) => {
+  async ({ messageId }, { rejectWithValue, getState }) => {
+    const state = getState()
+    const fileIds = state.conversation.selectedFiles.map((file) => file.id)
+    const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
+    const prompt = state.conversation.activeConversation?.prompt
+    const temperature = state.conversation.activeConversation?.temperature
+    const maxTokens = state.conversation.activeConversation?.maxTokens
+    const maxContextSnippets =
+      state.conversation.activeConversation?.maxContextSnippets
+    const documentSimilarityThreshold =
+      state.conversation.activeConversation?.documentSimilarityThreshold
+
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(
         JSON.stringify({
           action: 'regenerate_response',
           message_id: messageId,
+          llm_id: state.conversation.selectedModel,
+          file_ids: fileIds,
+          tag_ids: tagIds,
+          prompt_id: prompt?.id,
+          temperature: temperature,
+          max_tokens: maxTokens,
+          max_context_snippets: maxContextSnippets,
+          document_similarity_threshold: documentSimilarityThreshold,
         })
       )
     } else {
