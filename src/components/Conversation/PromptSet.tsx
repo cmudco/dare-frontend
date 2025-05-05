@@ -225,25 +225,36 @@ const PromptSet: React.FC = () => {
                     {group.versions.slice(1).map((version) => (
                       <div
                         key={version.id}
-                        className={`flex items-center justify-between rounded-md p-2 text-sm transition-colors ${
+                        className={`mb-3 rounded-lg border border-gray-100 p-3 text-black transition-colors ${
                           selectedPrompt?.id === version.id
                             ? 'bg-red-200'
-                            : 'bg-gray-50 hover:bg-gray-100'
+                            : 'bg-muted text-foreground hover:bg-pink-50'
                         }`}
                         onClick={(e) => {
                           e.stopPropagation()
                           handlePromptSelect(version)
                         }}
                       >
-                        <div className='flex items-center gap-2'>
-                          <span>{version.title || 'Untitled'}</span>
-                          <span className='inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800'>
-                            v{version.version || 1}
-                          </span>
+                        <div className='mb-1 flex items-start justify-between'>
+                          <div className='flex items-center gap-2'>
+                            <h4 className='text-xl font-medium text-gray-800'>
+                              {version.title || 'Untitled'}
+                            </h4>
+                            <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+                              v{version.version || 1}
+                            </span>
+                          </div>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-xs text-gray-500'>
+                              {formatDate(version.createdAt)}
+                            </span>
+                          </div>
                         </div>
-                        <span className='text-xs text-gray-500'>
-                          {formatDate(version.createdAt)}
-                        </span>
+                        <div className='max-h-[4.5em] overflow-hidden'>
+                          <RichTextPreview
+                            content={version.content || 'No content'}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
