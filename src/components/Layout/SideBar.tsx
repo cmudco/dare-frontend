@@ -79,6 +79,7 @@ const Sidebar = () => {
   ]
 
   const bottomItems = [
+    { name: 'Billing', icon: WorkflowsIcon, path: '/billing/transactions' },
     { name: 'Help', icon: QuestionMarkCircleIcon, path: '/help' },
     { name: 'Settings', icon: Cog8ToothIcon, path: '/settings' },
   ]

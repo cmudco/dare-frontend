@@ -18,6 +18,7 @@ import ForgotPasswordSuccess from '../components/Success.tsx'
 import VerifyEmailScreen from '@/components/Auth/VerifyEmail.tsx'
 import Workflows from '@/pages/Workflows/index.tsx'
 import ProfileScreen from '@/pages/ProfileScreen/index.tsx'
+import BillingScreen from '@/pages/Billing/index.tsx'
 
 const AppRoutes = () => {
   return (
@@ -38,6 +39,7 @@ const AppRoutes = () => {
             element={<ResetPasswordScreen />}
           />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
+          <Route path='/billing/transactions' element={<BillingScreen />} />
 
           <Route
             path='/'
