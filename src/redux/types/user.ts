@@ -8,6 +8,9 @@ export interface UserStats {
   messageCount: number
   aiMessageCount: number
   taggedFilesCount: number
+  totalInputTokens: number
+  totalOutputTokens: number
+  totalTokens: number
 }
 
 export interface User {
