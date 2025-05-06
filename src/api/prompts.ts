@@ -19,8 +19,6 @@ export const getPromptByIdAPI = async (id: string): Promise<Prompt> => {
 export const createPromptAPI = async (promptData: {
   title: string
   content: string
-  version?: number
-  parent?: string
 }): Promise<Prompt> => {
   return await baseRequest<Prompt>({
     url: 'api/prompts/',
@@ -37,6 +35,24 @@ export const updatePromptAPI = async (
     url: `api/prompts/${id}/`,
     method: METHOD.PUT,
     data: promptData,
+  })
+}
+
+export const simpleUpdatePromptAPI = async (
+  id: string,
+  promptData: Partial<Prompt>
+): Promise<Prompt> => {
+  return await baseRequest<Prompt>({
+    url: `api/prompts/${id}/simple-update/`,
+    method: METHOD.PATCH,
+    data: promptData,
+  })
+}
+
+export const clonePromptAPI = async (id: string): Promise<Prompt> => {
+  return await baseRequest<Prompt>({
+    url: `api/prompts/${id}/clone/`,
+    method: METHOD.POST,
   })
 }
 

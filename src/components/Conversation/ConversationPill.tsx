@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   updateConversationInput,
   updateActiveConversation,
+  updateSelectedTags,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker'
@@ -14,10 +15,18 @@ import {
 } from '../../redux/aynscThunks/conversation'
 import ConversationFileSelect from './ConversationFileSelect'
 import ModelConfigurationPanel from './ModelConfigurationPanel'
-import { ArrowUp } from 'lucide-react'
+import { ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
-const ConversationPill: React.FC = () => {
+interface ConversationPillProps {
+  editMessageId?: string | null
+  onCancelEdit?: () => void
+}
+
+const ConversationPill: React.FC<ConversationPillProps> = ({
+  editMessageId,
+  onCancelEdit,
+}) => {
   const dispatch = useDispatch<AppDispatch>()
   const conversationInput = useSelector(
     (state: RootState) => state.conversation.conversationInput
@@ -40,6 +49,7 @@ const ConversationPill: React.FC = () => {
     }
 
     if (!activeConversation) {
+      dispatch(updateSelectedTags([]))
       dispatch(createConversation())
         .unwrap()
         .then((newConversation) => {
@@ -52,6 +62,9 @@ const ConversationPill: React.FC = () => {
     } else {
       dispatch(sendMessage(newMessage))
       dispatch(updateConversationInput(''))
+      if (editMessageId && onCancelEdit) {
+        onCancelEdit()
+      }
     }
   }
 
@@ -72,8 +85,22 @@ const ConversationPill: React.FC = () => {
 
   return (
     <>
-      <div className='flex w-[90%] flex-col justify-end rounded-2xl border-2 border-gray-200 px-2'>
-        <div className='relative flex w-full items-center rounded-md'>
+      <div className='flex w-[90%] flex-col justify-end rounded-2xl border-2 border-gray-200'>
+        {editMessageId && (
+          <div className='mb-2 flex w-full items-center gap-2 rounded-b-sm rounded-t-2xl border-b bg-gray-100 px-6 py-3'>
+            <Pencil className='mr-1 h-4 w-4 text-gray-600' />
+            <span className='flex-1 text-base font-bold text-gray-700'>
+              Editing message
+            </span>
+            <button
+              onClick={onCancelEdit}
+              className='ml-2 rounded-full p-1 hover:bg-gray-200'
+            >
+              <X className='-mr-2 h-5 w-5 text-gray-500' />
+            </button>
+          </div>
+        )}
+        <div className='relative flex w-full items-center rounded-md px-4'>
           <textarea
             ref={textareaRef}
             value={conversationInput}
@@ -85,7 +112,7 @@ const ConversationPill: React.FC = () => {
             style={{ minHeight: '3.5rem', maxHeight: '10rem' }}
           />
           <div
-            className='absolute right-[6px] top-1/2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300'
+            className='absolute right-[16px] top-1/2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300'
             onClick={handleSendMessage}
             aria-label='Send message'
           >
@@ -93,7 +120,7 @@ const ConversationPill: React.FC = () => {
           </div>
         </div>
 
-        <div className='flex w-full items-center justify-between'>
+        <div className='relative mb-1 flex w-full items-center justify-between px-4'>
           <div className='flex w-full items-center gap-2'>
             <ConversationFileSelect />
             <PromptSet />

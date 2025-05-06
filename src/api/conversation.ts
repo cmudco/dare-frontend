@@ -2,6 +2,8 @@ import {
   Conversation,
   ConversationResponse,
   LLMModel,
+  Message,
+  MessageReaction,
 } from '../redux/types/conversation'
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
@@ -53,5 +55,16 @@ export const getModelsAPI = async (): Promise<{ results: LLMModel[] }> => {
   return await baseRequest<{ results: LLMModel[] }>({
     url: 'api/llms/',
     method: METHOD.GET,
+  })
+}
+
+export const updateMessageAPI = async (
+  messageId: string,
+  reaction: MessageReaction
+): Promise<Message> => {
+  return await baseRequest<Message>({
+    url: `api/messages/${messageId}/`,
+    method: METHOD.PATCH,
+    data: reaction,
   })
 }

@@ -27,6 +27,17 @@ export interface Message {
   llmId?: number
   streaming?: boolean
   snippets?: Snippet[]
+  isLiked?: boolean
+  isDisliked?: boolean
+  isEdited?: boolean
+  isRegenerated?: boolean
+  originalMessage?: string
+}
+
+export interface MessageProps {
+  message: Message
+  onEditMessage?: (id: string, content: string) => void
+  onContentRendered?: () => void
 }
 
 export interface LLMModel {
@@ -63,4 +74,9 @@ export interface ConversationState {
 
 export interface ConversationResponse {
   results: Conversation[]
+}
+
+export interface MessageReaction {
+  isLiked: boolean
+  isDisliked: boolean
 }

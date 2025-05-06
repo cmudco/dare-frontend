@@ -34,7 +34,10 @@ const Tiptap: React.FC<TiptapProps> = ({ content, onChange }) => {
     <div className='overflow-hidden rounded-md border'>
       <Toolbar editor={editor} />
       <div className='p-4'>
-        <EditorContent editor={editor} className='min-h-[150px] text-sm' />
+        <EditorContent
+          editor={editor}
+          className='min-h-[150px] break-all text-sm'
+        />
       </div>
     </div>
   )

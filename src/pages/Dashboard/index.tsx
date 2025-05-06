@@ -17,6 +17,8 @@ import {
   MessageCircle,
   Tag,
   Users,
+  Inbox,
+  Send,
 } from 'lucide-react'
 import { useEffect } from 'react'
 
@@ -75,6 +77,27 @@ const Dashboard = () => {
       description: 'Files with tags',
       color: 'from-violet-500 to-purple-500',
     },
+    {
+      title: 'Input Tokens',
+      value: stats?.totalInputTokens || 0,
+      icon: <Inbox className='h-5 w-5 text-green-500' />,
+      description: 'Total input tokens used',
+      color: 'from-green-500 to-teal-400',
+    },
+    {
+      title: 'Output Tokens',
+      value: stats?.totalOutputTokens || 0,
+      icon: <Send className='h-5 w-5 text-orange-500' />,
+      description: 'Total output tokens generated',
+      color: 'from-orange-500 to-red-400',
+    },
+    {
+      title: 'Total Tokens',
+      value: stats?.totalTokens || 0,
+      icon: <Activity className='h-5 w-5 text-purple-500' />,
+      description: 'Combined input and output tokens',
+      color: 'from-purple-500 to-fuchsia-400',
+    },
   ]
 
   return (
@@ -88,7 +111,7 @@ const Dashboard = () => {
 
       {loading ? (
         <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
-          {[...Array(6)].map((_, i) => (
+          {[...Array(9)].map((_, i) => (
             <Card key={i} className='overflow-hidden'>
               <CardHeader className='pb-2'>
                 <Skeleton className='h-4 w-24' />

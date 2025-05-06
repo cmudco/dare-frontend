@@ -5,6 +5,7 @@ import {
   resetConversation,
   updateActiveConversation,
   updateSearchQuery,
+  updateSelectedTags,
 } from '../../redux/conversationSlice'
 import { createConversation } from '../../redux/aynscThunks/conversation'
 import { AppDispatch, RootState } from '../../redux/store'
@@ -33,6 +34,7 @@ const ConversationHistory = () => {
   }
 
   const handleCreateConversation = () => {
+    dispatch(updateSelectedTags([]))
     dispatch(createConversation())
       .unwrap()
       .then((newConversation) => {

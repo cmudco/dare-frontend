@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../../redux/store'
 import ConversationPill from './ConversationPill'
@@ -35,6 +35,17 @@ const ActiveConversation: React.FC = () => {
     (state: RootState) => state.websocket.isConnected
   )
 
+  const [editMessageId, setEditMessageId] = useState<string | null>(null)
+
+  const handleEditMessage = (id: string, content: string) => {
+    setEditMessageId(id)
+    dispatch(updateConversationInput(content))
+  }
+  const handleCancelEdit = () => {
+    setEditMessageId(null)
+    dispatch(updateConversationInput(''))
+  }
+
   useEffect(() => {
     if (id) {
       const conversation = conversations.find(
@@ -47,7 +58,6 @@ const ActiveConversation: React.FC = () => {
       dispatch(updateActiveConversation(null))
     }
   }, [id, conversations, dispatch])
-
   useEffect(() => {
     const handleWebSocketConnection = async () => {
       if (isConnected) {
@@ -78,6 +88,10 @@ const ActiveConversation: React.FC = () => {
     }
   }, [activeConversation, dispatch])
 
+  useEffect(() => {
+    setEditMessageId(null)
+  }, [activeConversation?.conversationId])
+
   return (
     <Card className='flex-2 flex h-[90vh] w-[65vw] flex-col justify-end rounded-none rounded-tl-[3.25rem] border border-pink-50'>
       <div className={`flex h-full flex-col justify-between`}>
@@ -86,10 +100,13 @@ const ActiveConversation: React.FC = () => {
           <EmptyConversation />
         )}
         {activeConversation && conversationHistory.length > 0 && (
-          <MessageList />
+          <MessageList onEditMessage={handleEditMessage} />
         )}
         <div className='flex flex-col items-center justify-center'>
-          <ConversationPill />
+          <ConversationPill
+            editMessageId={editMessageId}
+            onCancelEdit={handleCancelEdit}
+          />
         </div>
       </div>
     </Card>

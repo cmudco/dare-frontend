@@ -1,41 +1,104 @@
 import React, { useState } from 'react'
-import { useSelector } from 'react-redux'
-import { Message as MessageModel } from '../../redux/types/conversation'
-import { ArrowPathIcon } from '@heroicons/react/24/outline'
+import { useSelector, useDispatch } from 'react-redux'
+import { MessageProps } from '../../redux/types/conversation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Bot, ChevronDown, ChevronUp } from 'lucide-react'
+import remarkMath from 'remark-math'
+import rehypeRaw from 'rehype-raw'
+import 'katex/dist/katex.min.css'
+import 'highlight.js/styles/atom-one-light.css'
+import {
+  Bot,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  RefreshCw,
+  ThumbsUp,
+  ThumbsDown,
+} from 'lucide-react'
 import { RootState } from '@/redux/store'
+import mermaid from 'mermaid'
+import rehypeKatex from 'rehype-katex'
+import rehypeHighlight from 'rehype-highlight'
+import { CodeBlock } from './CodeBlock'
+import { MermaidBlock } from './MermaidBlock'
+import { PencilIcon } from '@heroicons/react/20/solid'
+import { updateMessageThunk } from '../../redux/aynscThunks/conversation'
+import { AppDispatch } from '../../redux/store'
+import { regenerateResponse } from '@/redux/aynscThunks/websocket'
 
-interface MessageProps {
-  message: MessageModel
-}
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'default',
+  securityLevel: 'loose',
+})
 
-const Message: React.FC<MessageProps> = ({ message }) => {
+const Message: React.FC<MessageProps> = ({
+  message,
+  onEditMessage,
+  onContentRendered,
+}) => {
+  const dispatch = useDispatch<AppDispatch>()
   const llms = useSelector(
     (state: RootState) => state.conversation.availableModels
   )
   const user = useSelector((state: RootState) => state.user.user)
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
+  const [showOriginal, setShowOriginal] = useState(false)
 
-  if (!message) {
-    return null
-  }
+  if (!message) return null
 
-  const llm = llms.find((model) => model.id == message.llmId)
+  const llm = llms.find((model) => model.id === message.llmId)
   const llmName = llm ? llm.name : 'Unknown LLM'
-
   const userInitial = user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'
 
-  const toggleSnippets = () => {
-    setIsSnippetsOpen(!isSnippetsOpen)
+  const toggleSnippets = () => setIsSnippetsOpen(!isSnippetsOpen)
+  const toggleVersion = () => {
+    setShowOriginal(!showOriginal)
   }
+
+  const handleReaction = (isLike: boolean) => {
+    if (message.id) {
+      dispatch(
+        updateMessageThunk({
+          messageId: message.id,
+          reaction: { isLiked: isLike, isDisliked: !isLike },
+        })
+      )
+    }
+  }
+
+  const handleEdit = () => {
+    if (message.isSender && onEditMessage) {
+      onEditMessage(message.id, message.message)
+    }
+  }
+
+  const handleRegenerate = () => {
+    if (!message.isSender) {
+      dispatch(regenerateResponse({ messageId: message.id }))
+    }
+  }
+
+  const displayMessage =
+    showOriginal && message.originalMessage
+      ? message.originalMessage
+      : message.message
+  const buttonLabel = message.isRegenerated
+    ? showOriginal
+      ? 'Regenerated'
+      : 'Original'
+    : message.isEdited
+      ? showOriginal
+        ? 'Edited'
+        : 'Original'
+      : ''
 
   return (
     <div
       className={`flex flex-col px-5 ${
         message.isSender ? 'items-end' : 'items-start'
-      } mb-4`}
+      } group mb-4`}
     >
       <div
         className={`flex w-full max-w-[100%] ${
@@ -47,32 +110,98 @@ const Message: React.FC<MessageProps> = ({ message }) => {
             <Bot className='h-8 w-8' />
           </div>
         )}
+
+        {message.isSender && !message.streaming && (
+          <div className='mr-2 mt-2 flex flex-shrink-0 items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
+            <button
+              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+              onClick={() => navigator.clipboard.writeText(message.message)}
+              aria-label='Copy message'
+            >
+              <Copy className='h-4 w-4' />
+            </button>
+            <button
+              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+              onClick={handleEdit}
+              aria-label='Edit message'
+            >
+              <PencilIcon className='h-4 w-4' />
+            </button>
+            {(message.isEdited || message.isRegenerated) && buttonLabel && (
+              <button
+                className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+                onClick={toggleVersion}
+                aria-label={
+                  showOriginal
+                    ? message.isRegenerated
+                      ? 'Show Regenerated'
+                      : 'Show Edited'
+                    : 'Show Original'
+                }
+              >
+                {buttonLabel}
+              </button>
+            )}
+          </div>
+        )}
+
         <div
-          className={`relative max-w-[95%] text-wrap rounded-xl px-5 py-3 ${
+          className={`relative mb-2 max-w-[95%] text-wrap rounded-xl px-5 py-3 ${
             message.isSender ? 'bg-gray-100' : 'bg-gray-100'
-          } group inline-block`}
+          } inline-block hover:z-20`}
         >
           <div
             className={`text-wrap font-normal ${
               message.streaming ? 'animate-pulse' : ''
             }`}
           >
-            <div>
+            <div className='prose prose-sm max-w-none text-sm text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none'>
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                className='prose !max-w-none'
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
+                components={{
+                  code({ className, children, ...props }) {
+                    const match = /language-(\w+)/.exec(className || '')
+                    if (match && match[1] === 'mermaid') {
+                      if (message.streaming) {
+                        return (
+                          <div className='not-prose my-4'>
+                            Loading diagram...
+                          </div>
+                        )
+                      }
+                      return (
+                        <MermaidBlock
+                          code={String(children).trim()}
+                          onRendered={onContentRendered}
+                          streaming={message.streaming}
+                        />
+                      )
+                    }
+                    if (match) {
+                      return (
+                        <CodeBlock className={className} props={props}>
+                          {children}
+                        </CodeBlock>
+                      )
+                    }
+                    return (
+                      <code
+                        className='not-prose rounded bg-gray-100 px-1'
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    )
+                  },
+                }}
               >
-                {message.streaming ? `${message.message}▋` : message.message}
+                {message.streaming ? `${displayMessage}\u258b` : displayMessage}
               </ReactMarkdown>
             </div>
           </div>
-
-          {!message.isSender && !message.streaming && (
-            <button className='absolute -right-8 -top-2 mr-2 mt-2 hidden text-gray-500 hover:text-gray-700 group-hover:block'>
-              <ArrowPathIcon className='h-5 w-5 text-gray-900' />
-            </button>
-          )}
         </div>
+
         {message.isSender && (
           <div className='ml-2 mt-1 flex-shrink-0'>
             <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 font-medium text-white'>
@@ -81,6 +210,67 @@ const Message: React.FC<MessageProps> = ({ message }) => {
           </div>
         )}
       </div>
+
+      {!message.isSender && !message.streaming && (
+        <div className='flex w-full max-w-[95%] pl-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
+          <button
+            className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+            onClick={handleRegenerate}
+            aria-label='Regenerate AI response'
+          >
+            <RefreshCw className='h-4 w-4' />
+          </button>
+
+          <button
+            className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 ${
+              message.isLiked
+                ? 'text-blue-500'
+                : 'text-gray-400 hover:text-gray-800'
+            }`}
+            onClick={() => handleReaction(true)}
+            aria-label={message.isLiked ? 'Unlike response' : 'Like response'}
+          >
+            <ThumbsUp className='h-4 w-4' />
+          </button>
+
+          <button
+            className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 ${
+              message.isDisliked
+                ? 'text-red-500'
+                : 'text-gray-400 hover:text-gray-800'
+            }`}
+            onClick={() => handleReaction(false)}
+            aria-label={
+              message.isDisliked ? 'Remove dislike' : 'Dislike response'
+            }
+          >
+            <ThumbsDown className='h-4 w-4' />
+          </button>
+
+          <button
+            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+            onClick={() => navigator.clipboard.writeText(message.message)}
+            aria-label='Copy AI response'
+          >
+            <Copy className='h-4 w-4' />
+          </button>
+          {(message.isEdited || message.isRegenerated) && buttonLabel && (
+            <button
+              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+              onClick={toggleVersion}
+              aria-label={
+                showOriginal
+                  ? message.isRegenerated
+                    ? 'Show Regenerated'
+                    : 'Show Edited'
+                  : 'Show Original'
+              }
+            >
+              {buttonLabel}
+            </button>
+          )}
+        </div>
+      )}
 
       {!message.isSender && !message.streaming && message.llmId && (
         <div
@@ -113,7 +303,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
             {isSnippetsOpen && (
               <div className='mt-2 space-y-3'>
                 {[...message.snippets]
-                  .sort((a, b) => a.chunkIndex - b.chunkIndex)
+                  .sort((a, b) => b.similarityScore - a.similarityScore)
                   .map((snippet) => (
                     <div
                       key={snippet.id}

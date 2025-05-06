@@ -6,6 +6,7 @@ import {
   createConversation,
   deleteConversation,
   updateConversation,
+  updateMessageThunk,
 } from './aynscThunks/conversation'
 import { Message, Conversation, LLMModel } from './types/conversation'
 import { MyFile } from './types/files'
@@ -80,23 +81,22 @@ export const conversationSlice = createSlice({
     },
     updateMessage(state, action: PayloadAction<Partial<Message>>) {
       const index = state.activeConversationMessages.findIndex(
-        (msg) => msg?.id === action.payload.id
+        (msg) => msg?.id == action.payload.id
       )
       if (index !== -1) {
         state.activeConversationMessages[index] = {
           ...state.activeConversationMessages[index],
           ...action.payload,
-          message: `${state.activeConversationMessages[index].message}${action.payload.message}`,
+          message: `${action.payload.message}`,
         }
       }
     },
     setAvailableModels(state, action: PayloadAction<LLMModel[]>) {
       state.availableModels = action.payload
+      state.selectedModel = action.payload[0]?.id
     },
     updateConversationTitle(state, action: PayloadAction<string>) {
-      if (!state.activeConversation) {
-        return
-      }
+      if (!state.activeConversation) return
       state.activeConversation.title = action.payload
       const index = state.conversations.findIndex(
         (conv) =>
@@ -207,6 +207,22 @@ export const conversationSlice = createSlice({
       .addCase(updateConversation.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
+      })
+      .addCase(updateMessageThunk.fulfilled, (state, action) => {
+        const messageIndex = state.activeConversationMessages.findIndex(
+          (msg) => msg?.id == action.payload.id
+        )
+        if (messageIndex !== -1) {
+          state.activeConversationMessages[messageIndex] = {
+            ...state.activeConversationMessages[messageIndex],
+            isLiked: action.payload.isLiked,
+            isDisliked: action.payload.isDisliked,
+          }
+        }
+      })
+      .addCase(updateMessageThunk.rejected, (state, action) => {
+        state.error = action.payload as string
+        console.error('Failed to update message reaction:', action.payload)
       })
   },
 })

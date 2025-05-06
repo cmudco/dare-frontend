@@ -1,24 +1,44 @@
 import { useSelector } from 'react-redux'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { RootState } from '../../redux/store'
 import Message from './Message'
 
-const MessageList = () => {
+const MessageList = ({
+  onEditMessage,
+}: {
+  onEditMessage?: (id: string, content: string) => void
+}) => {
   const messages = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages
   )
   const messageEndRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  const scrollToBottom = useCallback(() => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages])
+  }, [])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, scrollToBottom])
+
+  const handleContentRendered = useCallback(() => {
+    scrollToBottom()
+  }, [scrollToBottom])
 
   return (
     <div className='flex max-h-[90%] flex-col gap-2 overflow-y-auto pt-2'>
       {messages.map(
-        (message, idx) => message && <Message key={idx} message={message} />
+        (message, idx) =>
+          message && (
+            <Message
+              key={idx}
+              message={message}
+              onEditMessage={onEditMessage}
+              onContentRendered={handleContentRendered}
+            />
+          )
       )}
       <div ref={messageEndRef} />
     </div>

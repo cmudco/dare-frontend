@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../../redux/store'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid'
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid'
 import { GoCommandPalette } from 'react-icons/go'
-import { formatDate } from '../../utils/constants/prompts'
-import { openModal } from '@/redux/promptSlice'
+import { formatDate, groupPrompts } from '../../utils/constants/prompts'
+import { openModal, clearSelectedPrompt } from '@/redux/promptSlice'
 import { useNavigate } from 'react-router-dom'
 import { setPrompt } from '@/redux/conversationSlice'
 import { Prompt } from '@/redux/types/prompt'
@@ -47,18 +48,49 @@ const PromptSet: React.FC = () => {
       activeConversation: state.conversation.activeConversation,
     })
   )
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    if (selectedPrompt) {
+      const groupedPrompts = groupPrompts(prompts)
+      const group = groupedPrompts.find((g) =>
+        g.versions.some((v) => v.id === selectedPrompt.id)
+      )
+      if (
+        group &&
+        group.versions.length > 1 &&
+        group.versions[0].id !== selectedPrompt.id
+      ) {
+        setExpandedGroups((prev) => {
+          const newSet = new Set(prev)
+          newSet.add(group.rootPrompt.id)
+          return newSet
+        })
+      }
+    }
+  }, [selectedPrompt, prompts])
 
   const handlePromptSelect = (prompt: Prompt) => {
-    const isSamePrompt = selectedPrompt?.id === prompt.id
-    const newPrompt = isSamePrompt ? null : prompt
-    dispatch(setPrompt(newPrompt))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { promptId: newPrompt?.id },
-        })
-      )
+    if (selectedPrompt?.id === prompt.id) {
+      dispatch(clearSelectedPrompt())
+      if (activeConversation) {
+        dispatch(
+          updateConversation({
+            conversationId: activeConversation.conversationId,
+            updates: { promptId: null },
+          })
+        )
+      }
+    } else {
+      dispatch(setPrompt(prompt))
+      if (activeConversation) {
+        dispatch(
+          updateConversation({
+            conversationId: activeConversation.conversationId,
+            updates: { promptId: prompt?.id },
+          })
+        )
+      }
     }
   }
 
@@ -67,15 +99,31 @@ const PromptSet: React.FC = () => {
     dispatch(openModal())
   }
 
-  const filteredPrompts = prompts.filter((prompt) => {
-    const promptTitle = prompt.title?.toLowerCase() || ''
-    const promptContent = stripHtml(prompt.content?.toLowerCase() || '')
+  const groupedPrompts = React.useMemo(() => groupPrompts(prompts), [prompts])
+
+  const filteredPrompts = groupedPrompts.filter((group) => {
+    const rootTitle = group.rootPrompt.title?.toLowerCase() || ''
+    const latestContent = stripHtml(
+      group.versions[0].content?.toLowerCase() || ''
+    )
     return (
       searchQuery === '' ||
-      promptTitle.includes(searchQuery.toLowerCase()) ||
-      promptContent.includes(searchQuery.toLowerCase())
+      rootTitle.includes(searchQuery.toLowerCase()) ||
+      latestContent.includes(searchQuery.toLowerCase())
     )
   })
+
+  const toggleExpand = (rootId: string) => {
+    setExpandedGroups((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(rootId)) {
+        newSet.delete(rootId)
+      } else {
+        newSet.add(rootId)
+      }
+      return newSet
+    })
+  }
 
   return (
     <Dialog>
@@ -121,34 +169,99 @@ const PromptSet: React.FC = () => {
             </div>
           )}
 
-          {filteredPrompts.map((prompt) => (
-            <div
-              key={prompt.id}
-              className={`mb-3 cursor-pointer rounded-lg border border-gray-100 p-3 text-black transition-colors ${
-                selectedPrompt?.id === prompt.id
-                  ? 'bg-red-200'
-                  : 'bg-muted text-foreground hover:bg-pink-50'
-              }`}
-              onClick={() => handlePromptSelect(prompt)}
-            >
-              <div className='mb-1 flex items-start justify-between'>
-                <div className='flex items-center gap-2'>
-                  <h4 className='text-xl font-medium text-gray-800'>
-                    {prompt.title || 'Untitled'}
-                  </h4>
-                  <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
-                    v{prompt.version || 1}
-                  </span>
+          {filteredPrompts.map((group) => {
+            const isExpanded = expandedGroups.has(group.rootPrompt.id)
+            const latestVersion = group.versions[0]
+
+            return (
+              <div key={group.rootPrompt.id}>
+                <div
+                  className={`mb-3 rounded-lg border border-gray-100 p-3 text-black transition-colors ${
+                    selectedPrompt?.id === latestVersion.id
+                      ? 'bg-red-200'
+                      : 'bg-muted text-foreground hover:bg-pink-50'
+                  }`}
+                  onClick={() => handlePromptSelect(latestVersion)}
+                >
+                  <div className='mb-1 flex items-start justify-between'>
+                    <div className='flex items-center gap-2'>
+                      <h4 className='text-xl font-medium text-gray-800'>
+                        {latestVersion.title || 'Untitled'}
+                      </h4>
+                      <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+                        v{latestVersion.version || 1}
+                      </span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <span className='text-xs text-gray-500'>
+                        {formatDate(latestVersion.createdAt)}
+                      </span>
+                      {group.versions.length > 1 && (
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleExpand(group.rootPrompt.id)
+                          }}
+                        >
+                          {isExpanded ? (
+                            <ChevronUpIcon className='h-4 w-4' />
+                          ) : (
+                            <ChevronDownIcon className='h-4 w-4' />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className='max-h-[4.5em] overflow-hidden'>
+                    <RichTextPreview
+                      content={latestVersion.content || 'No content'}
+                    />
+                  </div>
                 </div>
-                <span className='text-xs text-gray-500'>
-                  {formatDate(prompt.createdAt)}
-                </span>
+                {isExpanded && (
+                  <div className='mb-4 space-y-2 pl-4'>
+                    {group.versions.slice(1).map((version) => (
+                      <div
+                        key={version.id}
+                        className={`mb-3 rounded-lg border border-gray-100 p-3 text-black transition-colors ${
+                          selectedPrompt?.id === version.id
+                            ? 'bg-red-200'
+                            : 'bg-muted text-foreground hover:bg-pink-50'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handlePromptSelect(version)
+                        }}
+                      >
+                        <div className='mb-1 flex items-start justify-between'>
+                          <div className='flex items-center gap-2'>
+                            <h4 className='text-xl font-medium text-gray-800'>
+                              {version.title || 'Untitled'}
+                            </h4>
+                            <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+                              v{version.version || 1}
+                            </span>
+                          </div>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-xs text-gray-500'>
+                              {formatDate(version.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className='max-h-[4.5em] overflow-hidden'>
+                          <RichTextPreview
+                            content={version.content || 'No content'}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className='max-h-[4.5em] overflow-hidden'>
-                <RichTextPreview content={prompt.content || 'No content'} />
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </DialogContent>
     </Dialog>
