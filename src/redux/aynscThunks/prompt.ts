@@ -1,10 +1,12 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { Prompt } from '../types/prompt'
 import {
+  clonePromptAPI,
   createPromptAPI,
   deletePromptAPI,
   getPromptByIdAPI,
   getPromptsAPI,
+  simpleUpdatePromptAPI,
   updatePromptAPI,
 } from '@/api/prompts'
 import { RootState } from '../store'
@@ -38,23 +40,39 @@ export const createOrUpdatePrompt = createAsyncThunk(
     {
       id,
       promptData,
+      bumpVersion,
     }: {
       id?: string
       promptData: {
         title: string
         content: string
-        version?: number
-        parent?: string
+        isDefault?: boolean
       }
+      bumpVersion?: boolean
     },
     { rejectWithValue }
   ) => {
     try {
       if (id) {
-        return await updatePromptAPI(id, promptData)
+        if (bumpVersion) {
+          return await updatePromptAPI(id, promptData)
+        } else {
+          return await simpleUpdatePromptAPI(id, promptData)
+        }
       } else {
         return await createPromptAPI(promptData)
       }
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const clonePrompt = createAsyncThunk(
+  'prompts/clonePrompt',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      return await clonePromptAPI(id)
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }

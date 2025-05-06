@@ -7,6 +7,7 @@ export interface Prompt {
   user: string
   version: number
   parent?: string
+  isDefault?: boolean
 }
 
 export interface PromptState {

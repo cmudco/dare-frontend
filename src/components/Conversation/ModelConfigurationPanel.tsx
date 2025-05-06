@@ -71,7 +71,10 @@ const ModelConfigurationPanel: React.FC = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant='ghost' className='h-9 w-9 p-0 hover:bg-gray-200'>
+        <Button
+          variant='ghost'
+          className='absolute right-[10px] h-9 w-9 p-0 hover:bg-gray-200'
+        >
           <Settings className='h-5 w-5 text-gray-600' />
         </Button>
       </PopoverTrigger>
