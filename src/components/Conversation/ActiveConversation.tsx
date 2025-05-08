@@ -15,6 +15,7 @@ import {
 } from '../../redux/aynscThunks/websocket'
 import { Card } from '../ui/card'
 import EmptyConversation from './EmptyConversation'
+import CreditErrorAlert from './CreditErrorAlert'
 
 const ActiveConversation: React.FC = () => {
   const navigate = useNavigate()
@@ -93,23 +94,26 @@ const ActiveConversation: React.FC = () => {
   }, [activeConversation?.conversationId])
 
   return (
-    <Card className='flex-2 flex h-[90vh] w-[65vw] flex-col justify-end rounded-none rounded-tl-[3.25rem] border border-pink-50'>
-      <div className={`flex h-full flex-col justify-between`}>
-        {!activeConversation && <NewConversation />}
-        {activeConversation && conversationHistory.length === 0 && (
-          <EmptyConversation />
-        )}
-        {activeConversation && conversationHistory.length > 0 && (
-          <MessageList onEditMessage={handleEditMessage} />
-        )}
-        <div className='flex flex-col items-center justify-center'>
-          <ConversationPill
-            editMessageId={editMessageId}
-            onCancelEdit={handleCancelEdit}
-          />
+    <>
+      <CreditErrorAlert />
+      <Card className='flex-2 flex h-[90vh] w-[65vw] flex-col justify-end rounded-none rounded-tl-[3.25rem] border border-pink-50'>
+        <div className={`flex h-full flex-col justify-between`}>
+          {!activeConversation && <NewConversation />}
+          {activeConversation && conversationHistory.length === 0 && (
+            <EmptyConversation />
+          )}
+          {activeConversation && conversationHistory.length > 0 && (
+            <MessageList onEditMessage={handleEditMessage} />
+          )}
+          <div className='flex flex-col items-center justify-center'>
+            <ConversationPill
+              editMessageId={editMessageId}
+              onCancelEdit={handleCancelEdit}
+            />
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </>
   )
 }
 

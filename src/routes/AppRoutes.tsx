@@ -39,7 +39,6 @@ const AppRoutes = () => {
             element={<ResetPasswordScreen />}
           />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
-          <Route path='/billing/transactions' element={<BillingScreen />} />
 
           <Route
             path='/'
@@ -59,6 +58,7 @@ const AppRoutes = () => {
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
             <Route path='/profile' element={<ProfileScreen />} />
+            <Route path='/billing/' element={<BillingScreen />} />
           </Route>
           <Route path='*' element={<div>404 - Page Not Found</div>} />
         </Routes>

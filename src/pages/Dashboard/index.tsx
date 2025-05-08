@@ -23,9 +23,11 @@ import {
   Wallet as WalletIcon,
 } from 'lucide-react'
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const Dashboard = () => {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const { stats, loading: userLoading } = useAppSelector((state) => state.user)
   const { wallet, loading: billingLoading } = useAppSelector(
     (state) => state.billing
@@ -111,6 +113,7 @@ const Dashboard = () => {
       description: 'Current wallet balance',
       color: 'from-teal-500 to-cyan-500',
       link: '/billing/transactions',
+      onClick: () => navigate('/billing/'),
     },
   ]
 
@@ -145,7 +148,8 @@ const Dashboard = () => {
           {statCards.map((card, index) => (
             <Card
               key={index}
-              className='overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md'
+              className={`overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${card.onClick ? 'cursor-pointer' : ''}`}
+              onClick={card.onClick}
             >
               <div className={`h-1 w-full bg-gradient-to-r ${card.color}`} />
               <CardHeader className='pb-2'>

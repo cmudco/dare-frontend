@@ -6,6 +6,7 @@ import {
   FolderOpenIcon,
   QuestionMarkCircleIcon,
   Cog8ToothIcon,
+  CreditCardIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
@@ -79,7 +80,7 @@ const Sidebar = () => {
   ]
 
   const bottomItems = [
-    { name: 'Billing', icon: WorkflowsIcon, path: '/billing/transactions' },
+    { name: 'Billing', icon: CreditCardIcon, path: '/billing/' },
     { name: 'Help', icon: QuestionMarkCircleIcon, path: '/help' },
     { name: 'Settings', icon: Cog8ToothIcon, path: '/settings' },
   ]
