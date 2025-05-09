@@ -35,7 +35,10 @@ export const connectWebSocket = createAsyncThunk<
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data)
 
-      if (data.error === 'insufficient_credits') {
+      if (
+        data.error === 'insufficient_credits' ||
+        data.error === 'insufficient_balance'
+      ) {
         dispatch(
           setCreditError({
             type: data.error,

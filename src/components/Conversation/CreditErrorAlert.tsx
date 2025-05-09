@@ -1,21 +1,28 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { clearCreditError } from '@/redux/websocketSlice'
+import { getWallet } from '@/redux/aynscThunks/billing'
 import { XCircle } from 'lucide-react'
 
 const CreditErrorAlert: React.FC = () => {
   const dispatch = useAppDispatch()
   const creditError = useAppSelector((state) => state.websocket.creditError)
 
+  useEffect(() => {
+    if (creditError) {
+      dispatch(getWallet())
+    }
+  }, [creditError, dispatch])
+
   if (!creditError) return null
 
   const formatCurrency = (value: string) => {
     const numValue = parseFloat(value)
-    return `$${numValue.toString()}`
+    return `$${numValue.toFixed(4)}`
   }
 
   return (
-    <div className='fixed right-4 top-4 z-50'>
+    <div className='fixed right-2 top-24 z-50'>
       <div className='w-80 rounded-md border-l-4 border-red-400 bg-red-50 p-4 shadow-lg'>
         <div className='flex items-start'>
           <div className='flex-shrink-0'>
@@ -33,7 +40,9 @@ const CreditErrorAlert: React.FC = () => {
           </div>
           <div className='ml-3 flex-1'>
             <h3 className='text-sm font-medium text-red-800'>
-              Insufficient Credits
+              {creditError.type === 'insufficient_balance'
+                ? 'Insufficient Balance'
+                : 'Insufficient Credits'}
             </h3>
             <div className='mt-2 text-sm text-red-700'>
               <p>{creditError.message}</p>
@@ -47,7 +56,19 @@ const CreditErrorAlert: React.FC = () => {
               </div>
             </div>
             <div className='mt-4'>
-              <div className='-mx-2 -my-1.5 flex items-center justify-end'>
+              <div className='-mx-2 -my-1.5 flex items-center justify-between'>
+                {creditError.type === 'insufficient_balance' && (
+                  <button
+                    type='button'
+                    className='rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2'
+                    onClick={() => {
+                      dispatch(clearCreditError())
+                      window.location.href = '/billing/'
+                    }}
+                  >
+                    Add Funds
+                  </button>
+                )}
                 <button
                   type='button'
                   className='rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2'
