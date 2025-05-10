@@ -19,6 +19,8 @@ export interface Transaction {
   displayAmount: string
   type: string
   message: string
+  inputTokens: number
+  outputTokens: number
   createdAt: string
   updatedAt: string
 }
