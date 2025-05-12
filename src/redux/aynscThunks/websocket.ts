@@ -8,7 +8,7 @@ import {
 } from '../conversationSlice'
 import { Message } from '../types/conversation'
 import { AppDispatch, RootState } from '../store'
-import { setConnectionStatus } from '../websocketSlice'
+import { setConnectionStatus, setCreditError } from '../websocketSlice'
 import { WEBSOCKET_URL } from '../../api/config'
 
 let socket: WebSocket | null = null
@@ -34,6 +34,21 @@ export const connectWebSocket = createAsyncThunk<
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data)
+
+      if (
+        data.error === 'insufficient_credits' ||
+        data.error === 'insufficient_balance'
+      ) {
+        dispatch(
+          setCreditError({
+            type: data.error,
+            message: data.message,
+            currentBalance: data.current_balance,
+            requiredAmount: data.required_amount,
+          })
+        )
+        return
+      }
 
       switch (data.type) {
         case 'conversation_history':

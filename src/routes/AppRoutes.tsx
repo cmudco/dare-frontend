@@ -18,6 +18,7 @@ import ForgotPasswordSuccess from '../components/Success.tsx'
 import VerifyEmailScreen from '@/components/Auth/VerifyEmail.tsx'
 import Workflows from '@/pages/Workflows/index.tsx'
 import ProfileScreen from '@/pages/ProfileScreen/index.tsx'
+import BillingScreen from '@/pages/Billing/index.tsx'
 
 const AppRoutes = () => {
   return (
@@ -57,6 +58,7 @@ const AppRoutes = () => {
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
             <Route path='/profile' element={<ProfileScreen />} />
+            <Route path='/billing/' element={<BillingScreen />} />
           </Route>
           <Route path='*' element={<div>404 - Page Not Found</div>} />
         </Routes>

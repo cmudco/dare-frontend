@@ -7,7 +7,7 @@ import promptReducer from './promptSlice'
 import websocketReducer from './websocketSlice'
 import tagsReducer from './tagslice'
 import workflowReducer from './workflowSlice'
-
+import billingReducer from './billingSlice'
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({})
 
 export const store = configureStore({
@@ -19,6 +19,7 @@ export const store = configureStore({
     websocket: websocketReducer,
     tags: tagsReducer,
     workflow: workflowReducer,
+    billing: billingReducer,
   },
   enhancers: (getDefaultEnhancers) =>
     getDefaultEnhancers().concat(sentryReduxEnhancer),
