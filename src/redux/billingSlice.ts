@@ -1,0 +1,54 @@
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { initialBillingState } from './initialState/billing'
+
+import { getTransactions, getWallet } from './aynscThunks/billing'
+import { Transaction, Wallet } from './types/billing'
+
+const billingSlice = createSlice({
+  name: 'billing',
+  initialState: initialBillingState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(getWallet.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(getWallet.fulfilled, (state, action: PayloadAction<Wallet>) => {
+        state.loading = false
+        state.wallet = action.payload
+      })
+      .addCase(getWallet.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(getTransactions.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(
+        getTransactions.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            count: number
+            next: string | null
+            previous: string | null
+            results: Transaction[]
+          }>
+        ) => {
+          state.loading = false
+          state.transactions = action.payload.results
+          state.transactionCount = action.payload.count
+          state.nextPage = action.payload.next
+          state.previousPage = action.payload.previous
+        }
+      )
+      .addCase(getTransactions.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+  },
+})
+
+export default billingSlice.reducer

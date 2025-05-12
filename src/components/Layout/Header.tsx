@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { BellIcon } from '@heroicons/react/24/solid'
+import { BellIcon, CreditCardIcon } from '@heroicons/react/24/solid'
 import { useNavigate } from 'react-router-dom'
 import { AppDispatch, RootState } from '../../redux/store'
 import { userLogout } from '../../redux/aynscThunks/user'
+import { getWallet } from '../../redux/aynscThunks/billing'
 
 import {
   DropdownMenu,
@@ -17,6 +18,11 @@ const Header: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const user = useSelector((state: RootState) => state.user.user)
+  const wallet = useSelector((state: RootState) => state.billing.wallet)
+
+  useEffect(() => {
+    dispatch(getWallet())
+  }, [dispatch])
 
   const handleLogout = async () => {
     try {
@@ -35,6 +41,13 @@ const Header: React.FC = () => {
       </div>
 
       <div className='mr-3 flex items-center gap-4'>
+        {wallet && (
+          <div className='flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm'>
+            <CreditCardIcon className='h-4 w-4 text-pink-500' />
+            <span>{wallet.displayBalance}</span>
+          </div>
+        )}
+
         <BellIcon className='h-6 w-6 text-gray-600' />
 
         <DropdownMenu>
@@ -65,6 +78,12 @@ const Header: React.FC = () => {
               className='cursor-pointer py-3 hover:bg-gray-100'
             >
               Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => navigate('/billing')}
+              className='cursor-pointer py-3 hover:bg-gray-100'
+            >
+              Billing & Credits
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleLogout}

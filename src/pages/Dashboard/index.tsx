@@ -7,6 +7,7 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getWallet } from '@/redux/aynscThunks/billing'
 import { getUserStats } from '@/redux/aynscThunks/user'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
@@ -19,19 +20,26 @@ import {
   Users,
   Inbox,
   Send,
+  Wallet as WalletIcon,
 } from 'lucide-react'
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const Dashboard = () => {
   const dispatch = useAppDispatch()
-  const { stats, loading } = useAppSelector((state) => state.user)
+  const navigate = useNavigate()
+  const { stats, loading: userLoading } = useAppSelector((state) => state.user)
+  const { wallet, loading: billingLoading } = useAppSelector(
+    (state) => state.billing
+  )
 
   useEffect(() => {
     dispatch(getUserStats())
+    dispatch(getWallet())
   }, [dispatch])
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
+  const formatNumber = (num: number | string) => {
+    return typeof num === 'string' ? num : num.toLocaleString()
   }
 
   const statCards = [
@@ -98,6 +106,15 @@ const Dashboard = () => {
       description: 'Combined input and output tokens',
       color: 'from-purple-500 to-fuchsia-400',
     },
+    {
+      title: 'Wallet Balance',
+      value: wallet?.displayBalance || '$0.00',
+      icon: <WalletIcon className='h-5 w-5 text-teal-500' />,
+      description: 'Current wallet balance',
+      color: 'from-teal-500 to-cyan-500',
+      link: '/billing/transactions',
+      onClick: () => navigate('/billing/'),
+    },
   ]
 
   return (
@@ -109,7 +126,7 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {loading ? (
+      {userLoading || billingLoading ? (
         <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
           {[...Array(9)].map((_, i) => (
             <Card key={i} className='overflow-hidden'>
@@ -131,7 +148,8 @@ const Dashboard = () => {
           {statCards.map((card, index) => (
             <Card
               key={index}
-              className='overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md'
+              className={`overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${card.onClick ? 'cursor-pointer' : ''}`}
+              onClick={card.onClick}
             >
               <div className={`h-1 w-full bg-gradient-to-r ${card.color}`} />
               <CardHeader className='pb-2'>

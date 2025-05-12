@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../ui/dialog'
 import { Plus } from 'lucide-react'
 import { stripHtml } from '../../utils/textUtils'
 import { updateConversation } from '@/redux/aynscThunks/conversation'
+import { useAppSelector } from '@/redux/hooks'
 
 const RichTextPreview = ({ content }: { content: string }) => {
   const truncateHtml = (html: string, maxLength: number = 150): string => {
@@ -42,12 +43,12 @@ const PromptSet: React.FC = () => {
   const prompts = useSelector((state: RootState) => state.prompt.prompts)
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
-  const { prompt: selectedPrompt, activeConversation } = useSelector(
-    (state: RootState) => ({
-      prompt: state.conversation.activeConversation?.prompt,
-      activeConversation: state.conversation.activeConversation,
-    })
+
+  const selectedPrompt = useAppSelector(
+    (state) => state.conversation.activeConversation?.prompt
   )
+  const { activeConversation } = useAppSelector((state) => state.conversation)
+
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
 
   useEffect(() => {

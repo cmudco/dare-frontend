@@ -40,6 +40,12 @@ export interface MessageProps {
   onContentRendered?: () => void
 }
 
+export interface MessageProps {
+  message: Message
+  onEditMessage?: (id: string, content: string) => void
+  onContentRendered?: () => void
+}
+
 export interface LLMModel {
   id: number
   name: string
