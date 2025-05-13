@@ -1,3 +1,4 @@
+import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { LLMModel } from './conversation'
 import { MyFile } from './files'
 import { Prompt } from './prompt'
@@ -18,6 +19,27 @@ export interface Step {
   createdAt?: string
 }
 
+export interface WorkflowRunStep {
+  id: string
+  step: number
+  order: number
+  status: WorkflowRunStepStatus
+  response: string | null
+  error: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface WorkflowRun {
+  id: string
+  workflow: number
+  user: number
+  status: WorkflowRunStepStatus
+  startedAt: string
+  endedAt: string | null
+  steps: WorkflowRunStep[]
+}
+
 export interface Workflow {
   id: string
   title: string
@@ -27,18 +49,20 @@ export interface Workflow {
   created_at?: string
   user: string
   steps?: Step[]
+  lastRunId?: string | null
 }
 
 export interface WorkflowState {
   workflows: Workflow[]
   selectedWorkflow: Workflow | null
+  workflowRuns: WorkflowRun[]
+  selectedWorkflowRun: WorkflowRun | null
   loading: boolean
   error: string | null
   isModalOpen: boolean
   savedStepIds: string[]
   tempSteps: Step[]
 }
-
 export interface WorkflowTableProps {
   searchQuery: string
 }
@@ -97,4 +121,14 @@ export interface StepTouched {
   order?: boolean
   file?: boolean
   llm?: boolean
+}
+
+export interface WorkflowTableProps {
+  searchQuery: string
+}
+
+export interface WorkflowRunDrawerProps {
+  runId: string | null
+  isOpen: boolean
+  onClose: () => void
 }

@@ -1,6 +1,6 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
-import { Step, Workflow } from '@/redux/types/workflow'
+import { Step, Workflow, WorkflowRun } from '@/redux/types/workflow'
 import { Prompt } from '@/redux/types/prompt'
 
 export const getWorkflowsAPI = async (): Promise<{ results: Workflow[] }> => {
@@ -83,4 +83,59 @@ export const deleteStepAPI = async (id: string): Promise<void> => {
     url: `api/steps/${id}/`,
     method: METHOD.DELETE,
   })
+}
+
+export const startWorkflowRunAPI = async (
+  workflowId: string
+): Promise<WorkflowRun> => {
+  return await baseRequest<WorkflowRun>({
+    url: 'api/workflow-runs/run-workflow/',
+    method: METHOD.POST,
+    data: { workflow_id: workflowId },
+  })
+}
+
+export const getWorkflowRunByIdAPI = async (
+  runId: string
+): Promise<WorkflowRun> => {
+  return await baseRequest<WorkflowRun>({
+    url: `api/workflow-runs/${runId}/`,
+    method: METHOD.GET,
+  })
+}
+
+export const getWorkflowRunsAPI = async (): Promise<{
+  results: WorkflowRun[]
+}> => {
+  return await baseRequest<{ results: WorkflowRun[] }>({
+    url: 'api/workflow-runs/',
+    method: METHOD.GET,
+  })
+}
+
+export const getWorkflowRunsForWorkflowAPI = async (
+  workflowId: string
+): Promise<{
+  results: WorkflowRun[]
+}> => {
+  return await baseRequest<{ results: WorkflowRun[] }>({
+    url: `api/workflow-runs/?workflow=${workflowId}`,
+    method: METHOD.GET,
+  })
+}
+
+export const getLatestWorkflowRunAPI = async (
+  workflowId: string
+): Promise<WorkflowRun | null> => {
+  try {
+    const response = await baseRequest<{ results: WorkflowRun[] }>({
+      url: `api/workflow-runs/?workflow=${workflowId}&limit=1`,
+      method: METHOD.GET,
+    })
+
+    return response.results.length > 0 ? response.results[0] : null
+  } catch (error) {
+    console.error('Error fetching latest workflow run:', error)
+    return null
+  }
 }

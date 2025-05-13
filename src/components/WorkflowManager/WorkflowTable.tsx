@@ -1,7 +1,11 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
-import { deleteWorkflow } from '../../redux/asyncThunks/workflow'
+import {
+  deleteWorkflow,
+  startWorkflowRun,
+  getLatestWorkflowRun,
+} from '../../redux/asyncThunks/workflow'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
 import { formatDate } from '../../utils/constants/prompts'
 import { WORKFLOWS_TABLE_HEAD } from '../../utils/constants/workflows'
@@ -32,10 +36,8 @@ import {
 import { EllipsisVerticalIcon } from 'lucide-react'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getModeBadge, getStepCount } from '@/utils/constants/workflow'
-
-interface WorkflowTableProps {
-  searchQuery: string
-}
+import { WorkflowTableProps } from '@/redux/types/workflow'
+import WorkflowRunDrawer from './WorkflowRunDrawer'
 
 const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -47,6 +49,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   const [itemsPerPage, setItemsPerPage] = useState(5)
   const [deleteWorkflowId, setDeleteWorkflowId] = useState<string | null>(null)
   const [deleteWorkflowTitle, setDeleteWorkflowTitle] = useState<string>('')
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
 
   const filteredWorkflows = useMemo(() => {
     return workflows.filter((workflow) => {
@@ -88,6 +91,35 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
 
   const handleEdit = (id: string) => {
     dispatch(openEditModal(id))
+  }
+
+  const handleRun = async (id: string) => {
+    try {
+      const action = await dispatch(startWorkflowRun(id)).unwrap()
+      setSelectedRunId(action.id)
+    } catch (error) {
+      console.error('Failed to start workflow run:', error)
+    }
+  }
+
+  const handleView = async (workflowId: string) => {
+    try {
+      const workflow = workflows.find((w) => w.id === workflowId)
+
+      if (workflow?.lastRunId) {
+        setSelectedRunId(workflow.lastRunId)
+      } else {
+        const resultAction = await dispatch(
+          getLatestWorkflowRun(workflowId)
+        ).unwrap()
+
+        if (resultAction.run) {
+          setSelectedRunId(resultAction.run.id)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to view workflow run history:', error)
+    }
   }
 
   return (
@@ -153,8 +185,18 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                       <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem className='cursor-pointer'>
+                      <DropdownMenuItem
+                        onClick={() => handleRun(workflow.id)}
+                        className='cursor-pointer'
+                      >
                         <span>Run</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleView(workflow.id)}
+                        className='cursor-pointer'
+                        disabled={!workflow.lastRunId && !workflow.id}
+                      >
+                        <span>View</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleEdit(workflow.id)}
@@ -178,7 +220,6 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
           )}
         </TableBody>
 
-        {/* Footer for Pagination & Controls */}
         {filteredWorkflows.length > 0 && (
           <TableFooter>
             <TableRow>
@@ -187,7 +228,6 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                 className='w-full p-4'
               >
                 <div className='flex w-full items-center justify-between'>
-                  {/* Rows per page dropdown */}
                   <div className='flex items-center gap-4'>
                     <span className='text-sm'>Rows per page:</span>
                     <Select
@@ -204,8 +244,6 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                       </SelectContent>
                     </Select>
                   </div>
-
-                  {/* Pagination Controls */}
                   <div className='flex items-center gap-4'>
                     <Button
                       variant='secondary'
@@ -242,6 +280,12 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
         description='Are you sure you want to delete this workflow? This action cannot be undone.'
         itemName={deleteWorkflowTitle}
         confirmText='Delete'
+      />
+
+      <WorkflowRunDrawer
+        runId={selectedRunId}
+        isOpen={!!selectedRunId}
+        onClose={() => setSelectedRunId(null)}
       />
     </div>
   )

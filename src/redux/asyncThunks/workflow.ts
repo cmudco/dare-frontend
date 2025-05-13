@@ -5,6 +5,10 @@ import {
   createWorkflowAPI,
   updateWorkflowAPI,
   deleteWorkflowAPI,
+  startWorkflowRunAPI,
+  getWorkflowRunByIdAPI,
+  getWorkflowRunsAPI,
+  getLatestWorkflowRunAPI,
 } from '@/api/workflows'
 import { Workflow } from '../types/workflow'
 
@@ -76,6 +80,53 @@ export const deleteWorkflow = createAsyncThunk(
     try {
       await deleteWorkflowAPI(id)
       return id
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const startWorkflowRun = createAsyncThunk(
+  'workflows/startWorkflowRun',
+  async (workflowId: string, { rejectWithValue }) => {
+    try {
+      const response = await startWorkflowRunAPI(workflowId)
+      return response
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getWorkflowRunById = createAsyncThunk(
+  'workflows/getWorkflowRunById',
+  async (runId: string, { rejectWithValue }) => {
+    try {
+      return await getWorkflowRunByIdAPI(runId)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getWorkflowRuns = createAsyncThunk(
+  'workflows/getWorkflowRuns',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await getWorkflowRunsAPI()
+      return response.results
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getLatestWorkflowRun = createAsyncThunk(
+  'workflows/getLatestWorkflowRun',
+  async (workflowId: string, { rejectWithValue }) => {
+    try {
+      const result = await getLatestWorkflowRunAPI(workflowId)
+      return { workflowId, run: result }
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }
