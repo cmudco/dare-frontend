@@ -27,7 +27,6 @@ const RegistrationScreen: React.FC = () => {
       email: values.email,
       password1: values.password1,
       password2: values.password2,
-      // role: values.role,
     }
 
     try {

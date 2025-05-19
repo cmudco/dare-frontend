@@ -7,6 +7,15 @@ export const WORKFLOWS_TABLE_HEAD = [
   'Action',
 ]
 
+export const WORKFLOW_TABLE_HEADER_TO_KEY = {
+  'Workflow Name': 'title',
+  Description: 'description',
+  Mode: 'mode',
+  Steps: 'steps',
+  'Date Uploaded': 'createdAt',
+  Action: null,
+} as const
+
 export const WORKFLOW_MODES = [
   {
     id: 1,
@@ -17,6 +26,11 @@ export const WORKFLOW_MODES = [
     id: 2,
     name: 'Parallel',
     description: 'Execute all steps simultaneously in parallel.',
+  },
+  {
+    id: 3,
+    name: 'Unknown',
+    description: 'The workflow mode is unknown.',
   },
 ]
 
@@ -48,4 +62,9 @@ export enum WorkflowRunStepStatus {
   Running = 'running',
   Completed = 'completed',
   Failed = 'failed',
+}
+
+export enum WorkflowViewMode {
+  Run = 'run',
+  View = 'view',
 }

@@ -212,7 +212,6 @@ const userSlice = createSlice({
       })
       .addCase(updateVectorDBSetting.fulfilled, (state, action) => {
         state.loading = false
-        // Preserve existing user data when updating vector database
         if (state.user && action.payload) {
           state.user = {
             ...state.user,

@@ -4,9 +4,7 @@ import { RootState, AppDispatch } from '../../redux/store'
 import {
   deleteWorkflow,
   startWorkflowRun,
-  getLatestWorkflowRun,
 } from '../../redux/asyncThunks/workflow'
-import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
 import { formatDate } from '../../utils/constants/prompts'
 import { WORKFLOWS_TABLE_HEAD } from '../../utils/constants/workflows'
 import { openEditModal } from '../../redux/workflowSlice'
@@ -33,11 +31,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { EllipsisVerticalIcon } from 'lucide-react'
+import {
+  EllipsisVerticalIcon,
+  EyeIcon,
+  PencilIcon,
+  PlayIcon,
+  TrashIcon,
+} from '@heroicons/react/20/solid'
+import { ChevronUpDownIcon } from '@heroicons/react/24/outline'
 import { DeleteConfirmation } from '../DeleteConfirmation'
-import { getModeBadge, getStepCount } from '@/utils/constants/workflow'
+import {
+  SortDirection,
+  updateSortState,
+  sortWorkflows,
+} from '@/utils/sortUtils'
+import { getModeBadge, getStepCount } from '@/utils/workflowUtils'
+import WorkflowViewer from './WorkflowViewer'
 import { WorkflowTableProps } from '@/redux/types/workflow'
-import WorkflowRunDrawer from './WorkflowRunDrawer'
+import { SortDirectionEnum } from '@/utils/constants/sort'
 
 const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -49,7 +60,17 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   const [itemsPerPage, setItemsPerPage] = useState(5)
   const [deleteWorkflowId, setDeleteWorkflowId] = useState<string | null>(null)
   const [deleteWorkflowTitle, setDeleteWorkflowTitle] = useState<string>('')
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(
+    SortDirectionEnum.ASC
+  )
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
+  const [workflowViewMode, setWorkflowViewMode] = useState<'run' | 'view'>(
+    'view'
+  )
+  const [selectedWorkflowName, setSelectedWorkflowName] = useState<
+    string | undefined
+  >(undefined)
 
   const filteredWorkflows = useMemo(() => {
     return workflows.filter((workflow) => {
@@ -63,8 +84,12 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
     })
   }, [workflows, searchQuery])
 
-  const totalPages = Math.ceil(filteredWorkflows.length / itemsPerPage)
-  const paginatedWorkflows = filteredWorkflows.slice(
+  const sortedWorkflows = useMemo(() => {
+    return sortWorkflows(filteredWorkflows, sortColumn, sortDirection)
+  }, [filteredWorkflows, sortColumn, sortDirection])
+
+  const totalPages = Math.ceil(sortedWorkflows.length / itemsPerPage)
+  const paginatedWorkflows = sortedWorkflows.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   )
@@ -73,12 +98,16 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
     setCurrentPage(1)
   }, [searchQuery])
 
+  const handleSort = (column: string) => {
+    updateSortState(column, sortColumn, setSortColumn, setSortDirection)
+  }
+
   const handleDeleteConfirm = async () => {
     if (deleteWorkflowId) {
       try {
         await dispatch(deleteWorkflow(deleteWorkflowId)).unwrap()
-      } catch (error) {
-        console.error('Failed to delete workflow:', error)
+      } catch (err) {
+        console.error('Failed to delete workflow:', err)
       }
     }
     setDeleteWorkflowId(null)
@@ -93,29 +122,36 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
     dispatch(openEditModal(id))
   }
 
-  const handleRun = async (id: string) => {
+  const handleRun = async (id: string, title?: string) => {
     try {
-      const action = await dispatch(startWorkflowRun(id)).unwrap()
-      setSelectedRunId(action.id)
+      const workflowRun = await dispatch(startWorkflowRun(id)).unwrap()
+      if (workflowRun && workflowRun.id) {
+        setSelectedWorkflowName(title)
+        setWorkflowViewMode('run')
+        setSelectedRunId(workflowRun.id)
+      } else {
+        console.error(
+          'Failed to start workflow run: Invalid data received.',
+          workflowRun
+        )
+      }
     } catch (error) {
-      console.error('Failed to start workflow run:', error)
+      console.error('Failed to start workflow run (thunk rejected):', error)
     }
   }
 
-  const handleView = async (workflowId: string) => {
+  const handleView = (workflowId: string, title?: string) => {
     try {
       const workflow = workflows.find((w) => w.id === workflowId)
 
-      if (workflow?.lastRunId) {
-        setSelectedRunId(workflow.lastRunId)
-      } else {
-        const resultAction = await dispatch(
-          getLatestWorkflowRun(workflowId)
-        ).unwrap()
-
-        if (resultAction.run) {
-          setSelectedRunId(resultAction.run.id)
-        }
+      if (workflow?.latestRun) {
+        setSelectedWorkflowName(title)
+        setWorkflowViewMode('view')
+        setSelectedRunId(workflow.latestRun.id)
+      } else if (workflow) {
+        setSelectedWorkflowName(title)
+        setWorkflowViewMode('view')
+        setSelectedRunId(workflow.id)
       }
     } catch (error) {
       console.error('Failed to view workflow run history:', error)
@@ -130,11 +166,29 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
             {WORKFLOWS_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className='cursor-pointer p-4 text-sm font-semibold'
+                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 ${
+                  head !== 'Action' ? 'hover:bg-gray-100 hover:opacity-100' : ''
+                }`}
+                onClick={() => head !== 'Action' && handleSort(head)}
               >
                 <div className='flex items-center justify-between gap-2 opacity-70'>
                   {head}
-                  <ChevronUpDownIcon strokeWidth={2} className='h-4 w-4' />
+                  {head !== 'Action' && (
+                    <ChevronUpDownIcon
+                      strokeWidth={2}
+                      className={`h-4 w-4 ${
+                        sortColumn === head ? 'text-blue-500' : ''
+                      }`}
+                      style={{
+                        transform:
+                          sortColumn === head &&
+                          sortDirection === SortDirectionEnum.DESC
+                            ? 'rotate(180deg)'
+                            : 'none',
+                        transition: 'transform 0.2s',
+                      }}
+                    />
+                  )}
                 </div>
               </TableHead>
             ))}
@@ -150,7 +204,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                 Loading workflows...
               </TableCell>
             </TableRow>
-          ) : filteredWorkflows.length === 0 ? (
+          ) : sortedWorkflows.length === 0 ? (
             <TableRow>
               <TableCell
                 colSpan={WORKFLOWS_TABLE_HEAD.length}
@@ -186,22 +240,28 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem
-                        onClick={() => handleRun(workflow.id)}
+                        onClick={() => handleRun(workflow.id, workflow.title)}
                         className='cursor-pointer'
                       >
+                        <PlayIcon className='mr-2 h-4 w-4' />
                         <span>Run</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleView(workflow.id)}
-                        className='cursor-pointer'
-                        disabled={!workflow.lastRunId && !workflow.id}
-                      >
-                        <span>View</span>
-                      </DropdownMenuItem>
+                      {workflow.latestRun && (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleView(workflow.id, workflow.title)
+                          }
+                          className='cursor-pointer'
+                        >
+                          <EyeIcon className='mr-2 h-4 w-4' />
+                          <span>View Last Run</span>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         onClick={() => handleEdit(workflow.id)}
                         className='cursor-pointer'
                       >
+                        <PencilIcon className='mr-2 h-4 w-4' />
                         <span>Edit</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -210,6 +270,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                           handleDelete(workflow.id, workflow.title)
                         }
                       >
+                        <TrashIcon className='mr-2 h-4 w-4' />
                         <span>Delete</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -220,7 +281,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
           )}
         </TableBody>
 
-        {filteredWorkflows.length > 0 && (
+        {sortedWorkflows.length > 0 && (
           <TableFooter>
             <TableRow>
               <TableCell
@@ -282,10 +343,12 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
         confirmText='Delete'
       />
 
-      <WorkflowRunDrawer
+      <WorkflowViewer
         runId={selectedRunId}
         isOpen={!!selectedRunId}
         onClose={() => setSelectedRunId(null)}
+        mode={workflowViewMode}
+        workflowName={selectedWorkflowName}
       />
     </div>
   )

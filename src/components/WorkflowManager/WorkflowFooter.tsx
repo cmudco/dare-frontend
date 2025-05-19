@@ -4,14 +4,7 @@ import { AppDispatch } from '../../redux/store'
 import { closeModal } from '../../redux/workflowSlice'
 import { DialogFooter } from '../ui/dialog'
 import { Button } from '../ui/button'
-
-interface WorkflowFooterProps {
-  loading: boolean
-  isValid: boolean
-  dirty: boolean
-  unsavedSteps: number
-  stepsCount: number
-}
+import { WorkflowFooterProps } from '@/redux/types/workflow'
 
 const WorkflowFooter: React.FC<WorkflowFooterProps> = ({ loading }) => {
   const dispatch = useDispatch<AppDispatch>()

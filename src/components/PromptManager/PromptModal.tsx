@@ -18,7 +18,7 @@ import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import Tiptap from '../Tiptap'
 import { getUserData } from '@/redux/aynscThunks/user'
-import { Switch } from '@/components/ui/switch' // Adjust the import path based on your project structure
+import { Switch } from '@/components/ui/switch'
 
 const promptValidationSchema = Yup.object().shape({
   title: Yup.string().required('Title is required'),

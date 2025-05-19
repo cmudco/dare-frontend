@@ -4,6 +4,31 @@ import { getStatusDisplay } from '@/utils/constants/files'
 import type { MyFile } from '@/redux/types/files'
 import type { Tag } from '@/redux/types/tags'
 import type { Prompt } from '@/redux/types/prompt'
+import { PromptGroup } from './constants/prompts'
+import { Workflow, Step, WorkflowMode } from '@/redux/types/workflow'
+import { WORKFLOW_TABLE_HEADER_TO_KEY } from './constants/workflows'
+import { getStepCount } from './workflowUtils'
+import { SortDirectionEnum } from './constants/sort'
+
+export type SortDirection = SortDirectionEnum
+
+export const updateSortState = (
+  clickedColumn: string,
+  currentSortColumn: string | null,
+  setSortColumn: React.Dispatch<React.SetStateAction<string | null>>,
+  setSortDirection: React.Dispatch<React.SetStateAction<SortDirection>>
+): void => {
+  if (currentSortColumn === clickedColumn) {
+    setSortDirection((prevDirection) =>
+      prevDirection === SortDirectionEnum.ASC
+        ? SortDirectionEnum.DESC
+        : SortDirectionEnum.ASC
+    )
+  } else {
+    setSortColumn(clickedColumn)
+    setSortDirection(SortDirectionEnum.ASC)
+  }
+}
 
 export function getFileProp(
   col: string
@@ -21,7 +46,7 @@ export function getFileProp(
 export function sortFiles(
   files: MyFile[],
   sortColumn: string | null,
-  sortDirection: 'asc' | 'desc',
+  sortDirection: SortDirection,
   allTags: Tag[]
 ): MyFile[] {
   if (!sortColumn) return files
@@ -41,29 +66,35 @@ export function sortFiles(
         )
         .sort()
         .join(',')
-      if (aLabels < bLabels) return sortDirection === 'asc' ? -1 : 1
-      if (aLabels > bLabels) return sortDirection === 'asc' ? 1 : -1
+      if (aLabels < bLabels)
+        return sortDirection === SortDirectionEnum.ASC ? -1 : 1
+      if (aLabels > bLabels)
+        return sortDirection === SortDirectionEnum.ASC ? 1 : -1
       return 0
     }
     if (prop === 'status') {
       const aStatus = getStatusDisplay(a.status)
       const bStatus = getStatusDisplay(b.status)
-      if (aStatus < bStatus) return sortDirection === 'asc' ? -1 : 1
-      if (aStatus > bStatus) return sortDirection === 'asc' ? 1 : -1
+      if (aStatus < bStatus)
+        return sortDirection === SortDirectionEnum.ASC ? -1 : 1
+      if (aStatus > bStatus)
+        return sortDirection === SortDirectionEnum.ASC ? 1 : -1
       return 0
     }
     const aValue = a[prop]
     const bValue = b[prop]
     if (typeof aValue === 'string' && typeof bValue === 'string') {
       if (aValue.toLowerCase() < bValue.toLowerCase())
-        return sortDirection === 'asc' ? -1 : 1
+        return sortDirection === SortDirectionEnum.ASC ? -1 : 1
       if (aValue.toLowerCase() > bValue.toLowerCase())
-        return sortDirection === 'asc' ? 1 : -1
+        return sortDirection === SortDirectionEnum.ASC ? 1 : -1
       return 0
     }
     if (typeof aValue === 'number' && typeof bValue === 'number') {
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+      if (aValue < bValue)
+        return sortDirection === SortDirectionEnum.ASC ? -1 : 1
+      if (aValue > bValue)
+        return sortDirection === SortDirectionEnum.ASC ? 1 : -1
       return 0
     }
     return 0
@@ -80,15 +111,14 @@ export function getPromptProp(col: string): keyof Prompt | null {
 export function sortPrompts(
   prompts: Prompt[],
   sortColumn: string | null,
-  sortDirection: 'asc' | 'desc'
+  sortDirection: SortDirection
 ): Prompt[] {
   const sortedPrompts = [...prompts]
   if (!sortColumn) {
-    // Default sort by createdAt (newest first)
     return sortedPrompts.sort((a, b) => {
       const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0
-      return bDate - aDate // Descending order (newest first)
+      return bDate - aDate
     })
   }
   const prop = getPromptProp(sortColumn)
@@ -97,19 +127,151 @@ export function sortPrompts(
     if (prop === 'createdAt') {
       const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0
-      if (aDate < bDate) return sortDirection === 'asc' ? -1 : 1
-      if (aDate > bDate) return sortDirection === 'asc' ? 1 : -1
+      if (aDate < bDate) return sortDirection === SortDirectionEnum.ASC ? -1 : 1
+      if (aDate > bDate) return sortDirection === SortDirectionEnum.ASC ? 1 : -1
       return 0
     }
     const aValue = a[prop]
     const bValue = b[prop]
     if (typeof aValue === 'string' && typeof bValue === 'string') {
       if (aValue.toLowerCase() < bValue.toLowerCase())
-        return sortDirection === 'asc' ? -1 : 1
+        return sortDirection === SortDirectionEnum.ASC ? -1 : 1
       if (aValue.toLowerCase() > bValue.toLowerCase())
-        return sortDirection === 'asc' ? 1 : -1
+        return sortDirection === SortDirectionEnum.ASC ? 1 : -1
       return 0
     }
     return 0
+  })
+}
+
+export function sortPromptGroups(
+  groups: PromptGroup[],
+  sortColumn: string | null,
+  sortDirection: SortDirection
+): PromptGroup[] {
+  const sortedGroups = [...groups]
+  if (!sortColumn) {
+    return sortedGroups.sort((a, b) => {
+      const aDate = a.rootPrompt.createdAt
+        ? new Date(a.rootPrompt.createdAt).getTime()
+        : 0
+      const bDate = b.rootPrompt.createdAt
+        ? new Date(b.rootPrompt.createdAt).getTime()
+        : 0
+      return bDate - aDate
+    })
+  }
+
+  const prop = getPromptProp(sortColumn)
+  if (!prop) return sortedGroups
+
+  return sortedGroups.sort((a, b) => {
+    const aVal = a.rootPrompt[prop]
+    const bVal = b.rootPrompt[prop]
+
+    if (prop === 'createdAt') {
+      const aDate = aVal ? new Date(aVal as string).getTime() : 0
+      const bDate = bVal ? new Date(bVal as string).getTime() : 0
+      if (aDate < bDate) return sortDirection === SortDirectionEnum.ASC ? -1 : 1
+      if (aDate > bDate) return sortDirection === SortDirectionEnum.ASC ? 1 : -1
+      return 0
+    }
+
+    const aValueString = String(
+      aVal === null || aVal === undefined ? '' : aVal
+    ).toLowerCase()
+    const bValueString = String(
+      bVal === null || bVal === undefined ? '' : bVal
+    ).toLowerCase()
+
+    const comparison = aValueString.localeCompare(bValueString)
+    return sortDirection === SortDirectionEnum.ASC ? comparison : -comparison
+  })
+}
+
+export function getWorkflowProp(col: string): keyof Workflow | 'steps' | null {
+  return (
+    (
+      WORKFLOW_TABLE_HEADER_TO_KEY as Record<
+        string,
+        keyof Workflow | 'steps' | null
+      >
+    )[col] ?? null
+  )
+}
+
+export function sortWorkflows(
+  workflows: Workflow[],
+  sortColumn: string | null,
+  sortDirection: SortDirection
+): Workflow[] {
+  const sortedWorkflows = [...workflows]
+  if (!sortColumn) {
+    return sortedWorkflows.sort((a, b) => {
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return bDate - aDate
+    })
+  }
+
+  const prop = getWorkflowProp(sortColumn)
+  if (!prop) return sortedWorkflows
+
+  return sortedWorkflows.sort((a, b) => {
+    let aValue: string | number | undefined | null | Step[] | WorkflowMode
+    let bValue: string | number | undefined | null | Step[] | WorkflowMode
+
+    if (prop === 'steps') {
+      aValue = getStepCount(a)
+      bValue = getStepCount(b)
+    } else if (prop === 'mode') {
+      aValue = a.mode
+      bValue = b.mode
+    } else {
+      if (prop in a && prop in b) {
+        aValue = a[prop as keyof Workflow] as
+          | string
+          | number
+          | undefined
+          | null
+          | Step[]
+          | WorkflowMode
+        bValue = b[prop as keyof Workflow] as
+          | string
+          | number
+          | undefined
+          | null
+          | Step[]
+          | WorkflowMode
+      } else {
+        return 0
+      }
+    }
+
+    if (prop === 'createdAt') {
+      const aDate = aValue ? new Date(aValue as string).getTime() : 0
+      const bDate = bValue ? new Date(bValue as string).getTime() : 0
+      if (aDate < bDate) return sortDirection === SortDirectionEnum.ASC ? -1 : 1
+      if (aDate > bDate) return sortDirection === SortDirectionEnum.ASC ? 1 : -1
+      return 0
+    }
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      if (aValue < bValue)
+        return sortDirection === SortDirectionEnum.ASC ? -1 : 1
+      if (aValue > bValue)
+        return sortDirection === SortDirectionEnum.ASC ? 1 : -1
+      return 0
+    }
+
+    const aValueString = String(
+      aValue === null || aValue === undefined ? '' : aValue
+    ).toLowerCase()
+    const bValueString = String(
+      bValue === null || bValue === undefined ? '' : bValue
+    ).toLowerCase()
+
+    const comparison = aValueString.localeCompare(bValueString)
+    return sortDirection === SortDirectionEnum.ASC ? comparison : -comparison
   })
 }

@@ -6,8 +6,6 @@ import {
   deleteWorkflow,
   startWorkflowRun,
   getWorkflowRunById,
-  getWorkflowRuns,
-  getLatestWorkflowRun,
 } from './asyncThunks/workflow'
 import { initialState } from './initialState/workflow'
 import { Step } from './types/workflow'
@@ -118,8 +116,17 @@ const workflowSlice = createSlice({
     })
     builder.addCase(startWorkflowRun.fulfilled, (state, action) => {
       state.loading = false
-      state.workflowRuns.push(action.payload)
-      state.selectedWorkflowRun = action.payload
+      const newRun = action.payload
+
+      const existingRunIndex = state.workflowRuns.findIndex(
+        (run) => run.id === newRun.id
+      )
+      if (existingRunIndex !== -1) {
+        state.workflowRuns[existingRunIndex] = newRun
+      } else {
+        state.workflowRuns.push(newRun)
+      }
+      state.selectedWorkflowRun = newRun
     })
     builder.addCase(startWorkflowRun.rejected, (state, action) => {
       state.loading = false
@@ -144,48 +151,6 @@ const workflowSlice = createSlice({
       state.selectedWorkflowRun = updatedRun
     })
     builder.addCase(getWorkflowRunById.rejected, (state, action) => {
-      state.loading = false
-      state.error = action.payload as string
-    })
-
-    builder.addCase(getWorkflowRuns.pending, (state) => {
-      state.loading = true
-      state.error = null
-    })
-    builder.addCase(getWorkflowRuns.fulfilled, (state, action) => {
-      state.loading = false
-      state.workflowRuns = action.payload
-    })
-    builder.addCase(getWorkflowRuns.rejected, (state, action) => {
-      state.loading = false
-      state.error = action.payload as string
-    })
-
-    builder.addCase(getLatestWorkflowRun.pending, (state) => {
-      state.loading = true
-      state.error = null
-    })
-    builder.addCase(getLatestWorkflowRun.fulfilled, (state, action) => {
-      state.loading = false
-
-      if (action.payload.run) {
-        const workflowIndex = state.workflows.findIndex(
-          (workflow) => workflow.id === action.payload.workflowId
-        )
-
-        if (workflowIndex !== -1) {
-          state.workflows[workflowIndex].lastRunId = action.payload.run.id
-        }
-
-        const runExists = state.workflowRuns.some(
-          (run) => run.id === action.payload.run?.id
-        )
-        if (!runExists && action.payload.run) {
-          state.workflowRuns.push(action.payload.run)
-        }
-      }
-    })
-    builder.addCase(getLatestWorkflowRun.rejected, (state, action) => {
       state.loading = false
       state.error = action.payload as string
     })

@@ -103,39 +103,3 @@ export const getWorkflowRunByIdAPI = async (
     method: METHOD.GET,
   })
 }
-
-export const getWorkflowRunsAPI = async (): Promise<{
-  results: WorkflowRun[]
-}> => {
-  return await baseRequest<{ results: WorkflowRun[] }>({
-    url: 'api/workflow-runs/',
-    method: METHOD.GET,
-  })
-}
-
-export const getWorkflowRunsForWorkflowAPI = async (
-  workflowId: string
-): Promise<{
-  results: WorkflowRun[]
-}> => {
-  return await baseRequest<{ results: WorkflowRun[] }>({
-    url: `api/workflow-runs/?workflow=${workflowId}`,
-    method: METHOD.GET,
-  })
-}
-
-export const getLatestWorkflowRunAPI = async (
-  workflowId: string
-): Promise<WorkflowRun | null> => {
-  try {
-    const response = await baseRequest<{ results: WorkflowRun[] }>({
-      url: `api/workflow-runs/?workflow=${workflowId}&limit=1`,
-      method: METHOD.GET,
-    })
-
-    return response.results.length > 0 ? response.results[0] : null
-  } catch (error) {
-    console.error('Error fetching latest workflow run:', error)
-    return null
-  }
-}
