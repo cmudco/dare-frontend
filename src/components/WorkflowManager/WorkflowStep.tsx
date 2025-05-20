@@ -1,3 +1,4 @@
+import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -14,8 +15,8 @@ import {
 } from '@/components/ui/collapsible'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/redux/store'
-import { useEffect } from 'react'
-import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
+import { useEffect, useRef } from 'react'
+import { getWorkflowRunById, getWorkflows } from '@/redux/asyncThunks/workflow'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { getRunStatusBadge } from '@/utils/constants/workflow'
 
@@ -28,6 +29,7 @@ export const WorkflowStep: React.FC<{
   const { selectedWorkflowRun, loading } = useSelector(
     (state: RootState) => state.workflow
   )
+  const hasDispatchedGetWorkflows = useRef(false)
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined
@@ -39,6 +41,12 @@ export const WorkflowStep: React.FC<{
         intervalId = setInterval(() => {
           dispatch(getWorkflowRunById(runId))
         }, 5000)
+      } else if (
+        selectedWorkflowRun?.status === WorkflowRunStepStatus.Completed &&
+        !hasDispatchedGetWorkflows.current
+      ) {
+        dispatch(getWorkflows())
+        hasDispatchedGetWorkflows.current = true
       }
     }
 
@@ -77,6 +85,7 @@ export const WorkflowStep: React.FC<{
       {selectedWorkflowRun.steps.map((step) => (
         <Collapsible
           key={step.id}
+          defaultOpen={step.status === WorkflowRunStepStatus.Completed}
           className='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm'
         >
           <CollapsibleTrigger className='flex w-full items-center justify-between border-b border-gray-200 bg-gray-50 p-4'>

@@ -4,7 +4,7 @@ import { Badge } from '../components/ui/badge'
 export const getModeBadge = (mode: WorkflowMode) => {
   switch (mode) {
     case WorkflowMode.Serial:
-      return <Badge variant='blue'>WORKFLOWMODE</Badge>
+      return <Badge variant='blue'>Serial</Badge>
     case WorkflowMode.Parallel:
       return <Badge variant='green'>Parallel</Badge>
     default:
