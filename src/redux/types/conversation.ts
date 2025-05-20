@@ -51,6 +51,9 @@ export interface LLMModel {
   name: string
   identifier?: string
   description: string | null
+  isReasoning: boolean
+  inputTokenRatePerMillion: GLfloat
+  outputTokenRatePerMillion: GLfloat
 }
 
 export interface Snippet {
