@@ -56,6 +56,7 @@ export interface Workflow {
   lastRunId?: string | null
   latestRun?: WorkflowRun | null
 }
+
 export interface WorkflowState {
   workflows: Workflow[]
   selectedWorkflow: Workflow | null
@@ -77,12 +78,6 @@ export interface FormValues {
 
 export interface WorkflowTableProps {
   searchQuery: string
-}
-
-export interface WorkflowRunDrawerProps {
-  runId: string | null
-  isOpen: boolean
-  onClose: () => void
 }
 
 export interface WorkflowFieldsProps {
@@ -127,11 +122,4 @@ export interface WorkflowStepsProps {
   setSteps: (steps: Step[]) => void
   errors: FormikErrors<FormValues>
   touched: FormikTouched<FormValues>
-}
-
-export interface WorkflowViewerProps extends WorkflowRunDrawerProps {
-  title?: string
-  mode?: 'run' | 'view'
-  workflowName?: string
-  showActions?: boolean
 }
