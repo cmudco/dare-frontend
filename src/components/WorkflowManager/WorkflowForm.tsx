@@ -4,10 +4,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
 import { createOrUpdateWorkflow } from '../../redux/asyncThunks/workflow'
 import WorkflowFields from './WorkflowFields'
-import WorkflowSteps from './WorkflowSteps'
 import WorkflowFooter from './WorkflowFooter'
-import { FormValues, workflowValidationSchema } from '@/redux/types/workflow'
+import { FormValues } from '@/redux/types/workflow'
 import { closeModal } from '@/redux/workflowSlice'
+import { workflowValidationSchema } from '@/pages/Workflows/validation'
+import WorkflowAddSteps from './WorkflowCreateSteps'
 
 const WorkflowForm: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -16,11 +17,20 @@ const WorkflowForm: React.FC = () => {
   )
   const isEditMode = !!selectedWorkflow
 
+  const initialSteps = selectedWorkflow?.steps || []
+  const defaultFirstStep = {
+    prompt: null,
+    file: null,
+    llm: null,
+    order: 1,
+  }
+
   const initialValues: FormValues = {
     title: selectedWorkflow?.title || '',
     description: selectedWorkflow?.description || '',
     mode: selectedWorkflow?.mode || 0,
-    steps: selectedWorkflow?.steps || [],
+    steps:
+      isEditMode || initialSteps.length > 0 ? initialSteps : [defaultFirstStep],
   }
 
   const handleSubmit = async (
@@ -34,6 +44,8 @@ const WorkflowForm: React.FC = () => {
         prompt: step.prompt?.id || null,
         file: step.file?.id || null,
         llm: step.llm?.id || null,
+        max_tokens: step.maxTokens,
+        temperature: step.temperature,
       }))
 
       await dispatch(
@@ -81,7 +93,7 @@ const WorkflowForm: React.FC = () => {
             setFieldValue={setFieldValue}
             isEditMode={isEditMode}
           />
-          <WorkflowSteps
+          <WorkflowAddSteps
             steps={values.steps}
             setSteps={(newSteps) => setFieldValue('steps', newSteps)}
             errors={errors}

@@ -4,6 +4,8 @@ import {
   getWorkflowById,
   createOrUpdateWorkflow,
   deleteWorkflow,
+  startWorkflowRun,
+  getWorkflowRunById,
 } from './asyncThunks/workflow'
 import { initialState } from './initialState/workflow'
 import { Step } from './types/workflow'
@@ -14,6 +16,9 @@ const workflowSlice = createSlice({
   reducers: {
     clearSelectedWorkflow: (state) => {
       state.selectedWorkflow = null
+    },
+    clearSelectedWorkflowRun: (state) => {
+      state.selectedWorkflowRun = null
     },
     clearWorkflowError: (state) => {
       state.error = null
@@ -33,11 +38,7 @@ const workflowSlice = createSlice({
     },
     setSteps: (state, action: PayloadAction<Step[]>) => {
       if (state.selectedWorkflow) {
-        if (state.selectedWorkflow.steps) {
-          state.selectedWorkflow.steps = action.payload
-        } else if (state.selectedWorkflow.steps) {
-          state.selectedWorkflow.steps = action.payload
-        }
+        state.selectedWorkflow.steps = action.payload
       }
     },
   },
@@ -108,11 +109,57 @@ const workflowSlice = createSlice({
       state.loading = false
       state.error = action.payload as string
     })
+
+    builder.addCase(startWorkflowRun.pending, (state) => {
+      state.loading = true
+      state.error = null
+    })
+    builder.addCase(startWorkflowRun.fulfilled, (state, action) => {
+      state.loading = false
+      const newRun = action.payload
+
+      const existingRunIndex = state.workflowRuns.findIndex(
+        (run) => run.id === newRun.id
+      )
+      if (existingRunIndex !== -1) {
+        state.workflowRuns[existingRunIndex] = newRun
+      } else {
+        state.workflowRuns.push(newRun)
+      }
+      state.selectedWorkflowRun = newRun
+    })
+    builder.addCase(startWorkflowRun.rejected, (state, action) => {
+      state.loading = false
+      state.error = action.payload as string
+    })
+
+    builder.addCase(getWorkflowRunById.pending, (state) => {
+      state.loading = true
+      state.error = null
+    })
+    builder.addCase(getWorkflowRunById.fulfilled, (state, action) => {
+      state.loading = false
+      const updatedRun = action.payload
+      const index = state.workflowRuns.findIndex(
+        (run) => run.id === updatedRun.id
+      )
+      if (index !== -1) {
+        state.workflowRuns[index] = updatedRun
+      } else {
+        state.workflowRuns.push(updatedRun)
+      }
+      state.selectedWorkflowRun = updatedRun
+    })
+    builder.addCase(getWorkflowRunById.rejected, (state, action) => {
+      state.loading = false
+      state.error = action.payload as string
+    })
   },
 })
 
 export const {
   clearSelectedWorkflow,
+  clearSelectedWorkflowRun,
   clearWorkflowError,
   openModal,
   openEditModal,

@@ -5,7 +5,6 @@ export type SignupFormValues = {
   email: string
   password1: string
   password2: string
-  // role: string;
 }
 
 export const signupInitialValues: SignupFormValues = {
@@ -13,7 +12,6 @@ export const signupInitialValues: SignupFormValues = {
   email: '',
   password1: '',
   password2: '',
-  // role: "",
 }
 
 export const signupValidationSchema = Yup.object().shape({
@@ -27,7 +25,4 @@ export const signupValidationSchema = Yup.object().shape({
   password2: Yup.string()
     .oneOf([Yup.ref('password1')], 'Password does not match')
     .required('Confirm Password is required'),
-  // role: Yup.string()
-  //     .oneOf(["professor", "student"], "Please select a role")
-  //     .required("Role is required"),
 })

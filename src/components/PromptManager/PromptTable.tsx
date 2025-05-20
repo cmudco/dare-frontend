@@ -33,17 +33,19 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { EllipsisVerticalIcon } from 'lucide-react'
-import { Prompt } from '@/redux/types/prompt'
+import { Prompt, PromptTableProps } from '@/redux/types/prompt'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { stripHtml } from '../../utils/textUtils'
 import { TrashIcon } from '@heroicons/react/24/outline'
 import { DocumentDuplicateIcon, PencilIcon } from '@heroicons/react/20/solid'
 import { EyeIcon } from '@heroicons/react/24/outline'
 import PromptVersionHistoryModal from './PromptVersionHistoryModal'
-
-interface PromptTableProps {
-  searchQuery: string
-}
+import {
+  updateSortState,
+  SortDirection,
+  sortPromptGroups,
+} from '@/utils/sortUtils'
+import { SortDirectionEnum } from '@/utils/constants/sort'
 
 const PromptTable = ({ searchQuery }: PromptTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -58,7 +60,9 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
   >(null)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [sortDirection, setSortDirection] = useState<SortDirection>(
+    SortDirectionEnum.ASC
+  )
 
   const groupedPrompts = useMemo(() => groupPrompts(prompts), [prompts])
 
@@ -82,35 +86,11 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
   }, [latestPromptGroups, searchQuery])
 
   const sortedPromptGroups = useMemo(() => {
-    const sortedGroups = [...filteredPromptGroups]
-    if (sortColumn) {
-      sortedGroups.sort((a, b) => {
-        const aValue = a.rootPrompt[sortColumn as keyof Prompt] as string
-        const bValue = b.rootPrompt[sortColumn as keyof Prompt] as string
-        const comparison = aValue.localeCompare(bValue)
-        return sortDirection === 'asc' ? comparison : -comparison
-      })
-    } else {
-      sortedGroups.sort((a, b) => {
-        const aDate = a.rootPrompt.createdAt
-          ? new Date(a.rootPrompt.createdAt).getTime()
-          : 0
-        const bDate = b.rootPrompt.createdAt
-          ? new Date(b.rootPrompt.createdAt).getTime()
-          : 0
-        return bDate - aDate
-      })
-    }
-    return sortedGroups
+    return sortPromptGroups(filteredPromptGroups, sortColumn, sortDirection)
   }, [filteredPromptGroups, sortColumn, sortDirection])
 
   const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortColumn(column)
-      setSortDirection('asc')
-    }
+    updateSortState(column, sortColumn, setSortColumn, setSortDirection)
   }
 
   const totalItems = sortedPromptGroups.length
@@ -196,7 +176,8 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                       }`}
                       style={{
                         transform:
-                          sortColumn === head && sortDirection === 'desc'
+                          sortColumn === head &&
+                          sortDirection === SortDirectionEnum.DESC
                             ? 'rotate(180deg)'
                             : 'none',
                         transition: 'transform 0.2s',

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { getWorkflows } from '../../redux/asyncThunks/workflow'
 import WorkflowHeader from './WorkflowHeader'
 import WorkflowTable from './WorkflowTable'
 import WorkflowModal from './WorkflowModal'
 import { useAppDispatch } from '@/redux/hooks'
 import { getFiles } from '@/redux/aynscThunks/file'
 import { getAvailableModels } from '@/redux/aynscThunks/conversation'
+import { getWorkflows } from '@/redux/asyncThunks/workflow'
 
 const WorkflowManagerLayout = () => {
   const dispatch = useAppDispatch()

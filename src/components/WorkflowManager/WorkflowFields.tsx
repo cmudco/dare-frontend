@@ -1,4 +1,3 @@
-// WorkflowFields.tsx
 import React from 'react'
 import { DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog'
 import { Input } from '../ui/input'
@@ -20,22 +19,7 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip'
 import { Button } from '../ui/button'
-import { FormValues, FormTouched } from '@/redux/types/workflow'
-import { FormikErrors } from 'formik'
-
-interface WorkflowFieldsProps {
-  values: FormValues
-  errors: FormikErrors<FormValues>
-  touched: FormTouched
-  handleChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => void
-  setFieldValue: <K extends keyof FormValues>(
-    field: K,
-    value: FormValues[K]
-  ) => void
-  isEditMode: boolean
-}
+import { WorkflowFieldsProps } from '@/redux/types/workflow'
 
 const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
   values,
@@ -108,13 +92,10 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
           <SelectTrigger className='w-full'>
             <SelectValue placeholder='Select Mode' />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position='popper' className='z-50'>
             {WORKFLOW_MODES.map((mode) => (
-              <div key={mode.id} className='relative flex'>
-                <SelectItem
-                  value={mode.id.toString()}
-                  className='flex-grow pr-8'
-                >
+              <SelectItem key={mode.id} value={mode.id.toString()}>
+                <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center'>
                     {mode.id === 1 ? (
                       <ListOrdered className='mr-2 h-4 w-4' />
@@ -123,28 +104,37 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
                     )}
                     <span>{mode.name}</span>
                   </div>
-                </SelectItem>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='sm'
-                      className='absolute right-2 h-5 w-5 cursor-help p-0'
-                      onClick={(e) => e.preventDefault()}
+
+                  <Tooltip delayDuration={100}>
+                    <TooltipTrigger
+                      asChild
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
                     >
-                      <HelpCircle className='h-4 w-4 text-gray-400' />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side='right' className='z-50'>
-                    <p className='w-[280px] text-xs'>
-                      {mode.id === 1
-                        ? 'Tasks execute one after another, ensuring each step completes before the next begins.'
-                        : 'Tasks execute simultaneously, allowing multiple steps to run concurrently for faster processing.'}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        className='ml-2 h-6 w-6 flex-shrink-0 p-0'
+                      >
+                        <HelpCircle className='h-4 w-4 text-gray-500' />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side='right'
+                      className='z-[60] rounded-md bg-gray-900 p-2 text-white'
+                    >
+                      <p className='w-[280px] text-xs'>
+                        {mode.id === 1
+                          ? 'Tasks execute one after another, ensuring each step completes before the next begins.'
+                          : 'Tasks execute simultaneously, allowing multiple steps to run concurrently for faster processing.'}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>

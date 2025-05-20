@@ -8,6 +8,7 @@ import {
   clonePrompt,
 } from './aynscThunks/prompt'
 import { sortPrompts } from '../utils/sortUtils'
+import { SortDirectionEnum } from '@/utils/constants/sort'
 
 const promptSlice = createSlice({
   name: 'prompts',
@@ -41,7 +42,7 @@ const promptSlice = createSlice({
     })
     builder.addCase(getPrompts.fulfilled, (state, action) => {
       state.loading = false
-      state.prompts = sortPrompts(action.payload, null, 'desc')
+      state.prompts = sortPrompts(action.payload, null, SortDirectionEnum.DESC)
     })
     builder.addCase(getPrompts.rejected, (state, action) => {
       state.loading = false
@@ -78,8 +79,7 @@ const promptSlice = createSlice({
         state.prompts.push(updatedPrompt)
       }
 
-      // Apply sorting after adding/updating a prompt
-      state.prompts = sortPrompts(state.prompts, null, 'desc')
+      state.prompts = sortPrompts(state.prompts, null, SortDirectionEnum.DESC)
 
       if (state.selectedPrompt?.id === updatedPrompt.id) {
         state.selectedPrompt = updatedPrompt
@@ -97,7 +97,7 @@ const promptSlice = createSlice({
       state.loading = false
       const clonedPrompt = action.payload
       state.prompts.push(clonedPrompt)
-      state.prompts = sortPrompts(state.prompts, null, 'desc')
+      state.prompts = sortPrompts(state.prompts, null, SortDirectionEnum.DESC)
     })
     builder.addCase(clonePrompt.rejected, (state, action) => {
       state.loading = false
