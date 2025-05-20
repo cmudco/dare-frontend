@@ -86,29 +86,22 @@ export const deletePrompt = createAsyncThunk(
       const state = getState() as RootState
       const promptState = state.prompt
 
-      // Find the prompt being deleted
       const deletedPrompt = promptState.prompts.find((p) => p.id === id)
 
-      // If there's a prompt being deleted and it has children
       if (deletedPrompt) {
-        // Find any prompts that had the deleted prompt as their parent
         const childPrompts = promptState.prompts.filter((p) => p.parent === id)
 
-        // First delete the prompt from the backend
         await deletePromptAPI(id)
 
-        // Then update each child's parent reference in the backend
         const updatePromises = childPrompts.map((child) => {
           return updatePromptAPI(child.id, {
             ...child,
-            parent: deletedPrompt.parent, // Point to grandparent
+            parent: deletedPrompt.parent,
           })
         })
 
-        // Wait for all updates to complete
         await Promise.all(updatePromises)
       } else {
-        // If no children to update, just delete the prompt
         await deletePromptAPI(id)
       }
 

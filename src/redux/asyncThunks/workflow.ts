@@ -5,8 +5,10 @@ import {
   createWorkflowAPI,
   updateWorkflowAPI,
   deleteWorkflowAPI,
+  startWorkflowRunAPI,
+  getWorkflowRunByIdAPI,
 } from '@/api/workflows'
-import { Workflow } from '../types/workflow'
+import { Workflow, WorkflowRun } from '../types/workflow'
 
 export const getWorkflows = createAsyncThunk(
   'workflows/getWorkflows',
@@ -49,6 +51,8 @@ export const createOrUpdateWorkflow = createAsyncThunk(
           prompt: string | null
           file?: number | null
           llm?: number | null
+          maxTokens?: number | null
+          temperature?: number | null
         }[]
       }
     },
@@ -76,6 +80,33 @@ export const deleteWorkflow = createAsyncThunk(
     try {
       await deleteWorkflowAPI(id)
       return id
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const startWorkflowRun = createAsyncThunk<
+  WorkflowRun,
+  string,
+  { rejectValue: string }
+>(
+  'workflows/startWorkflowRun',
+  async (workflowId: string, { rejectWithValue }) => {
+    try {
+      const response = await startWorkflowRunAPI(workflowId)
+      return response
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getWorkflowRunById = createAsyncThunk(
+  'workflows/getWorkflowRunById',
+  async (runId: string, { rejectWithValue }) => {
+    try {
+      return await getWorkflowRunByIdAPI(runId)
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }

@@ -1,6 +1,6 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
-import { Step, Workflow } from '@/redux/types/workflow'
+import { Step, Workflow, WorkflowRun } from '@/redux/types/workflow'
 import { Prompt } from '@/redux/types/prompt'
 
 export const getWorkflowsAPI = async (): Promise<{ results: Workflow[] }> => {
@@ -82,5 +82,24 @@ export const deleteStepAPI = async (id: string): Promise<void> => {
   await baseRequest<void>({
     url: `api/steps/${id}/`,
     method: METHOD.DELETE,
+  })
+}
+
+export const startWorkflowRunAPI = async (
+  workflowId: string
+): Promise<WorkflowRun> => {
+  return await baseRequest<WorkflowRun>({
+    url: 'api/workflow-runs/run-workflow/',
+    method: METHOD.POST,
+    data: { workflow_id: workflowId },
+  })
+}
+
+export const getWorkflowRunByIdAPI = async (
+  runId: string
+): Promise<WorkflowRun> => {
+  return await baseRequest<WorkflowRun>({
+    url: `api/workflow-runs/${runId}/`,
+    method: METHOD.GET,
   })
 }

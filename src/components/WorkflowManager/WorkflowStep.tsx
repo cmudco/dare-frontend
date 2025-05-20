@@ -1,229 +1,161 @@
-import React, { useState } from 'react'
-import { Prompt } from '@/redux/types/prompt'
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from '../ui/select'
-import { Button } from '../ui/button'
-import {
-  ChevronUp,
-  ChevronDown,
-  Trash2,
-  ChevronsUpDown,
-  GripVertical,
-} from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeRaw from 'rehype-raw'
+import rehypeKatex from 'rehype-katex'
+import rehypeHighlight from 'rehype-highlight'
+import { CodeBlock } from '../Conversation/CodeBlock'
+import { MermaidBlock } from '../Conversation/MermaidBlock'
+import { MessagesSquare, AlertCircle, CirclePlay } from 'lucide-react'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '../ui/collapsible'
-import { Step, StepError, StepTouched } from '@/redux/types/workflow'
-import { LLMModel } from '@/redux/types/conversation'
-import { MyFile } from '@/redux/types/files'
+} from '@/components/ui/collapsible'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '@/redux/store'
+import { useEffect } from 'react'
+import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
+import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { getRunStatusBadge } from '@/utils/constants/workflow'
 
-interface WorkflowStepProps {
-  index: number
-  step: Step
-  prompts: Prompt[]
-  files: MyFile[]
-  llms: LLMModel[]
-  onRemove: () => void
-  onMove: (direction: 'up' | 'down') => void
-  onChange: (field: keyof Step, value: unknown) => void
-  error?: StepError
-  touched?: StepTouched
-  totalSteps?: number
-}
+export const WorkflowStep: React.FC<{
+  runId: string | null
+  isOpen: boolean
+  workflowName?: string
+}> = ({ runId, isOpen }) => {
+  const dispatch = useDispatch<AppDispatch>()
+  const { selectedWorkflowRun, loading } = useSelector(
+    (state: RootState) => state.workflow
+  )
 
-export const WorkflowStep: React.FC<WorkflowStepProps> = ({
-  index,
-  step,
-  prompts,
-  files,
-  llms,
-  onRemove,
-  onMove,
-  onChange,
-  error,
-  touched,
-  totalSteps,
-}) => {
-  const [isOpen, setIsOpen] = useState(false)
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | undefined
 
-  const handlePromptChange = (value: string) => {
-    const newPrompt = prompts.find((p) => p.id == value)
-    onChange('prompt', newPrompt || null)
+    if (runId && isOpen) {
+      dispatch(getWorkflowRunById(runId))
+
+      if (selectedWorkflowRun?.status === WorkflowRunStepStatus.Running) {
+        intervalId = setInterval(() => {
+          dispatch(getWorkflowRunById(runId))
+        }, 5000)
+      }
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+    }
+  }, [dispatch, runId, isOpen, selectedWorkflowRun?.status])
+
+  if (loading && !selectedWorkflowRun) {
+    return (
+      <div className='flex h-40 items-center justify-center'>
+        <div className='flex animate-pulse flex-col items-center text-blue-600'>
+          <span className='flex h-10 w-10 animate-spin items-center justify-center'>
+            <CirclePlay className='h-10 w-10' />
+          </span>
+          <span className='mt-3 text-sm font-medium'>
+            Loading workflow steps...
+          </span>
+        </div>
+      </div>
+    )
   }
 
-  const handleFileChange = (value: string) => {
-    console.log(value)
-    if (value === 'none') {
-      onChange('file', null)
-    } else {
-      const newFile = files.find((f) => f.id === parseInt(value))
-      onChange('file', newFile || null)
-    }
-  }
-
-  const handleLLMChange = (value: string) => {
-    if (value === 'none') {
-      onChange('llm', null)
-    } else {
-      const newLLM = llms.find((l) => l.id === parseInt(value))
-      onChange('llm', newLLM || null)
-    }
+  if (!selectedWorkflowRun || selectedWorkflowRun.steps.length === 0) {
+    return (
+      <div className='rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center'>
+        <p className='text-gray-500'>No steps have been executed yet.</p>
+      </div>
+    )
   }
 
   return (
-    <Collapsible
-      open={isOpen}
-      onOpenChange={setIsOpen}
-      className='overflow-hidden rounded-md border bg-white'
-    >
-      <div className='flex items-center justify-between bg-gray-50 p-3'>
-        <div className='flex items-center'>
-          <div className='mr-3 cursor-move'>
-            <GripVertical className='h-5 w-5 text-gray-400' />
-          </div>
-          <span className='text-sm font-medium'>Step {index + 1}</span>
-          {step.id && (
-            <span className='ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800'>
-              Saved
-            </span>
-          )}
-        </div>
-
-        <div className='flex items-center gap-1'>
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={() => onMove('up')}
-            className='h-8 w-8 p-0'
-            disabled={index === 0}
-          >
-            <ChevronUp className='h-4 w-4' />
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={() => onMove('down')}
-            className='h-8 w-8 p-0'
-            disabled={index === totalSteps! - 1} // Note: steps not in props, adjust as needed
-          >
-            <ChevronDown className='h-4 w-4' />
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={onRemove}
-            className='h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-600'
-          >
-            <Trash2 className='h-4 w-4' />
-          </Button>
-          <CollapsibleTrigger asChild>
-            <Button
-              type='button'
-              variant='ghost'
-              size='sm'
-              className='h-8 w-8 p-0'
-            >
-              <ChevronsUpDown className='h-4 w-4' />
-            </Button>
-          </CollapsibleTrigger>
-        </div>
-      </div>
-
-      <CollapsibleContent>
-        <div className='space-y-4 border-t p-4'>
-          <div className='space-y-2'>
-            <label className='text-sm font-medium'>Select Prompt</label>
-            <Select
-              value={step.prompt?.id.toString() || ''}
-              onValueChange={handlePromptChange}
-            >
-              <SelectTrigger
-                className={
-                  error?.prompt && touched?.prompt ? 'border-red-500' : ''
-                }
-              >
-                <SelectValue placeholder='Select a prompt' />
-              </SelectTrigger>
-              <SelectContent>
-                {prompts.map((prompt) => (
-                  <SelectItem key={prompt.id} value={prompt.id.toString()}>
-                    {prompt.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {error?.prompt && touched?.prompt && (
-              <p className='mt-1 text-xs text-red-500'>{error.prompt}</p>
-            )}
-          </div>
-
-          <div className='space-y-2'>
-            <label className='text-sm font-medium'>Select File</label>
-            <Select
-              value={step.file?.id?.toString() || 'none'}
-              onValueChange={handleFileChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='Select a file' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='none'>None</SelectItem>
-                {files.map((file) => (
-                  <SelectItem key={file.id} value={file.id.toString()}>
-                    {file.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {error?.file && touched?.file && (
-              <p className='mt-1 text-xs text-red-500'>{error.file}</p>
-            )}
-          </div>
-
-          <div className='space-y-2'>
-            <label className='text-sm font-medium'>Select LLM</label>
-            <Select
-              value={step.llm?.id?.toString() || 'none'}
-              onValueChange={handleLLMChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='Select an LLM' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='none'>None</SelectItem>
-                {llms.map((llm) => (
-                  <SelectItem key={llm.id} value={llm.id.toString()}>
-                    {llm.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {error?.llm && touched?.llm && (
-              <p className='mt-1 text-xs text-red-500'>{error.llm}</p>
-            )}
-          </div>
-
-          {/* {selectedPrompt && (
-            <div className="mt-3 p-3 bg-gray-50 rounded-md">
-              <h4 className="text-sm font-medium">Prompt Preview</h4>
-              <p className="text-xs text-gray-600 mt-1">
-                {stripHtml(selectedPrompt.content).substring(0, 150)}
-                {selectedPrompt.content.length > 150 ? "..." : ""}
-              </p>
+    <div className='space-y-6'>
+      {selectedWorkflowRun.steps.map((step) => (
+        <Collapsible
+          key={step.id}
+          className='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm'
+        >
+          <CollapsibleTrigger className='flex w-full items-center justify-between border-b border-gray-200 bg-gray-50 p-4'>
+            <div className='flex items-center'>
+              <span className='mr-3 flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-sm font-medium text-purple-700'>
+                {step.order}
+              </span>
+              <div>
+                <div className='font-medium text-gray-800'>
+                  Step {step.order}
+                </div>
+                <div className='text-xs text-gray-500'>
+                  {new Date(step.updatedAt).toLocaleString()}
+                </div>
+              </div>
             </div>
-          )} */}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+            <div>{getRunStatusBadge(step.status)}</div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            {step.response && (
+              <div className='p-4'>
+                <h5 className='mb-2 flex items-center text-sm font-medium text-gray-700'>
+                  <MessagesSquare className='mr-1.5 h-4 w-4 text-blue-600' />
+                  Response
+                </h5>
+                <div className='prose prose-sm max-w-none overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm text-gray-800'>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
+                    components={{
+                      code({ className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || '')
+                        if (match && match[1] === 'mermaid') {
+                          return (
+                            <MermaidBlock
+                              code={String(children).trim()}
+                              onRendered={() => {}}
+                              streaming={false}
+                            />
+                          )
+                        }
+                        if (match) {
+                          return (
+                            <CodeBlock className={className} {...props}>
+                              {children}
+                            </CodeBlock>
+                          )
+                        }
+                        return (
+                          <code
+                            className='not-prose rounded bg-gray-100 px-1'
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        )
+                      },
+                    }}
+                  >
+                    {step.response}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
+
+            {step.error && (
+              <div className='p-4'>
+                <h5 className='mb-2 flex items-center text-sm font-medium text-red-600'>
+                  <AlertCircle className='mr-1.5 h-4 w-4' />
+                  Error
+                </h5>
+                <div className='rounded-lg border border-red-100 bg-red-50 p-4 text-sm text-red-600'>
+                  {step.error}
+                </div>
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+      ))}
+    </div>
   )
 }

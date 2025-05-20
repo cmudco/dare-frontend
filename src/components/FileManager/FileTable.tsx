@@ -5,7 +5,7 @@ import { deleteFile } from '../../redux/aynscThunks/file'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
 import { TABLE_HEAD, TAG_COLORS } from '../../utils/constants/file'
 import { formatFileSize } from '@/utils/files'
-import { sortFiles } from '@/utils/sortUtils'
+import { SortDirection, sortFiles } from '@/utils/sortUtils'
 
 import {
   Select,
@@ -34,6 +34,7 @@ import {
 import { EllipsisVerticalIcon } from 'lucide-react'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getStatusDisplay } from '@/utils/constants/files'
+import { SortDirectionEnum } from '@/utils/constants/sort'
 
 interface FileTableProps {
   searchQuery: string
@@ -51,7 +52,9 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
   const [deleteFileId, setDeleteFileId] = useState<number | null>(null)
   const [deleteFileName, setDeleteFileName] = useState<string>('')
   const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [sortDirection, setSortDirection] = useState<SortDirection>(
+    SortDirectionEnum.ASC
+  )
 
   const filteredFiles = useMemo(() => {
     if (!user || user.vectorDb === undefined) {
@@ -101,13 +104,16 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+      setSortDirection((prev) =>
+        prev === SortDirectionEnum.ASC
+          ? SortDirectionEnum.DESC
+          : SortDirectionEnum.ASC
+      )
     } else {
       setSortColumn(column)
-      setSortDirection('asc')
+      setSortDirection(SortDirectionEnum.ASC)
     }
   }
-
   return (
     <div className='overflow-auto'>
       <Table className='mt-4 w-full min-w-max bg-white text-left'>
@@ -127,7 +133,8 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                       className={`h-4 w-4 ${sortColumn === head ? 'text-blue-500' : ''}`}
                       style={{
                         transform:
-                          sortColumn === head && sortDirection === 'desc'
+                          sortColumn === head &&
+                          sortDirection === SortDirectionEnum.DESC
                             ? 'rotate(180deg)'
                             : 'none',
                         transition: 'transform 0.2s',

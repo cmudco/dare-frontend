@@ -3,18 +3,12 @@ import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/store'
 import { Button } from '../ui/button'
 import { Plus } from 'lucide-react'
-import { WorkflowStep } from './WorkflowStep'
-import { FormTouched, FormValues, Step } from '@/redux/types/workflow'
-import { FormikErrors } from 'formik'
+import { Step, WorkflowStepsProps } from '@/redux/types/workflow'
+import { FormikErrors, FormikTouched } from 'formik'
+import { MODEL_CONFIG } from '@/config/modelConfig'
+import { WorkflowCreateStep } from './WorkflowCreateStep'
 
-interface WorkflowStepsProps {
-  steps: Step[]
-  setSteps: (steps: Step[]) => void
-  errors: FormikErrors<FormValues>
-  touched: FormTouched
-}
-
-const WorkflowSteps: React.FC<WorkflowStepsProps> = ({
+const WorkflowAddSteps: React.FC<WorkflowStepsProps> = ({
   steps,
   setSteps,
   errors,
@@ -31,74 +25,97 @@ const WorkflowSteps: React.FC<WorkflowStepsProps> = ({
       steps.length > 0 ? Math.max(...steps.map((s) => s.order)) + 1 : 1
     const newSteps = [
       ...steps,
-      { prompt: null, file: null, llm: null, order: newOrder },
+      {
+        prompt: null,
+        file: null,
+        llm: null,
+        order: newOrder,
+        maxTokens: MODEL_CONFIG.maxTokens,
+        temperature: MODEL_CONFIG.temperature,
+      },
     ]
     setSteps(newSteps)
   }
 
   const handleRemoveStep = (index: number) => {
     const newSteps = steps.filter((_, i) => i !== index)
-    newSteps.forEach((step, i) => (step.order = i + 1))
-    setSteps(newSteps)
+    const reorderedSteps = newSteps.map((step, i) => ({
+      ...step,
+      order: i + 1,
+    }))
+    setSteps(reorderedSteps)
   }
 
   const handleMoveStep = (from: number, to: number) => {
     const newSteps = [...steps]
     const [movedStep] = newSteps.splice(from, 1)
     newSteps.splice(to, 0, movedStep)
-    newSteps.forEach((step, i) => (step.order = i + 1))
-    setSteps(newSteps)
+    const reorderedSteps = newSteps.map((step, i) => ({
+      ...step,
+      order: i + 1,
+    }))
+    setSteps(reorderedSteps)
   }
 
-  const handleChangeStep = (index: number, field: string, value: unknown) => {
+  const handleChangeStep = (
+    index: number,
+    field: keyof Step,
+    value: unknown
+  ) => {
     const newSteps = [...steps]
     newSteps[index] = { ...newSteps[index], [field]: value }
     setSteps(newSteps)
   }
 
-  const stepErrors = errors.steps as Array<{ prompt?: string }> | undefined
+  const stepErrors = errors.steps as FormikErrors<Step>[] | undefined
+  const stepTouched = touched.steps as FormikTouched<Step>[] | undefined
 
   return (
     <div className='space-y-4 border-t pt-4'>
       <div className='flex items-center justify-between'>
+        <h3 className='text-md font-medium text-gray-700'>Workflow Steps</h3>
         <Button
           type='button'
           variant='outline'
           size='sm'
           onClick={handleAddStep}
-          className='flex items-center'
+          className='flex items-center gap-1.5'
         >
-          <Plus className='mr-1 h-4 w-4' />
+          <Plus className='h-4 w-4' />
           Add Step
         </Button>
       </div>
 
       <div className='space-y-3'>
         {steps.length === 0 ? (
-          <div className='rounded-md border border-dashed py-8 text-center text-gray-500'>
-            No steps added yet. Click "Add Step" to begin.
+          <div className='rounded-md border border-dashed border-gray-300 bg-gray-50 py-10 text-center text-sm text-gray-500'>
+            No steps added yet. Click "Add Step" to begin configuring your
+            workflow.
           </div>
         ) : (
           steps.map((step, index) => (
-            <WorkflowStep
-              key={`step-${step.id || `new-${index}`}`}
+            <WorkflowCreateStep
+              key={step.id || `new-step-${index}`}
               index={index}
               step={step}
               prompts={prompts}
               files={files}
               llms={llms}
               onRemove={() => handleRemoveStep(index)}
-              onMove={(dir) => {
+              onMove={(dir: 'up' | 'down') => {
                 if (dir === 'up' && index > 0) {
                   handleMoveStep(index, index - 1)
                 } else if (dir === 'down' && index < steps.length - 1) {
                   handleMoveStep(index, index + 1)
                 }
               }}
-              onChange={(field, value) => handleChangeStep(index, field, value)}
+              onChange={(field: keyof Step, value: unknown) =>
+                handleChangeStep(index, field, value)
+              }
               error={stepErrors?.[index]}
-              touched={touched.steps?.[index]}
+              touched={stepTouched?.[index]}
               totalSteps={steps.length}
+              isOpenByDefault={steps.length === 1 && index === 0}
             />
           ))
         )}
@@ -107,4 +124,4 @@ const WorkflowSteps: React.FC<WorkflowStepsProps> = ({
   )
 }
 
-export default WorkflowSteps
+export default WorkflowAddSteps
