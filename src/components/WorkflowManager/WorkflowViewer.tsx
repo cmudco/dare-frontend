@@ -102,11 +102,11 @@ const WorkflowViewer = () => {
       direction='right'
       onOpenChange={() => dispatch(setSelectedWorkflowRun(null))}
     >
-      <DrawerContent className='fixed bottom-0 right-0 top-0 mt-0 h-full w-[500px] rounded-l-lg bg-white p-0 shadow-lg'>
+      <DrawerContent className='fixed bottom-0 right-0 top-0 mt-0 h-full w-[50vw] rounded-l-lg bg-white p-0 shadow-lg'>
         <ScrollArea className='h-full w-full'>
-          <div className='p-6'>
+          <div className='p-4'>
             <DrawerHeader className='p-0 text-left'>
-              <div className='flex items-center justify-between'>
+              <div className='flex w-full items-center justify-between px-6 py-4'>
                 <div className='flex items-center'>
                   {getIconForMode()}
                   <DrawerTitle className='text-lg font-semibold text-gray-900'>
@@ -115,16 +115,19 @@ const WorkflowViewer = () => {
                       : 'Workflow Details'}
                   </DrawerTitle>
                 </div>
-                <DrawerClose asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='absolute right-4 top-4 rounded-full'
-                    onClick={() => dispatch(setSelectedWorkflowRun(null))}
-                  >
-                    <X className='h-5 w-5' />
-                  </Button>
-                </DrawerClose>
+                <div className='flex'>
+                  <DrawerClose asChild>
+                    <Button
+                      variant='outline'
+                      size='icon'
+                      className='rounded-full hover:bg-gray-100'
+                      onClick={() => dispatch(setSelectedWorkflowRun(null))}
+                    >
+                      <X className='h-5 w-5 text-gray-600' />
+                      <span className='sr-only'>Close</span>
+                    </Button>
+                  </DrawerClose>
+                </div>
               </div>
             </DrawerHeader>
 
@@ -150,6 +153,20 @@ const WorkflowViewer = () => {
               ) : (
                 <div className='space-y-6'>
                   {/* Run Details */}
+                  {selectedWorkflowRun?.status !==
+                    WorkflowRunStepStatus.Running && (
+                    <div className='flex justify-end gap-3'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        className='flex items-center gap-1.5'
+                        onClick={handleExportResults}
+                      >
+                        <FileText className='h-4 w-4' />
+                        Export Results
+                      </Button>
+                    </div>
+                  )}
                   {selectedWorkflowRun ? (
                     <div className='space-y-6'>
                       <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
@@ -220,20 +237,6 @@ const WorkflowViewer = () => {
                           workflowName={selectedWorkflow?.title}
                         />
                       </div>
-                      {selectedWorkflowRun?.status !==
-                        WorkflowRunStepStatus.Running && (
-                        <div className='flex justify-end gap-3'>
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            className='flex items-center gap-1.5'
-                            onClick={handleExportResults}
-                          >
-                            <FileText className='h-4 w-4' />
-                            Export Results
-                          </Button>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <div className='rounded-xl border border-dashed border-gray-300 bg-gray-50 py-12 text-center text-gray-500'>

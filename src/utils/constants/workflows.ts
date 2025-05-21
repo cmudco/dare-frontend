@@ -27,11 +27,6 @@ export const WORKFLOW_MODES = [
     name: 'Parallel',
     description: 'Execute all steps simultaneously in parallel.',
   },
-  {
-    id: 3,
-    name: 'Unknown',
-    description: 'The workflow mode is unknown.',
-  },
 ]
 
 export const WORKFLOW_RUN_STATUSES = [
