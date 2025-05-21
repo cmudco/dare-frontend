@@ -21,7 +21,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ReasoningStatus, ReasoningStatusColors } from '@/utils/constants/model'
-import { CheckCircle, XCircle } from 'lucide-react'
+import { CheckCircle, XCircle, FileText, ExternalLink } from 'lucide-react'
 
 const Help = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -62,23 +62,51 @@ const Help = () => {
     <ScrollArea className='h-full'>
       <div className='flex-1 space-y-6 p-4 pt-6 md:p-8'>
         <div className='flex items-center justify-between'>
-          <h1 className='text-3xl font-bold tracking-tight'>
-            Available AI Models
+          <h1 className='text-2xl font-bold tracking-tight'>
+            Help & Documentation
           </h1>
         </div>
 
-        <div className='mt-8 rounded-lg border border-blue-100 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30'>
-          <h2 className='mb-2 font-semibold text-blue-800 dark:text-blue-300'>
-            About Model Token Rates
-          </h2>
-          <p className='text-sm text-blue-700 dark:text-blue-400'>
-            Token rates are listed per million tokens. The actual cost of a
-            request is calculated based on the number of tokens processed. Input
-            tokens refer to the text you send to the model, while output tokens
-            are those generated in response.
-          </p>
-        </div>
+        <Card className='overflow-hidden shadow-md'>
+          <CardHeader>
+            <CardTitle className='flex items-center text-xl'>
+              <FileText className='mr-2 h-5 w-5' />
+              User Documentation
+            </CardTitle>
+            <CardDescription>
+              Essential guides and information on using the DARE LLM Gateway
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className='space-y-4'>
+              <div className='rounded-lg border border-gray-200 p-4 transition-all hover:border-blue-300 hover:shadow-md'>
+                <a
+                  href='https://docs.google.com/document/d/12t1EinvBwM4MsSSjvlWpNvav1dWW32zo1A9FhY8BfLM/edit?tab=t.0#heading=h.h5z6kf1kmw3f'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='flex items-start justify-between'
+                >
+                  <div>
+                    <h3 className='font-medium text-gray-900'>
+                      DARE LLM Gateway User Guide
+                    </h3>
+                    <p className='mt-1 text-sm text-gray-500'>
+                      Comprehensive guide to using the DARE platform, including
+                      features, workflows, and best practices.
+                    </p>
+                  </div>
+                  <ExternalLink className='h-5 w-5 flex-shrink-0 text-blue-500' />
+                </a>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
+        <div className='mt-4'>
+          <h2 className='mb-4 text-2xl font-semibold tracking-tight'>
+            Available AI Models
+          </h2>
+        </div>
         {availableModels.length === 0 ? (
           <div className='rounded-lg border border-gray-200 bg-gray-50 p-8 text-center'>
             <p className='text-gray-500'>
@@ -178,6 +206,17 @@ const Help = () => {
             </CardContent>
           </Card>
         )}
+        <div className='rounded-lg border border-blue-100 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30'>
+          <h2 className='mb-2 font-semibold text-blue-800 dark:text-blue-300'>
+            About Model Token Rates
+          </h2>
+          <p className='text-sm text-blue-700 dark:text-blue-400'>
+            Token rates are listed per million tokens. The actual cost of a
+            request is calculated based on the number of tokens processed. Input
+            tokens refer to the text you send to the model, while output tokens
+            are those generated in response.
+          </p>
+        </div>
       </div>
     </ScrollArea>
   )
