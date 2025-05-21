@@ -85,7 +85,7 @@ export const WorkflowStep: React.FC<{
       {selectedWorkflowRun.steps.map((step) => (
         <Collapsible
           key={step.id}
-          defaultOpen={step.status === WorkflowRunStepStatus.Completed}
+          open={step.status === WorkflowRunStepStatus.Completed}
           className='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm'
         >
           <CollapsibleTrigger className='flex w-full items-center justify-between border-b border-gray-200 bg-gray-50 p-4'>
