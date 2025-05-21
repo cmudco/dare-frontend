@@ -83,7 +83,7 @@ const Header: React.FC = () => {
               onClick={() => navigate('/billing')}
               className='cursor-pointer py-3 hover:bg-gray-100'
             >
-              Billing & Credits
+              Cost Tracking
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleLogout}

@@ -49,7 +49,7 @@ const BillingScreen = () => {
   return (
     <div className='container mx-auto space-y-6 p-6'>
       <div className='flex flex-col space-y-2'>
-        <h1 className='text-3xl font-bold tracking-tight'>Billing</h1>
+        <h1 className='text-3xl font-bold tracking-tight'>Cost Tracking</h1>
         <p className='text-muted-foreground'>
           View your wallet balance and transaction history.
         </p>
