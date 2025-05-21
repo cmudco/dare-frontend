@@ -19,6 +19,7 @@ import { useEffect, useRef } from 'react'
 import { getWorkflowRunById, getWorkflows } from '@/redux/asyncThunks/workflow'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { getRunStatusBadge } from '@/utils/constants/workflow'
+import { getWallet } from '@/redux/aynscThunks/billing'
 
 export const WorkflowStep: React.FC<{
   runId: string | null
@@ -46,6 +47,7 @@ export const WorkflowStep: React.FC<{
         !hasDispatchedGetWorkflows.current
       ) {
         dispatch(getWorkflows())
+        dispatch(getWallet())
         hasDispatchedGetWorkflows.current = true
       }
     }

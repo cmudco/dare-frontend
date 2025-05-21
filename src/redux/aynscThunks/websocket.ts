@@ -10,6 +10,7 @@ import { Message } from '../types/conversation'
 import { AppDispatch, RootState } from '../store'
 import { setConnectionStatus, setCreditError } from '../websocketSlice'
 import { WEBSOCKET_URL } from '../../api/config'
+import { getWallet } from './billing'
 
 let socket: WebSocket | null = null
 
@@ -64,8 +65,10 @@ export const connectWebSocket = createAsyncThunk<
                 streaming: false,
               })
             )
+            dispatch(getWallet())
           } else {
             dispatch(addMessage(data as Message))
+            dispatch(getWallet())
           }
           break
         case 'ai_stream':
