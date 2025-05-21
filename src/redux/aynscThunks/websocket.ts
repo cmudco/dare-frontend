@@ -162,7 +162,7 @@ export const regenerateResponse = createAsyncThunk<
   { dispatch: AppDispatch; state: RootState }
 >(
   'websocket/regenerateResponse',
-  async ({ messageId }, { rejectWithValue, getState }) => {
+  async ({ messageId }, { rejectWithValue, getState, dispatch }) => {
     const state = getState()
     const fileIds = state.conversation.selectedFiles.map((file) => file.id)
     const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
@@ -174,6 +174,13 @@ export const regenerateResponse = createAsyncThunk<
     const documentSimilarityThreshold =
       state.conversation.activeConversation?.documentSimilarityThreshold
 
+    dispatch(
+      updateMessage({
+        id: messageId,
+        streaming: true,
+        message: '',
+      })
+    )
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(
         JSON.stringify({
