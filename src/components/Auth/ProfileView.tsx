@@ -1,5 +1,6 @@
 import React from 'react'
 import { ChangePasswordForm } from './ChangePasswordForm'
+import { ChunkSettingsForm } from './ChunkSettingsForm'
 // import { VectorDBConfigForm } from './VectorDBConfigForm'
 
 const ProfileView: React.FC = () => {
@@ -10,6 +11,7 @@ const ProfileView: React.FC = () => {
       </div>
       <div className='p-8'>
         <ChangePasswordForm />
+        <ChunkSettingsForm />
         {/* <VectorDBConfigForm /> */}
       </div>
     </div>

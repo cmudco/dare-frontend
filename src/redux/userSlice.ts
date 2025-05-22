@@ -15,6 +15,8 @@ import {
   changePassword,
   updateVectorDBSetting,
   fetchVectorDBSetting,
+  fetchChunkSettings,
+  updateChunkSettings,
 } from './aynscThunks/user'
 
 const userSlice = createSlice({
@@ -238,6 +240,33 @@ const userSlice = createSlice({
         }
       })
       .addCase(fetchVectorDBSetting.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(fetchChunkSettings.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchChunkSettings.fulfilled, (state, action) => {
+        state.loading = false
+        state.error = null
+        state.chunkSettings = action.payload
+      })
+      .addCase(fetchChunkSettings.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(updateChunkSettings.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateChunkSettings.fulfilled, (state, action) => {
+        state.loading = false
+        state.error = null
+        state.chunkSettings = action.payload
+        state.successMessage = 'Chunk settings updated successfully'
+      })
+      .addCase(updateChunkSettings.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

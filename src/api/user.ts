@@ -1,4 +1,4 @@
-import { User } from '@/redux/types/user'
+import { User, ChunkSettings } from '@/redux/types/user'
 import { METHOD } from '@/utils/constants/requests'
 import { baseRequest } from '@/utils/requests'
 
@@ -21,6 +21,25 @@ export const updateVectorDBPreference = async (data: {
   return await baseRequest<User>({
     url: 'users/api/vector-db/preference/',
     method: METHOD.POST,
+    data,
+    includeAuthToken: true,
+  })
+}
+
+export const getChunkSettingsAPI = async (): Promise<ChunkSettings> => {
+  return await baseRequest<ChunkSettings>({
+    url: 'users/api/chunking/settings/',
+    method: METHOD.GET,
+    includeAuthToken: true,
+  })
+}
+
+export const updateChunkSettingsAPI = async (
+  data: ChunkSettings
+): Promise<ChunkSettings> => {
+  return await baseRequest<ChunkSettings>({
+    url: 'users/api/chunking/settings/',
+    method: METHOD.PATCH,
     data,
     includeAuthToken: true,
   })
