@@ -1,3 +1,5 @@
+import { LLMModel } from './conversation'
+
 export interface BillingState {
   wallet: Wallet | null
   transactions: Transaction[]
@@ -19,6 +21,7 @@ export interface Transaction {
   displayAmount: string
   type: string
   message: string
+  llm: LLMModel
   inputTokens: number
   outputTokens: number
   createdAt: string

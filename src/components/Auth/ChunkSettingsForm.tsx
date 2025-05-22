@@ -106,7 +106,7 @@ export const ChunkSettingsForm: React.FC = () => {
               onValueChange={(value) =>
                 chunkFormik.setFieldValue('chunkSize', value[0])
               }
-              className='flex-grow'
+              className='flex-grow cursor-pointer'
             />
             <Input
               type='number'
@@ -118,9 +118,6 @@ export const ChunkSettingsForm: React.FC = () => {
               name='chunkSize'
             />
           </div>
-          <p className='mt-1 text-xs text-gray-500'>
-            Embed model maximum length is 1,000.
-          </p>
           {chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize && (
             <p className='mt-1 text-xs text-red-500'>
               {chunkFormik.errors.chunkSize}
@@ -149,7 +146,7 @@ export const ChunkSettingsForm: React.FC = () => {
               onValueChange={(value) =>
                 chunkFormik.setFieldValue('overlapSize', value[0])
               }
-              className='flex-grow'
+              className='flex-grow cursor-pointer'
             />
             <Input
               type='number'

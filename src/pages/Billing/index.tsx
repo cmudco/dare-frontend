@@ -103,6 +103,7 @@ const BillingScreen = () => {
                 <TableRow>
                   <TableHead>Amount</TableHead>
                   <TableHead>Message</TableHead>
+                  <TableHead>LLM</TableHead>
                   <TableHead>Tokens</TableHead>
                   <TableHead>Date</TableHead>
                 </TableRow>
@@ -110,7 +111,7 @@ const BillingScreen = () => {
               <TableBody>
                 {transactions.length === 0 ? (
                   <TableRow key='no-transactions'>
-                    <TableCell colSpan={4} className='text-center'>
+                    <TableCell colSpan={5} className='text-center'>
                       No transactions found.
                     </TableCell>
                   </TableRow>
@@ -119,6 +120,7 @@ const BillingScreen = () => {
                     <TableRow key={transaction.id}>
                       <TableCell>{transaction.displayAmount}</TableCell>
                       <TableCell>{transaction.message}</TableCell>
+                      <TableCell>{transaction.llm?.name || 'N/A'}</TableCell>
                       <TableCell>
                         <div className='flex flex-col'>
                           <div className='flex items-center space-x-1'>

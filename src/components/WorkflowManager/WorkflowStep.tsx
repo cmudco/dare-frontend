@@ -84,89 +84,98 @@ export const WorkflowStep: React.FC<{
 
   return (
     <div className='space-y-6'>
-      {selectedWorkflowRun.steps.map((step) => (
-        <Collapsible
-          key={step.id}
-          open={step.status === WorkflowRunStepStatus.Completed}
-          className='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm'
-        >
-          <CollapsibleTrigger className='flex w-full items-center justify-between border-b border-gray-200 bg-gray-50 p-4'>
-            <div className='flex items-center'>
-              <span className='mr-3 flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-sm font-medium text-purple-700'>
-                {step.order}
-              </span>
-              <div>
-                <div className='font-medium text-gray-800'>
-                  Step {step.order}
-                </div>
-                <div className='text-xs text-gray-500'>
-                  {new Date(step.updatedAt).toLocaleString()}
-                </div>
-              </div>
-            </div>
-            <div>{getRunStatusBadge(step.status)}</div>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            {step.response && (
-              <div className='p-4'>
-                <h5 className='mb-2 flex items-center text-sm font-medium text-gray-700'>
-                  <MessagesSquare className='mr-1.5 h-4 w-4 text-blue-600' />
-                  Response
-                </h5>
-                <div className='prose prose-sm max-w-none overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm text-gray-800'>
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm, remarkMath]}
-                    rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
-                    components={{
-                      code({ className, children, ...props }) {
-                        const match = /language-(\w+)/.exec(className || '')
-                        if (match && match[1] === 'mermaid') {
-                          return (
-                            <MermaidBlock
-                              code={String(children).trim()}
-                              onRendered={() => {}}
-                              streaming={false}
-                            />
-                          )
-                        }
-                        if (match) {
-                          return (
-                            <CodeBlock className={className} {...props}>
-                              {children}
-                            </CodeBlock>
-                          )
-                        }
-                        return (
-                          <code
-                            className='not-prose rounded bg-gray-100 px-1'
-                            {...props}
-                          >
-                            {children}
-                          </code>
-                        )
-                      },
-                    }}
-                  >
-                    {step.response}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            )}
+      {selectedWorkflowRun.steps.map((step) => {
+        const isWorkflowCompleted =
+          selectedWorkflowRun?.status === WorkflowRunStepStatus.Completed
+        const isStepCompleted = step.status === WorkflowRunStepStatus.Completed
 
-            {step.error && (
-              <div className='p-4'>
-                <h5 className='mb-2 flex items-center text-sm font-medium text-red-600'>
-                  <AlertCircle className='mr-1.5 h-4 w-4' />
-                  Error
-                </h5>
-                <div className='rounded-lg border border-red-100 bg-red-50 p-4 text-sm text-red-600'>
-                  {step.error}
+        return (
+          <Collapsible
+            key={step.id}
+            {...(isWorkflowCompleted && !isStepCompleted ? { open: true } : {})}
+            {...(isWorkflowCompleted && isStepCompleted
+              ? { defaultOpen: true }
+              : {})}
+            className='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm'
+          >
+            <CollapsibleTrigger className='flex w-full items-center justify-between border-b border-gray-200 bg-gray-50 p-4'>
+              <div className='flex items-center'>
+                <span className='mr-3 flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-sm font-medium text-purple-700'>
+                  {step.order}
+                </span>
+                <div>
+                  <div className='font-medium text-gray-800'>
+                    Step {step.order}
+                  </div>
+                  <div className='text-xs text-gray-500'>
+                    {new Date(step.updatedAt).toLocaleString()}
+                  </div>
                 </div>
               </div>
-            )}
-          </CollapsibleContent>
-        </Collapsible>
-      ))}
+              <div>{getRunStatusBadge(step.status)}</div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              {step.response && (
+                <div className='p-4'>
+                  <h5 className='mb-2 flex items-center text-sm font-medium text-gray-700'>
+                    <MessagesSquare className='mr-1.5 h-4 w-4 text-blue-600' />
+                    Response
+                  </h5>
+                  <div className='prose prose-sm max-w-none overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm text-gray-800'>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
+                      components={{
+                        code({ className, children, ...props }) {
+                          const match = /language-(\w+)/.exec(className || '')
+                          if (match && match[1] === 'mermaid') {
+                            return (
+                              <MermaidBlock
+                                code={String(children).trim()}
+                                onRendered={() => {}}
+                                streaming={false}
+                              />
+                            )
+                          }
+                          if (match) {
+                            return (
+                              <CodeBlock className={className} {...props}>
+                                {children}
+                              </CodeBlock>
+                            )
+                          }
+                          return (
+                            <code
+                              className='not-prose rounded bg-gray-100 px-1'
+                              {...props}
+                            >
+                              {children}
+                            </code>
+                          )
+                        },
+                      }}
+                    >
+                      {step.response}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {step.error && (
+                <div className='p-4'>
+                  <h5 className='mb-2 flex items-center text-sm font-medium text-red-600'>
+                    <AlertCircle className='mr-1.5 h-4 w-4' />
+                    Error
+                  </h5>
+                  <div className='rounded-lg border border-red-100 bg-red-50 p-4 text-sm text-red-600'>
+                    {step.error}
+                  </div>
+                </div>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
+        )
+      })}
     </div>
   )
 }
