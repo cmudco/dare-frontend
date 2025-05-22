@@ -50,6 +50,7 @@ export interface LLMModel {
   id: number
   name: string
   identifier?: string
+  provider: string
   description: string | null
   isReasoning: boolean
   inputTokenRatePerMillion: GLfloat
