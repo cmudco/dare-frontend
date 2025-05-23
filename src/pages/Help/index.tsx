@@ -59,14 +59,14 @@ const Help = () => {
   }
 
   return (
-    <ScrollArea className='h-full'>
-      <div className='flex-1 space-y-6 p-4 pt-6 md:p-8'>
-        <div className='flex items-center justify-between'>
-          <h1 className='text-2xl font-bold tracking-tight'>
-            Help & Documentation
-          </h1>
-        </div>
-
+    <div className='container mx-auto space-y-6 p-6'>
+      <div className='flex flex-col space-y-2'>
+        <h1 className='text-3xl font-bold tracking-tight'>Help</h1>
+        <p className='text-muted-foreground'>
+          Find answers to your questions and learn how to use the platform.
+        </p>
+      </div>
+      <ScrollArea className='h-full'>
         <Card className='overflow-hidden shadow-md'>
           <CardHeader>
             <CardTitle className='flex items-center text-xl'>
@@ -217,8 +217,8 @@ const Help = () => {
             are those generated in response.
           </p>
         </div>
-      </div>
-    </ScrollArea>
+      </ScrollArea>
+    </div>
   )
 }
 
