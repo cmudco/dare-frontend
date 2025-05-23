@@ -21,7 +21,6 @@ export const connectWebSocket = createAsyncThunk<
 >('websocket/connect', async ({ conversationId, jwtKey }, { dispatch }) => {
   return new Promise<void>((resolve, reject) => {
     dispatch(clearConversation())
-
     const socketUrl = `${WEBSOCKET_URL}/conversations/${conversationId}/?jwt_key=${encodeURIComponent(
       jwtKey
     )}`

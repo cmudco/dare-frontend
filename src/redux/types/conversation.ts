@@ -12,6 +12,7 @@ export interface Conversation {
   documentSimilarityThreshold: number
   temperature: number
   maxTokens: number
+  historyLimit: number
   prompt?: Prompt | null
   promptId?: string | null
 }
@@ -80,6 +81,9 @@ export interface ConversationState {
   hoveredModel: string | null
   conversationInput: string
   availableModels: LLMModel[]
+  lastUsedSettings: {
+    historyLimit: number | null
+  }
 }
 
 export interface ConversationResponse {

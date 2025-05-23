@@ -8,6 +8,7 @@ import {
   updateConversation,
   updateMessageThunk,
 } from './aynscThunks/conversation'
+import { MODEL_CONFIG } from '../config/modelConfig'
 import { Message, Conversation, LLMModel } from './types/conversation'
 import { MyFile } from './types/files'
 import { Tag } from './types/tags'
@@ -26,7 +27,31 @@ export const conversationSlice = createSlice({
       state,
       action: PayloadAction<Conversation | null>
     ) {
-      state.activeConversation = action.payload
+      if (action.payload) {
+        if (state.activeConversation?.historyLimit) {
+          state.lastUsedSettings.historyLimit =
+            state.activeConversation.historyLimit
+        }
+
+        if (
+          state.activeConversation?.conversationId !==
+          action.payload.conversationId
+        ) {
+          const historyToApply =
+            state.lastUsedSettings.historyLimit !== null
+              ? state.lastUsedSettings.historyLimit
+              : action.payload.historyLimit || MODEL_CONFIG.historyLimit
+
+          state.activeConversation = {
+            ...action.payload,
+            historyLimit: historyToApply,
+          }
+        } else {
+          state.activeConversation = action.payload
+        }
+      } else {
+        state.activeConversation = null
+      }
     },
     updateSelectedModel(state, action: PayloadAction<number>) {
       state.selectedModel = action.payload
@@ -68,6 +93,12 @@ export const conversationSlice = createSlice({
       if (state.activeConversation) {
         state.activeConversation.documentSimilarityThreshold = action.payload
       }
+    },
+    updateHistoryLimit(state, action: PayloadAction<number>) {
+      if (state.activeConversation) {
+        state.activeConversation.historyLimit = action.payload
+      }
+      state.lastUsedSettings.historyLimit = action.payload
     },
     addMessage(state, action: PayloadAction<Message>) {
       const index = state.activeConversationMessages.findIndex(
@@ -194,14 +225,31 @@ export const conversationSlice = createSlice({
         const index = state.conversations.findIndex(
           (conv) => conv.conversationId === action.payload.conversationId
         )
+
+        const currentHistoryLimit = state.activeConversation?.historyLimit
+
         if (index !== -1) {
-          state.conversations[index] = action.payload
+          state.conversations[index] = {
+            ...action.payload,
+            historyLimit:
+              action.payload.historyLimit !== undefined
+                ? action.payload.historyLimit
+                : state.conversations[index].historyLimit ||
+                  MODEL_CONFIG.historyLimit,
+          }
         }
+
         if (
           state.activeConversation?.conversationId ===
           action.payload.conversationId
         ) {
-          state.activeConversation = action.payload
+          state.activeConversation = {
+            ...action.payload,
+            historyLimit:
+              action.payload.historyLimit !== undefined
+                ? action.payload.historyLimit
+                : currentHistoryLimit || MODEL_CONFIG.historyLimit,
+          }
         }
       })
       .addCase(updateConversation.rejected, (state, action) => {
@@ -235,6 +283,7 @@ export const {
   updateSelectedTags,
   updateTemperature,
   updateMaxTokens,
+  updateHistoryLimit,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,

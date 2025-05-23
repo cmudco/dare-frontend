@@ -6,6 +6,7 @@ import { AppDispatch, RootState } from '../../redux/store'
 import {
   updateTemperature,
   updateMaxTokens,
+  updateHistoryLimit,
 } from '../../redux/conversationSlice'
 import { Slider } from '../ui/slider'
 import { Settings } from 'lucide-react'
@@ -15,6 +16,8 @@ import {
   getTemperatureDescription,
   getMaxTokensColor,
   getMaxTokensDescription,
+  getHistoryLimitColor,
+  getHistoryLimitDescription,
 } from '@/utils/modelConfigUtils'
 import { updateConversation } from '@/redux/aynscThunks/conversation'
 
@@ -23,10 +26,18 @@ const ModelConfigurationPanel: React.FC = () => {
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
+  const lastUsedSettings = useSelector(
+    (state: RootState) => state.conversation.lastUsedSettings
+  )
 
   const temperature =
     activeConversation?.temperature ?? MODEL_CONFIG.temperature
   const maxTokens = activeConversation?.maxTokens ?? MODEL_CONFIG.maxTokens
+
+  const historyLimit =
+    activeConversation?.historyLimit ??
+    lastUsedSettings.historyLimit ??
+    MODEL_CONFIG.historyLimit
 
   const handleTemperatureChange = (values: number[]) => {
     dispatch(updateTemperature(values[0]))
@@ -52,16 +63,33 @@ const ModelConfigurationPanel: React.FC = () => {
     }
   }
 
+  const handleHistoryLimitChange = (values: number[]) => {
+    const newHistoryLimit = values[0]
+    dispatch(updateHistoryLimit(newHistoryLimit))
+
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { historyLimit: newHistoryLimit },
+        })
+      )
+    }
+  }
+
   const resetToDefaults = () => {
     if (activeConversation) {
       dispatch(updateTemperature(MODEL_CONFIG.temperature))
       dispatch(updateMaxTokens(MODEL_CONFIG.maxTokens))
+      dispatch(updateHistoryLimit(MODEL_CONFIG.historyLimit))
+
       dispatch(
         updateConversation({
           conversationId: activeConversation.conversationId,
           updates: {
             temperature: MODEL_CONFIG.temperature,
             maxTokens: MODEL_CONFIG.maxTokens,
+            historyLimit: MODEL_CONFIG.historyLimit,
           },
         })
       )
@@ -136,6 +164,36 @@ const ModelConfigurationPanel: React.FC = () => {
 
             <div className={`mt-2 text-sm ${getMaxTokensColor(maxTokens)}`}>
               {getMaxTokensDescription(maxTokens)}
+            </div>
+          </div>
+
+          <div className='space-y-4 border-t pt-2'>
+            <div className='flex items-center justify-between'>
+              <h4 className='font-medium'>History Limit</h4>
+              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
+                {historyLimit}
+              </span>
+            </div>
+
+            <Slider
+              value={[historyLimit]}
+              min={1}
+              max={30}
+              step={1}
+              onValueChange={handleHistoryLimitChange}
+              className='my-4 cursor-pointer'
+            />
+
+            <div className='flex justify-between px-1 text-xs text-gray-500'>
+              <span>Minimal</span>
+              <span>Standard</span>
+              <span>Extended</span>
+            </div>
+
+            <div
+              className={`mt-2 text-sm ${getHistoryLimitColor(historyLimit)}`}
+            >
+              {getHistoryLimitDescription(historyLimit)}
             </div>
           </div>
 
