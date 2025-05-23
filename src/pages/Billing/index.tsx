@@ -18,7 +18,8 @@ import {
 } from '@/components/ui/Table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { Wallet as WalletIcon } from 'lucide-react'
+import { Wallet as WalletIcon, FileSpreadsheet } from 'lucide-react'
+import { useExportToCSV } from '@/utils/billingExportUtils'
 
 const BillingScreen = () => {
   const dispatch = useAppDispatch()
@@ -45,6 +46,7 @@ const BillingScreen = () => {
     const params = new URLSearchParams(url.split('?')[1])
     return parseInt(params.get('page') || '1', 10)
   }
+  const exportToCSV = useExportToCSV()
 
   return (
     <div className='container mx-auto space-y-6 p-6'>
@@ -87,8 +89,22 @@ const BillingScreen = () => {
 
       <Card className='overflow-hidden'>
         <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-          <CardDescription>Your recent transactions</CardDescription>
+          <div className='flex items-center justify-between'>
+            <div>
+              <CardTitle>Transaction History</CardTitle>
+              <CardDescription>Your recent transactions</CardDescription>
+            </div>
+            <Button
+              onClick={exportToCSV}
+              variant='outline'
+              size='sm'
+              className='h-8 gap-1'
+              disabled={transactions.length === 0 || loading}
+            >
+              <FileSpreadsheet size={16} />
+              <span>Export Transaction History</span>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
