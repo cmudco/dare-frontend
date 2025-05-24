@@ -26,18 +26,12 @@ const ModelConfigurationPanel: React.FC = () => {
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
-  const lastUsedSettings = useSelector(
-    (state: RootState) => state.conversation.lastUsedSettings
-  )
 
   const temperature =
     activeConversation?.temperature ?? MODEL_CONFIG.temperature
   const maxTokens = activeConversation?.maxTokens ?? MODEL_CONFIG.maxTokens
-
   const historyLimit =
-    activeConversation?.historyLimit ??
-    lastUsedSettings.historyLimit ??
-    MODEL_CONFIG.historyLimit
+    activeConversation?.historyLimit ?? MODEL_CONFIG.historyLimit
 
   const handleTemperatureChange = (values: number[]) => {
     dispatch(updateTemperature(values[0]))
@@ -64,14 +58,12 @@ const ModelConfigurationPanel: React.FC = () => {
   }
 
   const handleHistoryLimitChange = (values: number[]) => {
-    const newHistoryLimit = values[0]
-    dispatch(updateHistoryLimit(newHistoryLimit))
-
+    dispatch(updateHistoryLimit(values[0]))
     if (activeConversation) {
       dispatch(
         updateConversation({
           conversationId: activeConversation.conversationId,
-          updates: { historyLimit: newHistoryLimit },
+          updates: { historyLimit: values[0] },
         })
       )
     }

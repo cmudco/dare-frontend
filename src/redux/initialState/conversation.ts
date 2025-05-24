@@ -16,7 +16,4 @@ export const initialState: ConversationState = {
   hoveredModel: null,
   conversationInput: '',
   availableModels: [],
-  lastUsedSettings: {
-    historyLimit: null,
-  },
 }

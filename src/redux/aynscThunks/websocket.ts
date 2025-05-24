@@ -113,6 +113,7 @@ export const sendWebSocketMessage = createAsyncThunk<
     state.conversation.activeConversation?.maxContextSnippets
   const documentSimilarityThreshold =
     state.conversation.activeConversation?.documentSimilarityThreshold
+  const historyLimit = state.conversation.activeConversation?.historyLimit
 
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(
@@ -127,6 +128,7 @@ export const sendWebSocketMessage = createAsyncThunk<
         max_tokens: maxTokens,
         max_context_snippets: maxContextSnippets,
         document_similarity_threshold: documentSimilarityThreshold,
+        history_limit: historyLimit,
       })
     )
   } else {
@@ -172,6 +174,7 @@ export const regenerateResponse = createAsyncThunk<
       state.conversation.activeConversation?.maxContextSnippets
     const documentSimilarityThreshold =
       state.conversation.activeConversation?.documentSimilarityThreshold
+    const historyLimit = state.conversation.activeConversation?.historyLimit
 
     dispatch(
       updateMessage({
@@ -193,6 +196,7 @@ export const regenerateResponse = createAsyncThunk<
           max_tokens: maxTokens,
           max_context_snippets: maxContextSnippets,
           document_similarity_threshold: documentSimilarityThreshold,
+          history_limit: historyLimit,
         })
       )
     } else {

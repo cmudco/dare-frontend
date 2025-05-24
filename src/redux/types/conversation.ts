@@ -41,12 +41,6 @@ export interface MessageProps {
   onContentRendered?: () => void
 }
 
-export interface MessageProps {
-  message: Message
-  onEditMessage?: (id: string, content: string) => void
-  onContentRendered?: () => void
-}
-
 export interface LLMModel {
   id: number
   name: string
@@ -54,8 +48,8 @@ export interface LLMModel {
   provider: string
   description: string | null
   isReasoning: boolean
-  inputTokenRatePerMillion: GLfloat
-  outputTokenRatePerMillion: GLfloat
+  inputTokenRatePerMillion: number
+  outputTokenRatePerMillion: number
 }
 
 export interface Snippet {
@@ -81,9 +75,6 @@ export interface ConversationState {
   hoveredModel: string | null
   conversationInput: string
   availableModels: LLMModel[]
-  lastUsedSettings: {
-    historyLimit: number | null
-  }
 }
 
 export interface ConversationResponse {
