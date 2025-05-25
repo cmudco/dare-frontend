@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
 import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
@@ -30,18 +30,17 @@ import {
   ListOrdered,
   Layers,
 } from 'lucide-react'
-import { pdf } from '@react-pdf/renderer'
-import 'katex/dist/katex.min.css'
-import 'highlight.js/styles/atom-one-light.css'
-import { PDFDocument } from './WorkflowPdfResult.tsx'
-import { WorkflowStep } from './WorkflowStep.tsx'
+import html2pdf from 'html2pdf.js'
 import { setSelectedWorkflowRun } from '@/redux/workflowSlice.ts'
+import { WorkflowStep } from './WorkflowStep.tsx'
 
 const WorkflowViewer = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { selectedWorkflow, selectedWorkflowRun, error } = useSelector(
     (state: RootState) => state.workflow
   )
+
+  const stepsRef = useRef<HTMLDivElement>(null)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -69,31 +68,23 @@ const WorkflowViewer = () => {
   }
 
   const handleExportResults = async () => {
-    if (!selectedWorkflowRun) return
+    if (!selectedWorkflowRun || !stepsRef.current) return
 
-    const stepsForPdf = selectedWorkflowRun.steps
-      .filter(
-        (step): step is typeof step & { response: string } => !!step.response
-      )
-      .map((step) => ({
-        order: step.order,
-        response: step.response,
-      }))
+    const element = stepsRef.current
 
-    if (stepsForPdf.length === 0) {
-      console.warn('No steps with responses to export.')
-      return
+    const opt = {
+      margin: [10, 10, 10, 10] as [number, number, number, number],
+      filename: `${selectedWorkflow?.title || 'workflow'}-results.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait' as 'portrait' | 'landscape',
+      },
     }
 
-    const blob = await pdf(<PDFDocument steps={stepsForPdf} />).toBlob()
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${selectedWorkflow?.title || 'workflow'}-results.pdf`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    await html2pdf().from(element).set(opt).save()
   }
 
   return (
@@ -102,11 +93,11 @@ const WorkflowViewer = () => {
       direction='right'
       onOpenChange={() => dispatch(setSelectedWorkflowRun(null))}
     >
-      <DrawerContent className='fixed bottom-0 right-0 top-0 mt-0 h-full w-[500px] rounded-l-lg bg-white p-0 shadow-lg'>
+      <DrawerContent className='fixed bottom-0 right-0 top-0 mt-0 h-full w-[50vw] rounded-l-lg bg-white p-0 shadow-lg'>
         <ScrollArea className='h-full w-full'>
-          <div className='p-6'>
+          <div className='p-4'>
             <DrawerHeader className='p-0 text-left'>
-              <div className='flex items-center justify-between'>
+              <div className='flex w-full items-center justify-between px-6 py-4'>
                 <div className='flex items-center'>
                   {getIconForMode()}
                   <DrawerTitle className='text-lg font-semibold text-gray-900'>
@@ -115,16 +106,19 @@ const WorkflowViewer = () => {
                       : 'Workflow Details'}
                   </DrawerTitle>
                 </div>
-                <DrawerClose asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='absolute right-4 top-4 rounded-full'
-                    onClick={() => dispatch(setSelectedWorkflowRun(null))}
-                  >
-                    <X className='h-5 w-5' />
-                  </Button>
-                </DrawerClose>
+                <div className='flex'>
+                  <DrawerClose asChild>
+                    <Button
+                      variant='outline'
+                      size='icon'
+                      className='rounded-full hover:bg-gray-100'
+                      onClick={() => dispatch(setSelectedWorkflowRun(null))}
+                    >
+                      <X className='h-5 w-5 text-gray-600' />
+                      <span className='sr-only'>Close</span>
+                    </Button>
+                  </DrawerClose>
+                </div>
               </div>
             </DrawerHeader>
 
@@ -149,7 +143,20 @@ const WorkflowViewer = () => {
                 </div>
               ) : (
                 <div className='space-y-6'>
-                  {/* Run Details */}
+                  {selectedWorkflowRun?.status !==
+                    WorkflowRunStepStatus.Running && (
+                    <div className='flex justify-end gap-3'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        className='flex items-center gap-1.5'
+                        onClick={handleExportResults}
+                      >
+                        <FileText className='h-4 w-4' />
+                        Export Results
+                      </Button>
+                    </div>
+                  )}
                   {selectedWorkflowRun ? (
                     <div className='space-y-6'>
                       <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
@@ -207,7 +214,10 @@ const WorkflowViewer = () => {
                           )}
                         </div>
                       </div>
-                      <div className='rounded-xl border border-gray-200 bg-white p-4 pb-6 shadow-sm'>
+                      <div
+                        className='rounded-xl border border-gray-200 bg-white p-4 pb-6 shadow-sm'
+                        ref={stepsRef}
+                      >
                         <h4 className='mb-4 flex items-center font-medium text-gray-700'>
                           <div className='mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-purple-100'>
                             <ListTodo className='h-4 w-4 text-purple-600' />
@@ -220,20 +230,6 @@ const WorkflowViewer = () => {
                           workflowName={selectedWorkflow?.title}
                         />
                       </div>
-                      {selectedWorkflowRun?.status !==
-                        WorkflowRunStepStatus.Running && (
-                        <div className='flex justify-end gap-3'>
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            className='flex items-center gap-1.5'
-                            onClick={handleExportResults}
-                          >
-                            <FileText className='h-4 w-4' />
-                            Export Results
-                          </Button>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <div className='rounded-xl border border-dashed border-gray-300 bg-gray-50 py-12 text-center text-gray-500'>

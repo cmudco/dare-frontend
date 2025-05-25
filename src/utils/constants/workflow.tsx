@@ -37,12 +37,6 @@ export const getModeBadge = (mode: WorkflowMode) => {
           {WORKFLOW_MODES[1].name}
         </Badge>
       )
-    default:
-      return (
-        <Badge variant='outline' className='bg-gray-100 text-gray-700'>
-          {WORKFLOW_MODES[2].name}
-        </Badge>
-      )
   }
 }
 

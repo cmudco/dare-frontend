@@ -1,0 +1,48 @@
+import { useAppSelector } from '@/redux/hooks'
+
+export const useExportToCSV = () => {
+  const transactions = useAppSelector((state) => state.billing.transactions)
+
+  const exportToCSV = () => {
+    if (transactions.length === 0) return
+
+    const headers = [
+      'Amount',
+      'Message',
+      'LLM',
+      'Input Tokens',
+      'Output Tokens',
+      'Date',
+    ]
+
+    const data = transactions.map((transaction) => [
+      transaction.displayAmount,
+      transaction.message,
+      transaction.llm?.name || 'N/A',
+      transaction.inputTokens?.toString() || 'N/A',
+      transaction.outputTokens?.toString() || 'N/A',
+      new Date(transaction.createdAt).toLocaleDateString(),
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...data.map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+      ),
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const date = new Date().toISOString().split('T')[0]
+
+    link.setAttribute('href', url)
+    link.setAttribute('download', `transaction-history-${date}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  return exportToCSV
+}

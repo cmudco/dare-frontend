@@ -10,6 +10,7 @@ import { Message } from '../types/conversation'
 import { AppDispatch, RootState } from '../store'
 import { setConnectionStatus, setCreditError } from '../websocketSlice'
 import { WEBSOCKET_URL } from '../../api/config'
+import { getWallet } from './billing'
 
 let socket: WebSocket | null = null
 
@@ -20,7 +21,6 @@ export const connectWebSocket = createAsyncThunk<
 >('websocket/connect', async ({ conversationId, jwtKey }, { dispatch }) => {
   return new Promise<void>((resolve, reject) => {
     dispatch(clearConversation())
-
     const socketUrl = `${WEBSOCKET_URL}/conversations/${conversationId}/?jwt_key=${encodeURIComponent(
       jwtKey
     )}`
@@ -64,8 +64,10 @@ export const connectWebSocket = createAsyncThunk<
                 streaming: false,
               })
             )
+            dispatch(getWallet())
           } else {
             dispatch(addMessage(data as Message))
+            dispatch(getWallet())
           }
           break
         case 'ai_stream':
@@ -111,6 +113,7 @@ export const sendWebSocketMessage = createAsyncThunk<
     state.conversation.activeConversation?.maxContextSnippets
   const documentSimilarityThreshold =
     state.conversation.activeConversation?.documentSimilarityThreshold
+  const historyLimit = state.conversation.activeConversation?.historyLimit
 
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(
@@ -125,6 +128,7 @@ export const sendWebSocketMessage = createAsyncThunk<
         max_tokens: maxTokens,
         max_context_snippets: maxContextSnippets,
         document_similarity_threshold: documentSimilarityThreshold,
+        history_limit: historyLimit,
       })
     )
   } else {
@@ -159,7 +163,7 @@ export const regenerateResponse = createAsyncThunk<
   { dispatch: AppDispatch; state: RootState }
 >(
   'websocket/regenerateResponse',
-  async ({ messageId }, { rejectWithValue, getState }) => {
+  async ({ messageId }, { rejectWithValue, getState, dispatch }) => {
     const state = getState()
     const fileIds = state.conversation.selectedFiles.map((file) => file.id)
     const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
@@ -170,7 +174,15 @@ export const regenerateResponse = createAsyncThunk<
       state.conversation.activeConversation?.maxContextSnippets
     const documentSimilarityThreshold =
       state.conversation.activeConversation?.documentSimilarityThreshold
+    const historyLimit = state.conversation.activeConversation?.historyLimit
 
+    dispatch(
+      updateMessage({
+        id: messageId,
+        streaming: true,
+        message: '',
+      })
+    )
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(
         JSON.stringify({
@@ -184,6 +196,7 @@ export const regenerateResponse = createAsyncThunk<
           max_tokens: maxTokens,
           max_context_snippets: maxContextSnippets,
           document_similarity_threshold: documentSimilarityThreshold,
+          history_limit: historyLimit,
         })
       )
     } else {

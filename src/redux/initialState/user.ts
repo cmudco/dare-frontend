@@ -10,4 +10,5 @@ export const initialState: UserState = {
   userLoading: true,
   successMessage: null,
   stats: null,
+  chunkSettings: null,
 }

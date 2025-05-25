@@ -18,7 +18,8 @@ import {
 } from '@/components/ui/Table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { Wallet as WalletIcon } from 'lucide-react'
+import { Wallet as WalletIcon, FileSpreadsheet } from 'lucide-react'
+import { useExportToCSV } from '@/utils/billingExportUtils'
 
 const BillingScreen = () => {
   const dispatch = useAppDispatch()
@@ -45,11 +46,12 @@ const BillingScreen = () => {
     const params = new URLSearchParams(url.split('?')[1])
     return parseInt(params.get('page') || '1', 10)
   }
+  const exportToCSV = useExportToCSV()
 
   return (
     <div className='container mx-auto space-y-6 p-6'>
       <div className='flex flex-col space-y-2'>
-        <h1 className='text-3xl font-bold tracking-tight'>Billing</h1>
+        <h1 className='text-3xl font-bold tracking-tight'>Cost Tracking</h1>
         <p className='text-muted-foreground'>
           View your wallet balance and transaction history.
         </p>
@@ -87,8 +89,22 @@ const BillingScreen = () => {
 
       <Card className='overflow-hidden'>
         <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-          <CardDescription>Your recent transactions</CardDescription>
+          <div className='flex items-center justify-between'>
+            <div>
+              <CardTitle>Transaction History</CardTitle>
+              <CardDescription>Your recent transactions</CardDescription>
+            </div>
+            <Button
+              onClick={exportToCSV}
+              variant='outline'
+              size='sm'
+              className='h-8 gap-1'
+              disabled={transactions.length === 0 || loading}
+            >
+              <FileSpreadsheet size={16} />
+              <span>Export Transaction History</span>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -103,6 +119,7 @@ const BillingScreen = () => {
                 <TableRow>
                   <TableHead>Amount</TableHead>
                   <TableHead>Message</TableHead>
+                  <TableHead>LLM</TableHead>
                   <TableHead>Tokens</TableHead>
                   <TableHead>Date</TableHead>
                 </TableRow>
@@ -110,7 +127,7 @@ const BillingScreen = () => {
               <TableBody>
                 {transactions.length === 0 ? (
                   <TableRow key='no-transactions'>
-                    <TableCell colSpan={4} className='text-center'>
+                    <TableCell colSpan={5} className='text-center'>
                       No transactions found.
                     </TableCell>
                   </TableRow>
@@ -119,6 +136,7 @@ const BillingScreen = () => {
                     <TableRow key={transaction.id}>
                       <TableCell>{transaction.displayAmount}</TableCell>
                       <TableCell>{transaction.message}</TableCell>
+                      <TableCell>{transaction.llm?.name || 'N/A'}</TableCell>
                       <TableCell>
                         <div className='flex flex-col'>
                           <div className='flex items-center space-x-1'>

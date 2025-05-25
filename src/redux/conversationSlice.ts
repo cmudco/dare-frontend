@@ -69,6 +69,11 @@ export const conversationSlice = createSlice({
         state.activeConversation.documentSimilarityThreshold = action.payload
       }
     },
+    updateHistoryLimit(state, action: PayloadAction<number>) {
+      if (state.activeConversation) {
+        state.activeConversation.historyLimit = action.payload
+      }
+    },
     addMessage(state, action: PayloadAction<Message>) {
       const index = state.activeConversationMessages.findIndex(
         (msg) => msg?.id === action.payload.id
@@ -235,6 +240,7 @@ export const {
   updateSelectedTags,
   updateTemperature,
   updateMaxTokens,
+  updateHistoryLimit,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,

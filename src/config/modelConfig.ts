@@ -3,4 +3,5 @@ export const MODEL_CONFIG = {
   temperature: 0.7,
   maxContextSnippets: 4,
   documentSimilarityThreshold: 0.5,
+  historyLimit: 10,
 }
