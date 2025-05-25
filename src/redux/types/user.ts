@@ -28,6 +28,12 @@ export interface User {
   profile_picture?: string
   vectorDb?: VectorDbSource
   defaultPrompt?: Prompt
+  chunkSettings?: ChunkSettings
+}
+
+export interface ChunkSettings {
+  chunkSize: number
+  overlapSize: number
 }
 
 export interface UserState {
@@ -40,6 +46,7 @@ export interface UserState {
   userLoading: boolean
   successMessage: string | null
   stats: UserStats | null
+  chunkSettings: ChunkSettings | null
 }
 
 export type ChangePasswordValues = {

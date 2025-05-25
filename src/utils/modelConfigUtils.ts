@@ -36,5 +36,19 @@ export const getMaxTokensPercentage = (maxTokens: number): number => {
   return ((maxTokens - min) / (max - min)) * 100
 }
 
+export const getHistoryLimitColor = (historyLimit: number): string => {
+  if (historyLimit <= 5) return 'text-blue-500'
+  if (historyLimit <= 15) return 'text-green-500'
+  return 'text-purple-500'
+}
+
+export const getHistoryLimitDescription = (historyLimit: number): string => {
+  if (historyLimit <= 5)
+    return 'Minimal message history for focused conversations'
+  if (historyLimit <= 15) return 'Standard message history balance'
+  return 'Extended message history for comprehensive context'
+}
+
 export const DEFAULT_TEMPERATURE = MODEL_CONFIG.temperature
 export const DEFAULT_MAX_TOKENS = MODEL_CONFIG.maxTokens
+export const DEFAULT_HISTORY_LIMIT = MODEL_CONFIG.historyLimit

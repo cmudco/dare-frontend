@@ -80,7 +80,7 @@ const Sidebar = () => {
   ]
 
   const bottomItems = [
-    { name: 'Billing', icon: CreditCardIcon, path: '/billing/' },
+    { name: 'Cost Tracking', icon: CreditCardIcon, path: '/billing/' },
     { name: 'Help', icon: QuestionMarkCircleIcon, path: '/help' },
     { name: 'Settings', icon: Cog8ToothIcon, path: '/settings' },
   ]

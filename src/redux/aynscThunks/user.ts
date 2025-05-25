@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { User, UserState, UserStats } from '../types/user'
+import { ChunkSettings, User, UserState, UserStats } from '../types/user'
 import {
   forgotPasswordUser,
   loginUser,
@@ -15,7 +15,12 @@ import {
   getUserStatsFromAPI,
   changePasswordUser,
 } from '../../api/auth'
-import { getVectorDBPreference, updateVectorDBPreference } from '@/api/user'
+import {
+  getChunkSettingsAPI,
+  getVectorDBPreference,
+  updateChunkSettingsAPI,
+  updateVectorDBPreference,
+} from '@/api/user'
 
 export const userRegister = createAsyncThunk(
   'user/register',
@@ -237,6 +242,30 @@ export const fetchVectorDBSetting = createAsyncThunk(
     try {
       const data = await getVectorDBPreference()
 
+      return data
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const fetchChunkSettings = createAsyncThunk(
+  'user/fetchChunkSettings',
+  async (_, thunkAPI) => {
+    try {
+      const data = await getChunkSettingsAPI()
+      return data
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateChunkSettings = createAsyncThunk(
+  'user/updateChunkSettings',
+  async (formData: ChunkSettings, thunkAPI) => {
+    try {
+      const data = await updateChunkSettingsAPI(formData)
       return data
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)

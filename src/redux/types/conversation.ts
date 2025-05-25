@@ -12,6 +12,7 @@ export interface Conversation {
   documentSimilarityThreshold: number
   temperature: number
   maxTokens: number
+  historyLimit: number
   prompt?: Prompt | null
   promptId?: string | null
 }
@@ -40,17 +41,15 @@ export interface MessageProps {
   onContentRendered?: () => void
 }
 
-export interface MessageProps {
-  message: Message
-  onEditMessage?: (id: string, content: string) => void
-  onContentRendered?: () => void
-}
-
 export interface LLMModel {
   id: number
   name: string
   identifier?: string
+  provider: string
   description: string | null
+  isReasoning: boolean
+  inputTokenRatePerMillion: number
+  outputTokenRatePerMillion: number
 }
 
 export interface Snippet {
