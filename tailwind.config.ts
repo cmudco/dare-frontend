@@ -72,12 +72,15 @@ const config: Config = {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        'dark-blue': '#162B4B',
+        'dark-blue-hovered': '#334155',
       },
       borderRadius: {
         xl: 'var(--radius)',
       },
     },
   },
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
 }
 
