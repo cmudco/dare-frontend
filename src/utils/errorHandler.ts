@@ -17,6 +17,10 @@ export const getErrorMessage = (error: unknown): string => {
         return errorData.message
       }
 
+      if (errorData.error) {
+        return errorData.error as string
+      }
+
       if (errorData.nonFieldErrors && errorData.nonFieldErrors.length > 0) {
         return errorData.nonFieldErrors.join('. ')
       }
