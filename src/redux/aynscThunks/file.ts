@@ -2,6 +2,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   uploadFileAPI,
   deleteFileAPI,
+  deleteMultipleFilesAPI,
   getFilesAPI,
   checkJobStatusesAPI,
   getFoldersAPI,
@@ -66,6 +67,18 @@ export const deleteFile = createAsyncThunk(
     try {
       await deleteFileAPI(id)
       return id
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const deleteMultipleFiles = createAsyncThunk(
+  'files/deleteMultipleFiles',
+  async (fileIds: number[], thunkAPI) => {
+    try {
+      await deleteMultipleFilesAPI(fileIds)
+      return fileIds
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

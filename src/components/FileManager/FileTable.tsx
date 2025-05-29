@@ -88,8 +88,9 @@ const FileTable = () => {
   }, [searchQuery, selectedTags])
 
   const handleSelectAll = (isSelected: boolean) => {
+    const shouldSelectAll = !isIndeterminate && isSelected
     handleSelectAllItems(
-      isSelected,
+      shouldSelectAll,
       paginatedFiles,
       selectedItems,
       (id: number) => dispatch(addSelectedItem(id)),

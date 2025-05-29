@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
   getFiles,
   deleteFile,
+  deleteMultipleFiles,
   uploadNewFile,
   checkJobStatuses,
   getFolders,
@@ -148,6 +149,21 @@ const fileSlice = createSlice({
         state.files = state.files.filter((file) => file.id !== action.payload)
       })
       .addCase(deleteFile.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(deleteMultipleFiles.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(deleteMultipleFiles.fulfilled, (state, action) => {
+        state.loading = false
+        state.files = state.files.filter(
+          (file) => !action.payload.includes(file.id)
+        )
+        state.selectedItems = []
+      })
+      .addCase(deleteMultipleFiles.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

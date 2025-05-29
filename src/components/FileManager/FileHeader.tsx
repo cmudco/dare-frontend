@@ -8,27 +8,31 @@ import {
   setSearchQuery,
   setSelectedTags,
   openMoveModal,
+  clearSelectedItems,
 } from '../../redux/fileSlice'
+import { deleteMultipleFiles, getFolders } from '../../redux/aynscThunks/file'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
-import { RootState } from '../../redux/store'
+import { RootState, AppDispatch } from '../../redux/store'
 import { useState } from 'react'
 import { Tag } from '../../redux/types/tags'
 import { Badge } from '../ui/badge'
+import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getTagColor } from '@/utils/files'
-import { Upload, FolderInput } from 'lucide-react'
+import { Upload, FolderInput, Trash2 } from 'lucide-react'
 
 interface FileHeaderProps {
   onToggleView?: (view: 'files' | 'folders') => void
 }
 
 const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   const { tags } = useSelector((state: RootState) => state.tags)
   const { searchQuery, selectedTags, selectedItems, currentView } = useSelector(
     (state: RootState) => state.files
   )
   const [showTagFilter, setShowTagFilter] = useState(false)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -41,6 +45,22 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
       : [...selectedTags, tagId]
 
     dispatch(setSelectedTags(newSelectedTags))
+  }
+
+  const handleBulkDelete = () => {
+    setShowDeleteConfirmation(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await dispatch(deleteMultipleFiles(selectedItems)).unwrap()
+      dispatch(getFolders())
+      dispatch(clearSelectedItems())
+      setShowDeleteConfirmation(false)
+    } catch (error) {
+      console.error('Failed to delete files:', error)
+      setShowDeleteConfirmation(false)
+    }
   }
 
   return (
@@ -98,6 +118,17 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
               Move ({selectedItems.length})
             </Button>
           )}
+          {selectedItems.length > 1 && (
+            <Button
+              className='whitespace-nowrap rounded-md bg-red-600 py-2 font-normal normal-case shadow-sm hover:bg-red-700'
+              variant='default'
+              size='default'
+              onClick={handleBulkDelete}
+            >
+              <Trash2 className='mr-1' />
+              Delete Files
+            </Button>
+          )}
           <Button
             className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
             variant='default'
@@ -132,6 +163,17 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
             <div className='text-sm text-gray-500'>No tags available</div>
           )}
         </div>
+      )}
+
+      {showDeleteConfirmation && (
+        <DeleteConfirmation
+          isOpen={showDeleteConfirmation}
+          onClose={() => setShowDeleteConfirmation(false)}
+          onDelete={handleDeleteConfirm}
+          title='Delete Files'
+          description={`Are you sure you want to delete ${selectedItems.length} selected file${selectedItems.length === 1 ? '' : 's'}? This action cannot be undone.`}
+          confirmText='Delete'
+        />
       )}
     </div>
   )

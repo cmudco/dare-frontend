@@ -28,6 +28,16 @@ export const deleteFileAPI = async (id: number): Promise<void> => {
   })
 }
 
+export const deleteMultipleFilesAPI = async (
+  fileIds: number[]
+): Promise<void> => {
+  await baseRequest<void>({
+    url: 'api/files/bulk-delete/',
+    method: METHOD.POST,
+    data: { fileIds },
+  })
+}
+
 export const checkJobStatusesAPI = async (
   fileIds: number[]
 ): Promise<
