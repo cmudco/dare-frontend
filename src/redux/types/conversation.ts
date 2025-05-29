@@ -1,5 +1,5 @@
 import { SenderType } from '@/utils/constants/conversation'
-import { MyFile } from './files'
+import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
 
@@ -71,6 +71,7 @@ export interface ConversationState {
   selectedModel: number | null
   selectedFiles: MyFile[]
   selectedTags: Tag[]
+  selectedFolders: MyFolder[]
   showDropdown: boolean
   hoveredModel: string | null
   conversationInput: string
