@@ -53,7 +53,7 @@ const FolderFilesModal = ({
   const { tags: allTags } = useSelector((state: RootState) => state.tags)
 
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(
     SortDirectionEnum.ASC
