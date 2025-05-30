@@ -1,7 +1,7 @@
 import { FILE_TABLE_HEADER_TO_KEY } from '@/utils/constants/file'
 import { PROMPT_TABLE_HEADER_TO_KEY } from '@/utils/constants/prompts'
 import { getStatusDisplay } from '@/utils/constants/files'
-import type { MyFile } from '@/redux/types/files'
+import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { Tag } from '@/redux/types/tags'
 import type { Prompt } from '@/redux/types/prompt'
 import { PromptGroup } from './constants/prompts'
@@ -40,6 +40,20 @@ export function getFileProp(
         keyof MyFile | 'tags' | 'status' | null
       >
     )[col] ?? null
+  )
+}
+
+export function getFolderProp(col: string): keyof MyFolder | null {
+  const FOLDER_TABLE_HEADER_TO_KEY = {
+    'Folder Name': 'name',
+    'Last Updated': 'updatedAt',
+    Action: null,
+  } as const
+
+  return (
+    (FOLDER_TABLE_HEADER_TO_KEY as Record<string, keyof MyFolder | null>)[
+      col
+    ] ?? null
   )
 }
 
@@ -97,6 +111,38 @@ export function sortFiles(
         return sortDirection === SortDirectionEnum.ASC ? 1 : -1
       return 0
     }
+    return 0
+  })
+}
+
+export function sortFolders(
+  folders: MyFolder[],
+  sortColumn: string | null,
+  sortDirection: SortDirection
+): MyFolder[] {
+  if (!sortColumn) return folders
+  const prop = getFolderProp(sortColumn)
+  if (!prop) return folders
+
+  return [...folders].sort((a, b) => {
+    if (prop === 'name') {
+      const aValue = a.name.toLowerCase()
+      const bValue = b.name.toLowerCase()
+      if (aValue < bValue)
+        return sortDirection === SortDirectionEnum.ASC ? -1 : 1
+      if (aValue > bValue)
+        return sortDirection === SortDirectionEnum.ASC ? 1 : -1
+      return 0
+    }
+
+    if (prop === 'updatedAt') {
+      const aDate = new Date(a.updatedAt).getTime()
+      const bDate = new Date(b.updatedAt).getTime()
+      if (aDate < bDate) return sortDirection === SortDirectionEnum.ASC ? -1 : 1
+      if (aDate > bDate) return sortDirection === SortDirectionEnum.ASC ? 1 : -1
+      return 0
+    }
+
     return 0
   })
 }

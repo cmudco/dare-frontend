@@ -53,6 +53,8 @@ export enum FileStatus {
   FAILED = 2,
 }
 
+export const FOLDER_TABLE_HEAD = ['Folder Name', 'Last Updated', 'Action']
+
 export const FILE_TABLE_HEADER_TO_KEY = {
   'File Name': 'name',
   'File Type': 'fileType',

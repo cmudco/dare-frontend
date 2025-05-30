@@ -22,7 +22,7 @@ const ProcessingFilesPopover: React.FC = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant='outline' className='fixed right-4 top-24'>
+        <Button variant='outline' size='sm'>
           <Loader2 className='mr-2 h-4 w-4 animate-spin' />
           Processing: <Badge className='ml-2'>{processingFiles.length}</Badge>
         </Button>

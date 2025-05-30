@@ -2,8 +2,16 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   uploadFileAPI,
   deleteFileAPI,
+  deleteMultipleFilesAPI,
   getFilesAPI,
   checkJobStatusesAPI,
+  getFoldersAPI,
+  createFolderAPI,
+  deleteFolderAPI,
+  updateFolderAPI,
+  moveFilesToFolderAPI,
+  removeFileFromFolderAPI,
+  uploadFolderAPI,
 } from '../../api/files'
 import { MyFile } from '../types/files'
 
@@ -65,6 +73,18 @@ export const deleteFile = createAsyncThunk(
   }
 )
 
+export const deleteMultipleFiles = createAsyncThunk(
+  'files/deleteMultipleFiles',
+  async (fileIds: number[], thunkAPI) => {
+    try {
+      await deleteMultipleFilesAPI(fileIds)
+      return fileIds
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
 export const checkJobStatuses = createAsyncThunk(
   'files/checkJobStatuses',
   async (fileIds: number[], thunkAPI) => {
@@ -76,6 +96,111 @@ export const checkJobStatuses = createAsyncThunk(
         jobId: item.jobId,
         jobStatus: item.jobStatus,
       }))
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getFolders = createAsyncThunk(
+  'files/getFolders',
+  async (_, thunkAPI) => {
+    try {
+      const response = await getFoldersAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const createFolder = createAsyncThunk(
+  'files/createFolder',
+  async (name: string, thunkAPI) => {
+    try {
+      const response = await createFolderAPI(name)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const deleteFolder = createAsyncThunk(
+  'files/deleteFolder',
+  async (id: number, thunkAPI) => {
+    try {
+      await deleteFolderAPI(id)
+      return id
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateFolder = createAsyncThunk(
+  'files/updateFolder',
+  async ({ id, name }: { id: number; name: string }, thunkAPI) => {
+    try {
+      const response = await updateFolderAPI(id, name)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const moveFilesToFolder = createAsyncThunk(
+  'files/moveFilesToFolder',
+  async (
+    { fileIds, folderId }: { fileIds: number[]; folderId: number },
+    thunkAPI
+  ) => {
+    try {
+      await moveFilesToFolderAPI(fileIds, folderId)
+      return { fileIds, folderId }
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const removeFileFromFolder = createAsyncThunk(
+  'files/removeFileFromFolder',
+  async (
+    { fileId, folderId }: { fileId: number; folderId: number },
+    thunkAPI
+  ) => {
+    try {
+      await removeFileFromFolderAPI(fileId, folderId)
+      return { fileId, folderId }
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const uploadFolder = createAsyncThunk(
+  'files/uploadFolder',
+  async (
+    { files, folderName }: { files: File[]; folderName: string },
+    thunkAPI
+  ) => {
+    try {
+      const formData = new FormData()
+
+      files.forEach((file) => {
+        formData.append('files', file)
+        const relativePath = file.webkitRelativePath || file.name
+        const fileName = relativePath.split('/').pop() || file.name
+        formData.append('names', fileName)
+      })
+
+      formData.append('name', folderName)
+
+      const folder = await uploadFolderAPI(formData)
+
+      return folder
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

@@ -96,7 +96,7 @@ const ActiveConversation: React.FC = () => {
   return (
     <>
       <CreditErrorAlert />
-      <Card className='flex-2 flex h-[90vh] w-[65vw] flex-col justify-end rounded-none rounded-tl-[3.25rem] border border-pink-50'>
+      <Card className='flex-2 flex h-[90vh] min-w-[65vw] flex-col justify-end rounded-none rounded-tl-[3.25rem] border border-pink-50'>
         <div className={`flex h-full flex-col justify-between`}>
           {!activeConversation && <NewConversation />}
           {activeConversation && conversationHistory.length === 0 && (

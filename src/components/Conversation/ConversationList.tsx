@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   ChatBubbleLeftEllipsisIcon,
   TrashIcon,
-  MoonIcon,
+  // MoonIcon,
 } from '@heroicons/react/24/outline'
 import { AppDispatch, RootState } from '../../redux/store'
 import { Conversation } from '../../redux/types/conversation'
@@ -35,7 +35,7 @@ const ConversationList: React.FC = () => {
 
   const bottomItems = [
     { name: 'Clear Conversation', icon: TrashIcon, action: 'clear' },
-    { name: 'Dark Mode', icon: MoonIcon, disabled: true },
+    // { name: 'Dark Mode', icon: MoonIcon, disabled: true },
   ]
 
   const filteredConversations = conversations.filter((conversation) => {
@@ -159,9 +159,8 @@ const ConversationList: React.FC = () => {
       <hr className='mt-4 border-gray-200' />
       <div className=''>
         {bottomItems.map((item) => {
-          const isDisabled =
-            (item.action === 'clear' && !activeConversation) ||
-            item.disabled === true
+          const isDisabled = item.action === 'clear' && !activeConversation
+          // || item.disabled === true (temporarily disabled Dark Mode)
           return (
             <div
               key={item.name}
