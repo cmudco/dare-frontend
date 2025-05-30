@@ -5,6 +5,7 @@ export type SignupFormValues = {
   email: string
   password1: string
   password2: string
+  accessCode: string
 }
 
 export const signupInitialValues: SignupFormValues = {
@@ -12,6 +13,7 @@ export const signupInitialValues: SignupFormValues = {
   email: '',
   password1: '',
   password2: '',
+  accessCode: '',
 }
 
 export const signupValidationSchema = Yup.object().shape({
@@ -25,4 +27,5 @@ export const signupValidationSchema = Yup.object().shape({
   password2: Yup.string()
     .oneOf([Yup.ref('password1')], 'Password does not match')
     .required('Confirm Password is required'),
+  accessCode: Yup.string().required('Access code is required'),
 })

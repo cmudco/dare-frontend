@@ -30,6 +30,7 @@ export const userRegister = createAsyncThunk(
       email: string
       password1: string
       password2: string
+      accessCode: string
     },
     thunkAPI
   ) => {
