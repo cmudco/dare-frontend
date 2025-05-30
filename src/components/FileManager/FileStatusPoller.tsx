@@ -1,7 +1,12 @@
 import React, { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
-import { checkJobStatuses, getFiles } from '../../redux/aynscThunks/file'
+import {
+  checkJobStatuses,
+  getFiles,
+  getFolders,
+} from '../../redux/aynscThunks/file'
+
 import { FileStatus } from '@/utils/constants/file'
 
 const FileStatusPoller: React.FC = () => {
@@ -17,6 +22,7 @@ const FileStatusPoller: React.FC = () => {
 
     if (prevProcessingCount.current > 0 && currentProcessingCount === 0) {
       dispatch(getFiles())
+      dispatch(getFolders())
     }
     prevProcessingCount.current = currentProcessingCount
 
@@ -31,6 +37,7 @@ const FileStatusPoller: React.FC = () => {
             )
             if (!stillProcessing) {
               clearInterval(interval)
+              dispatch(getFolders())
             }
           })
           .catch((error) => {

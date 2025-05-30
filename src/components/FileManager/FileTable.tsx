@@ -1,11 +1,22 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
-import { deleteFile } from '../../redux/aynscThunks/file'
+import { deleteFile, getFolders } from '../../redux/aynscThunks/file'
+import { addSelectedItem, removeSelectedItem } from '../../redux/fileSlice'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
 import { TABLE_HEAD, TAG_COLORS } from '../../utils/constants/file'
 import { formatFileSize } from '@/utils/files'
 import { SortDirection, sortFiles } from '@/utils/sortUtils'
+import {
+  filterFiles,
+  paginateItems,
+  getTotalPages,
+  resetPaginationOnFilter,
+  handleSelectAllItems,
+  getSelectionState,
+  createFilterConfig,
+  createPaginationConfig,
+} from '@/utils/tableUtils'
 
 import {
   Select,
@@ -31,19 +42,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { EllipsisVerticalIcon } from 'lucide-react'
+import { EllipsisVerticalIcon, Trash2 } from 'lucide-react'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getStatusDisplay } from '@/utils/constants/files'
 import { SortDirectionEnum } from '@/utils/constants/sort'
 
-interface FileTableProps {
-  searchQuery: string
-  selectedTags: number[]
-}
-
-const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
+const FileTable = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { files, loading } = useSelector((state: RootState) => state.files)
+  const { files, loading, searchQuery, selectedTags, selectedItems } =
+    useSelector((state: RootState) => state.files)
   const { tags: allTags } = useSelector((state: RootState) => state.tags)
   const user = useSelector((state: RootState) => state.user.user)
 
@@ -60,36 +67,47 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
     if (!user || user.vectorDb === undefined) {
       return []
     }
-    return files.filter((file) => {
-      const fileName = file.name?.toLowerCase() || ''
-      const matchesSearch =
-        searchQuery === '' || fileName.includes(searchQuery.toLowerCase())
-      const matchesTags =
-        selectedTags.length === 0 ||
-        (file.tags && file.tags.some((tagId) => selectedTags.includes(tagId)))
-      const matchesVectorDb = file.vectorDbSource === user.vectorDb
-      return matchesSearch && matchesTags && matchesVectorDb
-    })
+    const filterOptions = createFilterConfig(
+      searchQuery,
+      selectedTags,
+      user.vectorDb
+    )
+    return filterFiles(files, filterOptions)
   }, [files, searchQuery, selectedTags, user])
 
   const sortedFiles = useMemo(() => {
     return sortFiles(filteredFiles, sortColumn, sortDirection, allTags)
   }, [filteredFiles, sortColumn, sortDirection, allTags])
 
-  const totalPages = Math.ceil(sortedFiles.length / itemsPerPage)
-  const paginatedFiles = sortedFiles.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
+  const totalPages = getTotalPages(sortedFiles.length, itemsPerPage)
+  const paginationConfig = createPaginationConfig(currentPage, itemsPerPage)
+  const paginatedFiles = paginateItems(sortedFiles, paginationConfig)
 
   useEffect(() => {
-    setCurrentPage(1)
+    resetPaginationOnFilter(setCurrentPage)
   }, [searchQuery, selectedTags])
+
+  const handleSelectAll = (isSelected: boolean) => {
+    const shouldSelectAll = !isIndeterminate && isSelected
+    handleSelectAllItems(
+      shouldSelectAll,
+      paginatedFiles,
+      selectedItems,
+      (id: number) => dispatch(addSelectedItem(id)),
+      (id: number) => dispatch(removeSelectedItem(id))
+    )
+  }
+
+  const { isAllSelected, isIndeterminate } = getSelectionState(
+    paginatedFiles,
+    selectedItems
+  )
 
   const handleDeleteConfirm = async () => {
     if (deleteFileId !== null) {
       try {
         await dispatch(deleteFile(deleteFileId)).unwrap()
+        dispatch(getFolders())
       } catch (error) {
         console.error('Failed to delete file:', error)
       }
@@ -119,7 +137,23 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
       <Table className='mt-4 w-full min-w-max bg-white text-left'>
         <TableHeader>
           <TableRow className='bg-muted'>
-            {TABLE_HEAD.map((head) => (
+            <TableHead
+              key='select-all'
+              className='w-[50px] cursor-pointer select-none p-4 text-sm font-semibold transition-colors'
+            >
+              <div className='flex items-center justify-center'>
+                <input
+                  type='checkbox'
+                  className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  checked={isAllSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = isIndeterminate
+                  }}
+                />
+              </div>
+            </TableHead>
+            {TABLE_HEAD.filter((head) => head !== 'Select').map((head) => (
               <TableHead
                 key={head}
                 className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 ${head !== 'Action' ? 'hover:bg-gray-100 hover:opacity-100' : ''}`}
@@ -150,7 +184,7 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
           {files.length === 0 && loading ? (
             <TableRow>
               <TableCell
-                colSpan={TABLE_HEAD.length}
+                colSpan={TABLE_HEAD.length + 1}
                 className='p-4 text-center'
               >
                 Loading files...
@@ -159,7 +193,7 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
           ) : sortedFiles.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={TABLE_HEAD.length}
+                colSpan={TABLE_HEAD.length + 1}
                 className='p-4 text-center'
               >
                 No matching files found
@@ -168,6 +202,20 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
           ) : (
             paginatedFiles.map(({ id, name, fileType, size, tags, status }) => (
               <TableRow key={id}>
+                <TableCell className='w-[50px] p-4 text-center'>
+                  <input
+                    type='checkbox'
+                    className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
+                    checked={selectedItems.includes(id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        dispatch(addSelectedItem(id))
+                      } else {
+                        dispatch(removeSelectedItem(id))
+                      }
+                    }}
+                  />
+                </TableCell>
                 <TableCell className='p-4'>{name || 'Unnamed'}</TableCell>
                 <TableCell className='p-4'>{fileType || 'Unknown'}</TableCell>
                 <TableCell className='p-4'>{formatFileSize(size)}</TableCell>
@@ -203,6 +251,7 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
                         className='cursor-pointer text-red-500'
                         onClick={() => handleDelete(id, name)}
                       >
+                        <Trash2 className='mr-2 h-4 w-4' />
                         <span>Delete</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -216,7 +265,7 @@ const FileTable = ({ searchQuery, selectedTags }: FileTableProps) => {
         {sortedFiles.length > 0 && (
           <TableFooter>
             <TableRow>
-              <TableCell colSpan={TABLE_HEAD.length} className='w-full p-4'>
+              <TableCell colSpan={TABLE_HEAD.length + 1} className='w-full p-4'>
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
                     <span className='text-sm'>Rows per page:</span>

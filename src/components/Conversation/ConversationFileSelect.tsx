@@ -1,12 +1,20 @@
 import React, { useState, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Check, FileIcon, Search, Tag as TagIcon, Settings } from 'lucide-react'
+import {
+  Check,
+  FileIcon,
+  Search,
+  Tag as TagIcon,
+  Settings,
+  Folder,
+} from 'lucide-react'
 import type { RootState, AppDispatch } from '@/redux/store'
 import {
   updateSelectedFiles,
   updateSelectedTags,
+  updateSelectedFolders,
 } from '@/redux/conversationSlice'
-import type { MyFile } from '@/redux/types/files'
+import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { Tag } from '@/redux/types/tags'
 import { getTagColor } from '@/utils/files'
 import { Button } from '../ui/button'
@@ -26,6 +34,7 @@ import { FileStatus } from '@/utils/constants/file'
 const ConversationFileSelect: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const files = useSelector((state: RootState) => state.files.files)
+  const folders = useSelector((state: RootState) => state.files.folders)
   const tags = useSelector((state: RootState) => state.tags?.tags || [])
   const selectedFiles = useSelector(
     (state: RootState) => state.conversation.selectedFiles
@@ -33,12 +42,17 @@ const ConversationFileSelect: React.FC = () => {
   const selectedTags = useSelector(
     (state: RootState) => state.conversation.selectedTags
   )
+  const selectedFolders = useSelector(
+    (state: RootState) => state.conversation.selectedFolders
+  )
   const user = useSelector((state: RootState) => state.user.user)
 
   const [open, setOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState<'files' | 'tags'>('files')
+  const [activeTab, setActiveTab] = useState<'files' | 'tags' | 'folders'>(
+    'files'
+  )
 
   const filteredFiles = useMemo(() => {
     if (!user || user.vectorDb === undefined) {
@@ -61,6 +75,12 @@ const ConversationFileSelect: React.FC = () => {
     )
   }, [tags, searchQuery])
 
+  const filteredFolders = useMemo(() => {
+    return folders.filter((folder) =>
+      folder.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  }, [folders, searchQuery])
+
   const handleToggleFile = (file: MyFile) => {
     const newSelectedFiles = selectedFiles.some((f) => f.id === file.id)
       ? selectedFiles.filter((f) => f.id !== file.id)
@@ -75,9 +95,17 @@ const ConversationFileSelect: React.FC = () => {
     dispatch(updateSelectedTags(newSelectedTags))
   }
 
+  const handleToggleFolder = (folder: MyFolder) => {
+    const newSelectedFolders = selectedFolders.some((f) => f.id === folder.id)
+      ? selectedFolders.filter((f) => f.id !== folder.id)
+      : [...selectedFolders, folder]
+    dispatch(updateSelectedFolders(newSelectedFolders))
+  }
+
   const clearSelections = () => {
     dispatch(updateSelectedFiles([]))
     dispatch(updateSelectedTags([]))
+    dispatch(updateSelectedFolders([]))
   }
 
   return (
@@ -130,11 +158,14 @@ const ConversationFileSelect: React.FC = () => {
 
             <Tabs
               value={activeTab}
-              onValueChange={(value) => setActiveTab(value as 'files' | 'tags')}
+              onValueChange={(value) =>
+                setActiveTab(value as 'files' | 'tags' | 'folders')
+              }
             >
-              <TabsList className='grid w-full grid-cols-2'>
+              <TabsList className='grid w-full grid-cols-3'>
                 <TabsTrigger value='files'>Files</TabsTrigger>
                 <TabsTrigger value='tags'>Tags</TabsTrigger>
+                <TabsTrigger value='folders'>Folders</TabsTrigger>
               </TabsList>
 
               <TabsContent value='files' className='mt-4'>
@@ -213,6 +244,50 @@ const ConversationFileSelect: React.FC = () => {
                   )}
                 </div>
               </TabsContent>
+
+              <TabsContent value='folders' className='mt-4'>
+                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                  {filteredFolders.map((folder) => {
+                    const isSelected = selectedFolders.some(
+                      (f) => f.id === folder.id
+                    )
+                    const hasFiles = folder.fileCount > 0
+                    return (
+                      <div
+                        key={folder.id}
+                        onClick={() => hasFiles && handleToggleFolder(folder)}
+                        className={`flex items-center rounded-md p-2 ${
+                          hasFiles
+                            ? 'cursor-pointer hover:bg-muted'
+                            : 'cursor-not-allowed opacity-50'
+                        }`}
+                      >
+                        <div
+                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
+                            isSelected
+                              ? 'border-primary bg-primary'
+                              : 'border-input hover:border-muted-foreground'
+                          }`}
+                        >
+                          {isSelected && (
+                            <Check className='h-3 w-3 text-primary-foreground' />
+                          )}
+                        </div>
+                        <Folder className='mr-2 h-4 w-4 text-muted-foreground' />
+                        <span className='text-sm'>{folder.name}</span>
+                        <span className='ml-2 text-xs text-muted-foreground'>
+                          ({folder.fileCount})
+                        </span>
+                      </div>
+                    )
+                  })}
+                  {filteredFolders.length === 0 && (
+                    <p className='py-4 text-center text-muted-foreground'>
+                      No folders found
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
             </Tabs>
 
             <Separator />
@@ -222,7 +297,8 @@ const ConversationFileSelect: React.FC = () => {
                 Clear
               </Button>
               <Button size='sm' onClick={() => setOpen(false)}>
-                Done ({selectedFiles.length} files, {selectedTags.length} tags)
+                Done ({selectedFiles.length} files, {selectedTags.length} tags,{' '}
+                {selectedFolders.length} folders)
               </Button>
             </div>
           </div>

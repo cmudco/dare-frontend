@@ -106,6 +106,9 @@ export const sendWebSocketMessage = createAsyncThunk<
   const state = getState()
   const fileIds = state.conversation.selectedFiles.map((file) => file.id)
   const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
+  const folderIds = state.conversation.selectedFolders.map(
+    (folder) => folder.id
+  )
   const prompt = state.conversation.activeConversation?.prompt
   const temperature = state.conversation.activeConversation?.temperature
   const maxTokens = state.conversation.activeConversation?.maxTokens
@@ -122,6 +125,7 @@ export const sendWebSocketMessage = createAsyncThunk<
         sender_type: 1,
         file_ids: fileIds,
         tag_ids: tagIds,
+        folder_ids: folderIds,
         llm_id: state.conversation.selectedModel,
         prompt_id: prompt?.id,
         temperature: temperature,
@@ -167,6 +171,9 @@ export const regenerateResponse = createAsyncThunk<
     const state = getState()
     const fileIds = state.conversation.selectedFiles.map((file) => file.id)
     const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
+    const folderIds = state.conversation.selectedFolders.map(
+      (folder) => folder.id
+    )
     const prompt = state.conversation.activeConversation?.prompt
     const temperature = state.conversation.activeConversation?.temperature
     const maxTokens = state.conversation.activeConversation?.maxTokens
@@ -191,6 +198,7 @@ export const regenerateResponse = createAsyncThunk<
           llm_id: state.conversation.selectedModel,
           file_ids: fileIds,
           tag_ids: tagIds,
+          folder_ids: folderIds,
           prompt_id: prompt?.id,
           temperature: temperature,
           max_tokens: maxTokens,

@@ -163,14 +163,14 @@ const ModelConfigurationPanel: React.FC = () => {
             <div className='flex items-center justify-between'>
               <h4 className='font-medium'>History Limit</h4>
               <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
-                {historyLimit}
+                {historyLimit === 50 ? 'Full Context' : historyLimit}
               </span>
             </div>
 
             <Slider
               value={[historyLimit]}
               min={1}
-              max={30}
+              max={50}
               step={1}
               onValueChange={handleHistoryLimitChange}
               className='my-4 cursor-pointer'
@@ -179,7 +179,7 @@ const ModelConfigurationPanel: React.FC = () => {
             <div className='flex justify-between px-1 text-xs text-gray-500'>
               <span>Minimal</span>
               <span>Standard</span>
-              <span>Extended</span>
+              <span>Max</span>
             </div>
 
             <div

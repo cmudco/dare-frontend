@@ -9,7 +9,7 @@ import {
   updateMessageThunk,
 } from './aynscThunks/conversation'
 import { Message, Conversation, LLMModel } from './types/conversation'
-import { MyFile } from './types/files'
+import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
 
@@ -36,6 +36,9 @@ export const conversationSlice = createSlice({
     },
     updateSelectedTags(state, action: PayloadAction<Tag[]>) {
       state.selectedTags = action.payload
+    },
+    updateSelectedFolders(state, action: PayloadAction<MyFolder[]>) {
+      state.selectedFolders = action.payload
     },
     toggleDropdown(state) {
       state.showDropdown = !state.showDropdown
@@ -126,6 +129,8 @@ export const conversationSlice = createSlice({
       state.activeConversation = null
       state.activeConversationMessages = []
       state.selectedFiles = []
+      state.selectedTags = []
+      state.selectedFolders = []
       state.conversationInput = ''
       state.selectedModel = state.availableModels[0]?.id
     },
@@ -227,7 +232,6 @@ export const conversationSlice = createSlice({
       })
       .addCase(updateMessageThunk.rejected, (state, action) => {
         state.error = action.payload as string
-        console.error('Failed to update message reaction:', action.payload)
       })
   },
 })
@@ -238,6 +242,7 @@ export const {
   updateSelectedModel,
   updateSelectedFiles,
   updateSelectedTags,
+  updateSelectedFolders,
   updateTemperature,
   updateMaxTokens,
   updateHistoryLimit,

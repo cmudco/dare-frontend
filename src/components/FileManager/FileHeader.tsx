@@ -3,32 +3,40 @@ import {
   AdjustmentsVerticalIcon,
 } from '@heroicons/react/24/solid'
 import { useDispatch, useSelector } from 'react-redux'
-import { openModal } from '../../redux/fileSlice'
+import {
+  openModal,
+  setSearchQuery,
+  setSelectedTags,
+  openMoveModal,
+  clearSelectedItems,
+} from '../../redux/fileSlice'
+import { deleteMultipleFiles, getFolders } from '../../redux/aynscThunks/file'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
-import { RootState } from '../../redux/store'
+import { RootState, AppDispatch } from '../../redux/store'
 import { useState } from 'react'
 import { Tag } from '../../redux/types/tags'
 import { Badge } from '../ui/badge'
+import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getTagColor } from '@/utils/files'
-import { Upload } from 'lucide-react'
+import { Upload, FolderInput, Trash2 } from 'lucide-react'
 
 interface FileHeaderProps {
-  onSearch: (query: string) => void
-  onTagsChange: (tags: number[]) => void
+  onToggleView?: (view: 'files' | 'folders') => void
 }
 
-const FileHeader: React.FC<FileHeaderProps> = ({ onSearch, onTagsChange }) => {
-  const dispatch = useDispatch()
+const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
+  const dispatch = useDispatch<AppDispatch>()
   const { tags } = useSelector((state: RootState) => state.tags)
+  const { searchQuery, selectedTags, selectedItems, currentView } = useSelector(
+    (state: RootState) => state.files
+  )
   const [showTagFilter, setShowTagFilter] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTags, setSelectedTags] = useState<number[]>([])
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
-    setSearchQuery(value)
-    onSearch(value)
+    dispatch(setSearchQuery(value))
   }
 
   const handleTagToggle = (tagId: number) => {
@@ -36,14 +44,47 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onSearch, onTagsChange }) => {
       ? selectedTags.filter((id) => id !== tagId)
       : [...selectedTags, tagId]
 
-    setSelectedTags(newSelectedTags)
-    onTagsChange(newSelectedTags)
+    dispatch(setSelectedTags(newSelectedTags))
+  }
+
+  const handleBulkDelete = () => {
+    setShowDeleteConfirmation(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await dispatch(deleteMultipleFiles(selectedItems)).unwrap()
+      dispatch(getFolders())
+      dispatch(clearSelectedItems())
+      setShowDeleteConfirmation(false)
+    } catch (error) {
+      console.error('Failed to delete files:', error)
+      setShowDeleteConfirmation(false)
+    }
   }
 
   return (
     <div className='flex flex-col gap-4 px-2.5'>
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-2'>
+          {onToggleView && (
+            <div className='mr-4 flex gap-2'>
+              <Button
+                variant={currentView === 'files' ? 'default' : 'outline'}
+                size='sm'
+                onClick={() => onToggleView('files')}
+              >
+                Files
+              </Button>
+              <Button
+                variant={currentView === 'folders' ? 'default' : 'outline'}
+                size='sm'
+                onClick={() => onToggleView('folders')}
+              >
+                Folders
+              </Button>
+            </div>
+          )}
           <div className='relative flex h-[40px] w-[300px] items-center'>
             <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-gray-500' />
             <Input
@@ -65,15 +106,39 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onSearch, onTagsChange }) => {
             Filter by Tags
           </Button>
         </div>
-        <Button
-          className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
-          variant='default'
-          size='default'
-          onClick={() => dispatch(openModal())}
-        >
-          <Upload />
-          Upload File
-        </Button>
+        <div className='flex items-center gap-2'>
+          {selectedItems.length > 0 && (
+            <Button
+              className='whitespace-nowrap rounded-md bg-dark-blue py-2 font-normal normal-case shadow-sm hover:bg-dark-blue-hovered'
+              variant='default'
+              size='default'
+              onClick={() => dispatch(openMoveModal())}
+            >
+              <FolderInput className='mr-1' />
+              Move ({selectedItems.length})
+            </Button>
+          )}
+          {selectedItems.length > 1 && (
+            <Button
+              className='whitespace-nowrap rounded-md bg-red-600 py-2 font-normal normal-case shadow-sm hover:bg-red-700'
+              variant='default'
+              size='default'
+              onClick={handleBulkDelete}
+            >
+              <Trash2 className='mr-1' />
+              Delete Files
+            </Button>
+          )}
+          <Button
+            className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
+            variant='default'
+            size='default'
+            onClick={() => dispatch(openModal())}
+          >
+            <Upload />
+            Upload File
+          </Button>
+        </div>
       </div>
 
       {showTagFilter && (
@@ -98,6 +163,17 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onSearch, onTagsChange }) => {
             <div className='text-sm text-gray-500'>No tags available</div>
           )}
         </div>
+      )}
+
+      {showDeleteConfirmation && (
+        <DeleteConfirmation
+          isOpen={showDeleteConfirmation}
+          onClose={() => setShowDeleteConfirmation(false)}
+          onDelete={handleDeleteConfirm}
+          title='Delete Files'
+          description={`Are you sure you want to delete ${selectedItems.length} selected file${selectedItems.length === 1 ? '' : 's'}? This action cannot be undone.`}
+          confirmText='Delete'
+        />
       )}
     </div>
   )

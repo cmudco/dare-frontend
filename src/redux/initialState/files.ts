@@ -2,11 +2,18 @@ import { FileState } from '../types/files'
 
 export const initialState: FileState = {
   files: [],
+  folders: [],
   loading: false,
   error: null,
   selectedTags: [],
   isModalOpen: false,
   filename: '',
+  foldername: '',
+  expandedFolders: {},
   jobStatuses: {},
   pollingLoading: false,
+  searchQuery: '',
+  selectedItems: [],
+  currentView: 'files',
+  isMoveModalOpen: false,
 }
