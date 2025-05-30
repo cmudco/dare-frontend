@@ -105,6 +105,9 @@ export const sendWebSocketMessage = createAsyncThunk<
 >('websocket/sendMessage', async (message, { rejectWithValue, getState }) => {
   const state = getState()
   const fileIds = state.conversation.selectedFiles.map((file) => file.id)
+  const embeddingIds = state.conversation.selectedEmbeddings.map(
+    (file) => file.id
+  )
   const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
   const folderIds = state.conversation.selectedFolders.map(
     (folder) => folder.id
@@ -124,6 +127,7 @@ export const sendWebSocketMessage = createAsyncThunk<
         message: message.message,
         sender_type: 1,
         file_ids: fileIds,
+        embedding_ids: embeddingIds,
         tag_ids: tagIds,
         folder_ids: folderIds,
         llm_id: state.conversation.selectedModel,
@@ -170,6 +174,9 @@ export const regenerateResponse = createAsyncThunk<
   async ({ messageId }, { rejectWithValue, getState, dispatch }) => {
     const state = getState()
     const fileIds = state.conversation.selectedFiles.map((file) => file.id)
+    const embeddingIds = state.conversation.selectedEmbeddings.map(
+      (file) => file.id
+    )
     const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
     const folderIds = state.conversation.selectedFolders.map(
       (folder) => folder.id
@@ -197,6 +204,7 @@ export const regenerateResponse = createAsyncThunk<
           message_id: messageId,
           llm_id: state.conversation.selectedModel,
           file_ids: fileIds,
+          embedding_ids: embeddingIds,
           tag_ids: tagIds,
           folder_ids: folderIds,
           prompt_id: prompt?.id,

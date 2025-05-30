@@ -34,6 +34,9 @@ export const conversationSlice = createSlice({
     updateSelectedFiles(state, action: PayloadAction<MyFile[]>) {
       state.selectedFiles = action.payload
     },
+    updateSelectedEmbeddings(state, action: PayloadAction<MyFile[]>) {
+      state.selectedEmbeddings = action.payload
+    },
     updateSelectedTags(state, action: PayloadAction<Tag[]>) {
       state.selectedTags = action.payload
     },
@@ -129,6 +132,7 @@ export const conversationSlice = createSlice({
       state.activeConversation = null
       state.activeConversationMessages = []
       state.selectedFiles = []
+      state.selectedEmbeddings = []
       state.selectedTags = []
       state.selectedFolders = []
       state.conversationInput = ''
@@ -241,6 +245,7 @@ export const {
   updateActiveConversation,
   updateSelectedModel,
   updateSelectedFiles,
+  updateSelectedEmbeddings,
   updateSelectedTags,
   updateSelectedFolders,
   updateTemperature,
