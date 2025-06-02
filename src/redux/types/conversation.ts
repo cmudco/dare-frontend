@@ -15,6 +15,7 @@ export interface Conversation {
   historyLimit: number
   prompt?: Prompt | null
   promptId?: string | null
+  sortOrder?: number
 }
 
 export interface Message {
@@ -86,4 +87,21 @@ export interface ConversationResponse {
 export interface MessageReaction {
   isLiked: boolean
   isDisliked: boolean
+}
+
+export interface ConversationSortOrder {
+  conversationId: string
+  sortOrder: number
+}
+
+export interface SortableConversationItemProps {
+  conversation: Conversation
+  isActive: boolean
+  editingId: string | null
+  editValue: string
+  onConversationClick: (conversation: Conversation) => void
+  onEditClick: (conversation: Conversation) => void
+  onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onEditBlur: () => void
+  onEditKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
 }

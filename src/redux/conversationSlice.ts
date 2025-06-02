@@ -7,6 +7,7 @@ import {
   deleteConversation,
   updateConversation,
   updateMessageThunk,
+  updateConversationSortOrder,
 } from './aynscThunks/conversation'
 import { Message, Conversation, LLMModel } from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
@@ -138,6 +139,22 @@ export const conversationSlice = createSlice({
       state.conversationInput = ''
       state.selectedModel = state.availableModels[0]?.id
     },
+    updateConversationOrder(state, action: PayloadAction<string[]>) {
+      const orderedConversations: Conversation[] = []
+      action.payload.forEach((conversationId, index) => {
+        const conversation = state.conversations.find(
+          (c) => c.conversationId === conversationId
+        )
+        if (conversation) {
+          const updatedConversation = {
+            ...conversation,
+            sortOrder: (index + 1) * 10,
+          }
+          orderedConversations.push(updatedConversation)
+        }
+      })
+      state.conversations = orderedConversations
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -237,6 +254,16 @@ export const conversationSlice = createSlice({
       .addCase(updateMessageThunk.rejected, (state, action) => {
         state.error = action.payload as string
       })
+      .addCase(updateConversationSortOrder.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(updateConversationSortOrder.fulfilled, (state) => {
+        state.loading = false
+      })
+      .addCase(updateConversationSortOrder.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
   },
 })
 
@@ -264,5 +291,6 @@ export const {
   updateConversationHistory,
   setPrompt,
   resetConversation,
+  updateConversationOrder,
 } = conversationSlice.actions
 export default conversationSlice.reducer

@@ -1,6 +1,7 @@
 import {
   Conversation,
   ConversationResponse,
+  ConversationSortOrder,
   LLMModel,
   Message,
   MessageReaction,
@@ -66,5 +67,15 @@ export const updateMessageAPI = async (
     url: `api/messages/${messageId}/`,
     method: METHOD.PATCH,
     data: reaction,
+  })
+}
+
+export const updateConversationSortOrderAPI = async (
+  updates: ConversationSortOrder[]
+): Promise<void> => {
+  await baseRequest<void>({
+    url: 'api/conversations/update-sort-order/',
+    method: METHOD.PATCH,
+    data: updates,
   })
 }

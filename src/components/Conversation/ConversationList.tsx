@@ -4,17 +4,38 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   ChatBubbleLeftEllipsisIcon,
   TrashIcon,
-  // MoonIcon,
 } from '@heroicons/react/24/outline'
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { AppDispatch, RootState } from '../../redux/store'
 import { Conversation } from '../../redux/types/conversation'
-import { updateActiveConversation } from '../../redux/conversationSlice'
+import { updateActiveConversation, updateConversationOrder } from '../../redux/conversationSlice'
 import {
   deleteConversation,
   updateConversation,
+  updateConversationSortOrder,
 } from '@/redux/aynscThunks/conversation'
 import { DeleteConfirmation } from '../DeleteConfirmation'
-import { Pencil } from 'lucide-react'
+import SortableConversationItem from './SortableConversationItem'
+import {
+  filterConversations,
+  createSortOrderUpdates,
+  findConversationIndexes,
+  useDragSensors,
+  isDragOperationValid,
+  isConversationActive,
+  getConversationTitle,
+} from '../../utils/conversationUtils'
 
 const ConversationList: React.FC = () => {
   const location = useLocation()
@@ -29,19 +50,52 @@ const ConversationList: React.FC = () => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [activeId, setActiveId] = useState<string | null>(null)
   const searchQuery = useSelector(
     (state: RootState) => state.conversation?.searchQuery || ''
   )
+
+  const sensors = useDragSensors()
 
   const bottomItems = [
     { name: 'Clear Conversation', icon: TrashIcon, action: 'clear' },
     // { name: 'Dark Mode', icon: MoonIcon, disabled: true },
   ]
 
-  const filteredConversations = conversations.filter((conversation) => {
-    const title = conversation.title || 'New Chat'
-    return title.toLowerCase().includes(searchQuery.toLowerCase())
-  })
+  const filteredConversations = filterConversations(conversations, searchQuery)
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
+  }
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+
+    setActiveId(null)
+
+    if (active.id !== over?.id) {
+      const { oldIndex, newIndex } = findConversationIndexes(
+        conversations,
+        active.id,
+        over?.id
+      )
+
+      if (isDragOperationValid(oldIndex, newIndex, active.id, over?.id)) {
+        const newOrder = arrayMove(conversations, oldIndex, newIndex)
+        const orderedIds = newOrder.map((conversation) => conversation.conversationId)
+
+        dispatch(updateConversationOrder(orderedIds))
+
+        const sortOrderUpdates = createSortOrderUpdates(newOrder)
+
+        try {
+          await dispatch(updateConversationSortOrder(sortOrderUpdates))
+        } catch (error) {
+          console.error('Failed to update conversation sort order:', error)
+        }
+      }
+    }
+  }
 
   const handleConversationClick = (conversation: Conversation) => {
     dispatch(updateActiveConversation(conversation))
@@ -89,7 +143,7 @@ const ConversationList: React.FC = () => {
 
   const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      ;(e.target as HTMLInputElement).blur()
+      ; (e.target as HTMLInputElement).blur()
     } else if (e.key === 'Escape') {
       setEditingId(null)
     }
@@ -97,65 +151,56 @@ const ConversationList: React.FC = () => {
 
   return (
     <nav className='text-blue-gray-700 flex h-full flex-col gap-1 font-sans text-base font-normal'>
-      <div className='flex h-[65vh] w-full flex-col overflow-scroll'>
-        {filteredConversations.map((conversation) => {
-          const conversationId = conversation.conversationId
-          const isActive =
-            location.pathname === `/conversation/${conversationId}`
-          return (
-            <div
-              key={conversationId}
-              onClick={() => handleConversationClick(conversation)}
-              className={`group flex w-full cursor-pointer items-center gap-3 rounded-md p-3 text-start leading-tight outline-none transition-all ${
-                isActive
-                  ? 'bg-pink-50 text-primary'
-                  : 'focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-opacity-80 active:bg-opacity-80'
-              }`}
-            >
-              <div>
-                <ChatBubbleLeftEllipsisIcon className='w-6 font-bold' />
-              </div>
-              <span
-                className='relative flex h-6 flex-1 items-center overflow-hidden'
-                style={{ direction: 'ltr' }}
-              >
-                {editingId === conversationId ? (
-                  <input
-                    className='flex-1 rounded border bg-white px-2 py-1 text-sm shadow outline-none'
-                    value={editValue}
-                    autoFocus
-                    onChange={handleEditChange}
-                    onBlur={handleEditBlur}
-                    onKeyDown={handleEditKeyDown}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{ minWidth: 0 }}
-                  />
-                ) : (
-                  <>
-                    <span className='overflow-hidden text-ellipsis whitespace-nowrap'>
-                      {conversation.title || `New Chat`}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className='flex h-[65vh] w-full flex-col overflow-scroll'>
+          <SortableContext
+            items={filteredConversations.map(c => c.conversationId)}
+            strategy={verticalListSortingStrategy}
+          >
+            {filteredConversations.map((conversation) => {
+              const conversationId = conversation.conversationId
+              const isActive = isConversationActive(conversation, location.pathname)
+              return (
+                <SortableConversationItem
+                  key={conversationId}
+                  conversation={conversation}
+                  isActive={isActive}
+                  editingId={editingId}
+                  editValue={editValue}
+                  onConversationClick={handleConversationClick}
+                  onEditClick={handleEditClick}
+                  onEditChange={handleEditChange}
+                  onEditBlur={handleEditBlur}
+                  onEditKeyDown={handleEditKeyDown}
+                />
+              )
+            })}
+          </SortableContext>
+        </div>
+
+        <DragOverlay>
+          {activeId ? (
+            <div className="bg-white shadow-lg rounded-md border border-gray-200 opacity-95 px-3 py-3 min-h-[48px]">
+              {(() => {
+                const draggedConversation = conversations.find(c => c.conversationId === activeId)
+                return draggedConversation ? (
+                  <div className="flex items-center">
+                    <ChatBubbleLeftEllipsisIcon className='w-6 h-6 text-gray-600 mr-3' />
+                    <span className='text-gray-900'>
+                      {getConversationTitle(draggedConversation)}
                     </span>
-                    {editingId !== conversationId && (
-                      <button
-                        className='absolute right-0 top-1/2 z-20 -translate-y-1/2 rounded bg-white p-1 opacity-0 shadow transition-opacity hover:bg-gray-200 group-hover:opacity-100'
-                        style={{ pointerEvents: 'auto' }}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleEditClick(conversation)
-                        }}
-                        aria-label='Rename chat'
-                        tabIndex={-1}
-                      >
-                        <Pencil className='h-4 w-4' />
-                      </button>
-                    )}
-                  </>
-                )}
-              </span>
+                  </div>
+                ) : null
+              })()}
             </div>
-          )
-        })}
-      </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
       <hr className='mt-4 border-gray-200' />
       <div className=''>
         {bottomItems.map((item) => {
@@ -165,20 +210,17 @@ const ConversationList: React.FC = () => {
             <div
               key={item.name}
               onClick={() => !isDisabled && handleBottomItemClick(item.action)}
-              className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight outline-none transition-all ${
-                location.pathname === item.name
-                  ? 'bg-pink-50 text-primary'
-                  : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80'
-              } ${
-                isDisabled
+              className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight outline-none transition-all ${location.pathname === item.name
+                ? 'bg-pink-50 text-primary'
+                : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80'
+                } ${isDisabled
                   ? 'cursor-not-allowed text-gray-400 line-through opacity-50'
                   : 'cursor-pointer'
-              }`}
+                }`}
             >
               <item.icon
-                className={`mr-4 h-5 w-5 font-bold ${
-                  isDisabled ? 'text-gray-400' : ''
-                }`}
+                className={`mr-4 h-5 w-5 font-bold ${isDisabled ? 'text-gray-400' : ''
+                  }`}
               />
               {item.name}
             </div>
