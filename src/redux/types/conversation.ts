@@ -70,6 +70,7 @@ export interface ConversationState {
   activeConversationMessages: Message[]
   selectedModel: number | null
   selectedFiles: MyFile[]
+  selectedEmbeddings: MyFile[]
   selectedTags: Tag[]
   selectedFolders: MyFolder[]
   showDropdown: boolean

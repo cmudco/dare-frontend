@@ -56,7 +56,7 @@ const FolderTable = () => {
   )
 
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const [deleteFolderId, setDeleteFolderId] = useState<number | null>(null)
   const [deleteFolderName, setDeleteFolderName] = useState<string>('')

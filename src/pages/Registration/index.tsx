@@ -27,6 +27,7 @@ const RegistrationScreen: React.FC = () => {
       email: values.email,
       password1: values.password1,
       password2: values.password2,
+      accessCode: values.accessCode,
     }
 
     try {
@@ -57,6 +58,7 @@ const RegistrationScreen: React.FC = () => {
       label: 'Confirm Password',
       type: 'password',
     },
+    { name: 'accessCode', label: 'Access Code', type: 'text' },
   ]
 
   return (

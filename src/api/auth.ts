@@ -14,6 +14,7 @@ export const registerUser = async (data: {
   email: string
   password1: string
   password2: string
+  accessCode: string
 }): Promise<AuthResponse> => {
   return await baseRequest<AuthResponse>({
     url: 'users/api/dj-rest-auth/registration/',

@@ -11,6 +11,7 @@ export const initialState: ConversationState = {
   activeConversationMessages: [],
   selectedModel: null,
   selectedFiles: [] as MyFile[],
+  selectedEmbeddings: [] as MyFile[],
   selectedTags: [] as Tag[],
   selectedFolders: [] as MyFolder[],
   showDropdown: false,
