@@ -13,6 +13,7 @@ import {
   updateConversationAPI,
   updateMessageAPI,
   updateConversationSortOrderAPI,
+  deleteMultipleConversationsAPI,
 } from '../../api/conversation'
 import { AppDispatch } from '../store'
 import { sendWebSocketMessage } from './websocket'
@@ -126,3 +127,19 @@ export const updateConversationSortOrder = createAsyncThunk<
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })
+
+export const deleteMultipleConversations = createAsyncThunk<
+  string[],
+  string[],
+  { rejectValue: string }
+>(
+  'conversation/deleteMultipleConversations',
+  async (conversationIds, thunkAPI) => {
+    try {
+      await deleteMultipleConversationsAPI(conversationIds)
+      return conversationIds
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)

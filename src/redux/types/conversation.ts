@@ -74,6 +74,7 @@ export interface ConversationState {
   selectedEmbeddings: MyFile[]
   selectedTags: Tag[]
   selectedFolders: MyFolder[]
+  selectedConversations: string[]
   showDropdown: boolean
   hoveredModel: string | null
   conversationInput: string
@@ -97,9 +98,13 @@ export interface ConversationSortOrder {
 export interface SortableConversationItemProps {
   conversation: Conversation
   isActive: boolean
+  isSelected: boolean
   editingId: string | null
   editValue: string
-  onConversationClick: (conversation: Conversation) => void
+  onConversationClick: (
+    conversation: Conversation,
+    event?: React.MouseEvent
+  ) => void
   onEditClick: (conversation: Conversation) => void
   onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onEditBlur: () => void

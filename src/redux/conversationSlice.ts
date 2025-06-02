@@ -8,6 +8,7 @@ import {
   updateConversation,
   updateMessageThunk,
   updateConversationSortOrder,
+  deleteMultipleConversations,
 } from './aynscThunks/conversation'
 import { Message, Conversation, LLMModel } from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
@@ -155,6 +156,21 @@ export const conversationSlice = createSlice({
       })
       state.conversations = orderedConversations
     },
+    toggleConversationSelection(state, action: PayloadAction<string>) {
+      const conversationId = action.payload
+      const index = state.selectedConversations.indexOf(conversationId)
+      if (index > -1) {
+        state.selectedConversations.splice(index, 1)
+      } else {
+        state.selectedConversations.push(conversationId)
+      }
+    },
+    setSelectedConversations(state, action: PayloadAction<string[]>) {
+      state.selectedConversations = action.payload
+    },
+    clearSelectedConversations(state) {
+      state.selectedConversations = []
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -264,6 +280,21 @@ export const conversationSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
+      .addCase(deleteMultipleConversations.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(deleteMultipleConversations.fulfilled, (state, action) => {
+        state.loading = false
+        state.conversations = state.conversations.filter(
+          (conv) => !action.payload.includes(conv.conversationId)
+        )
+        state.selectedConversations = []
+      })
+      .addCase(deleteMultipleConversations.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
   },
 })
 
@@ -292,5 +323,8 @@ export const {
   setPrompt,
   resetConversation,
   updateConversationOrder,
+  toggleConversationSelection,
+  setSelectedConversations,
+  clearSelectedConversations,
 } = conversationSlice.actions
 export default conversationSlice.reducer

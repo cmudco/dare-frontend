@@ -79,3 +79,13 @@ export const updateConversationSortOrderAPI = async (
     data: updates,
   })
 }
+
+export const deleteMultipleConversationsAPI = async (
+  conversationIds: string[]
+): Promise<void> => {
+  await baseRequest<void>({
+    url: 'api/conversations/bulk-delete/',
+    method: METHOD.POST,
+    data: { conversationIds },
+  })
+}

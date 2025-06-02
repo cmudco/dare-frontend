@@ -58,7 +58,7 @@ export const useDragSensors = () => {
   return useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8
+        distance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -115,14 +115,21 @@ export const createDragStyle = (
  */
 export const getConversationItemClassName = (
   isDragging: boolean,
-  isActive: boolean
+  isActive: boolean,
+  isSelected?: boolean
 ): string => {
   const baseClasses =
     'group flex w-full items-center gap-2 rounded-md px-3 py-3 text-start leading-tight outline-none transition-all min-h-[48px] cursor-pointer'
   const dragClasses = isDragging ? 'shadow-lg scale-105 bg-gray-50' : ''
-  const activeClasses = isActive
-    ? 'bg-pink-50 text-primary'
-    : 'focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-opacity-80 active:bg-opacity-80'
+  const selectedClasses = isSelected
+    ? 'bg-blue-50 border-2 border-blue-300'
+    : ''
+  const activeClasses =
+    isActive && !isSelected
+      ? 'bg-pink-50 text-primary'
+      : !isSelected
+        ? 'focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-opacity-80 active:bg-opacity-80'
+        : ''
 
-  return `${baseClasses} ${dragClasses} ${activeClasses}`.trim()
+  return `${baseClasses} ${dragClasses} ${selectedClasses} ${activeClasses}`.trim()
 }

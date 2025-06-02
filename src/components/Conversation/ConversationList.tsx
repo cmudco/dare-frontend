@@ -19,11 +19,17 @@ import {
 } from '@dnd-kit/sortable'
 import { AppDispatch, RootState } from '../../redux/store'
 import { Conversation } from '../../redux/types/conversation'
-import { updateActiveConversation, updateConversationOrder } from '../../redux/conversationSlice'
+import {
+  updateActiveConversation,
+  updateConversationOrder,
+  toggleConversationSelection,
+  clearSelectedConversations,
+} from '../../redux/conversationSlice'
 import {
   deleteConversation,
   updateConversation,
   updateConversationSortOrder,
+  deleteMultipleConversations,
 } from '@/redux/aynscThunks/conversation'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
@@ -54,6 +60,9 @@ const ConversationList: React.FC = () => {
   const searchQuery = useSelector(
     (state: RootState) => state.conversation?.searchQuery || ''
   )
+  const selectedConversations = useSelector(
+    (state: RootState) => state.conversation.selectedConversations
+  )
 
   const sensors = useDragSensors()
 
@@ -82,7 +91,9 @@ const ConversationList: React.FC = () => {
 
       if (isDragOperationValid(oldIndex, newIndex, active.id, over?.id)) {
         const newOrder = arrayMove(conversations, oldIndex, newIndex)
-        const orderedIds = newOrder.map((conversation) => conversation.conversationId)
+        const orderedIds = newOrder.map(
+          (conversation) => conversation.conversationId
+        )
 
         dispatch(updateConversationOrder(orderedIds))
 
@@ -97,21 +108,36 @@ const ConversationList: React.FC = () => {
     }
   }
 
-  const handleConversationClick = (conversation: Conversation) => {
-    dispatch(updateActiveConversation(conversation))
-  }
-
-  const handleBottomItemClick = (action?: string) => {
-    if (action === 'clear' && activeConversation) {
-      setIsDeleteConfirmOpen(true)
+  const handleConversationClick = (
+    conversation: Conversation,
+    event?: React.MouseEvent
+  ) => {
+    if (event && (event.metaKey || event.ctrlKey)) {
+      // Multi-select with Cmd/Ctrl + click
+      dispatch(toggleConversationSelection(conversation.conversationId))
+    } else {
+      dispatch(updateActiveConversation(conversation))
+      dispatch(clearSelectedConversations())
     }
   }
 
   const handleDeleteConfirm = async () => {
-    const conversationId = activeConversation?.conversationId
-    if (conversationId) {
-      await dispatch(deleteConversation(conversationId))
+    if (selectedConversations.length > 0) {
+      await dispatch(deleteMultipleConversations(selectedConversations))
       navigate('/conversation')
+    } else if (activeConversation) {
+      await dispatch(deleteConversation(activeConversation.conversationId))
+      navigate('/conversation')
+    }
+  }
+
+  const handleBottomItemClick = (action?: string) => {
+    if (action === 'clear') {
+      if (selectedConversations.length > 0) {
+        setIsDeleteConfirmOpen(true)
+      } else if (activeConversation) {
+        setIsDeleteConfirmOpen(true)
+      }
     }
   }
 
@@ -143,7 +169,7 @@ const ConversationList: React.FC = () => {
 
   const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      ; (e.target as HTMLInputElement).blur()
+      ;(e.target as HTMLInputElement).blur()
     } else if (e.key === 'Escape') {
       setEditingId(null)
     }
@@ -159,17 +185,22 @@ const ConversationList: React.FC = () => {
       >
         <div className='flex h-[65vh] w-full flex-col overflow-scroll'>
           <SortableContext
-            items={filteredConversations.map(c => c.conversationId)}
+            items={filteredConversations.map((c) => c.conversationId)}
             strategy={verticalListSortingStrategy}
           >
             {filteredConversations.map((conversation) => {
               const conversationId = conversation.conversationId
-              const isActive = isConversationActive(conversation, location.pathname)
+              const isActive = isConversationActive(
+                conversation,
+                location.pathname
+              )
+              const isSelected = selectedConversations.includes(conversationId)
               return (
                 <SortableConversationItem
                   key={conversationId}
                   conversation={conversation}
                   isActive={isActive}
+                  isSelected={isSelected}
                   editingId={editingId}
                   editValue={editValue}
                   onConversationClick={handleConversationClick}
@@ -185,12 +216,14 @@ const ConversationList: React.FC = () => {
 
         <DragOverlay>
           {activeId ? (
-            <div className="bg-white shadow-lg rounded-md border border-gray-200 opacity-95 px-3 py-3 min-h-[48px]">
+            <div className='min-h-[48px] rounded-md border border-gray-200 bg-white px-3 py-3 opacity-95 shadow-lg'>
               {(() => {
-                const draggedConversation = conversations.find(c => c.conversationId === activeId)
+                const draggedConversation = conversations.find(
+                  (c) => c.conversationId === activeId
+                )
                 return draggedConversation ? (
-                  <div className="flex items-center">
-                    <ChatBubbleLeftEllipsisIcon className='w-6 h-6 text-gray-600 mr-3' />
+                  <div className='flex items-center'>
+                    <ChatBubbleLeftEllipsisIcon className='mr-3 h-6 w-6 text-gray-600' />
                     <span className='text-gray-900'>
                       {getConversationTitle(draggedConversation)}
                     </span>
@@ -204,25 +237,36 @@ const ConversationList: React.FC = () => {
       <hr className='mt-4 border-gray-200' />
       <div className=''>
         {bottomItems.map((item) => {
-          const isDisabled = item.action === 'clear' && !activeConversation
-          // || item.disabled === true (temporarily disabled Dark Mode)
+          const hasSelectedConversations = selectedConversations.length > 0
+          const isDisabled =
+            item.action === 'clear' &&
+            !activeConversation &&
+            !hasSelectedConversations
+          const buttonText =
+            item.action === 'clear' && hasSelectedConversations
+              ? 'Clear Selected Conversations'
+              : item.name
+
           return (
             <div
               key={item.name}
               onClick={() => !isDisabled && handleBottomItemClick(item.action)}
-              className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight outline-none transition-all ${location.pathname === item.name
-                ? 'bg-pink-50 text-primary'
-                : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80'
-                } ${isDisabled
+              className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight outline-none transition-all ${
+                location.pathname === item.name
+                  ? 'bg-pink-50 text-primary'
+                  : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80'
+              } ${
+                isDisabled
                   ? 'cursor-not-allowed text-gray-400 line-through opacity-50'
                   : 'cursor-pointer'
-                }`}
+              }`}
             >
               <item.icon
-                className={`mr-4 h-5 w-5 font-bold ${isDisabled ? 'text-gray-400' : ''
-                  }`}
+                className={`mr-4 h-5 w-5 font-bold ${
+                  isDisabled ? 'text-gray-400' : ''
+                }`}
               />
-              {item.name}
+              {buttonText}
             </div>
           )
         })}
@@ -232,9 +276,21 @@ const ConversationList: React.FC = () => {
         isOpen={isDeleteConfirmOpen}
         onClose={() => setIsDeleteConfirmOpen(false)}
         onDelete={handleDeleteConfirm}
-        title='Clear Conversation'
-        description='Are you sure you want to delete this conversation? This action cannot be undone.'
-        itemName={activeConversation?.title || 'New Chat'}
+        title={
+          selectedConversations.length > 0
+            ? 'Delete Conversations'
+            : 'Clear Conversation'
+        }
+        description={
+          selectedConversations.length > 0
+            ? `Are you sure you want to delete ${selectedConversations.length} selected conversation${selectedConversations.length > 1 ? 's' : ''}? This action cannot be undone.`
+            : 'Are you sure you want to delete this conversation? This action cannot be undone.'
+        }
+        itemName={
+          selectedConversations.length > 0
+            ? `${selectedConversations.length} conversation${selectedConversations.length > 1 ? 's' : ''}`
+            : activeConversation?.title || 'New Chat'
+        }
         confirmText='Delete'
       />
     </nav>
