@@ -1,7 +1,11 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
-import { clonePrompt, deletePrompt } from '../../redux/aynscThunks/prompt'
+import {
+  clonePrompt,
+  deletePrompt,
+  getPrompts,
+} from '../../redux/aynscThunks/prompt'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
 import {
   formatDate,
@@ -52,7 +56,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
   const { prompts, loading } = useSelector((state: RootState) => state.prompt)
 
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const [deletePromptId, setDeletePromptId] = useState<string | null>(null)
   const [deletePromptTitle, setDeletePromptTitle] = useState<string>('')
   const [versionHistoryPromptId, setVersionHistoryPromptId] = useState<
@@ -108,6 +112,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
     if (deletePromptId) {
       try {
         await dispatch(deletePrompt(deletePromptId)).unwrap()
+        dispatch(getPrompts())
       } catch (error) {
         console.error('Failed to delete prompt:', error)
       }

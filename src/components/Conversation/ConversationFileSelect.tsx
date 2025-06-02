@@ -11,6 +11,7 @@ import {
 import type { RootState, AppDispatch } from '@/redux/store'
 import {
   updateSelectedFiles,
+  updateSelectedEmbeddings,
   updateSelectedTags,
   updateSelectedFolders,
 } from '@/redux/conversationSlice'
@@ -39,6 +40,9 @@ const ConversationFileSelect: React.FC = () => {
   const selectedFiles = useSelector(
     (state: RootState) => state.conversation.selectedFiles
   )
+  const selectedEmbeddings = useSelector(
+    (state: RootState) => state.conversation.selectedEmbeddings
+  )
   const selectedTags = useSelector(
     (state: RootState) => state.conversation.selectedTags
   )
@@ -50,9 +54,9 @@ const ConversationFileSelect: React.FC = () => {
   const [open, setOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState<'files' | 'tags' | 'folders'>(
-    'files'
-  )
+  const [activeTab, setActiveTab] = useState<
+    'files' | 'embeddings' | 'tags' | 'folders'
+  >('files')
 
   const filteredFiles = useMemo(() => {
     if (!user || user.vectorDb === undefined) {
@@ -88,6 +92,15 @@ const ConversationFileSelect: React.FC = () => {
     dispatch(updateSelectedFiles(newSelectedFiles))
   }
 
+  const handleToggleEmbedding = (file: MyFile) => {
+    const newSelectedEmbeddings = selectedEmbeddings.some(
+      (f) => f.id === file.id
+    )
+      ? selectedEmbeddings.filter((f) => f.id !== file.id)
+      : [...selectedEmbeddings, file]
+    dispatch(updateSelectedEmbeddings(newSelectedEmbeddings))
+  }
+
   const handleToggleTag = (tag: Tag) => {
     const newSelectedTags = selectedTags.some((t) => t.id === tag.id)
       ? selectedTags.filter((t) => t.id !== tag.id)
@@ -104,6 +117,7 @@ const ConversationFileSelect: React.FC = () => {
 
   const clearSelections = () => {
     dispatch(updateSelectedFiles([]))
+    dispatch(updateSelectedEmbeddings([]))
     dispatch(updateSelectedTags([]))
     dispatch(updateSelectedFolders([]))
   }
@@ -159,11 +173,14 @@ const ConversationFileSelect: React.FC = () => {
             <Tabs
               value={activeTab}
               onValueChange={(value) =>
-                setActiveTab(value as 'files' | 'tags' | 'folders')
+                setActiveTab(
+                  value as 'files' | 'embeddings' | 'tags' | 'folders'
+                )
               }
             >
-              <TabsList className='grid w-full grid-cols-3'>
+              <TabsList className='grid w-full grid-cols-4'>
                 <TabsTrigger value='files'>Files</TabsTrigger>
+                <TabsTrigger value='embeddings'>Embeddings</TabsTrigger>
                 <TabsTrigger value='tags'>Tags</TabsTrigger>
                 <TabsTrigger value='folders'>Folders</TabsTrigger>
               </TabsList>
@@ -184,6 +201,37 @@ const ConversationFileSelect: React.FC = () => {
                         }`}
                       >
                         {selectedFiles.some((f) => f.id === file.id) && (
+                          <Check className='h-3 w-3 text-primary-foreground' />
+                        )}
+                      </div>
+                      <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+                      <span className='text-sm'>{file.name}</span>
+                    </div>
+                  ))}
+                  {filteredFiles.length === 0 && (
+                    <p className='py-4 text-center text-muted-foreground'>
+                      No files found
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value='embeddings' className='mt-4'>
+                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                  {filteredFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      onClick={() => handleToggleEmbedding(file)}
+                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-muted'
+                    >
+                      <div
+                        className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
+                          selectedEmbeddings.some((f) => f.id === file.id)
+                            ? 'border-primary bg-primary'
+                            : 'border-input hover:border-muted-foreground'
+                        }`}
+                      >
+                        {selectedEmbeddings.some((f) => f.id === file.id) && (
                           <Check className='h-3 w-3 text-primary-foreground' />
                         )}
                       </div>
@@ -297,8 +345,9 @@ const ConversationFileSelect: React.FC = () => {
                 Clear
               </Button>
               <Button size='sm' onClick={() => setOpen(false)}>
-                Done ({selectedFiles.length} files, {selectedTags.length} tags,{' '}
-                {selectedFolders.length} folders)
+                Done ({selectedFiles.length} files, {selectedEmbeddings.length}{' '}
+                embeddings, {selectedTags.length} tags, {selectedFolders.length}{' '}
+                folders)
               </Button>
             </div>
           </div>

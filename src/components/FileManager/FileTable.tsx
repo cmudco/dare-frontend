@@ -55,7 +55,7 @@ const FileTable = () => {
   const user = useSelector((state: RootState) => state.user.user)
 
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const [deleteFileId, setDeleteFileId] = useState<number | null>(null)
   const [deleteFileName, setDeleteFileName] = useState<string>('')
   const [sortColumn, setSortColumn] = useState<string | null>(null)

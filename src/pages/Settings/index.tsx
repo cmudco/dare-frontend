@@ -1,3 +1,4 @@
+import { ChangePasswordForm } from '@/components/Auth/ChangePasswordForm'
 import { ChunkSettingsForm } from '@/components/Auth/ChunkSettingsForm'
 const Settings = () => {
   return (
@@ -9,6 +10,7 @@ const Settings = () => {
         </p>
       </div>
       <ChunkSettingsForm />
+      <ChangePasswordForm />
     </div>
   )
 }
