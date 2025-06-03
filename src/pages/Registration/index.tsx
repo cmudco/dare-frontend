@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import AuthCard from '../../components/Auth/AuthCard'
 import AuthFormFooter from '../../components/Auth/AuthFormFooter'
 import { AppDispatch } from '../../redux/store'
-import { userRegister } from '../../redux/aynscThunks/user'
+import { userRegister } from '../../redux/asyncThunks/user'
 import {
   SignupFormValues,
   signupInitialValues,

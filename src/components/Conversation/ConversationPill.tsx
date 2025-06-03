@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   sendMessage,
   createConversation,
-} from '../../redux/aynscThunks/conversation'
+} from '../../redux/asyncThunks/conversation'
 import ConversationFileSelect from './ConversationFileSelect'
 import ModelConfigurationPanel from './ModelConfigurationPanel'
 import { ArrowUp, Pencil, X } from 'lucide-react'

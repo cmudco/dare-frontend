@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../redux/hooks'
 import AuthCard from './AuthCard'
-import { verifyEmailRegistration } from '@/redux/aynscThunks/user'
+import { verifyEmailRegistration } from '@/redux/asyncThunks/user'
 
 const VerifyEmailScreen = () => {
   const [searchParams] = useSearchParams()

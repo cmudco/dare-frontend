@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { clearCreditError } from '@/redux/websocketSlice'
-import { getWallet } from '@/redux/aynscThunks/billing'
+import { getWallet } from '@/redux/asyncThunks/billing'
 import { XCircle } from 'lucide-react'
 
 const CreditErrorAlert: React.FC = () => {

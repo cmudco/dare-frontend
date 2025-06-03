@@ -10,7 +10,7 @@ import * as Yup from 'yup'
 import {
   fetchChunkSettings,
   updateChunkSettings,
-} from '@/redux/aynscThunks/user'
+} from '@/redux/asyncThunks/user'
 import { ChunkSettings } from '@/redux/types/user'
 
 const chunkSettingsValidationSchema = Yup.object({

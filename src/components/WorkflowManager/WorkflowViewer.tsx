@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
-import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
+import { getWorkflowRunById } from '@/redux/asyncThunks/workflow.ts'
 import { getRunStatusBadge } from '@/utils/constants/workflow'
 import {
   WorkflowRunStepStatus,

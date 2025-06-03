@@ -9,7 +9,7 @@ import {
   updateMessageThunk,
   updateConversationSortOrder,
   deleteMultipleConversations,
-} from './aynscThunks/conversation'
+} from './asyncThunks/conversation'
 import { Message, Conversation, LLMModel } from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'

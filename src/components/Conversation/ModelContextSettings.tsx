@@ -16,7 +16,7 @@ import {
 } from '../ui/select'
 import { MODEL_CONFIG } from '../../config/modelConfig'
 import { RotateCw, X } from 'lucide-react'
-import { updateConversation } from '@/redux/aynscThunks/conversation'
+import { updateConversation } from '@/redux/asyncThunks/conversation'
 
 interface ModelContextSettingsProps {
   onClose: () => void

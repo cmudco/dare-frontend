@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialBillingState } from './initialState/billing'
 
-import { getTransactions, getWallet } from './aynscThunks/billing'
+import { getTransactions, getWallet } from './asyncThunks/billing'
 import { Transaction, Wallet } from './types/billing'
 
 const billingSlice = createSlice({

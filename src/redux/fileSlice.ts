@@ -12,7 +12,7 @@ import {
   moveFilesToFolder,
   removeFileFromFolder,
   uploadFolder,
-} from './aynscThunks/file'
+} from './asyncThunks/file'
 import { initialState } from './initialState/files'
 
 const fileSlice = createSlice({

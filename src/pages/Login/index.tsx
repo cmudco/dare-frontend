@@ -13,7 +13,7 @@ import {
   getUserData,
   userLogin,
   resendVerification,
-} from '../../redux/aynscThunks/user'
+} from '../../redux/asyncThunks/user'
 import { resetError } from '../../redux/userSlice'
 import { useAppSelector } from '../../redux/hooks'
 

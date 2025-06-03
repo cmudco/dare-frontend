@@ -1,7 +1,7 @@
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
-import { createOrUpdatePrompt } from '../../redux/aynscThunks/prompt'
+import { createOrUpdatePrompt } from '../../redux/asyncThunks/prompt'
 import { clearSelectedPrompt, closeModal } from '../../redux/promptSlice'
 import {
   Dialog,
@@ -17,7 +17,7 @@ import { Label } from '../ui/label'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import Tiptap from '../Tiptap'
-import { getUserData } from '@/redux/aynscThunks/user'
+import { getUserData } from '@/redux/asyncThunks/user'
 import { Switch } from '@/components/ui/switch'
 
 const promptValidationSchema = Yup.object().shape({

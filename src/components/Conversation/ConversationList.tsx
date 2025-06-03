@@ -30,7 +30,7 @@ import {
   updateConversation,
   updateConversationSortOrder,
   deleteMultipleConversations,
-} from '@/redux/aynscThunks/conversation'
+} from '@/redux/asyncThunks/conversation'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
 import {

@@ -23,9 +23,9 @@ import rehypeHighlight from 'rehype-highlight'
 import { CodeBlock } from './CodeBlock'
 import { MermaidBlock } from './MermaidBlock'
 import { PencilIcon } from '@heroicons/react/20/solid'
-import { updateMessageThunk } from '../../redux/aynscThunks/conversation'
+import { updateMessageThunk } from '../../redux/asyncThunks/conversation'
 import { AppDispatch } from '../../redux/store'
-import { regenerateResponse } from '@/redux/aynscThunks/websocket'
+import { regenerateResponse } from '@/redux/asyncThunks/websocket'
 import FeedbackModal from './FeedbackModal'
 
 mermaid.initialize({

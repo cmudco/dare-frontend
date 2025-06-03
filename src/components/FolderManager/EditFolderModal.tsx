@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from '../../redux/store'
-import { updateFolder } from '../../redux/aynscThunks/file'
+import { updateFolder } from '../../redux/asyncThunks/file'
 import {
   Dialog,
   DialogContent,

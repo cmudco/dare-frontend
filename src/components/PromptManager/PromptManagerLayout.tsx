@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from '../../redux/store'
-import { getPrompts } from '../../redux/aynscThunks/prompt'
+import { getPrompts } from '../../redux/asyncThunks/prompt'
 import PromptHeader from './PromptHeader'
 import PromptTable from './PromptTable'
 import PromptModal from './PromptModal'

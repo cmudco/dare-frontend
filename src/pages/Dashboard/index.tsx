@@ -7,8 +7,8 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getWallet } from '@/redux/aynscThunks/billing'
-import { getUserStats } from '@/redux/aynscThunks/user'
+import { getWallet } from '@/redux/asyncThunks/billing'
+import { getUserStats } from '@/redux/asyncThunks/user'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   Activity,

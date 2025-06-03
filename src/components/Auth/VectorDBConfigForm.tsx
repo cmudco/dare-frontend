@@ -17,7 +17,7 @@ import { getVectorDBName, VectorDbSource } from '@/utils/constants/user'
 import {
   updateVectorDBSetting,
   fetchVectorDBSetting,
-} from '@/redux/aynscThunks/user'
+} from '@/redux/asyncThunks/user'
 
 export const VectorDBConfigForm: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()

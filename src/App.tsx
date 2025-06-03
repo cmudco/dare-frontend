@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { getUserData } from './redux/aynscThunks/user'
+import { getUserData } from './redux/asyncThunks/user'
 import { AppDispatch, RootState } from './redux/store'
 import AppRoutes from './routes/AppRoutes'
 import Loader from './components/Loader'

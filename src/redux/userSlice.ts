@@ -17,7 +17,7 @@ import {
   fetchVectorDBSetting,
   fetchChunkSettings,
   updateChunkSettings,
-} from './aynscThunks/user'
+} from './asyncThunks/user'
 
 const userSlice = createSlice({
   name: 'user',

@@ -4,7 +4,7 @@ import { AppDispatch, RootState } from '@/redux/store'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Button } from '../ui/button'
-import { updateProfilePicture } from '@/redux/aynscThunks/user'
+import { updateProfilePicture } from '@/redux/asyncThunks/user'
 import { ProfileSettings } from '@/redux/types/user'
 
 export const ProfileForm: React.FC = () => {

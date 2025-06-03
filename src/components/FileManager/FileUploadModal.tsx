@@ -8,8 +8,8 @@ import {
   updateRemoveTag,
   setError,
 } from '../../redux/fileSlice'
-import { getFiles, uploadNewFile } from '../../redux/aynscThunks/file'
-import { addTag, getTags } from '../../redux/aynscThunks/tag'
+import { getFiles, uploadNewFile } from '../../redux/asyncThunks/file'
+import { addTag, getTags } from '../../redux/asyncThunks/tag'
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
 
 import {

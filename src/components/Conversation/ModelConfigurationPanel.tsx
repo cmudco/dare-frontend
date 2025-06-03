@@ -19,7 +19,7 @@ import {
   getHistoryLimitColor,
   getHistoryLimitDescription,
 } from '@/utils/modelConfigUtils'
-import { updateConversation } from '@/redux/aynscThunks/conversation'
+import { updateConversation } from '@/redux/asyncThunks/conversation'
 
 const ModelConfigurationPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()

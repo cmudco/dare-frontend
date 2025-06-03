@@ -5,7 +5,7 @@ import {
   updateSelectedModel,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
-import { getAvailableModels } from '../../redux/aynscThunks/conversation'
+import { getAvailableModels } from '../../redux/asyncThunks/conversation'
 import { LLMModel } from '@/redux/types/conversation'
 import {
   DropdownMenu,

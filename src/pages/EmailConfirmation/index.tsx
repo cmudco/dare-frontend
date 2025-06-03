@@ -5,7 +5,7 @@ import AuthFormFooter from '../../components/Auth/AuthFormFooter'
 import AuthCard from '../../components/Auth/AuthCard'
 import * as Yup from 'yup'
 import { AppDispatch } from '../../redux/store'
-import { resendVerification } from '../../redux/aynscThunks/user'
+import { resendVerification } from '../../redux/asyncThunks/user'
 
 const EmailConfirmationScreen: React.FC = () => {
   const navigate = useNavigate()

@@ -8,7 +8,7 @@ import {
 } from './validation'
 import { FormikValues } from 'formik'
 import { AppDispatch } from '../../redux/store'
-import { resetPassword } from '../../redux/aynscThunks/user'
+import { resetPassword } from '../../redux/asyncThunks/user'
 
 const ResetPasswordScreen: React.FC = () => {
   const navigate = useNavigate()
