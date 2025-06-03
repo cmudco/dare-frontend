@@ -1,5 +1,10 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { Conversation, Message, MessageReaction } from '../types/conversation'
+import {
+  Conversation,
+  ConversationSortOrder,
+  Message,
+  MessageReaction,
+} from '../types/conversation'
 import {
   getModelsAPI,
   createConversationAPI,
@@ -7,6 +12,8 @@ import {
   deleteConversationAPI,
   updateConversationAPI,
   updateMessageAPI,
+  updateConversationSortOrderAPI,
+  deleteMultipleConversationsAPI,
 } from '../../api/conversation'
 import { AppDispatch } from '../store'
 import { sendWebSocketMessage } from './websocket'
@@ -102,6 +109,35 @@ export const sendMessage = createAsyncThunk(
     const dispatch = thunkAPI.dispatch as AppDispatch
     try {
       dispatch(sendWebSocketMessage(message))
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateConversationSortOrder = createAsyncThunk<
+  void,
+  ConversationSortOrder[],
+  { rejectValue: string }
+>('conversation/updateConversationSortOrder', async (updates, thunkAPI) => {
+  try {
+    await updateConversationSortOrderAPI(updates)
+  } catch (error) {
+    console.error('Error updating conversation sort order:', error)
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const deleteMultipleConversations = createAsyncThunk<
+  string[],
+  string[],
+  { rejectValue: string }
+>(
+  'conversation/deleteMultipleConversations',
+  async (conversationIds, thunkAPI) => {
+    try {
+      await deleteMultipleConversationsAPI(conversationIds)
+      return conversationIds
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

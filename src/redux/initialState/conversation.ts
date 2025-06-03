@@ -14,6 +14,7 @@ export const initialState: ConversationState = {
   selectedEmbeddings: [] as MyFile[],
   selectedTags: [] as Tag[],
   selectedFolders: [] as MyFolder[],
+  selectedConversations: [],
   showDropdown: false,
   hoveredModel: null,
   conversationInput: '',
