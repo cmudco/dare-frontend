@@ -264,6 +264,7 @@ export const conversationSlice = createSlice({
             ...state.activeConversationMessages[messageIndex],
             isLiked: action.payload.isLiked,
             isDisliked: action.payload.isDisliked,
+            dislikeFeedback: action.payload.dislikeFeedback,
           }
         }
       })

@@ -26,6 +26,7 @@ import { PencilIcon } from '@heroicons/react/20/solid'
 import { updateMessageThunk } from '../../redux/aynscThunks/conversation'
 import { AppDispatch } from '../../redux/store'
 import { regenerateResponse } from '@/redux/aynscThunks/websocket'
+import FeedbackModal from './FeedbackModal'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -45,6 +46,7 @@ const Message: React.FC<MessageProps> = ({
   const user = useSelector((state: RootState) => state.user.user)
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
   const [showOriginal, setShowOriginal] = useState(false)
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
 
   if (!message) return null
 
@@ -58,11 +60,30 @@ const Message: React.FC<MessageProps> = ({
   }
 
   const handleReaction = (isLike: boolean) => {
-    if (message.id) {
+    if (!message.id) return
+
+    if (isLike || message.isDisliked) {
       dispatch(
         updateMessageThunk({
           messageId: message.id,
           reaction: { isLiked: isLike, isDisliked: !isLike },
+        })
+      )
+    } else {
+      setIsFeedbackModalOpen(true)
+    }
+  }
+
+  const handleFeedbackSubmit = (feedback: string) => {
+    if (message.id) {
+      dispatch(
+        updateMessageThunk({
+          messageId: message.id,
+          reaction: {
+            isLiked: false,
+            isDisliked: true,
+            dislikeFeedback: feedback.trim() || undefined,
+          },
         })
       )
     }
@@ -334,6 +355,12 @@ const Message: React.FC<MessageProps> = ({
             )}
           </div>
         )}
+
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+        onSubmit={handleFeedbackSubmit}
+      />
     </div>
   )
 }
