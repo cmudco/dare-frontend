@@ -58,13 +58,13 @@ const ModelPicker: React.FC = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button className='flex h-10 border-gray-200 bg-white px-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'>
-          <Box className='h-4 w-4' />
+          <Box className='h-2 w-4' />
           {getModelButtonText()}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align='end'
-        className='w-72 rounded-md bg-white p-2 shadow-lg dark:bg-gray-900'
+        className='max-h-[70vh] min-h-[20vh] w-72 overflow-y-auto rounded-md bg-white p-2 shadow-lg dark:bg-gray-900'
       >
         {loading && (
           <p className='py-2 text-center text-gray-500'>Loading models...</p>
