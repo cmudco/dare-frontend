@@ -29,11 +29,16 @@ export interface User {
   vectorDb?: VectorDbSource
   defaultPrompt?: Prompt
   chunkSettings?: ChunkSettings
+  conversationSettings?: ConversationSettings
 }
 
 export interface ChunkSettings {
   chunkSize: number
   overlapSize: number
+}
+
+export interface ConversationSettings {
+  fontSize: 'xs' | 'sm' | 'base' | 'lg' | 'xl'
 }
 
 export interface UserState {
@@ -47,6 +52,7 @@ export interface UserState {
   successMessage: string | null
   stats: UserStats | null
   chunkSettings: ChunkSettings | null
+  conversationSettings: ConversationSettings | null
 }
 
 export type ChangePasswordValues = {

@@ -44,9 +44,31 @@ const Message: React.FC<MessageProps> = ({
     (state: RootState) => state.conversation.availableModels
   )
   const user = useSelector((state: RootState) => state.user.user)
+  const conversationSettings = useSelector(
+    (state: RootState) => state.user.conversationSettings
+  )
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
   const [showOriginal, setShowOriginal] = useState(false)
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
+
+  // Function to get font size classes based on user preference
+  const getFontSizeClasses = () => {
+    const fontSize = conversationSettings?.fontSize || 'sm'
+    switch (fontSize) {
+      case 'xs':
+        return 'prose-xs text-xs'
+      case 'sm':
+        return 'prose-sm text-sm'
+      case 'base':
+        return 'prose text-base'
+      case 'lg':
+        return 'prose-lg text-lg'
+      case 'xl':
+        return 'prose-xl text-xl'
+      default:
+        return 'prose-sm text-sm'
+    }
+  }
 
   if (!message) return null
 
@@ -176,7 +198,7 @@ const Message: React.FC<MessageProps> = ({
               message.streaming ? 'animate-pulse' : ''
             }`}
           >
-            <div className='prose prose-sm max-w-none text-sm text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none'>
+            <div className={`prose ${getFontSizeClasses()} max-w-none text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
