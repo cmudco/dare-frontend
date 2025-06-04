@@ -5,6 +5,7 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Button } from '../ui/button'
 import { Slider } from '../ui/slider'
+import { Card } from '../ui/card'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import {
@@ -69,22 +70,25 @@ export const ChunkSettingsForm: React.FC = () => {
   })
 
   return (
-    <div className='mt-8 border-t pt-8'>
-      <h3 className='mb-4 text-lg font-semibold'>
-        Text Splitting & Chunking Preferences
-      </h3>
-      <p className='mb-4 text-sm text-gray-600'>
-        Sometimes, you may want to change the default way that new documents are
-        split and chunked before being inserted into your vector database. You
-        should only modify this setting if you understand how text splitting
-        works and it's side effects.
-      </p>
-      <p className='mb-6 text-sm text-gray-600'>
-        <strong>Note:</strong> Changes here will only apply to newly embedded
-        documents, not existing documents.
-      </p>
+    <Card className="p-6">
+      <div className="space-y-6">
+        <div>
+          <h3 className='text-lg font-semibold'>
+            Text Splitting & Chunking Preferences
+          </h3>
+          <p className='text-sm text-gray-600 mt-1'>
+            Sometimes, you may want to change the default way that new documents are
+            split and chunked before being inserted into your vector database. You
+            should only modify this setting if you understand how text splitting
+            works and it's side effects.
+          </p>
+          <p className='text-sm text-gray-600 mt-2'>
+            <strong>Note:</strong> Changes here will only apply to newly embedded
+            documents, not existing documents.
+          </p>
+        </div>
 
-      <form onSubmit={chunkFormik.handleSubmit} className='space-y-6'>
+        <form onSubmit={chunkFormik.handleSubmit} className='space-y-6'>
         <div>
           <Label
             className='mb-2 flex flex-col text-base font-normal'
@@ -188,7 +192,8 @@ export const ChunkSettingsForm: React.FC = () => {
         >
           {isLoading ? 'Updating...' : 'Update Chunking Settings'}
         </Button>
-      </form>
-    </div>
+        </form>
+      </div>
+    </Card>
   )
 }
