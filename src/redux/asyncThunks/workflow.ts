@@ -53,6 +53,9 @@ export const createOrUpdateWorkflow = createAsyncThunk(
           llm?: number | null
           maxTokens?: number | null
           temperature?: number | null
+          maxContextSnippets?: number | null
+          documentSimilarityThreshold?: number | null
+          isEmbeddings?: boolean
         }[]
       }
     },
