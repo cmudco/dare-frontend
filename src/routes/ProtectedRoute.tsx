@@ -13,6 +13,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
     return <Navigate to='/login' state={{ from: location }} replace />
   }
 
+  if (user && !user.isActive) {
+    return <Navigate to='/login' state={{ from: location }} replace />
+  }
+
   return <>{children}</>
 }
 

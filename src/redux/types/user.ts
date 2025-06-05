@@ -21,7 +21,7 @@ export interface User {
   role: string
   is_2fa_enabled: boolean
   is_2fa_pending: boolean
-  is_active: boolean
+  isActive: boolean
   is_staff: boolean
   roomid?: string
   invite_code?: string
