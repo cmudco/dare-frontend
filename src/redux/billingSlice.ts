@@ -1,8 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialBillingState } from './initialState/billing'
 
-import { getTransactions, getWallet } from './asyncThunks/billing'
-import { Transaction, Wallet } from './types/billing'
+import {
+  getTransactions,
+  getWallet,
+  getBillingModelStats,
+} from './asyncThunks/billing'
+import { Transaction, Wallet, BillingModelStatsResponse } from './types/billing'
 
 const billingSlice = createSlice({
   name: 'billing',
@@ -46,6 +50,22 @@ const billingSlice = createSlice({
       )
       .addCase(getTransactions.rejected, (state, action) => {
         state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(getBillingModelStats.pending, (state) => {
+        state.modelStatsLoading = true
+        state.error = null
+      })
+      .addCase(
+        getBillingModelStats.fulfilled,
+        (state, action: PayloadAction<BillingModelStatsResponse>) => {
+          state.modelStatsLoading = false
+          state.modelStats = action.payload.modelsBillingStats
+          state.overallStats = action.payload.overallStats
+        }
+      )
+      .addCase(getBillingModelStats.rejected, (state, action) => {
+        state.modelStatsLoading = false
         state.error = action.payload as string
       })
   },

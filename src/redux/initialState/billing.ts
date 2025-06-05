@@ -8,4 +8,7 @@ export const initialBillingState: BillingState = {
   previousPage: null,
   loading: false,
   error: null,
+  modelStats: [],
+  overallStats: null,
+  modelStatsLoading: false,
 }
