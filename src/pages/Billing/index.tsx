@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { getWallet, getTransactions } from '@/redux/aynscThunks/billing'
+import { getWallet, getTransactions } from '@/redux/asyncThunks/billing'
 import {
   Card,
   CardHeader,

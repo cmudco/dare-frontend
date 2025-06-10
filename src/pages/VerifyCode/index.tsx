@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import AuthCard from '../../components/Auth/AuthCard'
 import { FormikValues } from 'formik'
 import { AppDispatch } from '../../redux/store'
-import { verifyCode } from '../../redux/aynscThunks/user'
+import { verifyCode } from '../../redux/asyncThunks/user'
 
 import { updateUser } from '../../redux/userSlice'
 import {

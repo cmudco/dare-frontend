@@ -34,6 +34,7 @@ export interface Message {
   isEdited?: boolean
   isRegenerated?: boolean
   originalMessage?: string
+  dislikeFeedback?: string
 }
 
 export interface MessageProps {
@@ -88,6 +89,7 @@ export interface ConversationResponse {
 export interface MessageReaction {
   isLiked: boolean
   isDisliked: boolean
+  dislikeFeedback?: string
 }
 
 export interface ConversationSortOrder {

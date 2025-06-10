@@ -1,12 +1,7 @@
 import React from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
-import { AppDispatch, RootState } from '../../redux/store'
-import {
-  updateMaxContextSnippets,
-  updateDocumentSimilarityThreshold,
-} from '../../redux/conversationSlice'
+import { Label } from '../ui/label'
 import {
   Select,
   SelectContent,
@@ -15,25 +10,22 @@ import {
   SelectValue,
 } from '../ui/select'
 import { MODEL_CONFIG } from '../../config/modelConfig'
-import { RotateCw, X } from 'lucide-react'
-import { updateConversation } from '@/redux/asyncThunks/conversation'
+import { RotateCw } from 'lucide-react'
+import { Step } from '@/redux/types/workflow'
 
-interface ModelContextSettingsProps {
-  onClose: () => void
+interface WorkflowEmbeddingSettingsProps {
+  step: Step
+  onChange: (field: keyof Step, value: unknown) => void
 }
 
-const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
-  onClose,
+const WorkflowEmbeddingSettings: React.FC<WorkflowEmbeddingSettingsProps> = ({
+  step,
+  onChange,
 }) => {
-  const dispatch = useDispatch<AppDispatch>()
-  const activeConversation = useSelector(
-    (state: RootState) => state.conversation.activeConversation
-  )
   const maxContextSnippets =
-    activeConversation?.maxContextSnippets ?? MODEL_CONFIG.maxContextSnippets
+    step.maxContextSnippets ?? MODEL_CONFIG.maxContextSnippets
   const documentSimilarityThreshold =
-    activeConversation?.documentSimilarityThreshold ??
-    MODEL_CONFIG.documentSimilarityThreshold
+    step.documentSimilarityThreshold ?? MODEL_CONFIG.documentSimilarityThreshold
 
   const [snippetInput, setSnippetInput] = React.useState(
     maxContextSnippets.toString()
@@ -44,15 +36,7 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   }, [maxContextSnippets])
 
   const handleMaxContextSnippetsChange = (value: number) => {
-    dispatch(updateMaxContextSnippets(value))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { maxContextSnippets: value },
-        })
-      )
-    }
+    onChange('maxContextSnippets', value)
   }
 
   const handleSnippetInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,81 +63,49 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
 
   const handleDocumentSimilarityThresholdChange = (value: string) => {
     const threshold = parseFloat(value)
-    dispatch(updateDocumentSimilarityThreshold(threshold))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { documentSimilarityThreshold: threshold },
-        })
-      )
-    }
+    onChange('documentSimilarityThreshold', threshold)
   }
 
   const handleResetMaxContextSnippets = () => {
-    dispatch(updateMaxContextSnippets(MODEL_CONFIG.maxContextSnippets))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { maxContextSnippets: MODEL_CONFIG.maxContextSnippets },
-        })
-      )
-    }
+    onChange('maxContextSnippets', MODEL_CONFIG.maxContextSnippets)
   }
 
   const handleResetDocumentSimilarityThreshold = () => {
-    dispatch(
-      updateDocumentSimilarityThreshold(
-        MODEL_CONFIG.documentSimilarityThreshold
-      )
+    onChange(
+      'documentSimilarityThreshold',
+      MODEL_CONFIG.documentSimilarityThreshold
     )
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: {
-            documentSimilarityThreshold:
-              MODEL_CONFIG.documentSimilarityThreshold,
-          },
-        })
-      )
-    }
   }
 
   return (
-    <div className='space-y-4'>
+    <div className='space-y-4 rounded-md border border-blue-200 bg-blue-50 p-4'>
       <div className='flex items-center justify-between'>
-        <h3 className='text-md font-semibold'>Vector Database Settings</h3>
-        <Button
-          variant='ghost'
-          size='icon'
-          onClick={onClose}
-          aria-label='Close Settings'
-          className='h-6 w-6'
-        >
-          <X className='h-4 w-4' />
-        </Button>
+        <h4 className='text-sm font-medium text-blue-900'>
+          Embedding Settings
+        </h4>
       </div>
-      <hr />
+
       <div className='space-y-4'>
         <div className='space-y-2'>
           <div className='flex items-center justify-between'>
-            <h4 className='font-semibold'>
+            <Label className='text-sm font-medium text-blue-800'>
               Max Context Snippets (Recommended:{' '}
               {MODEL_CONFIG.maxContextSnippets})
-            </h4>
+            </Label>
             <Button
+              type='button'
               variant='ghost'
               size='icon'
               onClick={handleResetMaxContextSnippets}
               aria-label='Reset Max Context Snippets'
+              className='h-6 w-6'
             >
-              <RotateCw className='h-4 w-4' />
+              <RotateCw className='h-3 w-3' />
             </Button>
           </div>
           <div className='flex items-center space-x-2'>
             <Button
+              type='button'
               variant='outline'
               className='h-auto px-2 py-1'
               onClick={() =>
@@ -177,6 +129,7 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
               pattern='[0-9]*'
             />
             <Button
+              type='button'
               variant='outline'
               className='h-auto px-2 py-1'
               onClick={() =>
@@ -187,17 +140,21 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
             </Button>
           </div>
         </div>
-        <hr />
+
         <div className='space-y-2'>
           <div className='flex items-center justify-between'>
-            <h4 className='font-semibold'>Document Similarity threshold</h4>
+            <Label className='text-sm font-medium text-blue-800'>
+              Document Similarity Threshold
+            </Label>
             <Button
+              type='button'
               variant='ghost'
               size='icon'
               onClick={handleResetDocumentSimilarityThreshold}
               aria-label='Reset Document Similarity Threshold'
+              className='h-6 w-6'
             >
-              <RotateCw className='h-4 w-4' />
+              <RotateCw className='h-3 w-3' />
             </Button>
           </div>
           <Select
@@ -207,7 +164,6 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
             <SelectTrigger className='w-full'>
               <SelectValue placeholder='Select similarity threshold' />
             </SelectTrigger>
-
             <SelectContent>
               <SelectItem value='0.2'>Low (similarity score ≥ .20)</SelectItem>
               <SelectItem value='0.5'>
@@ -218,6 +174,7 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
           </Select>
         </div>
       </div>
+
       <style>{`
         input.hide-number-arrows::-webkit-outer-spin-button,
         input.hide-number-arrows::-webkit-inner-spin-button {
@@ -237,4 +194,4 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   )
 }
 
-export default ModelContextSettings
+export default WorkflowEmbeddingSettings

@@ -6,7 +6,7 @@ import { TABLE_HEAD, TAG_COLORS } from '../../utils/constants/file'
 import { formatFileSize } from '@/utils/files'
 import { SortDirection, sortFiles } from '@/utils/sortUtils'
 import { SortDirectionEnum } from '@/utils/constants/sort'
-import { getFolders, removeFileFromFolder } from '../../redux/aynscThunks/file'
+import { getFolders, removeFileFromFolder } from '../../redux/asyncThunks/file'
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import {

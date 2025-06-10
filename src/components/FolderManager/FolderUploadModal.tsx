@@ -6,7 +6,7 @@ import {
   getFiles,
   getFolders,
   uploadFolder,
-} from '../../redux/aynscThunks/file'
+} from '../../redux/asyncThunks/file'
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
 
 import {

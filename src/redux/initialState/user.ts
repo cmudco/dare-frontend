@@ -1,5 +1,15 @@
 import { UserState } from '../types/user'
 
+// Load conversation settings from localStorage with fallback
+const getStoredConversationSettings = () => {
+  try {
+    const stored = localStorage.getItem('conversationSettings')
+    return stored ? JSON.parse(stored) : { fontSize: 'sm' }
+  } catch {
+    return { fontSize: 'sm' }
+  }
+}
+
 export const initialState: UserState = {
   user: null,
   isAuthenticated: false,
@@ -11,4 +21,5 @@ export const initialState: UserState = {
   successMessage: null,
   stats: null,
   chunkSettings: null,
+  conversationSettings: getStoredConversationSettings(),
 }

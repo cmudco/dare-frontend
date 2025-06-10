@@ -17,7 +17,7 @@ import {
   fetchVectorDBSetting,
   fetchChunkSettings,
   updateChunkSettings,
-} from './aynscThunks/user'
+} from './asyncThunks/user'
 
 const userSlice = createSlice({
   name: 'user',
@@ -32,6 +32,14 @@ const userSlice = createSlice({
     },
     resetError(state) {
       state.error = null
+    },
+    updateConversationSettings(state, action) {
+      state.conversationSettings = {
+        ...state.conversationSettings,
+        ...action.payload
+      }
+      // Also store in localStorage for persistence
+      localStorage.setItem('conversationSettings', JSON.stringify(state.conversationSettings))
     },
   },
   extraReducers: (builder) => {
@@ -273,6 +281,6 @@ const userSlice = createSlice({
   },
 })
 
-export const { updateUser, logout, resetError } = userSlice.actions
+export const { updateUser, logout, resetError, updateConversationSettings } = userSlice.actions
 
 export default userSlice.reducer

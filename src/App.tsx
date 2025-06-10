@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { getUserData } from './redux/aynscThunks/user'
+import { getUserData } from './redux/asyncThunks/user'
 import { AppDispatch, RootState } from './redux/store'
 import AppRoutes from './routes/AppRoutes'
 import Loader from './components/Loader'
@@ -13,7 +13,7 @@ function App() {
     if (!user) {
       dispatch(getUserData())
     }
-  }, [])
+  }, [dispatch, user])
 
   const BackgroundCircle = () => (
     <div className='pointer-events-none fixed left-0 top-0 z-[-1] h-full w-full overflow-hidden backdrop-blur'>

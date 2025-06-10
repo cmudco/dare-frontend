@@ -1,4 +1,8 @@
-import { Transaction, Wallet } from '@/redux/types/billing'
+import {
+  Transaction,
+  Wallet,
+  BillingModelStatsResponse,
+} from '@/redux/types/billing'
 import { METHOD } from '@/utils/constants/requests'
 import { baseRequest } from '@/utils/requests'
 
@@ -27,3 +31,11 @@ export const getTransactionsAPI = async (
     method: METHOD.GET,
   })
 }
+
+export const getBillingModelStatsAPI =
+  async (): Promise<BillingModelStatsResponse> => {
+    return await baseRequest<BillingModelStatsResponse>({
+      url: 'api/billing/model_stats/',
+      method: METHOD.GET,
+    })
+  }

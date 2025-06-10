@@ -7,7 +7,7 @@ import {
   updateSearchQuery,
   updateSelectedTags,
 } from '../../redux/conversationSlice'
-import { createConversation } from '../../redux/aynscThunks/conversation'
+import { createConversation } from '../../redux/asyncThunks/conversation'
 import { AppDispatch, RootState } from '../../redux/store'
 import ConversationList from './ConversationList'
 import { useNavigate } from 'react-router-dom'
