@@ -23,6 +23,7 @@ const WorkflowForm: React.FC = () => {
     file: null,
     llm: null,
     order: 1,
+    isEmbeddings: false,
   }
 
   const initialValues: FormValues = {
@@ -46,6 +47,9 @@ const WorkflowForm: React.FC = () => {
         llm: step.llm?.id || null,
         max_tokens: step.maxTokens,
         temperature: step.temperature,
+        max_context_snippets: step.maxContextSnippets,
+        document_similarity_threshold: step.documentSimilarityThreshold,
+        is_embeddings: step.isEmbeddings || false,
       }))
 
       await dispatch(

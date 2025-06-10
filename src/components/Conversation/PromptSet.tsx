@@ -14,7 +14,7 @@ import { Input } from '../ui/input'
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../ui/dialog'
 import { Plus } from 'lucide-react'
 import { stripHtml } from '../../utils/textUtils'
-import { updateConversation } from '@/redux/aynscThunks/conversation'
+import { updateConversation } from '@/redux/asyncThunks/conversation'
 import { useAppSelector } from '@/redux/hooks'
 
 const RichTextPreview = ({ content }: { content: string }) => {

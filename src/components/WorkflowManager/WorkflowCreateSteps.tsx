@@ -32,6 +32,7 @@ const WorkflowAddSteps: React.FC<WorkflowStepsProps> = ({
         order: newOrder,
         maxTokens: MODEL_CONFIG.maxTokens,
         temperature: MODEL_CONFIG.temperature,
+        isEmbeddings: false,
       },
     ]
     setSteps(newSteps)

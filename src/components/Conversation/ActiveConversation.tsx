@@ -12,7 +12,7 @@ import MessageList from './MessageList'
 import {
   connectWebSocket,
   disconnectWebSocket,
-} from '../../redux/aynscThunks/websocket'
+} from '../../redux/asyncThunks/websocket'
 import { Card } from '../ui/card'
 import EmptyConversation from './EmptyConversation'
 import CreditErrorAlert from './CreditErrorAlert'

@@ -6,7 +6,7 @@ import {
   createOrUpdatePrompt,
   deletePrompt,
   clonePrompt,
-} from './aynscThunks/prompt'
+} from './asyncThunks/prompt'
 import { sortPrompts } from '../utils/sortUtils'
 import { SortDirectionEnum } from '@/utils/constants/sort'
 

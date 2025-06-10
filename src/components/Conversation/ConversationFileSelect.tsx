@@ -56,7 +56,7 @@ const ConversationFileSelect: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<
     'files' | 'embeddings' | 'tags' | 'folders'
-  >('files')
+  >('embeddings')
 
   const filteredFiles = useMemo(() => {
     if (!user || user.vectorDb === undefined) {
@@ -179,42 +179,11 @@ const ConversationFileSelect: React.FC = () => {
               }
             >
               <TabsList className='grid w-full grid-cols-4'>
-                <TabsTrigger value='files'>Files</TabsTrigger>
                 <TabsTrigger value='embeddings'>Embeddings</TabsTrigger>
+                <TabsTrigger value='files'>Files</TabsTrigger>
                 <TabsTrigger value='tags'>Tags</TabsTrigger>
                 <TabsTrigger value='folders'>Folders</TabsTrigger>
               </TabsList>
-
-              <TabsContent value='files' className='mt-4'>
-                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredFiles.map((file) => (
-                    <div
-                      key={file.id}
-                      onClick={() => handleToggleFile(file)}
-                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-muted'
-                    >
-                      <div
-                        className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                          selectedFiles.some((f) => f.id === file.id)
-                            ? 'border-primary bg-primary'
-                            : 'border-input hover:border-muted-foreground'
-                        }`}
-                      >
-                        {selectedFiles.some((f) => f.id === file.id) && (
-                          <Check className='h-3 w-3 text-primary-foreground' />
-                        )}
-                      </div>
-                      <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                      <span className='text-sm'>{file.name}</span>
-                    </div>
-                  ))}
-                  {filteredFiles.length === 0 && (
-                    <p className='py-4 text-center text-muted-foreground'>
-                      No files found
-                    </p>
-                  )}
-                </div>
-              </TabsContent>
 
               <TabsContent value='embeddings' className='mt-4'>
                 <div className='max-h-[300px] space-y-1 overflow-y-auto'>
@@ -232,6 +201,37 @@ const ConversationFileSelect: React.FC = () => {
                         }`}
                       >
                         {selectedEmbeddings.some((f) => f.id === file.id) && (
+                          <Check className='h-3 w-3 text-primary-foreground' />
+                        )}
+                      </div>
+                      <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+                      <span className='text-sm'>{file.name}</span>
+                    </div>
+                  ))}
+                  {filteredFiles.length === 0 && (
+                    <p className='py-4 text-center text-muted-foreground'>
+                      No files found
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value='files' className='mt-4'>
+                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                  {filteredFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      onClick={() => handleToggleFile(file)}
+                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-muted'
+                    >
+                      <div
+                        className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
+                          selectedFiles.some((f) => f.id === file.id)
+                            ? 'border-primary bg-primary'
+                            : 'border-input hover:border-muted-foreground'
+                        }`}
+                      >
+                        {selectedFiles.some((f) => f.id === file.id) && (
                           <Check className='h-3 w-3 text-primary-foreground' />
                         )}
                       </div>
@@ -344,11 +344,11 @@ const ConversationFileSelect: React.FC = () => {
               <Button variant='ghost' size='sm' onClick={clearSelections}>
                 Clear
               </Button>
-              <Button size='sm' onClick={() => setOpen(false)}>
-                Done ({selectedFiles.length} files, {selectedEmbeddings.length}{' '}
-                embeddings, {selectedTags.length} tags, {selectedFolders.length}{' '}
+                <Button size='sm' onClick={() => setOpen(false)}>
+                Done ({selectedEmbeddings.length} embeddings, {selectedFiles.length}{' '}
+                files, {selectedTags.length} tags, {selectedFolders.length}{' '}
                 folders)
-              </Button>
+                </Button>
             </div>
           </div>
         </PopoverContent>

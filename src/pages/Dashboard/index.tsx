@@ -7,8 +7,8 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getWallet } from '@/redux/aynscThunks/billing'
-import { getUserStats } from '@/redux/aynscThunks/user'
+import { getWallet } from '@/redux/asyncThunks/billing'
+import { getUserStats } from '@/redux/asyncThunks/user'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   Activity,
@@ -22,8 +22,9 @@ import {
   Send,
   Wallet as WalletIcon,
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import TokenBreakdownModal from '@/components/Dashboard/TokenBreakdownModal'
 
 const Dashboard = () => {
   const dispatch = useAppDispatch()
@@ -32,6 +33,10 @@ const Dashboard = () => {
   const { wallet, loading: billingLoading } = useAppSelector(
     (state) => state.billing
   )
+  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedTokenType, setSelectedTokenType] = useState<
+    'input' | 'output' | 'total'
+  >('total')
 
   useEffect(() => {
     dispatch(getUserStats())
@@ -40,6 +45,11 @@ const Dashboard = () => {
 
   const formatNumber = (num: number | string) => {
     return typeof num === 'string' ? num : num.toLocaleString()
+  }
+
+  const handleTokenCardClick = (tokenType: 'input' | 'output' | 'total') => {
+    setSelectedTokenType(tokenType)
+    setModalOpen(true)
   }
 
   const statCards = [
@@ -91,6 +101,7 @@ const Dashboard = () => {
       icon: <Inbox className='h-5 w-5 text-green-500' />,
       description: 'Total input tokens used',
       color: 'from-green-500 to-teal-400',
+      onClick: () => handleTokenCardClick('input'),
     },
     {
       title: 'Output Tokens',
@@ -98,6 +109,7 @@ const Dashboard = () => {
       icon: <Send className='h-5 w-5 text-orange-500' />,
       description: 'Total output tokens generated',
       color: 'from-orange-500 to-red-400',
+      onClick: () => handleTokenCardClick('output'),
     },
     {
       title: 'Total Tokens',
@@ -105,6 +117,7 @@ const Dashboard = () => {
       icon: <Activity className='h-5 w-5 text-purple-500' />,
       description: 'Combined input and output tokens',
       color: 'from-purple-500 to-fuchsia-400',
+      onClick: () => handleTokenCardClick('total'),
     },
     {
       title: 'Wallet Balance',
@@ -112,7 +125,6 @@ const Dashboard = () => {
       icon: <WalletIcon className='h-5 w-5 text-teal-500' />,
       description: 'Current wallet balance',
       color: 'from-teal-500 to-cyan-500',
-      link: '/billing/transactions',
       onClick: () => navigate('/billing/'),
     },
   ]
@@ -235,6 +247,12 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      <TokenBreakdownModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        tokenType={selectedTokenType}
+      />
     </div>
   )
 }

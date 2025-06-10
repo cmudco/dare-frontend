@@ -5,7 +5,7 @@ import {
   clonePrompt,
   deletePrompt,
   getPrompts,
-} from '../../redux/aynscThunks/prompt'
+} from '../../redux/asyncThunks/prompt'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
 import {
   formatDate,

@@ -13,6 +13,8 @@ import {
   Trash2,
   ChevronsUpDown,
   GripVertical,
+  HelpCircle,
+  Database,
 } from 'lucide-react'
 import {
   Collapsible,
@@ -23,6 +25,14 @@ import { WorkflowStepProps } from '@/redux/types/workflow'
 import { Slider } from '../ui/slider'
 import { MODEL_CONFIG } from '@/config/modelConfig'
 import { Label } from '../ui/label'
+import { Switch } from '../ui/switch'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip'
+import WorkflowEmbeddingSettings from './WorkflowEmbeddingSettings'
 import {
   getTemperatureColor,
   getTemperatureDescription,
@@ -290,6 +300,61 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
               </p>
             )}
           </div>
+
+          <TooltipProvider>
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <div className='space-y-1'>
+                  <Label className='text-sm font-medium'>Use Embeddings</Label>
+                  <p className='text-xs text-gray-500'>
+                    Enable document embeddings for context-aware responses
+                  </p>
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <Switch
+                    checked={step.isEmbeddings || false}
+                    onCheckedChange={(checked) =>
+                      onChange('isEmbeddings', checked)
+                    }
+                  />
+                  <Tooltip delayDuration={100}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        className='h-6 w-6 p-0'
+                      >
+                        <HelpCircle className='h-4 w-4 text-gray-500' />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side='left'
+                      className='z-[60] rounded-md bg-gray-900 p-2 text-white'
+                    >
+                      <p className='w-[280px] text-xs'>
+                        When enabled, this step will use document embeddings to
+                        provide context-aware responses based on the selected
+                        file.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              {step.isEmbeddings && (
+                <div className='mt-2 flex items-center space-x-2 rounded-md bg-blue-50 p-2'>
+                  <Database className='h-4 w-4 text-blue-600' />
+                  <p className='text-xs text-blue-700'>
+                    Embeddings enabled for this step
+                  </p>
+                </div>
+              )}
+            </div>
+          </TooltipProvider>
+
+          {step.isEmbeddings && (
+            <WorkflowEmbeddingSettings step={step} onChange={onChange} />
+          )}
         </div>
       </CollapsibleContent>
     </Collapsible>

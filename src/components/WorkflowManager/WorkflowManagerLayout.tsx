@@ -3,8 +3,8 @@ import WorkflowHeader from './WorkflowHeader'
 import WorkflowTable from './WorkflowTable'
 import WorkflowModal from './WorkflowModal'
 import { useAppDispatch } from '@/redux/hooks'
-import { getFiles } from '@/redux/aynscThunks/file'
-import { getAvailableModels } from '@/redux/aynscThunks/conversation'
+import { getFiles } from '@/redux/asyncThunks/file'
+import { getAvailableModels } from '@/redux/asyncThunks/conversation'
 import { getWorkflows } from '@/redux/asyncThunks/workflow'
 
 const WorkflowManagerLayout = () => {

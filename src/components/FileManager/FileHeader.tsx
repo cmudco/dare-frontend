@@ -10,7 +10,7 @@ import {
   openMoveModal,
   clearSelectedItems,
 } from '../../redux/fileSlice'
-import { deleteMultipleFiles, getFolders } from '../../redux/aynscThunks/file'
+import { deleteMultipleFiles, getFolders } from '../../redux/asyncThunks/file'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { RootState, AppDispatch } from '../../redux/store'

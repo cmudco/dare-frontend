@@ -23,9 +23,10 @@ import rehypeHighlight from 'rehype-highlight'
 import { CodeBlock } from './CodeBlock'
 import { MermaidBlock } from './MermaidBlock'
 import { PencilIcon } from '@heroicons/react/20/solid'
-import { updateMessageThunk } from '../../redux/aynscThunks/conversation'
+import { updateMessageThunk } from '../../redux/asyncThunks/conversation'
 import { AppDispatch } from '../../redux/store'
-import { regenerateResponse } from '@/redux/aynscThunks/websocket'
+import { regenerateResponse } from '@/redux/asyncThunks/websocket'
+import FeedbackModal from './FeedbackModal'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -43,8 +44,31 @@ const Message: React.FC<MessageProps> = ({
     (state: RootState) => state.conversation.availableModels
   )
   const user = useSelector((state: RootState) => state.user.user)
+  const conversationSettings = useSelector(
+    (state: RootState) => state.user.conversationSettings
+  )
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
   const [showOriginal, setShowOriginal] = useState(false)
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
+
+  // Function to get font size classes based on user preference
+  const getFontSizeClasses = () => {
+    const fontSize = conversationSettings?.fontSize || 'sm'
+    switch (fontSize) {
+      case 'xs':
+        return 'prose-xs text-xs'
+      case 'sm':
+        return 'prose-sm text-sm'
+      case 'base':
+        return 'prose text-base'
+      case 'lg':
+        return 'prose-lg text-lg'
+      case 'xl':
+        return 'prose-xl text-xl'
+      default:
+        return 'prose-sm text-sm'
+    }
+  }
 
   if (!message) return null
 
@@ -58,11 +82,30 @@ const Message: React.FC<MessageProps> = ({
   }
 
   const handleReaction = (isLike: boolean) => {
-    if (message.id) {
+    if (!message.id) return
+
+    if (isLike || message.isDisliked) {
       dispatch(
         updateMessageThunk({
           messageId: message.id,
           reaction: { isLiked: isLike, isDisliked: !isLike },
+        })
+      )
+    } else {
+      setIsFeedbackModalOpen(true)
+    }
+  }
+
+  const handleFeedbackSubmit = (feedback: string) => {
+    if (message.id) {
+      dispatch(
+        updateMessageThunk({
+          messageId: message.id,
+          reaction: {
+            isLiked: false,
+            isDisliked: true,
+            dislikeFeedback: feedback.trim() || undefined,
+          },
         })
       )
     }
@@ -155,7 +198,7 @@ const Message: React.FC<MessageProps> = ({
               message.streaming ? 'animate-pulse' : ''
             }`}
           >
-            <div className='prose prose-sm max-w-none text-sm text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none'>
+            <div className={`prose ${getFontSizeClasses()} max-w-none text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
@@ -334,6 +377,12 @@ const Message: React.FC<MessageProps> = ({
             )}
           </div>
         )}
+
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+        onSubmit={handleFeedbackSubmit}
+      />
     </div>
   )
 }

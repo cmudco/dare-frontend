@@ -1,5 +1,6 @@
 import { ChangePasswordForm } from '@/components/Auth/ChangePasswordForm'
 import { ChunkSettingsForm } from '@/components/Auth/ChunkSettingsForm'
+import ConversationSettingsForm from '@/components/Auth/ConversationSettingsForm'
 const Settings = () => {
   return (
     <div className='container mx-auto space-y-6 p-6'>
@@ -9,6 +10,7 @@ const Settings = () => {
           Manage your settings and preferences.
         </p>
       </div>
+      <ConversationSettingsForm />
       <ChunkSettingsForm />
       <ChangePasswordForm />
     </div>

@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../../redux/store'
-import { getFiles, getFolders } from '../../redux/aynscThunks/file'
-import { getTags } from '../../redux/aynscThunks/tag'
+import { getFiles, getFolders } from '../../redux/asyncThunks/file'
+import { getTags } from '../../redux/asyncThunks/tag'
 import { setCurrentView } from '../../redux/fileSlice'
 
 import FileUploadModal from './FileUploadModal'

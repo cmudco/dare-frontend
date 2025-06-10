@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/redux/store'
 import { Label } from '../ui/label'
 import { Button } from '../ui/button'
+import { Card } from '../ui/card'
 
 import {
   Select,
@@ -17,7 +18,7 @@ import { getVectorDBName, VectorDbSource } from '@/utils/constants/user'
 import {
   updateVectorDBSetting,
   fetchVectorDBSetting,
-} from '@/redux/aynscThunks/user'
+} from '@/redux/asyncThunks/user'
 
 export const VectorDBConfigForm: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -56,19 +57,25 @@ export const VectorDBConfigForm: React.FC = () => {
   const hasChanges = vectorDBValue !== initialVectorDBValue
 
   return (
-    <div className='mt-8 max-w-2xl border-t pt-8'>
-      <h3 className='mb-4 text-lg font-semibold'>
-        Vector Database Configuration
-      </h3>
+    <Card className="p-6">
+      <div className="space-y-6">
+        <div>
+          <h3 className='text-lg font-semibold'>
+            Vector Database Configuration
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Choose which vector database to use for your document search and embedding storage.
+          </p>
+        </div>
 
-      <div className='space-y-2'>
-        <Label className='text-base font-normal' htmlFor='vectorDb'>
-          Vector Database Provider
-        </Label>
-        <Select
-          value={vectorDBValue.toString()}
-          onValueChange={(value) => setVectorDBValue(parseInt(value))}
-        >
+        <div className='space-y-2'>
+          <Label className='text-base font-normal' htmlFor='vectorDb'>
+            Vector Database Provider
+          </Label>
+          <Select
+            value={vectorDBValue.toString()}
+            onValueChange={(value) => setVectorDBValue(parseInt(value))}
+          >
           <SelectTrigger className='h-10'>
             <div className='flex items-center gap-2'>
               {vectorDBValue == VectorDbSource.PINECONE ? (
@@ -101,7 +108,7 @@ export const VectorDBConfigForm: React.FC = () => {
           Choose which vector database to use for your document search and
           embedding storage
         </p>
-      </div>
+        </div>
 
       {success && (
         <div className='mt-2'>
@@ -120,6 +127,7 @@ export const VectorDBConfigForm: React.FC = () => {
       >
         {isSubmitting || loading ? 'Updating...' : 'Update Configuration'}
       </Button>
-    </div>
+      </div>
+    </Card>
   )
 }

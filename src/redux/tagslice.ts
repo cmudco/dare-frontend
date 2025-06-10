@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialTagState } from './initialState/tags'
 import { Tag } from './types/tags'
-import { addTag, editTag, getTags, removeTag } from './aynscThunks/tag'
+import { addTag, editTag, getTags, removeTag } from './asyncThunks/tag'
 
 const tagSlice = createSlice({
   name: 'tags',

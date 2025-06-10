@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
-import { deleteFile, getFolders } from '../../redux/aynscThunks/file'
+import { deleteFile, getFolders } from '../../redux/asyncThunks/file'
 import { addSelectedItem, removeSelectedItem } from '../../redux/fileSlice'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
 import { TABLE_HEAD, TAG_COLORS } from '../../utils/constants/file'

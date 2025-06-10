@@ -19,6 +19,9 @@ export interface Step {
   createdAt?: string
   maxTokens?: number
   temperature?: number
+  maxContextSnippets?: number
+  documentSimilarityThreshold?: number
+  isEmbeddings?: boolean
 }
 
 export interface WorkflowRunStep {

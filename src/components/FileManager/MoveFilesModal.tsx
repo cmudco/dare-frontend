@@ -7,7 +7,7 @@ import {
   moveFilesToFolder,
   getFiles,
   getFolders,
-} from '../../redux/aynscThunks/file'
+} from '../../redux/asyncThunks/file'
 import {
   Dialog,
   DialogContent,

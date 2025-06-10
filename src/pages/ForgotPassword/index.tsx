@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import AuthCard from '../../components/Auth/AuthCard'
 import { FormikValues } from 'formik'
 import { AppDispatch } from '../../redux/store'
-import { forgotPassword } from '../../redux/aynscThunks/user'
+import { forgotPassword } from '../../redux/asyncThunks/user'
 import {
   forgotPasswordInitialValues,
   forgotPasswordValidationSchema,

@@ -81,6 +81,15 @@ export const getUserData = createAsyncThunk<
     if (!user) {
       return thunkAPI.rejectWithValue('No user data found')
     }
+
+    if (!user.isActive) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('refresh_token')
+      return thunkAPI.rejectWithValue(
+        'This user has been set inactive. Please contact your administrator for assistance.'
+      )
+    }
+
     return user
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message)

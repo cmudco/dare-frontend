@@ -8,6 +8,9 @@ export interface BillingState {
   previousPage: string | null
   loading: boolean
   error: string | null
+  modelStats: BillingModelStats[]
+  overallStats: OverallStats | null
+  modelStatsLoading: boolean
 }
 
 export interface Wallet {
@@ -26,4 +29,31 @@ export interface Transaction {
   outputTokens: number
   createdAt: string
   updatedAt: string
+}
+
+export interface BillingModelStats {
+  llmId: number
+  llmName: string
+  llmIdentifier: string
+  llmProvider: string
+  inputTokens: number
+  outputTokens: number
+  totalTokens: number
+  totalCost: string
+  totalCostDecimal: number
+  transactionCount: number
+}
+
+export interface OverallStats {
+  totalCost: string
+  totalCostDecimal: number
+  totalInputTokens: number
+  totalOutputTokens: number
+  totalTokens: number
+  totalTransactions: number
+}
+
+export interface BillingModelStatsResponse {
+  modelsBillingStats: BillingModelStats[]
+  overallStats: OverallStats
 }

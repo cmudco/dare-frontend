@@ -3,8 +3,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { BellIcon, CreditCardIcon } from '@heroicons/react/24/solid'
 import { useNavigate } from 'react-router-dom'
 import { AppDispatch, RootState } from '../../redux/store'
-import { userLogout } from '../../redux/aynscThunks/user'
-import { getWallet } from '../../redux/aynscThunks/billing'
+import { userLogout } from '../../redux/asyncThunks/user'
+import { getWallet } from '../../redux/asyncThunks/billing'
 
 import {
   DropdownMenu,

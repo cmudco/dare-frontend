@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { FolderPlus, FolderInput, Plus, Upload } from 'lucide-react'
 import FolderModal from './FolderModal'
 import FolderUploadModal from './FolderUploadModal'
-import { createFolder } from '../../redux/aynscThunks/file'
+import { createFolder } from '../../redux/asyncThunks/file'
 import { setSearchQuery, openMoveModal } from '../../redux/fileSlice'
 import {
   DropdownMenu,

@@ -11,7 +11,7 @@ import {
   createPaginationConfig,
 } from '@/utils/tableUtils'
 import { SortDirectionEnum } from '@/utils/constants/sort'
-import { deleteFolder } from '../../redux/aynscThunks/file'
+import { deleteFolder } from '../../redux/asyncThunks/file'
 import { MyFolder } from '../../redux/types/files'
 
 import {

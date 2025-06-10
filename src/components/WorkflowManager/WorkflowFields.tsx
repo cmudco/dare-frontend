@@ -82,9 +82,9 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
       </div>
     </div>
 
-    <div className='space-y-2'>
-      <Label htmlFor='mode'>Mode</Label>
-      <TooltipProvider>
+    <TooltipProvider>
+      <div className='space-y-2'>
+        <Label htmlFor='mode'>Mode</Label>
         <Select
           value={values.mode ? values.mode.toString() : ''}
           onValueChange={(value) => setFieldValue('mode', parseInt(value))}
@@ -138,11 +138,11 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
             ))}
           </SelectContent>
         </Select>
-      </TooltipProvider>
-      {errors.mode && touched.mode && (
-        <p className='mt-1 text-xs text-red-500'>{errors.mode}</p>
-      )}
-    </div>
+        {errors.mode && touched.mode && (
+          <p className='mt-1 text-xs text-red-500'>{errors.mode}</p>
+        )}
+      </div>
+    </TooltipProvider>
   </>
 )
 

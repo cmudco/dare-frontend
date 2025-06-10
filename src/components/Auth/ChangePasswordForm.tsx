@@ -4,7 +4,8 @@ import { AppDispatch, RootState } from '@/redux/store'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Button } from '../ui/button'
-import { changePassword } from '@/redux/aynscThunks/user'
+import { Card } from '../ui/card'
+import { changePassword } from '@/redux/asyncThunks/user'
 import { FormikHelpers, useFormik } from 'formik'
 import { changePasswordValidationSchema } from '@/pages/ProfileScreen/validation'
 import { ChangePasswordValues } from '@/redux/types/user'
@@ -49,9 +50,16 @@ export const ChangePasswordForm: React.FC = () => {
   })
 
   return (
-    <div className='mt-8 border-t pt-8'>
-      <h3 className='mb-4 text-lg font-semibold'>Change Password</h3>
-      <form onSubmit={passwordFormik.handleSubmit} className='space-y-4'>
+    <Card className="p-6">
+      <div className="space-y-6">
+        <div>
+          <h3 className='text-lg font-semibold'>Change Password</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Update your account password for better security.
+          </p>
+        </div>
+        
+        <form onSubmit={passwordFormik.handleSubmit} className='space-y-4'>
         <div>
           <Label className='text-base font-normal' htmlFor='currentPassword'>
             Current Password
@@ -148,7 +156,8 @@ export const ChangePasswordForm: React.FC = () => {
         >
           {isLoading ? 'Updating...' : 'Update Password'}
         </Button>
-      </form>
-    </div>
+        </form>
+      </div>
+    </Card>
   )
 }

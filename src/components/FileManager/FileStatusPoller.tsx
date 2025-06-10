@@ -5,7 +5,7 @@ import {
   checkJobStatuses,
   getFiles,
   getFolders,
-} from '../../redux/aynscThunks/file'
+} from '../../redux/asyncThunks/file'
 
 import { FileStatus } from '@/utils/constants/file'
 
