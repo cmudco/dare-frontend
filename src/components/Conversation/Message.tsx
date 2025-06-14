@@ -15,6 +15,7 @@ import {
   RefreshCw,
   ThumbsUp,
   ThumbsDown,
+  Info,
 } from 'lucide-react'
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
@@ -27,6 +28,7 @@ import { updateMessageThunk } from '../../redux/asyncThunks/conversation'
 import { AppDispatch } from '../../redux/store'
 import { regenerateResponse } from '@/redux/asyncThunks/websocket'
 import FeedbackModal from './FeedbackModal'
+import MessageMetadata from './MessageMetadata'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -50,6 +52,7 @@ const Message: React.FC<MessageProps> = ({
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
   const [showOriginal, setShowOriginal] = useState(false)
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
+  const [isMetadataOpen, setIsMetadataOpen] = useState(false)
 
   // Function to get font size classes based on user preference
   const getFontSizeClasses = () => {
@@ -299,6 +302,13 @@ const Message: React.FC<MessageProps> = ({
           >
             <Copy className='h-4 w-4' />
           </button>
+          <button
+            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+            onClick={() => setIsMetadataOpen(true)}
+            aria-label='View message metadata'
+          >
+            <Info className='h-4 w-4' />
+          </button>
           {(message.isEdited || message.isRegenerated) && buttonLabel && (
             <button
               className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
@@ -389,6 +399,12 @@ const Message: React.FC<MessageProps> = ({
         isOpen={isFeedbackModalOpen}
         onClose={() => setIsFeedbackModalOpen(false)}
         onSubmit={handleFeedbackSubmit}
+      />
+
+      <MessageMetadata
+        isOpen={isMetadataOpen}
+        onClose={() => setIsMetadataOpen(false)}
+        message={message}
       />
     </div>
   )
