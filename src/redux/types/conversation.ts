@@ -35,6 +35,9 @@ export interface Message {
   isRegenerated?: boolean
   originalMessage?: string
   dislikeFeedback?: string
+  cost?: string | null
+  inputTokens?: number | null
+  outputTokens?: number | null
 }
 
 export interface MessageProps {
