@@ -198,7 +198,9 @@ const Message: React.FC<MessageProps> = ({
               message.streaming ? 'animate-pulse' : ''
             }`}
           >
-            <div className={`prose ${getFontSizeClasses()} max-w-none text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}>
+            <div
+              className={`prose ${getFontSizeClasses()} max-w-none text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
+            >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
@@ -321,7 +323,12 @@ const Message: React.FC<MessageProps> = ({
             message.isSender ? 'text-right' : 'pl-10 text-left'
           }`}
         >
-          {llmName}
+          <span>{llmName}</span>
+          {message.cost && (
+            <span className='ml-2 font-medium text-green-600'>
+              ${parseFloat(message.cost).toFixed(4)}
+            </span>
+          )}
         </div>
       )}
 
