@@ -27,18 +27,30 @@ const WorkflowAddSteps: React.FC<WorkflowStepsProps> = ({
       ...steps,
       {
         prompt: null,
-        file: null,
+        files: [],
+        embeddings: [],
         llm: null,
         order: newOrder,
         maxTokens: MODEL_CONFIG.maxTokens,
         temperature: MODEL_CONFIG.temperature,
-        isEmbeddings: false,
+        maxContextSnippets: MODEL_CONFIG.maxContextSnippets,
+        documentSimilarityThreshold: MODEL_CONFIG.documentSimilarityThreshold,
       },
     ]
     setSteps(newSteps)
   }
 
-  const handleRemoveStep = (index: number) => {
+  const handleStepChange = (
+    index: number,
+    field: keyof Step,
+    value: unknown
+  ) => {
+    const newSteps = [...steps]
+    newSteps[index] = { ...newSteps[index], [field]: value }
+    setSteps(newSteps)
+  }
+
+  const handleStepRemove = (index: number) => {
     const newSteps = steps.filter((_, i) => i !== index)
     const reorderedSteps = newSteps.map((step, i) => ({
       ...step,
@@ -47,25 +59,19 @@ const WorkflowAddSteps: React.FC<WorkflowStepsProps> = ({
     setSteps(reorderedSteps)
   }
 
-  const handleMoveStep = (from: number, to: number) => {
+  const handleStepReorder = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= steps.length) {
+      return
+    }
+
     const newSteps = [...steps]
-    const [movedStep] = newSteps.splice(from, 1)
-    newSteps.splice(to, 0, movedStep)
+    const [movedStep] = newSteps.splice(fromIndex, 1)
+    newSteps.splice(toIndex, 0, movedStep)
     const reorderedSteps = newSteps.map((step, i) => ({
       ...step,
       order: i + 1,
     }))
     setSteps(reorderedSteps)
-  }
-
-  const handleChangeStep = (
-    index: number,
-    field: keyof Step,
-    value: unknown
-  ) => {
-    const newSteps = [...steps]
-    newSteps[index] = { ...newSteps[index], [field]: value }
-    setSteps(newSteps)
   }
 
   const stepErrors = errors.steps as FormikErrors<Step>[] | undefined
@@ -102,21 +108,12 @@ const WorkflowAddSteps: React.FC<WorkflowStepsProps> = ({
               prompts={prompts}
               files={files}
               llms={llms}
-              onRemove={() => handleRemoveStep(index)}
-              onMove={(dir: 'up' | 'down') => {
-                if (dir === 'up' && index > 0) {
-                  handleMoveStep(index, index - 1)
-                } else if (dir === 'down' && index < steps.length - 1) {
-                  handleMoveStep(index, index + 1)
-                }
-              }}
-              onChange={(field: keyof Step, value: unknown) =>
-                handleChangeStep(index, field, value)
-              }
+              totalSteps={steps.length}
+              onStepChange={handleStepChange}
+              onStepRemove={handleStepRemove}
+              onStepReorder={handleStepReorder}
               error={stepErrors?.[index]}
               touched={stepTouched?.[index]}
-              totalSteps={steps.length}
-              isOpenByDefault={steps.length === 1 && index === 0}
             />
           ))
         )}

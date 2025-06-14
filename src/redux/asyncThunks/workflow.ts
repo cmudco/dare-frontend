@@ -49,13 +49,13 @@ export const createOrUpdateWorkflow = createAsyncThunk(
           id?: string
           order: number
           prompt: string | null
-          file?: number | null
+          files?: number[]
+          embeddings?: number[]
           llm?: number | null
           maxTokens?: number | null
           temperature?: number | null
           maxContextSnippets?: number | null
           documentSimilarityThreshold?: number | null
-          isEmbeddings?: boolean
         }[]
       }
     },

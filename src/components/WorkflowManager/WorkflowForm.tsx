@@ -20,10 +20,10 @@ const WorkflowForm: React.FC = () => {
   const initialSteps = selectedWorkflow?.steps || []
   const defaultFirstStep = {
     prompt: null,
-    file: null,
+    files: [],
+    embeddings: [],
     llm: null,
     order: 1,
-    isEmbeddings: false,
   }
 
   const initialValues: FormValues = {
@@ -43,13 +43,13 @@ const WorkflowForm: React.FC = () => {
         id: step.id,
         order: step.order,
         prompt: step.prompt?.id || null,
-        file: step.file?.id || null,
+        files: step.files?.map((f) => f.id) || [],
+        embeddings: step.embeddings?.map((f) => f.id) || [],
         llm: step.llm?.id || null,
         max_tokens: step.maxTokens,
         temperature: step.temperature,
         max_context_snippets: step.maxContextSnippets,
         document_similarity_threshold: step.documentSimilarityThreshold,
-        is_embeddings: step.isEmbeddings || false,
       }))
 
       await dispatch(

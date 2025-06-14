@@ -13,7 +13,8 @@ export interface Step {
   id?: string
   workflow?: string
   prompt: Prompt | null
-  file: MyFile | null
+  files: MyFile[]
+  embeddings: MyFile[]
   llm: LLMModel | null
   order: number
   createdAt?: string
@@ -21,7 +22,6 @@ export interface Step {
   temperature?: number
   maxContextSnippets?: number
   documentSimilarityThreshold?: number
-  isEmbeddings?: boolean
 }
 
 export interface WorkflowRunStep {
@@ -111,13 +111,12 @@ export interface WorkflowStepProps {
   prompts: Prompt[]
   files: MyFile[]
   llms: LLMModel[]
-  onRemove: () => void
-  onMove: (direction: 'up' | 'down') => void
-  onChange: (field: keyof Step, value: unknown) => void
+  totalSteps: number
+  onStepChange: (index: number, field: keyof Step, value: unknown) => void
+  onStepRemove: (index: number) => void
+  onStepReorder: (fromIndex: number, toIndex: number) => void
   error?: FormikErrors<Step>
   touched?: FormikTouched<Step>
-  totalSteps?: number
-  isOpenByDefault?: boolean
 }
 
 export interface WorkflowStepsProps {
