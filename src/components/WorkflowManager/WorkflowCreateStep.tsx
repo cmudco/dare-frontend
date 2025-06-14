@@ -11,34 +11,37 @@ import {
   ChevronUp,
   ChevronDown,
   Trash2,
-  ChevronsUpDown,
   GripVertical,
   HelpCircle,
+  X,
+  FileText,
   Database,
+  Minus,
+  Plus,
 } from 'lucide-react'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../ui/collapsible'
-import { WorkflowStepProps } from '@/redux/types/workflow'
+import { WorkflowStepProps, Step } from '@/redux/types/workflow'
 import { Slider } from '../ui/slider'
 import { MODEL_CONFIG } from '@/config/modelConfig'
 import { Label } from '../ui/label'
-import { Switch } from '../ui/switch'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip'
-import WorkflowEmbeddingSettings from './WorkflowEmbeddingSettings'
 import {
   getTemperatureColor,
   getTemperatureDescription,
   getMaxTokensColor,
   getMaxTokensDescription,
 } from '@/utils/modelConfigUtils'
+import { Badge } from '../ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 
 export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
   index,
@@ -46,317 +49,531 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
   prompts,
   files,
   llms,
-  onRemove,
-  onMove,
-  onChange,
+  totalSteps,
+  onStepChange,
+  onStepRemove,
+  onStepReorder,
   error,
   touched,
-  totalSteps,
-  isOpenByDefault,
 }) => {
-  const [isOpen, setIsOpen] = useState(isOpenByDefault && index === 0)
+  const [isOpen, setIsOpen] = useState(true)
 
-  const currentMaxTokens = step.maxTokens ?? MODEL_CONFIG.maxTokens
-  const currentTemperature = step.temperature ?? MODEL_CONFIG.temperature
-
-  const handlePromptChange = (value: string) => {
-    const newPrompt = prompts.find((p) => p.id == value)
-    onChange('prompt', newPrompt || null)
+  const onChange = (field: keyof Step, value: unknown) => {
+    onStepChange(index, field, value)
   }
 
-  const handleFileChange = (value: string) => {
-    if (value === 'none') {
-      onChange('file', null)
-    } else {
-      const newFile = files.find((f) => f.id === parseInt(value))
-      onChange('file', newFile || null)
+  const handlePromptChange = (promptId: string) => {
+    const selectedPrompt = prompts.find((p) => p.id == promptId)
+    onChange('prompt', selectedPrompt || null)
+  }
+
+  const handleFileSelect = (fileId: string, type: 'files' | 'embeddings') => {
+    const selectedFile = files.find((f) => f.id === parseInt(fileId))
+    if (selectedFile) {
+      const currentFiles = step[type] || []
+      const isAlreadySelected = currentFiles.some(
+        (f) => f.id === selectedFile.id
+      )
+
+      if (!isAlreadySelected) {
+        onChange(type, [...currentFiles, selectedFile])
+      }
     }
   }
 
-  const handleLLMChange = (value: string) => {
-    if (value === 'none') {
+  const handleFileRemove = (fileId: number, type: 'files' | 'embeddings') => {
+    const currentFiles = step[type] || []
+    const updatedFiles = currentFiles.filter((f) => f.id !== fileId)
+    onChange(type, updatedFiles)
+  }
+
+  const handleLLMChange = (llmId: string) => {
+    if (llmId === 'none') {
       onChange('llm', null)
     } else {
-      const newLLM = llms.find((l) => l.id === parseInt(value))
-      onChange('llm', newLLM || null)
+      const selectedLLM = llms.find((l) => l.id === parseInt(llmId))
+      onChange('llm', selectedLLM || null)
     }
   }
 
-  const handleMaxTokensChange = (values: number[]) => {
-    onChange('maxTokens', values[0])
+  const handleSliderChange = (field: keyof Step, values: number[]) => {
+    onChange(field, values[0])
   }
 
-  const handleTemperatureChange = (values: number[]) => {
-    onChange('temperature', values[0])
+  const maxTokens = step.maxTokens ?? MODEL_CONFIG.maxTokens
+  const temperature = step.temperature ?? MODEL_CONFIG.temperature
+
+  const getAvailableFiles = (type: 'files' | 'embeddings') => {
+    const selectedFiles = step[type] || []
+    return files.filter((file) => !selectedFiles.some((f) => f.id === file.id))
   }
 
   return (
-    <Collapsible
-      open={isOpen}
-      onOpenChange={setIsOpen}
-      className='overflow-hidden rounded-md border bg-white'
-    >
-      <div className='flex items-center justify-between bg-gray-50 p-3'>
-        <div className='flex items-center'>
-          <div className='mr-3 cursor-move'>
-            <GripVertical className='h-5 w-5 text-gray-400' />
-          </div>
-          <span className='text-sm font-medium'>Step {index + 1}</span>
-          {step.id && (
-            <span className='ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800'>
-              Saved
-            </span>
-          )}
-        </div>
-
-        <div className='flex items-center gap-1'>
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={() => onMove('up')}
-            className='h-8 w-8 p-0'
-            disabled={index === 0}
-          >
-            <ChevronUp className='h-4 w-4' />
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={() => onMove('down')}
-            className='h-8 w-8 p-0'
-            disabled={index === totalSteps! - 1}
-          >
-            <ChevronDown className='h-4 w-4' />
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={onRemove}
-            className='h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-600'
-          >
-            <Trash2 className='h-4 w-4' />
-          </Button>
-          <CollapsibleTrigger asChild>
-            <Button
-              type='button'
-              variant='ghost'
-              size='sm'
-              className='h-8 w-8 p-0'
-            >
-              <ChevronsUpDown className='h-4 w-4' />
-            </Button>
-          </CollapsibleTrigger>
-        </div>
-      </div>
-
-      <CollapsibleContent>
-        <div className='space-y-6 border-t p-4'>
-          <div className='space-y-2'>
-            <label className='text-sm font-medium'>Select Prompt</label>
-            <Select
-              value={step.prompt?.id.toString() || ''}
-              onValueChange={handlePromptChange}
-            >
-              <SelectTrigger
-                className={
-                  error?.prompt && touched?.prompt ? 'border-red-500' : ''
-                }
-              >
-                <SelectValue placeholder='Select a prompt' />
-              </SelectTrigger>
-              <SelectContent>
-                {prompts.map((prompt) => (
-                  <SelectItem key={prompt.id} value={prompt.id.toString()}>
-                    {prompt.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {error?.prompt && touched?.prompt && (
-              <p className='mt-1 text-xs text-red-500'>{error.prompt}</p>
-            )}
-          </div>
-
-          <div className='space-y-2'>
-            <label className='text-sm font-medium'>Select File</label>
-            <Select
-              value={step.file?.id?.toString() || 'none'}
-              onValueChange={handleFileChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='Select a file' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='none'>None</SelectItem>
-                {files.map((file) => (
-                  <SelectItem key={file.id} value={file.id.toString()}>
-                    {file.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {error?.file && touched?.file && (
-              <p className='mt-1 text-xs text-red-500'>{error.file}</p>
-            )}
-          </div>
-
-          <div className='space-y-2'>
-            <label className='text-sm font-medium'>Select LLM</label>
-            <Select
-              value={step.llm?.id?.toString() || 'none'}
-              onValueChange={handleLLMChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='Select an LLM' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='none'>None</SelectItem>
-                {llms.map((llm) => (
-                  <SelectItem key={llm.id} value={llm.id.toString()}>
-                    {llm.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {error?.llm && touched?.llm && (
-              <p className='mt-1 text-xs text-red-500'>{error.llm as string}</p>
-            )}
-          </div>
-
-          <hr className='my-4' />
-
-          <div className='space-y-3'>
-            <div className='flex items-center justify-between'>
-              <Label
-                htmlFor={`temperature-slider-${index}`}
-                className='text-sm font-medium'
-              >
-                Temperature
-              </Label>
-              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
-                {currentTemperature.toFixed(1)}
-              </span>
-            </div>
-            <Slider
-              id={`temperature-slider-${index}`}
-              value={[currentTemperature]}
-              min={0}
-              max={1}
-              step={0.1}
-              onValueChange={handleTemperatureChange}
-              className='my-2 cursor-pointer'
-            />
-            <div className='flex justify-between px-1 text-xs text-gray-500'>
-              <span>Precise</span>
-              <span>Balanced</span>
-              <span>Creative</span>
-            </div>
-            <div
-              className={`mt-1 text-xs ${getTemperatureColor(currentTemperature)}`}
-            >
-              {getTemperatureDescription(currentTemperature)}
-            </div>
-            {error?.temperature && touched?.temperature && (
-              <p className='mt-1 text-xs text-red-500'>
-                {error.temperature as string}
-              </p>
-            )}
-          </div>
-
-          <div className='space-y-3'>
-            <div className='flex items-center justify-between'>
-              <Label
-                htmlFor={`max-tokens-slider-${index}`}
-                className='text-sm font-medium'
-              >
-                Max Tokens
-              </Label>
-              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
-                {currentMaxTokens}
-              </span>
-            </div>
-            <Slider
-              id={`max-tokens-slider-${index}`}
-              value={[currentMaxTokens]}
-              min={1}
-              max={
-                MODEL_CONFIG.maxTokens > 4096 ? MODEL_CONFIG.maxTokens : 8192
-              }
-              step={128}
-              onValueChange={handleMaxTokensChange}
-              className='my-2 cursor-pointer'
-            />
-            <div
-              className={`mt-1 text-xs ${getMaxTokensColor(currentMaxTokens)}`}
-            >
-              {getMaxTokensDescription(currentMaxTokens)}
-            </div>
-            {error?.maxTokens && touched?.maxTokens && (
-              <p className='mt-1 text-xs text-red-500'>
-                {error.maxTokens as string}
-              </p>
-            )}
-          </div>
-
-          <TooltipProvider>
-            <div className='space-y-2'>
-              <div className='flex items-center justify-between'>
-                <div className='space-y-1'>
-                  <Label className='text-sm font-medium'>Use Embeddings</Label>
-                  <p className='text-xs text-gray-500'>
-                    Enable document embeddings for context-aware responses
-                  </p>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <div className='rounded-lg border border-gray-200 bg-white shadow-sm'>
+        <CollapsibleTrigger asChild>
+          <div className='flex cursor-pointer items-center justify-between p-4 hover:bg-gray-50'>
+            <div className='flex items-center gap-3'>
+              <GripVertical className='h-4 w-4 text-gray-400' />
+              <div className='flex items-center gap-2'>
+                <div className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-600'>
+                  {index + 1}
                 </div>
-                <div className='flex items-center space-x-2'>
-                  <Switch
-                    checked={step.isEmbeddings || false}
-                    onCheckedChange={(checked) =>
-                      onChange('isEmbeddings', checked)
-                    }
-                  />
-                  <Tooltip delayDuration={100}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type='button'
-                        variant='ghost'
-                        size='icon'
-                        className='h-6 w-6 p-0'
-                      >
-                        <HelpCircle className='h-4 w-4 text-gray-500' />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side='left'
-                      className='z-[60] rounded-md bg-gray-900 p-2 text-white'
-                    >
-                      <p className='w-[280px] text-xs'>
-                        When enabled, this step will use document embeddings to
-                        provide context-aware responses based on the selected
-                        file.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+                <h3 className='font-medium text-gray-900'>
+                  {step.prompt?.title || `Step ${index + 1}`}
+                </h3>
               </div>
-              {step.isEmbeddings && (
-                <div className='mt-2 flex items-center space-x-2 rounded-md bg-blue-50 p-2'>
-                  <Database className='h-4 w-4 text-blue-600' />
-                  <p className='text-xs text-blue-700'>
-                    Embeddings enabled for this step
-                  </p>
+              {step.files && step.files.length > 0 && (
+                <div className='flex items-center gap-1'>
+                  <FileText className='h-3 w-3 text-green-500' />
+                  <span className='text-xs text-green-600'>
+                    {step.files.length} file{step.files.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+              {step.embeddings && step.embeddings.length > 0 && (
+                <div className='flex items-center gap-1'>
+                  <Database className='h-3 w-3 text-blue-500' />
+                  <span className='text-xs text-blue-600'>
+                    {step.embeddings.length} embedding
+                    {step.embeddings.length > 1 ? 's' : ''}
+                  </span>
                 </div>
               )}
             </div>
-          </TooltipProvider>
+            <div className='flex items-center gap-2'>
+              <div className='flex gap-0.5'>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (index > 0) {
+                      onStepReorder(index, index - 1)
+                    }
+                  }}
+                  disabled={index === 0}
+                  className='h-6 w-6 p-0 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30'
+                  title={index === 0 ? 'Already at top' : 'Move step up'}
+                >
+                  <ChevronUp className='h-3 w-3' />
+                </Button>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (index < totalSteps - 1) {
+                      onStepReorder(index, index + 1)
+                    }
+                  }}
+                  disabled={index === totalSteps - 1}
+                  className='h-6 w-6 p-0 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30'
+                  title={
+                    index === totalSteps - 1
+                      ? 'Already at bottom'
+                      : 'Move step down'
+                  }
+                >
+                  <ChevronDown className='h-3 w-3' />
+                </Button>
+              </div>
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onStepRemove(index)
+                }}
+                className='h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700'
+                title='Remove step'
+              >
+                <Trash2 className='h-4 w-4' />
+              </Button>
+              {isOpen ? (
+                <Minus className='h-4 w-4 text-gray-400' />
+              ) : (
+                <Plus className='h-4 w-4 text-gray-400' />
+              )}
+            </div>
+          </div>
+        </CollapsibleTrigger>
 
-          {step.isEmbeddings && (
-            <WorkflowEmbeddingSettings step={step} onChange={onChange} />
-          )}
-        </div>
-      </CollapsibleContent>
+        <CollapsibleContent>
+          <div className='space-y-4 p-4 pt-0'>
+            {/* Prompt Selection */}
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>Select Prompt *</label>
+              <Select
+                value={step.prompt?.id || ''}
+                onValueChange={handlePromptChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Choose a prompt' />
+                </SelectTrigger>
+                <SelectContent>
+                  {prompts.map((prompt) => (
+                    <SelectItem key={prompt.id} value={prompt.id}>
+                      {prompt.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {error?.prompt && touched?.prompt && (
+                <p className='mt-1 text-xs text-red-500'>
+                  {error.prompt as string}
+                </p>
+              )}
+            </div>
+
+            {/* Files and Embeddings Section */}
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+              {/* Files for Full Content */}
+              <Card>
+                <CardHeader className='pb-3'>
+                  <CardTitle className='flex items-center gap-2 text-sm font-medium'>
+                    <FileText className='h-4 w-4 text-green-500' />
+                    Content Files
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className='h-3 w-3 text-gray-400' />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className='max-w-xs text-sm'>
+                            Files that will be processed with their full content
+                            included in the prompt context.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-3'>
+                  <Select
+                    onValueChange={(fileId) =>
+                      handleFileSelect(fileId, 'files')
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder='Add content file' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableFiles('files').map((file) => (
+                        <SelectItem key={file.id} value={file.id.toString()}>
+                          {file.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {step.files && step.files.length > 0 && (
+                    <div className='space-y-2'>
+                      <div className='flex flex-wrap gap-2'>
+                        {step.files.map((file) => (
+                          <Badge
+                            key={file.id}
+                            variant='secondary'
+                            className='flex items-center gap-1 border-green-200 bg-green-50 px-2 py-1 text-green-700'
+                          >
+                            <FileText className='h-3 w-3' />
+                            <span className='text-xs'>{file.name}</span>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => handleFileRemove(file.id, 'files')}
+                              className='h-4 w-4 p-0 hover:bg-green-200'
+                            >
+                              <X className='h-3 w-3' />
+                            </Button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Files for Embedding Search */}
+              <Card>
+                <CardHeader className='pb-3'>
+                  <CardTitle className='flex items-center gap-2 text-sm font-medium'>
+                    <Database className='h-4 w-4 text-blue-500' />
+                    Embedding Files
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className='h-3 w-3 text-gray-400' />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className='max-w-xs text-sm'>
+                            Files that will be searched using semantic
+                            similarity to find relevant context snippets.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-3'>
+                  <Select
+                    onValueChange={(fileId) =>
+                      handleFileSelect(fileId, 'embeddings')
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder='Add embedding file' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableFiles('embeddings').map((file) => (
+                        <SelectItem key={file.id} value={file.id.toString()}>
+                          {file.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {step.embeddings && step.embeddings.length > 0 && (
+                    <div className='space-y-2'>
+                      <div className='flex flex-wrap gap-2'>
+                        {step.embeddings.map((file) => (
+                          <Badge
+                            key={file.id}
+                            variant='secondary'
+                            className='flex items-center gap-1 border-blue-200 bg-blue-50 px-2 py-1 text-blue-700'
+                          >
+                            <Database className='h-3 w-3' />
+                            <span className='text-xs'>{file.name}</span>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='sm'
+                              onClick={() =>
+                                handleFileRemove(file.id, 'embeddings')
+                              }
+                              className='h-4 w-4 p-0 hover:bg-blue-200'
+                            >
+                              <X className='h-3 w-3' />
+                            </Button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* LLM Selection */}
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>Select LLM</label>
+              <Select
+                value={step.llm?.id?.toString() || 'none'}
+                onValueChange={handleLLMChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Select an LLM' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='none'>None (Use default)</SelectItem>
+                  {llms.map((llm) => (
+                    <SelectItem key={llm.id} value={llm.id.toString()}>
+                      {llm.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {error?.llm && touched?.llm && (
+                <p className='mt-1 text-xs text-red-500'>
+                  {error.llm as string}
+                </p>
+              )}
+            </div>
+
+            <hr className='my-4' />
+
+            {/* Temperature Slider */}
+            <div className='space-y-3'>
+              <div className='flex items-center justify-between'>
+                <Label
+                  htmlFor={`temperature-slider-${index}`}
+                  className='text-sm font-medium'
+                >
+                  Temperature
+                </Label>
+                <div className='flex items-center gap-2'>
+                  <span
+                    className={`rounded px-2 py-1 text-xs font-medium ${getTemperatureColor(
+                      temperature
+                    )}`}
+                  >
+                    {temperature.toFixed(1)}
+                  </span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className='h-4 w-4 text-gray-400' />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className='max-w-xs text-sm'>
+                          Controls randomness in responses. Lower values
+                          (0.1-0.3) for focused, deterministic outputs. Higher
+                          values (0.7-1.0) for creative, varied responses.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+              <Slider
+                id={`temperature-slider-${index}`}
+                min={0.1}
+                max={1.0}
+                step={0.1}
+                value={[temperature]}
+                onValueChange={(values) =>
+                  handleSliderChange('temperature', values)
+                }
+                className='w-full'
+              />
+              <p className='text-xs text-gray-500'>
+                {getTemperatureDescription(temperature)}
+              </p>
+            </div>
+
+            {/* Max Tokens Slider */}
+            <div className='space-y-3'>
+              <div className='flex items-center justify-between'>
+                <Label
+                  htmlFor={`max-tokens-slider-${index}`}
+                  className='text-sm font-medium'
+                >
+                  Max Tokens
+                </Label>
+                <div className='flex items-center gap-2'>
+                  <span
+                    className={`rounded px-2 py-1 text-xs font-medium ${getMaxTokensColor(
+                      maxTokens
+                    )}`}
+                  >
+                    {maxTokens.toLocaleString()}
+                  </span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className='h-4 w-4 text-gray-400' />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className='max-w-xs text-sm'>
+                          Maximum length of the AI response. Higher values allow
+                          for longer, more detailed responses but consume more
+                          tokens.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+              <Slider
+                id={`max-tokens-slider-${index}`}
+                min={100}
+                max={8000}
+                step={100}
+                value={[maxTokens]}
+                onValueChange={(values) =>
+                  handleSliderChange('maxTokens', values)
+                }
+                className='w-full'
+              />
+              <p className='text-xs text-gray-500'>
+                {getMaxTokensDescription(maxTokens)}
+              </p>
+            </div>
+
+            {/* Embedding Settings */}
+            {step.embeddings && step.embeddings.length > 0 && (
+              <Card className='border-blue-200 bg-blue-50'>
+                <CardHeader className='pb-3'>
+                  <CardTitle className='flex items-center gap-2 text-sm font-medium'>
+                    <Database className='h-4 w-4 text-blue-600' />
+                    Embedding Search Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  {/* Max Context Snippets */}
+                  <div className='space-y-2'>
+                    <div className='flex items-center justify-between'>
+                      <Label className='text-sm font-medium'>
+                        Max Context Snippets
+                      </Label>
+                      <span className='rounded border bg-white px-2 py-1 font-mono text-sm'>
+                        {step.maxContextSnippets ??
+                          MODEL_CONFIG.maxContextSnippets}
+                      </span>
+                    </div>
+                    <Slider
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={[
+                        step.maxContextSnippets ??
+                          MODEL_CONFIG.maxContextSnippets,
+                      ]}
+                      onValueChange={(values) =>
+                        handleSliderChange('maxContextSnippets', values)
+                      }
+                      className='w-full'
+                    />
+                    <p className='text-xs text-gray-600'>
+                      Maximum number of relevant text snippets to retrieve from
+                      embedding files.
+                    </p>
+                  </div>
+
+                  {/* Document Similarity Threshold */}
+                  <div className='space-y-2'>
+                    <div className='flex items-center justify-between'>
+                      <Label className='text-sm font-medium'>
+                        Similarity Threshold
+                      </Label>
+                      <span className='rounded border bg-white px-2 py-1 font-mono text-sm'>
+                        {(
+                          step.documentSimilarityThreshold ??
+                          MODEL_CONFIG.documentSimilarityThreshold
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+                    <Slider
+                      min={0.1}
+                      max={0.9}
+                      step={0.05}
+                      value={[
+                        step.documentSimilarityThreshold ??
+                          MODEL_CONFIG.documentSimilarityThreshold,
+                      ]}
+                      onValueChange={(values) =>
+                        handleSliderChange(
+                          'documentSimilarityThreshold',
+                          values
+                        )
+                      }
+                      className='w-full'
+                    />
+                    <p className='text-xs text-gray-600'>
+                      Minimum similarity score for including text snippets in
+                      context.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </CollapsibleContent>
+      </div>
     </Collapsible>
   )
 }

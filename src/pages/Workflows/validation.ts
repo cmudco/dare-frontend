@@ -16,8 +16,9 @@ export const workflowValidationSchema = Yup.object().shape({
     Yup.object().shape({
       prompt: Yup.mixed().nullable().required('Prompt is required'),
       order: Yup.number().required('Order is required'),
-      file: Yup.object().required('File is required'),
-      llm: Yup.object().required('LLM is required'),
+      files: Yup.array().of(Yup.object()).default([]),
+      embeddings: Yup.array().of(Yup.object()).default([]),
+      llm: Yup.object().nullable(),
       maxTokens: Yup.number().nullable(),
       temperature: Yup.number().nullable(),
     })
