@@ -15,6 +15,7 @@ import {
   RefreshCw,
   ThumbsUp,
   ThumbsDown,
+  Info,
 } from 'lucide-react'
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
@@ -27,6 +28,7 @@ import { updateMessageThunk } from '../../redux/asyncThunks/conversation'
 import { AppDispatch } from '../../redux/store'
 import { regenerateResponse } from '@/redux/asyncThunks/websocket'
 import FeedbackModal from './FeedbackModal'
+import MessageMetadata from './MessageMetadata'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -50,6 +52,7 @@ const Message: React.FC<MessageProps> = ({
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
   const [showOriginal, setShowOriginal] = useState(false)
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
+  const [isMetadataOpen, setIsMetadataOpen] = useState(false)
 
   // Function to get font size classes based on user preference
   const getFontSizeClasses = () => {
@@ -198,7 +201,9 @@ const Message: React.FC<MessageProps> = ({
               message.streaming ? 'animate-pulse' : ''
             }`}
           >
-            <div className={`prose ${getFontSizeClasses()} max-w-none text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}>
+            <div
+              className={`prose ${getFontSizeClasses()} max-w-none text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
+            >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
@@ -297,6 +302,13 @@ const Message: React.FC<MessageProps> = ({
           >
             <Copy className='h-4 w-4' />
           </button>
+          <button
+            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+            onClick={() => setIsMetadataOpen(true)}
+            aria-label='View message metadata'
+          >
+            <Info className='h-4 w-4' />
+          </button>
           {(message.isEdited || message.isRegenerated) && buttonLabel && (
             <button
               className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
@@ -321,7 +333,12 @@ const Message: React.FC<MessageProps> = ({
             message.isSender ? 'text-right' : 'pl-10 text-left'
           }`}
         >
-          {llmName}
+          <span>{llmName}</span>
+          {message.cost && (
+            <span className='ml-2 font-medium text-green-600'>
+              ${parseFloat(message.cost).toFixed(4)}
+            </span>
+          )}
         </div>
       )}
 
@@ -382,6 +399,12 @@ const Message: React.FC<MessageProps> = ({
         isOpen={isFeedbackModalOpen}
         onClose={() => setIsFeedbackModalOpen(false)}
         onSubmit={handleFeedbackSubmit}
+      />
+
+      <MessageMetadata
+        isOpen={isMetadataOpen}
+        onClose={() => setIsMetadataOpen(false)}
+        message={message}
       />
     </div>
   )
