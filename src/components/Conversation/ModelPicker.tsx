@@ -57,20 +57,22 @@ const ModelPicker: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className='flex h-10 border-gray-200 bg-white px-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'>
+        <Button className='dark:bg-dark-chat-history flex h-10 border-gray-200 bg-white px-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-dark-icon-unselected dark:text-white dark:hover:bg-dark-icon-unselected'>
           <Box className='h-2 w-4' />
           {getModelButtonText()}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align='end'
-        className='max-h-[70vh] min-h-[20vh] w-72 overflow-y-auto rounded-md bg-white p-2 shadow-lg dark:bg-gray-900'
+        className='max-h-[70vh] min-h-[20vh] w-72 overflow-y-auto rounded-md bg-background bg-white p-2 shadow-lg'
       >
         {loading && (
-          <p className='py-2 text-center text-gray-500'>Loading models...</p>
+          <p className='py-2 text-center text-gray-500 dark:text-gray-400'>
+            Loading models...
+          </p>
         )}
         {error && (
-          <p className='py-2 text-center text-red-500'>
+          <p className='py-2 text-center text-red-500 dark:text-red-400'>
             Error loading models: {error}
           </p>
         )}
@@ -88,7 +90,7 @@ const ModelPicker: React.FC = () => {
                   className={`rounded-md px-4 py-1 text-sm font-medium transition-all ${
                     providerFilter === 'all'
                       ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
-                      : 'bg-transparent text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50'
+                      : 'bg-transparent text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/10'
                   }`}
                   onClick={() => setProviderFilter('all')}
                 >
@@ -102,7 +104,7 @@ const ModelPicker: React.FC = () => {
                     className={`rounded-md px-4 py-1 text-sm font-medium capitalize transition-all ${
                       providerFilter === provider
                         ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
-                        : 'bg-transparent text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50'
+                        : 'bg-transparent text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/10'
                     }`}
                     onClick={() => setProviderFilter(provider)}
                   >
@@ -111,7 +113,7 @@ const ModelPicker: React.FC = () => {
                 ))}
               </div>
             </div>
-            <DropdownMenuSeparator className='my-1' />
+            <DropdownMenuSeparator className='my-1 dark:border-gray-700' />
           </>
         )}
 
@@ -126,7 +128,7 @@ const ModelPicker: React.FC = () => {
               className={`mt-1 cursor-pointer rounded-md p-3 ${
                 model.id === selectedModel
                   ? 'bg-pink-50 dark:bg-pink-900/20'
-                  : 'hover:bg-gray-50 dark:hover:bg-gray-800/70'
+                  : 'hover:bg-gray-50 dark:hover:bg-white/10'
               }`}
             >
               <div className='flex flex-col'>
@@ -152,10 +154,10 @@ const ModelPicker: React.FC = () => {
             No models available
           </p>
         )}
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className='dark:border-gray-700' />
         <DropdownMenuItem
           asChild
-          className='cursor-pointer rounded px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800'
+          className='cursor-pointer rounded px-4 py-2 hover:bg-gray-100 dark:text-white dark:hover:bg-white/10'
         >
           <Link to='/help' className='flex items-center'>
             <HelpCircle className='mr-2 h-4 w-4' />

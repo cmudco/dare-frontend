@@ -90,7 +90,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
             <Input
               type='text'
               placeholder='Search by Files'
-              className='rounded-md border border-gray-300 bg-white pl-10 focus:border-primary focus:ring-2 focus:ring-primary'
+              className='rounded-md border border-gray-300 bg-white pl-10 focus:border-primary focus:ring-2 focus:ring-primary dark:border-dark-icon-unselected dark:bg-transparent dark:text-white'
               value={searchQuery}
               onChange={handleSearchChange}
             />

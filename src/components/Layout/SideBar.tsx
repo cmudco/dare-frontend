@@ -99,12 +99,12 @@ const Sidebar = () => {
       <div
         className={`relative flex ${
           isCollapsed ? 'w-[80px]' : 'w-[160px] md:w-[200px] lg:w-[18vw]'
-        } shadow-blue-gray-900/5 h-[auto] min-h-[90vh] flex-col border border-t-0 border-pink-50 bg-white bg-clip-border text-gray-700 transition-all duration-300`}
+        } shadow-blue-gray-900/5 h-[auto] min-h-[90vh] flex-col border border-t-0 border-pink-50 bg-white bg-clip-border text-gray-700 transition-all duration-300 dark:border-slate-800 dark:bg-dark-bg dark:text-white`}
       >
         <div className='flex items-center justify-between p-4'>
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`hover:bg-primary-dark border-border-gray absolute -right-4 top-4 mt-1 translate-x-0 transform rounded-full border-2 bg-white p-1 transition-all`}
+            className={`hover:bg-primary-dark border-border-gray dark:bg-dark-chat-history absolute -right-4 top-4 mt-1 translate-x-0 transform rounded-full border-2 bg-white p-1 transition-all dark:border-slate-600`}
           >
             <ChevronLeftIcon
               className={`h-5 w-5 font-bold text-primary transition-transform duration-300 ${
@@ -125,7 +125,7 @@ const Sidebar = () => {
                 to={item.path}
                 className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-none transition-all ${
                   isActive
-                    ? 'bg-sky-50'
+                    ? 'dark:hover:bg-dare-gradient/90 bg-sky-50 dark:bg-dare-gradient dark:text-white'
                     : 'focus:bg-blue-gray-50 focus:text-blue-gradient-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-opacity-80 active:bg-opacity-80'
                 }`}
               >
@@ -135,7 +135,7 @@ const Sidebar = () => {
                       className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
                       style={{
                         fill: 'none',
-                        stroke: 'url(#dare-gradient)',
+                        stroke: 'url(#dare-gradient) dark:white',
                         color: 'url(#dare-gradient)',
                       }}
                     />
@@ -151,7 +151,7 @@ const Sidebar = () => {
                   }`}
                 >
                   {isActive ? (
-                    <span className='bg-dare-gradient bg-clip-text text-transparent'>
+                    <span className='bg-dare-gradient bg-clip-text text-transparent dark:bg-none dark:text-white'>
                       {item.name}
                     </span>
                   ) : (
@@ -162,7 +162,7 @@ const Sidebar = () => {
             )
           })}
 
-          <div className='sticky bottom-0 z-10 mt-auto bg-white'>
+          <div className='sticky bottom-0 z-10 mt-auto bg-white dark:bg-dark-bg'>
             {bottomItems.map((item) => {
               const isActive = location.pathname === item.path
               return (
@@ -171,7 +171,7 @@ const Sidebar = () => {
                   to={item.path}
                   className={`flex w-full items-center rounded-lg p-3 text-start leading-tight outline-none transition-all ${
                     isActive
-                      ? 'bg-sky-50'
+                      ? 'dark:hover:bg-dare-gradient/90 bg-sky-50 dark:bg-dare-gradient dark:text-white'
                       : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gradient-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80'
                   }`}
                 >
@@ -183,7 +183,7 @@ const Sidebar = () => {
                         className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
                         style={{
                           fill: 'none',
-                          stroke: 'url(#dare-gradient)',
+                          stroke: 'url(#dare-gradient) dark:white',
                           color: 'url(#dare-gradient)',
                         }}
                       />
@@ -199,7 +199,7 @@ const Sidebar = () => {
                     }`}
                   >
                     {isActive ? (
-                      <span className='bg-dare-gradient bg-clip-text text-transparent'>
+                      <span className='bg-dare-gradient bg-clip-text text-transparent dark:bg-none dark:text-white'>
                         {item.name}
                       </span>
                     ) : (

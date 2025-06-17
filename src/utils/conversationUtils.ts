@@ -126,7 +126,7 @@ export const getConversationItemClassName = (
     : ''
   const activeClasses =
     isActive && !isSelected
-      ? 'bg-pink-50 text-primary'
+      ? 'bg-pink-50 dark:bg-dare-gradient dark:text-white text-primary'
       : !isSelected
         ? 'focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-opacity-80 active:bg-opacity-80'
         : ''

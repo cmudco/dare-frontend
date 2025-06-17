@@ -126,24 +126,27 @@ const ConversationFileSelect: React.FC = () => {
     <div className='left-3 flex h-full items-center'>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant='ghost' className='h-9 w-9 p-0 hover:bg-gray-200'>
-            <FolderIcon className='h-5 w-5 text-gray-600' />
+          <Button
+            variant='ghost'
+            className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
+          >
+            <FolderIcon className='h-5 w-5 text-gray-600 dark:text-gray-300' />
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className='w-[400px] p-4'
+          className='w-[400px] border bg-background bg-white p-4 dark:border-dark-icon-unselected'
           align='start'
           side='top'
           sideOffset={8}
         >
-          <div className='space-y-4'>
+          <div className='space-y-4 text-gray-900 dark:text-white'>
             <div className='relative'>
-              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground dark:text-gray-400' />
               <Input
                 placeholder={`Search ${activeTab}`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='pl-9 pr-10'
+                className='pl-9 pr-10 dark:border-dark-icon-unselected dark:bg-transparent dark:text-white dark:placeholder-gray-400'
               />
               <SettingsPopover
                 open={settingsOpen}
@@ -152,16 +155,16 @@ const ConversationFileSelect: React.FC = () => {
                 <SettingsPopoverTrigger asChild>
                   <Button
                     variant='ghost'
-                    className='absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0'
+                    className='absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0 dark:hover:bg-white/10'
                   >
-                    <Settings className='h-4 w-4 text-gray-600' />
+                    <Settings className='h-4 w-4 text-gray-600 dark:text-gray-300' />
                   </Button>
                 </SettingsPopoverTrigger>
                 <SettingsPopoverContent
                   align='start'
                   side='right'
                   sideOffset={8}
-                  className='w-[25rem] p-4'
+                  className='w-[25rem] border bg-background bg-white p-4 dark:border-dark-icon-unselected'
                 >
                   <ModelContextSettings
                     onClose={() => setSettingsOpen(false)}
@@ -178,11 +181,31 @@ const ConversationFileSelect: React.FC = () => {
                 )
               }
             >
-              <TabsList className='grid w-full grid-cols-4'>
-                <TabsTrigger value='embeddings'>Embeddings</TabsTrigger>
-                <TabsTrigger value='files'>Files</TabsTrigger>
-                <TabsTrigger value='tags'>Tags</TabsTrigger>
-                <TabsTrigger value='folders'>Folders</TabsTrigger>
+              <TabsList className='grid w-full grid-cols-4 dark:border-dark-icon-unselected dark:bg-black/20'>
+                <TabsTrigger
+                  value='embeddings'
+                  className='dark:text-gray-300 dark:data-[state=active]:bg-dark-button-primary dark:data-[state=active]:text-white'
+                >
+                  Embeddings
+                </TabsTrigger>
+                <TabsTrigger
+                  value='files'
+                  className='dark:text-gray-300 dark:data-[state=active]:bg-dark-button-primary dark:data-[state=active]:text-white'
+                >
+                  Files
+                </TabsTrigger>
+                <TabsTrigger
+                  value='tags'
+                  className='dark:text-gray-300 dark:data-[state=active]:bg-dark-button-primary dark:data-[state=active]:text-white'
+                >
+                  Tags
+                </TabsTrigger>
+                <TabsTrigger
+                  value='folders'
+                  className='dark:text-gray-300 dark:data-[state=active]:bg-dark-button-primary dark:data-[state=active]:text-white'
+                >
+                  Folders
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value='embeddings' className='mt-4'>
@@ -191,21 +214,23 @@ const ConversationFileSelect: React.FC = () => {
                     <div
                       key={file.id}
                       onClick={() => handleToggleEmbedding(file)}
-                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-muted'
+                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-muted dark:hover:bg-white/10'
                     >
                       <div
                         className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
                           selectedEmbeddings.some((f) => f.id === file.id)
                             ? 'border-primary bg-primary'
-                            : 'border-input hover:border-muted-foreground'
+                            : 'border-input hover:border-muted-foreground dark:border-dark-icon-unselected dark:hover:border-gray-300'
                         }`}
                       >
                         {selectedEmbeddings.some((f) => f.id === file.id) && (
                           <Check className='h-3 w-3 text-primary-foreground' />
                         )}
                       </div>
-                      <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                      <span className='text-sm'>{file.name}</span>
+                      <FileIcon className='mr-2 h-4 w-4 text-muted-foreground dark:text-gray-400' />
+                      <span className='text-sm dark:text-white'>
+                        {file.name}
+                      </span>
                     </div>
                   ))}
                   {filteredFiles.length === 0 && (
@@ -341,14 +366,23 @@ const ConversationFileSelect: React.FC = () => {
             <Separator />
 
             <div className='flex items-center justify-between'>
-              <Button variant='ghost' size='sm' onClick={clearSelections}>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={clearSelections}
+                className='dark:text-white dark:hover:bg-white/10'
+              >
                 Clear
               </Button>
-                <Button size='sm' onClick={() => setOpen(false)}>
-                Done ({selectedEmbeddings.length} embeddings, {selectedFiles.length}{' '}
-                files, {selectedTags.length} tags, {selectedFolders.length}{' '}
-                folders)
-                </Button>
+              <Button
+                size='sm'
+                onClick={() => setOpen(false)}
+                className='dark:bg-dark-button-primary dark:text-white dark:hover:bg-dark-button-primary/80'
+              >
+                Done ({selectedEmbeddings.length} embeddings,{' '}
+                {selectedFiles.length} files, {selectedTags.length} tags,{' '}
+                {selectedFolders.length} folders)
+              </Button>
             </div>
           </div>
         </PopoverContent>

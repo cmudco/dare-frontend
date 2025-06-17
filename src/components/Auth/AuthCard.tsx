@@ -75,7 +75,7 @@ const AuthCard = <T extends FormikValues>({
           </div>
         </div>
 
-        <h1 className='text-center text-2xl font-black text-[#023572]'>
+        <h1 className='text-center text-2xl font-black text-foreground'>
           {title}
         </h1>
         {subtitle && <p className='w-[80%] text-start text-sm'>{subtitle}</p>}

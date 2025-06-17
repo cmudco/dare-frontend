@@ -160,14 +160,16 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
 
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max bg-white text-left'>
+      <Table className='mt-4 w-full min-w-max bg-background bg-white text-left'>
         <TableHeader>
-          <TableRow className='bg-muted'>
+          <TableRow className='bg-background bg-muted'>
             {PROMPTS_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 ${
-                  head !== 'Action' ? 'hover:bg-gray-100 hover:opacity-100' : ''
+                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 dark:text-white ${
+                  head !== 'Action'
+                    ? 'hover:bg-gray-100 hover:opacity-100 dark:hover:bg-gray-700'
+                    : ''
                 }`}
                 onClick={() => head !== 'Action' && handleSort(head)}
               >
@@ -199,7 +201,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={PROMPTS_TABLE_HEAD.length}
-                className='p-4 text-center'
+                className='p-4 text-center dark:text-white'
               >
                 Loading prompts...
               </TableCell>
@@ -208,7 +210,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={PROMPTS_TABLE_HEAD.length}
-                className='p-4 text-center'
+                className='p-4 text-center dark:text-white'
               >
                 No matching prompts found
               </TableCell>
@@ -216,29 +218,29 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
           ) : (
             paginatedPromptGroups.map((group) =>
               group.versions.map((prompt) => (
-                <TableRow key={prompt.id}>
+                <TableRow key={prompt.id} className='dark:border-gray-700'>
                   <TableCell className='p-4'>
                     <div>
                       <div className='flex items-center gap-2'>
-                        <h3 className='font-medium'>
+                        <h3 className='font-medium dark:text-white'>
                           {prompt.title || 'Untitled'}
                         </h3>
-                        <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+                        <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'>
                           v{prompt.version || 1}
                         </span>
                       </div>
-                      <p className='max-w-[300px] truncate text-sm text-gray-500'>
+                      <p className='max-w-[300px] truncate text-sm text-gray-500 dark:text-gray-400'>
                         {renderPromptContent(prompt.content) || 'No content'}
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className='p-4'>
+                  <TableCell className='p-4 dark:text-white'>
                     {formatDate(prompt.createdAt)}
                   </TableCell>
                   <TableCell className='p-4 text-center'>
                     <DropdownMenu>
-                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
-                        <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
+                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200 dark:hover:bg-gray-700'>
+                        <EllipsisVerticalIcon className='h-4 w-4 text-gray-500 dark:text-gray-400' />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem
@@ -282,25 +284,42 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
 
         {sortedPromptGroups.length > 0 && (
           <TableFooter>
-            <TableRow>
+            <TableRow className='bg-background'>
               <TableCell
                 colSpan={PROMPTS_TABLE_HEAD.length}
-                className='w-full p-4'
+                className='w-full p-4 dark:text-white'
               >
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
-                    <span className='text-sm'>Rows per page:</span>
+                    <span className='text-sm dark:text-white'>
+                      Rows per page:
+                    </span>
                     <Select
                       value={String(itemsPerPage)}
                       onValueChange={(val) => setItemsPerPage(Number(val))}
                     >
-                      <SelectTrigger className='w-[80px]'>
+                      <SelectTrigger className='w-[80px] bg-background dark:border-gray-700 dark:text-white'>
                         <SelectValue placeholder='Rows' />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='5'>5</SelectItem>
-                        <SelectItem value='10'>10</SelectItem>
-                        <SelectItem value='20'>20</SelectItem>
+                      <SelectContent className='bg-background dark:border-gray-700'>
+                        <SelectItem
+                          value='5'
+                          className='dark:text-white dark:hover:bg-white/10'
+                        >
+                          5
+                        </SelectItem>
+                        <SelectItem
+                          value='10'
+                          className='dark:text-white dark:hover:bg-white/10'
+                        >
+                          10
+                        </SelectItem>
+                        <SelectItem
+                          value='20'
+                          className='dark:text-white dark:hover:bg-white/10'
+                        >
+                          20
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -314,7 +333,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                     >
                       Previous
                     </Button>
-                    <span className='text-sm'>
+                    <span className='text-sm dark:text-white'>
                       Page {currentPage} of {totalPages || 1}
                     </span>
                     <Button

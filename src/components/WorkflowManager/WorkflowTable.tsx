@@ -146,14 +146,16 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
 
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max bg-white text-left'>
+      <Table className='mt-4 w-full min-w-max bg-background bg-white text-left'>
         <TableHeader>
-          <TableRow className='bg-muted'>
+          <TableRow className='bg-background bg-muted'>
             {WORKFLOWS_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 ${
-                  head !== 'Action' ? 'hover:bg-gray-100 hover:opacity-100' : ''
+                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 dark:text-white ${
+                  head !== 'Action'
+                    ? 'hover:bg-gray-100 hover:opacity-100 dark:hover:bg-gray-700'
+                    : ''
                 }`}
                 onClick={() => head !== 'Action' && handleSort(head)}
               >
@@ -183,7 +185,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={WORKFLOWS_TABLE_HEAD.length}
-                className='p-4 text-center'
+                className='p-4 text-center dark:text-white'
               >
                 Loading workflows...
               </TableCell>
@@ -192,35 +194,37 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={WORKFLOWS_TABLE_HEAD.length}
-                className='p-4 text-center'
+                className='p-4 text-center dark:text-white'
               >
                 No matching workflows found
               </TableCell>
             </TableRow>
           ) : (
             paginatedWorkflows.map((workflow) => (
-              <TableRow key={workflow.id}>
+              <TableRow key={workflow.id} className='dark:border-gray-700'>
                 <TableCell className='p-4'>
-                  <h3 className='font-medium'>
+                  <h3 className='font-medium dark:text-white'>
                     {workflow.title || 'Untitled'}
                   </h3>
                 </TableCell>
                 <TableCell className='p-4'>
-                  <p className='max-w-[300px] truncate text-sm text-gray-500'>
+                  <p className='max-w-[300px] truncate text-sm text-gray-500 dark:text-gray-400'>
                     {workflow.description || 'No description'}
                   </p>
                 </TableCell>
                 <TableCell className='p-4'>
                   {getModeBadge(workflow.mode)}
                 </TableCell>
-                <TableCell className='p-4'>{getStepCount(workflow)}</TableCell>
-                <TableCell className='p-4'>
+                <TableCell className='p-4 dark:text-white'>
+                  {getStepCount(workflow)}
+                </TableCell>
+                <TableCell className='p-4 dark:text-white'>
                   {formatDate(workflow.createdAt || workflow.created_at)}
                 </TableCell>
                 <TableCell className='p-4 text-center'>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
-                      <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
+                    <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200 dark:hover:bg-gray-700'>
+                      <EllipsisVerticalIcon className='h-4 w-4 text-gray-500 dark:text-gray-400' />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem
@@ -271,14 +275,16 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
         </TableBody>
         {sortedWorkflows.length > 0 && (
           <TableFooter>
-            <TableRow>
+            <TableRow className='bg-background'>
               <TableCell
                 colSpan={WORKFLOWS_TABLE_HEAD.length}
                 className='w-full p-4'
               >
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
-                    <span className='text-sm'>Rows per page:</span>
+                    <span className='text-sm dark:text-white'>
+                      Rows per page:
+                    </span>
                     <Select
                       value={String(itemsPerPage)}
                       onValueChange={(val) => setItemsPerPage(Number(val))}
@@ -302,7 +308,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                     >
                       Previous
                     </Button>
-                    <span className='text-sm'>
+                    <span className='text-sm dark:text-white'>
                       Page {currentPage} of {totalPages || 1}
                     </span>
                     <Button

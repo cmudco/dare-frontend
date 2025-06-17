@@ -49,17 +49,17 @@ const ConversationHistory = () => {
 
   return (
     <div
-      className={`transition-width flex max-w-[20vw] flex-1 flex-col border border-pink-50 bg-white bg-clip-border text-gray-700 duration-300`}
+      className={`transition-width flex max-w-[20vw] flex-1 flex-col border border-pink-50 bg-white bg-clip-border text-gray-700 duration-300 dark:border-slate-800 dark:bg-dark-bg dark:text-white`}
     >
       <div className='flex items-center justify-between border-pink-50 p-4'>
-        <div className='flex flex-grow items-center rounded-3xl border border-gray-500 p-2'>
-          <MagnifyingGlassIcon className='mr-2 h-5 w-5 text-gray-600' />
+        <div className='flex flex-grow items-center rounded-3xl border border-gray-500 p-2 dark:border-slate-800'>
+          <MagnifyingGlassIcon className='mr-2 h-5 w-5 text-gray-600 dark:text-dark-icon-unselected' />
           <input
             type='text'
             placeholder='Search'
             value={searchQuery}
             onChange={handleSearchChange}
-            className='w-20 bg-transparent font-normal placeholder-gray-600 outline-none'
+            className='w-20 bg-transparent font-normal placeholder-gray-600 outline-none dark:text-white dark:placeholder-dark-icon-unselected'
           />
         </div>
         <Button

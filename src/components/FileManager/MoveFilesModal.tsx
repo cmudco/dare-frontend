@@ -77,13 +77,13 @@ const MoveFilesModal = () => {
               {selectedFiles.map((file) => (
                 <div
                   key={file.id}
-                  className='flex items-center rounded-md border bg-white p-2 shadow-sm hover:bg-gray-50'
+                  className='dark:bg-dark-chat-history flex items-center rounded-md border bg-white p-2 shadow-sm hover:bg-gray-50 dark:border-dark-icon-unselected dark:hover:bg-dark-icon-unselected'
                 >
                   <div className='mr-2 flex-shrink-0'>
                     {getFileIcon(file.fileType)}
                   </div>
                   <div className='min-w-0 flex-1'>
-                    <p className='truncate text-sm font-medium text-gray-900'>
+                    <p className='truncate text-sm font-medium text-gray-900 dark:text-white'>
                       {file.name || 'Unnamed'}
                     </p>
                     <p className='truncate text-xs text-gray-500'>
