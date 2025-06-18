@@ -93,7 +93,7 @@ const WorkflowViewer = () => {
       direction='right'
       onOpenChange={() => dispatch(setSelectedWorkflowRun(null))}
     >
-      <DrawerContent className='fixed bottom-0 right-0 top-0 mt-0 h-full w-[50vw] rounded-l-lg bg-white p-0 shadow-lg'>
+      <DrawerContent className='fixed bottom-0 right-0 top-0 mt-0 h-full w-[100vw] rounded-l-lg bg-white p-0 shadow-lg'>
         <ScrollArea className='h-full w-full'>
           <div className='p-4'>
             <DrawerHeader className='p-0 text-left'>
