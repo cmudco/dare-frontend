@@ -69,7 +69,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   }
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === 'Enter' && !event.shiftKey && !event.altKey) {
       event.preventDefault()
       handleSendMessage()
     }
