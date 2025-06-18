@@ -235,7 +235,7 @@ const Message: React.FC<MessageProps> = ({
                     }
                     return (
                       <code
-                        className='not-prose rounded bg-gray-100 px-1'
+                        className='not-prose rounded border border-gray-200 bg-gray-100 px-1 text-gray-900'
                         {...props}
                       >
                         {children}
