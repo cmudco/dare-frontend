@@ -1,7 +1,7 @@
 import React from 'react'
 import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline'
 import { useSortable } from '@dnd-kit/sortable'
-import { Pencil } from 'lucide-react'
+import { Pencil, Copy } from 'lucide-react'
 import { SortableConversationItemProps } from '../../redux/types/conversation'
 import {
   createDragStyle,
@@ -17,6 +17,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   editValue,
   onConversationClick,
   onEditClick,
+  onCloneClick,
   onEditChange,
   onEditBlur,
   onEditKeyDown,
@@ -66,16 +67,28 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
             <span className='block overflow-hidden text-ellipsis whitespace-nowrap pr-2 text-sm'>
               {getConversationTitle(conversation)}
             </span>
-            <button
-              className='absolute right-0 top-1/2 -translate-y-1/2 rounded-md bg-white p-1.5 opacity-0 shadow-sm transition-opacity duration-150 hover:bg-gray-100 group-hover:opacity-100'
-              onClick={(e) => {
-                e.stopPropagation()
-                onEditClick(conversation)
-              }}
-              aria-label='Rename chat'
-            >
-              <Pencil className='h-4 w-4 text-gray-600' />
-            </button>
+            <div className='absolute right-0 top-1/2 flex -translate-y-1/2 gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
+              <button
+                className='rounded-md bg-white p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-100'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onCloneClick(conversation)
+                }}
+                aria-label='Clone chat'
+              >
+                <Copy className='h-4 w-4 text-gray-600' />
+              </button>
+              <button
+                className='rounded-md bg-white p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-100'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEditClick(conversation)
+                }}
+                aria-label='Rename chat'
+              >
+                <Pencil className='h-4 w-4 text-gray-600' />
+              </button>
+            </div>
           </>
         )}
       </div>

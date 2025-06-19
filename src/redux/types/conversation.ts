@@ -113,6 +113,7 @@ export interface SortableConversationItemProps {
     event?: React.MouseEvent
   ) => void
   onEditClick: (conversation: Conversation) => void
+  onCloneClick: (conversation: Conversation) => void
   onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onEditBlur: () => void
   onEditKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
