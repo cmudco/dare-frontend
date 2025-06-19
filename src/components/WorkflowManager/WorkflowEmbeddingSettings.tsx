@@ -78,17 +78,15 @@ const WorkflowEmbeddingSettings: React.FC<WorkflowEmbeddingSettingsProps> = ({
   }
 
   return (
-    <div className='space-y-4 rounded-md border border-blue-200 bg-blue-50 p-4'>
+    <div className='space-y-4 rounded-md p-4'>
       <div className='flex items-center justify-between'>
-        <h4 className='text-sm font-medium text-blue-900'>
-          Embedding Settings
-        </h4>
+        <h4 className='text-sm font-medium'>Embedding Settings</h4>
       </div>
 
       <div className='space-y-4'>
         <div className='space-y-2'>
           <div className='flex items-center justify-between'>
-            <Label className='text-sm font-medium text-blue-800'>
+            <Label className='text-sm font-medium'>
               Max Context Snippets (Recommended:{' '}
               {MODEL_CONFIG.maxContextSnippets})
             </Label>
@@ -143,7 +141,7 @@ const WorkflowEmbeddingSettings: React.FC<WorkflowEmbeddingSettingsProps> = ({
 
         <div className='space-y-2'>
           <div className='flex items-center justify-between'>
-            <Label className='text-sm font-medium text-blue-800'>
+            <Label className='text-sm font-medium'>
               Document Similarity Threshold
             </Label>
             <Button
