@@ -27,8 +27,10 @@ import {
   ThumbsDown,
   Edit,
   RotateCcw,
+  Tag,
 } from 'lucide-react'
 import { formatDistance } from 'date-fns'
+import { getTagColor } from '@/utils/files'
 
 interface MessageMetadataProps {
   isOpen: boolean
@@ -137,9 +139,6 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                           {senderInfo.icon}
                           {senderInfo.label}
                         </Badge>
-                        <span className='text-sm text-gray-600'>
-                          {message.senderName}
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -262,6 +261,32 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                           <FileText className='h-4 w-4 text-gray-500' />
                           <span className='text-sm'>{file.name}</span>
                         </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Tags Information */}
+              {message.tags && message.tags.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className='flex items-center gap-2 text-lg'>
+                      <Tag className='h-5 w-5' />
+                      Tags ({message.tags.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='flex flex-wrap gap-2'>
+                      {message.tags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant={getTagColor(tag.label)}
+                          className='flex items-center gap-1'
+                        >
+                          <Tag className='h-3 w-3' />
+                          {tag.label}
+                        </Badge>
                       ))}
                     </div>
                   </CardContent>

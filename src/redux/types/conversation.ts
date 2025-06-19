@@ -26,6 +26,7 @@ export interface Message {
   isSender: boolean
   date: string
   files?: MyFile[]
+  tags?: Tag[]
   llmId?: number
   streaming?: boolean
   snippets?: Snippet[]
