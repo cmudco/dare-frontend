@@ -263,10 +263,8 @@ export const conversationSlice = createSlice({
         if (messageIndex !== -1) {
           state.activeConversationMessages[messageIndex] = {
             ...state.activeConversationMessages[messageIndex],
-            isLiked: action.payload.isLiked,
-            isDisliked: action.payload.isDisliked,
-            dislikeFeedback: action.payload.dislikeFeedback,
-            likeFeedback: action.payload.likeFeedback,
+            feedbackType: action.payload.feedbackType,
+            feedbackText: action.payload.feedbackText,
           }
         }
       })

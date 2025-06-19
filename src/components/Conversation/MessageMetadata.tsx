@@ -2,6 +2,7 @@ import React from 'react'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux/store'
 import { Message } from '@/redux/types/conversation'
+import { FeedbackType } from '@/utils/constants/conversation'
 import {
   Drawer,
   DrawerClose,
@@ -303,7 +304,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                 </CardHeader>
                 <CardContent>
                   <div className='flex flex-wrap gap-2'>
-                    {message.isLiked && (
+                    {message.feedbackType === FeedbackType.LIKE && (
                       <Badge
                         variant='outline'
                         className='border-green-600 text-green-600'
@@ -312,7 +313,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                         Liked
                       </Badge>
                     )}
-                    {message.isDisliked && (
+                    {message.feedbackType === FeedbackType.DISLIKE && (
                       <Badge
                         variant='outline'
                         className='border-red-600 text-red-600'
@@ -365,27 +366,27 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                     </div>
                   )}
 
-                  {message.dislikeFeedback && (
+                  {message.feedbackText && (
                     <div className='mt-4'>
                       <label className='text-sm font-medium text-gray-600'>
-                        Dislike Feedback
+                        {message.feedbackType === 'like' ? 'Like' : 'Dislike'}{' '}
+                        Feedback
                       </label>
-                      <div className='mt-1 rounded-md bg-red-50 p-3'>
-                        <p className='text-sm text-red-800'>
-                          {message.dislikeFeedback}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {message.likeFeedback && (
-                    <div className='mt-4'>
-                      <label className='text-sm font-medium text-gray-600'>
-                        Like Feedback
-                      </label>
-                      <div className='mt-1 rounded-md bg-green-50 p-3'>
-                        <p className='text-sm text-green-800'>
-                          {message.likeFeedback}
+                      <div
+                        className={`mt-1 rounded-md p-3 ${
+                          message.feedbackType === 'like'
+                            ? 'bg-green-50'
+                            : 'bg-red-50'
+                        }`}
+                      >
+                        <p
+                          className={`text-sm ${
+                            message.feedbackType === 'like'
+                              ? 'text-green-800'
+                              : 'text-red-800'
+                          }`}
+                        >
+                          {message.feedbackText}
                         </p>
                       </div>
                     </div>
