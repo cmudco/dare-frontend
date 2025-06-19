@@ -352,6 +352,19 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                       </div>
                     </div>
                   )}
+
+                  {message.likeFeedback && (
+                    <div className='mt-4'>
+                      <label className='text-sm font-medium text-gray-600'>
+                        Like Feedback
+                      </label>
+                      <div className='mt-1 rounded-md bg-green-50 p-3'>
+                        <p className='text-sm text-green-800'>
+                          {message.likeFeedback}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

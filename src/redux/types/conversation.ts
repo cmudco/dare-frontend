@@ -35,6 +35,7 @@ export interface Message {
   isRegenerated?: boolean
   originalMessage?: string
   dislikeFeedback?: string
+  likeFeedback?: string
   cost?: string | null
   inputTokens?: number | null
   outputTokens?: number | null
@@ -93,6 +94,7 @@ export interface MessageReaction {
   isLiked: boolean
   isDisliked: boolean
   dislikeFeedback?: string
+  likeFeedback?: string
 }
 
 export interface ConversationSortOrder {

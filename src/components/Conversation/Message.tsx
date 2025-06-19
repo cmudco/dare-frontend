@@ -52,6 +52,7 @@ const Message: React.FC<MessageProps> = ({
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
   const [showOriginal, setShowOriginal] = useState(false)
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
+  const [feedbackIsLike, setFeedbackIsLike] = useState(false)
   const [isMetadataOpen, setIsMetadataOpen] = useState(false)
 
   // Function to get font size classes based on user preference
@@ -87,16 +88,8 @@ const Message: React.FC<MessageProps> = ({
   const handleReaction = (isLike: boolean) => {
     if (!message.id) return
 
-    if (isLike || message.isDisliked) {
-      dispatch(
-        updateMessageThunk({
-          messageId: message.id,
-          reaction: { isLiked: isLike, isDisliked: !isLike },
-        })
-      )
-    } else {
-      setIsFeedbackModalOpen(true)
-    }
+    setFeedbackIsLike(isLike)
+    setIsFeedbackModalOpen(true)
   }
 
   const handleFeedbackSubmit = (feedback: string) => {
@@ -105,9 +98,14 @@ const Message: React.FC<MessageProps> = ({
         updateMessageThunk({
           messageId: message.id,
           reaction: {
-            isLiked: false,
-            isDisliked: true,
-            dislikeFeedback: feedback.trim() || undefined,
+            isLiked: feedbackIsLike,
+            isDisliked: !feedbackIsLike,
+            dislikeFeedback: !feedbackIsLike
+              ? feedback.trim() || undefined
+              : undefined,
+            likeFeedback: feedbackIsLike
+              ? feedback.trim() || undefined
+              : undefined,
           },
         })
       )
@@ -399,6 +397,7 @@ const Message: React.FC<MessageProps> = ({
         isOpen={isFeedbackModalOpen}
         onClose={() => setIsFeedbackModalOpen(false)}
         onSubmit={handleFeedbackSubmit}
+        isLike={feedbackIsLike}
       />
 
       <MessageMetadata

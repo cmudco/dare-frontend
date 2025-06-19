@@ -265,6 +265,7 @@ export const conversationSlice = createSlice({
             isLiked: action.payload.isLiked,
             isDisliked: action.payload.isDisliked,
             dislikeFeedback: action.payload.dislikeFeedback,
+            likeFeedback: action.payload.likeFeedback,
           }
         }
       })
