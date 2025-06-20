@@ -2,6 +2,7 @@ import React from 'react'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux/store'
 import { Message } from '@/redux/types/conversation'
+import { FeedbackType } from '@/utils/constants/conversation'
 import {
   Drawer,
   DrawerClose,
@@ -27,8 +28,10 @@ import {
   ThumbsDown,
   Edit,
   RotateCcw,
+  Tag,
 } from 'lucide-react'
 import { formatDistance } from 'date-fns'
+import { getTagColor } from '@/utils/files'
 
 interface MessageMetadataProps {
   isOpen: boolean
@@ -137,9 +140,6 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                           {senderInfo.icon}
                           {senderInfo.label}
                         </Badge>
-                        <span className='text-sm text-gray-600'>
-                          {message.senderName}
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -268,6 +268,32 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                 </Card>
               )}
 
+              {/* Tags Information */}
+              {message.tags && message.tags.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className='flex items-center gap-2 text-lg'>
+                      <Tag className='h-5 w-5' />
+                      Tags ({message.tags.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='flex flex-wrap gap-2'>
+                      {message.tags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant={getTagColor(tag.label)}
+                          className='flex items-center gap-1'
+                        >
+                          <Tag className='h-3 w-3' />
+                          {tag.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Message Status */}
               <Card>
                 <CardHeader>
@@ -278,7 +304,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                 </CardHeader>
                 <CardContent>
                   <div className='flex flex-wrap gap-2'>
-                    {message.isLiked && (
+                    {message.feedbackType === FeedbackType.LIKE && (
                       <Badge
                         variant='outline'
                         className='border-green-600 text-green-600'
@@ -287,7 +313,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                         Liked
                       </Badge>
                     )}
-                    {message.isDisliked && (
+                    {message.feedbackType === FeedbackType.DISLIKE && (
                       <Badge
                         variant='outline'
                         className='border-red-600 text-red-600'
@@ -340,14 +366,27 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                     </div>
                   )}
 
-                  {message.dislikeFeedback && (
+                  {message.feedbackText && (
                     <div className='mt-4'>
                       <label className='text-sm font-medium text-gray-600'>
-                        Dislike Feedback
+                        {message.feedbackType === 'like' ? 'Like' : 'Dislike'}{' '}
+                        Feedback
                       </label>
-                      <div className='mt-1 rounded-md bg-red-50 p-3'>
-                        <p className='text-sm text-red-800'>
-                          {message.dislikeFeedback}
+                      <div
+                        className={`mt-1 rounded-md p-3 ${
+                          message.feedbackType === 'like'
+                            ? 'bg-green-50'
+                            : 'bg-red-50'
+                        }`}
+                      >
+                        <p
+                          className={`text-sm ${
+                            message.feedbackType === 'like'
+                              ? 'text-green-800'
+                              : 'text-red-800'
+                          }`}
+                        >
+                          {message.feedbackText}
                         </p>
                       </div>
                     </div>

@@ -15,12 +15,14 @@ interface FeedbackModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (feedback: string) => void
+  isLike?: boolean
 }
 
 const FeedbackModal: React.FC<FeedbackModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  isLike = false,
 }) => {
   const [feedback, setFeedback] = useState('')
 
@@ -42,7 +44,9 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         <DialogHeader>
           <DialogTitle>Provide Feedback</DialogTitle>
           <DialogDescription>
-            Help us improve by sharing why you didn't like this response.
+            {isLike
+              ? 'Help us improve by sharing what you liked about this response.'
+              : "Help us improve by sharing why you didn't like this response."}
           </DialogDescription>
         </DialogHeader>
 
@@ -53,7 +57,11 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
               id='feedback'
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              placeholder='Please share your feedback to help us improve...'
+              placeholder={
+                isLike
+                  ? 'Please share what you liked to help us continue providing great responses...'
+                  : 'Please share your feedback to help us improve...'
+              }
               rows={4}
             />
           </div>

@@ -4,6 +4,8 @@ import { RootState, AppDispatch } from '../../redux/store'
 import {
   deleteWorkflow,
   startWorkflowRun,
+  cloneWorkflow,
+  getWorkflows,
 } from '../../redux/asyncThunks/workflow'
 import { formatDate } from '../../utils/constants/prompts'
 import { WORKFLOWS_TABLE_HEAD } from '../../utils/constants/workflows'
@@ -32,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import {
+  DocumentDuplicateIcon,
   EllipsisVerticalIcon,
   EyeIcon,
   PencilIcon,
@@ -49,6 +52,7 @@ import { getModeBadge, getStepCount } from '@/utils/workflowUtils'
 import WorkflowViewer from './WorkflowViewer'
 import { WorkflowTableProps } from '@/redux/types/workflow'
 import { SortDirectionEnum } from '@/utils/constants/sort'
+import { Workflow } from '@/redux/types/workflow'
 
 const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -127,6 +131,17 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
       setDeleteWorkflowId(null)
       setDeleteWorkflowTitle('')
     }
+  }
+
+  const handleClone = (id: string) => {
+    dispatch(cloneWorkflow(id)).then((action) => {
+      if (cloneWorkflow.fulfilled.match(action)) {
+        const payload = action.payload as Workflow
+        dispatch(getWorkflows()).then(() => {
+          dispatch(openEditModal(payload.id))
+        })
+      }
+    })
   }
 
   return (
@@ -230,6 +245,13 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                       >
                         <PencilIcon className='mr-2 h-4 w-4' />
                         <span>Edit</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleClone(workflow.id)}
+                        className='cursor-pointer text-yellow-500'
+                      >
+                        <DocumentDuplicateIcon className='h-4 w-4' />
+                        <span>Clone</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className='cursor-pointer text-red-500'

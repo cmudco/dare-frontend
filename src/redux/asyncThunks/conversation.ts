@@ -14,6 +14,7 @@ import {
   updateMessageAPI,
   updateConversationSortOrderAPI,
   deleteMultipleConversationsAPI,
+  cloneConversationAPI,
 } from '../../api/conversation'
 import { AppDispatch } from '../store'
 import { sendWebSocketMessage } from './websocket'
@@ -140,6 +141,17 @@ export const deleteMultipleConversations = createAsyncThunk<
       return conversationIds
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const cloneConversation = createAsyncThunk(
+  'conversation/cloneConversation',
+  async (conversationId: string, { rejectWithValue }) => {
+    try {
+      return await cloneConversationAPI(conversationId)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
     }
   }
 )

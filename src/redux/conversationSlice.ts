@@ -9,6 +9,7 @@ import {
   updateMessageThunk,
   updateConversationSortOrder,
   deleteMultipleConversations,
+  cloneConversation,
 } from './asyncThunks/conversation'
 import { Message, Conversation, LLMModel } from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
@@ -262,9 +263,8 @@ export const conversationSlice = createSlice({
         if (messageIndex !== -1) {
           state.activeConversationMessages[messageIndex] = {
             ...state.activeConversationMessages[messageIndex],
-            isLiked: action.payload.isLiked,
-            isDisliked: action.payload.isDisliked,
-            dislikeFeedback: action.payload.dislikeFeedback,
+            feedbackType: action.payload.feedbackType,
+            feedbackText: action.payload.feedbackText,
           }
         }
       })
@@ -293,6 +293,18 @@ export const conversationSlice = createSlice({
         state.selectedConversations = []
       })
       .addCase(deleteMultipleConversations.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(cloneConversation.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(cloneConversation.fulfilled, (state, action) => {
+        state.loading = false
+        state.conversations.unshift(action.payload)
+      })
+      .addCase(cloneConversation.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

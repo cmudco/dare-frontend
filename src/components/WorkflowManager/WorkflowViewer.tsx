@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react'
+import { memo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
 import { getWorkflowRunById } from '@/redux/asyncThunks/workflow.ts'
@@ -41,6 +41,8 @@ const WorkflowViewer = () => {
   )
 
   const stepsRef = useRef<HTMLDivElement>(null)
+  const [isExporting, setIsExporting] = useState(false)
+  const [expandAllForExport, setExpandAllForExport] = useState(false)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -70,21 +72,34 @@ const WorkflowViewer = () => {
   const handleExportResults = async () => {
     if (!selectedWorkflowRun || !stepsRef.current) return
 
-    const element = stepsRef.current
+    setIsExporting(true)
 
-    const opt = {
-      margin: [10, 10, 10, 10] as [number, number, number, number],
-      filename: `${selectedWorkflow?.title || 'workflow'}-results.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: {
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait' as 'portrait' | 'landscape',
-      },
+    try {
+      setExpandAllForExport(true)
+
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      const element = stepsRef.current
+
+      const opt = {
+        margin: [10, 10, 10, 10] as [number, number, number, number],
+        filename: `${selectedWorkflow?.title || 'workflow'}-results.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait' as 'portrait' | 'landscape',
+        },
+      }
+
+      await html2pdf().from(element).set(opt).save()
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+    } finally {
+      setIsExporting(false)
+      setExpandAllForExport(false)
     }
-
-    await html2pdf().from(element).set(opt).save()
   }
 
   return (
@@ -151,9 +166,19 @@ const WorkflowViewer = () => {
                         size='sm'
                         className='flex items-center gap-1.5'
                         onClick={handleExportResults}
+                        disabled={isExporting}
                       >
-                        <FileText className='h-4 w-4' />
-                        Export Results
+                        {isExporting ? (
+                          <>
+                            <div className='h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
+                            Exporting...
+                          </>
+                        ) : (
+                          <>
+                            <FileText className='h-4 w-4' />
+                            Export Results
+                          </>
+                        )}
                       </Button>
                     </div>
                   )}
@@ -228,6 +253,7 @@ const WorkflowViewer = () => {
                           runId={selectedWorkflowRun.id}
                           isOpen={!!selectedWorkflowRun}
                           workflowName={selectedWorkflow?.title}
+                          forceExpandAll={expandAllForExport}
                         />
                       </div>
                     </div>

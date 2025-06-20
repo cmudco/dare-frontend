@@ -30,6 +30,7 @@ import {
   updateConversation,
   updateConversationSortOrder,
   deleteMultipleConversations,
+  cloneConversation,
 } from '@/redux/asyncThunks/conversation'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
@@ -175,6 +176,18 @@ const ConversationList: React.FC = () => {
     }
   }
 
+  const handleCloneClick = async (conversation: Conversation) => {
+    try {
+      const clonedConversation = await dispatch(
+        cloneConversation(conversation.conversationId)
+      ).unwrap()
+      dispatch(updateActiveConversation(clonedConversation))
+      navigate(`/conversation/${clonedConversation.conversationId}`)
+    } catch (error) {
+      console.error('Error cloning conversation:', error)
+    }
+  }
+
   return (
     <nav className='text-blue-gray-700 flex h-full flex-col gap-1 font-sans text-base font-normal'>
       <DndContext
@@ -205,6 +218,7 @@ const ConversationList: React.FC = () => {
                   editValue={editValue}
                   onConversationClick={handleConversationClick}
                   onEditClick={handleEditClick}
+                  onCloneClick={handleCloneClick}
                   onEditChange={handleEditChange}
                   onEditBlur={handleEditBlur}
                   onEditKeyDown={handleEditKeyDown}

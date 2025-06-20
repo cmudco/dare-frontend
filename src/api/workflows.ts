@@ -103,3 +103,10 @@ export const getWorkflowRunByIdAPI = async (
     method: METHOD.GET,
   })
 }
+
+export const cloneWorkflowAPI = async (id: string): Promise<Workflow> => {
+  return await baseRequest<Workflow>({
+    url: `api/workflows/${id}/clone/`,
+    method: METHOD.POST,
+  })
+}
