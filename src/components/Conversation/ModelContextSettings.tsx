@@ -7,13 +7,6 @@ import {
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
 } from '../../redux/conversationSlice'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select'
 import { MODEL_CONFIG } from '../../config/modelConfig'
 import { RotateCw, X } from 'lucide-react'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
@@ -38,10 +31,17 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   const [snippetInput, setSnippetInput] = React.useState(
     maxContextSnippets.toString()
   )
+  const [thresholdInput, setThresholdInput] = React.useState(
+    documentSimilarityThreshold.toString()
+  )
 
   React.useEffect(() => {
     setSnippetInput(maxContextSnippets.toString())
   }, [maxContextSnippets])
+
+  React.useEffect(() => {
+    setThresholdInput(documentSimilarityThreshold.toString())
+  }, [documentSimilarityThreshold])
 
   const handleMaxContextSnippetsChange = (value: number) => {
     dispatch(updateMaxContextSnippets(value))
@@ -70,6 +70,30 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   }
 
   const handleSnippetInputKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === 'Enter') {
+      ;(e.target as HTMLInputElement).blur()
+    }
+  }
+
+  const handleThresholdInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const val = e.target.value.replace(/[^0-9.]/g, '')
+    setThresholdInput(val)
+  }
+
+  const handleThresholdInputBlur = () => {
+    const num = Math.max(0, Math.min(1, parseFloat(thresholdInput) || 0))
+    if (num !== documentSimilarityThreshold) {
+      handleDocumentSimilarityThresholdChange(num.toString())
+    } else {
+      setThresholdInput(num.toString())
+    }
+  }
+
+  const handleThresholdInputKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>
   ) => {
     if (e.key === 'Enter') {
@@ -200,22 +224,43 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
               <RotateCw className='h-4 w-4' />
             </Button>
           </div>
-          <Select
-            onValueChange={handleDocumentSimilarityThresholdChange}
-            value={documentSimilarityThreshold.toString()}
-          >
-            <SelectTrigger className='w-full'>
-              <SelectValue placeholder='Select similarity threshold' />
-            </SelectTrigger>
-
-            <SelectContent>
-              <SelectItem value='0.2'>Low (similarity score ≥ .20)</SelectItem>
-              <SelectItem value='0.5'>
-                Medium (similarity score ≥ .50)
-              </SelectItem>
-              <SelectItem value='0.8'>High (similarity score ≥ .80)</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className='flex items-center space-x-2'>
+            <Button
+              variant='outline'
+              className='h-auto px-2 py-1'
+              onClick={() =>
+                handleDocumentSimilarityThresholdChange(
+                  Math.max(0, documentSimilarityThreshold - 0.1).toFixed(1)
+                )
+              }
+            >
+              -
+            </Button>
+            <Input
+              type='number'
+              min={0}
+              max={1}
+              step={0.01}
+              value={thresholdInput}
+              onChange={handleThresholdInputChange}
+              onBlur={handleThresholdInputBlur}
+              onKeyDown={handleThresholdInputKeyDown}
+              className='hide-number-arrows h-8 w-20 text-center font-mono text-sm focus:outline-none focus-visible:outline-none'
+              aria-label='Document Similarity Threshold'
+              inputMode='decimal'
+            />
+            <Button
+              variant='outline'
+              className='h-auto px-2 py-1'
+              onClick={() =>
+                handleDocumentSimilarityThresholdChange(
+                  Math.min(1, documentSimilarityThreshold + 0.1).toFixed(1)
+                )
+              }
+            >
+              +
+            </Button>
+          </div>
         </div>
       </div>
       <style>{`

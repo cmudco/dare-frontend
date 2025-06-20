@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { MessageProps } from '../../redux/types/conversation'
+import { FeedbackType } from '@/utils/constants/conversation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -52,6 +53,7 @@ const Message: React.FC<MessageProps> = ({
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
   const [showOriginal, setShowOriginal] = useState(false)
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
+  const [feedbackIsLike, setFeedbackIsLike] = useState(false)
   const [isMetadataOpen, setIsMetadataOpen] = useState(false)
 
   // Function to get font size classes based on user preference
@@ -87,16 +89,8 @@ const Message: React.FC<MessageProps> = ({
   const handleReaction = (isLike: boolean) => {
     if (!message.id) return
 
-    if (isLike || message.isDisliked) {
-      dispatch(
-        updateMessageThunk({
-          messageId: message.id,
-          reaction: { isLiked: isLike, isDisliked: !isLike },
-        })
-      )
-    } else {
-      setIsFeedbackModalOpen(true)
-    }
+    setFeedbackIsLike(isLike)
+    setIsFeedbackModalOpen(true)
   }
 
   const handleFeedbackSubmit = (feedback: string) => {
@@ -105,9 +99,10 @@ const Message: React.FC<MessageProps> = ({
         updateMessageThunk({
           messageId: message.id,
           reaction: {
-            isLiked: false,
-            isDisliked: true,
-            dislikeFeedback: feedback.trim() || undefined,
+            feedbackType: feedbackIsLike
+              ? FeedbackType.LIKE
+              : FeedbackType.DISLIKE,
+            feedbackText: feedback.trim() || undefined,
           },
         })
       )
@@ -271,25 +266,31 @@ const Message: React.FC<MessageProps> = ({
 
           <button
             className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 ${
-              message.isLiked
+              message.feedbackType === FeedbackType.LIKE
                 ? 'text-blue-500'
                 : 'text-gray-400 hover:text-gray-800'
             }`}
             onClick={() => handleReaction(true)}
-            aria-label={message.isLiked ? 'Unlike response' : 'Like response'}
+            aria-label={
+              message.feedbackType === FeedbackType.LIKE
+                ? 'Remove like'
+                : 'Like response'
+            }
           >
             <ThumbsUp className='h-4 w-4' />
           </button>
 
           <button
             className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 ${
-              message.isDisliked
+              message.feedbackType === FeedbackType.DISLIKE
                 ? 'text-red-500'
                 : 'text-gray-400 hover:text-gray-800'
             }`}
             onClick={() => handleReaction(false)}
             aria-label={
-              message.isDisliked ? 'Remove dislike' : 'Dislike response'
+              message.feedbackType === FeedbackType.DISLIKE
+                ? 'Remove dislike'
+                : 'Dislike response'
             }
           >
             <ThumbsDown className='h-4 w-4' />
@@ -399,6 +400,7 @@ const Message: React.FC<MessageProps> = ({
         isOpen={isFeedbackModalOpen}
         onClose={() => setIsFeedbackModalOpen(false)}
         onSubmit={handleFeedbackSubmit}
+        isLike={feedbackIsLike}
       />
 
       <MessageMetadata

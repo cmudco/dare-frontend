@@ -1,4 +1,4 @@
-import { SenderType } from '@/utils/constants/conversation'
+import { SenderType, FeedbackType } from '@/utils/constants/conversation'
 import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
@@ -26,15 +26,15 @@ export interface Message {
   isSender: boolean
   date: string
   files?: MyFile[]
+  tags?: Tag[]
   llmId?: number
   streaming?: boolean
   snippets?: Snippet[]
-  isLiked?: boolean
-  isDisliked?: boolean
+  feedbackType?: FeedbackType | null
+  feedbackText?: string
   isEdited?: boolean
   isRegenerated?: boolean
   originalMessage?: string
-  dislikeFeedback?: string
   cost?: string | null
   inputTokens?: number | null
   outputTokens?: number | null
@@ -90,9 +90,8 @@ export interface ConversationResponse {
 }
 
 export interface MessageReaction {
-  isLiked: boolean
-  isDisliked: boolean
-  dislikeFeedback?: string
+  feedbackType?: FeedbackType | null
+  feedbackText?: string
 }
 
 export interface ConversationSortOrder {
@@ -111,6 +110,7 @@ export interface SortableConversationItemProps {
     event?: React.MouseEvent
   ) => void
   onEditClick: (conversation: Conversation) => void
+  onCloneClick: (conversation: Conversation) => void
   onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onEditBlur: () => void
   onEditKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void

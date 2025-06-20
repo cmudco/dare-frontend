@@ -89,3 +89,12 @@ export const deleteMultipleConversationsAPI = async (
     data: { conversationIds },
   })
 }
+
+export const cloneConversationAPI = async (
+  conversationId: string
+): Promise<Conversation> => {
+  return await baseRequest<Conversation>({
+    url: `api/conversations/${conversationId}/clone/`,
+    method: METHOD.POST,
+  })
+}

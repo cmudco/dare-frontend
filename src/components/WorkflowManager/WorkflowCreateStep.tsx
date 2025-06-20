@@ -18,6 +18,7 @@ import {
   Database,
   Minus,
   Plus,
+  Settings,
 } from 'lucide-react'
 import {
   Collapsible,
@@ -42,6 +43,8 @@ import {
 } from '@/utils/modelConfigUtils'
 import { Badge } from '../ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import WorkflowEmbeddingSettings from './WorkflowEmbeddingSettings'
 
 export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
   index,
@@ -301,22 +304,47 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
               {/* Files for Embedding Search */}
               <Card>
                 <CardHeader className='pb-3'>
-                  <CardTitle className='flex items-center gap-2 text-sm font-medium'>
-                    <Database className='h-4 w-4 text-blue-500' />
-                    Embedding Files
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className='h-3 w-3 text-gray-400' />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className='max-w-xs text-sm'>
-                            Files that will be searched using semantic
-                            similarity to find relevant context snippets.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                  <CardTitle className='flex items-center justify-between gap-2 text-sm font-medium'>
+                    <div className='flex items-center gap-2'>
+                      <Database className='h-4 w-4 text-blue-500' />
+                      Embedding Files
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className='h-3 w-3 text-gray-400' />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className='max-w-xs text-sm'>
+                              Files that will be searched using semantic
+                              similarity to find relevant context snippets.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          className='h-5 w-5 p-0 text-gray-400 hover:text-blue-600'
+                          title='Embedding search settings'
+                        >
+                          <Settings className='h-4 w-4 text-gray-600' />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        align='start'
+                        side='right'
+                        sideOffset={8}
+                        className='w-auto p-0'
+                      >
+                        <WorkflowEmbeddingSettings
+                          step={step}
+                          onChange={onChange}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-3'>
@@ -493,84 +521,6 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                 {getMaxTokensDescription(maxTokens)}
               </p>
             </div>
-
-            {/* Embedding Settings */}
-            {step.embeddings && step.embeddings.length > 0 && (
-              <Card className='border-blue-200 bg-blue-50'>
-                <CardHeader className='pb-3'>
-                  <CardTitle className='flex items-center gap-2 text-sm font-medium'>
-                    <Database className='h-4 w-4 text-blue-600' />
-                    Embedding Search Settings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  {/* Max Context Snippets */}
-                  <div className='space-y-2'>
-                    <div className='flex items-center justify-between'>
-                      <Label className='text-sm font-medium'>
-                        Max Context Snippets
-                      </Label>
-                      <span className='rounded border bg-white px-2 py-1 font-mono text-sm'>
-                        {step.maxContextSnippets ??
-                          MODEL_CONFIG.maxContextSnippets}
-                      </span>
-                    </div>
-                    <Slider
-                      min={1}
-                      max={10}
-                      step={1}
-                      value={[
-                        step.maxContextSnippets ??
-                          MODEL_CONFIG.maxContextSnippets,
-                      ]}
-                      onValueChange={(values) =>
-                        handleSliderChange('maxContextSnippets', values)
-                      }
-                      className='w-full'
-                    />
-                    <p className='text-xs text-gray-600'>
-                      Maximum number of relevant text snippets to retrieve from
-                      embedding files.
-                    </p>
-                  </div>
-
-                  {/* Document Similarity Threshold */}
-                  <div className='space-y-2'>
-                    <div className='flex items-center justify-between'>
-                      <Label className='text-sm font-medium'>
-                        Similarity Threshold
-                      </Label>
-                      <span className='rounded border bg-white px-2 py-1 font-mono text-sm'>
-                        {(
-                          step.documentSimilarityThreshold ??
-                          MODEL_CONFIG.documentSimilarityThreshold
-                        ).toFixed(2)}
-                      </span>
-                    </div>
-                    <Slider
-                      min={0.1}
-                      max={0.9}
-                      step={0.05}
-                      value={[
-                        step.documentSimilarityThreshold ??
-                          MODEL_CONFIG.documentSimilarityThreshold,
-                      ]}
-                      onValueChange={(values) =>
-                        handleSliderChange(
-                          'documentSimilarityThreshold',
-                          values
-                        )
-                      }
-                      className='w-full'
-                    />
-                    <p className='text-xs text-gray-600'>
-                      Minimum similarity score for including text snippets in
-                      context.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </CollapsibleContent>
       </div>
