@@ -21,7 +21,7 @@ export const CodeBlock: React.FC<{
           type='button'
           variant='outline'
           size='sm'
-          className='flex h-6 min-h-0 w-6 min-w-0 items-center justify-center border border-gray-300 bg-white/80 px-1 py-0.5 text-gray-800 opacity-80 shadow-sm transition-opacity hover:opacity-100'
+          className='dark:bg-dark-chat-history/80 flex h-6 min-h-0 w-6 min-w-0 items-center justify-center border border-gray-300 bg-white/80 px-1 py-0.5 text-gray-800 opacity-80 shadow-sm transition-opacity hover:opacity-100 dark:border-dark-icon-unselected dark:text-white'
           style={{ fontSize: '0.75rem' }}
           onClick={() => {
             navigator.clipboard.writeText(codeString)
@@ -40,7 +40,7 @@ export const CodeBlock: React.FC<{
         </Button>
         {copied && (
           <span
-            className='animate-fade-in-out ml-2 rounded bg-white/90 px-2 py-0.5 text-xs font-semibold text-green-600 shadow'
+            className='animate-fade-in-out dark:bg-dark-chat-history/90 ml-2 rounded bg-white/90 px-2 py-0.5 text-xs font-semibold text-green-600 shadow dark:text-green-400'
             style={{ zIndex: 20 }}
           >
             Snippet copied!

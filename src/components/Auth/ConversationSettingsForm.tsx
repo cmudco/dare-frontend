@@ -29,36 +29,50 @@ const ConversationSettingsForm: React.FC = () => {
   ]
 
   const handleFontSizeChange = (newFontSize: string) => {
-    dispatch(updateConversationSettings({
-      fontSize: newFontSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl'
-    }))
+    dispatch(
+      updateConversationSettings({
+        fontSize: newFontSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl',
+      })
+    )
   }
 
   return (
-    <Card className="p-6">
-      <div className="space-y-6">
+    <Card className='border-border bg-card p-6'>
+      <div className='space-y-6'>
         <div>
-          <h3 className="text-lg font-semibold">Conversation Preferences</h3>
-          <p className="text-sm text-gray-600 mt-1">
+          <h3 className='text-lg font-semibold text-card-foreground'>
+            Conversation Preferences
+          </h3>
+          <p className='mt-1 text-sm text-muted-foreground'>
             Customize how messages appear in your conversations.
           </p>
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="font-size-select" className="text-sm font-medium">
+        <div className='space-y-4'>
+          <div className='space-y-2'>
+            <Label
+              htmlFor='font-size-select'
+              className='text-sm font-medium text-foreground'
+            >
               Message Font Size
             </Label>
-            <p className="text-xs text-gray-500">
+            <p className='text-xs text-muted-foreground'>
               Choose the font size for both your messages and AI responses.
             </p>
             <Select value={fontSize} onValueChange={handleFontSizeChange}>
-              <SelectTrigger id="font-size-select" className="w-full max-w-xs">
-                <SelectValue placeholder="Select font size" />
+              <SelectTrigger
+                id='font-size-select'
+                className='w-full max-w-xs border-border bg-background text-foreground'
+              >
+                <SelectValue placeholder='Select font size' />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className='border-border bg-popover'>
                 {fontSizeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    className='text-popover-foreground hover:bg-accent'
+                  >
                     {option.label}
                   </SelectItem>
                 ))}
@@ -67,15 +81,13 @@ const ConversationSettingsForm: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600 mb-2 font-medium">Preview:</p>
-          <div className={`
-            ${fontSize === 'xs' ? 'text-xs' : ''}
-            ${fontSize === 'sm' ? 'text-sm' : ''}
-            ${fontSize === 'base' ? 'text-base' : ''}
-            ${fontSize === 'lg' ? 'text-lg' : ''}
-            ${fontSize === 'xl' ? 'text-xl' : ''}
-          `}>
+        <div className='mt-4 rounded-lg bg-muted p-4'>
+          <p className='mb-2 text-sm font-medium text-muted-foreground'>
+            Preview:
+          </p>
+          <div
+            className={`text-foreground ${fontSize === 'xs' ? 'text-xs' : ''} ${fontSize === 'sm' ? 'text-sm' : ''} ${fontSize === 'base' ? 'text-base' : ''} ${fontSize === 'lg' ? 'text-lg' : ''} ${fontSize === 'xl' ? 'text-xl' : ''} `}
+          >
             This is how your messages will appear in conversations.
           </div>
         </div>

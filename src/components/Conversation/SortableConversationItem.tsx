@@ -54,7 +54,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
       <div className='relative min-w-0 flex-1'>
         {editingId === conversation.conversationId ? (
           <input
-            className='w-full rounded border bg-white px-2 py-1 text-sm shadow outline-none'
+            className='w-full rounded border bg-white px-2 py-1 text-sm shadow outline-none dark:border-dark-icon-unselected dark:bg-transparent dark:text-white'
             value={editValue}
             autoFocus
             onChange={onEditChange}
@@ -69,7 +69,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
             </span>
             <div className='absolute right-0 top-1/2 flex -translate-y-1/2 gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
               <button
-                className='rounded-md bg-white p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-100'
+                className='rounded-md bg-white p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-dark-icon-unselected'
                 onClick={(e) => {
                   e.stopPropagation()
                   onCloneClick(conversation)
@@ -79,7 +79,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                 <Copy className='h-4 w-4 text-gray-600' />
               </button>
               <button
-                className='rounded-md bg-white p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-100'
+                className='rounded-md bg-white p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-dark-icon-unselected'
                 onClick={(e) => {
                   e.stopPropagation()
                   onEditClick(conversation)

@@ -20,7 +20,7 @@ const WorkflowModal: React.FC = () => {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className='mx-auto max-h-[90vh] w-[90vw] max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg'>
+      <DialogContent className='dark:bg-dark-chat-history mx-auto max-h-[90vh] w-[90vw] max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg'>
         <WorkflowForm />
       </DialogContent>
     </Dialog>

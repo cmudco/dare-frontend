@@ -93,17 +93,21 @@ const ModelConfigurationPanel: React.FC = () => {
       <PopoverTrigger asChild>
         <Button
           variant='ghost'
-          className='absolute right-[10px] h-9 w-9 p-0 hover:bg-gray-200'
+          className='absolute right-[10px] h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
         >
-          <Settings className='h-5 w-5 text-gray-600' />
+          <Settings className='h-5 w-5 text-gray-600 dark:text-gray-300' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-80 p-4'>
-        <div className='flex flex-col justify-center gap-4'>
+      <PopoverContent className='w-80 border bg-background bg-white p-4 dark:border-dark-icon-unselected'>
+        <div className='flex flex-col justify-center gap-4 text-gray-900 dark:text-white'>
           {activeConversation?.conversationId && (
-            <div className='flex items-center justify-between border-b pb-2'>
-              <h3 className='font-medium'>Configuration</h3>
-              <Button size='sm' onClick={resetToDefaults} className='text-xs'>
+            <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+              <h3 className='font-medium dark:text-white'>Configuration</h3>
+              <Button
+                size='sm'
+                onClick={resetToDefaults}
+                className='text-xs dark:bg-dark-button-primary dark:text-white dark:hover:bg-dark-button-primary/80'
+              >
                 Reset to Defaults
               </Button>
             </div>
@@ -111,8 +115,8 @@ const ModelConfigurationPanel: React.FC = () => {
 
           <div className='space-y-4'>
             <div className='flex items-center justify-between'>
-              <h4 className='font-medium'>Temperature</h4>
-              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
+              <h4 className='font-medium dark:text-white'>Temperature</h4>
+              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
                 {temperature.toFixed(1)}
               </span>
             </div>
@@ -126,7 +130,7 @@ const ModelConfigurationPanel: React.FC = () => {
               className='my-4 cursor-pointer'
             />
 
-            <div className='flex justify-between px-1 text-xs text-gray-500'>
+            <div className='flex justify-between px-1 text-xs text-gray-500 dark:text-gray-400'>
               <span>Precise</span>
               <span>Balanced</span>
               <span>Creative</span>
@@ -137,10 +141,10 @@ const ModelConfigurationPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className='space-y-4 border-t pt-2'>
+          <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
             <div className='flex items-center justify-between'>
-              <h4 className='font-medium'>Max Tokens</h4>
-              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
+              <h4 className='font-medium dark:text-white'>Max Tokens</h4>
+              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
                 {maxTokens}
               </span>
             </div>
@@ -159,10 +163,10 @@ const ModelConfigurationPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className='space-y-4 border-t pt-2'>
+          <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
             <div className='flex items-center justify-between'>
-              <h4 className='font-medium'>History Limit</h4>
-              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm'>
+              <h4 className='font-medium dark:text-white'>History Limit</h4>
+              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
                 {historyLimit === 50 ? 'Full Context' : historyLimit}
               </span>
             </div>
@@ -176,7 +180,7 @@ const ModelConfigurationPanel: React.FC = () => {
               className='my-4 cursor-pointer'
             />
 
-            <div className='flex justify-between px-1 text-xs text-gray-500'>
+            <div className='flex justify-between px-1 text-xs text-gray-500 dark:text-gray-400'>
               <span>Minimal</span>
               <span>Standard</span>
               <span>Max</span>
@@ -190,7 +194,7 @@ const ModelConfigurationPanel: React.FC = () => {
           </div>
 
           {activeConversation?.conversationId && (
-            <p className='mt-2 border-t pt-2 text-xs text-gray-500'>
+            <p className='mt-2 border-t pt-2 text-xs text-gray-500 dark:border-dark-icon-unselected dark:text-gray-400'>
               These settings are specific to this conversation and will be
               remembered when you return.
             </p>

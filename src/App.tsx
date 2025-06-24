@@ -4,12 +4,17 @@ import { AppDispatch, RootState } from './redux/store'
 import AppRoutes from './routes/AppRoutes'
 import Loader from './components/Loader'
 import { useEffect } from 'react'
+import { initializeTheme } from './redux/themeSlice'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
   const { userLoading, user } = useSelector((state: RootState) => state.user)
+  const { isDarkMode } = useSelector((state: RootState) => state.theme)
 
   useEffect(() => {
+    // Initialize theme before anything else
+    dispatch(initializeTheme())
+
     if (!user) {
       dispatch(getUserData())
     }
@@ -17,11 +22,15 @@ function App() {
 
   const BackgroundCircle = () => (
     <div className='pointer-events-none fixed left-0 top-0 z-[-1] h-full w-full overflow-hidden backdrop-blur'>
-      <img
-        src='/shapes/BgCircle.svg'
-        alt='Background Circle'
-        className='absolute left-0 top-0 h-auto w-full object-cover'
-      />
+      {isDarkMode ? (
+        <div className='bg-dark-gradient absolute left-0 top-0 h-full w-full' />
+      ) : (
+        <img
+          src='/shapes/BgCircle.svg'
+          alt='Background Circle'
+          className='absolute left-0 top-0 h-auto w-full object-cover'
+        />
+      )}
     </div>
   )
 
