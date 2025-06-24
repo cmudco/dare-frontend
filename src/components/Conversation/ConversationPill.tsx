@@ -85,18 +85,18 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
 
   return (
     <>
-      <div className='flex w-[90%] flex-col justify-end rounded-2xl border-2 border-gray-200'>
+      <div className='flex w-[90%] flex-col justify-end rounded-2xl border-2 border-gray-200 dark:border-dark-icon-unselected dark:bg-transparent'>
         {editMessageId && (
-          <div className='mb-2 flex w-full items-center gap-2 rounded-b-sm rounded-t-2xl border-b bg-gray-100 px-6 py-3'>
-            <Pencil className='mr-1 h-4 w-4 text-gray-600' />
-            <span className='flex-1 text-base font-bold text-gray-700'>
+          <div className='mb-2 flex w-full items-center gap-2 rounded-b-sm rounded-t-2xl border-b bg-gray-100 px-6 py-3 dark:bg-dark-bg'>
+            <Pencil className='mr-1 h-4 w-4 text-gray-600 dark:text-dark-icon-unselected' />
+            <span className='flex-1 text-base font-bold text-gray-700 dark:text-white'>
               Editing message
             </span>
             <button
               onClick={onCancelEdit}
-              className='ml-2 rounded-full p-1 hover:bg-gray-200'
+              className='ml-2 rounded-full p-1 hover:bg-gray-200 dark:hover:bg-dark-icon-unselected/20'
             >
-              <X className='-mr-2 h-5 w-5 text-gray-500' />
+              <X className='-mr-2 h-5 w-5 text-gray-500 dark:text-dark-icon-unselected' />
             </button>
           </div>
         )}
@@ -107,16 +107,16 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
             placeholder='Type message'
-            className='h-14 w-full resize-none overflow-y-auto rounded-2xl py-4 pl-2 pr-12 text-sm font-normal focus:outline-none'
+            className='h-14 w-full resize-none overflow-y-auto rounded-2xl py-4 pl-2 pr-12 text-sm font-normal focus:outline-none dark:bg-transparent dark:text-white dark:placeholder-dark-icon-unselected'
             rows={1}
             style={{ minHeight: '3.5rem', maxHeight: '10rem' }}
           />
           <div
-            className='absolute right-[16px] top-1/2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300'
+            className='absolute right-[16px] top-1/2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-dark-icon-unselected/30 dark:hover:bg-dark-icon-unselected/50'
             onClick={handleSendMessage}
             aria-label='Send message'
           >
-            <ArrowUp className='h-4 w-4 text-gray-600' />
+            <ArrowUp className='h-4 w-4 text-gray-600 dark:text-white' />
           </div>
         </div>
 

@@ -188,7 +188,9 @@ const Message: React.FC<MessageProps> = ({
 
         <div
           className={`relative mb-2 max-w-[95%] text-wrap rounded-xl px-5 py-3 ${
-            message.isSender ? 'bg-gray-100' : 'bg-gray-100'
+            message.isSender
+              ? 'bg-gray-100 dark:bg-neutral-800'
+              : 'bg-gray-100 dark:bg-neutral-900'
           } inline-block hover:z-20`}
         >
           <div
@@ -197,7 +199,7 @@ const Message: React.FC<MessageProps> = ({
             }`}
           >
             <div
-              className={`prose ${getFontSizeClasses()} max-w-none text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
+              className={`prose ${getFontSizeClasses()} max-w-none text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none dark:text-white`}
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}

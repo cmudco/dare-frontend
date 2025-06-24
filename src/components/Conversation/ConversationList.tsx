@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   ChatBubbleLeftEllipsisIcon,
+  MoonIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline'
 import {
@@ -32,6 +33,7 @@ import {
   deleteMultipleConversations,
   cloneConversation,
 } from '@/redux/asyncThunks/conversation'
+import { toggleDarkMode } from '../../redux/themeSlice'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
 import {
@@ -64,12 +66,19 @@ const ConversationList: React.FC = () => {
   const selectedConversations = useSelector(
     (state: RootState) => state.conversation.selectedConversations
   )
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode)
 
   const sensors = useDragSensors()
 
   const bottomItems = [
     { name: 'Clear Conversation', icon: TrashIcon, action: 'clear' },
-    // { name: 'Dark Mode', icon: MoonIcon, disabled: true },
+    {
+      name: isDarkMode ? 'Light Mode' : 'Dark Mode',
+      icon: MoonIcon,
+      action: 'darkMode',
+      disabled: false,
+      currentTheme: isDarkMode ? 'dark' : 'light',
+    },
   ]
 
   const filteredConversations = filterConversations(conversations, searchQuery)
@@ -139,6 +148,8 @@ const ConversationList: React.FC = () => {
       } else if (activeConversation) {
         setIsDeleteConfirmOpen(true)
       }
+    } else if (action === 'darkMode') {
+      dispatch(toggleDarkMode())
     }
   }
 
@@ -230,15 +241,15 @@ const ConversationList: React.FC = () => {
 
         <DragOverlay>
           {activeId ? (
-            <div className='min-h-[48px] rounded-md border border-gray-200 bg-white px-3 py-3 opacity-95 shadow-lg'>
+            <div className='dark:bg-dark-chat-history min-h-[48px] rounded-md border border-gray-200 bg-white px-3 py-3 opacity-95 shadow-lg dark:border-dark-icon-unselected'>
               {(() => {
                 const draggedConversation = conversations.find(
                   (c) => c.conversationId === activeId
                 )
                 return draggedConversation ? (
                   <div className='flex items-center'>
-                    <ChatBubbleLeftEllipsisIcon className='mr-3 h-6 w-6 text-gray-600' />
-                    <span className='text-gray-900'>
+                    <ChatBubbleLeftEllipsisIcon className='mr-3 h-6 w-6 text-gray-600 dark:text-white' />
+                    <span className='text-gray-900 dark:text-white'>
                       {getConversationTitle(draggedConversation)}
                     </span>
                   </div>
@@ -248,8 +259,8 @@ const ConversationList: React.FC = () => {
           ) : null}
         </DragOverlay>
       </DndContext>
-      <hr className='mt-4 border-gray-200' />
-      <div className=''>
+      <hr className='mt-4 border-gray-200 dark:border-dark-icon-unselected' />
+      <div className='space-y-1'>
         {bottomItems.map((item) => {
           const hasSelectedConversations = selectedConversations.length > 0
           const isDisabled =
@@ -265,22 +276,26 @@ const ConversationList: React.FC = () => {
             <div
               key={item.name}
               onClick={() => !isDisabled && handleBottomItemClick(item.action)}
-              className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight outline-none transition-all ${
+              className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight text-gray-700 outline-none transition-all dark:text-white ${
                 location.pathname === item.name
-                  ? 'bg-pink-50 text-primary'
-                  : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80'
+                  ? 'bg-pink-50 text-primary dark:bg-dark-button-primary dark:text-white'
+                  : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80 dark:hover:bg-dark-icon-unselected/20 dark:hover:text-white dark:focus:bg-dark-icon-unselected/20 dark:focus:text-white dark:active:bg-dark-icon-unselected/20 dark:active:text-white'
               } ${
                 isDisabled
-                  ? 'cursor-not-allowed text-gray-400 line-through opacity-50'
+                  ? 'cursor-not-allowed text-gray-400 line-through opacity-50 dark:text-dark-icon-unselected'
                   : 'cursor-pointer'
               }`}
             >
               <item.icon
                 className={`mr-4 h-5 w-5 font-bold ${
-                  isDisabled ? 'text-gray-400' : ''
+                  isDisabled
+                    ? 'text-gray-400 dark:text-dark-icon-unselected'
+                    : 'text-gray-700 dark:text-white'
                 }`}
               />
-              {buttonText}
+              <span className='text-gray-700 dark:text-white'>
+                {buttonText}
+              </span>
             </div>
           )
         })}

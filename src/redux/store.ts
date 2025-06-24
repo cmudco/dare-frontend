@@ -8,6 +8,7 @@ import websocketReducer from './websocketSlice'
 import tagsReducer from './tagslice'
 import workflowReducer from './workflowSlice'
 import billingReducer from './billingSlice'
+import themeReducer from './themeSlice'
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({})
 
 export const store = configureStore({
@@ -20,6 +21,7 @@ export const store = configureStore({
     tags: tagsReducer,
     workflow: workflowReducer,
     billing: billingReducer,
+    theme: themeReducer,
   },
   enhancers: (getDefaultEnhancers) =>
     getDefaultEnhancers().concat(sentryReduxEnhancer),

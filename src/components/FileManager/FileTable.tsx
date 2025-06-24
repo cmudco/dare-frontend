@@ -134,12 +134,12 @@ const FileTable = () => {
   }
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max bg-white text-left'>
+      <Table className='mt-4 w-full min-w-max bg-background bg-white text-left'>
         <TableHeader>
-          <TableRow className='bg-muted'>
+          <TableRow className='bg-background bg-muted'>
             <TableHead
               key='select-all'
-              className='w-[50px] cursor-pointer select-none p-4 text-sm font-semibold transition-colors'
+              className='w-[50px] cursor-pointer select-none p-4 text-sm font-semibold transition-colors dark:text-white'
             >
               <div className='flex items-center justify-center'>
                 <input
@@ -156,7 +156,7 @@ const FileTable = () => {
             {TABLE_HEAD.filter((head) => head !== 'Select').map((head) => (
               <TableHead
                 key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 ${head !== 'Action' ? 'hover:bg-gray-100 hover:opacity-100' : ''}`}
+                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 dark:text-white ${head !== 'Action' ? 'hover:bg-gray-100 hover:opacity-100 dark:hover:bg-gray-700' : ''}`}
                 onClick={() => head !== 'Action' && handleSort(head)}
               >
                 <div className='flex items-center gap-2 opacity-70'>
@@ -264,22 +264,42 @@ const FileTable = () => {
 
         {sortedFiles.length > 0 && (
           <TableFooter>
-            <TableRow>
-              <TableCell colSpan={TABLE_HEAD.length + 1} className='w-full p-4'>
+            <TableRow className='dark:bg-gray-800/50'>
+              <TableCell
+                colSpan={TABLE_HEAD.length + 1}
+                className='w-full p-4 dark:text-white'
+              >
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
-                    <span className='text-sm'>Rows per page:</span>
+                    <span className='text-sm dark:text-white'>
+                      Rows per page:
+                    </span>
                     <Select
                       value={String(itemsPerPage)}
                       onValueChange={(val) => setItemsPerPage(Number(val))}
                     >
-                      <SelectTrigger className='w-[80px]'>
+                      <SelectTrigger className='w-[80px] bg-background dark:border-gray-700 dark:text-white'>
                         <SelectValue placeholder='Rows' />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='5'>5</SelectItem>
-                        <SelectItem value='10'>10</SelectItem>
-                        <SelectItem value='20'>20</SelectItem>
+                      <SelectContent className='bg-background dark:border-gray-700'>
+                        <SelectItem
+                          value='5'
+                          className='dark:text-white dark:hover:bg-white/10'
+                        >
+                          5
+                        </SelectItem>
+                        <SelectItem
+                          value='10'
+                          className='dark:text-white dark:hover:bg-white/10'
+                        >
+                          10
+                        </SelectItem>
+                        <SelectItem
+                          value='20'
+                          className='dark:text-white dark:hover:bg-white/10'
+                        >
+                          20
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -292,7 +312,7 @@ const FileTable = () => {
                     >
                       Previous
                     </Button>
-                    <span className='text-sm'>
+                    <span className='text-sm dark:text-white'>
                       Page {currentPage} of {totalPages || 1}
                     </span>
                     <Button

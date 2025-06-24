@@ -34,7 +34,7 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className='left-0 right-0 top-0 flex h-[80px] w-full items-center justify-between border border-pink-50 bg-white p-1 px-2'>
+    <header className='dark:border-r-0dark:bg-dark-bg left-0 right-0 top-0 flex h-[80px] w-full items-center justify-between border border-pink-50 bg-white p-1 px-2 dark:border-l-0 dark:border-r-0 dark:border-t-0 dark:border-b-slate-800'>
       <div className='mx-2 flex items-center gap-2'>
         <img src='/icons/Logo.png' alt='Logo' className='h-auto w-10' />
         <img src='/icons/TextLogo.svg' alt='Logo' className='h-auto w-16' />
@@ -71,23 +71,23 @@ const Header: React.FC = () => {
 
           <DropdownMenuContent
             align='end'
-            className='w-[200px] border border-gray-100 p-1'
+            className='w-[200px] border border-gray-100 bg-popover p-1 dark:border-gray-700'
           >
             <DropdownMenuItem
               onClick={() => navigate('/profile')}
-              className='cursor-pointer py-3 hover:bg-gray-100'
+              className='cursor-pointer py-3 hover:bg-gray-100 dark:text-white dark:hover:bg-white/10'
             >
               Profile
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigate('/billing')}
-              className='cursor-pointer py-3 hover:bg-gray-100'
+              className='cursor-pointer py-3 hover:bg-gray-100 dark:text-white dark:hover:bg-white/10'
             >
               Cost Tracking
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleLogout}
-              className='cursor-pointer py-3 text-red-500 hover:bg-gray-100'
+              className='cursor-pointer py-3 text-red-500 hover:bg-gray-100 dark:hover:bg-white/10'
             >
               Sign Out
             </DropdownMenuItem>

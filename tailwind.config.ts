@@ -74,6 +74,12 @@ const config: Config = {
         },
         'dark-blue': '#162B4B',
         'dark-blue-hovered': '#334155',
+        'dark-bg': '#011227',
+        'dark-primary': '#030a12', // Your main dark background color
+        'dark-button-primary': '#EE183C',
+        'dark-button-secondary': '#023572',
+        'dark-text': '#FFFFFF',
+        'dark-icon-unselected': '#BCBEC0',
       },
       borderRadius: {
         xl: 'var(--radius)',

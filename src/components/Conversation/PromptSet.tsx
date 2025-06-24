@@ -134,9 +134,9 @@ const PromptSet: React.FC = () => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className='w-[90vw] max-w-2xl rounded-lg bg-white p-6 shadow-md [&>button]:hidden'>
+      <DialogContent className='dark:bg-dark-chat-history w-[90vw] max-w-2xl rounded-lg bg-white p-6 shadow-md [&>button]:hidden'>
         <div className='mb-4 flex items-center justify-between'>
-          <DialogTitle className='text-lg font-bold text-black'>
+          <DialogTitle className='text-lg font-bold text-black dark:text-white'>
             Select Prompt
           </DialogTitle>
           <Button

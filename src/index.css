@@ -80,32 +80,43 @@ input:-webkit-autofill + label {
   }
 
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --dare: 0 76% 45%;
-    --dare-bg: 214 65% 40%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Background: linear gradient #000000 #023572 */
+    --background: 210 94% 4%; /* #030a12 - Your main dark background */
+    --foreground: 0 0% 100%; /* #FFFFFF for text */
+    --card: 210 94% 4%; /* #030a12 - Your main dark background */
+    --card-foreground: 0 0% 100%; /* #FFFFFF for text */
+    --popover: 210 94% 4%; /* #030a12 - Your main dark background */
+    --popover-foreground: 0 0% 100%; /* #FFFFFF */
+    --primary: 348 88% 52%; /* #EE183C for buttons */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --dare: 348 88% 52%; /* #EE183C for buttons */
+    --dare-bg: 214 100% 22%; /* #023572 for button gradients */
+    --secondary: 200 6% 74%; /* #BCBEC0 for unselected icons/buttons */
+    --secondary-foreground: 0 0% 100%; /* #FFFFFF */
+    --muted: 210 94% 4%; /* #030a12 - Your main dark background */
+    --muted-foreground: 200 6% 74%; /* #BCBEC0 for unselected icons/buttons */
+    --accent: 210 94% 4%; /* #030a12 - Your main dark background */
+    --accent-foreground: 0 0% 100%; /* #FFFFFF */
+    --destructive: 348 88% 52%; /* #EE183C */
+    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+    --border: 217 32% 46%; /* #6b7280 for borders */
+    --input: 210 94% 4%; /* #030a12 - Your main dark background */
+    --ring: 348 88% 52%; /* #EE183C */
+    --chart-1: 348 88% 52%; /* #EE183C */
+    --chart-2: 214 100% 22%; /* #023572 */
+    --chart-3: 200 6% 74%; /* #BCBEC0 */
+    --chart-4: 0 0% 100%; /* #FFFFFF */
+    --chart-5: 210 94% 4%; /* #030a12 - Your main dark background */
+
+    /* Sidebar specific colors for dark mode */
+    --sidebar-background: 210 94% 4%; /* #030a12 - Your main dark background */
+    --sidebar-foreground: 0 0% 100%; /* #FFFFFF */
+    --sidebar-primary: 348 88% 52%; /* #EE183C */
+    --sidebar-primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --sidebar-accent: 214 100% 22%; /* #023572 */
+    --sidebar-accent-foreground: 0 0% 100%; /* #FFFFFF */
+    --sidebar-border: 217 32% 46%; /* #6b7280 */
+    --sidebar-ring: 348 88% 52%; /* #EE183C */
   }
 }
 
@@ -118,6 +129,155 @@ input:-webkit-autofill + label {
     @apply bg-background text-foreground;
   }
 }
+
+/* Dark mode specific styles */
+.dark body {
+  background: hsl(var(--background));
+}
+
+/* Semantic dark mode background classes */
+.dark .bg-dark-primary {
+  background-color: hsl(var(--background)) !important;
+}
+
+.dark .bg-dark-secondary {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.dark .bg-dark-surface {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* Modal and Dialog universal dark mode */
+.dark [data-radix-dialog-content],
+.dark [role="dialog"],
+.dark .modal-content {
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Popover and Dropdown universal dark mode */
+.dark [data-radix-popover-content],
+.dark [data-radix-select-content],
+.dark .dropdown-content {
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+/* Table universal dark mode */
+.dark .table-header,
+.dark .table-footer,
+.dark table thead,
+.dark table tfoot {
+  background-color: hsl(var(--background)) !important;
+}
+
+/* Card universal dark mode */
+.dark .card,
+.dark .bg-card {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Input universal dark mode */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: hsl(var(--input)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Dropdown and Select components */
+.dark .dropdown-trigger,
+.dark .dropdown-content,
+.dark .dropdown-item {
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+.dark .dropdown-item:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+/* Table content */
+.dark .table-content {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Button gradients for dark mode */
+.dark .bg-dare-gradient {
+  background: linear-gradient(92.18deg, #ee183c -38.97%, #023572 132.6%);
+}
+
+/* Input field dark mode styles */
+.dark input {
+  background-color: transparent !important;
+  color: #ffffff !important;
+  border-color: #bcbec0 !important;
+}
+
+.dark input::placeholder {
+  color: #bcbec0 !important;
+}
+
+.dark textarea {
+  background-color: transparent !important;
+  color: #ffffff !important;
+  border-color: #bcbec0 !important;
+}
+
+.dark textarea::placeholder {
+  color: #bcbec0 !important;
+}
+
+/* Remove white backgrounds in dark mode */
+.dark .bg-white {
+  background-color: transparent !important;
+}
+
+/* Specific overrides for components that should keep some background */
+.dark .bg-white.keep-bg {
+  background-color: #011227 !important;
+}
+
+/* Dialog and modal backgrounds */
+.dark [data-radix-dialog-content] {
+  background-color: #030a12 !important;
+  border-color: #bcbec0 !important;
+}
+
+/* Modal overlay for dark mode */
+.dark [data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Ensure dialog content is fully opaque in dark mode */
+.dark .bg-white.dark\:bg-dark-chat-history {
+  background-color: #011227 !important;
+  opacity: 1 !important;
+}
+
+/* Dropdown and popover backgrounds */
+.dark [data-radix-popover-content] {
+  background-color: #011227 !important;
+  border-color: #bcbec0 !important;
+}
+
+/* Card backgrounds */
+/* .dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background-color: #01122780 !important;
+} */
 
 .gradient-border {
   position: relative;
@@ -142,4 +302,63 @@ input:-webkit-autofill + label {
   );
   border-radius: 1rem;
   z-index: -1;
+}
+
+/* Additional dark mode modal fixes */
+.dark [role="dialog"] {
+  background-color: #030a12 !important;
+  opacity: 1 !important;
+}
+
+/* Ensure all dialog overlays are properly dark */
+.dark [data-state="open"][data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Fix any remaining transparent backgrounds in modals */
+.dark .bg-white[role="dialog"],
+.dark .bg-white[data-radix-dialog-content] {
+  background-color: #030a12 !important;
+  color: #ffffff !important;
+}
+
+/* Ensure modal content is not transparent */
+.dark .backdrop-blur-sm {
+  backdrop-filter: none !important;
+  background-color: #011227 !important;
+}
+
+/* Tiptap Editor Dark Mode Styles */
+.dark .ProseMirror {
+  background-color: #030a12 !important;
+  color: #ffffff !important;
+  outline: none !important;
+}
+
+.dark .ProseMirror p.is-editor-empty:first-child::before {
+  color: #9ca3af !important;
+}
+
+.dark .ProseMirror blockquote {
+  border-left-color: #6b7280 !important;
+  color: #d1d5db !important;
+}
+
+.dark .ProseMirror code {
+  background-color: #374151 !important;
+  color: #f9fafb !important;
+}
+
+.dark .ProseMirror pre {
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+}
+
+.dark .ProseMirror h1, 
+.dark .ProseMirror h2, 
+.dark .ProseMirror h3, 
+.dark .ProseMirror h4, 
+.dark .ProseMirror h5, 
+.dark .ProseMirror h6 {
+  color: #ffffff !important;
 }

@@ -81,12 +81,12 @@ const PromptUploadModal: React.FC = () => {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className='mx-auto w-[90vw] max-w-2xl rounded-lg bg-white p-6 shadow-lg'>
+      <DialogContent className='mx-auto w-[90vw] max-w-2xl rounded-lg bg-background p-6 shadow-lg'>
         <DialogHeader>
-          <DialogTitle className='text-lg font-semibold text-gray-900'>
+          <DialogTitle className='text-lg font-semibold text-foreground'>
             {isEditMode ? 'Edit Prompt' : 'Create New Prompt'}
           </DialogTitle>
-          <DialogDescription className='text-sm text-gray-500'>
+          <DialogDescription className='text-sm text-muted-foreground'>
             {isEditMode
               ? 'Update your prompt details below.'
               : 'Fill in the details to create a new prompt.'}
