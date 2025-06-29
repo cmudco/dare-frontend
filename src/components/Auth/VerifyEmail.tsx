@@ -48,8 +48,8 @@ const VerifyEmailScreen = () => {
     >
       {loading && (
         <div className='flex flex-col items-center justify-center'>
-          <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900'></div>
-          <p className='mt-4 text-gray-600'>Verifying your email...</p>
+          <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-foreground'></div>
+          <p className='mt-4 text-muted-foreground'>Verifying your email...</p>
         </div>
       )}
 
@@ -62,7 +62,7 @@ const VerifyEmailScreen = () => {
       {successMessage && (
         <div className='flex flex-col items-center gap-2 text-sm text-green-500'>
           <p>{successMessage}</p>
-          <p className='text-gray-600'>Redirecting to login...</p>
+          <p className='text-muted-foreground'>Redirecting to login...</p>
         </div>
       )}
     </AuthCard>

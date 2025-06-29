@@ -16,7 +16,7 @@ const AuthFormFooter: React.FC<AuthFormFooterProps> = ({
   onClick,
 }) => {
   return (
-    <p className='mt-4 text-center text-sm text-gray-500'>
+    <p className='mt-4 text-center text-sm text-muted-foreground'>
       {text}{' '}
       {route ? (
         <Link to={route} className='font-body font-bold text-primary'>

@@ -29,7 +29,10 @@ const TextInput: React.FC<TextInputProps> = ({
 
   return (
     <div className='relative mb-5 w-full'>
-      <label htmlFor={name} className='block text-sm font-medium text-gray-700'>
+      <label
+        htmlFor={name}
+        className='block text-sm font-medium text-foreground'
+      >
         {label}
       </label>
       <div className='relative'>
@@ -40,7 +43,7 @@ const TextInput: React.FC<TextInputProps> = ({
           value={value}
           onChange={onChange}
           onBlur={onBlur}
-          className={`w-full border ${error ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2`}
+          className={`w-full border ${error ? 'border-red-500' : 'border-border'} rounded-md bg-input px-3 py-2 text-foreground dark:text-white`}
         />
         {type === 'password' && (
           <div
@@ -48,9 +51,9 @@ const TextInput: React.FC<TextInputProps> = ({
             onClick={togglePasswordVisibility}
           >
             {showPassword ? (
-              <EyeSlashIcon className='h-5 w-5 text-gray-800' />
+              <EyeSlashIcon className='h-5 w-5 text-foreground' />
             ) : (
-              <EyeIcon className='h-5 w-5 text-gray-800' />
+              <EyeIcon className='h-5 w-5 text-foreground' />
             )}
           </div>
         )}
