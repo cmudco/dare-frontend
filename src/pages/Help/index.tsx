@@ -87,12 +87,49 @@ const Help = () => {
                   className='flex items-start justify-between'
                 >
                   <div>
-                    <h3 className='font-medium text-gray-900'>
+                    <h3 className='font-medium text-gray-900 dark:text-white'>
                       DARE LLM Gateway User Guide
                     </h3>
                     <p className='mt-1 text-sm text-gray-500'>
                       Comprehensive guide to using the DARE platform, including
                       features, workflows, and best practices.
+                    </p>
+                  </div>
+                  <ExternalLink className='h-5 w-5 flex-shrink-0 text-blue-500' />
+                </a>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Learning Modules Section */}
+        <Card className='mt-6 overflow-hidden shadow-md'>
+          <CardHeader>
+            <CardTitle className='flex items-center text-xl'>
+              <FileText className='mr-2 h-5 w-5' />
+              Learning Modules
+            </CardTitle>
+            <CardDescription>
+              Access curated learning modules and resources to deepen your
+              understanding of the DARE platform and related concepts.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className='space-y-4'>
+              <div className='rounded-lg border border-gray-200 p-4 transition-all hover:border-blue-300 hover:shadow-md'>
+                <a
+                  href='https://drive.google.com/drive/folders/137SL9lhrd1e842Q7-z0V_CwADQxznnBV'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='flex items-start justify-between'
+                >
+                  <div>
+                    <h3 className='font-medium text-gray-900 dark:text-white'>
+                      DARE Learning Modules
+                    </h3>
+                    <p className='mt-1 text-sm text-gray-500'>
+                      Explore sample exercises, system prompting, multi-agent
+                      workflows, and more.
                     </p>
                   </div>
                   <ExternalLink className='h-5 w-5 flex-shrink-0 text-blue-500' />

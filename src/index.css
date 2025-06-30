@@ -99,8 +99,8 @@ input:-webkit-autofill + label {
     --accent-foreground: 0 0% 100%; /* #FFFFFF */
     --destructive: 348 88% 52%; /* #EE183C */
     --destructive-foreground: 0 0% 100%; /* #FFFFFF */
-    --border: 217 32% 46%; /* #6b7280 for borders */
-    --input: 210 94% 4%; /* #030a12 - Your main dark background */
+    --border: 0 0% 100%; /* #FFFFFF for borders - changed to white */
+    --input: 214 100% 22%; /* #023572 for input background - changed to dark blue */
     --ring: 348 88% 52%; /* #EE183C */
     --chart-1: 348 88% 52%; /* #EE183C */
     --chart-2: 214 100% 22%; /* #023572 */
