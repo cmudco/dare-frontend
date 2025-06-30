@@ -53,7 +53,7 @@ const AuthCard = <T extends FormikValues>({
 
   return (
     <div className='flex min-h-screen flex-col items-center justify-center'>
-      <div className='border-6 gradient-border relative mx-auto flex w-[80vw] flex-col items-center justify-center gap-3 rounded-2xl p-8 shadow-md md:w-[60vw] lg:w-[50vw] xl:w-[40vw]'>
+      <div className='border-6 gradient-border relative mx-auto flex w-[80vw] flex-col items-center justify-center gap-3 rounded-2xl bg-card p-8 shadow-md md:w-[60vw] lg:w-[50vw] xl:w-[40vw]'>
         {showBackButton && (
           <div
             className='absolute left-9 top-5 mt-4 flex w-full cursor-pointer items-center gap-1 text-left text-xs'
@@ -154,7 +154,7 @@ const AuthCard = <T extends FormikValues>({
         <div className='h-[50px]'></div>
 
         {showprivacyPolicy && (
-          <p className='absolute -bottom-10 text-center text-sm text-gray-500'>
+          <p className='absolute -bottom-10 text-center text-sm text-muted-foreground'>
             By signing up, you are agreeing to DARE's Terms of Service and
             Privacy Policy.
           </p>
