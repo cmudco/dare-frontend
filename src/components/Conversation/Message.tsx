@@ -155,14 +155,20 @@ const Message: React.FC<MessageProps> = ({
         {message.isSender && !message.streaming && (
           <div className='mr-2 mt-2 flex flex-shrink-0 items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
             <button
-              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
               onClick={() => navigator.clipboard.writeText(message.message)}
               aria-label='Copy message'
             >
               <Copy className='h-4 w-4' />
             </button>
             <button
-              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+              className={`mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
+                message.isEdited || message.isRegenerated
+                  ? showOriginal
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
               onClick={handleEdit}
               aria-label='Edit message'
             >
@@ -170,7 +176,13 @@ const Message: React.FC<MessageProps> = ({
             </button>
             {(message.isEdited || message.isRegenerated) && buttonLabel && (
               <button
-                className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+                className={`mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
+                  showOriginal
+                    ? message.isRegenerated
+                      ? 'text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
                 onClick={toggleVersion}
                 aria-label={
                   showOriginal
@@ -189,8 +201,8 @@ const Message: React.FC<MessageProps> = ({
         <div
           className={`relative mb-2 max-w-[95%] text-wrap rounded-xl px-5 py-3 ${
             message.isSender
-              ? 'bg-gray-100 dark:bg-neutral-800'
-              : 'bg-gray-100 dark:bg-neutral-900'
+              ? 'border border-blue-200 bg-blue-50 dark:border-blue-800/30 dark:bg-blue-900/20'
+              : 'border border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-800'
           } inline-block hover:z-20`}
         >
           <div
@@ -199,7 +211,7 @@ const Message: React.FC<MessageProps> = ({
             }`}
           >
             <div
-              className={`prose ${getFontSizeClasses()} max-w-none text-gray-800 dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none dark:text-white`}
+              className={`prose ${getFontSizeClasses()} max-w-none text-foreground dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
@@ -232,7 +244,7 @@ const Message: React.FC<MessageProps> = ({
                     }
                     return (
                       <code
-                        className='not-prose rounded border border-gray-200 bg-gray-100 px-1 text-gray-900'
+                        className='not-prose rounded border border-border bg-muted px-1 text-foreground transition-colors hover:bg-muted/80'
                         {...props}
                       >
                         {children}
@@ -259,7 +271,7 @@ const Message: React.FC<MessageProps> = ({
       {!message.isSender && !message.streaming && (
         <div className='flex w-full max-w-[95%] pl-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
           <button
-            className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+            className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
             onClick={handleRegenerate}
             aria-label='Regenerate AI response'
           >
@@ -269,8 +281,8 @@ const Message: React.FC<MessageProps> = ({
           <button
             className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 ${
               message.feedbackType === FeedbackType.LIKE
-                ? 'text-blue-500'
-                : 'text-gray-400 hover:text-gray-800'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
             onClick={() => handleReaction(true)}
             aria-label={
@@ -286,7 +298,7 @@ const Message: React.FC<MessageProps> = ({
             className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 ${
               message.feedbackType === FeedbackType.DISLIKE
                 ? 'text-red-500'
-                : 'text-gray-400 hover:text-gray-800'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
             onClick={() => handleReaction(false)}
             aria-label={
@@ -299,14 +311,14 @@ const Message: React.FC<MessageProps> = ({
           </button>
 
           <button
-            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
             onClick={() => navigator.clipboard.writeText(message.message)}
             aria-label='Copy AI response'
           >
             <Copy className='h-4 w-4' />
           </button>
           <button
-            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
             onClick={() => setIsMetadataOpen(true)}
             aria-label='View message metadata'
           >
@@ -314,7 +326,13 @@ const Message: React.FC<MessageProps> = ({
           </button>
           {(message.isEdited || message.isRegenerated) && buttonLabel && (
             <button
-              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-gray-400 hover:text-gray-800'
+              className={`mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
+                showOriginal
+                  ? message.isRegenerated
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
               onClick={toggleVersion}
               aria-label={
                 showOriginal
@@ -332,7 +350,7 @@ const Message: React.FC<MessageProps> = ({
 
       {!message.isSender && !message.streaming && message.llmId && (
         <div
-          className={`mt-1 text-xs text-gray-500 ${
+          className={`mt-1 text-xs text-muted-foreground ${
             message.isSender ? 'text-right' : 'pl-10 text-left'
           }`}
         >
@@ -352,7 +370,7 @@ const Message: React.FC<MessageProps> = ({
           <div className='mt-2 w-full max-w-[95%] pl-10'>
             <button
               onClick={toggleSnippets}
-              className='flex items-center text-sm text-gray-600 hover:text-gray-800'
+              className='flex items-center text-sm text-muted-foreground hover:text-foreground'
             >
               {isSnippetsOpen ? (
                 <ChevronUp className='mr-1 h-4 w-4' />
@@ -370,14 +388,14 @@ const Message: React.FC<MessageProps> = ({
                   .map((snippet) => (
                     <div
                       key={snippet.id}
-                      className='rounded-r-lg border-l-4 border-gray-300 bg-gray-50 p-3 pl-4'
+                      className='rounded-r-lg border-l-4 border-border bg-muted p-3 pl-4'
                     >
                       <div className='mb-1 flex items-center justify-between'>
-                        <span className='text-sm font-medium text-gray-700'>
+                        <span className='text-sm font-medium text-foreground'>
                           From {snippet.file.name} (Score:{' '}
                           {snippet.similarityScore.toFixed(2)})
                         </span>
-                        <span className='text-xs text-gray-500'>
+                        <span className='text-xs text-muted-foreground'>
                           {snippet.vectorDbSource ? (
                             <>
                               <span className='font-medium'>
@@ -390,7 +408,9 @@ const Message: React.FC<MessageProps> = ({
                           )}
                         </span>
                       </div>
-                      <p className='text-sm text-gray-600'>{snippet.text}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        {snippet.text}
+                      </p>
                     </div>
                   ))}
               </div>

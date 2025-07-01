@@ -42,13 +42,13 @@ const Header: React.FC = () => {
 
       <div className='mr-3 flex items-center gap-4'>
         {wallet && (
-          <div className='flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm'>
+          <div className='flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-1.5 text-sm font-medium text-foreground shadow-sm dark:from-purple-900/30 dark:to-pink-900/30'>
             <CreditCardIcon className='h-4 w-4 text-pink-500' />
             <span>{wallet.displayBalance}</span>
           </div>
         )}
 
-        <BellIcon className='h-6 w-6 text-gray-600' />
+        <BellIcon className='h-6 w-6 text-muted-foreground transition-colors hover:text-foreground' />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -59,10 +59,10 @@ const Header: React.FC = () => {
                 className='h-8 w-8 rounded-full'
               />
               <div className='flex flex-col items-start normal-case'>
-                <span className='text-sm font-medium text-gray-900'>
+                <span className='text-sm font-medium text-foreground'>
                   {user?.name || 'John Doe'}
                 </span>
-                <span className='text-xs text-gray-500'>
+                <span className='text-xs text-muted-foreground'>
                   {user?.email || 'Loading...'}
                 </span>
               </div>

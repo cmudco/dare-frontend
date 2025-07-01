@@ -8,10 +8,10 @@ export const getModeBadge = (mode: WorkflowMode) => {
     case WorkflowMode.Parallel:
       return <Badge variant='green'>Parallel</Badge>
     default:
-      return <Badge variant='default'>Unknown</Badge>
+      return <Badge variant='gray'>Unknown</Badge>
   }
 }
 
-export const getStepCount = (workflow: Workflow) => {
+export const getStepCount = (workflow: Workflow): number => {
   return workflow.steps?.length || 0
 }

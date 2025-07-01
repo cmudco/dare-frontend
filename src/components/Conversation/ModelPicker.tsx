@@ -64,7 +64,7 @@ const ModelPicker: React.FC = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align='end'
-        className='max-h-[70vh] min-h-[20vh] w-72 overflow-y-auto rounded-md bg-background bg-white p-2 shadow-lg'
+        className='max-h-[70vh] min-h-[20vh] w-72 overflow-y-auto rounded-md border-border bg-popover p-2 shadow-lg'
       >
         {loading && (
           <p className='py-2 text-center text-gray-500 dark:text-gray-400'>
@@ -89,8 +89,8 @@ const ModelPicker: React.FC = () => {
                   size='sm'
                   className={`rounded-md px-4 py-1 text-sm font-medium transition-all ${
                     providerFilter === 'all'
-                      ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
-                      : 'bg-transparent text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/10'
+                      ? 'border-primary/20 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground'
+                      : 'border-border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                   onClick={() => setProviderFilter('all')}
                 >
@@ -103,8 +103,8 @@ const ModelPicker: React.FC = () => {
                     size='sm'
                     className={`rounded-md px-4 py-1 text-sm font-medium capitalize transition-all ${
                       providerFilter === provider
-                        ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
-                        : 'bg-transparent text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/10'
+                        ? 'border-primary/20 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground'
+                        : 'border-border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                     onClick={() => setProviderFilter(provider)}
                   >
@@ -150,7 +150,7 @@ const ModelPicker: React.FC = () => {
         )}
 
         {!loading && !error && !hasModels && (
-          <p className='py-2 text-center text-gray-500 dark:text-gray-400'>
+          <p className='py-2 text-center text-muted-foreground'>
             No models available
           </p>
         )}

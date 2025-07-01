@@ -76,7 +76,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                 }}
                 aria-label='Clone chat'
               >
-                <Copy className='h-4 w-4 text-gray-600' />
+                <Copy className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
               </button>
               <button
                 className='rounded-md bg-white p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-dark-icon-unselected'
@@ -86,7 +86,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                 }}
                 aria-label='Rename chat'
               >
-                <Pencil className='h-4 w-4 text-gray-600' />
+                <Pencil className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
               </button>
             </div>
           </>

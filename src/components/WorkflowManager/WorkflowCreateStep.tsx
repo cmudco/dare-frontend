@@ -115,14 +115,14 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <div className='rounded-lg border border-gray-200 bg-white shadow-sm'>
         <CollapsibleTrigger asChild>
-          <div className='flex cursor-pointer items-center justify-between p-4 hover:bg-gray-50'>
-            <div className='flex items-center gap-3'>
-              <GripVertical className='h-4 w-4 text-gray-400' />
-              <div className='flex items-center gap-2'>
+          <div className='flex cursor-pointer items-center justify-between p-4 transition-colors hover:bg-muted'>
+            <div className='flex items-center space-x-3'>
+              <GripVertical className='h-4 w-4 text-muted-foreground' />
+              <div className='flex items-center space-x-2'>
                 <div className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-600'>
                   {index + 1}
                 </div>
-                <h3 className='font-medium text-gray-900'>
+                <h3 className='font-medium text-foreground'>
                   {step.prompt?.title || `Step ${index + 1}`}
                 </h3>
               </div>
@@ -157,10 +157,10 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                     }
                   }}
                   disabled={index === 0}
-                  className='h-6 w-6 p-0 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30'
+                  className='h-6 w-6 p-0 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30'
                   title={index === 0 ? 'Already at top' : 'Move step up'}
                 >
-                  <ChevronUp className='h-3 w-3' />
+                  <ChevronUp className='h-4 w-4' />
                 </Button>
                 <Button
                   type='button'
@@ -173,14 +173,14 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                     }
                   }}
                   disabled={index === totalSteps - 1}
-                  className='h-6 w-6 p-0 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30'
+                  className='h-6 w-6 p-0 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30'
                   title={
                     index === totalSteps - 1
                       ? 'Already at bottom'
                       : 'Move step down'
                   }
                 >
-                  <ChevronDown className='h-3 w-3' />
+                  <ChevronDown className='h-4 w-4' />
                 </Button>
               </div>
               <Button
@@ -197,9 +197,9 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                 <Trash2 className='h-4 w-4' />
               </Button>
               {isOpen ? (
-                <Minus className='h-4 w-4 text-gray-400' />
+                <Minus className='h-4 w-4 text-muted-foreground' />
               ) : (
-                <Plus className='h-4 w-4 text-gray-400' />
+                <Plus className='h-4 w-4 text-muted-foreground' />
               )}
             </div>
           </div>
@@ -243,7 +243,7 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <HelpCircle className='h-3 w-3 text-gray-400' />
+                          <HelpCircle className='h-3 w-3 text-muted-foreground' />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className='max-w-xs text-sm'>
@@ -311,7 +311,7 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <HelpCircle className='h-3 w-3 text-gray-400' />
+                            <HelpCircle className='h-3 w-3 text-muted-foreground' />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className='max-w-xs text-sm'>
@@ -327,10 +327,11 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                         <Button
                           variant='ghost'
                           size='icon'
-                          className='h-5 w-5 p-0 text-gray-400 hover:text-blue-600'
-                          title='Embedding search settings'
+                          className='h-5 w-5 p-0 text-muted-foreground transition-colors hover:text-primary'
+                          onClick={() => setIsEmbeddingDialogOpen(true)}
+                          aria-label='Embedding settings'
                         >
-                          <Settings className='h-4 w-4 text-gray-600' />
+                          <Settings className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent
@@ -444,13 +445,14 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <HelpCircle className='h-4 w-4 text-gray-400' />
+                        <HelpCircle className='h-4 w-4 text-muted-foreground' />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className='max-w-xs text-sm'>
-                          Controls randomness in responses. Lower values
-                          (0.1-0.3) for focused, deterministic outputs. Higher
-                          values (0.7-1.0) for creative, varied responses.
+                          Temperature controls how creative or focused the AI
+                          responses are. Lower values (0.1-0.3) make responses
+                          more consistent and factual, while higher values
+                          (0.7-1.0) make them more creative and varied.
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -468,7 +470,7 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                 }
                 className='w-full'
               />
-              <p className='text-xs text-gray-500'>
+              <p className='text-xs text-muted-foreground'>
                 {getTemperatureDescription(temperature)}
               </p>
             </div>
@@ -493,13 +495,13 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <HelpCircle className='h-4 w-4 text-gray-400' />
+                        <HelpCircle className='h-4 w-4 text-muted-foreground' />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className='max-w-xs text-sm'>
-                          Maximum length of the AI response. Higher values allow
-                          for longer, more detailed responses but consume more
-                          tokens.
+                          Maximum tokens controls the length of the AI response.
+                          Higher values allow for longer responses but consume
+                          more tokens.
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -517,7 +519,7 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                 }
                 className='w-full'
               />
-              <p className='text-xs text-gray-500'>
+              <p className='text-xs text-muted-foreground'>
                 {getMaxTokensDescription(maxTokens)}
               </p>
             </div>

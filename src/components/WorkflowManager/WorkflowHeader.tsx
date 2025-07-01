@@ -27,7 +27,7 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
   return (
     <div className='flex items-center justify-between px-2.5'>
       <div className='relative flex h-[40px] w-[300px] items-center'>
-        <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-gray-500' />
+        <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-muted-foreground' />
         <Input
           type='text'
           placeholder='Search workflows'

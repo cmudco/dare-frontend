@@ -129,14 +129,17 @@ const PromptSet: React.FC = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant='ghost' className='h-9 w-9 p-0 hover:bg-gray-200'>
-          <GoCommandPalette className='h-5 w-5 text-gray-600' />
+        <Button
+          variant='ghost'
+          className='h-9 w-9 p-0 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+        >
+          <GoCommandPalette className='h-5 w-5 text-muted-foreground transition-colors hover:text-foreground' />
         </Button>
       </DialogTrigger>
 
-      <DialogContent className='dark:bg-dark-chat-history w-[90vw] max-w-2xl rounded-lg bg-white p-6 shadow-md [&>button]:hidden'>
+      <DialogContent className='w-[90vw] max-w-2xl rounded-lg border-border bg-background p-6 shadow-md [&>button]:hidden'>
         <div className='mb-4 flex items-center justify-between'>
-          <DialogTitle className='text-lg font-bold text-black dark:text-white'>
+          <DialogTitle className='text-lg font-bold text-foreground'>
             Select Prompt
           </DialogTitle>
           <Button
@@ -149,11 +152,11 @@ const PromptSet: React.FC = () => {
         </div>
 
         <div className='relative mb-2'>
-          <MagnifyingGlassIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-500' />
+          <MagnifyingGlassIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
           <Input
             type='text'
             placeholder='Search prompts'
-            className='w-full bg-white pl-9'
+            className='w-full border-border bg-input pl-9'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -163,7 +166,7 @@ const PromptSet: React.FC = () => {
 
         <div className='max-h-[50vh] overflow-y-auto'>
           {filteredPrompts.length === 0 && (
-            <div className='py-6 text-center text-gray-500'>
+            <div className='py-6 text-center text-muted-foreground'>
               {prompts.length === 0
                 ? 'No prompts available'
                 : 'No matching prompts found'}
@@ -177,16 +180,16 @@ const PromptSet: React.FC = () => {
             return (
               <div key={group.rootPrompt.id}>
                 <div
-                  className={`mb-3 rounded-lg border border-gray-100 p-3 text-black transition-colors ${
+                  className={`mb-3 rounded-lg border border-border p-3 text-foreground transition-colors ${
                     selectedPrompt?.id === latestVersion.id
-                      ? 'bg-red-200'
-                      : 'bg-muted text-foreground hover:bg-pink-50'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'bg-background hover:bg-muted'
                   }`}
                   onClick={() => handlePromptSelect(latestVersion)}
                 >
                   <div className='mb-1 flex items-start justify-between'>
                     <div className='flex items-center gap-2'>
-                      <h4 className='text-xl font-medium text-gray-800'>
+                      <h4 className='text-xl font-medium text-foreground'>
                         {latestVersion.title || 'Untitled'}
                       </h4>
                       <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
@@ -194,7 +197,7 @@ const PromptSet: React.FC = () => {
                       </span>
                     </div>
                     <div className='flex items-center gap-2'>
-                      <span className='text-xs text-gray-500'>
+                      <span className='text-xs text-muted-foreground'>
                         {formatDate(latestVersion.createdAt)}
                       </span>
                       {group.versions.length > 1 && (
@@ -226,10 +229,10 @@ const PromptSet: React.FC = () => {
                     {group.versions.slice(1).map((version) => (
                       <div
                         key={version.id}
-                        className={`mb-3 rounded-lg border border-gray-100 p-3 text-black transition-colors ${
+                        className={`mb-3 rounded-lg border border-border p-3 text-foreground transition-colors ${
                           selectedPrompt?.id === version.id
-                            ? 'bg-red-200'
-                            : 'bg-muted text-foreground hover:bg-pink-50'
+                            ? 'bg-accent text-accent-foreground'
+                            : 'bg-background hover:bg-muted'
                         }`}
                         onClick={(e) => {
                           e.stopPropagation()
@@ -238,7 +241,7 @@ const PromptSet: React.FC = () => {
                       >
                         <div className='mb-1 flex items-start justify-between'>
                           <div className='flex items-center gap-2'>
-                            <h4 className='text-xl font-medium text-gray-800'>
+                            <h4 className='text-xl font-medium text-foreground'>
                               {version.title || 'Untitled'}
                             </h4>
                             <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
@@ -246,7 +249,7 @@ const PromptSet: React.FC = () => {
                             </span>
                           </div>
                           <div className='flex items-center gap-2'>
-                            <span className='text-xs text-gray-500'>
+                            <span className='text-xs text-muted-foreground'>
                               {formatDate(version.createdAt)}
                             </span>
                           </div>
