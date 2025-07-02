@@ -112,6 +112,10 @@ export const sendWebSocketMessage = createAsyncThunk<
   const folderIds = state.conversation.selectedFolders.map(
     (folder) => folder.id
   )
+  const referencedConversationIds =
+    state.conversation.referencedConversations.map(
+      (conversation) => conversation.conversationId
+    )
   const prompt = state.conversation.activeConversation?.prompt
   const temperature = state.conversation.activeConversation?.temperature
   const maxTokens = state.conversation.activeConversation?.maxTokens
@@ -120,25 +124,29 @@ export const sendWebSocketMessage = createAsyncThunk<
   const documentSimilarityThreshold =
     state.conversation.activeConversation?.documentSimilarityThreshold
   const historyLimit = state.conversation.activeConversation?.historyLimit
+  const referencedConversationHistoryLimit =
+    state.conversation.referencedConversationHistoryLimit
 
   if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(
-      JSON.stringify({
-        message: message.message,
-        sender_type: 1,
-        file_ids: fileIds,
-        embedding_ids: embeddingIds,
-        tag_ids: tagIds,
-        folder_ids: folderIds,
-        llm_id: state.conversation.selectedModel,
-        prompt_id: prompt?.id,
-        temperature: temperature,
-        max_tokens: maxTokens,
-        max_context_snippets: maxContextSnippets,
-        document_similarity_threshold: documentSimilarityThreshold,
-        history_limit: historyLimit,
-      })
-    )
+    const payload = {
+      message: message.message,
+      sender_type: 1,
+      file_ids: fileIds,
+      embedding_ids: embeddingIds,
+      tag_ids: tagIds,
+      folder_ids: folderIds,
+      referenced_conversation_ids: referencedConversationIds,
+      referenced_conversation_history_limit: referencedConversationHistoryLimit,
+      llm_id: state.conversation.selectedModel,
+      prompt_id: prompt?.id,
+      temperature: temperature,
+      max_tokens: maxTokens,
+      max_context_snippets: maxContextSnippets,
+      document_similarity_threshold: documentSimilarityThreshold,
+      history_limit: historyLimit,
+    }
+
+    socket.send(JSON.stringify(payload))
   } else {
     return rejectWithValue('WebSocket is not connected')
   }
@@ -181,6 +189,12 @@ export const regenerateResponse = createAsyncThunk<
     const folderIds = state.conversation.selectedFolders.map(
       (folder) => folder.id
     )
+    const referencedConversationIds =
+      state.conversation.referencedConversations.map(
+        (conversation) => conversation.conversationId
+      )
+    const referencedConversationHistoryLimit =
+      state.conversation.referencedConversationHistoryLimit
     const prompt = state.conversation.activeConversation?.prompt
     const temperature = state.conversation.activeConversation?.temperature
     const maxTokens = state.conversation.activeConversation?.maxTokens
@@ -207,6 +221,9 @@ export const regenerateResponse = createAsyncThunk<
           embedding_ids: embeddingIds,
           tag_ids: tagIds,
           folder_ids: folderIds,
+          referenced_conversation_ids: referencedConversationIds,
+          referenced_conversation_history_limit:
+            referencedConversationHistoryLimit,
           prompt_id: prompt?.id,
           temperature: temperature,
           max_tokens: maxTokens,
