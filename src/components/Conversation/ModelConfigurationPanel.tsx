@@ -98,7 +98,7 @@ const ModelConfigurationPanel: React.FC = () => {
           <Settings className='h-5 w-5 text-gray-600 dark:text-gray-300' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-80 border bg-background bg-white p-4 dark:border-dark-icon-unselected'>
+      <PopoverContent className='w-80 border border-border bg-popover p-4'>
         <div className='flex flex-col justify-center gap-4 text-gray-900 dark:text-white'>
           {activeConversation?.conversationId && (
             <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>

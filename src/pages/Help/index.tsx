@@ -44,7 +44,9 @@ const Help = () => {
     return (
       <div className='flex min-h-[60vh] items-center justify-center'>
         <div className='animate-pulse text-center'>
-          <p className='text-lg font-medium text-gray-500'>Loading models...</p>
+          <p className='text-lg font-medium text-muted-foreground'>
+            Loading models...
+          </p>
         </div>
       </div>
     )
@@ -87,10 +89,10 @@ const Help = () => {
                   className='flex items-start justify-between'
                 >
                   <div>
-                    <h3 className='font-medium text-gray-900 dark:text-white'>
+                    <h3 className='font-medium text-foreground'>
                       DARE LLM Gateway User Guide
                     </h3>
-                    <p className='mt-1 text-sm text-gray-500'>
+                    <p className='mt-1 text-sm text-muted-foreground'>
                       Comprehensive guide to using the DARE platform, including
                       features, workflows, and best practices.
                     </p>
@@ -124,10 +126,10 @@ const Help = () => {
                   className='flex items-start justify-between'
                 >
                   <div>
-                    <h3 className='font-medium text-gray-900 dark:text-white'>
+                    <h3 className='font-medium text-foreground'>
                       DARE Learning Modules
                     </h3>
-                    <p className='mt-1 text-sm text-gray-500'>
+                    <p className='mt-1 text-sm text-muted-foreground'>
                       Explore sample exercises, system prompting, multi-agent
                       workflows, and more.
                     </p>
@@ -169,7 +171,7 @@ const Help = () => {
                     <TableHead className='text-left font-semibold'>
                       <div className='flex flex-col items-start'>
                         <span>Input Tokens</span>
-                        <span className='text-xs text-gray-500'>
+                        <span className='text-xs text-muted-foreground'>
                           Per Million
                         </span>
                       </div>
@@ -178,7 +180,7 @@ const Help = () => {
                     <TableHead className='text-left font-semibold'>
                       <div className='flex flex-col items-start'>
                         <span>Output Tokens</span>
-                        <span className='text-xs text-gray-500'>
+                        <span className='text-xs text-muted-foreground'>
                           Per Million
                         </span>
                       </div>

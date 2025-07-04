@@ -16,20 +16,20 @@ const badgeVariants = cva(
           'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
         outline: 'text-foreground',
 
-        blue: 'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200',
+        blue: 'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-900/50',
         green:
-          'bg-green-100 text-green-800 border-green-300 hover:bg-green-200',
+          'bg-green-100 text-green-800 border-green-300 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800 dark:hover:bg-green-900/50',
         yellow:
-          'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200',
-        red: 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200',
+          'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800 dark:hover:bg-yellow-900/50',
+        red: 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800 dark:hover:bg-red-900/50',
         purple:
-          'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200',
-        gray: 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200',
+          'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800 dark:hover:bg-purple-900/50',
+        gray: 'bg-muted text-muted-foreground border-border hover:bg-muted/80',
       },
 
       selected: {
         true: '',
-        false: 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200',
+        false: 'bg-muted text-muted-foreground border-border hover:bg-muted/80',
       },
     },
     compoundVariants: [
@@ -37,7 +37,7 @@ const badgeVariants = cva(
         selected: false,
         variant: ['blue', 'green', 'yellow', 'red', 'purple', 'gray'],
         className:
-          'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200',
+          'bg-muted text-muted-foreground border-border hover:bg-muted/80',
       },
     ],
     defaultVariants: {
@@ -53,14 +53,18 @@ export interface BadgeProps
   selected?: boolean
 }
 
-function Badge({ className, variant, selected, ...props }: BadgeProps) {
-  return (
-    <div
-      className={cn(badgeVariants({ variant, selected }), className)}
-      {...props}
-    />
-  )
-}
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+  ({ className, variant, selected, ...props }, ref) => {
+    return (
+      <div
+        className={cn(badgeVariants({ variant, selected }), className)}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Badge.displayName = 'Badge'
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { Badge, badgeVariants }

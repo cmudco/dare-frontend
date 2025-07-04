@@ -134,9 +134,9 @@ const FileTable = () => {
   }
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max bg-background bg-white text-left'>
+      <Table className='mt-4 w-full min-w-max bg-background text-left'>
         <TableHeader>
-          <TableRow className='bg-background bg-muted'>
+          <TableRow className='bg-muted'>
             <TableHead
               key='select-all'
               className='w-[50px] cursor-pointer select-none p-4 text-sm font-semibold transition-colors dark:text-white'

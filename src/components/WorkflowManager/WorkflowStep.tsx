@@ -77,8 +77,10 @@ export const WorkflowStep: React.FC<{
 
   if (!selectedWorkflowRun || selectedWorkflowRun.steps.length === 0) {
     return (
-      <div className='rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center'>
-        <p className='text-gray-500'>No steps have been executed yet.</p>
+      <div className='rounded-lg border border-dashed border-border bg-muted p-6 text-center'>
+        <p className='text-muted-foreground'>
+          No steps have been executed yet.
+        </p>
       </div>
     )
   }
@@ -100,32 +102,32 @@ export const WorkflowStep: React.FC<{
             {...(!forceExpandAll && isWorkflowCompleted && isStepCompleted
               ? { defaultOpen: true }
               : {})}
-            className='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm'
+            className='overflow-hidden rounded-xl border border-border bg-card shadow-sm'
           >
-            <CollapsibleTrigger className='flex w-full items-center justify-between border-b border-gray-200 bg-gray-50 p-4'>
+            <CollapsibleTrigger className='flex w-full items-center justify-between border-b border-border bg-muted p-4'>
               <div className='flex items-center'>
-                <span className='mr-3 flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-sm font-medium text-purple-700'>
+                <span className='mr-3 flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-sm font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'>
                   {step.order}
                 </span>
                 <div>
-                  <div className='font-medium text-gray-800'>
+                  <div className='font-medium text-foreground'>
                     Step {step.order}
                   </div>
-                  <div className='text-xs text-gray-500'>
+                  <div className='text-xs text-muted-foreground'>
                     {new Date(step.updatedAt).toLocaleString()}
                   </div>
                 </div>
               </div>
               <div>{getRunStatusBadge(step.status)}</div>
             </CollapsibleTrigger>
-            <CollapsibleContent>
+            <CollapsibleContent className='bg-card p-4'>
               {step.response && (
                 <div className='p-4'>
-                  <h5 className='mb-2 flex items-center text-sm font-medium text-gray-700'>
-                    <MessagesSquare className='mr-1.5 h-4 w-4 text-blue-600' />
+                  <h5 className='mb-2 flex items-center text-sm font-medium text-foreground'>
+                    <MessagesSquare className='mr-2 h-4 w-4' />
                     Response
                   </h5>
-                  <div className='prose prose-sm max-w-none overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm text-gray-800'>
+                  <div className='prose prose-sm max-w-none overflow-hidden rounded-lg border border-border bg-background p-4 text-sm text-foreground'>
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm, remarkMath]}
                       rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}

@@ -80,9 +80,7 @@ const WorkflowAddSteps: React.FC<WorkflowStepsProps> = ({
   return (
     <div className='space-y-4 border-t pt-4'>
       <div className='flex items-center justify-between'>
-        <h3 className='text-md font-medium text-gray-700 dark:text-white'>
-          Workflow Steps
-        </h3>
+        <h3 className='text-md font-medium text-foreground'>Steps</h3>
         <Button
           type='button'
           variant='outline'
@@ -97,9 +95,8 @@ const WorkflowAddSteps: React.FC<WorkflowStepsProps> = ({
 
       <div className='space-y-3'>
         {steps.length === 0 ? (
-          <div className='rounded-md border border-dashed border-gray-300 bg-gray-50 py-10 text-center text-sm text-gray-500 dark:border-gray-600 dark:bg-gray-800/50 dark:text-gray-400'>
-            No steps added yet. Click "Add Step" to begin configuring your
-            workflow.
+          <div className='rounded-md border border-dashed border-border bg-muted py-10 text-center text-sm text-muted-foreground'>
+            No steps added. Click "Add Step" to get started.
           </div>
         ) : (
           steps.map((step, index) => (

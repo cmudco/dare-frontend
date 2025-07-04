@@ -14,6 +14,7 @@ import {
   createConversation,
 } from '../../redux/asyncThunks/conversation'
 import ConversationFileSelect from './ConversationFileSelect'
+import ConversationReferenceSelect from './ConversationReferenceSelect'
 import ModelConfigurationPanel from './ModelConfigurationPanel'
 import { ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
@@ -125,6 +126,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <ConversationFileSelect />
             <PromptSet />
             <div className='h-8 w-[2px] rounded-lg bg-gray-300'></div>
+            <ConversationReferenceSelect />
             <ModelPicker />
           </div>
           <ModelConfigurationPanel />

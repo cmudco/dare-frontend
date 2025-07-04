@@ -126,7 +126,7 @@ const Sidebar = () => {
                 className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-none transition-all ${
                   isActive
                     ? 'dark:hover:bg-dare-gradient/90 bg-sky-50 dark:bg-dare-gradient dark:text-white'
-                    : 'focus:bg-blue-gray-50 focus:text-blue-gradient-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-opacity-80 active:bg-opacity-80'
+                    : 'hover:bg-blue-50 hover:text-blue-900 focus:bg-blue-50 focus:text-blue-900 active:bg-blue-50 active:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:active:bg-white/10'
                 }`}
               >
                 <div className={`${isCollapsed ? 'mx-auto' : 'mr-2'} relative`}>
@@ -172,7 +172,7 @@ const Sidebar = () => {
                   className={`flex w-full items-center rounded-lg p-3 text-start leading-tight outline-none transition-all ${
                     isActive
                       ? 'dark:hover:bg-dare-gradient/90 bg-sky-50 dark:bg-dare-gradient dark:text-white'
-                      : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gradient-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80'
+                      : 'hover:bg-blue-50 hover:text-blue-900 focus:bg-blue-50 focus:text-blue-900 active:bg-blue-50 active:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:active:bg-white/10'
                   }`}
                 >
                   <div

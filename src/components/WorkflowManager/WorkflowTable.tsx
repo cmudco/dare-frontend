@@ -146,15 +146,15 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
 
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max bg-background bg-white text-left'>
+      <Table className='mt-4 w-full min-w-max bg-background text-left'>
         <TableHeader>
-          <TableRow className='bg-background bg-muted'>
+          <TableRow className='bg-muted'>
             {WORKFLOWS_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 dark:text-white ${
+                className={`cursor-pointer select-none p-4 text-sm font-semibold text-foreground transition-colors duration-150 ${
                   head !== 'Action'
-                    ? 'hover:bg-gray-100 hover:opacity-100 dark:hover:bg-gray-700'
+                    ? 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
                     : ''
                 }`}
                 onClick={() => head !== 'Action' && handleSort(head)}
@@ -185,7 +185,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={WORKFLOWS_TABLE_HEAD.length}
-                className='p-4 text-center dark:text-white'
+                className='p-4 text-center text-foreground'
               >
                 Loading workflows...
               </TableCell>
@@ -194,37 +194,37 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={WORKFLOWS_TABLE_HEAD.length}
-                className='p-4 text-center dark:text-white'
+                className='p-4 text-center text-foreground'
               >
                 No matching workflows found
               </TableCell>
             </TableRow>
           ) : (
             paginatedWorkflows.map((workflow) => (
-              <TableRow key={workflow.id} className='dark:border-gray-700'>
+              <TableRow key={workflow.id} className='border-border'>
                 <TableCell className='p-4'>
-                  <h3 className='font-medium dark:text-white'>
+                  <h3 className='font-medium text-foreground'>
                     {workflow.title || 'Untitled'}
                   </h3>
                 </TableCell>
                 <TableCell className='p-4'>
-                  <p className='max-w-[300px] truncate text-sm text-gray-500 dark:text-gray-400'>
+                  <p className='max-w-[300px] truncate text-sm text-muted-foreground'>
                     {workflow.description || 'No description'}
                   </p>
                 </TableCell>
                 <TableCell className='p-4'>
                   {getModeBadge(workflow.mode)}
                 </TableCell>
-                <TableCell className='p-4 dark:text-white'>
+                <TableCell className='p-4 text-foreground'>
                   {getStepCount(workflow)}
                 </TableCell>
-                <TableCell className='p-4 dark:text-white'>
+                <TableCell className='p-4 text-foreground'>
                   {formatDate(workflow.createdAt || workflow.created_at)}
                 </TableCell>
                 <TableCell className='p-4 text-center'>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200 dark:hover:bg-gray-700'>
-                      <EllipsisVerticalIcon className='h-4 w-4 text-gray-500 dark:text-gray-400' />
+                    <DropdownMenuTrigger className='rounded-md p-2 transition-colors hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'>
+                      <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem

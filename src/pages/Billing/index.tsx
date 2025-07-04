@@ -139,18 +139,20 @@ const BillingScreen = () => {
                       <TableCell>{transaction.llm?.name || 'N/A'}</TableCell>
                       <TableCell>
                         <div className='flex flex-col'>
-                          <div className='flex items-center space-x-1'>
-                            <span className='font-medium text-green-600'>
-                              {transaction.inputTokens ?? 'N/A'}
+                          <div className='text-center'>
+                            <span className='text-xs text-muted-foreground'>
+                              input
                             </span>
-                            <span className='text-xs text-gray-500'>input</span>
+                            <span className='text-sm font-medium text-foreground'>
+                              ${transaction.inputTokens}
+                            </span>
                           </div>
-                          <div className='flex items-center space-x-1'>
-                            <span className='font-medium text-blue-600'>
-                              {transaction.outputTokens ?? 'N/A'}
-                            </span>
-                            <span className='text-xs text-gray-500'>
+                          <div className='text-center'>
+                            <span className='text-xs text-muted-foreground'>
                               output
+                            </span>
+                            <span className='text-sm font-medium text-foreground'>
+                              ${transaction.outputTokens}
                             </span>
                           </div>
                         </div>

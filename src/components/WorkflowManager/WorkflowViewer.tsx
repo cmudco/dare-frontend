@@ -61,9 +61,9 @@ const WorkflowViewer = () => {
         (m) => m.id === selectedWorkflow.mode
       )
       if (modeDetails?.id === 1) {
-        return <ListOrdered className='mr-2 h-5 w-5 text-gray-700' />
+        return <ListOrdered className='mr-2 h-5 w-5 text-foreground' />
       } else if (modeDetails?.id === 2) {
-        return <Layers className='mr-2 h-5 w-5 text-gray-700' />
+        return <Layers className='mr-2 h-5 w-5 text-foreground' />
       }
     }
     return null
@@ -115,7 +115,7 @@ const WorkflowViewer = () => {
               <div className='flex w-full items-center justify-between px-6 py-4'>
                 <div className='flex items-center'>
                   {getIconForMode()}
-                  <DrawerTitle className='text-lg font-semibold text-gray-900'>
+                  <DrawerTitle className='text-lg font-semibold text-foreground'>
                     {selectedWorkflow?.title
                       ? `${selectedWorkflow.title} - Workflow Details`
                       : 'Workflow Details'}
@@ -126,10 +126,10 @@ const WorkflowViewer = () => {
                     <Button
                       variant='outline'
                       size='icon'
-                      className='rounded-full hover:bg-gray-100'
+                      className='rounded-full transition-colors hover:bg-muted'
                       onClick={() => dispatch(setSelectedWorkflowRun(null))}
                     >
-                      <X className='h-5 w-5 text-gray-600' />
+                      <X className='h-5 w-5 text-muted-foreground transition-colors hover:text-foreground' />
                       <span className='sr-only'>Close</span>
                     </Button>
                   </DrawerClose>
@@ -185,10 +185,10 @@ const WorkflowViewer = () => {
                   {selectedWorkflowRun ? (
                     <div className='space-y-6'>
                       <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
-                        <div className='rounded-xl border border-gray-200 bg-white p-4 shadow-sm'>
-                          <h4 className='mb-2 flex items-center font-medium text-gray-700'>
-                            <div className='mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-100'>
-                              <CheckCircle className='h-4 w-4 text-blue-600' />
+                        <div className='rounded-xl border border-border bg-card p-4 shadow-sm'>
+                          <h4 className='mb-2 flex items-center font-medium text-foreground'>
+                            <div className='mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30'>
+                              <CheckCircle className='h-4 w-4 text-blue-600 dark:text-blue-400' />
                             </div>
                             Status
                           </h4>
@@ -196,14 +196,14 @@ const WorkflowViewer = () => {
                             {getRunStatusBadge(selectedWorkflowRun.status)}
                           </div>
                         </div>
-                        <div className='rounded-xl border border-gray-200 bg-white p-4 shadow-sm'>
-                          <h4 className='mb-2 flex items-center font-medium text-gray-700'>
-                            <div className='mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-green-100'>
-                              <Timer className='h-4 w-4 text-green-600' />
+                        <div className='rounded-xl border border-border bg-card p-4 shadow-sm'>
+                          <h4 className='mb-2 flex items-center font-medium text-foreground'>
+                            <div className='mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30'>
+                              <Timer className='h-4 w-4 text-green-600 dark:text-green-400' />
                             </div>
                             Duration
                           </h4>
-                          <div className='font-medium text-gray-800'>
+                          <div className='font-medium text-foreground'>
                             {selectedWorkflowRun.endedAt
                               ? formatDistance(
                                   new Date(selectedWorkflowRun.endedAt),
@@ -213,15 +213,15 @@ const WorkflowViewer = () => {
                           </div>
                         </div>
                       </div>
-                      <div className='rounded-xl border border-gray-200 bg-white p-4 shadow-sm'>
-                        <h4 className='mb-3 flex items-center font-medium text-gray-700'>
-                          <div className='mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100'>
-                            <Target className='h-4 w-4 text-indigo-600' />
+                      <div className='rounded-xl border border-border bg-card p-4 shadow-sm'>
+                        <h4 className='mb-3 flex items-center font-medium text-foreground'>
+                          <div className='mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30'>
+                            <Target className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
                           </div>
                           Timeline
                         </h4>
                         <div className='grid grid-cols-1 gap-4'>
-                          <div className='rounded-lg border border-gray-100 bg-gray-50 p-4'>
+                          <div className='rounded-lg border border-border bg-card p-4'>
                             <div className='mb-2 flex items-center text-sm font-medium text-indigo-700'>
                               <CirclePlay className='mr-1.5 h-4 w-4' />
                               Started
@@ -229,7 +229,7 @@ const WorkflowViewer = () => {
                             {formatDate(selectedWorkflowRun.startedAt)}
                           </div>
                           {selectedWorkflowRun.endedAt && (
-                            <div className='rounded-lg border border-gray-100 bg-gray-50 p-4'>
+                            <div className='rounded-lg border border-border bg-card p-4'>
                               <div className='mb-2 flex items-center text-sm font-medium text-green-700'>
                                 <CheckCircle className='mr-1.5 h-4 w-4' />
                                 Completed
@@ -240,12 +240,12 @@ const WorkflowViewer = () => {
                         </div>
                       </div>
                       <div
-                        className='rounded-xl border border-gray-200 bg-white p-4 pb-6 shadow-sm'
+                        className='rounded-xl border border-border bg-card p-4 pb-6 shadow-sm'
                         ref={stepsRef}
                       >
-                        <h4 className='mb-4 flex items-center font-medium text-gray-700'>
-                          <div className='mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-purple-100'>
-                            <ListTodo className='h-4 w-4 text-purple-600' />
+                        <h4 className='mb-4 flex items-center font-medium text-foreground'>
+                          <div className='mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30'>
+                            <ListTodo className='h-4 w-4 text-purple-600 dark:text-purple-400' />
                           </div>
                           Steps
                         </h4>
@@ -258,8 +258,8 @@ const WorkflowViewer = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className='rounded-xl border border-dashed border-gray-300 bg-gray-50 py-12 text-center text-gray-500'>
-                      <Terminal className='mx-auto mb-3 h-12 w-12 text-gray-400' />
+                    <div className='rounded-xl border border-dashed border-border bg-muted py-12 text-center text-muted-foreground'>
+                      <Terminal className='mx-auto mb-3 h-12 w-12 text-muted-foreground' />
                       <p className='text-lg font-medium'>
                         No run data available
                       </p>
