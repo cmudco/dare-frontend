@@ -46,6 +46,18 @@ export const conversationSlice = createSlice({
     updateSelectedFolders(state, action: PayloadAction<MyFolder[]>) {
       state.selectedFolders = action.payload
     },
+    updateReferencedConversations(
+      state,
+      action: PayloadAction<Conversation[]>
+    ) {
+      state.referencedConversations = action.payload
+    },
+    updateReferencedConversationHistoryLimit(
+      state,
+      action: PayloadAction<number>
+    ) {
+      state.referencedConversationHistoryLimit = action.payload
+    },
     toggleDropdown(state) {
       state.showDropdown = !state.showDropdown
     },
@@ -140,6 +152,7 @@ export const conversationSlice = createSlice({
       state.selectedFolders = []
       state.conversationInput = ''
       state.selectedModel = state.availableModels[0]?.id
+      state.referencedConversations = []
     },
     updateConversationOrder(state, action: PayloadAction<string[]>) {
       const orderedConversations: Conversation[] = []
@@ -214,6 +227,7 @@ export const conversationSlice = createSlice({
       .addCase(createConversation.fulfilled, (state, action) => {
         state.loading = false
         state.conversations.unshift(action.payload)
+        state.referencedConversations = []
       })
       .addCase(createConversation.rejected, (state, action) => {
         state.loading = false
@@ -339,5 +353,7 @@ export const {
   toggleConversationSelection,
   setSelectedConversations,
   clearSelectedConversations,
+  updateReferencedConversations,
+  updateReferencedConversationHistoryLimit,
 } = conversationSlice.actions
 export default conversationSlice.reducer

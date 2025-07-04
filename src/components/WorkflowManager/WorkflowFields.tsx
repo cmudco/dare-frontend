@@ -31,10 +31,10 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
 }) => (
   <>
     <DialogHeader>
-      <DialogTitle className='text-left text-lg font-semibold text-gray-900 dark:text-white'>
+      <DialogTitle className='text-left text-lg font-semibold text-foreground'>
         {isEditMode ? 'Edit Workflow' : 'Create New Workflow'}
       </DialogTitle>
-      <DialogDescription className='text-sm text-gray-500 dark:text-gray-400'>
+      <DialogDescription className='text-sm text-muted-foreground'>
         {isEditMode
           ? 'Update your workflow details and steps below.'
           : 'Create steps first, then save your workflow.'}
@@ -76,8 +76,8 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
         ) : (
           <span />
         )}
-        <span className='text-xs text-gray-500 dark:text-gray-400'>
-          {values.description.length}/500
+        <span className='text-xs text-muted-foreground'>
+          {values.description?.length || 0}/500
         </span>
       </div>
     </div>
@@ -89,18 +89,18 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
           value={values.mode ? values.mode.toString() : ''}
           onValueChange={(value) => setFieldValue('mode', parseInt(value))}
         >
-          <SelectTrigger className='w-full bg-background dark:border-gray-700 dark:text-white'>
+          <SelectTrigger className='w-full border-border bg-background text-foreground'>
             <SelectValue placeholder='Select Mode' />
           </SelectTrigger>
           <SelectContent
             position='popper'
-            className='z-50 bg-background dark:border-gray-700'
+            className='z-50 border-border bg-background'
           >
             {WORKFLOW_MODES.map((mode) => (
               <SelectItem
                 key={mode.id}
                 value={mode.id.toString()}
-                className='dark:text-white dark:hover:bg-white/10'
+                className='text-foreground hover:bg-muted'
               >
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center'>
@@ -126,12 +126,12 @@ const WorkflowFields: React.FC<WorkflowFieldsProps> = ({
                         size='icon'
                         className='ml-2 h-6 w-6 flex-shrink-0 p-0'
                       >
-                        <HelpCircle className='h-4 w-4 text-gray-500 dark:text-gray-400' />
+                        <HelpCircle className='h-4 w-4 text-muted-foreground' />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent
                       side='right'
-                      className='z-[60] rounded-md border bg-background bg-gray-900 p-2 text-white dark:border-gray-700'
+                      className='z-[60] rounded-md border border-border bg-background p-2 text-foreground'
                     >
                       <p className='w-[280px] text-xs'>
                         {mode.id === 1

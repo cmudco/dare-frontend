@@ -120,7 +120,7 @@ export const getConversationItemClassName = (
 ): string => {
   const baseClasses =
     'group flex w-full items-center gap-2 rounded-md px-3 py-3 text-start leading-tight outline-none transition-all min-h-[48px] cursor-pointer'
-  const dragClasses = isDragging ? 'shadow-lg scale-105 bg-gray-50' : ''
+  const dragClasses = isDragging ? 'shadow-lg scale-105 bg-muted/50' : ''
   const selectedClasses = isSelected
     ? 'bg-blue-50 border-2 border-blue-300'
     : ''
@@ -128,7 +128,7 @@ export const getConversationItemClassName = (
     isActive && !isSelected
       ? 'bg-pink-50 dark:bg-dare-gradient dark:text-white text-primary'
       : !isSelected
-        ? 'focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-gray-200 hover:bg-opacity-80 hover:text-gray-900 focus:bg-opacity-80 active:bg-opacity-80'
+        ? 'hover:bg-blue-50 hover:text-blue-900 focus:bg-blue-50 focus:text-blue-900 active:bg-blue-50 active:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:active:bg-white/10'
         : ''
 
   return `${baseClasses} ${dragClasses} ${selectedClasses} ${activeClasses}`.trim()

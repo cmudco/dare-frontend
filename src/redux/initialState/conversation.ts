@@ -15,6 +15,8 @@ export const initialState: ConversationState = {
   selectedTags: [] as Tag[],
   selectedFolders: [] as MyFolder[],
   selectedConversations: [],
+  referencedConversations: [],
+  referencedConversationHistoryLimit: 10,
   showDropdown: false,
   hoveredModel: null,
   conversationInput: '',

@@ -21,7 +21,7 @@ export const getModeBadge = (mode: WorkflowMode) => {
       return (
         <Badge
           variant='outline'
-          className='border-blue-200 bg-blue-50 text-blue-700'
+          className='border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
         >
           <ListOrdered className='mr-1 h-3.5 w-3.5' />
           {WORKFLOW_MODES[0].name}
@@ -31,7 +31,7 @@ export const getModeBadge = (mode: WorkflowMode) => {
       return (
         <Badge
           variant='outline'
-          className='border-green-200 bg-green-50 text-green-700'
+          className='border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300'
         >
           <Layers className='mr-1 h-3.5 w-3.5' />
           {WORKFLOW_MODES[1].name}
@@ -51,7 +51,7 @@ export const getRunStatusBadge = (status: WorkflowRunStepStatus) => {
       return (
         <Badge
           variant='outline'
-          className='border-blue-200 bg-blue-50 text-blue-700'
+          className='border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
         >
           <Clock className='mr-1 h-3.5 w-3.5' />
           Pending
@@ -61,7 +61,7 @@ export const getRunStatusBadge = (status: WorkflowRunStepStatus) => {
       return (
         <Badge
           variant='outline'
-          className='border-yellow-200 bg-yellow-50 text-yellow-700'
+          className='border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
         >
           <Loader2 className='mr-1 h-3.5 w-3.5 animate-spin' />
           Running
@@ -71,7 +71,7 @@ export const getRunStatusBadge = (status: WorkflowRunStepStatus) => {
       return (
         <Badge
           variant='outline'
-          className='border-green-200 bg-green-50 text-green-700'
+          className='border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300'
         >
           <CheckCircle className='mr-1 h-3.5 w-3.5' />
           Completed
@@ -81,7 +81,7 @@ export const getRunStatusBadge = (status: WorkflowRunStepStatus) => {
       return (
         <Badge
           variant='outline'
-          className='border-red-200 bg-red-50 text-red-700'
+          className='border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300'
         >
           <XCircle className='mr-1 h-3.5 w-3.5' />
           Failed
@@ -89,7 +89,10 @@ export const getRunStatusBadge = (status: WorkflowRunStepStatus) => {
       )
     default:
       return (
-        <Badge variant='outline' className='bg-gray-100 text-gray-700'>
+        <Badge
+          variant='outline'
+          className='border-border bg-muted text-muted-foreground'
+        >
           Unknown
         </Badge>
       )

@@ -79,6 +79,8 @@ export interface ConversationState {
   selectedTags: Tag[]
   selectedFolders: MyFolder[]
   selectedConversations: string[]
+  referencedConversations: Conversation[]
+  referencedConversationHistoryLimit: number
   showDropdown: boolean
   hoveredModel: string | null
   conversationInput: string

@@ -17,7 +17,7 @@ import {
 } from '@/redux/conversationSlice'
 import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { Tag } from '@/redux/types/tags'
-import { getTagColor } from '@/utils/files'
+
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { FolderIcon } from '@heroicons/react/24/outline'
@@ -130,18 +130,18 @@ const ConversationFileSelect: React.FC = () => {
             variant='ghost'
             className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
           >
-            <FolderIcon className='h-5 w-5 text-gray-600 dark:text-gray-300' />
+            <FolderIcon className='h-5 w-5 text-muted-foreground transition-colors hover:text-foreground' />
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className='w-[400px] border bg-background bg-white p-4 dark:border-dark-icon-unselected'
+          className='w-[400px] border border-border bg-popover p-4'
           align='start'
           side='top'
           sideOffset={8}
         >
-          <div className='space-y-4 text-gray-900 dark:text-white'>
+          <div className='space-y-4 text-foreground'>
             <div className='relative'>
-              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground dark:text-gray-400' />
+              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
               <Input
                 placeholder={`Search ${activeTab}`}
                 value={searchQuery}
@@ -157,14 +157,14 @@ const ConversationFileSelect: React.FC = () => {
                     variant='ghost'
                     className='absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0 dark:hover:bg-white/10'
                   >
-                    <Settings className='h-4 w-4 text-gray-600 dark:text-gray-300' />
+                    <Settings className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
                   </Button>
                 </SettingsPopoverTrigger>
                 <SettingsPopoverContent
                   align='start'
                   side='right'
                   sideOffset={8}
-                  className='w-[25rem] border bg-background bg-white p-4 dark:border-dark-icon-unselected'
+                  className='w-[25rem] border border-border bg-popover p-4'
                 >
                   <ModelContextSettings
                     onClose={() => setSettingsOpen(false)}
@@ -181,28 +181,28 @@ const ConversationFileSelect: React.FC = () => {
                 )
               }
             >
-              <TabsList className='grid w-full grid-cols-4 dark:border-dark-icon-unselected dark:bg-black/20'>
+              <TabsList className='grid w-full grid-cols-4 border-border bg-muted/30 dark:bg-muted/50'>
                 <TabsTrigger
                   value='embeddings'
-                  className='dark:text-gray-300 dark:data-[state=active]:bg-dark-button-primary dark:data-[state=active]:text-white'
+                  className='text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'
                 >
                   Embeddings
                 </TabsTrigger>
                 <TabsTrigger
                   value='files'
-                  className='dark:text-gray-300 dark:data-[state=active]:bg-dark-button-primary dark:data-[state=active]:text-white'
+                  className='text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'
                 >
                   Files
                 </TabsTrigger>
                 <TabsTrigger
                   value='tags'
-                  className='dark:text-gray-300 dark:data-[state=active]:bg-dark-button-primary dark:data-[state=active]:text-white'
+                  className='text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'
                 >
                   Tags
                 </TabsTrigger>
                 <TabsTrigger
                   value='folders'
-                  className='dark:text-gray-300 dark:data-[state=active]:bg-dark-button-primary dark:data-[state=active]:text-white'
+                  className='text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'
                 >
                   Folders
                 </TabsTrigger>
@@ -214,7 +214,7 @@ const ConversationFileSelect: React.FC = () => {
                     <div
                       key={file.id}
                       onClick={() => handleToggleEmbedding(file)}
-                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-muted dark:hover:bg-white/10'
+                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
                     >
                       <div
                         className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
@@ -227,7 +227,7 @@ const ConversationFileSelect: React.FC = () => {
                           <Check className='h-3 w-3 text-primary-foreground' />
                         )}
                       </div>
-                      <FileIcon className='mr-2 h-4 w-4 text-muted-foreground dark:text-gray-400' />
+                      <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
                       <span className='text-sm dark:text-white'>
                         {file.name}
                       </span>
@@ -247,7 +247,7 @@ const ConversationFileSelect: React.FC = () => {
                     <div
                       key={file.id}
                       onClick={() => handleToggleFile(file)}
-                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-muted'
+                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
                     >
                       <div
                         className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
@@ -261,7 +261,11 @@ const ConversationFileSelect: React.FC = () => {
                         )}
                       </div>
                       <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                      <span className='text-sm'>{file.name}</span>
+                      <span
+                        className={`text-sm ${selectedFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'}`}
+                      >
+                        {file.name}
+                      </span>
                     </div>
                   ))}
                   {filteredFiles.length === 0 && (
@@ -283,7 +287,7 @@ const ConversationFileSelect: React.FC = () => {
                         onClick={() => hasFiles && handleToggleTag(tag)}
                         className={`flex items-center rounded-md p-2 ${
                           hasFiles
-                            ? 'cursor-pointer hover:bg-muted'
+                            ? 'cursor-pointer hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
                             : 'cursor-not-allowed opacity-50'
                         }`}
                       >
@@ -300,7 +304,7 @@ const ConversationFileSelect: React.FC = () => {
                         </div>
                         <TagIcon className='mr-2 h-4 w-4 text-muted-foreground' />
                         <span
-                          className={`text-sm ${isSelected ? `text-${getTagColor(tag.label)}-600` : ''}`}
+                          className={`text-sm ${isSelected ? 'font-medium text-primary' : 'text-foreground'}`}
                         >
                           {tag.label}
                         </span>
@@ -331,7 +335,7 @@ const ConversationFileSelect: React.FC = () => {
                         onClick={() => hasFiles && handleToggleFolder(folder)}
                         className={`flex items-center rounded-md p-2 ${
                           hasFiles
-                            ? 'cursor-pointer hover:bg-muted'
+                            ? 'cursor-pointer hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
                             : 'cursor-not-allowed opacity-50'
                         }`}
                       >
@@ -347,7 +351,11 @@ const ConversationFileSelect: React.FC = () => {
                           )}
                         </div>
                         <Folder className='mr-2 h-4 w-4 text-muted-foreground' />
-                        <span className='text-sm'>{folder.name}</span>
+                        <span
+                          className={`text-sm ${isSelected ? 'font-medium text-primary' : 'text-foreground'}`}
+                        >
+                          {folder.name}
+                        </span>
                         <span className='ml-2 text-xs text-muted-foreground'>
                           ({folder.fileCount})
                         </span>

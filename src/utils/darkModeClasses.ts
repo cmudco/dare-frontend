@@ -20,6 +20,19 @@ export const darkClasses = {
   mutedText: 'text-muted-foreground',
   popoverText: 'text-popover-foreground',
 
+  // Semantic text classes for different UI contexts
+  headerText: 'text-foreground',
+  bodyText: 'text-foreground',
+  subtleText: 'text-muted-foreground',
+  captionText: 'text-muted-foreground',
+  labelText: 'text-foreground',
+  placeholderText: 'text-muted-foreground',
+  linkText: 'text-primary',
+  errorText: 'text-destructive',
+  successText: 'text-green-600 dark:text-green-400',
+  warningText: 'text-yellow-600 dark:text-yellow-400',
+  infoText: 'text-blue-600 dark:text-blue-400',
+
   // Border classes using CSS variables
   border: 'border-border',
 
@@ -35,7 +48,8 @@ export const darkClasses = {
   card: 'bg-card border-border text-card-foreground',
 
   // Input classes
-  input: 'bg-input border-border text-foreground',
+  input:
+    'bg-input border-border text-foreground placeholder:text-muted-foreground',
 
   // Button classes
   buttonPrimary: 'bg-primary text-primary-foreground border-border',
@@ -44,6 +58,41 @@ export const darkClasses = {
   // Accent and interactive elements
   accent: 'bg-accent text-accent-foreground',
   destructive: 'bg-destructive text-destructive-foreground',
+}
+
+/**
+ * Text color replacements for hardcoded gray colors
+ * Use these instead of text-gray-* classes for dark mode compatibility
+ */
+export const textColors = {
+  // Replace text-gray-900, text-black with these
+  primary: 'text-foreground',
+
+  // Replace text-gray-800, text-gray-700 with these
+  secondary: 'text-foreground',
+
+  // Replace text-gray-600, text-gray-500 with these
+  muted: 'text-muted-foreground',
+
+  // Replace text-gray-400, text-gray-300 with these
+  subtle: 'text-muted-foreground',
+
+  // Special purpose colors
+  link: 'text-primary hover:text-primary/80',
+  error: 'text-destructive',
+  success: 'text-green-600 dark:text-green-400',
+  warning: 'text-yellow-600 dark:text-yellow-400',
+  info: 'text-blue-600 dark:text-blue-400',
+}
+
+/**
+ * Interactive element colors (buttons, icons, etc.)
+ */
+export const interactiveColors = {
+  icon: 'text-muted-foreground hover:text-foreground',
+  iconActive: 'text-foreground',
+  button: 'text-muted-foreground hover:text-foreground',
+  buttonActive: 'text-foreground',
 }
 
 /**
@@ -76,4 +125,15 @@ export const componentClasses = {
     secondary: darkClasses.buttonSecondary,
     destructive: darkClasses.destructive,
   },
+}
+
+/**
+ * Utility to replace hardcoded gray text colors with semantic equivalents
+ */
+export const replaceGrayText = (className: string): string => {
+  return className
+    .replace(/text-gray-900|text-black(?!\w)/g, textColors.primary)
+    .replace(/text-gray-800|text-gray-700/g, textColors.secondary)
+    .replace(/text-gray-600|text-gray-500/g, textColors.muted)
+    .replace(/text-gray-400|text-gray-300/g, textColors.subtle)
 }
