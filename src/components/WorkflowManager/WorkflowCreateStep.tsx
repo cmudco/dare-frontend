@@ -328,7 +328,8 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                           variant='ghost'
                           size='icon'
                           className='h-5 w-5 p-0 text-muted-foreground transition-colors hover:text-primary'
-                          onClick={() => setIsEmbeddingDialogOpen(true)}
+                          // TODO: Temporary fix
+                          // onClick={() => setIsEmbeddingDialogOpen(true)}
                           aria-label='Embedding settings'
                         >
                           <Settings className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
