@@ -12,6 +12,7 @@ export interface MyFile {
   jobId?: string
   status: FileStatus
   vectorDbSource: VectorDbSource
+  errorMessage?: string
 }
 
 export interface MyFolder {

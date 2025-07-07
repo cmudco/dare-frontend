@@ -200,65 +200,67 @@ const FileTable = () => {
               </TableCell>
             </TableRow>
           ) : (
-            paginatedFiles.map(({ id, name, fileType, size, tags, status }) => (
-              <TableRow key={id}>
-                <TableCell className='w-[50px] p-4 text-center'>
-                  <input
-                    type='checkbox'
-                    className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
-                    checked={selectedItems.includes(id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        dispatch(addSelectedItem(id))
-                      } else {
-                        dispatch(removeSelectedItem(id))
-                      }
-                    }}
-                  />
-                </TableCell>
-                <TableCell className='p-4'>{name || 'Unnamed'}</TableCell>
-                <TableCell className='p-4'>{fileType || 'Unknown'}</TableCell>
-                <TableCell className='p-4'>{formatFileSize(size)}</TableCell>
-                <TableCell className='p-4'>
-                  <div className='flex max-w-[150px] flex-wrap gap-2'>
-                    {Array.isArray(tags) &&
-                      tags.map((tagId, i) => {
-                        const tag = allTags.find((t) => t.id === tagId)
-                        if (!tag) return null
-                        const colorVariant = TAG_COLORS[tag.label]
-                        return (
-                          <Badge
-                            key={`${id}-${i}`}
-                            variant={colorVariant}
-                            selected={true}
-                          >
-                            {tag.label}
-                          </Badge>
-                        )
-                      })}
-                  </div>
-                </TableCell>
-                <TableCell className='p-4'>
-                  {getStatusDisplay(status)}
-                </TableCell>
-                <TableCell className='p-4 text-center'>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
-                      <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem
-                        className='cursor-pointer text-red-500'
-                        onClick={() => handleDelete(id, name)}
-                      >
-                        <Trash2 className='mr-2 h-4 w-4' />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))
+            paginatedFiles.map(
+              ({ id, name, fileType, size, tags, status, errorMessage }) => (
+                <TableRow key={id}>
+                  <TableCell className='w-[50px] p-4 text-center'>
+                    <input
+                      type='checkbox'
+                      className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
+                      checked={selectedItems.includes(id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          dispatch(addSelectedItem(id))
+                        } else {
+                          dispatch(removeSelectedItem(id))
+                        }
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell className='p-4'>{name || 'Unnamed'}</TableCell>
+                  <TableCell className='p-4'>{fileType || 'Unknown'}</TableCell>
+                  <TableCell className='p-4'>{formatFileSize(size)}</TableCell>
+                  <TableCell className='p-4'>
+                    <div className='flex max-w-[150px] flex-wrap gap-2'>
+                      {Array.isArray(tags) &&
+                        tags.map((tagId, i) => {
+                          const tag = allTags.find((t) => t.id === tagId)
+                          if (!tag) return null
+                          const colorVariant = TAG_COLORS[tag.label]
+                          return (
+                            <Badge
+                              key={`${id}-${i}`}
+                              variant={colorVariant}
+                              selected={true}
+                            >
+                              {tag.label}
+                            </Badge>
+                          )
+                        })}
+                    </div>
+                  </TableCell>
+                  <TableCell className='p-4'>
+                    {getStatusDisplay(status, errorMessage)}
+                  </TableCell>
+                  <TableCell className='p-4 text-center'>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
+                        <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem
+                          className='cursor-pointer text-red-500'
+                          onClick={() => handleDelete(id, name)}
+                        >
+                          <Trash2 className='mr-2 h-4 w-4' />
+                          <span>Delete</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              )
+            )
           )}
         </TableBody>
 
