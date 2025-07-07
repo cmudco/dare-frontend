@@ -9,7 +9,6 @@ import {
 import { FormikValues } from 'formik'
 import { AppDispatch } from '../../redux/store'
 import { resetPassword } from '../../redux/asyncThunks/user'
-import { CALLBACK_VALUES } from '@/constants/platforms'
 
 const ResetPasswordScreen: React.FC = () => {
   const navigate = useNavigate()
@@ -28,14 +27,10 @@ const ResetPasswordScreen: React.FC = () => {
     try {
       const resultAction = await dispatch(resetPassword(formData)).unwrap()
       if (resultAction) {
-        const callback = searchParams.get('callback')
-        if (callback === CALLBACK_VALUES.SOCRATIC_BOOKS) {
-          // Redirect to SocraticBooks frontend
-          const socraticBooksUrl =
-            import.meta.env.VITE_SOCRATIC_BOOKS_URL || 'http://localhost:5174'
-          window.location.href = `${socraticBooksUrl}/login`
+        const callbackUrl = searchParams.get('callbackurl')
+        if (callbackUrl) {
+          window.location.href = `${callbackUrl}/login`
         } else {
-          // Default behavior - redirect to DARE login
           navigate('/login')
         }
       }

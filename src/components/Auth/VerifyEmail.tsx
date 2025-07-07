@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../redux/hooks'
 import AuthCard from './AuthCard'
 import { verifyEmailRegistration } from '@/redux/asyncThunks/user'
-import { CALLBACK_VALUES } from '@/constants/platforms'
 
 const VerifyEmailScreen = () => {
   const [searchParams] = useSearchParams()
@@ -22,15 +21,11 @@ const VerifyEmailScreen = () => {
 
   useEffect(() => {
     if (successMessage) {
-      const callback = searchParams.get('callback')
+      const callbackUrl = searchParams.get('callbackurl')
       const timer = setTimeout(() => {
-        if (callback === CALLBACK_VALUES.SOCRATIC_BOOKS) {
-          // Redirect to SocraticBooks frontend
-          const socraticBooksUrl =
-            import.meta.env.VITE_SOCRATIC_BOOKS_URL || 'http://localhost:5174'
-          window.location.href = `${socraticBooksUrl}/login`
+        if (callbackUrl) {
+          window.location.href = `${callbackUrl}/login`
         } else {
-          // Default behavior - redirect to DARE login
           navigate('/login')
         }
       }, 3000)
