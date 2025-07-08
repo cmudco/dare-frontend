@@ -1,4 +1,10 @@
 import { Badge } from '@/components/ui/badge'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { FileStatus } from './file'
 import {
   Loader2,
@@ -26,7 +32,7 @@ export const getJobStatusDisplay = (jobStatus?: string) => {
   }
 }
 
-export const getStatusDisplay = (status: FileStatus) => {
+export const getStatusDisplay = (status: FileStatus, errorMessage?: string) => {
   switch (status) {
     case FileStatus.PROCESSING:
       return (
@@ -40,12 +46,48 @@ export const getStatusDisplay = (status: FileStatus) => {
           <CheckCircle className='mr-1 h-4 w-4' /> Processed
         </Badge>
       )
-    case FileStatus.FAILED:
-      return (
-        <Badge variant='destructive'>
+    case FileStatus.FAILED: {
+      const failedBadge = (
+        <Badge variant='destructive' className='cursor-pointer'>
           <XCircle className='mr-1 h-4 w-4' /> Failed
         </Badge>
       )
+
+      if (errorMessage && errorMessage.trim()) {
+        const formatErrorMessage = (error: string) => {
+          if (error.includes('You exceeded your current quota')) {
+            return 'OpenAI quota exceeded. Please check your billing details.'
+          }
+          if (error.includes('Error generating batch embeddings')) {
+            return 'Failed to generate embeddings. Check API limits.'
+          }
+          if (error.includes('Error reading file content')) {
+            return 'Unable to read file content. Check file format.'
+          }
+          return error
+        }
+
+        const displayMessage = formatErrorMessage(errorMessage)
+
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>{failedBadge}</TooltipTrigger>
+              <TooltipContent className='max-w-sm p-3' side='top'>
+                <div className='space-y-1'>
+                  <p className='text-sm font-medium'>Error Details:</p>
+                  <p className='text-xs text-muted-foreground'>
+                    {displayMessage}
+                  </p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )
+      }
+
+      return failedBadge
+    }
     default:
       return <Badge variant='outline'>Unknown</Badge>
   }
