@@ -85,9 +85,9 @@ const ConversationReferenceSelect: React.FC = () => {
         <PopoverTrigger asChild>
           <Button
             variant='ghost'
-            className='dark:bg-dark-chat-history relative flex h-10 border-gray-200 bg-white px-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-dark-icon-unselected dark:text-white dark:hover:bg-dark-icon-unselected'
+            className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
           >
-            <MessageSquare className='h-4 w-4' />
+            <MessageSquare className='h-5 w-5 text-muted-foreground transition-colors hover:text-foreground' />
             {selectedCount > 0 && (
               <Badge
                 variant='secondary'
@@ -186,9 +186,9 @@ const ConversationReferenceSelect: React.FC = () => {
                     <Badge
                       key={conversation.conversationId}
                       variant='secondary'
-                      className='flex items-center gap-1 px-2 py-1'
+                      className='flex min-w-0 max-w-[180px] items-center gap-1 px-2 py-1'
                     >
-                      <span className='max-w-[120px] truncate text-xs'>
+                      <span className='min-w-0 max-w-[140px] truncate text-xs'>
                         {getConversationTitle(conversation)}
                       </span>
                       <button
@@ -212,7 +212,11 @@ const ConversationReferenceSelect: React.FC = () => {
                   <div
                     key={conversation.conversationId}
                     onClick={() => handleToggleConversation(conversation)}
-                    className='flex cursor-pointer items-center rounded-md p-2 hover:bg-muted'
+                    className={`flex cursor-pointer items-center rounded-md p-2 transition-colors ${
+                      isReferenced
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
+                        : 'hover:bg-gray-200 dark:hover:bg-white/10'
+                    }`}
                   >
                     <div
                       className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
@@ -226,9 +230,9 @@ const ConversationReferenceSelect: React.FC = () => {
                       )}
                     </div>
                     <MessageSquare className='mr-2 h-4 w-4 text-muted-foreground' />
-                    <div className='flex-1'>
+                    <div className='min-w-0 flex-1'>
                       <span
-                        className={`text-sm ${
+                        className={`block overflow-hidden text-ellipsis whitespace-nowrap pr-2 text-sm ${
                           isReferenced
                             ? 'font-medium text-primary'
                             : 'text-foreground'

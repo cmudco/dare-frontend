@@ -40,7 +40,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
       className={getConversationItemClassName(isDragging, isActive, isSelected)}
       onClick={(e) => onConversationClick(conversation, e)}
     >
-      <div className='flex flex-shrink-0 items-center gap-2'>
+      <div className='flex flex-shrink-0 items-center gap-1'>
         <div
           className={`p-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           {...attributes}
@@ -69,7 +69,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
             </span>
             <div className='absolute right-0 top-1/2 flex -translate-y-1/2 gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
               <button
-                className='rounded-md bg-white p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-dark-icon-unselected'
+                className='rounded-md bg-gray-100 p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-200 dark:bg-white/20 dark:hover:bg-white/30'
                 onClick={(e) => {
                   e.stopPropagation()
                   onCloneClick(conversation)
@@ -79,7 +79,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                 <Copy className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
               </button>
               <button
-                className='rounded-md bg-white p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-dark-icon-unselected'
+                className='rounded-md bg-gray-100 p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-200 dark:bg-white/20 dark:hover:bg-white/30'
                 onClick={(e) => {
                   e.stopPropagation()
                   onEditClick(conversation)
