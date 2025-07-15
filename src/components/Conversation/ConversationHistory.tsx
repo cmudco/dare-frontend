@@ -49,7 +49,7 @@ const ConversationHistory = () => {
 
   return (
     <div
-      className={`transition-width flex max-w-[20vw] flex-1 flex-col border border-pink-50 bg-white bg-clip-border text-gray-700 duration-300 dark:border-slate-800 dark:bg-dark-bg dark:text-white`}
+      className={`transition-width flex max-w-[20vw] flex-1 flex-col border border-pink-50 bg-white bg-clip-border p-2 text-gray-700 duration-300 dark:border-slate-800 dark:bg-dark-bg dark:text-white`}
     >
       <div className='flex items-center justify-between border-pink-50 p-4'>
         <div className='flex flex-grow items-center rounded-3xl border border-gray-500 p-2 dark:border-slate-800'>
@@ -69,7 +69,7 @@ const ConversationHistory = () => {
           <span className='text-xl'>+</span>
         </Button>
       </div>
-      <hr className='mx-1 border-gray-200' />
+      <hr className='mx-1 mb-2 border-gray-200' />
       <ConversationList />
     </div>
   )

@@ -57,9 +57,14 @@ const ModelPicker: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className='dark:bg-dark-chat-history flex h-10 border-gray-200 bg-white px-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-dark-icon-unselected dark:text-white dark:hover:bg-dark-icon-unselected'>
-          <Box className='h-2 w-4' />
-          {getModelButtonText()}
+        <Button
+          variant='ghost'
+          className='group flex h-9 items-center gap-2 px-3 hover:bg-gray-200 dark:hover:bg-white/10'
+        >
+          <Box className='h-5 w-5 text-muted-foreground transition-colors group-hover:text-foreground dark:text-muted-foreground dark:group-hover:text-white' />
+          <span className='max-w-[120px] truncate text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground dark:text-muted-foreground dark:group-hover:text-white'>
+            {getModelButtonText()}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -90,7 +95,7 @@ const ModelPicker: React.FC = () => {
                   className={`rounded-md px-4 py-1 text-sm font-medium transition-all ${
                     providerFilter === 'all'
                       ? 'border-primary/20 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground'
-                      : 'border-border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
+                      : 'border-border bg-transparent text-muted-foreground hover:bg-blue-50 dark:hover:bg-primary/30 dark:hover:text-white'
                   }`}
                   onClick={() => setProviderFilter('all')}
                 >
@@ -104,7 +109,7 @@ const ModelPicker: React.FC = () => {
                     className={`rounded-md px-4 py-1 text-sm font-medium capitalize transition-all ${
                       providerFilter === provider
                         ? 'border-primary/20 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground'
-                        : 'border-border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
+                        : 'border-border bg-transparent text-muted-foreground hover:bg-blue-50 dark:hover:bg-primary/30 dark:hover:text-white'
                     }`}
                     onClick={() => setProviderFilter(provider)}
                   >

@@ -184,25 +184,25 @@ const ConversationFileSelect: React.FC = () => {
               <TabsList className='grid w-full grid-cols-4 border-border bg-muted/30 dark:bg-muted/50'>
                 <TabsTrigger
                   value='embeddings'
-                  className='text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'
+                  className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
                 >
                   Embeddings
                 </TabsTrigger>
                 <TabsTrigger
                   value='files'
-                  className='text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'
+                  className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
                 >
                   Files
                 </TabsTrigger>
                 <TabsTrigger
                   value='tags'
-                  className='text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'
+                  className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
                 >
                   Tags
                 </TabsTrigger>
                 <TabsTrigger
                   value='folders'
-                  className='text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'
+                  className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
                 >
                   Folders
                 </TabsTrigger>
@@ -285,9 +285,11 @@ const ConversationFileSelect: React.FC = () => {
                       <div
                         key={tag.id}
                         onClick={() => hasFiles && handleToggleTag(tag)}
-                        className={`flex items-center rounded-md p-2 ${
+                        className={`flex items-center rounded-md p-2 transition-colors ${
                           hasFiles
-                            ? 'cursor-pointer hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+                            ? isSelected
+                              ? 'cursor-pointer bg-blue-100 text-blue-900 dark:bg-white/20 dark:text-white'
+                              : 'cursor-pointer text-foreground hover:bg-blue-50 hover:text-blue-900 dark:text-white dark:hover:bg-white/10 dark:hover:text-white'
                             : 'cursor-not-allowed opacity-50'
                         }`}
                       >
@@ -333,9 +335,11 @@ const ConversationFileSelect: React.FC = () => {
                       <div
                         key={folder.id}
                         onClick={() => hasFiles && handleToggleFolder(folder)}
-                        className={`flex items-center rounded-md p-2 ${
+                        className={`flex items-center rounded-md p-2 transition-colors ${
                           hasFiles
-                            ? 'cursor-pointer hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+                            ? isSelected
+                              ? 'cursor-pointer bg-blue-100 text-blue-900 dark:bg-white/20 dark:text-white'
+                              : 'cursor-pointer text-foreground hover:bg-blue-50 hover:text-blue-900 dark:text-white dark:hover:bg-white/10 dark:hover:text-white'
                             : 'cursor-not-allowed opacity-50'
                         }`}
                       >

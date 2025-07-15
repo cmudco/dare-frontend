@@ -37,7 +37,11 @@ const Header: React.FC = () => {
     <header className='dark:border-r-0dark:bg-dark-bg left-0 right-0 top-0 flex h-[80px] w-full items-center justify-between border border-pink-50 bg-white p-1 px-2 dark:border-l-0 dark:border-r-0 dark:border-t-0 dark:border-b-slate-800'>
       <div className='mx-2 flex items-center gap-2'>
         <img src='/icons/Logo.png' alt='Logo' className='h-auto w-10' />
-        <img src='/icons/TextLogo.svg' alt='Logo' className='h-auto w-16' />
+        <img
+          src='/icons/TextLogo.svg'
+          alt='Logo'
+          className='h-auto w-16 dark:invert'
+        />
       </div>
 
       <div className='mr-3 flex items-center gap-4'>

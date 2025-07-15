@@ -1,5 +1,5 @@
 import React from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import AuthCard from '../../components/Auth/AuthCard'
 import {
@@ -14,6 +14,7 @@ const ResetPasswordScreen: React.FC = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>()
   const { token, uid } = useParams<{ token: string; uid: string }>()
+  const [searchParams] = useSearchParams()
 
   const handleSubmit = async (values: FormikValues) => {
     const formData = {
@@ -26,7 +27,12 @@ const ResetPasswordScreen: React.FC = () => {
     try {
       const resultAction = await dispatch(resetPassword(formData)).unwrap()
       if (resultAction) {
-        navigate('/login')
+        const callbackUrl = searchParams.get('callbackurl')
+        if (callbackUrl) {
+          window.location.href = `${callbackUrl}/login`
+        } else {
+          navigate('/login')
+        }
       }
     } catch (error) {
       console.error('Password reset failed:', error)

@@ -141,18 +141,18 @@ const BillingScreen = () => {
                         <div className='flex flex-col'>
                           <div className='text-center'>
                             <span className='text-xs text-muted-foreground'>
-                              input
+                              input{' '}
                             </span>
                             <span className='text-sm font-medium text-foreground'>
-                              ${transaction.inputTokens}
+                              {transaction.inputTokens}
                             </span>
                           </div>
                           <div className='text-center'>
                             <span className='text-xs text-muted-foreground'>
-                              output
+                              output{' '}
                             </span>
                             <span className='text-sm font-medium text-foreground'>
-                              ${transaction.outputTokens}
+                              {transaction.outputTokens}
                             </span>
                           </div>
                         </div>

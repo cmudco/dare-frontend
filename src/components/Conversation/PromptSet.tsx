@@ -180,10 +180,10 @@ const PromptSet: React.FC = () => {
             return (
               <div key={group.rootPrompt.id}>
                 <div
-                  className={`mb-3 rounded-lg border border-border p-3 text-foreground transition-colors ${
+                  className={`mb-3 cursor-pointer rounded-lg border border-border p-3 text-foreground transition-colors ${
                     selectedPrompt?.id === latestVersion.id
-                      ? 'bg-accent text-accent-foreground'
-                      : 'bg-background hover:bg-muted'
+                      ? 'cursor-pointer bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
+                      : 'cursor-pointer bg-background hover:bg-muted dark:hover:bg-blue-900/30'
                   }`}
                   onClick={() => handlePromptSelect(latestVersion)}
                 >
@@ -229,10 +229,10 @@ const PromptSet: React.FC = () => {
                     {group.versions.slice(1).map((version) => (
                       <div
                         key={version.id}
-                        className={`mb-3 rounded-lg border border-border p-3 text-foreground transition-colors ${
+                        className={`mb-3 cursor-pointer rounded-lg border border-border p-3 text-foreground transition-colors ${
                           selectedPrompt?.id === version.id
-                            ? 'bg-accent text-accent-foreground'
-                            : 'bg-background hover:bg-muted'
+                            ? 'cursor-pointer bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
+                            : 'cursor-pointer bg-background hover:bg-muted dark:hover:bg-blue-900/30'
                         }`}
                         onClick={(e) => {
                           e.stopPropagation()
