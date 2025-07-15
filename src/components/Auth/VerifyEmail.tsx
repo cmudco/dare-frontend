@@ -21,12 +21,17 @@ const VerifyEmailScreen = () => {
 
   useEffect(() => {
     if (successMessage) {
+      const callbackUrl = searchParams.get('callbackurl')
       const timer = setTimeout(() => {
-        navigate('/login')
+        if (callbackUrl) {
+          window.location.href = `${callbackUrl}/login`
+        } else {
+          navigate('/login')
+        }
       }, 3000)
       return () => clearTimeout(timer)
     }
-  }, [successMessage, navigate])
+  }, [successMessage, navigate, searchParams])
 
   return (
     <AuthCard

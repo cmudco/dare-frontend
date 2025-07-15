@@ -207,7 +207,7 @@ const ConversationList: React.FC = () => {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className='flex h-[65vh] w-full flex-col overflow-scroll'>
+        <div className='flex h-[65vh] w-full flex-col gap-1 overflow-scroll'>
           <SortableContext
             items={filteredConversations.map((c) => c.conversationId)}
             strategy={verticalListSortingStrategy}
@@ -279,7 +279,7 @@ const ConversationList: React.FC = () => {
               className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight text-gray-700 outline-none transition-all dark:text-white ${
                 location.pathname === item.name
                   ? 'bg-pink-50 text-primary dark:bg-dark-button-primary dark:text-white'
-                  : 'hover:bg-blue-gray-50 hover:text-blue-gray-900 focus:bg-blue-gray-50 focus:text-blue-gray-900 active:bg-blue-gray-50 active:text-blue-gray-900 hover:bg-opacity-80 focus:bg-opacity-80 active:bg-opacity-80 dark:hover:bg-dark-icon-unselected/20 dark:hover:text-white dark:focus:bg-dark-icon-unselected/20 dark:focus:text-white dark:active:bg-dark-icon-unselected/20 dark:active:text-white'
+                  : 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-dark-icon-unselected/20 dark:hover:text-white'
               } ${
                 isDisabled
                   ? 'cursor-not-allowed text-gray-400 line-through opacity-50 dark:text-dark-icon-unselected'
