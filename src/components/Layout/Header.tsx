@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { BellIcon, CreditCardIcon } from '@heroicons/react/24/solid'
+import { CreditCardIcon } from '@heroicons/react/24/solid'
 import { useNavigate } from 'react-router-dom'
 import { AppDispatch, RootState } from '../../redux/store'
 import { userLogout } from '../../redux/asyncThunks/user'
 import { getWallet } from '../../redux/asyncThunks/billing'
+import { Sun, Moon } from 'lucide-react'
+import { toggleDarkMode } from '../../redux/themeSlice'
 
 import {
   DropdownMenu,
@@ -46,13 +48,24 @@ const Header: React.FC = () => {
 
       <div className='mr-3 flex items-center gap-4'>
         {wallet && (
-          <div className='flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-1.5 text-sm font-medium text-foreground shadow-sm dark:from-purple-900/30 dark:to-pink-900/30'>
+          <div
+            className='flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-1.5 text-sm font-medium text-foreground shadow-sm transition-opacity hover:opacity-80 dark:from-purple-900/30 dark:to-pink-900/30'
+            onClick={() => navigate('/billing')}
+          >
             <CreditCardIcon className='h-4 w-4 text-pink-500' />
             <span>{wallet.displayBalance}</span>
           </div>
         )}
 
-        <BellIcon className='h-6 w-6 text-muted-foreground transition-colors hover:text-foreground' />
+        <Button
+          variant='ghost'
+          size='icon'
+          onClick={() => dispatch(toggleDarkMode())}
+        >
+          <Sun className='h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0' />
+          <Moon className='absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100' />
+          <span className='sr-only'>Toggle theme</span>
+        </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
