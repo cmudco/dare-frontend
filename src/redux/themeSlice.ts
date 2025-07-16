@@ -5,7 +5,7 @@ interface ThemeState {
 }
 
 const initialState: ThemeState = {
-  isDarkMode: localStorage.getItem('dare-theme') === 'dark' || false,
+  isDarkMode: localStorage.getItem('dare-theme') === 'dark',
 }
 
 const themeSlice = createSlice({
@@ -36,16 +36,11 @@ const themeSlice = createSlice({
     },
     initializeTheme: (state) => {
       const savedTheme = localStorage.getItem('dare-theme')
-      const prefersDark = window.matchMedia(
-        '(prefers-color-scheme: dark)'
-      ).matches
-
       if (savedTheme) {
         state.isDarkMode = savedTheme === 'dark'
       } else {
-        state.isDarkMode = prefersDark
+        state.isDarkMode = false
       }
-
       // Apply theme to document
       if (state.isDarkMode) {
         document.documentElement.classList.add('dark')
