@@ -12,6 +12,7 @@ import {
   moveFilesToFolder,
   removeFileFromFolder,
   uploadFolder,
+  updateFileTags,
 } from './asyncThunks/file'
 import { initialState } from './initialState/files'
 
@@ -264,6 +265,24 @@ const fileSlice = createSlice({
         state.loading = false
       })
       .addCase(removeFileFromFolder.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(updateFileTags.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateFileTags.fulfilled, (state, action) => {
+        state.loading = false
+        const updatedFile = action.payload
+        const index = state.files.findIndex(
+          (file) => file.id === updatedFile.id
+        )
+        if (index !== -1) {
+          state.files[index] = updatedFile
+        }
+      })
+      .addCase(updateFileTags.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

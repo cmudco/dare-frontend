@@ -4,7 +4,7 @@ import { RootState, AppDispatch } from '../../redux/store'
 import { deleteFile, getFolders } from '../../redux/asyncThunks/file'
 import { addSelectedItem, removeSelectedItem } from '../../redux/fileSlice'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
-import { TABLE_HEAD, TAG_COLORS } from '../../utils/constants/file'
+import { TABLE_HEAD } from '../../utils/constants/file'
 import { formatFileSize } from '@/utils/files'
 import { SortDirection, sortFiles } from '@/utils/sortUtils'
 import {
@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from '../ui/select'
 import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
 import {
   Table,
   TableBody,
@@ -42,10 +41,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { EllipsisVerticalIcon, Trash2 } from 'lucide-react'
+import { EllipsisVerticalIcon, Trash2, Tag } from 'lucide-react'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getStatusDisplay } from '@/utils/constants/files'
 import { SortDirectionEnum } from '@/utils/constants/sort'
+import FileTagModal from './FileTagModal'
+import TagsDisplay from './TagsDisplay'
 
 const FileTable = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -62,6 +63,9 @@ const FileTable = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>(
     SortDirectionEnum.ASC
   )
+  const [tagFileId, setTagFileId] = useState<number | null>(null)
+  const [tagFileName, setTagFileName] = useState<string>('')
+  const [tagFileExistingTags, setTagFileExistingTags] = useState<number[]>([])
 
   const filteredFiles = useMemo(() => {
     if (!user || user.vectorDb === undefined) {
@@ -120,6 +124,12 @@ const FileTable = () => {
     setDeleteFileName(name || 'Unnamed')
   }
 
+  const handleTag = (id: number, name: string, existingTags: number[]) => {
+    setTagFileId(id)
+    setTagFileName(name || 'Unnamed')
+    setTagFileExistingTags(existingTags)
+  }
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       setSortDirection((prev) =>
@@ -132,6 +142,7 @@ const FileTable = () => {
       setSortDirection(SortDirectionEnum.ASC)
     }
   }
+
   return (
     <div className='overflow-auto'>
       <Table className='mt-4 w-full min-w-max bg-background text-left'>
@@ -221,23 +232,12 @@ const FileTable = () => {
                   <TableCell className='p-4'>{fileType || 'Unknown'}</TableCell>
                   <TableCell className='p-4'>{formatFileSize(size)}</TableCell>
                   <TableCell className='p-4'>
-                    <div className='flex max-w-[150px] flex-wrap gap-2'>
-                      {Array.isArray(tags) &&
-                        tags.map((tagId, i) => {
-                          const tag = allTags.find((t) => t.id === tagId)
-                          if (!tag) return null
-                          const colorVariant = TAG_COLORS[tag.label]
-                          return (
-                            <Badge
-                              key={`${id}-${i}`}
-                              variant={colorVariant}
-                              selected={true}
-                            >
-                              {tag.label}
-                            </Badge>
-                          )
-                        })}
-                    </div>
+                    <TagsDisplay
+                      tags={tags || []}
+                      allTags={allTags}
+                      fileId={id}
+                      maxVisible={3}
+                    />
                   </TableCell>
                   <TableCell className='p-4'>
                     {getStatusDisplay(status, errorMessage)}
@@ -248,6 +248,17 @@ const FileTable = () => {
                         <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
+                        <DropdownMenuItem
+                          className='cursor-pointer'
+                          onClick={() => handleTag(id, name, tags || [])}
+                        >
+                          <Tag className='mr-2 h-4 w-4' />
+                          <span>
+                            {!Array.isArray(tags) || tags.length === 0
+                              ? 'Add Tags'
+                              : 'Edit Tags'}
+                          </span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() => handleDelete(id, name)}
@@ -341,6 +352,14 @@ const FileTable = () => {
         description='Are you sure you want to delete this file? This action cannot be undone.'
         itemName={deleteFileName}
         confirmText='Delete'
+      />
+
+      <FileTagModal
+        isOpen={tagFileId !== null}
+        onClose={() => setTagFileId(null)}
+        fileId={tagFileId}
+        fileName={tagFileName}
+        existingTags={tagFileExistingTags}
       />
     </div>
   )
