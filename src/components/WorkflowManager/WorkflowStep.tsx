@@ -7,7 +7,13 @@ import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import { CodeBlock } from '../Conversation/CodeBlock'
 import { MermaidBlock } from '../Conversation/MermaidBlock'
-import { MessagesSquare, AlertCircle, CirclePlay } from 'lucide-react'
+import {
+  MessagesSquare,
+  AlertCircle,
+  CirclePlay,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react'
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,7 +21,7 @@ import {
 } from '@/components/ui/collapsible'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/redux/store'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getWorkflowRunById, getWorkflows } from '@/redux/asyncThunks/workflow'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { getRunStatusBadge } from '@/utils/constants/workflow'
@@ -32,6 +38,16 @@ export const WorkflowStep: React.FC<{
     (state: RootState) => state.workflow
   )
   const hasDispatchedGetWorkflows = useRef(false)
+  const [openSnippets, setOpenSnippets] = useState<{ [key: string]: boolean }>(
+    {}
+  )
+
+  const toggleSnippets = (stepId: string) => {
+    setOpenSnippets((prev) => ({
+      ...prev,
+      [stepId]: !prev[stepId],
+    }))
+  }
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined
@@ -91,6 +107,7 @@ export const WorkflowStep: React.FC<{
         const isWorkflowCompleted =
           selectedWorkflowRun?.status === WorkflowRunStepStatus.Completed
         const isStepCompleted = step.status === WorkflowRunStepStatus.Completed
+        const isSnippetsOpen = openSnippets[step.id] || false
 
         return (
           <Collapsible
@@ -164,6 +181,68 @@ export const WorkflowStep: React.FC<{
                       {step.response}
                     </ReactMarkdown>
                   </div>
+
+                  {step.snippets &&
+                    step.snippets.length > 0 &&
+                    step.status === WorkflowRunStepStatus.Completed && (
+                      <div className='mt-4'>
+                        <button
+                          onClick={() => toggleSnippets(step.id)}
+                          className='flex items-center text-sm text-muted-foreground hover:text-foreground'
+                        >
+                          {isSnippetsOpen ? (
+                            <ChevronUp className='mr-1 h-4 w-4' />
+                          ) : (
+                            <ChevronDown className='mr-1 h-4 w-4' />
+                          )}
+                          {isSnippetsOpen
+                            ? 'Hide Matched Snippets'
+                            : `Show Matched Snippets (${step.snippets.length})`}
+                        </button>
+                        {isSnippetsOpen && (
+                          <div className='mt-2 space-y-3'>
+                            {[...step.snippets]
+                              .sort(
+                                (a, b) =>
+                                  (b.similarity_score || 0) -
+                                  (a.similarity_score || 0)
+                              )
+                              .map((snippet) => (
+                                <div
+                                  key={snippet.id}
+                                  className='rounded-r-lg border-l-4 border-border bg-muted p-3 pl-4'
+                                >
+                                  <div className='mb-1 flex items-center justify-between'>
+                                    <span className='text-sm font-medium text-foreground'>
+                                      From{' '}
+                                      {snippet.file?.name || 'Unknown file'}{' '}
+                                      (Score:{' '}
+                                      {snippet.similarity_score?.toFixed(2) ||
+                                        'N/A'}
+                                      )
+                                    </span>
+                                    <span className='text-xs text-muted-foreground'>
+                                      {snippet.vector_db_source ? (
+                                        <>
+                                          <span className='font-medium'>
+                                            {snippet.vector_db_source}
+                                          </span>{' '}
+                                          - Chunk {snippet.chunk_index || 0}
+                                        </>
+                                      ) : (
+                                        <>Chunk {snippet.chunk_index || 0}</>
+                                      )}
+                                    </span>
+                                  </div>
+                                  <p className='text-sm text-muted-foreground'>
+                                    {snippet.text}
+                                  </p>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                 </div>
               )}
 

@@ -9,6 +9,15 @@ export enum WorkflowMode {
   Parallel = 2,
 }
 
+export interface WorkflowStepSnippet {
+  id: string
+  file: MyFile
+  text: string
+  similarity_score: number
+  chunk_index: number
+  vector_db_source?: string
+}
+
 export interface Step {
   id?: string
   workflow?: string
@@ -33,6 +42,7 @@ export interface WorkflowRunStep {
   error: string | null
   createdAt: string
   updatedAt: string
+  snippets?: WorkflowStepSnippet[]
 }
 
 export interface WorkflowRun {
