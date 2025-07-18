@@ -1,7 +1,10 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/redux/store'
-import { getAvailableModels } from '@/redux/asyncThunks/conversation'
+import {
+  getAvailableModels,
+  getAllModels,
+} from '@/redux/asyncThunks/conversation'
 import { LLMModel } from '@/redux/types/conversation'
 import {
   Card,
@@ -31,6 +34,7 @@ const Help = () => {
 
   useEffect(() => {
     dispatch(getAvailableModels())
+    dispatch(getAllModels())
   }, [dispatch])
 
   const formatCurrency = (value: string | number | undefined): string => {

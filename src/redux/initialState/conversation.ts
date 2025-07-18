@@ -21,4 +21,5 @@ export const initialState: ConversationState = {
   hoveredModel: null,
   conversationInput: '',
   availableModels: [],
+  allModels: [],
 }

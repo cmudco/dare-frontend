@@ -3,6 +3,7 @@ import { initialState } from './initialState/conversation'
 import {
   getConversations,
   getAvailableModels,
+  getAllModels,
   createConversation,
   deleteConversation,
   updateConversation,
@@ -120,6 +121,9 @@ export const conversationSlice = createSlice({
     setAvailableModels(state, action: PayloadAction<LLMModel[]>) {
       state.availableModels = action.payload
       state.selectedModel = action.payload[0]?.id
+    },
+    setAllModels(state, action: PayloadAction<LLMModel[]>) {
+      state.allModels = action.payload
     },
     updateConversationTitle(state, action: PayloadAction<string>) {
       if (!state.activeConversation) return
@@ -322,6 +326,22 @@ export const conversationSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
+      .addCase(getAllModels.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(
+        getAllModels.fulfilled,
+        (state, action: PayloadAction<LLMModel[]>) => {
+          state.loading = false
+          state.allModels = action.payload
+        }
+      )
+      .addCase(getAllModels.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+        console.error('Failed to load all models:', action.payload)
+      })
   },
 })
 
@@ -345,6 +365,7 @@ export const {
   clearConversation,
   updateMessage,
   setAvailableModels,
+  setAllModels,
   updateConversationTitle,
   updateConversationHistory,
   setPrompt,

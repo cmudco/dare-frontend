@@ -7,6 +7,7 @@ import {
 } from '../types/conversation'
 import {
   getModelsAPI,
+  getAllModelsAPI,
   createConversationAPI,
   getConversationsAPI,
   deleteConversationAPI,
@@ -30,6 +31,20 @@ export const getAvailableModels = createAsyncThunk<
     return response.results || []
   } catch (error) {
     console.error('Error fetching models:', error)
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const getAllModels = createAsyncThunk<
+  LLMModel[],
+  void,
+  { rejectValue: string }
+>('conversation/getAllModels', async (_, thunkAPI) => {
+  try {
+    const response = await getAllModelsAPI()
+    return response || []
+  } catch (error) {
+    console.error('Error fetching all models:', error)
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })

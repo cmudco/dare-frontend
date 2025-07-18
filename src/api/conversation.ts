@@ -59,6 +59,13 @@ export const getModelsAPI = async (): Promise<{ results: LLMModel[] }> => {
   })
 }
 
+export const getAllModelsAPI = async (): Promise<LLMModel[]> => {
+  return await baseRequest<LLMModel[]>({
+    url: 'api/llms/all_models/',
+    method: METHOD.GET,
+  })
+}
+
 export const updateMessageAPI = async (
   messageId: string,
   reaction: MessageReaction
