@@ -13,9 +13,9 @@ export interface WorkflowStepSnippet {
   id: string
   file: MyFile
   text: string
-  similarity_score: number
-  chunk_index: number
-  vector_db_source?: string
+  similarityScore: number
+  chunkIndex: number
+  vectorDbSource?: string
 }
 
 export interface Step {

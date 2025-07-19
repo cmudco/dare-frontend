@@ -13,6 +13,7 @@ import {
   CirclePlay,
   ChevronDown,
   ChevronUp,
+  FileText,
 } from 'lucide-react'
 import {
   Collapsible,
@@ -182,67 +183,64 @@ export const WorkflowStep: React.FC<{
                     </ReactMarkdown>
                   </div>
 
-                  {step.snippets &&
-                    step.snippets.length > 0 &&
-                    step.status === WorkflowRunStepStatus.Completed && (
-                      <div className='mt-4'>
-                        <button
+                  {step.snippets && step.snippets.length > 0 && (
+                    <div className='mt-6'>
+                      <Collapsible open={isSnippetsOpen}>
+                        <CollapsibleTrigger
+                          className='flex w-full items-center justify-between rounded-md border border-border bg-muted px-4 py-3 transition-colors hover:bg-accent'
                           onClick={() => toggleSnippets(step.id)}
-                          className='flex items-center text-sm text-muted-foreground hover:text-foreground'
                         >
+                          <h5 className='flex items-center text-sm font-medium text-foreground'>
+                            <FileText className='mr-2 h-4 w-4' />
+                            Context Snippets ({step.snippets.length})
+                          </h5>
                           {isSnippetsOpen ? (
-                            <ChevronUp className='mr-1 h-4 w-4' />
+                            <ChevronUp className='h-4 w-4 text-muted-foreground' />
                           ) : (
-                            <ChevronDown className='mr-1 h-4 w-4' />
+                            <ChevronDown className='h-4 w-4 text-muted-foreground' />
                           )}
-                          {isSnippetsOpen
-                            ? 'Hide Matched Snippets'
-                            : `Show Matched Snippets (${step.snippets.length})`}
-                        </button>
-                        {isSnippetsOpen && (
-                          <div className='mt-2 space-y-3'>
-                            {[...step.snippets]
-                              .sort(
-                                (a, b) =>
-                                  (b.similarity_score || 0) -
-                                  (a.similarity_score || 0)
-                              )
-                              .map((snippet) => (
-                                <div
-                                  key={snippet.id}
-                                  className='rounded-r-lg border-l-4 border-border bg-muted p-3 pl-4'
-                                >
-                                  <div className='mb-1 flex items-center justify-between'>
-                                    <span className='text-sm font-medium text-foreground'>
-                                      From{' '}
-                                      {snippet.file?.name || 'Unknown file'}{' '}
-                                      (Score:{' '}
-                                      {snippet.similarity_score?.toFixed(2) ||
-                                        'N/A'}
-                                      )
-                                    </span>
-                                    <span className='text-xs text-muted-foreground'>
-                                      {snippet.vector_db_source ? (
-                                        <>
-                                          <span className='font-medium'>
-                                            {snippet.vector_db_source}
-                                          </span>{' '}
-                                          - Chunk {snippet.chunk_index || 0}
-                                        </>
-                                      ) : (
-                                        <>Chunk {snippet.chunk_index || 0}</>
-                                      )}
-                                    </span>
-                                  </div>
-                                  <p className='text-sm text-muted-foreground'>
-                                    {snippet.text}
-                                  </p>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className='space-y-3 p-4'>
+                          {[...step.snippets]
+                            .sort(
+                              (a, b) =>
+                                (b.similarityScore || 0) -
+                                (a.similarityScore || 0)
+                            )
+                            .map((snippet) => (
+                              <div
+                                key={snippet.id}
+                                className='rounded-r-lg border-l-4 border-border bg-background p-3 pl-4'
+                              >
+                                <div className='mb-1 flex items-center justify-between'>
+                                  <span className='text-sm font-medium text-foreground'>
+                                    From {snippet.file.name} (Score:{' '}
+                                    {snippet.similarityScore?.toFixed(2) ||
+                                      'N/A'}
+                                    )
+                                  </span>
+                                  <span className='text-xs text-muted-foreground'>
+                                    {snippet.vectorDbSource ? (
+                                      <>
+                                        <span className='font-medium'>
+                                          {snippet.vectorDbSource}
+                                        </span>{' '}
+                                        - Chunk {snippet.chunkIndex || 0}
+                                      </>
+                                    ) : (
+                                      <>Chunk {snippet.chunkIndex || 0}</>
+                                    )}
+                                  </span>
                                 </div>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                                <p className='text-sm text-muted-foreground'>
+                                  {snippet.text}
+                                </p>
+                              </div>
+                            ))}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </div>
+                  )}
                 </div>
               )}
 
