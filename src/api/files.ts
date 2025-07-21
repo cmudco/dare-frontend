@@ -119,6 +119,17 @@ export const removeFileFromFolderAPI = async (
   })
 }
 
+export const updateFileTagsAPI = async (
+  fileId: number,
+  tagIds: number[]
+): Promise<MyFile> => {
+  return await baseRequest<MyFile>({
+    url: `api/files/${fileId}/`,
+    method: METHOD.PATCH,
+    data: { tags: tagIds },
+  })
+}
+
 export const uploadFolderAPI = async (data: FormData): Promise<MyFolder> => {
   return await baseRequest<MyFolder>({
     url: 'api/folders/',

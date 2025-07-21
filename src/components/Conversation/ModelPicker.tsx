@@ -5,7 +5,10 @@ import {
   updateSelectedModel,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
-import { getAvailableModels } from '../../redux/asyncThunks/conversation'
+import {
+  getAvailableModels,
+  getAllModels,
+} from '../../redux/asyncThunks/conversation'
 import { LLMModel } from '@/redux/types/conversation'
 import {
   DropdownMenu,
@@ -28,10 +31,12 @@ const ModelPicker: React.FC = () => {
   )
   const loading = useSelector((state: RootState) => state.conversation.loading)
   const error = useSelector((state: RootState) => state.conversation.error)
+  const user = useSelector((state: RootState) => state.user.user)
   const [providerFilter, setProviderFilter] = useState<string>('all')
 
   useEffect(() => {
     dispatch(getAvailableModels())
+    dispatch(getAllModels())
   }, [dispatch])
 
   const handleModelSelect = (llmId: number) => {
@@ -84,6 +89,22 @@ const ModelPicker: React.FC = () => {
 
         {!loading && !error && hasModels && (
           <>
+            {user?.modelGroup && (
+              <div className='mb-2 border-b border-border pb-2'>
+                <div className='px-2 py-1'>
+                  <div className='flex items-center gap-2'>
+                    <span className='rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'>
+                      {user.modelGroup.name}
+                    </span>
+                    {user.modelGroup.description && (
+                      <span className='text-xs text-muted-foreground'>
+                        {user.modelGroup.description}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
             <div className='mb-2 px-2 py-2'>
               <h4 className='mb-2.5 text-sm font-medium text-gray-700 dark:text-gray-300'>
                 Filter by provider:

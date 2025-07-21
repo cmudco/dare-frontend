@@ -30,6 +30,12 @@ export interface User {
   defaultPrompt?: Prompt
   chunkSettings?: ChunkSettings
   conversationSettings?: ConversationSettings
+  modelGroup?: {
+    id: number
+    name: string
+    description?: string
+    isActive: boolean
+  }
 }
 
 export interface ChunkSettings {

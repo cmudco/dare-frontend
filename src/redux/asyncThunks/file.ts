@@ -12,6 +12,7 @@ import {
   moveFilesToFolderAPI,
   removeFileFromFolderAPI,
   uploadFolderAPI,
+  updateFileTagsAPI,
 } from '../../api/files'
 import { MyFile } from '../types/files'
 
@@ -22,6 +23,21 @@ export const getFiles = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await getFilesAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateFileTags = createAsyncThunk(
+  'files/updateFileTags',
+  async (
+    { fileId, tagIds }: { fileId: number; tagIds: number[] },
+    thunkAPI
+  ) => {
+    try {
+      const response = await updateFileTagsAPI(fileId, tagIds)
       return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)

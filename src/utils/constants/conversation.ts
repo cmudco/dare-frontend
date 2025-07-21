@@ -6,6 +6,8 @@ export enum SenderType {
 export enum Provider {
   OPENAI = 'openai',
   CLAUDE = 'claude',
+  GEMINI = 'gemini',
+  LLAMA = 'llama',
 }
 
 export enum FeedbackType {
