@@ -43,9 +43,7 @@ const Message: React.FC<MessageProps> = ({
   onContentRendered,
 }) => {
   const dispatch = useDispatch<AppDispatch>()
-  const llms = useSelector(
-    (state: RootState) => state.conversation.availableModels
-  )
+  const llms = useSelector((state: RootState) => state.conversation.allModels)
   const user = useSelector((state: RootState) => state.user.user)
   const conversationSettings = useSelector(
     (state: RootState) => state.user.conversationSettings

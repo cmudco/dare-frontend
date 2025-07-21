@@ -85,6 +85,7 @@ export interface ConversationState {
   hoveredModel: string | null
   conversationInput: string
   availableModels: LLMModel[]
+  allModels: LLMModel[]
 }
 
 export interface ConversationResponse {

@@ -7,7 +7,14 @@ import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import { CodeBlock } from '../Conversation/CodeBlock'
 import { MermaidBlock } from '../Conversation/MermaidBlock'
-import { MessagesSquare, AlertCircle, CirclePlay } from 'lucide-react'
+import {
+  MessagesSquare,
+  AlertCircle,
+  CirclePlay,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+} from 'lucide-react'
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,7 +22,7 @@ import {
 } from '@/components/ui/collapsible'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/redux/store'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getWorkflowRunById, getWorkflows } from '@/redux/asyncThunks/workflow'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { getRunStatusBadge } from '@/utils/constants/workflow'
@@ -32,6 +39,16 @@ export const WorkflowStep: React.FC<{
     (state: RootState) => state.workflow
   )
   const hasDispatchedGetWorkflows = useRef(false)
+  const [openSnippets, setOpenSnippets] = useState<{ [key: string]: boolean }>(
+    {}
+  )
+
+  const toggleSnippets = (stepId: string) => {
+    setOpenSnippets((prev) => ({
+      ...prev,
+      [stepId]: !prev[stepId],
+    }))
+  }
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined
@@ -91,6 +108,7 @@ export const WorkflowStep: React.FC<{
         const isWorkflowCompleted =
           selectedWorkflowRun?.status === WorkflowRunStepStatus.Completed
         const isStepCompleted = step.status === WorkflowRunStepStatus.Completed
+        const isSnippetsOpen = openSnippets[step.id] || false
 
         return (
           <Collapsible
@@ -164,6 +182,65 @@ export const WorkflowStep: React.FC<{
                       {step.response}
                     </ReactMarkdown>
                   </div>
+
+                  {step.snippets && step.snippets.length > 0 && (
+                    <div className='mt-6'>
+                      <Collapsible open={isSnippetsOpen}>
+                        <CollapsibleTrigger
+                          className='flex w-full items-center justify-between rounded-md border border-border bg-muted px-4 py-3 transition-colors hover:bg-accent'
+                          onClick={() => toggleSnippets(step.id)}
+                        >
+                          <h5 className='flex items-center text-sm font-medium text-foreground'>
+                            <FileText className='mr-2 h-4 w-4' />
+                            Context Snippets ({step.snippets.length})
+                          </h5>
+                          {isSnippetsOpen ? (
+                            <ChevronUp className='h-4 w-4 text-muted-foreground' />
+                          ) : (
+                            <ChevronDown className='h-4 w-4 text-muted-foreground' />
+                          )}
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className='space-y-3 p-4'>
+                          {[...step.snippets]
+                            .sort(
+                              (a, b) =>
+                                (b.similarityScore || 0) -
+                                (a.similarityScore || 0)
+                            )
+                            .map((snippet) => (
+                              <div
+                                key={snippet.id}
+                                className='rounded-r-lg border-l-4 border-border bg-background p-3 pl-4'
+                              >
+                                <div className='mb-1 flex items-center justify-between'>
+                                  <span className='text-sm font-medium text-foreground'>
+                                    From {snippet.file.name} (Score:{' '}
+                                    {snippet.similarityScore?.toFixed(2) ||
+                                      'N/A'}
+                                    )
+                                  </span>
+                                  <span className='text-xs text-muted-foreground'>
+                                    {snippet.vectorDbSource ? (
+                                      <>
+                                        <span className='font-medium'>
+                                          {snippet.vectorDbSource}
+                                        </span>{' '}
+                                        - Chunk {snippet.chunkIndex || 0}
+                                      </>
+                                    ) : (
+                                      <>Chunk {snippet.chunkIndex || 0}</>
+                                    )}
+                                  </span>
+                                </div>
+                                <p className='text-sm text-muted-foreground'>
+                                  {snippet.text}
+                                </p>
+                              </div>
+                            ))}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </div>
+                  )}
                 </div>
               )}
 

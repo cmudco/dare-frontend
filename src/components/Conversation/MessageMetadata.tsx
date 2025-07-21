@@ -44,13 +44,13 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
   onClose,
   message,
 }) => {
-  const availableModels = useSelector(
-    (state: RootState) => state.conversation.availableModels
+  const allModels = useSelector(
+    (state: RootState) => state.conversation.allModels
   )
 
   const getLLMName = (llmId?: number) => {
     if (!llmId) return 'N/A'
-    const llm = availableModels.find((model) => model.id === llmId)
+    const llm = allModels.find((model) => model.id === llmId)
     return llm ? llm.name : `Model ${llmId}`
   }
 
