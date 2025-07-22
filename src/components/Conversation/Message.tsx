@@ -209,12 +209,65 @@ const Message: React.FC<MessageProps> = ({
             }`}
           >
             <div
-              className={`prose ${getFontSizeClasses()} max-w-none text-foreground dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
+              className={`prose ${getFontSizeClasses()} max-w-full text-foreground dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
+              style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
                 components={{
+                  // Handle tables
+                  table({ children, ...props }) {
+                    return (
+                      <div className='max-w-full overflow-x-auto'>
+                        <table className='min-w-full' {...props}>
+                          {children}
+                        </table>
+                      </div>
+                    )
+                  },
+                  // Handle pre blocks
+                  pre({ children, ...props }) {
+                    return (
+                      <pre
+                        className='max-w-full overflow-x-auto whitespace-pre-wrap break-words'
+                        {...props}
+                      >
+                        {children}
+                      </pre>
+                    )
+                  },
+                  // Handle paragraphs
+                  p({ children, ...props }) {
+                    return (
+                      <p
+                        className='break-words'
+                        style={{
+                          wordBreak: 'break-word',
+                          overflowWrap: 'break-word',
+                        }}
+                        {...props}
+                      >
+                        {children}
+                      </p>
+                    )
+                  },
+                  // Handle links to prevent long URLs from overflowing
+                  a({ children, href, ...props }) {
+                    return (
+                      <a
+                        href={href}
+                        className='break-all'
+                        style={{
+                          wordBreak: 'break-all',
+                          overflowWrap: 'break-word',
+                        }}
+                        {...props}
+                      >
+                        {children}
+                      </a>
+                    )
+                  },
                   code({ className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || '')
                     if (match && match[1] === 'mermaid') {
@@ -242,7 +295,11 @@ const Message: React.FC<MessageProps> = ({
                     }
                     return (
                       <code
-                        className='not-prose rounded border border-border bg-muted px-1 text-foreground transition-colors hover:bg-muted/80'
+                        className='not-prose break-all rounded border border-border bg-muted px-1 text-foreground transition-colors hover:bg-muted/80'
+                        style={{
+                          wordBreak: 'break-all',
+                          overflowWrap: 'break-word',
+                        }}
                         {...props}
                       >
                         {children}
