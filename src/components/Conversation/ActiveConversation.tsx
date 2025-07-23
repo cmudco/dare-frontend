@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   updateConversationInput,
   updateActiveConversation,
+  loadSelectedFilesFromIds,
 } from '../../redux/conversationSlice'
 import MessageList from './MessageList'
 import {
@@ -26,6 +27,7 @@ const ActiveConversation: React.FC = () => {
   const conversationHistory = useSelector(
     (state: RootState) => state.conversation?.activeConversationMessages || []
   )
+  const files = useSelector((state: RootState) => state.files.files)
 
   const { id } = useParams<{ id: string }>()
   const conversations = useSelector(
@@ -58,7 +60,24 @@ const ActiveConversation: React.FC = () => {
     } else {
       dispatch(updateActiveConversation(null))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, conversations, dispatch])
+
+  useEffect(() => {
+    if (activeConversation && files.length > 0) {
+      const selectedFileIds = activeConversation.selectedFileIds || []
+      const selectedEmbeddingIds = activeConversation.selectedEmbeddingIds || []
+
+      dispatch(
+        loadSelectedFilesFromIds({
+          files,
+          selectedFileIds,
+          selectedEmbeddingIds,
+        })
+      )
+    }
+  }, [activeConversation?.conversationId, files, dispatch])
+
   useEffect(() => {
     const handleWebSocketConnection = async () => {
       if (isConnected) {
@@ -81,12 +100,14 @@ const ActiveConversation: React.FC = () => {
     }
 
     handleWebSocketConnection()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConversation?.conversationId, dispatch])
 
   useEffect(() => {
     if (activeConversation) {
       navigate(`/conversation/${activeConversation.conversationId}`)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConversation, dispatch])
 
   useEffect(() => {

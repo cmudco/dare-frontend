@@ -11,6 +11,7 @@ import {
   updateConversationSortOrder,
   deleteMultipleConversations,
   cloneConversation,
+  updateConversationSelectedIds,
 } from './asyncThunks/conversation'
 import { Message, Conversation, LLMModel } from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
@@ -31,6 +32,23 @@ export const conversationSlice = createSlice({
       action: PayloadAction<Conversation | null>
     ) {
       state.activeConversation = action.payload
+    },
+    loadSelectedFilesFromIds(
+      state,
+      action: PayloadAction<{
+        files: MyFile[]
+        selectedFileIds: number[]
+        selectedEmbeddingIds: number[]
+      }>
+    ) {
+      const { files, selectedFileIds, selectedEmbeddingIds } = action.payload
+
+      state.selectedFiles = files.filter((file) =>
+        selectedFileIds.includes(file.id)
+      )
+      state.selectedEmbeddings = files.filter((file) =>
+        selectedEmbeddingIds.includes(file.id)
+      )
     },
     updateSelectedModel(state, action: PayloadAction<number>) {
       state.selectedModel = action.payload
@@ -342,6 +360,31 @@ export const conversationSlice = createSlice({
         state.error = action.payload as string
         console.error('Failed to load all models:', action.payload)
       })
+      .addCase(updateConversationSelectedIds.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateConversationSelectedIds.fulfilled, (state, action) => {
+        state.loading = false
+        // Update the active conversation with the new data
+        if (
+          state.activeConversation?.conversationId ===
+          action.payload.conversationId
+        ) {
+          state.activeConversation = action.payload
+        }
+        // Update the conversation in the conversations list
+        const index = state.conversations.findIndex(
+          (conv) => conv.conversationId === action.payload.conversationId
+        )
+        if (index !== -1) {
+          state.conversations[index] = action.payload
+        }
+      })
+      .addCase(updateConversationSelectedIds.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
   },
 })
 
@@ -376,5 +419,6 @@ export const {
   clearSelectedConversations,
   updateReferencedConversations,
   updateReferencedConversationHistoryLimit,
+  loadSelectedFilesFromIds,
 } = conversationSlice.actions
 export default conversationSlice.reducer

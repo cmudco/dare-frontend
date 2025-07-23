@@ -16,6 +16,8 @@ export interface Conversation {
   prompt?: Prompt | null
   promptId?: string | null
   sortOrder?: number
+  selectedEmbeddingIds?: number[]
+  selectedFileIds?: number[]
 }
 
 export interface Message {
