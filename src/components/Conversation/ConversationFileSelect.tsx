@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Check,
@@ -15,8 +15,10 @@ import {
   updateSelectedTags,
   updateSelectedFolders,
 } from '@/redux/conversationSlice'
+import { updateConversationSelectedIds } from '@/redux/asyncThunks/conversation'
 import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { Tag } from '@/redux/types/tags'
+import { useDebounce } from '@/utils/debounce'
 
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -49,6 +51,9 @@ const ConversationFileSelect: React.FC = () => {
   const selectedFolders = useSelector(
     (state: RootState) => state.conversation.selectedFolders
   )
+  const activeConversation = useSelector(
+    (state: RootState) => state.conversation.activeConversation
+  )
   const user = useSelector((state: RootState) => state.user.user)
 
   const [open, setOpen] = useState(false)
@@ -57,6 +62,27 @@ const ConversationFileSelect: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     'files' | 'embeddings' | 'tags' | 'folders'
   >('embeddings')
+
+  const saveSelectedIds = useCallback(() => {
+    if (activeConversation) {
+      const selectedFileIds = selectedFiles.map((file) => file.id)
+      const selectedEmbeddingIds = selectedEmbeddings.map((file) => file.id)
+
+      dispatch(
+        updateConversationSelectedIds({
+          conversationId: activeConversation.conversationId,
+          selectedFileIds,
+          selectedEmbeddingIds,
+        })
+      )
+    }
+  }, [dispatch, activeConversation, selectedFiles, selectedEmbeddings])
+
+  useDebounce(saveSelectedIds, 1000, [
+    selectedFiles,
+    selectedEmbeddings,
+    activeConversation?.conversationId,
+  ])
 
   const filteredFiles = useMemo(() => {
     if (!user || user.vectorDb === undefined) {

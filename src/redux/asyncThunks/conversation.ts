@@ -119,6 +119,32 @@ export const updateMessageThunk = createAsyncThunk<
   }
 })
 
+export const updateConversationSelectedIds = createAsyncThunk<
+  Conversation,
+  {
+    conversationId: string
+    selectedEmbeddingIds: number[]
+    selectedFileIds: number[]
+  },
+  { rejectValue: string }
+>(
+  'conversation/updateConversationSelectedIds',
+  async (
+    { conversationId, selectedEmbeddingIds, selectedFileIds },
+    thunkAPI
+  ) => {
+    try {
+      const updatedConversation = await updateConversationAPI(conversationId, {
+        selectedEmbeddingIds,
+        selectedFileIds,
+      })
+      return updatedConversation
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
 export const sendMessage = createAsyncThunk(
   'conversation/sendMessage',
   async (message: Partial<Message> & { filePath?: string }, thunkAPI) => {
