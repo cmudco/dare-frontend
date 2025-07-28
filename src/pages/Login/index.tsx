@@ -18,6 +18,7 @@ import { resetError } from '../../redux/userSlice'
 import { useAppSelector } from '../../redux/hooks'
 import { Button } from '../../components/ui/button'
 import { Moon, Sun } from 'lucide-react'
+import { toast } from '@/hooks/use-toast'
 
 const LoginScreen: React.FC = () => {
   const navigate = useNavigate()
@@ -29,6 +30,44 @@ const LoginScreen: React.FC = () => {
   useEffect(() => {
     dispatch(resetError())
   }, [dispatch])
+
+  useEffect(() => {
+    const checkAndShowToast = () => {
+      const sessionExpiredToast = localStorage.getItem('sessionExpiredToast')
+
+      if (sessionExpiredToast) {
+        try {
+          const toastData = JSON.parse(sessionExpiredToast)
+
+          const currentTime = Date.now()
+          const timeDiff = currentTime - toastData.timestamp
+          const isRecent = timeDiff < 30000
+
+          if (isRecent) {
+            toast({
+              title: toastData.title,
+              description: toastData.description,
+              variant: toastData.variant,
+              duration: 8000,
+            })
+          }
+
+          localStorage.removeItem('sessionExpiredToast')
+        } catch (error) {
+          console.error('Error parsing session expired toast:', error)
+          localStorage.removeItem('sessionExpiredToast')
+        }
+      }
+    }
+
+    checkAndShowToast()
+
+    const timeoutId = setTimeout(() => {
+      checkAndShowToast()
+    }, 200)
+
+    return () => clearTimeout(timeoutId)
+  }, [])
 
   useEffect(() => {
     if (user) {
