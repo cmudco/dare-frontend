@@ -22,6 +22,8 @@ const WorkflowForm: React.FC = () => {
     prompt: null,
     files: [],
     embeddings: [],
+    usePreviousStepFiles: false,
+    usePreviousStepEmbeddings: false,
     llm: null,
     order: 1,
   }
@@ -45,6 +47,8 @@ const WorkflowForm: React.FC = () => {
         prompt: step.prompt?.id || null,
         files: step.files?.map((f) => f.id) || [],
         embeddings: step.embeddings?.map((f) => f.id) || [],
+        usePreviousStepFiles: step.usePreviousStepFiles || false,
+        usePreviousStepEmbeddings: step.usePreviousStepEmbeddings || false,
         llm: step.llm?.id || null,
         max_tokens: step.maxTokens,
         temperature: step.temperature,

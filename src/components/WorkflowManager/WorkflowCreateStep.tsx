@@ -62,6 +62,12 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
   const [isOpen, setIsOpen] = useState(true)
 
   const onChange = (field: keyof Step, value: unknown) => {
+    if (field === 'usePreviousStepFiles' && value === true) {
+      onStepChange(index, 'files', [])
+    }
+    if (field === 'usePreviousStepEmbeddings' && value === true) {
+      onStepChange(index, 'embeddings', [])
+    }
     onStepChange(index, field, value)
   }
 
@@ -126,23 +132,43 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                   {step.prompt?.title || `Step ${index + 1}`}
                 </h3>
               </div>
-              {step.files && step.files.length > 0 && (
+              {step.usePreviousStepFiles && (
                 <div className='flex items-center gap-1'>
-                  <FileText className='h-3 w-3 text-green-500' />
-                  <span className='text-xs text-green-600'>
-                    {step.files.length} file{step.files.length > 1 ? 's' : ''}
+                  <FileText className='h-3 w-3 text-orange-500' />
+                  <span className='text-xs text-orange-600'>
+                    Files from step {index}
                   </span>
                 </div>
               )}
-              {step.embeddings && step.embeddings.length > 0 && (
+              {!step.usePreviousStepFiles &&
+                step.files &&
+                step.files.length > 0 && (
+                  <div className='flex items-center gap-1'>
+                    <FileText className='h-3 w-3 text-green-500' />
+                    <span className='text-xs text-green-600'>
+                      {step.files.length} file{step.files.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+              {step.usePreviousStepEmbeddings && (
                 <div className='flex items-center gap-1'>
-                  <Database className='h-3 w-3 text-blue-500' />
-                  <span className='text-xs text-blue-600'>
-                    {step.embeddings.length} embedding
-                    {step.embeddings.length > 1 ? 's' : ''}
+                  <Database className='h-3 w-3 text-orange-500' />
+                  <span className='text-xs text-orange-600'>
+                    Embeddings from step {index}
                   </span>
                 </div>
               )}
+              {!step.usePreviousStepEmbeddings &&
+                step.embeddings &&
+                step.embeddings.length > 0 && (
+                  <div className='flex items-center gap-1'>
+                    <Database className='h-3 w-3 text-blue-500' />
+                    <span className='text-xs text-blue-600'>
+                      {step.embeddings.length} embedding
+                      {step.embeddings.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
             </div>
             <div className='flex items-center gap-2'>
               <div className='flex gap-0.5'>
@@ -256,48 +282,103 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-3'>
-                  <Select
-                    onValueChange={(fileId) =>
-                      handleFileSelect(fileId, 'files')
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder='Add content file' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getAvailableFiles('files').map((file) => (
-                        <SelectItem key={file.id} value={file.id.toString()}>
-                          {file.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {step.files && step.files.length > 0 && (
-                    <div className='space-y-2'>
-                      <div className='flex flex-wrap gap-2'>
-                        {step.files.map((file) => (
-                          <Badge
-                            key={file.id}
-                            variant='secondary'
-                            className='flex items-center gap-1 border-green-200 bg-green-50 px-2 py-1 text-green-700'
-                          >
-                            <FileText className='h-3 w-3' />
-                            <span className='text-xs'>{file.name}</span>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='sm'
-                              onClick={() => handleFileRemove(file.id, 'files')}
-                              className='h-4 w-4 p-0 hover:bg-green-200'
-                            >
-                              <X className='h-3 w-3' />
-                            </Button>
-                          </Badge>
-                        ))}
+                  {/* Use Previous Step Files Toggle */}
+                  {index > 0 && (
+                    <div className='flex items-center justify-between rounded-md border border-dashed border-orange-200 bg-orange-50 p-3'>
+                      <div className='flex items-center space-x-2'>
+                        <input
+                          type='checkbox'
+                          id={`use-previous-files-${index}`}
+                          checked={step.usePreviousStepFiles || false}
+                          onChange={(e) =>
+                            onChange('usePreviousStepFiles', e.target.checked)
+                          }
+                          className='rounded border-orange-300 text-orange-600 focus:ring-orange-500'
+                        />
+                        <label
+                          htmlFor={`use-previous-files-${index}`}
+                          className='text-sm font-medium text-orange-700'
+                        >
+                          Use same files from Step {index}
+                        </label>
                       </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className='h-4 w-4 text-orange-500' />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className='max-w-xs text-sm'>
+                              When enabled, this step will automatically use the
+                              same content files as the previous step,
+                              eliminating the need to manually select files
+                              again.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   )}
+                  {!step.usePreviousStepFiles && (
+                    <Select
+                      onValueChange={(fileId) =>
+                        handleFileSelect(fileId, 'files')
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Add content file' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableFiles('files').map((file) => (
+                          <SelectItem key={file.id} value={file.id.toString()}>
+                            {file.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {step.usePreviousStepFiles && (
+                    <div className='rounded-md border border-orange-200 bg-orange-100 p-3'>
+                      <p className='text-sm font-medium text-orange-700'>
+                        🔗 Using files from Step {index}
+                      </p>
+                      <p className='mt-1 text-xs text-orange-600'>
+                        Files will be automatically inherited from the previous
+                        step during execution.
+                      </p>
+                    </div>
+                  )}
+
+                  {!step.usePreviousStepFiles &&
+                    step.files &&
+                    step.files.length > 0 && (
+                      <div className='space-y-2'>
+                        <div className='flex flex-wrap gap-2'>
+                          {step.files.map((file) => (
+                            <Badge
+                              key={file.id}
+                              variant='secondary'
+                              className='flex items-center gap-1 border-green-200 bg-green-50 px-2 py-1 text-green-700'
+                            >
+                              <FileText className='h-3 w-3' />
+                              <span className='text-xs'>{file.name}</span>
+                              <Button
+                                type='button'
+                                variant='ghost'
+                                size='sm'
+                                onClick={() =>
+                                  handleFileRemove(file.id, 'files')
+                                }
+                                className='h-4 w-4 p-0 hover:bg-green-200'
+                              >
+                                <X className='h-3 w-3' />
+                              </Button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                 </CardContent>
               </Card>
 
@@ -348,50 +429,106 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-3'>
-                  <Select
-                    onValueChange={(fileId) =>
-                      handleFileSelect(fileId, 'embeddings')
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder='Add embedding file' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getAvailableFiles('embeddings').map((file) => (
-                        <SelectItem key={file.id} value={file.id.toString()}>
-                          {file.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {step.embeddings && step.embeddings.length > 0 && (
-                    <div className='space-y-2'>
-                      <div className='flex flex-wrap gap-2'>
-                        {step.embeddings.map((file) => (
-                          <Badge
-                            key={file.id}
-                            variant='secondary'
-                            className='flex items-center gap-1 border-blue-200 bg-blue-50 px-2 py-1 text-blue-700'
-                          >
-                            <Database className='h-3 w-3' />
-                            <span className='text-xs'>{file.name}</span>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='sm'
-                              onClick={() =>
-                                handleFileRemove(file.id, 'embeddings')
-                              }
-                              className='h-4 w-4 p-0 hover:bg-blue-200'
-                            >
-                              <X className='h-3 w-3' />
-                            </Button>
-                          </Badge>
-                        ))}
+                  {/* Use Previous Step Embeddings Toggle */}
+                  {index > 0 && (
+                    <div className='flex items-center justify-between rounded-md border border-dashed border-blue-200 bg-blue-50 p-3'>
+                      <div className='flex items-center space-x-2'>
+                        <input
+                          type='checkbox'
+                          id={`use-previous-embeddings-${index}`}
+                          checked={step.usePreviousStepEmbeddings || false}
+                          onChange={(e) =>
+                            onChange(
+                              'usePreviousStepEmbeddings',
+                              e.target.checked
+                            )
+                          }
+                          className='rounded border-blue-300 text-blue-600 focus:ring-blue-500'
+                        />
+                        <label
+                          htmlFor={`use-previous-embeddings-${index}`}
+                          className='text-sm font-medium text-blue-700'
+                        >
+                          Use same embeddings from Step {index}
+                        </label>
                       </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className='h-4 w-4 text-blue-500' />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className='max-w-xs text-sm'>
+                              When enabled, this step will automatically use the
+                              same embedding files as the previous step for
+                              semantic search.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   )}
+
+                  {!step.usePreviousStepEmbeddings && (
+                    <Select
+                      onValueChange={(fileId) =>
+                        handleFileSelect(fileId, 'embeddings')
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Add embedding file' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableFiles('embeddings').map((file) => (
+                          <SelectItem key={file.id} value={file.id.toString()}>
+                            {file.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {step.usePreviousStepEmbeddings && (
+                    <div className='rounded-md border border-blue-200 bg-blue-100 p-3'>
+                      <p className='text-sm font-medium text-blue-700'>
+                        🔗 Using embeddings from Step {index}
+                      </p>
+                      <p className='mt-1 text-xs text-blue-600'>
+                        Embedding files will be automatically inherited from the
+                        previous step during execution.
+                      </p>
+                    </div>
+                  )}
+
+                  {!step.usePreviousStepEmbeddings &&
+                    step.embeddings &&
+                    step.embeddings.length > 0 && (
+                      <div className='space-y-2'>
+                        <div className='flex flex-wrap gap-2'>
+                          {step.embeddings.map((file) => (
+                            <Badge
+                              key={file.id}
+                              variant='secondary'
+                              className='flex items-center gap-1 border-blue-200 bg-blue-50 px-2 py-1 text-blue-700'
+                            >
+                              <Database className='h-3 w-3' />
+                              <span className='text-xs'>{file.name}</span>
+                              <Button
+                                type='button'
+                                variant='ghost'
+                                size='sm'
+                                onClick={() =>
+                                  handleFileRemove(file.id, 'embeddings')
+                                }
+                                className='h-4 w-4 p-0 hover:bg-blue-200'
+                              >
+                                <X className='h-3 w-3' />
+                              </Button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                 </CardContent>
               </Card>
             </div>
