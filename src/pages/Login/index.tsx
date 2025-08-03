@@ -48,7 +48,7 @@ const LoginScreen: React.FC = () => {
               title: toastData.title,
               description: toastData.description,
               variant: toastData.variant,
-              duration: 8000,
+              permanent: true, // Make session expired toast permanent
             })
           }
 
