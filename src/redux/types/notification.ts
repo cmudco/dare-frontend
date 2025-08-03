@@ -31,12 +31,14 @@ export interface Notification {
   deliveryType: NotificationDeliveryType
   category: NotificationCategory
   status: NotificationStatus
+  effectiveStatus: NotificationStatus
   actionType: NotificationAction
   actionUrl?: string
   isBannerNotification: boolean
   isExpired: boolean
   createdAt: string
   readAt?: string
+  effectiveReadAt?: string
 }
 
 export interface NotificationStats {

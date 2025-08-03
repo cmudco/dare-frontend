@@ -5,7 +5,6 @@ import {
   NotificationStats,
   CreateNotificationData,
   PaginatedResponse,
-  NotificationStatus,
 } from '@/redux/types/notification'
 
 export const getNotifications = async (params?: {
@@ -102,33 +101,30 @@ export const clearAllNotifications = async (): Promise<{
 
 export const markNotificationAsRead = async (
   id: number
-): Promise<Notification> => {
-  return await baseRequest<Notification>({
-    url: `api/notifications/${id}/`,
-    method: METHOD.PATCH,
-    data: { status: NotificationStatus.READ },
+): Promise<{ message: string; notification: Notification }> => {
+  return await baseRequest<{ message: string; notification: Notification }>({
+    url: `api/notifications/${id}/mark-read/`,
+    method: METHOD.POST,
     includeAuthToken: true,
   })
 }
 
 export const markNotificationAsUnread = async (
   id: number
-): Promise<Notification> => {
-  return await baseRequest<Notification>({
-    url: `api/notifications/${id}/`,
-    method: METHOD.PATCH,
-    data: { status: NotificationStatus.UNREAD },
+): Promise<{ message: string; notification: Notification }> => {
+  return await baseRequest<{ message: string; notification: Notification }>({
+    url: `api/notifications/${id}/mark-unread/`,
+    method: METHOD.POST,
     includeAuthToken: true,
   })
 }
 
 export const archiveNotification = async (
   id: number
-): Promise<Notification> => {
-  return await baseRequest<Notification>({
-    url: `api/notifications/${id}/`,
-    method: METHOD.PATCH,
-    data: { status: NotificationStatus.ARCHIVED },
+): Promise<{ message: string; notification: Notification }> => {
+  return await baseRequest<{ message: string; notification: Notification }>({
+    url: `api/notifications/${id}/archive/`,
+    method: METHOD.POST,
     includeAuthToken: true,
   })
 }

@@ -40,7 +40,7 @@ const SystemBanner: React.FC<SystemBannerProps> = ({ className }) => {
   const bannerNotifications = notifications.filter(
     (notification) =>
       notification.deliveryType === NotificationDeliveryType.BANNER &&
-      notification.status === NotificationStatus.UNREAD &&
+      notification.effectiveStatus === NotificationStatus.UNREAD &&
       !notification.isExpired &&
       !dismissedBannerIds.has(notification.id)
   )
@@ -62,14 +62,14 @@ const SystemBanner: React.FC<SystemBannerProps> = ({ className }) => {
         .filter(
           (n) =>
             n.deliveryType === NotificationDeliveryType.BANNER &&
-            n.status === NotificationStatus.UNREAD &&
+            n.effectiveStatus === NotificationStatus.UNREAD &&
             !n.isExpired
         )
         .map((n) => n.id)
     )
 
     setDismissedBannerIds((prev) => {
-      const newDismissedIds = new Set()
+      const newDismissedIds = new Set<number>()
       prev.forEach((id) => {
         if (currentBannerIds.has(id)) {
           newDismissedIds.add(id)

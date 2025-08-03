@@ -17,6 +17,7 @@ export const createTestNotification = (
     deliveryType: NotificationDeliveryType.PANEL,
     category: NotificationCategory.DEFAULT,
     status: NotificationStatus.UNREAD,
+    effectiveStatus: NotificationStatus.UNREAD,
     actionType: NotificationAction.NONE,
     actionUrl: undefined,
     isBannerNotification: false,

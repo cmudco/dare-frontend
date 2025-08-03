@@ -38,7 +38,7 @@ export const notificationSlice = createSlice({
     addNotification(state, action: PayloadAction<Notification>) {
       state.notifications.unshift(action.payload)
       if (
-        action.payload.status === NotificationStatus.UNREAD &&
+        action.payload.effectiveStatus === NotificationStatus.UNREAD &&
         action.payload.deliveryType === NotificationDeliveryType.PANEL
       ) {
         state.unreadCount += 1
@@ -50,8 +50,8 @@ export const notificationSlice = createSlice({
         (n) => n.id === action.payload.id
       )
       if (index !== -1) {
-        const oldStatus = state.notifications[index].status
-        const newStatus = action.payload.status
+        const oldStatus = state.notifications[index].effectiveStatus
+        const newStatus = action.payload.effectiveStatus
         const isPanel =
           action.payload.deliveryType === NotificationDeliveryType.PANEL
 
@@ -176,7 +176,7 @@ export const notificationSlice = createSlice({
         state.notifications = action.payload
         state.unreadCount = action.payload.filter(
           (n) =>
-            n.status === NotificationStatus.UNREAD &&
+            n.effectiveStatus === NotificationStatus.UNREAD &&
             n.deliveryType === NotificationDeliveryType.PANEL
         ).length
       })
@@ -282,7 +282,7 @@ export const notificationSlice = createSlice({
           (n) => n.id === action.payload.id
         )
         if (index !== -1) {
-          const oldStatus = state.notifications[index].status
+          const oldStatus = state.notifications[index].effectiveStatus
           const isPanel =
             state.notifications[index].deliveryType ===
             NotificationDeliveryType.PANEL
@@ -291,7 +291,7 @@ export const notificationSlice = createSlice({
 
           if (
             oldStatus === NotificationStatus.UNREAD &&
-            action.payload.status === NotificationStatus.READ &&
+            action.payload.effectiveStatus === NotificationStatus.READ &&
             isPanel
           ) {
             state.unreadCount = Math.max(0, state.unreadCount - 1)
@@ -310,7 +310,7 @@ export const notificationSlice = createSlice({
         )
         if (index !== -1) {
           state.notifications[index] = action.payload
-          if (action.payload.status === NotificationStatus.UNREAD) {
+          if (action.payload.effectiveStatus === NotificationStatus.UNREAD) {
             state.unreadCount += 1
           }
         }
@@ -322,10 +322,10 @@ export const notificationSlice = createSlice({
         (n) => n.id === action.payload.id
       )
       if (index !== -1) {
-        const previousStatus = state.notifications[index].status
+        const previousStatus = state.notifications[index].effectiveStatus
         state.notifications[index] = action.payload
         if (
-          action.payload.status === NotificationStatus.ARCHIVED &&
+          action.payload.effectiveStatus === NotificationStatus.ARCHIVED &&
           previousStatus === NotificationStatus.UNREAD
         ) {
           state.unreadCount = Math.max(0, state.unreadCount - 1)

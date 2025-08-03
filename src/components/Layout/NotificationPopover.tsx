@@ -64,14 +64,20 @@ const NotificationPopover: React.FC = () => {
     e.stopPropagation()
 
     const notification = notifications.find((n) => n.id === notificationId)
-    if (notification && notification.status === NotificationStatus.UNREAD) {
+    if (
+      notification &&
+      notification.effectiveStatus === NotificationStatus.UNREAD
+    ) {
       dispatch(markAsRead(notificationId))
     }
 
     try {
       await dispatch(markNotificationAsReadThunk(notificationId)).unwrap()
     } catch {
-      if (notification && notification.status === NotificationStatus.UNREAD) {
+      if (
+        notification &&
+        notification.effectiveStatus === NotificationStatus.UNREAD
+      ) {
         dispatch(markAsUnread(notificationId))
       }
     }
@@ -167,19 +173,23 @@ const NotificationPopover: React.FC = () => {
                   key={notification.id}
                   className={cn(
                     'group relative cursor-pointer px-4 py-3 transition-colors hover:bg-accent/50',
-                    notification.status === NotificationStatus.UNREAD &&
+                    notification.effectiveStatus ===
+                      NotificationStatus.UNREAD &&
                       'bg-blue-50/30 dark:bg-blue-950/10'
                   )}
                   onClick={() => {
                     if (notification.actionUrl) {
                       window.open(notification.actionUrl, '_blank')
                     }
-                    if (notification.status === NotificationStatus.UNREAD) {
+                    if (
+                      notification.effectiveStatus === NotificationStatus.UNREAD
+                    ) {
                       dispatch(markNotificationAsReadThunk(notification.id))
                     }
                   }}
                 >
-                  {notification.status === NotificationStatus.UNREAD && (
+                  {notification.effectiveStatus ===
+                    NotificationStatus.UNREAD && (
                     <div className='absolute left-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-blue-500' />
                   )}
 
@@ -193,7 +203,8 @@ const NotificationPopover: React.FC = () => {
                         <p className='line-clamp-1 text-sm font-medium leading-tight'>
                           {notification.title}
                         </p>
-                        {notification.status === NotificationStatus.UNREAD && (
+                        {notification.effectiveStatus ===
+                          NotificationStatus.UNREAD && (
                           <Button
                             variant='ghost'
                             size='sm'

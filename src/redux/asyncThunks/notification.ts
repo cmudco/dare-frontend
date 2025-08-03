@@ -128,8 +128,8 @@ export const markNotificationAsReadThunk = createAsyncThunk<
   { rejectValue: string }
 >('notification/markNotificationAsRead', async (id, thunkAPI) => {
   try {
-    const notification = await markNotificationAsRead(id)
-    return notification
+    const response = await markNotificationAsRead(id)
+    return response.notification
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message)
   }
@@ -141,8 +141,8 @@ export const markNotificationAsUnreadThunk = createAsyncThunk<
   { rejectValue: string }
 >('notification/markNotificationAsUnread', async (id, thunkAPI) => {
   try {
-    const notification = await markNotificationAsUnread(id)
-    return notification
+    const response = await markNotificationAsUnread(id)
+    return response.notification
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message)
   }
@@ -153,8 +153,8 @@ export const archiveNotificationThunk = createAsyncThunk<
   { rejectValue: string }
 >('notification/archiveNotification', async (id, thunkAPI) => {
   try {
-    const notification = await archiveNotification(id)
-    return notification
+    const response = await archiveNotification(id)
+    return response.notification
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message)
   }
