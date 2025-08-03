@@ -32,8 +32,7 @@ export const WorkflowStep: React.FC<{
   runId: string | null
   isOpen: boolean
   workflowName?: string
-  forceExpandAll?: boolean
-}> = ({ runId, isOpen, forceExpandAll = false }) => {
+}> = ({ runId, isOpen }) => {
   const dispatch = useDispatch<AppDispatch>()
   const { selectedWorkflowRun, loading } = useSelector(
     (state: RootState) => state.workflow
@@ -113,11 +112,8 @@ export const WorkflowStep: React.FC<{
         return (
           <Collapsible
             key={step.id}
-            {...(forceExpandAll ? { open: true } : {})}
-            {...(!forceExpandAll && isWorkflowCompleted && !isStepCompleted
-              ? { open: true }
-              : {})}
-            {...(!forceExpandAll && isWorkflowCompleted && isStepCompleted
+            {...(isWorkflowCompleted && !isStepCompleted ? { open: true } : {})}
+            {...(isWorkflowCompleted && isStepCompleted
               ? { defaultOpen: true }
               : {})}
             className='overflow-hidden rounded-xl border border-border bg-card shadow-sm'
