@@ -41,11 +41,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { EllipsisVerticalIcon, Trash2, Tag } from 'lucide-react'
+import { EllipsisVerticalIcon, Trash2, Tag, Eye } from 'lucide-react'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getStatusDisplay } from '@/utils/constants/files'
 import { SortDirectionEnum } from '@/utils/constants/sort'
 import FileTagModal from './FileTagModal'
+import FileViewerModal from './FileViewerModal'
 import TagsDisplay from './TagsDisplay'
 
 const FileTable = () => {
@@ -66,6 +67,9 @@ const FileTable = () => {
   const [tagFileId, setTagFileId] = useState<number | null>(null)
   const [tagFileName, setTagFileName] = useState<string>('')
   const [tagFileExistingTags, setTagFileExistingTags] = useState<number[]>([])
+  const [viewFileId, setViewFileId] = useState<number | null>(null)
+  const [viewFileName, setViewFileName] = useState<string>('')
+  const [viewFileType, setViewFileType] = useState<string>('')
 
   const filteredFiles = useMemo(() => {
     if (!user || user.vectorDb === undefined) {
@@ -128,6 +132,12 @@ const FileTable = () => {
     setTagFileId(id)
     setTagFileName(name || 'Unnamed')
     setTagFileExistingTags(existingTags)
+  }
+
+  const handleView = (id: number, name: string, fileType: string) => {
+    setViewFileId(id)
+    setViewFileName(name || 'Unnamed')
+    setViewFileType(fileType || '')
   }
 
   const handleSort = (column: string) => {
@@ -250,6 +260,13 @@ const FileTable = () => {
                       <DropdownMenuContent>
                         <DropdownMenuItem
                           className='cursor-pointer'
+                          onClick={() => handleView(id, name, fileType)}
+                        >
+                          <Eye className='mr-2 h-4 w-4' />
+                          <span>View</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className='cursor-pointer'
                           onClick={() => handleTag(id, name, tags || [])}
                         >
                           <Tag className='mr-2 h-4 w-4' />
@@ -360,6 +377,14 @@ const FileTable = () => {
         fileId={tagFileId}
         fileName={tagFileName}
         existingTags={tagFileExistingTags}
+      />
+
+      <FileViewerModal
+        isOpen={viewFileId !== null}
+        onClose={() => setViewFileId(null)}
+        fileId={viewFileId}
+        fileName={viewFileName}
+        fileType={viewFileType}
       />
     </div>
   )
