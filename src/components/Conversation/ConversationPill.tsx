@@ -17,7 +17,7 @@ import ConversationFileSelect from './ConversationFileSelect'
 import ConversationReferenceSelect from './ConversationReferenceSelect'
 import ModelConfigurationPanel from './ModelConfigurationPanel'
 import { ArrowUp, Pencil, X } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 
 interface ConversationPillProps {
@@ -36,13 +36,28 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
+  const isConnected = useSelector(
+    (state: RootState) => state.websocket.isConnected
+  )
   const navigate = useNavigate()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode)
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null)
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     dispatch(updateConversationInput(event.target.value))
   }
+
+  useEffect(() => {
+    if (pendingMessage && isConnected && activeConversation) {
+      const newMessage: Partial<Message> = {
+        message: pendingMessage,
+      }
+      dispatch(sendMessage(newMessage))
+      dispatch(updateConversationInput(''))
+      setPendingMessage(null)
+    }
+  }, [pendingMessage, isConnected, activeConversation, dispatch])
 
   const handleSendMessage = () => {
     if (conversationInput.trim() === '') return
@@ -52,6 +67,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     }
 
     if (!activeConversation) {
+      setPendingMessage(conversationInput)
       dispatch(updateSelectedTags([]))
       dispatch(createConversation())
         .unwrap()
@@ -61,6 +77,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
         })
         .catch((error) => {
           console.error('Error creating conversation:', error)
+          setPendingMessage(null)
         })
     } else {
       dispatch(sendMessage(newMessage))

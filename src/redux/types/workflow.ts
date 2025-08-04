@@ -24,6 +24,8 @@ export interface Step {
   prompt: Prompt | null
   files: MyFile[]
   embeddings: MyFile[]
+  usePreviousStepFiles?: boolean
+  usePreviousStepEmbeddings?: boolean
   llm: LLMModel | null
   order: number
   createdAt?: string

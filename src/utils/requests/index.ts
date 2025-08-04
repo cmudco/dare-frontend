@@ -1,6 +1,7 @@
-import axios, { AxiosRequestConfig } from 'axios'
+import axios, { AxiosRequestConfig, AxiosError } from 'axios'
 import { getErrorMessage } from '@/utils/errorHandler'
 import { METHOD } from '../constants/requests'
+import { tokenExpirationService } from '@/services/tokenExpirationService'
 
 const BASE_URL = import.meta.env.VITE_DJANGO_BACKEND_URL
 
@@ -48,6 +49,12 @@ export const baseRequest = async <T>({
     const response = await axios(axiosOptions)
     return response.data
   } catch (error) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      if (includeAuthToken && tokenExpirationService.isCurrentlyMonitoring()) {
+        tokenExpirationService.handleTokenExpiration()
+      }
+    }
+
     const errorMessage = getErrorMessage(error)
     throw new Error(errorMessage)
   }
