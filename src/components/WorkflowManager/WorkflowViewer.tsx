@@ -1,4 +1,4 @@
-import { memo, useRef, useState } from 'react'
+import { memo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
 import { getWorkflowRunById } from '@/redux/asyncThunks/workflow.ts'
@@ -30,9 +30,9 @@ import {
   ListOrdered,
   Layers,
 } from 'lucide-react'
-import html2pdf from 'html2pdf.js'
 import { setSelectedWorkflowRun } from '@/redux/workflowSlice.ts'
 import { WorkflowStep } from './WorkflowStep.tsx'
+import { exportWorkflowRunPdfAPI } from '@/api/workflows'
 
 const WorkflowViewer = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -40,9 +40,7 @@ const WorkflowViewer = () => {
     (state: RootState) => state.workflow
   )
 
-  const stepsRef = useRef<HTMLDivElement>(null)
   const [isExporting, setIsExporting] = useState(false)
-  const [expandAllForExport, setExpandAllForExport] = useState(false)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -70,35 +68,27 @@ const WorkflowViewer = () => {
   }
 
   const handleExportResults = async () => {
-    if (!selectedWorkflowRun || !stepsRef.current) return
+    if (!selectedWorkflowRun) return
 
     setIsExporting(true)
 
     try {
-      setExpandAllForExport(true)
+      const blob = await exportWorkflowRunPdfAPI(selectedWorkflowRun.id)
 
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const element = stepsRef.current
-
-      const opt = {
-        margin: [10, 10, 10, 10] as [number, number, number, number],
-        filename: `${selectedWorkflow?.title || 'workflow'}-results.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait' as 'portrait' | 'landscape',
-        },
-      }
-
-      await html2pdf().from(element).set(opt).save()
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${selectedWorkflow?.title || 'workflow'}-results.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error exporting PDF:', error)
+      // TODO: Show error toast/notification to user
     } finally {
       setIsExporting(false)
-      setExpandAllForExport(false)
     }
   }
 
@@ -239,10 +229,7 @@ const WorkflowViewer = () => {
                           )}
                         </div>
                       </div>
-                      <div
-                        className='rounded-xl border border-border bg-card p-4 pb-6 shadow-sm'
-                        ref={stepsRef}
-                      >
+                      <div className='rounded-xl border border-border bg-card p-4 pb-6 shadow-sm'>
                         <h4 className='mb-4 flex items-center font-medium text-foreground'>
                           <div className='mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30'>
                             <ListTodo className='h-4 w-4 text-purple-600 dark:text-purple-400' />
@@ -253,7 +240,6 @@ const WorkflowViewer = () => {
                           runId={selectedWorkflowRun.id}
                           isOpen={!!selectedWorkflowRun}
                           workflowName={selectedWorkflow?.title}
-                          forceExpandAll={expandAllForExport}
                         />
                       </div>
                     </div>

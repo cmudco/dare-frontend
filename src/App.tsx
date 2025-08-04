@@ -1,24 +1,59 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { getUserData } from './redux/asyncThunks/user'
+import { getUserData, userLogout } from './redux/asyncThunks/user'
 import { AppDispatch, RootState } from './redux/store'
 import AppRoutes from './routes/AppRoutes'
 import Loader from './components/Loader'
 import { useEffect } from 'react'
 import { initializeTheme } from './redux/themeSlice'
+import { Toaster } from '@/components/ui/toaster'
+import { tokenExpirationService } from '@/services/tokenExpirationService'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
-  const { userLoading, user } = useSelector((state: RootState) => state.user)
+  const { userLoading, user, isAuthenticated } = useSelector(
+    (state: RootState) => state.user
+  )
   const { isDarkMode } = useSelector((state: RootState) => state.theme)
 
   useEffect(() => {
-    // Initialize theme before anything else
     dispatch(initializeTheme())
 
     if (!user) {
       dispatch(getUserData())
     }
   }, [dispatch, user])
+
+  useEffect(() => {
+    const handleTokenExpiration = async () => {
+      try {
+        await dispatch(userLogout()).unwrap()
+      } catch {
+        // Continue with redirect even if logout fails
+      }
+
+      const currentPath = window.location.pathname
+
+      if (currentPath !== '/login') {
+        try {
+          setTimeout(() => {
+            window.location.href = '/login'
+          }, 50)
+        } catch {
+          window.location.href = '/login'
+        }
+      }
+    }
+
+    if (isAuthenticated && user) {
+      tokenExpirationService.startMonitoring(handleTokenExpiration)
+    } else {
+      tokenExpirationService.stopMonitoring()
+    }
+
+    return () => {
+      tokenExpirationService.stopMonitoring()
+    }
+  }, [isAuthenticated, user, dispatch])
 
   const BackgroundCircle = () => (
     <div className='pointer-events-none fixed left-0 top-0 z-[-1] h-full w-full overflow-hidden backdrop-blur'>
@@ -49,6 +84,7 @@ function App() {
     <>
       <BackgroundCircle />
       <AppRoutes />
+      <Toaster />
     </>
   )
 }

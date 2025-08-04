@@ -138,7 +138,7 @@ const fileSlice = createSlice({
       })
       .addCase(uploadFolder.rejected, (state, action) => {
         state.loading = false
-        console.log('Upload folder error:', action.payload)
+
         state.error = (action.payload as string) || 'Failed to upload folder'
       })
       .addCase(deleteFile.pending, (state) => {

@@ -7,6 +7,7 @@ import { userLogout } from '../../redux/asyncThunks/user'
 import { getWallet } from '../../redux/asyncThunks/billing'
 import { Sun, Moon } from 'lucide-react'
 import { toggleDarkMode } from '../../redux/themeSlice'
+import NotificationPopover from './NotificationPopover'
 
 import {
   DropdownMenu,
@@ -56,6 +57,8 @@ const Header: React.FC = () => {
             <span>{wallet.displayBalance}</span>
           </div>
         )}
+
+        <NotificationPopover />
 
         <Button
           variant='ghost'
