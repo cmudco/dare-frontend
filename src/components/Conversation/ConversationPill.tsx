@@ -23,11 +23,13 @@ import clsx from 'clsx'
 interface ConversationPillProps {
   editMessageId?: string | null
   onCancelEdit?: () => void
+  disabled?: boolean
 }
 
 const ConversationPill: React.FC<ConversationPillProps> = ({
   editMessageId,
   onCancelEdit,
+  disabled = false,
 }) => {
   const dispatch = useDispatch<AppDispatch>()
   const conversationInput = useSelector(
@@ -45,6 +47,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (disabled) return
     dispatch(updateConversationInput(event.target.value))
   }
 
@@ -60,7 +63,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   }, [pendingMessage, isConnected, activeConversation, dispatch])
 
   const handleSendMessage = () => {
-    if (conversationInput.trim() === '') return
+    if (disabled || conversationInput.trim() === '') return
 
     const newMessage: Partial<Message> = {
       message: conversationInput,
@@ -89,6 +92,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   }
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (disabled) return
     if (event.key === 'Enter' && !event.shiftKey && !event.altKey) {
       event.preventDefault()
       handleSendMessage()
@@ -105,7 +109,12 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
 
   return (
     <>
-      <div className='flex w-[90%] flex-col justify-end rounded-2xl border-2 border-gray-200 dark:border-dark-icon-unselected dark:bg-transparent'>
+      <div
+        className={clsx(
+          'flex w-[90%] flex-col justify-end rounded-2xl border-2 border-gray-200 dark:border-dark-icon-unselected dark:bg-transparent',
+          disabled && 'pointer-events-none opacity-60'
+        )}
+      >
         {editMessageId && (
           <div className='mb-2 flex w-full items-center gap-2 rounded-b-sm rounded-t-2xl border-b bg-gray-100 px-6 py-3 dark:bg-dark-bg'>
             <Pencil className='mr-1 h-4 w-4 text-gray-600 dark:text-dark-icon-unselected' />
@@ -126,26 +135,44 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             value={conversationInput}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
-            placeholder='Type message'
-            className='h-14 w-full resize-none overflow-y-auto rounded-2xl py-4 pl-2 pr-12 text-sm font-normal focus:outline-none dark:bg-transparent dark:text-white dark:placeholder-dark-icon-unselected'
+            placeholder={
+              disabled
+                ? 'Select a conversation to start chatting'
+                : 'Type message'
+            }
+            disabled={disabled}
+            className={clsx(
+              'h-14 w-full resize-none overflow-y-auto rounded-2xl py-4 pl-2 pr-12 text-sm font-normal focus:outline-none dark:bg-transparent dark:text-white dark:placeholder-dark-icon-unselected',
+              disabled && 'cursor-not-allowed opacity-60'
+            )}
             rows={1}
             style={{ minHeight: '3.5rem', maxHeight: '10rem' }}
           />
           <div
             className={clsx(
-              'absolute right-[16px] top-1/2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full transition-colors',
-              isDarkMode
-                ? 'bg-white/30 text-white hover:bg-white/50'
-                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              'absolute right-[16px] top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full transition-colors',
+              disabled
+                ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-600'
+                : clsx(
+                    'cursor-pointer',
+                    isDarkMode
+                      ? 'bg-white/30 text-white hover:bg-white/50'
+                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                  )
             )}
-            onClick={handleSendMessage}
+            onClick={disabled ? undefined : handleSendMessage}
             aria-label='Send message'
           >
             <ArrowUp className='h-4 w-4' />
           </div>
         </div>
 
-        <div className='relative mb-1 flex w-full items-center justify-between px-4'>
+        <div
+          className={clsx(
+            'relative mb-1 flex w-full items-center justify-between px-4',
+            disabled && 'pointer-events-none opacity-50'
+          )}
+        >
           <div className='flex w-full items-center gap-2'>
             <ConversationFileSelect />
             <PromptSet />
@@ -157,7 +184,9 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
         </div>
       </div>
       <p className='mt-2 text-center text-sm text-gray-500'>
-        DARE Chat can make mistakes. Check important information.
+        {disabled
+          ? 'Select a conversation to start chatting'
+          : 'DARE Chat can make mistakes. Check important information.'}
       </p>
     </>
   )
