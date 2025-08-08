@@ -130,6 +130,7 @@ const ActiveConversation: React.FC = () => {
             <ConversationPill
               editMessageId={editMessageId}
               onCancelEdit={handleCancelEdit}
+              disabled={!activeConversation}
             />
           </div>
         </div>
