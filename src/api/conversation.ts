@@ -106,48 +106,12 @@ export const cloneConversationAPI = async (
   })
 }
 
-// Using fetch here because our baseRequest doesn't support blob/stream responses
 export const exportConversationPdfAPI = async (
   conversationId: string
 ): Promise<{ blob: Blob; filename: string }> => {
-  const baseUrl =
-    import.meta.env.VITE_DJANGO_BACKEND_URL || 'http://localhost:8000'
-  const url = `${baseUrl}/api/conversations/${conversationId}/export-pdf/`
-
-  try {
-    const authToken = localStorage.getItem('token')
-    const headers: Record<string, string> = {}
-
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-    })
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to export conversation PDF: ${response.status} ${response.statusText}`
-      )
-    }
-
-    // Get filename from Content-Disposition header or create default
-    const contentDisposition = response.headers.get('Content-Disposition')
-    let filename = 'conversation.pdf'
-    if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename="(.+)"/)
-      if (filenameMatch) {
-        filename = filenameMatch[1]
-      }
-    }
-
-    const blob = await response.blob()
-
-    return { blob, filename }
-  } catch (error) {
-    console.error('Error exporting conversation PDF:', error)
-    throw error
-  }
+  return await baseRequest({
+    url: `api/conversations/${conversationId}/export-pdf/`,
+    method: METHOD.GET,
+    responseType: 'blob',
+  })
 }
