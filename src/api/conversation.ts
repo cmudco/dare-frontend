@@ -105,3 +105,13 @@ export const cloneConversationAPI = async (
     method: METHOD.POST,
   })
 }
+
+export const exportConversationPdfAPI = async (
+  conversationId: string
+): Promise<{ blob: Blob; filename: string }> => {
+  return await baseRequest({
+    url: `api/conversations/${conversationId}/export-pdf/`,
+    method: METHOD.GET,
+    responseType: 'blob',
+  })
+}

@@ -73,13 +73,15 @@ const WorkflowViewer = () => {
     setIsExporting(true)
 
     try {
-      const blob = await exportWorkflowRunPdfAPI(selectedWorkflowRun.id)
+      const { blob, filename } = await exportWorkflowRunPdfAPI(
+        selectedWorkflowRun.id
+      )
 
       // Create download link
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${selectedWorkflow?.title || 'workflow'}-results.pdf`
+      link.download = filename
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
