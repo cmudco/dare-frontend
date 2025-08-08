@@ -45,6 +45,7 @@ import { Badge } from '../ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import WorkflowEmbeddingSettings from './WorkflowEmbeddingSettings'
+import { MultiSelect } from '../ui/multi-select'
 
 export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
   index,
@@ -76,18 +77,14 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
     onChange('prompt', selectedPrompt || null)
   }
 
-  const handleFileSelect = (fileId: string, type: 'files' | 'embeddings') => {
-    const selectedFile = files.find((f) => f.id === parseInt(fileId))
-    if (selectedFile) {
-      const currentFiles = step[type] || []
-      const isAlreadySelected = currentFiles.some(
-        (f) => f.id === selectedFile.id
-      )
-
-      if (!isAlreadySelected) {
-        onChange(type, [...currentFiles, selectedFile])
-      }
-    }
+  const handleFileSelect = (
+    fileIds: string[],
+    type: 'files' | 'embeddings'
+  ) => {
+    const selectedFiles = fileIds
+      .map((id) => files.find((f) => f.id === parseInt(id)))
+      .filter(Boolean) as typeof files
+    onChange(type, selectedFiles)
   }
 
   const handleFileRemove = (fileId: number, type: 'files' | 'embeddings') => {
@@ -112,9 +109,16 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
   const maxTokens = step.maxTokens ?? MODEL_CONFIG.maxTokens
   const temperature = step.temperature ?? MODEL_CONFIG.temperature
 
-  const getAvailableFiles = (type: 'files' | 'embeddings') => {
+  const getAvailableFiles = () => {
+    return files.map((file) => ({
+      value: file.id.toString(),
+      label: file.name,
+    }))
+  }
+
+  const getSelectedFileIds = (type: 'files' | 'embeddings') => {
     const selectedFiles = step[type] || []
-    return files.filter((file) => !selectedFiles.some((f) => f.id === file.id))
+    return selectedFiles.map((file) => file.id.toString())
   }
 
   return (
@@ -320,22 +324,14 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                     </div>
                   )}
                   {!step.usePreviousStepFiles && (
-                    <Select
-                      onValueChange={(fileId) =>
-                        handleFileSelect(fileId, 'files')
+                    <MultiSelect
+                      options={getAvailableFiles()}
+                      selectedValues={getSelectedFileIds('files')}
+                      onSelectionChange={(fileIds) =>
+                        handleFileSelect(fileIds, 'files')
                       }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder='Add content file' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAvailableFiles('files').map((file) => (
-                          <SelectItem key={file.id} value={file.id.toString()}>
-                            {file.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder='Add content files'
+                    />
                   )}
 
                   {step.usePreviousStepFiles && (
@@ -470,22 +466,14 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                   )}
 
                   {!step.usePreviousStepEmbeddings && (
-                    <Select
-                      onValueChange={(fileId) =>
-                        handleFileSelect(fileId, 'embeddings')
+                    <MultiSelect
+                      options={getAvailableFiles()}
+                      selectedValues={getSelectedFileIds('embeddings')}
+                      onSelectionChange={(fileIds) =>
+                        handleFileSelect(fileIds, 'embeddings')
                       }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder='Add embedding file' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAvailableFiles('embeddings').map((file) => (
-                          <SelectItem key={file.id} value={file.id.toString()}>
-                            {file.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder='Add embedding files'
+                    />
                   )}
 
                   {step.usePreviousStepEmbeddings && (
