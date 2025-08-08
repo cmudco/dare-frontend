@@ -93,7 +93,7 @@ const FileViewerModal = ({
         setBlobUrl(null)
       }
     }
-  }, [isOpen, fileId, blobUrl, fetchFileAsBlob])
+  }, [isOpen, fileId, fetchFileAsBlob])
 
   const handleClose = () => {
     setError(null)

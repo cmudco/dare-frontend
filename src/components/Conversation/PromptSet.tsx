@@ -11,7 +11,13 @@ import { setPrompt } from '@/redux/conversationSlice'
 import { Prompt } from '@/redux/types/prompt'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '../ui/dialog'
 import { Plus } from 'lucide-react'
 import { stripHtml } from '../../utils/textUtils'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
@@ -266,6 +272,12 @@ const PromptSet: React.FC = () => {
               </div>
             )
           })}
+        </div>
+
+        <div className='mt-4 flex justify-end'>
+          <DialogClose asChild>
+            <Button className='px-6'>Done</Button>
+          </DialogClose>
         </div>
       </DialogContent>
     </Dialog>
