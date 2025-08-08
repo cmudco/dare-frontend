@@ -111,14 +111,14 @@ export const cloneWorkflowAPI = async (id: string): Promise<Workflow> => {
   })
 }
 
-export const exportWorkflowRunPdfAPI = async (runId: string): Promise<Blob> => {
+// Using fetch here because our baseRequest doesn't support blob/stream responses
+export const exportWorkflowRunPdfAPI = async (
+  runId: string
+): Promise<{ blob: Blob; filename: string }> => {
   const baseUrl = import.meta.env.VITE_DJANGO_BACKEND_URL || ''
   const url = `${baseUrl}/api/workflow-runs/${runId}/export-pdf/`
 
-  console.log('Requesting PDF export from:', url)
-
   try {
-    // Use fetch for blob response but include auth token manually
     const authToken = localStorage.getItem('token')
     const headers: Record<string, string> = {}
 
@@ -131,19 +131,27 @@ export const exportWorkflowRunPdfAPI = async (runId: string): Promise<Blob> => {
       headers,
     })
 
-    console.log('PDF export response:', response.status, response.statusText)
-
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error('PDF export failed:', errorText)
       throw new Error(
-        `Failed to export PDF: ${response.status} ${response.statusText}`
+        `Failed to export workflow PDF: ${response.status} ${response.statusText}`
       )
     }
 
-    return await response.blob()
+    // Get filename from Content-Disposition header or create default
+    const contentDisposition = response.headers.get('Content-Disposition')
+    let filename = 'workflow-results.pdf'
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+      if (filenameMatch) {
+        filename = filenameMatch[1]
+      }
+    }
+
+    const blob = await response.blob()
+
+    return { blob, filename }
   } catch (error) {
-    console.error('Error exporting PDF:', error)
+    console.error('Error exporting workflow PDF:', error)
     throw error
   }
 }
