@@ -16,6 +16,7 @@ import {
 import ConversationFileSelect from './ConversationFileSelect'
 import ConversationReferenceSelect from './ConversationReferenceSelect'
 import ModelConfigurationPanel from './ModelConfigurationPanel'
+import ExportButton from './ExportButton'
 import { ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
@@ -179,6 +180,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <div className='h-8 w-[2px] rounded-lg bg-gray-300'></div>
             <ConversationReferenceSelect />
             <ModelPicker />
+            <ExportButton />
           </div>
           <ModelConfigurationPanel />
         </div>

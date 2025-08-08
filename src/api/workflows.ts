@@ -111,39 +111,12 @@ export const cloneWorkflowAPI = async (id: string): Promise<Workflow> => {
   })
 }
 
-export const exportWorkflowRunPdfAPI = async (runId: string): Promise<Blob> => {
-  const baseUrl = import.meta.env.VITE_DJANGO_BACKEND_URL || ''
-  const url = `${baseUrl}/api/workflow-runs/${runId}/export-pdf/`
-
-  console.log('Requesting PDF export from:', url)
-
-  try {
-    // Use fetch for blob response but include auth token manually
-    const authToken = localStorage.getItem('token')
-    const headers: Record<string, string> = {}
-
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-    })
-
-    console.log('PDF export response:', response.status, response.statusText)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('PDF export failed:', errorText)
-      throw new Error(
-        `Failed to export PDF: ${response.status} ${response.statusText}`
-      )
-    }
-
-    return await response.blob()
-  } catch (error) {
-    console.error('Error exporting PDF:', error)
-    throw error
-  }
+export const exportWorkflowRunPdfAPI = async (
+  runId: string
+): Promise<{ blob: Blob; filename: string }> => {
+  return await baseRequest({
+    url: `api/workflow-runs/${runId}/export-pdf/`,
+    method: METHOD.GET,
+    responseType: 'blob',
+  })
 }
