@@ -3,6 +3,8 @@ import {
   updateConversationInput,
   updateActiveConversation,
   updateSelectedTags,
+  saveDraftForConversation,
+  clearDraftForConversation,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker'
@@ -18,7 +20,7 @@ import ConversationReferenceSelect from './ConversationReferenceSelect'
 import ModelConfigurationPanel from './ModelConfigurationPanel'
 import ExportButton from './ExportButton'
 import { ArrowUp, Pencil, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
 
 interface ConversationPillProps {
@@ -46,10 +48,39 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode)
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
+  const autoSaveEnabled = useSelector(
+    (state: RootState) => state.conversation.autoSaveEnabled
+  )
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const debouncedSaveDraft = useCallback(
+    (conversationId: string, text: string) => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+
+      debounceTimeoutRef.current = setTimeout(() => {
+        if (autoSaveEnabled && text.trim()) {
+          dispatch(saveDraftForConversation({ conversationId, text }))
+        }
+      }, 500)
+    },
+    [dispatch, autoSaveEnabled]
+  )
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (disabled) return
-    dispatch(updateConversationInput(event.target.value))
+    const newValue = event.target.value
+    dispatch(updateConversationInput(newValue))
+
+    if (activeConversation && autoSaveEnabled) {
+      if (newValue.trim() === '') {
+        // Clear draft if input is empty
+        dispatch(clearDraftForConversation(activeConversation.conversationId))
+      } else {
+        debouncedSaveDraft(activeConversation.conversationId, newValue)
+      }
+    }
   }
 
   useEffect(() => {
@@ -86,6 +117,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     } else {
       dispatch(sendMessage(newMessage))
       dispatch(updateConversationInput(''))
+      dispatch(clearDraftForConversation(activeConversation.conversationId))
       if (editMessageId && onCancelEdit) {
         onCancelEdit()
       }

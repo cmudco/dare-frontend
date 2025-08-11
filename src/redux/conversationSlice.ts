@@ -207,6 +207,49 @@ export const conversationSlice = createSlice({
     clearSelectedConversations(state) {
       state.selectedConversations = []
     },
+    saveDraftForConversation(
+      state,
+      action: PayloadAction<{ conversationId: string; text: string }>
+    ) {
+      const { conversationId, text } = action.payload
+      const existingIndex = state.conversationDrafts.findIndex(
+        (d) => d.conversationId === conversationId
+      )
+      const draft = {
+        conversationId,
+        draft: text,
+        timestamp: Date.now(),
+      }
+
+      if (existingIndex >= 0) {
+        state.conversationDrafts[existingIndex] = draft
+      } else {
+        state.conversationDrafts.push(draft)
+      }
+    },
+    loadDraftForConversation(state, action: PayloadAction<string>) {
+      const conversationId = action.payload
+      const draft = state.conversationDrafts.find(
+        (d) => d.conversationId === conversationId
+      )
+      state.conversationInput = draft?.draft || ''
+    },
+    clearDraftForConversation(state, action: PayloadAction<string>) {
+      const conversationId = action.payload
+      state.conversationDrafts = state.conversationDrafts.filter(
+        (d) => d.conversationId !== conversationId
+      )
+    },
+    clearOldDrafts(state, action: PayloadAction<number>) {
+      const maxAge = action.payload || 1 * 24 * 60 * 60 * 1000 // 1 day default
+      const cutoffTime = Date.now() - maxAge
+      state.conversationDrafts = state.conversationDrafts.filter(
+        (d) => d.timestamp > cutoffTime
+      )
+    },
+    setAutoSaveEnabled(state, action: PayloadAction<boolean>) {
+      state.autoSaveEnabled = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -263,6 +306,9 @@ export const conversationSlice = createSlice({
         state.loading = false
         state.conversations = state.conversations.filter(
           (conv) => conv.conversationId !== action.payload
+        )
+        state.conversationDrafts = state.conversationDrafts.filter(
+          (draft) => draft.conversationId !== action.payload
         )
       })
       .addCase(deleteConversation.rejected, (state, action) => {
@@ -325,6 +371,9 @@ export const conversationSlice = createSlice({
         state.loading = false
         state.conversations = state.conversations.filter(
           (conv) => !action.payload.includes(conv.conversationId)
+        )
+        state.conversationDrafts = state.conversationDrafts.filter(
+          (draft) => !action.payload.includes(draft.conversationId)
         )
         state.selectedConversations = []
       })
@@ -420,5 +469,10 @@ export const {
   updateReferencedConversations,
   updateReferencedConversationHistoryLimit,
   loadSelectedFilesFromIds,
+  saveDraftForConversation,
+  loadDraftForConversation,
+  clearDraftForConversation,
+  clearOldDrafts,
+  setAutoSaveEnabled,
 } = conversationSlice.actions
 export default conversationSlice.reducer
