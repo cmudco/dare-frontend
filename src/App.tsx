@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 import { initializeTheme } from './redux/themeSlice'
 import { Toaster } from '@/components/ui/toaster'
 import { tokenExpirationService } from '@/services/tokenExpirationService'
+import { clearOldDrafts } from './redux/conversationSlice'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -17,6 +18,8 @@ function App() {
 
   useEffect(() => {
     dispatch(initializeTheme())
+
+    dispatch(clearOldDrafts(1 * 24 * 60 * 60 * 1000)) // Clear drafts older than 1 day
 
     if (!user) {
       dispatch(getUserData())

@@ -1,6 +1,7 @@
 import { ConversationState } from '../types/conversation'
 import { MyFile, MyFolder } from '../types/files'
 import { Tag } from '../types/tags'
+import { loadDraftsFromLocalStorage } from '../../utils/draftStorage'
 
 export const initialState: ConversationState = {
   conversations: [],
@@ -22,4 +23,6 @@ export const initialState: ConversationState = {
   conversationInput: '',
   availableModels: [],
   allModels: [],
+  conversationDrafts: loadDraftsFromLocalStorage(),
+  autoSaveEnabled: true,
 }

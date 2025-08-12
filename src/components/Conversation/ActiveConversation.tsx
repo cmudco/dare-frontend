@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../../redux/store'
 import ConversationPill from './ConversationPill'
@@ -8,6 +8,8 @@ import {
   updateConversationInput,
   updateActiveConversation,
   loadSelectedFilesFromIds,
+  loadDraftForConversation,
+  saveDraftForConversation,
 } from '../../redux/conversationSlice'
 import MessageList from './MessageList'
 import {
@@ -28,6 +30,12 @@ const ActiveConversation: React.FC = () => {
     (state: RootState) => state.conversation?.activeConversationMessages || []
   )
   const files = useSelector((state: RootState) => state.files.files)
+  const conversationInput = useSelector(
+    (state: RootState) => state.conversation.conversationInput
+  )
+  const autoSaveEnabled = useSelector(
+    (state: RootState) => state.conversation.autoSaveEnabled
+  )
 
   const { id } = useParams<{ id: string }>()
   const conversations = useSelector(
@@ -39,6 +47,7 @@ const ActiveConversation: React.FC = () => {
   )
 
   const [editMessageId, setEditMessageId] = useState<string | null>(null)
+  const prevActiveConversationRef = useRef<typeof activeConversation>(null)
 
   const handleEditMessage = (id: string, content: string) => {
     setEditMessageId(id)
@@ -113,6 +122,32 @@ const ActiveConversation: React.FC = () => {
   useEffect(() => {
     setEditMessageId(null)
   }, [activeConversation?.conversationId])
+
+  useEffect(() => {
+    const prevConversation = prevActiveConversationRef.current
+    const currentConversation = activeConversation
+
+    if (
+      prevConversation?.conversationId !== currentConversation?.conversationId
+    ) {
+      if (prevConversation && autoSaveEnabled && conversationInput.trim()) {
+        dispatch(
+          saveDraftForConversation({
+            conversationId: prevConversation.conversationId,
+            text: conversationInput,
+          })
+        )
+      }
+
+      if (currentConversation) {
+        dispatch(loadDraftForConversation(currentConversation.conversationId))
+      }
+
+      prevActiveConversationRef.current = currentConversation
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConversation?.conversationId, dispatch])
 
   return (
     <>
