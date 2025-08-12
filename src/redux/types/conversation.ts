@@ -68,6 +68,12 @@ export interface Snippet {
   vectorDbSource: string
 }
 
+export interface ConversationDraft {
+  conversationId: string
+  draft: string
+  timestamp: number
+}
+
 export interface ConversationState {
   conversations: Conversation[]
   activeConversation: Conversation | null
@@ -88,6 +94,8 @@ export interface ConversationState {
   conversationInput: string
   availableModels: LLMModel[]
   allModels: LLMModel[]
+  conversationDrafts: ConversationDraft[]
+  autoSaveEnabled: boolean
 }
 
 export interface ConversationResponse {

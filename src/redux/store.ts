@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit'
+import { configureStore, Middleware } from '@reduxjs/toolkit'
 import * as Sentry from '@sentry/react'
 import userReducer from './userSlice'
 import fileReducer from './fileSlice'
@@ -10,7 +10,28 @@ import workflowReducer from './workflowSlice'
 import billingReducer from './billingSlice'
 import themeReducer from './themeSlice'
 import notificationReducer from './notificationSlice'
+import { saveDraftsToLocalStorage } from '../utils/draftStorage'
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({})
+
+const draftPersistenceMiddleware: Middleware =
+  (store) => (next) => (action) => {
+    const result = next(action)
+    if (
+      typeof action === 'object' &&
+      action &&
+      'type' in action &&
+      typeof action.type === 'string' &&
+      action.type.startsWith('conversation/') &&
+      (action.type.includes('saveDraftForConversation') ||
+        action.type.includes('clearDraftForConversation') ||
+        action.type.includes('clearOldDrafts'))
+    ) {
+      const state = store.getState() as ReturnType<typeof store.getState>
+      saveDraftsToLocalStorage(state.conversation.conversationDrafts)
+    }
+
+    return result
+  }
 
 export const store = configureStore({
   reducer: {
@@ -25,6 +46,8 @@ export const store = configureStore({
     theme: themeReducer,
     notification: notificationReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(draftPersistenceMiddleware),
   enhancers: (getDefaultEnhancers) =>
     getDefaultEnhancers().concat(sentryReduxEnhancer),
 })
