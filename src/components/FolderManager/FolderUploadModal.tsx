@@ -137,7 +137,7 @@ const FolderUploadModal: React.FC<FolderUploadModalProps> = ({
         }
         if (!isAllowedFileType(file)) {
           errors.push(
-            `File "${file.name}" type not allowed and has been discarded. Allowed types are: docx, doc, pdf, txt, md, json`
+            `File "${file.name}" type not allowed and has been discarded. Allowed types are: docx, doc, pdf, txt, md, json, csv, xls, xlsx`
           )
           continue
         }

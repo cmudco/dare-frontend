@@ -30,6 +30,10 @@ export const ALLOWED_FILE_EXTENSIONS = [
   '.txt',
   '.md',
   '.json',
+  // Spreadsheets
+  '.csv',
+  '.xls',
+  '.xlsx',
 ]
 
 export const ALLOWED_FILE_TYPES = [
@@ -41,6 +45,10 @@ export const ALLOWED_FILE_TYPES = [
   'application/markdown',
   'text/x-markdown',
   'application/json',
+  // Spreadsheets
+  'text/csv',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ]
 
 export const MAX_FILE_SIZE_MB = 30
