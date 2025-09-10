@@ -13,47 +13,6 @@ import { WEBSOCKET_URL } from '../../api/config'
 import { getWallet } from './billing'
 
 let socket: WebSocket | null = null
-let manualClose = false
-let heartbeatInterval: number | null = null
-let pongTimeout: number | null = null
-let lastConnectArgs: { conversationId: string; jwtKey: string } | null = null
-let onlineListenerAttached = false
-
-const HEARTBEAT_INTERVAL_MS = 25000 // 25s
-const PONG_TIMEOUT_MS = 10000 // 10s
-
-function clearHeartbeat() {
-  if (heartbeatInterval !== null) {
-    window.clearInterval(heartbeatInterval)
-    heartbeatInterval = null
-  }
-  if (pongTimeout !== null) {
-    window.clearTimeout(pongTimeout)
-    pongTimeout = null
-  }
-}
-
-function startHeartbeat() {
-  clearHeartbeat()
-  heartbeatInterval = window.setInterval(() => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) return
-    try {
-      const payload = { type: 'ping', ts: Date.now() }
-      socket.send(JSON.stringify(payload))
-      // Require a pong within timeout; if not, force-close to trigger reconnect
-      if (pongTimeout !== null) window.clearTimeout(pongTimeout)
-      pongTimeout = window.setTimeout(() => {
-        try {
-          socket?.close(4002, 'Heartbeat timeout')
-        } catch (e) {
-          console.warn('Failed to close WebSocket after heartbeat timeout', e)
-        }
-      }, PONG_TIMEOUT_MS)
-    } catch (e) {
-      console.warn('Heartbeat send failed:', e)
-    }
-  }, HEARTBEAT_INTERVAL_MS)
-}
 
 export const connectWebSocket = createAsyncThunk<
   void,
@@ -61,8 +20,6 @@ export const connectWebSocket = createAsyncThunk<
   { dispatch: AppDispatch; state: RootState }
 >('websocket/connect', async ({ conversationId, jwtKey }, { dispatch }) => {
   return new Promise<void>((resolve, reject) => {
-    manualClose = false
-    lastConnectArgs = { conversationId, jwtKey }
     dispatch(clearConversation())
     const socketUrl = `${WEBSOCKET_URL}/conversations/${conversationId}/?jwt_key=${encodeURIComponent(
       jwtKey
@@ -72,21 +29,11 @@ export const connectWebSocket = createAsyncThunk<
 
     socket.onopen = () => {
       dispatch(setConnectionStatus(true))
-      startHeartbeat()
       resolve()
     }
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data)
-
-      // Heartbeat response
-      if (data?.type === 'pong') {
-        if (pongTimeout !== null) {
-          window.clearTimeout(pongTimeout)
-          pongTimeout = null
-        }
-        return
-      }
 
       if (
         data.error === 'insufficient_credits' ||
@@ -146,22 +93,7 @@ export const connectWebSocket = createAsyncThunk<
     socket.onerror = (error) => {
       console.error('WebSocket error:', error)
       dispatch(setConnectionStatus(false))
-      // Allow onclose to schedule reconnect; reject only if we never opened
-      if (socket?.readyState !== WebSocket.OPEN) {
-        reject(new Error('WebSocket error'))
-      }
-    }
-
-    if (!onlineListenerAttached) {
-      window.addEventListener('online', () => {
-        if (manualClose) return
-        if (socket && socket.readyState === WebSocket.OPEN) return
-        const args = lastConnectArgs
-        if (args) {
-          dispatch(connectWebSocket(args))
-        }
-      })
-      onlineListenerAttached = true
+      reject(new Error('WebSocket error'))
     }
   })
 })
@@ -313,8 +245,6 @@ export const disconnectWebSocket = createAsyncThunk<
 >('websocket/disconnect', async (_, { dispatch }) => {
   return new Promise<void>((resolve) => {
     if (socket) {
-      manualClose = true
-      clearHeartbeat()
       socket.onclose = () => {
         socket = null
         dispatch(setConnectionStatus(false))
