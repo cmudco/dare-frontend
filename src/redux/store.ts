@@ -10,6 +10,7 @@ import workflowReducer from './workflowSlice'
 import billingReducer from './billingSlice'
 import themeReducer from './themeSlice'
 import notificationReducer from './notificationSlice'
+import flowReducer from './slices/flowSlice'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({})
 
@@ -42,6 +43,7 @@ export const store = configureStore({
     websocket: websocketReducer,
     tags: tagsReducer,
     workflow: workflowReducer,
+    flow: flowReducer,
     billing: billingReducer,
     theme: themeReducer,
     notification: notificationReducer,
