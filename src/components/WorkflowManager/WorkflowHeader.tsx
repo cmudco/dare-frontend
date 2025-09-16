@@ -5,6 +5,8 @@ import { Input } from '../ui/input'
 import { useState } from 'react'
 import { openModal } from '@/redux/workflowSlice'
 import { Plus } from 'lucide-react'
+import SelectModeDialog from './SelectModeDialog'
+import { useNavigate } from 'react-router-dom'
 
 interface WorkflowHeaderProps {
   onSearch: (query: string) => void
@@ -12,7 +14,9 @@ interface WorkflowHeaderProps {
 
 const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+  const [modePromptOpen, setModePromptOpen] = useState(false)
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -21,7 +25,7 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
   }
 
   const handleCreateWorkflow = () => {
-    dispatch(openModal())
+    setModePromptOpen(true)
   }
 
   return (
@@ -45,6 +49,20 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
         <Plus />
         Create Workflow
       </Button>
+
+      <SelectModeDialog
+        open={modePromptOpen}
+        onOpenChange={setModePromptOpen}
+        title='Select mode'
+        onSelectNew={() => {
+          setModePromptOpen(false)
+          navigate('/workflows/create')
+        }}
+        onSelectLegacy={() => {
+          setModePromptOpen(false)
+          dispatch(openModal())
+        }}
+      />
     </div>
   )
 }

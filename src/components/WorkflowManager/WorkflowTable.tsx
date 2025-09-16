@@ -10,6 +10,7 @@ import {
 import { formatDate } from '../../utils/constants/prompts'
 import { WORKFLOWS_TABLE_HEAD } from '../../utils/constants/workflows'
 import { openEditModal, selectWorkflowForView } from '../../redux/workflowSlice'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../ui/button'
 import {
   Select,
@@ -43,6 +44,7 @@ import {
 } from '@heroicons/react/20/solid'
 import { ChevronUpDownIcon } from '@heroicons/react/24/outline'
 import { DeleteConfirmation } from '../DeleteConfirmation'
+import SelectModeDialog from './SelectModeDialog'
 import {
   SortDirection,
   updateSortState,
@@ -58,6 +60,10 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
   const { workflows, loading } = useSelector(
     (state: RootState) => state.workflow
+  )
+  const navigate = useNavigate()
+  const [editModePromptOpen, setEditModePromptOpen] = useState<string | null>(
+    null
   )
 
   const [currentPage, setCurrentPage] = useState(1)
@@ -100,7 +106,8 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   }
 
   const handleEdit = (id: string) => {
-    dispatch(openEditModal(id))
+    // Ask user which edit mode
+    setEditModePromptOpen(id)
   }
 
   const handleRun = async (id: string) => {
@@ -338,6 +345,22 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
       />
 
       <WorkflowViewer />
+
+      <SelectModeDialog
+        open={!!editModePromptOpen}
+        onOpenChange={(open) => !open && setEditModePromptOpen(null)}
+        title='Select mode'
+        onSelectNew={() => {
+          const id = editModePromptOpen
+          setEditModePromptOpen(null)
+          if (id) navigate(`/workflows/${id}/edit`)
+        }}
+        onSelectLegacy={() => {
+          const id = editModePromptOpen
+          setEditModePromptOpen(null)
+          if (id) dispatch(openEditModal(id))
+        }}
+      />
     </div>
   )
 }
