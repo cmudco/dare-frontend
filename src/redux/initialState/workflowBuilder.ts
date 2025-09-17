@@ -8,4 +8,7 @@ export const initialState: WorkflowBuilderState = {
   currentMode: 'sequential',
   lastWorkflowId: undefined,
   savedViewport: null,
+  currentRun: null,
+  isRunning: false,
+  loadedWorkflow: null,
 }

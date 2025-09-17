@@ -1,4 +1,5 @@
 import { type Node, type Edge } from '@xyflow/react'
+import type { WorkflowRun, Workflow } from './workflow'
 
 export interface NodeErrors {
   title?: string
@@ -14,4 +15,7 @@ export interface WorkflowBuilderState {
   currentMode: 'sequential' | 'parallel'
   lastWorkflowId: string | undefined
   savedViewport: { x: number; y: number; zoom: number } | null
+  currentRun: WorkflowRun | null
+  isRunning: boolean
+  loadedWorkflow: Workflow | null
 }

@@ -5,6 +5,9 @@ import { NodeErrors } from './types/workflowBuilder'
 import { handleConnection, isValidConnection } from '@/utils/workflowBuilder/connectionHelpers'
 import { createNode, removeNodeById as removeNodeByIdHelper, updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/nodeHelpers'
 import { validateWorkflow, serializeWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
+import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
+import { startWorkflowRun } from './asyncThunks/workflow'
+import type { WorkflowRun } from './types/workflow'
 
 const workflowBuilderSlice = createSlice({
   name: 'workflowBuilder',
@@ -94,12 +97,9 @@ const workflowBuilderSlice = createSlice({
       state.savedViewport = action.payload
     },
     onNodesChange: (state, action: PayloadAction<NodeChange[]>) => {
-      // Filter out 'dimensions' updates to avoid mutating frozen objects and reduce noise
-      const filtered = action.payload.filter((c) => c.type !== 'dimensions')
-      if (filtered.length === 0) return
-
+      console.log('onNodesChange payload:', action.payload)
       // Apply changes using ReactFlow's utility
-      state.nodes = applyNodeChanges(filtered, state.nodes)
+      state.nodes = applyNodeChanges(action.payload, state.nodes)
     },
     onEdgesChange: (state, action: PayloadAction<EdgeChange[]>) => {
       // Apply changes using ReactFlow's utility
@@ -157,9 +157,51 @@ const workflowBuilderSlice = createSlice({
         return node
       })
     },
+    updateWorkflowRunStatus: (state, action: PayloadAction<WorkflowRun>) => {
+      const runData = action.payload
+      state.currentRun = runData
+      state.isRunning = runData.status === 'running'
+
+      // Update output nodes with step responses and status
+      state.nodes = state.nodes.map(node => {
+        if (node.type === 'chatOutput') {
+          const stepNumber = node.data.stepNumber
+          const stepRun = runData.steps?.find(s => (s.order || s.step) === stepNumber)
+
+          if (stepRun) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                status: stepRun.status,
+                response: stepRun.response,
+                error: stepRun.error
+              }
+            }
+          }
+        }
+        return node
+      })
+    },
     resetBuilder: () => {
       return initialState
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loadWorkflowIntoBuilder.fulfilled, (state, action) => {
+        state.nodes = action.payload.nodes
+        state.edges = action.payload.edges
+        state.loadedWorkflow = action.payload.workflow
+        state.currentRun = action.payload.currentRun
+        state.isRunning = action.payload.currentRun?.status === 'running'
+        state.lastWorkflowId = action.payload.workflow.id?.toString()
+      })
+      .addCase(startWorkflowRun.fulfilled, (state, action) => {
+        // When a new run starts, update the current run and start polling
+        state.currentRun = action.payload
+        state.isRunning = action.payload.status === 'running'
+      })
   },
 })
 
@@ -185,6 +227,7 @@ export const {
   updateNodeDataById,
   validateWorkflowData,
   updateStepApiIds,
+  updateWorkflowRunStatus,
   resetBuilder,
 } = workflowBuilderSlice.actions
 

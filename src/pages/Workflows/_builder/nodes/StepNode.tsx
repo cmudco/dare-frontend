@@ -1,4 +1,4 @@
-import { Handle, Position, useReactFlow, type NodeProps } from '@xyflow/react'
+import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import {
@@ -10,21 +10,22 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Slider } from '@/components/ui/slider'
 import {
-  Settings,
-  FileText,
-  Database,
-  Brain,
-  X,
   Clock,
   CheckCircle,
   XCircle,
   Loader2,
+  Brain,
+  Settings,
+  FileText,
+  Database,
+  X,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { useAppSelector } from '@/redux/hooks'
-import { Input } from '@/components/ui/input'
-import { Slider } from '@/components/ui/slider'
+import { useState, useEffect } from 'react'
+import { useAppSelector, useAppDispatch } from '@/redux/hooks'
+import { updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 
@@ -38,46 +39,65 @@ export type StepNodeData = {
   temperature?: number
   maxContextSnippets?: number
   documentSimilarityThreshold?: number
-  errors?: { prompt?: string }
+  apiId?: number
 }
 
 export default function StepNode({ id, data, selected }: NodeProps) {
   const nodeData = (data as unknown as StepNodeData) || ({} as StepNodeData)
   const { errorsByNodeId, clearNodeError } = useErrorsContext()
   const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
-  const [prompt, setPrompt] = useState(
-    nodeData.prompt ? String(nodeData.prompt) : ''
-  )
-  const [contentFiles, setContentFiles] = useState<string[]>(
-    nodeData.contentFiles || []
-  )
-  const [embeddingFiles, setEmbeddingFiles] = useState<string[]>(
-    nodeData.embeddingFiles || []
-  )
-  const [llm, setLlm] = useState<string | number>(nodeData.llm ?? '')
-  const [maxTokens, setMaxTokens] = useState<number>(
-    Number(nodeData?.maxTokens ?? 2048)
-  )
-  const [temperature, setTemperature] = useState<number>(
-    Number(nodeData?.temperature ?? 0.7)
-  )
-  const [maxContextSnippets, setMaxContextSnippets] = useState<number>(
-    Number(nodeData?.maxContextSnippets ?? 4)
-  )
-  const [documentSimilarityThreshold, setDocumentSimilarityThreshold] =
-    useState<number>(Number(nodeData?.documentSimilarityThreshold ?? 0.2))
+  const dispatch = useAppDispatch()
 
-  const rf = useReactFlow()
+  // Local state for form inputs
+  const [prompt, setPrompt] = useState(nodeData.prompt ? String(nodeData.prompt) : '')
+  const [contentFiles, setContentFiles] = useState<string[]>(nodeData.contentFiles || [])
+  const [embeddingFiles, setEmbeddingFiles] = useState<string[]>(nodeData.embeddingFiles || [])
+  const [llm, setLlm] = useState<string | number>(nodeData.llm ?? '')
+  const [maxTokens, setMaxTokens] = useState<number>(Number(nodeData?.maxTokens ?? 2048))
+  const [temperature, setTemperature] = useState<number>(Number(nodeData?.temperature ?? 0.7))
+  const [maxContextSnippets, setMaxContextSnippets] = useState<number>(Number(nodeData?.maxContextSnippets ?? 4))
+  const [documentSimilarityThreshold, setDocumentSimilarityThreshold] = useState<number>(Number(nodeData?.documentSimilarityThreshold ?? 0.2))
+  const [showAdvanced, setShowAdvanced] = useState(false)
+
+  // Redux selectors
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
-  const { selectedWorkflowRun } = useAppSelector((s) => s.workflow)
+  const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+
+  // Update Redux when form changes
+  const updateNodeData = (updates: Partial<StepNodeData>) => {
+    dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
+  }
+
+  // Sync local state with props data when it changes (from Redux)
+  useEffect(() => {
+    const newData = data as StepNodeData
+    if (newData.prompt !== undefined && newData.prompt !== prompt) {
+      setPrompt(newData.prompt ? String(newData.prompt) : '')
+    }
+    if (newData.llm !== undefined && newData.llm !== llm) {
+      setLlm(newData.llm ?? '')
+    }
+    if (newData.contentFiles && JSON.stringify(newData.contentFiles) !== JSON.stringify(contentFiles)) {
+      setContentFiles(newData.contentFiles)
+    }
+    if (newData.embeddingFiles && JSON.stringify(newData.embeddingFiles) !== JSON.stringify(embeddingFiles)) {
+      setEmbeddingFiles(newData.embeddingFiles)
+    }
+    if (newData.maxTokens !== undefined && newData.maxTokens !== maxTokens) {
+      setMaxTokens(newData.maxTokens)
+    }
+    if (newData.temperature !== undefined && newData.temperature !== temperature) {
+      setTemperature(newData.temperature)
+    }
+  }, [data])
 
   // Get the status of this step from the current workflow run
   const getStepStatus = () => {
-    if (!selectedWorkflowRun || !selectedWorkflowRun.steps) return null
-    const runStep = selectedWorkflowRun.steps.find(
-      (rs) => rs.order === nodeData.stepNumber
+    if (!currentRun || !currentRun.steps) return null
+    const runStep = currentRun.steps.find(
+      (rs) => (rs.order || rs.step) === nodeData.stepNumber
     )
     return runStep?.status || null
   }
@@ -128,108 +148,15 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     )
   }
 
-  useEffect(() => {
-    rf.setNodes((nds) =>
-      nds.map((n) => {
-        if (n.id !== id) return n
-        const nextData: StepNodeData = {
-          ...n.data,
-          prompt,
-          contentFiles,
-          embeddingFiles,
-          llm,
-          maxTokens,
-          temperature,
-          maxContextSnippets,
-          documentSimilarityThreshold,
-        }
-        return { ...n, data: nextData }
-      })
-    )
-  }, [
-    prompt,
-    contentFiles,
-    embeddingFiles,
-    llm,
-    maxTokens,
-    temperature,
-    maxContextSnippets,
-    documentSimilarityThreshold,
-    id,
-    rf,
-  ])
-
-  // hydrate from incoming node data (prefill in edit mode)
-  const hydratedOnceRef = useRef<string | null>(null)
-  useEffect(() => {
-    const d: StepNodeData = nodeData
-    const key = d?.instanceKey ?? null
-
-    console.log(`🔢 STEP NODE ${id} HYDRATION:`, {
-      nodeId: id,
-      data: d,
-      instanceKey: key,
-      previousKey: hydratedOnceRef.current,
-      willHydrate: hydratedOnceRef.current !== key,
-    })
-
-    if (hydratedOnceRef.current === key) return
-    if (d) {
-      if (d.prompt != null) setPrompt(String(d.prompt))
-      if (Array.isArray(d.contentFiles)) setContentFiles([...d.contentFiles])
-      if (Array.isArray(d.embeddingFiles))
-        setEmbeddingFiles([...d.embeddingFiles])
-      if (d.llm != null) setLlm(String(d.llm))
-      if (typeof d.maxTokens === 'number') setMaxTokens(d.maxTokens)
-      if (typeof d.temperature === 'number') setTemperature(d.temperature)
-      if (typeof d.maxContextSnippets === 'number')
-        setMaxContextSnippets(d.maxContextSnippets)
-      if (typeof d.documentSimilarityThreshold === 'number')
-        setDocumentSimilarityThreshold(d.documentSimilarityThreshold)
-
-      console.log(`✅ STEP NODE ${id} HYDRATED:`, {
-        prompt: d.prompt,
-        contentFiles: d.contentFiles,
-        embeddingFiles: d.embeddingFiles,
-        llm: d.llm,
-        maxTokens: d.maxTokens,
-        temperature: d.temperature,
-      })
-    }
-    hydratedOnceRef.current = key
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeData])
-
-  const addContentFile = (fileId: string) => {
-    if (!contentFiles.includes(fileId))
-      setContentFiles([...contentFiles, fileId])
-  }
-  const removeContentFile = (fileId: string) =>
-    setContentFiles(contentFiles.filter((id) => id !== fileId))
-  const addEmbeddingFile = (fileId: string) => {
-    if (!embeddingFiles.includes(fileId))
-      setEmbeddingFiles([...embeddingFiles, fileId])
-  }
-  const removeEmbeddingFile = (fileId: string) =>
-    setEmbeddingFiles(embeddingFiles.filter((id) => id !== fileId))
-
-  const promptError = fieldErrors.prompt
-  const llmError = fieldErrors.llm as string | undefined
-
   return (
     <Card
-      className={`w-96 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
+      className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
-      <Handle
-        type='target'
-        position={Position.Left}
-        className='h-3 w-3 border-2 border-white bg-secondary'
-      />
       <CardHeader className='pb-3'>
         <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
           <div className='flex items-center gap-2'>
             <div className='flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20'>
-              <Settings className='h-3 w-3 text-primary' />
+              <Brain className='h-3 w-3 text-primary' />
             </div>
             Step {nodeData.stepNumber}
           </div>
@@ -238,190 +165,262 @@ export default function StepNode({ id, data, selected }: NodeProps) {
       </CardHeader>
       <CardContent className='space-y-4'>
         <div className='space-y-2'>
-          <Label className='flex items-center gap-1 text-xs font-medium'>
-            <FileText className='h-3 w-3' />
-            Select Prompt
+          <Label htmlFor='prompt' className='text-xs font-medium'>
+            Prompt
           </Label>
           <Select
             value={prompt}
-            onValueChange={(v) => {
-              setPrompt(v)
+            onValueChange={(value) => {
+              setPrompt(value)
+              updateNodeData({ prompt: value })
               clearNodeError(id, 'prompt')
             }}
           >
-            <SelectTrigger
-              className={`bg-background text-sm ${promptError ? 'border-destructive' : ''}`}
-            >
-              <SelectValue placeholder='Choose a prompt'>
-                {prompt &&
-                  prompts.find((p) => String(p.id) === String(prompt))?.title}
-              </SelectValue>
+            <SelectTrigger className={`bg-background text-sm ${
+              fieldErrors.prompt ? 'border-destructive' : ''
+            }`}>
+              <SelectValue placeholder='Select a prompt' />
             </SelectTrigger>
             <SelectContent>
               {prompts.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
+                <SelectItem key={p.id} value={p.id.toString()}>
                   {p.title}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {promptError && (
-            <p className='mt-1 text-xs text-destructive'>{promptError}</p>
+          {fieldErrors.prompt && (
+            <p className='mt-1 text-xs text-destructive'>
+              {fieldErrors.prompt}
+            </p>
           )}
         </div>
 
+        {/* Content Files */}
         <div className='space-y-2'>
-          <Label className='flex items-center gap-1 text-xs font-medium'>
+          <Label className='text-xs font-medium flex items-center gap-2'>
             <FileText className='h-3 w-3' />
             Content Files
           </Label>
-          <div className='mb-2 flex flex-wrap gap-1'>
+          <div className='flex flex-wrap gap-1'>
             {contentFiles.map((fileId) => {
-              const file = files.find((f) => String(f.id) === fileId)
+              const file = files.find(f => f.id.toString() === fileId)
               return (
                 <Badge key={fileId} variant='secondary' className='text-xs'>
-                  {file?.name}
+                  {file?.name || `File ${fileId}`}
                   <Button
                     size='sm'
                     variant='ghost'
-                    className='ml-1 h-4 w-4 p-0'
-                    onClick={() => removeContentFile(fileId)}
+                    className='h-4 w-4 p-0 ml-1'
+                    onClick={() => {
+                      const newFiles = contentFiles.filter(id => id !== fileId)
+                      setContentFiles(newFiles)
+                      updateNodeData({ contentFiles: newFiles })
+                    }}
                   >
-                    <X className='h-2 w-2' />
+                    <X className='h-3 w-3' />
                   </Button>
                 </Badge>
               )
             })}
-          </div>
-          <Select onValueChange={addContentFile} value={''}>
-            <SelectTrigger className='bg-background text-sm'>
-              <SelectValue placeholder='Add content file' />
-            </SelectTrigger>
-            <SelectContent>
-              {files
-                .filter((f) => !contentFiles.includes(String(f.id)))
-                .map((file) => (
-                  <SelectItem key={file.id} value={String(file.id)}>
+            <Select
+              value=""
+              onValueChange={(value) => {
+                if (value && !contentFiles.includes(value)) {
+                  const newFiles = [...contentFiles, value]
+                  setContentFiles(newFiles)
+                  updateNodeData({ contentFiles: newFiles })
+                }
+              }}
+            >
+              <SelectTrigger className='w-24 h-6 text-xs'>
+                <SelectValue placeholder='+ Add' />
+              </SelectTrigger>
+              <SelectContent>
+                {files.filter(f => !contentFiles.includes(f.id.toString())).map((file) => (
+                  <SelectItem key={file.id} value={file.id.toString()}>
                     {file.name}
                   </SelectItem>
                 ))}
-            </SelectContent>
-          </Select>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
+        {/* Embedding Files */}
         <div className='space-y-2'>
-          <Label className='flex items-center gap-1 text-xs font-medium'>
+          <Label className='text-xs font-medium flex items-center gap-2'>
             <Database className='h-3 w-3' />
             Embedding Files
           </Label>
-          <div className='mb-2 flex flex-wrap gap-1'>
+          <div className='flex flex-wrap gap-1'>
             {embeddingFiles.map((fileId) => {
-              const file = files.find((f) => String(f.id) === fileId)
+              const file = files.find(f => f.id.toString() === fileId)
               return (
-                <Badge key={fileId} variant='outline' className='text-xs'>
-                  {file?.name}
+                <Badge key={fileId} variant='secondary' className='text-xs'>
+                  {file?.name || `File ${fileId}`}
                   <Button
                     size='sm'
                     variant='ghost'
-                    className='ml-1 h-4 w-4 p-0'
-                    onClick={() => removeEmbeddingFile(fileId)}
+                    className='h-4 w-4 p-0 ml-1'
+                    onClick={() => {
+                      const newFiles = embeddingFiles.filter(id => id !== fileId)
+                      setEmbeddingFiles(newFiles)
+                      updateNodeData({ embeddingFiles: newFiles })
+                    }}
                   >
-                    <X className='h-2 w-2' />
+                    <X className='h-3 w-3' />
                   </Button>
                 </Badge>
               )
             })}
-          </div>
-          <Select onValueChange={addEmbeddingFile} value={''}>
-            <SelectTrigger className='bg-background text-sm'>
-              <SelectValue placeholder='Add embedding file' />
-            </SelectTrigger>
-            <SelectContent>
-              {files
-                .filter((f) => !embeddingFiles.includes(String(f.id)))
-                .map((file) => (
-                  <SelectItem key={file.id} value={String(file.id)}>
+            <Select
+              value=""
+              onValueChange={(value) => {
+                if (value && !embeddingFiles.includes(value)) {
+                  const newFiles = [...embeddingFiles, value]
+                  setEmbeddingFiles(newFiles)
+                  updateNodeData({ embeddingFiles: newFiles })
+                }
+              }}
+            >
+              <SelectTrigger className='w-24 h-6 text-xs'>
+                <SelectValue placeholder='+ Add' />
+              </SelectTrigger>
+              <SelectContent>
+                {files.filter(f => !embeddingFiles.includes(f.id.toString())).map((file) => (
+                  <SelectItem key={file.id} value={file.id.toString()}>
                     {file.name}
                   </SelectItem>
                 ))}
-            </SelectContent>
-          </Select>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className='space-y-2'>
-          <Label className='flex items-center gap-1 text-xs font-medium'>
-            <Brain className='h-3 w-3' />
-            Select LLM
+          <Label htmlFor='llm' className='text-xs font-medium'>
+            LLM Model
           </Label>
-          <Select value={String(llm)} onValueChange={(v) => setLlm(v)}>
-            <SelectTrigger
-              className={`bg-background text-sm ${llmError ? 'border-destructive' : ''}`}
-            >
-              <SelectValue placeholder='Choose an LLM'>
-                {llm &&
-                  availableModels.find((m) => String(m.id) === String(llm))
-                    ?.name}
-              </SelectValue>
+          <Select
+            value={llm.toString()}
+            onValueChange={(value) => {
+              setLlm(value)
+              updateNodeData({ llm: value })
+              clearNodeError(id, 'llm' as any)
+            }}
+          >
+            <SelectTrigger className={`bg-background text-sm ${
+              fieldErrors.llm ? 'border-destructive' : ''
+            }`}>
+              <SelectValue placeholder='Select an LLM' />
             </SelectTrigger>
             <SelectContent>
               {availableModels.map((model) => (
-                <SelectItem key={model.id} value={String(model.id)}>
+                <SelectItem key={model.id} value={model.id.toString()}>
                   {model.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {llmError && (
-            <p className='mt-1 text-xs text-destructive'>{llmError}</p>
+          {fieldErrors.llm && (
+            <p className='mt-1 text-xs text-destructive'>
+              {fieldErrors.llm}
+            </p>
           )}
         </div>
+
+        {/* Advanced Settings Toggle */}
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          className='w-full text-xs'
+          onClick={() => setShowAdvanced(!showAdvanced)}
+        >
+          <Settings className='mr-2 h-3 w-3' />
+          {showAdvanced ? 'Hide' : 'Show'} Advanced Settings
+        </Button>
+
+        {/* Advanced Settings */}
+        {showAdvanced && (
+          <div className='space-y-4 border-t pt-4'>
+            <div className='space-y-2'>
+              <Label className='text-xs font-medium'>
+                Max Tokens: {maxTokens}
+              </Label>
+              <Slider
+                value={[maxTokens]}
+                onValueChange={(value) => {
+                  setMaxTokens(value[0])
+                  updateNodeData({ maxTokens: value[0] })
+                }}
+                max={8192}
+                min={100}
+                step={100}
+                className='w-full'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label className='text-xs font-medium'>
+                Temperature: {temperature}
+              </Label>
+              <Slider
+                value={[temperature]}
+                onValueChange={(value) => {
+                  setTemperature(value[0])
+                  updateNodeData({ temperature: value[0] })
+                }}
+                max={2}
+                min={0}
+                step={0.1}
+                className='w-full'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label className='text-xs font-medium'>
+                Max Context Snippets: {maxContextSnippets}
+              </Label>
+              <Slider
+                value={[maxContextSnippets]}
+                onValueChange={(value) => {
+                  setMaxContextSnippets(value[0])
+                  updateNodeData({ maxContextSnippets: value[0] })
+                }}
+                max={20}
+                min={1}
+                step={1}
+                className='w-full'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label className='text-xs font-medium'>
+                Document Similarity Threshold: {documentSimilarityThreshold}
+              </Label>
+              <Slider
+                value={[documentSimilarityThreshold]}
+                onValueChange={(value) => {
+                  setDocumentSimilarityThreshold(value[0])
+                  updateNodeData({ documentSimilarityThreshold: value[0] })
+                }}
+                max={1}
+                min={0}
+                step={0.1}
+                className='w-full'
+              />
+            </div>
+          </div>
+        )}
       </CardContent>
-      <CardContent className='space-y-4'>
-        <div className='grid grid-cols-2 gap-3'>
-          <div className='space-y-1'>
-            <Label className='text-xs'>Max Tokens</Label>
-            <Input
-              type='number'
-              value={maxTokens}
-              onChange={(e) => setMaxTokens(Number(e.target.value))}
-              className='h-8 bg-background text-sm'
-            />
-          </div>
-          <div className='space-y-1'>
-            <Label className='text-xs'>
-              Temperature ({temperature.toFixed(2)})
-            </Label>
-            <Slider
-              min={0}
-              max={2}
-              step={0.01}
-              value={[temperature]}
-              onValueChange={(v) => setTemperature(v[0] ?? 0.7)}
-            />
-          </div>
-          <div className='space-y-1'>
-            <Label className='text-xs'>Max Context Snippets</Label>
-            <Input
-              type='number'
-              value={maxContextSnippets}
-              onChange={(e) => setMaxContextSnippets(Number(e.target.value))}
-              className='h-8 bg-background text-sm'
-            />
-          </div>
-          <div className='space-y-1'>
-            <Label className='text-xs'>
-              Similarity Threshold ({documentSimilarityThreshold.toFixed(2)})
-            </Label>
-            <Slider
-              min={0}
-              max={1}
-              step={0.01}
-              value={[documentSimilarityThreshold]}
-              onValueChange={(v) => setDocumentSimilarityThreshold(v[0] ?? 0.2)}
-            />
-          </div>
-        </div>
-      </CardContent>
+
+      <Handle
+        type='target'
+        position={Position.Left}
+        className='h-3 w-3 bg-secondary'
+      />
       <Handle
         type='source'
         position={Position.Right}

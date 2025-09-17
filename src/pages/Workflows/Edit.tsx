@@ -16,22 +16,17 @@ import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
 import {
-  getWorkflowById,
   startWorkflowRun,
-  getWorkflowRunById,
   createOrUpdateWorkflow,
 } from '@/redux/asyncThunks/workflow'
 import { clearSelectedWorkflow } from '@/redux/workflowSlice'
 import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
-import { useState, useEffect as useEffectHook } from 'react'
+import { useState } from 'react'
 
 const WorkflowEditPage = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
-  const workflow = useAppSelector((s) => s.workflow.selectedWorkflow)
-  const selectedRun = useAppSelector((s) => s.workflow.selectedWorkflowRun)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
@@ -49,7 +44,7 @@ const WorkflowEditPage = () => {
     }
 
     // Dispatch save action
-    const targetId = workflow?.id?.toString() || id || ''
+    const targetId = id || ''
     const action = targetId
       ? createOrUpdateWorkflow({ id: targetId, workflowData: serializedWorkflow })
       : createOrUpdateWorkflow({ workflowData: serializedWorkflow })
@@ -93,39 +88,21 @@ const WorkflowEditPage = () => {
     dispatch(getAvailableModels())
   }, [dispatch])
 
+  // Clear any previous workflow/run state when component mounts
   useEffect(() => {
     if (id) {
-      // Ensure we don't briefly render a previous workflow while a new one loads
       dispatch(clearSelectedWorkflow())
-      dispatch(getWorkflowById(id))
+      dispatch(setSelectedWorkflowRun(null))
     }
   }, [dispatch, id])
 
-  // Do not auto-load or resume last run when editing; user must click Run
-  useEffect(() => {
-    if (!workflow?.id) return
-    dispatch(setSelectedWorkflowRun(null))
-  }, [dispatch, workflow?.id])
+  // Check if workflow is running (now handled by WorkflowBuilder, but needed for UI state)
+  const workflowBuilderState = useAppSelector(s => s.workflowBuilder)
+  const workflowIsRunning = workflowBuilderState.isRunning
 
-  // Poll run while running (only for this workflow)
-  useEffectHook(() => {
-    if (!selectedRun?.id) return
-    const belongsToThis = String(selectedRun.workflow) === String(id)
-    setIsRunning(
-      belongsToThis && selectedRun.status === WorkflowRunStepStatus.Running
-    )
-    let t: ReturnType<typeof setInterval> | undefined
-    if (belongsToThis && selectedRun.status === WorkflowRunStepStatus.Running) {
-      t = setInterval(() => dispatch(getWorkflowRunById(selectedRun.id)), 3000)
-    }
-    return () => t && clearInterval(t)
-  }, [
-    dispatch,
-    selectedRun?.id,
-    selectedRun?.status,
-    selectedRun?.workflow,
-    id,
-  ])
+  useEffect(() => {
+    setIsRunning(workflowIsRunning)
+  }, [workflowIsRunning])
 
   return (
     <div className='flex h-full flex-col'>
@@ -185,7 +162,6 @@ const WorkflowEditPage = () => {
         <ReactFlowProvider key={id}>
           <WorkflowBuilder
             key={id}
-            initialWorkflow={workflow || undefined}
             workflowId={id}
             disableEditing={isRunning}
           />
