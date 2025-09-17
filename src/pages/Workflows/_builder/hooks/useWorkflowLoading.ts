@@ -137,7 +137,7 @@ export const useWorkflowLoading = ({
     })
 
     const startNode: Node = {
-      id: '1',
+      id: '0',  // Start node is always "0"
       type: 'start',
       position: { x: 100, y: 100 },
       data: {
@@ -160,7 +160,7 @@ export const useWorkflowLoading = ({
 
         const stepData = {
           stepNumber: step.order || idx + 1,
-          id: step.id,
+          apiId: step.id,  // Store API ID here
           prompt: toIdString(step.prompt) || '',
           contentFiles: (step.files || []).map((f: MyFile | string | number) =>
             String(((f as MyFile)?.id ?? f) as string | number)
@@ -197,7 +197,7 @@ export const useWorkflowLoading = ({
         })
 
         return {
-          id: `${idx + 2}`,
+          id: (idx + 1).toString(),  // "1", "2", "3"
           type: 'step',
           position: { x: 300 + idx * 400, y: 100 },
           data: stepData,
@@ -215,11 +215,12 @@ export const useWorkflowLoading = ({
           workflowVersion
 
         return {
-          id: `${stepNodes.length + idx + 2}`,
+          id: `${idx + 1}o`,  // "1o", "2o", "3o"
           type: 'chatOutput',
           position: { x: 300 + idx * 400, y: 300 },
           data: {
             label: `Step ${step.order || idx + 1} Output`,
+            stepNumber: step.order || idx + 1,
             instanceKey: `output-${step.id || idx}-${stepVersion}`,
           },
         }
@@ -262,7 +263,7 @@ export const useWorkflowLoading = ({
       if (isParallel) {
         return stepNodes.map((step, idx) => ({
           id: `e-start-${step.id}`,
-          source: '1',
+          source: '0',  // Start node is always "0"
           target: step.id,
           type: 'smoothstep',
           sourceHandle: `output-${idx + 1}`,
@@ -282,7 +283,7 @@ export const useWorkflowLoading = ({
       return [
         {
           id: `e-start-${first.id}`,
-          source: '1',
+          source: '0',  // Start node is always "0"
           target: first.id,
           type: 'smoothstep',
           sourceHandle: null,
@@ -291,7 +292,7 @@ export const useWorkflowLoading = ({
     })()
 
     const stepToOutputEdges: Edge[] = stepNodes.map((step, idx) => ({
-      id: `e-${step.id}-output`,
+      id: `e-${step.id}-${outputNodes[idx].id}`,
       source: step.id,
       target: outputNodes[idx].id,
       type: 'smoothstep',

@@ -138,6 +138,25 @@ const workflowBuilderSlice = createSlice({
       state.errorsByNodeId = result.nodeErrors
       // Return validation result for component to handle
     },
+    updateStepApiIds: (
+      state,
+      action: PayloadAction<{ stepApiIds: Record<string, number> }>
+    ) => {
+      const { stepApiIds } = action.payload
+
+      state.nodes = state.nodes.map(node => {
+        if (node.type === 'step' && stepApiIds[node.id]) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              apiId: stepApiIds[node.id]
+            }
+          }
+        }
+        return node
+      })
+    },
     resetBuilder: () => {
       return initialState
     },
@@ -165,6 +184,7 @@ export const {
   removeNodeWithEdges,
   updateNodeDataById,
   validateWorkflowData,
+  updateStepApiIds,
   resetBuilder,
 } = workflowBuilderSlice.actions
 

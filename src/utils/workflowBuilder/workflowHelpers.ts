@@ -163,15 +163,16 @@ export const serializeWorkflow = (nodes: Node[], edges: any[]): SerializedWorkfl
   const stepNodes = nodes
     .filter((n) => n.type === 'step')
     .sort((a, b) => {
-      const aIdx = sequence.indexOf(a.id)
-      const bIdx = sequence.indexOf(b.id)
-      return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx)
+      // Sort by step number (which corresponds to ReactFlow ID: "1", "2", "3")
+      const aStepNum = (a.data as { stepNumber?: number })?.stepNumber || parseInt(a.id) || 999
+      const bStepNum = (b.data as { stepNumber?: number })?.stepNumber || parseInt(b.id) || 999
+      return aStepNum - bStepNum
     })
     .map((n, idx) => {
       const nodeData = n.data as Partial<StepNodeData> & {
         usePreviousStepFiles?: boolean
         usePreviousStepEmbeddings?: boolean
-        id?: string
+        apiId?: number
       }
 
       const stepData: SerializedWorkflow['steps'][0] = {
@@ -191,9 +192,9 @@ export const serializeWorkflow = (nodes: Node[], edges: any[]): SerializedWorkfl
         ),
       }
 
-      // Include step ID if this is an existing step (for updates)
-      if (nodeData?.id) {
-        stepData.id = nodeData.id
+      // Include API ID if this is an existing step (for updates)
+      if (nodeData?.apiId) {
+        stepData.id = nodeData.apiId.toString()
       }
 
       return stepData

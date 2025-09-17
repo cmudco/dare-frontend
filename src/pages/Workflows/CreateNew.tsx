@@ -10,7 +10,7 @@ import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { validateWorkflowData } from '@/redux/workflowBuilderSlice'
+import { validateWorkflowData, updateStepApiIds } from '@/redux/workflowBuilderSlice'
 import { serializeWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
 import { createOrUpdateWorkflow } from '@/redux/asyncThunks/workflow'
 import { getFiles } from '@/redux/asyncThunks/file'
@@ -39,6 +39,21 @@ const WorkflowCreatePage = () => {
     dispatch(createOrUpdateWorkflow({ workflowData: serializedWorkflow }))
       .unwrap()
       .then((saved: any) => {
+        // Map ReactFlow step IDs to API step IDs for new steps
+        const stepApiIds: Record<string, number> = {}
+        const stepNodes = nodes.filter(n => n.type === 'step' && !n.data.apiId)
+
+        saved.steps.forEach((apiStep: any, idx: number) => {
+          if (stepNodes[idx]) {
+            stepApiIds[stepNodes[idx].id] = apiStep.id
+          }
+        })
+
+        // Update step nodes with their API IDs
+        if (Object.keys(stepApiIds).length > 0) {
+          dispatch(updateStepApiIds({ stepApiIds }))
+        }
+
         const savedId = String(saved.id)
         // Navigate to edit page
         navigate(`/workflows/${savedId}/edit`)

@@ -34,21 +34,28 @@ export const createNode = (
   if (type === 'step') {
     // Auto-create step + output node pair
     const stepNumber = nodes.filter((n) => n.type === 'step').length + 1
-    const stepId = `${nodes.length + 1}`
-    const outputId = `${nodes.length + 2}`
+    const stepId = stepNumber.toString()          // "1", "2", "3"
+    const outputId = `${stepNumber}o`             // "1o", "2o", "3o"
 
     const stepNode: Node = {
       id: stepId,
       type: 'step',
       position,
-      data: { label: 'step', stepNumber },
+      data: {
+        label: 'step',
+        stepNumber,
+        apiId: null  // Will be set after save
+      },
     }
 
     const outputNode: Node = {
       id: outputId,
       type: 'chatOutput',
       position: { x: position.x + 400, y: position.y },
-      data: { label: `Step ${stepNumber} Output` },
+      data: {
+        label: `Step ${stepNumber} Output`,
+        stepNumber
+      },
     }
 
     // Create edge connecting step to output
@@ -73,38 +80,25 @@ export const createNode = (
     if (mode === 'sequential') {
       const prevStepNumber = stepNumber - 1
       if (prevStepNumber >= 1) {
-        // Find previous step node by stepNumber
-        const prevStep = nodes.find(
-          (n) =>
-            n.type === 'step' &&
-            Number(
-              (n.data as { stepNumber?: number } | undefined)?.stepNumber
-            ) === prevStepNumber
+        // Previous output node ID follows pattern: "{prevStepNumber}o"
+        const prevOutputId = `${prevStepNumber}o`
+
+        // Check if previous output exists and connection doesn't already exist
+        const prevOutputExists = nodes.some(n => n.id === prevOutputId)
+        const connectionExists = edges.some(
+          (e) => e.source === prevOutputId && e.target === stepId
         )
-        if (prevStep) {
-          // Find its output node via existing edge source=prevStep.id -> target chatOutput
-          const prevStepToOutput = edges.find(
-            (e) =>
-              e.source === prevStep.id &&
-              nodes.find((n) => n.id === e.target)?.type === 'chatOutput'
-          )
-          const prevOutputId = prevStepToOutput?.target
-          if (prevOutputId) {
-            const exists = edges.some(
-              (e) => e.source === prevOutputId && e.target === stepId
-            )
-            if (!exists) {
-              nextEdges = [
-                ...nextEdges,
-                {
-                  id: `e-${prevOutputId}-${stepId}`,
-                  source: prevOutputId,
-                  target: stepId,
-                  type: 'smoothstep',
-                },
-              ]
-            }
-          }
+
+        if (prevOutputExists && !connectionExists) {
+          nextEdges = [
+            ...nextEdges,
+            {
+              id: `e-${prevOutputId}-${stepId}`,
+              source: prevOutputId,
+              target: stepId,
+              type: 'smoothstep',
+            },
+          ]
         }
       }
     }
@@ -113,7 +107,7 @@ export const createNode = (
   } else {
     // Handle start node with initial data
     const newNode: Node = {
-      id: `${nodes.length + 1}`,
+      id: "0",  // Start node is always "0"
       type,
       position,
       data:
