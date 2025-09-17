@@ -1,13 +1,25 @@
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
-import WorkflowBuilder, { type WorkflowBuilderHandle } from './_builder/WorkflowBuilder'
+import WorkflowBuilder, {
+  type WorkflowBuilderHandle,
+} from './_builder/WorkflowBuilder'
 import { useEffect, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
-import { getWorkflowById, startWorkflowRun, getWorkflowRunById } from '@/redux/asyncThunks/workflow'
+import {
+  getWorkflowById,
+  startWorkflowRun,
+  getWorkflowRunById,
+} from '@/redux/asyncThunks/workflow'
 import { clearSelectedWorkflow } from '@/redux/workflowSlice'
 import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
@@ -20,6 +32,8 @@ const WorkflowEditPage = () => {
   const builderRef = useRef<WorkflowBuilderHandle>(null)
   const workflow = useAppSelector((s) => s.workflow.selectedWorkflow)
   const selectedRun = useAppSelector((s) => s.workflow.selectedWorkflowRun)
+  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
   const [isRunning, setIsRunning] = useState(false)
 
   useEffect(() => {
@@ -36,52 +50,95 @@ const WorkflowEditPage = () => {
     }
   }, [dispatch, id])
 
-  // Load last run only once per workflow id (avoid re-fetch on Save)
-  const loadedRunForWorkflowRef = useRef<string | null>(null)
+  // Do not auto-load or resume last run when editing; user must click Run
   useEffect(() => {
     if (!workflow?.id) return
-    const wfId = String(workflow.id)
-    if (loadedRunForWorkflowRef.current === wfId) return
-    const lastId = (workflow.latestRun?.id as any) || workflow.lastRunId
-    if (lastId) dispatch(getWorkflowRunById(String(lastId)))
-    else dispatch(setSelectedWorkflowRun(null))
-    loadedRunForWorkflowRef.current = wfId
+    dispatch(setSelectedWorkflowRun(null))
   }, [dispatch, workflow?.id])
 
   // Poll run while running (only for this workflow)
   useEffectHook(() => {
     if (!selectedRun?.id) return
     const belongsToThis = String(selectedRun.workflow) === String(id)
-    setIsRunning(belongsToThis && selectedRun.status === WorkflowRunStepStatus.Running)
-    let t: any
+    setIsRunning(
+      belongsToThis && selectedRun.status === WorkflowRunStepStatus.Running
+    )
+    let t: ReturnType<typeof setInterval> | undefined
     if (belongsToThis && selectedRun.status === WorkflowRunStepStatus.Running) {
       t = setInterval(() => dispatch(getWorkflowRunById(selectedRun.id)), 3000)
     }
     return () => t && clearInterval(t)
-  }, [dispatch, selectedRun?.id, selectedRun?.status, selectedRun?.workflow, id])
+  }, [
+    dispatch,
+    selectedRun?.id,
+    selectedRun?.status,
+    selectedRun?.workflow,
+    id,
+  ])
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='flex items-center justify-between px-8 py-4 border-b'>
+      <div className='flex items-center justify-between border-b px-8 py-4'>
         <div>
           <h1 className='text-2xl font-semibold'>Edit Workflow</h1>
-          <p className='text-muted-foreground'>Modify your workflow and save changes.</p>
+          <p className='text-muted-foreground'>
+            Modify your workflow and save changes.
+          </p>
         </div>
         <div className='flex items-center gap-2'>
-          <Button onClick={() => builderRef.current?.save()} className='normal-case' disabled={isRunning}>Save changes</Button>
+          <TooltipProvider>
+            <Tooltip delayDuration={150}>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    onClick={() => builderRef.current?.save()}
+                    className='normal-case'
+                    disabled={isRunning || !hasAtLeastOneStep}
+                  >
+                    Save changes
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {(isRunning || !hasAtLeastOneStep) && (
+                <TooltipContent>
+                  {isRunning
+                    ? 'Cannot save while a run is in progress'
+                    : 'Add at least one step to save'}
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
           {id && (
-            <Button variant='outline' onClick={() => dispatch(startWorkflowRun(id))} disabled={isRunning} className='normal-case'>Run</Button>
+            <Button
+              variant='outline'
+              onClick={() => dispatch(startWorkflowRun(id))}
+              disabled={isRunning}
+              className='normal-case'
+            >
+              Run
+            </Button>
           )}
           <Button
             variant='secondary'
-            onClick={() => { dispatch(setSelectedWorkflowRun(null)); navigate('/workflows') }}
+            onClick={() => {
+              dispatch(setSelectedWorkflowRun(null))
+              navigate('/workflows')
+            }}
             className='normal-case'
-          >Back</Button>
+          >
+            Back
+          </Button>
         </div>
       </div>
-      <div className='flex flex-1 min-h-0'>
+      <div className='flex min-h-0 flex-1'>
         <ReactFlowProvider key={id}>
-          <WorkflowBuilder key={id} ref={builderRef} initialWorkflow={workflow || undefined} workflowId={id} disableEditing={isRunning} />
+          <WorkflowBuilder
+            key={id}
+            ref={builderRef}
+            initialWorkflow={workflow || undefined}
+            workflowId={id}
+            disableEditing={isRunning}
+          />
         </ReactFlowProvider>
       </div>
     </div>

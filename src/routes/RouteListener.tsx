@@ -33,13 +33,19 @@ const RouteListener: React.FC<RouteListenerProps> = ({ children }) => {
       if (!already) {
         try {
           sessionStorage.setItem(key, '1')
-        } catch {}
+        } catch {
+          /* ignore quota/access issues */
+        }
         // Hard reload this route once
         window.location.reload()
         return
       } else {
         // Clear the marker so future visits also reload once
-        try { sessionStorage.removeItem(key) } catch {}
+        try {
+          sessionStorage.removeItem(key)
+        } catch {
+          /* ignore quota/access issues */
+        }
       }
     }
   }, [location, dispatch])

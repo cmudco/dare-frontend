@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, Send } from 'lucide-react'
 import { useState } from 'react'
 
+type OutputData = { response?: string }
 export default function ChatOutputNode({ selected, data }: NodeProps) {
-  const response: string | null = (data as any)?.response ?? null
+  const response: string | null = (data as OutputData)?.response ?? null
   const [expanded, setExpanded] = useState(false)
 
   const copyToClipboard = async () => {
@@ -19,7 +20,9 @@ export default function ChatOutputNode({ selected, data }: NodeProps) {
   const hasResponse = Boolean((response || '').trim())
   const widthClass = hasResponse ? 'w-[40rem]' : 'w-80'
   return (
-    <Card className={`${widthClass} border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}>
+    <Card
+      className={`${widthClass} border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
+    >
       <CardHeader className='pb-2'>
         <CardTitle className='flex items-center gap-2 text-sm text-card-foreground'>
           <div className='rounded bg-primary/90 p-1'>
@@ -33,7 +36,7 @@ export default function ChatOutputNode({ selected, data }: NodeProps) {
           <div className='text-xs text-foreground'>
             {expanded ? (
               <div
-                className='max-h-[48rem] overflow-y-auto whitespace-pre-wrap leading-relaxed pr-2'
+                className='max-h-[48rem] overflow-y-auto whitespace-pre-wrap pr-2 leading-relaxed'
                 onWheel={(e) => e.stopPropagation()}
                 onWheelCapture={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
@@ -43,7 +46,7 @@ export default function ChatOutputNode({ selected, data }: NodeProps) {
               </div>
             ) : (
               <div
-                className='max-h-40 overflow-y-auto whitespace-pre-wrap leading-relaxed pr-2'
+                className='max-h-40 overflow-y-auto whitespace-pre-wrap pr-2 leading-relaxed'
                 onWheel={(e) => e.stopPropagation()}
                 onWheelCapture={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
@@ -53,14 +56,32 @@ export default function ChatOutputNode({ selected, data }: NodeProps) {
               </div>
             )}
             <div className='mt-2 flex items-center justify-end gap-2'>
-              <Button size='sm' variant='ghost' className='h-7 px-2 text-xs' onMouseDown={(e) => e.stopPropagation()} onClick={copyToClipboard}>
+              <Button
+                size='sm'
+                variant='ghost'
+                className='h-7 px-2 text-xs'
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={copyToClipboard}
+              >
                 Copy
               </Button>
-              <Button size='sm' variant='ghost' className='h-7 px-2 text-xs' onMouseDown={(e) => e.stopPropagation()} onClick={() => setExpanded((v) => !v)}>
+              <Button
+                size='sm'
+                variant='ghost'
+                className='h-7 px-2 text-xs'
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={() => setExpanded((v) => !v)}
+              >
                 {expanded ? (
-                  <><ChevronUp className='mr-1 h-3 w-3' />Collapse</>
+                  <>
+                    <ChevronUp className='mr-1 h-3 w-3' />
+                    Collapse
+                  </>
                 ) : (
-                  <><ChevronDown className='mr-1 h-3 w-3' />Expand</>
+                  <>
+                    <ChevronDown className='mr-1 h-3 w-3' />
+                    Expand
+                  </>
                 )}
               </Button>
             </div>
@@ -69,8 +90,16 @@ export default function ChatOutputNode({ selected, data }: NodeProps) {
           <p className='text-xs text-muted-foreground'>Awaiting response...</p>
         )}
       </CardContent>
-      <Handle type='target' position={Position.Left} className='h-3 w-3 bg-secondary' />
-      <Handle type='source' position={Position.Right} className='h-3 w-3 bg-primary border-2 border-white' />
+      <Handle
+        type='target'
+        position={Position.Left}
+        className='h-3 w-3 bg-secondary'
+      />
+      <Handle
+        type='source'
+        position={Position.Right}
+        className='h-3 w-3 border-2 border-white bg-primary'
+      />
     </Card>
   )
 }
