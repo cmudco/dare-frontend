@@ -1,6 +1,11 @@
 import { createContext, useContext } from 'react'
 
-export type NodeErrors = { prompt?: string; title?: string; description?: string }
+export type NodeErrors = {
+  prompt?: string
+  title?: string
+  description?: string
+  llm?: string
+}
 
 export type ErrorsContextValue = {
   errorsByNodeId: Record<string, NodeErrors>
@@ -13,6 +18,3 @@ export const ErrorsContext = createContext<ErrorsContextValue>({
 })
 
 export const useErrorsContext = () => useContext(ErrorsContext)
-
-
-

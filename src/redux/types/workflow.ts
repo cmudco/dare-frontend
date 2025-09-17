@@ -65,6 +65,7 @@ export interface Workflow {
   description: string
   mode: WorkflowMode
   layout?: Record<string, { x: number; y: number }>
+  viewport?: { x: number; y: number; zoom: number }
   createdAt?: string
   created_at?: string
   user: string

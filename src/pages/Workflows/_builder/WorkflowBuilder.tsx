@@ -1,12 +1,13 @@
 import React from 'react'
-import {
-  ReactFlow,
-  Background,
-  Controls,
-} from '@xyflow/react'
+import { ReactFlow, Background, Controls, useReactFlow } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { onNodesChange, onEdgesChange, onConnect, resetBuilder } from '@/redux/workflowBuilderSlice'
+import {
+  onNodesChange,
+  onEdgesChange,
+  onConnect,
+  setSavedViewport,
+} from '@/redux/workflowBuilderSlice'
 import { isValidConnection } from '@/utils/workflowBuilder/connectionHelpers'
 import {
   WORKFLOW_NODE_TYPES,
@@ -29,6 +30,7 @@ export interface WorkflowBuilderProps {
 
 const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   const dispatch = useAppDispatch()
+  const reactFlowInstance = useReactFlow()
 
   // Get current state from Redux
   const {
@@ -36,9 +38,17 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     edges,
     errorsByNodeId,
     currentRun,
-    isRunning: isWorkflowRunning
+    isRunning: isWorkflowRunning,
+    savedViewport,
   } = useAppSelector((state) => state.workflowBuilder)
-  console.log('WorkflowBuilder render - nodes:', nodes, 'edges:', edges, 'isRunning:', isWorkflowRunning)
+  console.log(
+    'WorkflowBuilder render - nodes:',
+    nodes,
+    'edges:',
+    edges,
+    'isRunning:',
+    isWorkflowRunning
+  )
 
   // Load workflow when workflowId or initialWorkflow changes
   useEffect(() => {
@@ -46,7 +56,9 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
       dispatch(loadWorkflowIntoBuilder(props.workflowId))
     } else if (props.initialWorkflow) {
       // For cases where workflow is passed directly (shouldn't happen often with new approach)
-      console.warn('InitialWorkflow passed directly - consider using workflowId instead')
+      console.warn(
+        'InitialWorkflow passed directly - consider using workflowId instead'
+      )
     }
   }, [props.workflowId, props.initialWorkflow, dispatch])
 
@@ -58,6 +70,16 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     }
   }, [currentRun?.id, isWorkflowRunning, dispatch])
 
+  useEffect(() => {
+    if (savedViewport && nodes.length > 0) {
+      // Small delay to ensure ReactFlow is fully initialized
+      const timeoutId = setTimeout(() => {
+        reactFlowInstance.setViewport(savedViewport, { duration: 0 })
+      }, 100)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [reactFlowInstance, savedViewport, nodes.length])
+
   return (
     <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
       <ErrorsContext.Provider
@@ -67,19 +89,20 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
             dispatch(clearNodeErrorAction({ nodeId, field })),
         }}
       >
-        <NodeToolbar
-          disabled={props.disableEditing || isWorkflowRunning}
-        />
+        <NodeToolbar disabled={props.disableEditing || isWorkflowRunning} />
         <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={(changes) => dispatch(onNodesChange(changes))}
           onEdgesChange={(changes) => dispatch(onEdgesChange(changes))}
           onConnect={(connection) => dispatch(onConnect(connection))}
-          isValidConnection={(connection) => isValidConnection(connection, nodes, edges)}
+          isValidConnection={(connection) =>
+            isValidConnection(connection, nodes, edges)
+          }
           nodeTypes={WORKFLOW_NODE_TYPES}
           defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
-          fitView
+          onMoveEnd={(_, viewport) => dispatch(setSavedViewport(viewport))}
+          fitView={!savedViewport}
         >
           <Background />
           <Controls />

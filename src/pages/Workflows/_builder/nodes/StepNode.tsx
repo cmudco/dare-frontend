@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import {
   Clock,
@@ -49,14 +48,27 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const dispatch = useAppDispatch()
 
   // Local state for form inputs
-  const [prompt, setPrompt] = useState(nodeData.prompt ? String(nodeData.prompt) : '')
-  const [contentFiles, setContentFiles] = useState<string[]>(nodeData.contentFiles || [])
-  const [embeddingFiles, setEmbeddingFiles] = useState<string[]>(nodeData.embeddingFiles || [])
+  const [prompt, setPrompt] = useState(
+    nodeData.prompt ? String(nodeData.prompt) : ''
+  )
+  const [contentFiles, setContentFiles] = useState<string[]>(
+    nodeData.contentFiles || []
+  )
+  const [embeddingFiles, setEmbeddingFiles] = useState<string[]>(
+    nodeData.embeddingFiles || []
+  )
   const [llm, setLlm] = useState<string | number>(nodeData.llm ?? '')
-  const [maxTokens, setMaxTokens] = useState<number>(Number(nodeData?.maxTokens ?? 2048))
-  const [temperature, setTemperature] = useState<number>(Number(nodeData?.temperature ?? 0.7))
-  const [maxContextSnippets, setMaxContextSnippets] = useState<number>(Number(nodeData?.maxContextSnippets ?? 4))
-  const [documentSimilarityThreshold, setDocumentSimilarityThreshold] = useState<number>(Number(nodeData?.documentSimilarityThreshold ?? 0.2))
+  const [maxTokens, setMaxTokens] = useState<number>(
+    Number(nodeData?.maxTokens ?? 2048)
+  )
+  const [temperature, setTemperature] = useState<number>(
+    Number(nodeData?.temperature ?? 0.7)
+  )
+  const [maxContextSnippets, setMaxContextSnippets] = useState<number>(
+    Number(nodeData?.maxContextSnippets ?? 4)
+  )
+  const [documentSimilarityThreshold, setDocumentSimilarityThreshold] =
+    useState<number>(Number(nodeData?.documentSimilarityThreshold ?? 0.2))
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   // Redux selectors
@@ -79,16 +91,25 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     if (newData.llm !== undefined && newData.llm !== llm) {
       setLlm(newData.llm ?? '')
     }
-    if (newData.contentFiles && JSON.stringify(newData.contentFiles) !== JSON.stringify(contentFiles)) {
+    if (
+      newData.contentFiles &&
+      JSON.stringify(newData.contentFiles) !== JSON.stringify(contentFiles)
+    ) {
       setContentFiles(newData.contentFiles)
     }
-    if (newData.embeddingFiles && JSON.stringify(newData.embeddingFiles) !== JSON.stringify(embeddingFiles)) {
+    if (
+      newData.embeddingFiles &&
+      JSON.stringify(newData.embeddingFiles) !== JSON.stringify(embeddingFiles)
+    ) {
       setEmbeddingFiles(newData.embeddingFiles)
     }
     if (newData.maxTokens !== undefined && newData.maxTokens !== maxTokens) {
       setMaxTokens(newData.maxTokens)
     }
-    if (newData.temperature !== undefined && newData.temperature !== temperature) {
+    if (
+      newData.temperature !== undefined &&
+      newData.temperature !== temperature
+    ) {
       setTemperature(newData.temperature)
     }
   }, [data])
@@ -176,9 +197,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               clearNodeError(id, 'prompt')
             }}
           >
-            <SelectTrigger className={`bg-background text-sm ${
-              fieldErrors.prompt ? 'border-destructive' : ''
-            }`}>
+            <SelectTrigger
+              className={`bg-background text-sm ${
+                fieldErrors.prompt ? 'border-destructive' : ''
+              }`}
+            >
               <SelectValue placeholder='Select a prompt' />
             </SelectTrigger>
             <SelectContent>
@@ -198,22 +221,24 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
         {/* Content Files */}
         <div className='space-y-2'>
-          <Label className='text-xs font-medium flex items-center gap-2'>
+          <Label className='flex items-center gap-2 text-xs font-medium'>
             <FileText className='h-3 w-3' />
             Content Files
           </Label>
           <div className='flex flex-wrap gap-1'>
             {contentFiles.map((fileId) => {
-              const file = files.find(f => f.id.toString() === fileId)
+              const file = files.find((f) => f.id.toString() === fileId)
               return (
                 <Badge key={fileId} variant='secondary' className='text-xs'>
                   {file?.name || `File ${fileId}`}
                   <Button
                     size='sm'
                     variant='ghost'
-                    className='h-4 w-4 p-0 ml-1'
+                    className='ml-1 h-4 w-4 p-0'
                     onClick={() => {
-                      const newFiles = contentFiles.filter(id => id !== fileId)
+                      const newFiles = contentFiles.filter(
+                        (id) => id !== fileId
+                      )
                       setContentFiles(newFiles)
                       updateNodeData({ contentFiles: newFiles })
                     }}
@@ -224,7 +249,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               )
             })}
             <Select
-              value=""
+              value=''
               onValueChange={(value) => {
                 if (value && !contentFiles.includes(value)) {
                   const newFiles = [...contentFiles, value]
@@ -233,15 +258,17 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                 }
               }}
             >
-              <SelectTrigger className='w-24 h-6 text-xs'>
+              <SelectTrigger className='h-6 w-24 text-xs'>
                 <SelectValue placeholder='+ Add' />
               </SelectTrigger>
               <SelectContent>
-                {files.filter(f => !contentFiles.includes(f.id.toString())).map((file) => (
-                  <SelectItem key={file.id} value={file.id.toString()}>
-                    {file.name}
-                  </SelectItem>
-                ))}
+                {files
+                  .filter((f) => !contentFiles.includes(f.id.toString()))
+                  .map((file) => (
+                    <SelectItem key={file.id} value={file.id.toString()}>
+                      {file.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -249,22 +276,24 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
         {/* Embedding Files */}
         <div className='space-y-2'>
-          <Label className='text-xs font-medium flex items-center gap-2'>
+          <Label className='flex items-center gap-2 text-xs font-medium'>
             <Database className='h-3 w-3' />
             Embedding Files
           </Label>
           <div className='flex flex-wrap gap-1'>
             {embeddingFiles.map((fileId) => {
-              const file = files.find(f => f.id.toString() === fileId)
+              const file = files.find((f) => f.id.toString() === fileId)
               return (
                 <Badge key={fileId} variant='secondary' className='text-xs'>
                   {file?.name || `File ${fileId}`}
                   <Button
                     size='sm'
                     variant='ghost'
-                    className='h-4 w-4 p-0 ml-1'
+                    className='ml-1 h-4 w-4 p-0'
                     onClick={() => {
-                      const newFiles = embeddingFiles.filter(id => id !== fileId)
+                      const newFiles = embeddingFiles.filter(
+                        (id) => id !== fileId
+                      )
                       setEmbeddingFiles(newFiles)
                       updateNodeData({ embeddingFiles: newFiles })
                     }}
@@ -275,7 +304,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               )
             })}
             <Select
-              value=""
+              value=''
               onValueChange={(value) => {
                 if (value && !embeddingFiles.includes(value)) {
                   const newFiles = [...embeddingFiles, value]
@@ -284,15 +313,17 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                 }
               }}
             >
-              <SelectTrigger className='w-24 h-6 text-xs'>
+              <SelectTrigger className='h-6 w-24 text-xs'>
                 <SelectValue placeholder='+ Add' />
               </SelectTrigger>
               <SelectContent>
-                {files.filter(f => !embeddingFiles.includes(f.id.toString())).map((file) => (
-                  <SelectItem key={file.id} value={file.id.toString()}>
-                    {file.name}
-                  </SelectItem>
-                ))}
+                {files
+                  .filter((f) => !embeddingFiles.includes(f.id.toString()))
+                  .map((file) => (
+                    <SelectItem key={file.id} value={file.id.toString()}>
+                      {file.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -307,12 +338,14 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             onValueChange={(value) => {
               setLlm(value)
               updateNodeData({ llm: value })
-              clearNodeError(id, 'llm' as any)
+              clearNodeError(id, 'llm')
             }}
           >
-            <SelectTrigger className={`bg-background text-sm ${
-              fieldErrors.llm ? 'border-destructive' : ''
-            }`}>
+            <SelectTrigger
+              className={`bg-background text-sm ${
+                fieldErrors.llm ? 'border-destructive' : ''
+              }`}
+            >
               <SelectValue placeholder='Select an LLM' />
             </SelectTrigger>
             <SelectContent>
@@ -324,9 +357,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             </SelectContent>
           </Select>
           {fieldErrors.llm && (
-            <p className='mt-1 text-xs text-destructive'>
-              {fieldErrors.llm}
-            </p>
+            <p className='mt-1 text-xs text-destructive'>{fieldErrors.llm}</p>
           )}
         </div>
 

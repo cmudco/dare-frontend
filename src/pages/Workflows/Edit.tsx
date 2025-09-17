@@ -10,8 +10,14 @@ import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { validateWorkflowData, updateStepApiIds } from '@/redux/workflowBuilderSlice'
-import { serializeWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
+import {
+  setErrorsByNodeId,
+  updateStepApiIds,
+} from '@/redux/workflowBuilderSlice'
+import {
+  serializeWorkflow,
+  validateWorkflow,
+} from '@/utils/workflowBuilder/workflowHelpers'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
@@ -22,6 +28,7 @@ import {
 import { clearSelectedWorkflow } from '@/redux/workflowSlice'
 import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
 import { useState } from 'react'
+import { toast } from '@/utils/toast'
 
 const WorkflowEditPage = () => {
   const navigate = useNavigate()
@@ -29,42 +36,60 @@ const WorkflowEditPage = () => {
   const dispatch = useAppDispatch()
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
+  const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
   const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
   const [isRunning, setIsRunning] = useState(false)
 
   const handleSave = () => {
-    // Validate first
-    dispatch(validateWorkflowData())
+    const validation = validateWorkflow(nodes, edges)
+    dispatch(setErrorsByNodeId(validation.nodeErrors))
 
-    // Get validation result and serialize
-    const serializedWorkflow = serializeWorkflow(nodes, edges)
+    if (!validation.isValid) {
+      const message =
+        validation.errorMessages[0] || 'Please fix the highlighted nodes'
+      toast.error(message)
+      return
+    }
+
+    const serializedWorkflow = serializeWorkflow(nodes, edges, savedViewport)
     if (!serializedWorkflow) {
-      // Handle validation errors via toast in component
+      toast.error(
+        'Unable to serialize workflow. Please fix the highlighted nodes.'
+      )
       return
     }
 
     // Dispatch save action
     const targetId = id || ''
     const action = targetId
-      ? createOrUpdateWorkflow({ id: targetId, workflowData: serializedWorkflow })
+      ? createOrUpdateWorkflow({
+          id: targetId,
+          workflowData: serializedWorkflow,
+        })
       : createOrUpdateWorkflow({ workflowData: serializedWorkflow })
 
     dispatch(action)
       .unwrap()
-      .then((saved: any) => {
+      .then((saved) => {
         // Map ReactFlow step IDs to API step IDs for new steps only
         const stepApiIds: Record<string, number> = {}
-        const newStepNodes = nodes.filter(n => n.type === 'step' && !n.data.apiId)
+        const newStepNodes = nodes.filter(
+          (n) => n.type === 'step' && !n.data.apiId
+        )
 
         if (saved.steps && newStepNodes.length > 0) {
           // For existing workflows, new steps are added at the end
-          const existingStepsCount = nodes.filter(n => n.type === 'step' && n.data.apiId).length
+          const existingStepsCount = nodes.filter(
+            (n) => n.type === 'step' && n.data.apiId
+          ).length
 
-          saved.steps.slice(existingStepsCount).forEach((apiStep: any, idx: number) => {
-            if (newStepNodes[idx]) {
-              stepApiIds[newStepNodes[idx].id] = apiStep.id
-            }
-          })
+          saved.steps
+            ?.slice(existingStepsCount)
+            .forEach((apiStep, idx: number) => {
+              if (newStepNodes[idx] && apiStep.id) {
+                stepApiIds[newStepNodes[idx].id] = Number(apiStep.id)
+              }
+            })
 
           // Update step nodes with their API IDs
           if (Object.keys(stepApiIds).length > 0) {
@@ -72,9 +97,8 @@ const WorkflowEditPage = () => {
           }
         }
 
-        // Clear any previously selected run
         dispatch(setSelectedWorkflowRun(null))
-        // Handle success via toast
+        toast.success('Workflow updated!')
       })
       .catch((error: unknown) => {
         // Handle error via toast
@@ -97,7 +121,7 @@ const WorkflowEditPage = () => {
   }, [dispatch, id])
 
   // Check if workflow is running (now handled by WorkflowBuilder, but needed for UI state)
-  const workflowBuilderState = useAppSelector(s => s.workflowBuilder)
+  const workflowBuilderState = useAppSelector((s) => s.workflowBuilder)
   const workflowIsRunning = workflowBuilderState.isRunning
 
   useEffect(() => {

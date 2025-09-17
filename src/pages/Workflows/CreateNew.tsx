@@ -10,42 +10,60 @@ import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { validateWorkflowData, updateStepApiIds } from '@/redux/workflowBuilderSlice'
-import { serializeWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
+import {
+  setErrorsByNodeId,
+  updateStepApiIds,
+} from '@/redux/workflowBuilderSlice'
+import {
+  serializeWorkflow,
+  validateWorkflow,
+} from '@/utils/workflowBuilder/workflowHelpers'
 import { createOrUpdateWorkflow } from '@/redux/asyncThunks/workflow'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
+import { toast } from '@/utils/toast'
 
 const WorkflowCreatePage = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
+  const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
   const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
 
   const handleSave = () => {
-    // Validate first
-    dispatch(validateWorkflowData())
+    const validation = validateWorkflow(nodes, edges)
+    dispatch(setErrorsByNodeId(validation.nodeErrors))
 
-    // Get validation result and serialize
-    const serializedWorkflow = serializeWorkflow(nodes, edges)
+    if (!validation.isValid) {
+      const message =
+        validation.errorMessages[0] || 'Please fix the highlighted nodes'
+      toast.error(message)
+      return
+    }
+
+    const serializedWorkflow = serializeWorkflow(nodes, edges, savedViewport)
     if (!serializedWorkflow) {
-      // Handle validation errors via toast in component
+      toast.error(
+        'Unable to serialize workflow. Please fix the highlighted nodes.'
+      )
       return
     }
 
     // Dispatch save action for new workflow
     dispatch(createOrUpdateWorkflow({ workflowData: serializedWorkflow }))
       .unwrap()
-      .then((saved: any) => {
+      .then((saved) => {
         // Map ReactFlow step IDs to API step IDs for new steps
         const stepApiIds: Record<string, number> = {}
-        const stepNodes = nodes.filter(n => n.type === 'step' && !n.data.apiId)
+        const stepNodes = nodes.filter(
+          (n) => n.type === 'step' && !n.data.apiId
+        )
 
-        saved.steps.forEach((apiStep: any, idx: number) => {
-          if (stepNodes[idx]) {
-            stepApiIds[stepNodes[idx].id] = apiStep.id
+        saved.steps?.forEach((apiStep, idx: number) => {
+          if (stepNodes[idx] && apiStep.id) {
+            stepApiIds[stepNodes[idx].id] = Number(apiStep.id)
           }
         })
 
@@ -55,7 +73,7 @@ const WorkflowCreatePage = () => {
         }
 
         const savedId = String(saved.id)
-        // Navigate to edit page
+        toast.success('Workflow saved!')
         navigate(`/workflows/${savedId}/edit`)
       })
       .catch((error: unknown) => {

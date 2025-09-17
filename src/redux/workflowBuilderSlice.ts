@@ -1,10 +1,22 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { type Node, type Edge, type NodeChange, type EdgeChange, type Connection, applyNodeChanges, applyEdgeChanges } from '@xyflow/react'
+import {
+  type Node,
+  type Edge,
+  type NodeChange,
+  type EdgeChange,
+  type Connection,
+  applyNodeChanges,
+  applyEdgeChanges,
+} from '@xyflow/react'
 import { initialState } from './initialState/workflowBuilder'
 import { NodeErrors } from './types/workflowBuilder'
-import { handleConnection, isValidConnection } from '@/utils/workflowBuilder/connectionHelpers'
-import { createNode, removeNodeById as removeNodeByIdHelper, updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/nodeHelpers'
-import { validateWorkflow, serializeWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
+import { handleConnection } from '@/utils/workflowBuilder/connectionHelpers'
+import {
+  createNode,
+  removeNodeById as removeNodeByIdHelper,
+  updateNodeData as updateNodeDataHelper,
+} from '@/utils/workflowBuilder/nodeHelpers'
+import { validateWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
 import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
 import { startWorkflowRun } from './asyncThunks/workflow'
 import type { WorkflowRun } from './types/workflow'
@@ -112,7 +124,10 @@ const workflowBuilderSlice = createSlice({
     },
     createNodeAtPosition: (
       state,
-      action: PayloadAction<{ type: string; position: { x: number; y: number } }>
+      action: PayloadAction<{
+        type: string
+        position: { x: number; y: number }
+      }>
     ) => {
       const { type, position } = action.payload
       const result = createNode(type, position, state.nodes, state.edges)
@@ -128,13 +143,16 @@ const workflowBuilderSlice = createSlice({
     },
     updateNodeDataById: (
       state,
-      action: PayloadAction<{ nodeId: string; newData: Record<string, unknown> }>
+      action: PayloadAction<{
+        nodeId: string
+        newData: Record<string, unknown>
+      }>
     ) => {
       const { nodeId, newData } = action.payload
       state.nodes = updateNodeDataHelper(nodeId, newData, state.nodes)
     },
     validateWorkflowData: (state) => {
-      const result = validateWorkflow(state.nodes)
+      const result = validateWorkflow(state.nodes, state.edges)
       state.errorsByNodeId = result.nodeErrors
       // Return validation result for component to handle
     },
@@ -144,14 +162,14 @@ const workflowBuilderSlice = createSlice({
     ) => {
       const { stepApiIds } = action.payload
 
-      state.nodes = state.nodes.map(node => {
+      state.nodes = state.nodes.map((node) => {
         if (node.type === 'step' && stepApiIds[node.id]) {
           return {
             ...node,
             data: {
               ...node.data,
-              apiId: stepApiIds[node.id]
-            }
+              apiId: stepApiIds[node.id],
+            },
           }
         }
         return node
@@ -163,10 +181,12 @@ const workflowBuilderSlice = createSlice({
       state.isRunning = runData.status === 'running'
 
       // Update output nodes with step responses and status
-      state.nodes = state.nodes.map(node => {
+      state.nodes = state.nodes.map((node) => {
         if (node.type === 'chatOutput') {
           const stepNumber = node.data.stepNumber
-          const stepRun = runData.steps?.find(s => (s.order || s.step) === stepNumber)
+          const stepRun = runData.steps?.find(
+            (s) => (s.order || s.step) === stepNumber
+          )
 
           if (stepRun) {
             return {
@@ -175,8 +195,8 @@ const workflowBuilderSlice = createSlice({
                 ...node.data,
                 status: stepRun.status,
                 response: stepRun.response,
-                error: stepRun.error
-              }
+                error: stepRun.error,
+              },
             }
           }
         }
@@ -196,6 +216,7 @@ const workflowBuilderSlice = createSlice({
         state.currentRun = action.payload.currentRun
         state.isRunning = action.payload.currentRun?.status === 'running'
         state.lastWorkflowId = action.payload.workflow.id?.toString()
+        state.savedViewport = action.payload.viewport ?? null
       })
       .addCase(startWorkflowRun.fulfilled, (state, action) => {
         // When a new run starts, update the current run and start polling

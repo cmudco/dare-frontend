@@ -1,4 +1,9 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import {
+  Handle,
+  Position,
+  type NodeProps,
+  useUpdateNodeInternals,
+} from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,7 +19,11 @@ import { Play, GitBranch, ArrowRight } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useErrorsContext } from '../ErrorsContext'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { updateNodeDataById } from '@/redux/workflowBuilderSlice'
+import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
+import {
+  rebuildEdgesForMode,
+  edgesChanged,
+} from '@/utils/workflowBuilder/layoutHelpers'
 
 type Mode = 'sequential' | 'parallel'
 type StartData = {
@@ -34,6 +43,7 @@ export default function StartNode({ id, data, selected }: NodeProps) {
   const startFieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const edges = useAppSelector((s) => s.workflowBuilder.edges)
 
   // Update Redux when user changes values
   const updateNodeData = (updates: Partial<StartData>) => {
@@ -46,7 +56,10 @@ export default function StartNode({ id, data, selected }: NodeProps) {
     if (newData.title !== undefined && newData.title !== title) {
       setTitle(newData.title)
     }
-    if (newData.description !== undefined && newData.description !== description) {
+    if (
+      newData.description !== undefined &&
+      newData.description !== description
+    ) {
       setDescription(newData.description)
     }
     if (newData.mode !== undefined && newData.mode !== mode) {
@@ -56,6 +69,21 @@ export default function StartNode({ id, data, selected }: NodeProps) {
 
   // Get number of step nodes for parallel mode handle rendering
   const stepCount = nodes.filter((n) => n.type === 'step').length
+  const updateNodeInternals = useUpdateNodeInternals()
+
+  useEffect(() => {
+    updateNodeInternals(String(id))
+  }, [updateNodeInternals, id, mode, stepCount])
+
+  useEffect(() => {
+    const startId = String(id)
+    if (!nodes.some((n) => n.id === startId)) return
+
+    const rebuiltEdges = rebuildEdgesForMode(startId, mode, nodes)
+    if (edgesChanged(edges, rebuiltEdges)) {
+      dispatch(setEdges(rebuiltEdges))
+    }
+  }, [dispatch, edges, id, mode, nodes])
 
   // Simple handle rendering based on mode
   const renderOutputHandles = () => {
@@ -64,7 +92,7 @@ export default function StartNode({ id, data, selected }: NodeProps) {
       const handleCount = Math.max(stepCount, 1)
       const handles = []
       for (let i = 0; i < handleCount; i++) {
-        const topPosition = 45 + (i * 10) // Simple spacing
+        const topPosition = 45 + i * 10 // Simple spacing
         handles.push(
           <Handle
             key={`output-${i + 1}`}
