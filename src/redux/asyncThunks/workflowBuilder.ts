@@ -25,12 +25,20 @@ export const loadWorkflowIntoBuilder = createAsyncThunk(
     }
 
     const workflowSteps = (workflow?.steps || []) as ApiStep[]
+    const savedLayout = workflow.layout ?? {}
+    const getPosition = (nodeId: string, fallback: { x: number; y: number }) => {
+      const saved = savedLayout[nodeId]
+      if (saved) {
+        return { x: saved.x, y: saved.y }
+      }
+      return { x: fallback.x, y: fallback.y }
+    }
 
     // Create start node with ID "0"
     const startNode: Node = {
       id: '0',
       type: 'start',
-      position: { x: 100, y: 100 },
+      position: getPosition('0', { x: 100, y: 100 }),
       data: {
         title: workflow?.title || '',
         description: workflow?.description || '',
@@ -62,24 +70,28 @@ export const loadWorkflowIntoBuilder = createAsyncThunk(
         usePreviousStepEmbeddings: Boolean(step.usePreviousStepEmbeddings),
       }
 
+      const nodeId = (idx + 1).toString()
       return {
-        id: (idx + 1).toString(),  // "1", "2", "3"
+        id: nodeId,  // "1", "2", "3"
         type: 'step',
-        position: { x: 300 + idx * 400, y: 100 },
+        position: getPosition(nodeId, { x: 300 + idx * 400, y: 100 }),
         data: stepData,
       }
     })
 
     // Create output nodes with IDs "1o", "2o", "3o"
-    let outputNodes: Node[] = workflowSteps.map((step: ApiStep, idx: number) => ({
-      id: `${idx + 1}o`,  // "1o", "2o", "3o"
-      type: 'chatOutput',
-      position: { x: 300 + idx * 400, y: 300 },
-      data: {
-        label: `Step ${step.order || idx + 1} Output`,
-        stepNumber: step.order || idx + 1,
-      },
-    }))
+    let outputNodes: Node[] = workflowSteps.map((step: ApiStep, idx: number) => {
+      const outputId = `${idx + 1}o`
+      return {
+        id: outputId,  // "1o", "2o", "3o"
+        type: 'chatOutput',
+        position: getPosition(outputId, { x: 300 + idx * 400, y: 300 }),
+        data: {
+          label: `Step ${step.order || idx + 1} Output`,
+          stepNumber: step.order || idx + 1,
+        },
+      }
+    })
 
     // If workflow has a latest run, populate output nodes with responses
     const latestRun: WorkflowRun | null | undefined = workflow.latestRun

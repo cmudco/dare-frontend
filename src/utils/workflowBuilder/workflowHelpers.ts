@@ -200,10 +200,19 @@ export const serializeWorkflow = (nodes: Node[], edges: any[]): SerializedWorkfl
       return stepData
     })
 
+  const layout = nodes.reduce<Record<string, { x: number; y: number }>>((acc, node) => {
+    const position = node.position ?? (node as { positionAbsolute?: { x: number; y: number } }).positionAbsolute
+    if (position) {
+      acc[node.id] = { x: position.x, y: position.y }
+    }
+    return acc
+  }, {})
+
   return {
     title,
     description,
     mode,
+    layout: Object.keys(layout).length ? layout : undefined,
     steps: stepNodes,
   }
 }
