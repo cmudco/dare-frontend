@@ -1,16 +1,14 @@
-import { useAppSelector } from '@/redux/hooks'
+import { useAppSelector, useAppDispatch } from '@/redux/hooks'
+import { createNodeAtPosition, resetBuilder } from '@/redux/workflowBuilderSlice'
 
 interface NodeToolbarProps {
-  onAddNode: (type: string, position: { x: number; y: number }) => void
-  onClear?: () => void
   disabled?: boolean
 }
 
 export const NodeToolbar = ({
-  onAddNode,
-  onClear,
   disabled,
 }: NodeToolbarProps) => {
+  const dispatch = useAppDispatch()
   const nodes = useAppSelector((state) => state.workflowBuilder.nodes)
 
   const hasStartNode = nodes.some((n) => n.type === 'start')
@@ -21,7 +19,7 @@ export const NodeToolbar = ({
       x: Math.random() * 400 + 100,
       y: Math.random() * 200 + 100,
     }
-    onAddNode(type, position)
+    dispatch(createNodeAtPosition({ type, position }))
   }
 
   return (
@@ -84,7 +82,7 @@ export const NodeToolbar = ({
         + Output
       </button>
 
-      {nodes.length > 0 && onClear && (
+      {nodes.length > 0 && (
         <>
           <div
             style={{
@@ -95,7 +93,7 @@ export const NodeToolbar = ({
             }}
           />
           <button
-            onClick={onClear}
+            onClick={() => dispatch(resetBuilder())}
             disabled={disabled}
             style={{
               padding: '8px 12px',

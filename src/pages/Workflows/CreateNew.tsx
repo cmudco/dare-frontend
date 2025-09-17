@@ -7,11 +7,12 @@ import {
 } from '@/components/ui/tooltip'
 import { useNavigate } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
-import WorkflowBuilder, {
-  type WorkflowBuilderHandle,
-} from './_builder/WorkflowBuilder'
-import { useRef, useEffect } from 'react'
+import WorkflowBuilder from './_builder/WorkflowBuilder'
+import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { validateWorkflowData } from '@/redux/workflowBuilderSlice'
+import { serializeWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
+import { createOrUpdateWorkflow } from '@/redux/asyncThunks/workflow'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
@@ -19,9 +20,34 @@ import { getAvailableModels } from '@/redux/asyncThunks/conversation'
 const WorkflowCreatePage = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
-  const builderRef = useRef<WorkflowBuilderHandle>(null)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
+
+  const handleSave = () => {
+    // Validate first
+    dispatch(validateWorkflowData())
+
+    // Get validation result and serialize
+    const serializedWorkflow = serializeWorkflow(nodes, edges)
+    if (!serializedWorkflow) {
+      // Handle validation errors via toast in component
+      return
+    }
+
+    // Dispatch save action for new workflow
+    dispatch(createOrUpdateWorkflow({ workflowData: serializedWorkflow }))
+      .unwrap()
+      .then((saved: any) => {
+        const savedId = String(saved.id)
+        // Navigate to edit page
+        navigate(`/workflows/${savedId}/edit`)
+      })
+      .catch((error: unknown) => {
+        // Handle error via toast
+        console.error('Network error:', error)
+      })
+  }
 
   useEffect(() => {
     dispatch(getFiles())
@@ -43,7 +69,7 @@ const WorkflowCreatePage = () => {
               <TooltipTrigger asChild>
                 <span>
                   <Button
-                    onClick={() => builderRef.current?.save()}
+                    onClick={handleSave}
                     className='normal-case'
                     disabled={!hasAtLeastOneStep}
                   >
@@ -67,10 +93,7 @@ const WorkflowCreatePage = () => {
       </div>
       <div className='flex min-h-0 flex-1'>
         <ReactFlowProvider>
-          <WorkflowBuilder
-            ref={builderRef}
-            onSaved={(wid) => navigate(`/workflows/${wid}/edit`)}
-          />
+          <WorkflowBuilder />
         </ReactFlowProvider>
       </div>
     </div>

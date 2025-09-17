@@ -1,7 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { type Node, type Edge } from '@xyflow/react'
+import { type Node, type Edge, type NodeChange, type EdgeChange, type Connection, applyNodeChanges, applyEdgeChanges } from '@xyflow/react'
 import { initialState } from './initialState/workflowBuilder'
 import { NodeErrors } from './types/workflowBuilder'
+import { handleConnection, isValidConnection } from '@/utils/workflowBuilder/connectionHelpers'
+import { createNode, removeNodeById as removeNodeByIdHelper, updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/nodeHelpers'
+import { validateWorkflow, serializeWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
 
 const workflowBuilderSlice = createSlice({
   name: 'workflowBuilder',
@@ -90,6 +93,51 @@ const workflowBuilderSlice = createSlice({
     ) => {
       state.savedViewport = action.payload
     },
+    onNodesChange: (state, action: PayloadAction<NodeChange[]>) => {
+      // Filter out 'dimensions' updates to avoid mutating frozen objects and reduce noise
+      const filtered = action.payload.filter((c) => c.type !== 'dimensions')
+      if (filtered.length === 0) return
+
+      // Apply changes using ReactFlow's utility
+      state.nodes = applyNodeChanges(filtered, state.nodes)
+    },
+    onEdgesChange: (state, action: PayloadAction<EdgeChange[]>) => {
+      // Apply changes using ReactFlow's utility
+      state.edges = applyEdgeChanges(action.payload, state.edges)
+    },
+    onConnect: (state, action: PayloadAction<Connection>) => {
+      const result = handleConnection(action.payload, state.nodes, state.edges)
+      state.nodes = result.nodes
+      state.edges = result.edges
+    },
+    createNodeAtPosition: (
+      state,
+      action: PayloadAction<{ type: string; position: { x: number; y: number } }>
+    ) => {
+      const { type, position } = action.payload
+      const result = createNode(type, position, state.nodes, state.edges)
+      state.nodes = result.nodes
+      state.edges = result.edges
+      // Note: Toast handling will be done in the component via the shouldShowToast return value
+    },
+    removeNodeWithEdges: (state, action: PayloadAction<{ nodeId: string }>) => {
+      const { nodeId } = action.payload
+      const result = removeNodeByIdHelper(nodeId, state.nodes, state.edges)
+      state.nodes = result.nodes
+      state.edges = result.edges
+    },
+    updateNodeDataById: (
+      state,
+      action: PayloadAction<{ nodeId: string; newData: Record<string, unknown> }>
+    ) => {
+      const { nodeId, newData } = action.payload
+      state.nodes = updateNodeDataHelper(nodeId, newData, state.nodes)
+    },
+    validateWorkflowData: (state) => {
+      const result = validateWorkflow(state.nodes)
+      state.errorsByNodeId = result.nodeErrors
+      // Return validation result for component to handle
+    },
     resetBuilder: () => {
       return initialState
     },
@@ -110,6 +158,13 @@ export const {
   setCurrentMode,
   setLastWorkflowId,
   setSavedViewport,
+  onNodesChange,
+  onEdgesChange,
+  onConnect,
+  createNodeAtPosition,
+  removeNodeWithEdges,
+  updateNodeDataById,
+  validateWorkflowData,
   resetBuilder,
 } = workflowBuilderSlice.actions
 

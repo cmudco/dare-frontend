@@ -7,11 +7,11 @@ import {
 } from '@/components/ui/tooltip'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
-import WorkflowBuilder, {
-  type WorkflowBuilderHandle,
-} from './_builder/WorkflowBuilder'
-import { useEffect, useRef } from 'react'
+import WorkflowBuilder from './_builder/WorkflowBuilder'
+import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { validateWorkflowData } from '@/redux/workflowBuilderSlice'
+import { serializeWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
@@ -19,6 +19,7 @@ import {
   getWorkflowById,
   startWorkflowRun,
   getWorkflowRunById,
+  createOrUpdateWorkflow,
 } from '@/redux/asyncThunks/workflow'
 import { clearSelectedWorkflow } from '@/redux/workflowSlice'
 import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
@@ -29,12 +30,42 @@ const WorkflowEditPage = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
-  const builderRef = useRef<WorkflowBuilderHandle>(null)
   const workflow = useAppSelector((s) => s.workflow.selectedWorkflow)
   const selectedRun = useAppSelector((s) => s.workflow.selectedWorkflowRun)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
   const [isRunning, setIsRunning] = useState(false)
+
+  const handleSave = () => {
+    // Validate first
+    dispatch(validateWorkflowData())
+
+    // Get validation result and serialize
+    const serializedWorkflow = serializeWorkflow(nodes, edges)
+    if (!serializedWorkflow) {
+      // Handle validation errors via toast in component
+      return
+    }
+
+    // Dispatch save action
+    const targetId = workflow?.id?.toString() || id || ''
+    const action = targetId
+      ? createOrUpdateWorkflow({ id: targetId, workflowData: serializedWorkflow })
+      : createOrUpdateWorkflow({ workflowData: serializedWorkflow })
+
+    dispatch(action)
+      .unwrap()
+      .then(() => {
+        // Clear any previously selected run
+        dispatch(setSelectedWorkflowRun(null))
+        // Handle success via toast
+      })
+      .catch((error: unknown) => {
+        // Handle error via toast
+        console.error('Network error:', error)
+      })
+  }
 
   useEffect(() => {
     dispatch(getFiles())
@@ -91,7 +122,7 @@ const WorkflowEditPage = () => {
               <TooltipTrigger asChild>
                 <span>
                   <Button
-                    onClick={() => builderRef.current?.save()}
+                    onClick={handleSave}
                     className='normal-case'
                     disabled={isRunning || !hasAtLeastOneStep}
                   >
@@ -134,7 +165,6 @@ const WorkflowEditPage = () => {
         <ReactFlowProvider key={id}>
           <WorkflowBuilder
             key={id}
-            ref={builderRef}
             initialWorkflow={workflow || undefined}
             workflowId={id}
             disableEditing={isRunning}
