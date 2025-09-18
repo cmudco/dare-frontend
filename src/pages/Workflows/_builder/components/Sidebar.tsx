@@ -40,13 +40,31 @@ export default function Sidebar({ disabled }: SidebarProps) {
 
   const hasStartNode = nodes.some((n) => n.type === 'start')
 
-  const handleAddNode = (type: string) => {
-    if (isWorkflowRunning) return // Prevent adding nodes when workflow is running
-    const position = {
-      x: Math.random() * 400 + 100,
-      y: Math.random() * 400 + 100,
+  const calculateOptimalPosition = (type: string) => {
+    const startNode = nodes.find((n) => n.type === 'start')
+    const mode =
+      (startNode?.data as { mode?: 'sequential' | 'parallel' })?.mode ||
+      'sequential'
+
+    const startPosition = { x: 100, y: 200 }
+    const stepSpacing = mode === 'parallel' ? 440 : 300 // Good spacing for both modes
+
+    if (type === 'start') return startPosition
+
+    if (type === 'step') {
+      const stepCount = nodes.filter((n) => n.type === 'step').length
+      return {
+        x: startPosition.x + 400,
+        y: startPosition.y + stepCount * stepSpacing,
+      }
     }
-    // Use Redux dispatch method like NodeToolbar
+
+    return { x: startPosition.x + 800, y: startPosition.y }
+  }
+
+  const handleAddNode = (type: string) => {
+    if (isWorkflowRunning) return
+    const position = calculateOptimalPosition(type)
     dispatch(createNodeAtPosition({ type, position }))
   }
 

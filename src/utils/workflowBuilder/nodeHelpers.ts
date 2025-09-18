@@ -3,7 +3,7 @@ import { type Node, type Edge } from '@xyflow/react'
 interface NodeCreationResult {
   nodes: Node[]
   edges: Edge[]
-  shouldShowToast?: { type: 'error' | 'info', message: string }
+  shouldShowToast?: { type: 'error' | 'info'; message: string }
 }
 
 export const createNode = (
@@ -12,14 +12,13 @@ export const createNode = (
   nodes: Node[],
   edges: Edge[]
 ): NodeCreationResult => {
-
   const hasStart = nodes.some((n) => n.type === 'start')
 
   if (!hasStart && type !== 'start') {
     return {
       nodes,
       edges,
-      shouldShowToast: { type: 'error', message: 'Add a Start node first.' }
+      shouldShowToast: { type: 'error', message: 'Add a Start node first.' },
     }
   }
 
@@ -27,15 +26,18 @@ export const createNode = (
     return {
       nodes,
       edges,
-      shouldShowToast: { type: 'info', message: 'Only one Start node is allowed.' }
+      shouldShowToast: {
+        type: 'info',
+        message: 'Only one Start node is allowed.',
+      },
     }
   }
 
   if (type === 'step') {
     // Auto-create step + output node pair
     const stepNumber = nodes.filter((n) => n.type === 'step').length + 1
-    const stepId = stepNumber.toString()          // "1", "2", "3"
-    const outputId = `${stepNumber}o`             // "1o", "2o", "3o"
+    const stepId = stepNumber.toString() // "1", "2", "3"
+    const outputId = `${stepNumber}o` // "1o", "2o", "3o"
 
     const stepNode: Node = {
       id: stepId,
@@ -44,17 +46,17 @@ export const createNode = (
       data: {
         label: 'step',
         stepNumber,
-        apiId: null  // Will be set after save
+        apiId: null, // Will be set after save
       },
     }
 
     const outputNode: Node = {
       id: outputId,
       type: 'chatOutput',
-      position: { x: position.x + 400, y: position.y },
+      position: { x: position.x + 400, y: position.y }, // Keep same Y as step for now
       data: {
         label: `Step ${stepNumber} Output`,
-        stepNumber
+        stepNumber,
       },
     }
 
@@ -84,7 +86,7 @@ export const createNode = (
         const prevOutputId = `${prevStepNumber}o`
 
         // Check if previous output exists and connection doesn't already exist
-        const prevOutputExists = nodes.some(n => n.id === prevOutputId)
+        const prevOutputExists = nodes.some((n) => n.id === prevOutputId)
         const connectionExists = edges.some(
           (e) => e.source === prevOutputId && e.target === stepId
         )
@@ -107,7 +109,7 @@ export const createNode = (
   } else {
     // Handle start node with initial data
     const newNode: Node = {
-      id: "0",  // Start node is always "0"
+      id: '0', // Start node is always "0"
       type,
       position,
       data:
@@ -129,7 +131,7 @@ export const removeNodeById = (
   nodeId: string,
   nodes: Node[],
   edges: Edge[]
-): { nodes: Node[], edges: Edge[] } => {
+): { nodes: Node[]; edges: Edge[] } => {
   const updatedNodes = nodes.filter((node) => node.id !== nodeId)
   const updatedEdges = edges.filter(
     (edge) => edge.source !== nodeId && edge.target !== nodeId
@@ -144,8 +146,6 @@ export const updateNodeData = (
   nodes: Node[]
 ): Node[] => {
   return nodes.map((node) =>
-    node.id === nodeId
-      ? { ...node, data: { ...node.data, ...newData } }
-      : node
+    node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node
   )
 }
