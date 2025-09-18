@@ -46,7 +46,6 @@ export const createOrUpdateWorkflow = createAsyncThunk(
         title: string
         description: string
         mode: number
-        layout?: Record<string, { x: number; y: number }>
         steps: {
           id?: string
           order: number
