@@ -22,7 +22,6 @@ export const createWorkflowAPI = async (workflowData: {
   description: string
   mode: number
   steps_ids?: string[]
-  layout?: Record<string, { x: number; y: number }>
 }): Promise<Workflow> => {
   return await baseRequest<Workflow>({
     url: 'api/workflows/',
@@ -38,7 +37,6 @@ export const updateWorkflowAPI = async (
     description?: string
     mode?: number
     steps_ids?: string[]
-    layout?: Record<string, { x: number; y: number }>
   }
 ): Promise<Workflow> => {
   return await baseRequest<Workflow>({
