@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import SideBar from './SideBar'
 import Header from './Header'
 import SystemBanner from './SystemBanner'
+import ToastContainer from '@/components/ui/ToastContainer'
 
 const UserView: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ const UserView: React.FC = () => {
           <Outlet />
         </div>
       </div>
+      <ToastContainer />
     </>
   )
 }
