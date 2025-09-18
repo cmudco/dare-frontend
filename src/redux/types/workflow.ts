@@ -64,7 +64,6 @@ export interface Workflow {
   title: string
   description: string
   mode: WorkflowMode
-  layout?: Record<string, { x: number; y: number }>
   createdAt?: string
   created_at?: string
   user: string
