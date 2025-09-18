@@ -1,27 +1,53 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Cog } from 'lucide-react'
-import { useAppSelector } from '@/redux/hooks'
+import { Play, Cog, Trash2 } from 'lucide-react'
+import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import {
+  createNodeAtPosition,
+  resetBuilder,
+} from '@/redux/workflowBuilderSlice'
 
 interface SidebarProps {
-  onAddNode: (type: string, position: { x: number; y: number }) => void
   disabled?: { start: boolean; step: boolean; output: boolean }
 }
 
 const nodeComponents = [
-  { type: 'start', label: 'Start', description: 'Define workflow title and description', icon: Play, color: 'bg-primary' },
-  { type: 'step', label: 'Step', description: 'Configure prompt, files, embeddings and LLM (includes output)', icon: Cog, color: 'bg-primary' },
+  {
+    type: 'start',
+    label: 'Start',
+    description: 'Define workflow title and description',
+    icon: Play,
+    color: 'bg-primary',
+  },
+  {
+    type: 'step',
+    label: 'Step',
+    description:
+      'Configure prompt, files, embeddings and LLM (includes output)',
+    icon: Cog,
+    color: 'bg-primary',
+  },
+  // { type: 'chatOutput', label: 'Output', description: 'Configure how results are displayed', icon: Cog, color: 'bg-primary' },
 ]
 
-export default function Sidebar({ onAddNode, disabled }: SidebarProps) {
+export default function Sidebar({ disabled }: SidebarProps) {
+  const dispatch = useAppDispatch()
   const { selectedWorkflowRun } = useAppSelector((state) => state.workflow)
-  const isWorkflowRunning = selectedWorkflowRun?.status === WorkflowRunStepStatus.Running
-  
+  const nodes = useAppSelector((state) => state.workflowBuilder.nodes)
+  const isWorkflowRunning =
+    selectedWorkflowRun?.status === WorkflowRunStepStatus.Running
+
+  const hasStartNode = nodes.some((n) => n.type === 'start')
+
   const handleAddNode = (type: string) => {
     if (isWorkflowRunning) return // Prevent adding nodes when workflow is running
-    const position = { x: Math.random() * 400 + 100, y: Math.random() * 400 + 100 }
-    onAddNode(type, position)
+    const position = {
+      x: Math.random() * 400 + 100,
+      y: Math.random() * 400 + 100,
+    }
+    // Use Redux dispatch method like NodeToolbar
+    dispatch(createNodeAtPosition({ type, position }))
   }
 
   return (
@@ -36,7 +62,10 @@ export default function Sidebar({ onAddNode, disabled }: SidebarProps) {
           </CardContent>
         </Card>
         {nodeComponents.map((component) => (
-          <Card key={component.type} className='cursor-pointer transition-shadow hover:shadow-md'>
+          <Card
+            key={component.type}
+            className='cursor-pointer transition-shadow hover:shadow-md'
+          >
             <CardHeader className='pb-2'>
               <CardTitle className='flex items-center gap-2 text-sm'>
                 <div className={`rounded p-1 ${component.color}`}>
@@ -46,17 +75,21 @@ export default function Sidebar({ onAddNode, disabled }: SidebarProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0'>
-              <p className='mb-3 text-xs text-muted-foreground'>{component.description}</p>
+              <p className='mb-3 text-xs text-muted-foreground'>
+                {component.description}
+              </p>
               <Button
                 size='sm'
                 variant='secondary'
                 onClick={() => handleAddNode(component.type)}
-                className={`w-full ${isWorkflowRunning ? 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground' : ''}`}
+                className={`w-full ${isWorkflowRunning ? 'cursor-not-allowed bg-muted text-muted-foreground opacity-50' : ''}`}
                 disabled={
                   isWorkflowRunning ||
                   (component.type === 'start'
-                    ? Boolean(disabled?.start)
-                    : Boolean(disabled?.step))
+                    ? Boolean(disabled?.start) || hasStartNode
+                    : component.type === 'chatOutput'
+                      ? Boolean(disabled?.output) || !hasStartNode
+                      : Boolean(disabled?.step) || !hasStartNode)
                 }
               >
                 Add to Canvas
@@ -64,9 +97,25 @@ export default function Sidebar({ onAddNode, disabled }: SidebarProps) {
             </CardContent>
           </Card>
         ))}
+
+        {/* Clear All Button */}
+        {nodes.length > 0 && (
+          <Card className='border-destructive/20'>
+            <CardContent className='py-3'>
+              <Button
+                size='sm'
+                variant='destructive'
+                onClick={() => dispatch(resetBuilder())}
+                disabled={isWorkflowRunning}
+                className={`w-full ${isWorkflowRunning ? 'cursor-not-allowed opacity-50' : ''}`}
+              >
+                <Trash2 className='mr-2 h-4 w-4' />
+                Clear All Nodes
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
 }
-
-

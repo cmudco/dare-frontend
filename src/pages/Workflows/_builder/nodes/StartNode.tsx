@@ -100,7 +100,7 @@ export default function StartNode({ id, data, selected }: NodeProps) {
             position={Position.Right}
             id={`output-${i + 1}`}
             style={{ top: `${Math.min(topPosition, 85)}%` }}
-            className='h-3 w-3 border-2 border-white bg-primary'
+            className='h-4 w-4 border-2 border-white bg-primary'
           />
         )
       }

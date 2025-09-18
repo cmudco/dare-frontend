@@ -258,7 +258,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                 }
               }}
             >
-              <SelectTrigger className='h-6 w-24 text-xs'>
+              <SelectTrigger className='bg-background text-sm'>
                 <SelectValue placeholder='+ Add' />
               </SelectTrigger>
               <SelectContent>
@@ -313,7 +313,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                 }
               }}
             >
-              <SelectTrigger className='h-6 w-24 text-xs'>
+              <SelectTrigger className='bg-background text-sm'>
                 <SelectValue placeholder='+ Add' />
               </SelectTrigger>
               <SelectContent>
@@ -450,12 +450,12 @@ export default function StepNode({ id, data, selected }: NodeProps) {
       <Handle
         type='target'
         position={Position.Left}
-        className='h-3 w-3 bg-secondary'
+        className='h-4 w-4 bg-secondary'
       />
       <Handle
         type='source'
         position={Position.Right}
-        className='h-3 w-3 border-2 border-white bg-primary'
+        className='h-4 w-4 border-2 border-white bg-primary'
       />
     </Card>
   )

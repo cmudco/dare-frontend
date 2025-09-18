@@ -16,11 +16,11 @@ import {
 import { loadWorkflowIntoBuilder } from '@/redux/asyncThunks/workflowBuilder'
 import { startWorkflowRunPolling } from '@/services/workflowRunPolling'
 import { useEffect } from 'react'
-import { NodeToolbar } from './components/NodeToolbar'
 import { ErrorsContext } from './ErrorsContext'
 import type { NodeErrors as NodeErrorsType } from '@/redux/types/workflowBuilder'
 import type { Workflow } from '@/redux/types/workflow'
 import { clearNodeError as clearNodeErrorAction } from '@/redux/workflowBuilderSlice'
+import Sidebar from './components/Sidebar'
 
 export interface WorkflowBuilderProps {
   initialWorkflow?: Workflow
@@ -81,7 +81,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   }, [reactFlowInstance, savedViewport, nodes.length])
 
   return (
-    <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
+    <div className='flex w-full'>
       <ErrorsContext.Provider
         value={{
           errorsByNodeId,
@@ -89,7 +89,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
             dispatch(clearNodeErrorAction({ nodeId, field })),
         }}
       >
-        <NodeToolbar disabled={props.disableEditing || isWorkflowRunning} />
+        <Sidebar />
         <ReactFlow
           nodes={nodes}
           edges={edges}

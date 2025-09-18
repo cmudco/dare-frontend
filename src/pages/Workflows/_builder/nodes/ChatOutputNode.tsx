@@ -1,7 +1,15 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp, Send, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronUp,
+  Send,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Loader2,
+} from 'lucide-react'
 import { useState } from 'react'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 
@@ -153,21 +161,23 @@ export default function ChatOutputNode({ selected, data }: NodeProps) {
           </div>
         ) : (
           <p className='text-xs text-muted-foreground'>
-            {status === WorkflowRunStepStatus.Running ? 'Generating response...' :
-             status === WorkflowRunStepStatus.Pending ? 'Waiting to start...' :
-             'Awaiting response...'}
+            {status === WorkflowRunStepStatus.Running
+              ? 'Generating response...'
+              : status === WorkflowRunStepStatus.Pending
+                ? 'Waiting to start...'
+                : 'Awaiting response...'}
           </p>
         )}
       </CardContent>
       <Handle
         type='target'
         position={Position.Left}
-        className='h-3 w-3 bg-secondary'
+        className='h-4 w-4 bg-secondary'
       />
       <Handle
         type='source'
         position={Position.Right}
-        className='h-3 w-3 border-2 border-white bg-primary'
+        className='h-4 w-4 border-2 border-white bg-primary'
       />
     </Card>
   )
