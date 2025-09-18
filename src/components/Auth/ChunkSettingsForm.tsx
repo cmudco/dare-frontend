@@ -33,10 +33,12 @@ const chunkSettingsValidationSchema = Yup.object({
 
 interface ChunkSettingsFormProps {
   className?: string
+  onSuccess?: () => void
 }
 
 export const ChunkSettingsForm: React.FC<ChunkSettingsFormProps> = ({
   className,
+  onSuccess,
 }) => {
   const dispatch = useDispatch<AppDispatch>()
   const isLoading = useSelector((state: RootState) => state.user.loading)
@@ -57,103 +59,97 @@ export const ChunkSettingsForm: React.FC<ChunkSettingsFormProps> = ({
     },
     enableReinitialize: true,
     validationSchema: chunkSettingsValidationSchema,
-    onSubmit: async (values, helpers) => {
+    onSubmit: async (values) => {
       try {
-        const resultAction = await dispatch(updateChunkSettings(values))
-
-        if (updateChunkSettings.fulfilled.match(resultAction)) {
-          toast.success('Chunk settings saved.')
-          helpers.setSubmitting(false)
-          helpers.resetForm({ values })
-          dispatch(fetchChunkSettings())
-        } else {
-          helpers.setSubmitting(false)
-        }
+        await dispatch(updateChunkSettings(values))
+        toast.success('Chunk settings saved.')
+        onSuccess?.()
       } catch (error) {
         console.error('Error updating chunk settings:', error)
-        helpers.setSubmitting(false)
       }
     },
   })
 
-  const submitButtonLabel = 'Save'
-
-  const formContent = (
-    <form onSubmit={chunkFormik.handleSubmit} className='space-y-4 text-sm'>
-      <div>
-        <Label className='text-xs font-medium uppercase' htmlFor='chunkSize'>
-          Chunk Size
-        </Label>
-        <div className='mt-1 flex items-center gap-2'>
-          <span className='text-xs text-muted-foreground'>
-            Recommended: 500-1000 characters
-          </span>
+  return (
+    <div className={`space-y-4 ${className ?? ''}`}>
+      <form onSubmit={chunkFormik.handleSubmit} className='space-y-4 text-sm'>
+        <div>
+          <Label className='text-xs font-medium uppercase' htmlFor='chunkSize'>
+            Chunk Size
+          </Label>
+          <div className='mt-1 flex items-center gap-2'>
+            <span className='text-xs text-muted-foreground'>
+              Recommended: 500-1000 characters
+            </span>
+          </div>
+          <Input
+            className={`mt-1 h-10 max-w-md ${
+              chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize
+                ? 'border-red-500'
+                : ''
+            }`}
+            id='chunkSize'
+            type='number'
+            placeholder='Enter chunk size (e.g., 500)'
+            {...chunkFormik.getFieldProps('chunkSize')}
+          />
+          {chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize && (
+            <p className='mt-1 text-xs text-red-500'>
+              {chunkFormik.errors.chunkSize}
+            </p>
+          )}
         </div>
-        <Input
-          className={`mt-1 h-10 max-w-md ${
-            chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize
-              ? 'border-red-500'
-              : ''
-          }`}
-          id='chunkSize'
-          type='number'
-          placeholder='Enter chunk size (e.g., 500)'
-          {...chunkFormik.getFieldProps('chunkSize')}
-        />
-        {chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize && (
-          <p className='mt-1 text-xs text-red-500'>
-            {chunkFormik.errors.chunkSize}
-          </p>
+
+        <div>
+          <Label
+            className='text-xs font-medium uppercase'
+            htmlFor='overlapSize'
+          >
+            Overlap Size
+          </Label>
+          <div className='mt-1 flex items-center gap-2'>
+            <span className='text-xs text-muted-foreground'>
+              Recommended: 50-200 characters
+            </span>
+          </div>
+          <Input
+            className={`mt-1 h-10 max-w-md ${
+              chunkFormik.touched.overlapSize && chunkFormik.errors.overlapSize
+                ? 'border-red-500'
+                : ''
+            }`}
+            id='overlapSize'
+            type='number'
+            placeholder='Enter overlap size (e.g., 100)'
+            {...chunkFormik.getFieldProps('overlapSize')}
+          />
+          {chunkFormik.touched.overlapSize &&
+            chunkFormik.errors.overlapSize && (
+              <p className='mt-1 text-xs text-red-500'>
+                {chunkFormik.errors.overlapSize}
+              </p>
+            )}
+        </div>
+
+        {error && (
+          <div className='mt-2'>
+            <p className='text-xs font-medium text-red-500'>{error}</p>
+          </div>
         )}
-      </div>
 
-      <div>
-        <Label className='text-xs font-medium uppercase' htmlFor='overlapSize'>
-          Overlap Size
-        </Label>
-        <div className='mt-1 flex items-center gap-2'>
-          <span className='text-xs text-muted-foreground'>
-            Recommended: 50-200 characters
-          </span>
+        <div className='mt-4 flex justify-end'>
+          <Button
+            type='submit'
+            disabled={
+              isLoading || chunkFormik.isSubmitting || !chunkFormik.isValid
+            }
+            variant='default'
+            className='h-9 px-4 text-sm'
+          >
+            {chunkFormik.isSubmitting ? 'Saving...' : 'Save'}
+          </Button>
         </div>
-        <Input
-          className={`mt-1 h-10 max-w-md ${
-            chunkFormik.touched.overlapSize && chunkFormik.errors.overlapSize
-              ? 'border-red-500'
-              : ''
-          }`}
-          id='overlapSize'
-          type='number'
-          placeholder='Enter overlap size (e.g., 100)'
-          {...chunkFormik.getFieldProps('overlapSize')}
-        />
-        {chunkFormik.touched.overlapSize && chunkFormik.errors.overlapSize && (
-          <p className='mt-1 text-xs text-red-500'>
-            {chunkFormik.errors.overlapSize}
-          </p>
-        )}
-      </div>
-
-      {error && (
-        <div className='mt-2'>
-          <p className='text-xs font-medium text-red-500'>{error}</p>
-        </div>
-      )}
-
-      <div className='mt-4 flex justify-end'>
-        <Button
-          type='submit'
-          disabled={
-            isLoading || chunkFormik.isSubmitting || !chunkFormik.isValid
-          }
-          variant='default'
-          className='h-9 px-4 text-sm'
-        >
-          {chunkFormik.isSubmitting ? 'Saving...' : submitButtonLabel}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   )
-
-  return <div className={`space-y-4 ${className ?? ''}`}>{formContent}</div>
 }

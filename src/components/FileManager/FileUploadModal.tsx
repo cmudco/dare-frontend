@@ -192,7 +192,9 @@ const FileUploadModal: React.FC = () => {
                     retrieval.
                   </p>
                 </div>
-                <ChunkSettingsForm />
+                <ChunkSettingsForm
+                  onSuccess={() => setIsChunkPopoverOpen(false)}
+                />
               </PopoverContent>
             </Popover>
           </div>
