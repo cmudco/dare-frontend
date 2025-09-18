@@ -136,7 +136,18 @@ export const useWorkflowOperations = ({
       })
       .map((n, idx) => {
         const nodeData = n.data as Partial<StepNodeData>
-        const stepData: Record<string, unknown> = {
+        const stepData: {
+          id?: string
+          order: number
+          prompt: string | null
+          files?: number[]
+          embeddings?: number[]
+          llm?: number | null
+          maxTokens?: number | null
+          temperature?: number | null
+          maxContextSnippets?: number | null
+          documentSimilarityThreshold?: number | null
+        } = {
           order: idx + 1,
           prompt: normalizeIdValue(nodeData?.prompt),
           files: toNumericArray(nodeData?.contentFiles),
@@ -147,10 +158,6 @@ export const useWorkflowOperations = ({
           maxContextSnippets: nodeData?.maxContextSnippets ?? null,
           documentSimilarityThreshold:
             nodeData?.documentSimilarityThreshold ?? null,
-          usePreviousStepFiles: Boolean(nodeData?.usePreviousStepFiles),
-          usePreviousStepEmbeddings: Boolean(
-            nodeData?.usePreviousStepEmbeddings
-          ),
         }
 
         // Include step ID if this is an existing step (for updates)
@@ -227,7 +234,11 @@ export const useWorkflowOperations = ({
 
       if (!prompt) {
         errors.push(`Step ${idx + 1} requires a prompt`)
-      } else if (typeof prompt === 'object' && !prompt.id) {
+      } else if (
+        typeof prompt === 'object' &&
+        prompt !== null &&
+        !('id' in prompt)
+      ) {
         errors.push(`Step ${idx + 1} has invalid prompt data`)
       } else if (typeof prompt === 'string' && !prompt.trim()) {
         errors.push(`Step ${idx + 1} requires a prompt`)

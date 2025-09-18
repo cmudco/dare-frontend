@@ -122,7 +122,7 @@ export const loadWorkflowIntoBuilder = createAsyncThunk<
 
     outputNodes = outputNodes.map((outNode, idx) => {
       const stepNumber = stepNodes[idx]?.data?.stepNumber
-      if (!stepNumber) return outNode
+      if (!stepNumber || typeof stepNumber !== 'number') return outNode
 
       const runStep = findRunForStep(stepNumber)
       if (!runStep) return outNode

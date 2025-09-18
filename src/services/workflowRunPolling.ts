@@ -1,6 +1,7 @@
 import type { AppDispatch } from '@/redux/store'
 import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
 import { updateWorkflowRunStatus } from '@/redux/workflowBuilderSlice'
+import type { WorkflowRun } from '@/redux/types/workflow'
 
 export const startWorkflowRunPolling = (
   runId: string,
@@ -11,12 +12,12 @@ export const startWorkflowRunPolling = (
       const result = await dispatch(getWorkflowRunById(runId))
       const runData = result.payload
 
-      if (runData) {
+      if (runData && typeof runData === 'object' && 'status' in runData) {
         // Update the workflow run status in Redux
-        dispatch(updateWorkflowRunStatus(runData))
+        dispatch(updateWorkflowRunStatus(runData as WorkflowRun))
 
         // Stop polling if the run is no longer running
-        if (runData.status !== 'running') {
+        if ('status' in runData && runData.status !== 'running') {
           clearInterval(interval)
         }
       }

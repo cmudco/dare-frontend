@@ -39,6 +39,9 @@ export type StepNodeData = {
   maxContextSnippets?: number
   documentSimilarityThreshold?: number
   apiId?: number
+  usePreviousStepFiles?: boolean
+  usePreviousStepEmbeddings?: boolean
+  id?: string
 }
 
 export default function StepNode({ id, data, selected }: NodeProps) {
@@ -112,7 +115,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     ) {
       setTemperature(newData.temperature)
     }
-  }, [data])
+  }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get the status of this step from the current workflow run
   const getStepStatus = () => {
