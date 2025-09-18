@@ -17,8 +17,10 @@ import ResetPasswordScreen from '../pages/ResetPassword'
 import ForgotPasswordSuccess from '../components/Success.tsx'
 import VerifyEmailScreen from '@/components/Auth/VerifyEmail.tsx'
 import Workflows from '@/pages/Workflows/index.tsx'
+import WorkflowEditPage from '@/pages/Workflows/Edit.tsx'
 import ProfileScreen from '@/pages/ProfileScreen/index.tsx'
 import BillingScreen from '@/pages/Billing/index.tsx'
+import WorkflowCreatePage from '@/pages/Workflows/CreateNew.tsx'
 
 const AppRoutes = () => {
   return (
@@ -55,6 +57,8 @@ const AppRoutes = () => {
             <Route path='/files' element={<Files />} />
             <Route path='/prompts' element={<Prompt />} />
             <Route path='/workflows' element={<Workflows />} />
+            <Route path='/workflows/create' element={<WorkflowCreatePage />} />
+            <Route path='/workflows/:id/edit' element={<WorkflowEditPage />} />
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
             <Route path='/profile' element={<ProfileScreen />} />
