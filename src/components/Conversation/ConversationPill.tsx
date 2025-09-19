@@ -53,11 +53,16 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   )
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  const clearPendingDraftSave = useCallback(() => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+      debounceTimeoutRef.current = null
+    }
+  }, [debounceTimeoutRef])
+
   const debouncedSaveDraft = useCallback(
     (conversationId: string, text: string) => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current)
-      }
+      clearPendingDraftSave()
 
       debounceTimeoutRef.current = setTimeout(() => {
         if (autoSaveEnabled && text.trim()) {
@@ -65,7 +70,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
         }
       }, 500)
     },
-    [dispatch, autoSaveEnabled]
+    [dispatch, autoSaveEnabled, clearPendingDraftSave]
   )
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -90,12 +95,22 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       }
       dispatch(sendMessage(newMessage))
       dispatch(updateConversationInput(''))
+      dispatch(clearDraftForConversation(activeConversation.conversationId))
+      clearPendingDraftSave()
       setPendingMessage(null)
     }
-  }, [pendingMessage, isConnected, activeConversation, dispatch])
+  }, [
+    pendingMessage,
+    isConnected,
+    activeConversation,
+    dispatch,
+    clearPendingDraftSave,
+  ])
 
   const handleSendMessage = () => {
     if (disabled || conversationInput.trim() === '') return
+
+    clearPendingDraftSave()
 
     const newMessage: Partial<Message> = {
       message: conversationInput,
@@ -139,6 +154,12 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`
     }
   }, [conversationInput])
+
+  useEffect(() => {
+    return () => {
+      clearPendingDraftSave()
+    }
+  }, [clearPendingDraftSave])
 
   return (
     <>
@@ -212,9 +233,11 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <div className='h-8 w-[2px] rounded-lg bg-gray-300'></div>
             <ConversationReferenceSelect />
             <ModelPicker />
-            <ExportButton />
           </div>
-          <ModelConfigurationPanel />
+          <div className='flex items-center gap-3'>
+            <ExportButton />
+            <ModelConfigurationPanel />
+          </div>
         </div>
       </div>
       <p className='mt-2 text-center text-sm text-gray-500'>
