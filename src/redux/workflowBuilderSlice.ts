@@ -109,7 +109,6 @@ const workflowBuilderSlice = createSlice({
       state.savedViewport = action.payload
     },
     onNodesChange: (state, action: PayloadAction<NodeChange[]>) => {
-      console.log('onNodesChange payload:', action.payload)
       // Apply changes using ReactFlow's utility
       state.nodes = applyNodeChanges(action.payload, state.nodes)
     },

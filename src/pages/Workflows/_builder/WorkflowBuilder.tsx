@@ -41,14 +41,6 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     isRunning: isWorkflowRunning,
     savedViewport,
   } = useAppSelector((state) => state.workflowBuilder)
-  console.log(
-    'WorkflowBuilder render - nodes:',
-    nodes,
-    'edges:',
-    edges,
-    'isRunning:',
-    isWorkflowRunning
-  )
 
   // Load workflow when workflowId or initialWorkflow changes
   useEffect(() => {

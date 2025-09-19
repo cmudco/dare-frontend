@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/redux/store'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Button } from '../ui/button'
-import { Card } from '../ui/card'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import {
@@ -12,6 +11,7 @@ import {
   updateChunkSettings,
 } from '@/redux/asyncThunks/user'
 import { ChunkSettings } from '@/redux/types/user'
+import { toast } from '@/utils/toast'
 
 const chunkSettingsValidationSchema = Yup.object({
   chunkSize: Yup.number()
@@ -31,11 +31,18 @@ const chunkSettingsValidationSchema = Yup.object({
     ),
 })
 
-export const ChunkSettingsForm: React.FC = () => {
+interface ChunkSettingsFormProps {
+  className?: string
+  onSuccess?: () => void
+}
+
+export const ChunkSettingsForm: React.FC<ChunkSettingsFormProps> = ({
+  className,
+  onSuccess,
+}) => {
   const dispatch = useDispatch<AppDispatch>()
   const isLoading = useSelector((state: RootState) => state.user.loading)
   const error = useSelector((state: RootState) => state.user.error)
-  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
     dispatch(fetchChunkSettings())
@@ -54,14 +61,9 @@ export const ChunkSettingsForm: React.FC = () => {
     validationSchema: chunkSettingsValidationSchema,
     onSubmit: async (values) => {
       try {
-        const resultAction = await dispatch(updateChunkSettings(values))
-
-        if (updateChunkSettings.fulfilled.match(resultAction)) {
-          setSuccess(true)
-          setTimeout(() => {
-            setSuccess(false)
-          }, 3000)
-        }
+        await dispatch(updateChunkSettings(values))
+        toast.success('Chunk settings saved.')
+        onSuccess?.()
       } catch (error) {
         console.error('Error updating chunk settings:', error)
       }
@@ -69,100 +71,85 @@ export const ChunkSettingsForm: React.FC = () => {
   })
 
   return (
-    <Card className='p-6'>
-      <div className='space-y-6'>
+    <div className={`space-y-4 ${className ?? ''}`}>
+      <form onSubmit={chunkFormik.handleSubmit} className='space-y-4 text-sm'>
         <div>
-          <h3 className='text-lg font-semibold'>Chunk Settings</h3>
-          <p className='mt-1 text-sm text-muted-foreground'>
-            Configure how your documents are split into chunks for processing.
-          </p>
-          <p className='mt-2 text-sm text-muted-foreground'>
-            Smaller chunks provide more precise search results, while larger
-            chunks maintain more context.
-          </p>
+          <Label className='text-xs font-medium uppercase' htmlFor='chunkSize'>
+            Chunk Size
+          </Label>
+          <div className='mt-1 flex items-center gap-2'>
+            <span className='text-xs text-muted-foreground'>
+              Recommended: 500-1000 characters
+            </span>
+          </div>
+          <Input
+            className={`mt-1 h-10 max-w-md ${
+              chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize
+                ? 'border-red-500'
+                : ''
+            }`}
+            id='chunkSize'
+            type='number'
+            placeholder='Enter chunk size (e.g., 500)'
+            {...chunkFormik.getFieldProps('chunkSize')}
+          />
+          {chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize && (
+            <p className='mt-1 text-xs text-red-500'>
+              {chunkFormik.errors.chunkSize}
+            </p>
+          )}
         </div>
 
-        <form onSubmit={chunkFormik.handleSubmit} className='space-y-4'>
-          <div>
-            <Label className='text-base font-normal' htmlFor='chunkSize'>
-              Chunk Size
-            </Label>
-            <div className='mt-1 flex items-center gap-2'>
-              <span className='text-xs text-muted-foreground'>
-                Recommended: 500-1000 characters
-              </span>
-            </div>
-            <Input
-              className={`mt-1 h-10 max-w-md ${
-                chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize
-                  ? 'border-red-500'
-                  : ''
-              }`}
-              id='chunkSize'
-              type='number'
-              placeholder='Enter chunk size (e.g., 500)'
-              {...chunkFormik.getFieldProps('chunkSize')}
-            />
-            {chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize && (
+        <div>
+          <Label
+            className='text-xs font-medium uppercase'
+            htmlFor='overlapSize'
+          >
+            Overlap Size
+          </Label>
+          <div className='mt-1 flex items-center gap-2'>
+            <span className='text-xs text-muted-foreground'>
+              Recommended: 50-200 characters
+            </span>
+          </div>
+          <Input
+            className={`mt-1 h-10 max-w-md ${
+              chunkFormik.touched.overlapSize && chunkFormik.errors.overlapSize
+                ? 'border-red-500'
+                : ''
+            }`}
+            id='overlapSize'
+            type='number'
+            placeholder='Enter overlap size (e.g., 100)'
+            {...chunkFormik.getFieldProps('overlapSize')}
+          />
+          {chunkFormik.touched.overlapSize &&
+            chunkFormik.errors.overlapSize && (
               <p className='mt-1 text-xs text-red-500'>
-                {chunkFormik.errors.chunkSize}
+                {chunkFormik.errors.overlapSize}
               </p>
             )}
+        </div>
+
+        {error && (
+          <div className='mt-2'>
+            <p className='text-xs font-medium text-red-500'>{error}</p>
           </div>
+        )}
 
-          <div>
-            <Label className='text-base font-normal' htmlFor='overlapSize'>
-              Overlap Size
-            </Label>
-            <div className='mt-1 flex items-center gap-2'>
-              <span className='text-xs text-muted-foreground'>
-                Recommended: 50-200 characters
-              </span>
-            </div>
-            <Input
-              className={`mt-1 h-10 max-w-md ${
-                chunkFormik.touched.overlapSize &&
-                chunkFormik.errors.overlapSize
-                  ? 'border-red-500'
-                  : ''
-              }`}
-              id='overlapSize'
-              type='number'
-              placeholder='Enter overlap size (e.g., 100)'
-              {...chunkFormik.getFieldProps('overlapSize')}
-            />
-            {chunkFormik.touched.overlapSize &&
-              chunkFormik.errors.overlapSize && (
-                <p className='mt-1 text-xs text-red-500'>
-                  {chunkFormik.errors.overlapSize}
-                </p>
-              )}
-          </div>
-
-          {error && (
-            <div className='mt-2'>
-              <p className='text-xs font-medium text-red-500'>{error}</p>
-            </div>
-          )}
-
-          {success && (
-            <div className='mt-2'>
-              <p className='text-xs font-medium text-green-500'>
-                Chunking settings updated successfully!
-              </p>
-            </div>
-          )}
-
+        <div className='mt-4 flex justify-end'>
           <Button
             type='submit'
-            disabled={isLoading || !chunkFormik.isValid || !chunkFormik.dirty}
+            disabled={
+              isLoading || chunkFormik.isSubmitting || !chunkFormik.isValid
+            }
             variant='default'
-            className='mt-4 h-[38px] text-base font-normal'
+            className='h-9 px-4 text-sm'
           >
-            {isLoading ? 'Updating...' : 'Update Chunking Settings'}
+            {chunkFormik.isSubmitting ? 'Saving...' : 'Save'}
           </Button>
-        </form>
-      </div>
-    </Card>
+        </div>
+      </form>
+    </div>
   )
 }
