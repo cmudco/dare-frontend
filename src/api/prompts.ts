@@ -9,7 +9,7 @@ export const getPromptsAPI = async (): Promise<{ results: Prompt[] }> => {
   })
 }
 
-export const getPromptByIdAPI = async (id: string): Promise<Prompt> => {
+export const getPromptByIdAPI = async (id: number): Promise<Prompt> => {
   return await baseRequest<Prompt>({
     url: `api/prompts/${id}/`,
     method: METHOD.GET,
@@ -28,7 +28,7 @@ export const createPromptAPI = async (promptData: {
 }
 
 export const updatePromptAPI = async (
-  id: string,
+  id: number,
   promptData: Partial<Prompt>
 ): Promise<Prompt> => {
   return await baseRequest<Prompt>({
@@ -39,7 +39,7 @@ export const updatePromptAPI = async (
 }
 
 export const simpleUpdatePromptAPI = async (
-  id: string,
+  id: number,
   promptData: Partial<Prompt>
 ): Promise<Prompt> => {
   return await baseRequest<Prompt>({
@@ -49,14 +49,14 @@ export const simpleUpdatePromptAPI = async (
   })
 }
 
-export const clonePromptAPI = async (id: string): Promise<Prompt> => {
+export const clonePromptAPI = async (id: number): Promise<Prompt> => {
   return await baseRequest<Prompt>({
     url: `api/prompts/${id}/clone/`,
     method: METHOD.POST,
   })
 }
 
-export const deletePromptAPI = async (id: string): Promise<void> => {
+export const deletePromptAPI = async (id: number): Promise<void> => {
   await baseRequest<void>({
     url: `api/prompts/${id}/`,
     method: METHOD.DELETE,

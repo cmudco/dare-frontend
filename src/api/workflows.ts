@@ -1,7 +1,12 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
-import { Step, Workflow, WorkflowRun } from '@/redux/types/workflow'
-import { Prompt } from '@/redux/types/prompt'
+import {
+  Step,
+  Workflow,
+  WorkflowRun,
+  CreateWorkflowDTO,
+  UpdateWorkflowDTO,
+} from '@/redux/types/workflow'
 
 export const getWorkflowsAPI = async (): Promise<{ results: Workflow[] }> => {
   return await baseRequest<{ results: Workflow[] }>({
@@ -10,21 +15,16 @@ export const getWorkflowsAPI = async (): Promise<{ results: Workflow[] }> => {
   })
 }
 
-export const getWorkflowByIdAPI = async (id: string): Promise<Workflow> => {
+export const getWorkflowByIdAPI = async (id: number): Promise<Workflow> => {
   return await baseRequest<Workflow>({
     url: `api/workflows/${id}/`,
     method: METHOD.GET,
   })
 }
 
-export const createWorkflowAPI = async (workflowData: {
-  title: string
-  description: string
-  mode: number
-  steps_ids?: string[]
-  layout?: Record<string, { x: number; y: number }>
-  viewport?: { x: number; y: number; zoom: number } | null
-}): Promise<Workflow> => {
+export const createWorkflowAPI = async (
+  workflowData: CreateWorkflowDTO
+): Promise<Workflow> => {
   return await baseRequest<Workflow>({
     url: 'api/workflows/',
     method: METHOD.POST,
@@ -33,15 +33,8 @@ export const createWorkflowAPI = async (workflowData: {
 }
 
 export const updateWorkflowAPI = async (
-  id: string,
-  workflowData: {
-    title?: string
-    description?: string
-    mode?: number
-    steps_ids?: string[]
-    layout?: Record<string, { x: number; y: number }>
-    viewport?: { x: number; y: number; zoom: number } | null
-  }
+  id: number,
+  workflowData: UpdateWorkflowDTO
 ): Promise<Workflow> => {
   return await baseRequest<Workflow>({
     url: `api/workflows/${id}/`,
@@ -50,7 +43,7 @@ export const updateWorkflowAPI = async (
   })
 }
 
-export const deleteWorkflowAPI = async (id: string): Promise<void> => {
+export const deleteWorkflowAPI = async (id: number): Promise<void> => {
   await baseRequest<void>({
     url: `api/workflows/${id}/`,
     method: METHOD.DELETE,
@@ -69,28 +62,8 @@ export const createStepAPI = async (stepData: {
   })
 }
 
-export const updateStepAPI = async (
-  id: string,
-  stepData: Partial<Omit<Step, 'prompt'> & { prompt: string | Prompt }> & {
-    user?: string
-  }
-): Promise<Step> => {
-  return await baseRequest<Step>({
-    url: `api/steps/${id}/`,
-    method: METHOD.PATCH,
-    data: stepData,
-  })
-}
-
-export const deleteStepAPI = async (id: string): Promise<void> => {
-  await baseRequest<void>({
-    url: `api/steps/${id}/`,
-    method: METHOD.DELETE,
-  })
-}
-
 export const startWorkflowRunAPI = async (
-  workflowId: string
+  workflowId: number
 ): Promise<WorkflowRun> => {
   return await baseRequest<WorkflowRun>({
     url: 'api/workflow-runs/run-workflow/',
@@ -100,7 +73,7 @@ export const startWorkflowRunAPI = async (
 }
 
 export const getWorkflowRunByIdAPI = async (
-  runId: string
+  runId: number
 ): Promise<WorkflowRun> => {
   return await baseRequest<WorkflowRun>({
     url: `api/workflow-runs/${runId}/`,
@@ -108,7 +81,7 @@ export const getWorkflowRunByIdAPI = async (
   })
 }
 
-export const cloneWorkflowAPI = async (id: string): Promise<Workflow> => {
+export const cloneWorkflowAPI = async (id: number): Promise<Workflow> => {
   return await baseRequest<Workflow>({
     url: `api/workflows/${id}/clone/`,
     method: METHOD.POST,
@@ -116,7 +89,7 @@ export const cloneWorkflowAPI = async (id: string): Promise<Workflow> => {
 }
 
 export const exportWorkflowRunPdfAPI = async (
-  runId: string
+  runId: number
 ): Promise<{ blob: Blob; filename: string }> => {
   return await baseRequest({
     url: `api/workflow-runs/${runId}/export-pdf/`,

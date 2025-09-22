@@ -73,7 +73,7 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
   }
 
   const handlePromptChange = (promptId: string) => {
-    const selectedPrompt = prompts.find((p) => p.id == promptId)
+    const selectedPrompt = prompts.find((p) => p.id.toString() === promptId)
     onChange('prompt', selectedPrompt || null)
   }
 
@@ -241,7 +241,7 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
             <div className='space-y-2'>
               <label className='text-sm font-medium'>Select Prompt *</label>
               <Select
-                value={step.prompt?.id || ''}
+                value={step.prompt?.id?.toString() || ''}
                 onValueChange={handlePromptChange}
               >
                 <SelectTrigger>
@@ -249,7 +249,7 @@ export const WorkflowCreateStep: React.FC<WorkflowStepProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   {prompts.map((prompt) => (
-                    <SelectItem key={prompt.id} value={prompt.id}>
+                    <SelectItem key={prompt.id} value={prompt.id.toString()}>
                       {prompt.title}
                     </SelectItem>
                   ))}

@@ -62,7 +62,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
     (state: RootState) => state.workflow
   )
   const navigate = useNavigate()
-  const [editModePromptOpen, setEditModePromptOpen] = useState<string | null>(
+  const [editModePromptOpen, setEditModePromptOpen] = useState<number | null>(
     null
   )
 
@@ -72,7 +72,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   const [sortDirection, setSortDirection] = useState<SortDirection>(
     SortDirectionEnum.ASC
   )
-  const [deleteWorkflowId, setDeleteWorkflowId] = useState<string | null>(null)
+  const [deleteWorkflowId, setDeleteWorkflowId] = useState<number | null>(null)
   const [deleteWorkflowTitle, setDeleteWorkflowTitle] = useState<string>('')
 
   const filteredWorkflows = useMemo(() => {
@@ -105,12 +105,11 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
     updateSortState(column, sortColumn, setSortColumn, setSortDirection)
   }
 
-  const handleEdit = (id: string) => {
-    // Ask user which edit mode
+  const handleEdit = (id: number) => {
     setEditModePromptOpen(id)
   }
 
-  const handleRun = async (id: string) => {
+  const handleRun = async (id: number) => {
     try {
       await dispatch(startWorkflowRun(id)).unwrap()
       dispatch(selectWorkflowForView({ workflowId: id, mode: 'run' }))
@@ -119,11 +118,11 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
     }
   }
 
-  const handleView = (workflowId: string) => {
+  const handleView = (workflowId: number) => {
     dispatch(selectWorkflowForView({ workflowId, mode: 'view' }))
   }
 
-  const handleDelete = (id: string, title: string) => {
+  const handleDelete = (id: number, title: string) => {
     setDeleteWorkflowId(id)
     setDeleteWorkflowTitle(title || 'Untitled')
   }
@@ -140,7 +139,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
     }
   }
 
-  const handleClone = (id: string) => {
+  const handleClone = (id: number) => {
     dispatch(cloneWorkflow(id)).then((action) => {
       if (cloneWorkflow.fulfilled.match(action)) {
         const payload = action.payload as Workflow

@@ -34,7 +34,7 @@ const workflowSlice = createSlice({
       state.tempSteps = []
       state.isModalOpen = true
     },
-    openEditModal: (state, action: PayloadAction<string>) => {
+    openEditModal: (state, action: PayloadAction<number>) => {
       state.isModalOpen = true
       state.selectedWorkflow =
         state.workflows.find((workflow) => workflow.id === action.payload) ||
@@ -51,7 +51,7 @@ const workflowSlice = createSlice({
     },
     selectWorkflowForView: (
       state,
-      action: PayloadAction<{ workflowId: string; mode: 'run' | 'view' }>
+      action: PayloadAction<{ workflowId: number; mode: 'run' | 'view' }>
     ) => {
       const { workflowId, mode } = action.payload
       const workflow = state.workflows.find((w) => w.id === workflowId)
@@ -64,7 +64,7 @@ const workflowSlice = createSlice({
         }
       }
     },
-    setSavedStepIds: (state, action: PayloadAction<string[]>) => {
+    setSavedStepIds: (state, action: PayloadAction<number[]>) => {
       state.savedStepIds = action.payload
     },
     setTempSteps: (state, action: PayloadAction<Step[]>) => {
@@ -154,9 +154,7 @@ const workflowSlice = createSlice({
           state.workflowRuns.push(newRun)
         }
         state.selectedWorkflowRun = newRun
-        const workflow = state.workflows.find(
-          (w) => w.id === String(newRun.workflow)
-        )
+        const workflow = state.workflows.find((w) => w.id === newRun.workflow)
         if (workflow) {
           workflow.latestRun = newRun
           workflow.lastRunId = newRun.id

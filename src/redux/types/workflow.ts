@@ -10,7 +10,7 @@ export enum WorkflowMode {
 }
 
 export interface WorkflowStepSnippet {
-  id: string
+  id: number
   file: MyFile
   text: string
   similarityScore: number
@@ -19,8 +19,8 @@ export interface WorkflowStepSnippet {
 }
 
 export interface Step {
-  id?: string
-  workflow?: string
+  id?: number
+  workflow?: number
   prompt: Prompt | null
   files: MyFile[]
   embeddings: MyFile[]
@@ -29,6 +29,7 @@ export interface Step {
   llm: LLMModel | null
   order: number
   createdAt?: string
+  user?: number
   maxTokens?: number
   temperature?: number
   maxContextSnippets?: number
@@ -36,7 +37,7 @@ export interface Step {
 }
 
 export interface WorkflowRunStep {
-  id: string
+  id: number
   step: number
   order: number
   status: WorkflowRunStepStatus
@@ -48,7 +49,7 @@ export interface WorkflowRunStep {
 }
 
 export interface WorkflowRun {
-  id: string
+  id: number
   workflow: number
   user: number
   status: WorkflowRunStepStatus
@@ -60,18 +61,20 @@ export interface WorkflowRun {
 }
 
 export interface Workflow {
-  id: string
+  id: number
   title: string
   description: string
   mode: WorkflowMode
-  layout?: Record<string, { x: number; y: number }>
-  viewport?: { x: number; y: number; zoom: number }
+  version?: number
+  parent?: number | null
   createdAt?: string
   created_at?: string
   user: string
   steps?: Step[]
-  lastRunId?: string | null
+  lastRunId?: number | null
   latestRun?: WorkflowRun | null
+  layout?: Record<string, { x: number; y: number }>
+  viewport?: { x: number; y: number; zoom: number }
 }
 
 export interface WorkflowState {
@@ -82,7 +85,7 @@ export interface WorkflowState {
   loading: boolean
   error: string | null
   isModalOpen: boolean
-  savedStepIds: string[]
+  savedStepIds: number[]
   tempSteps: Step[]
 }
 
@@ -138,4 +141,34 @@ export interface WorkflowStepsProps {
   setSteps: (steps: Step[]) => void
   errors: FormikErrors<FormValues>
   touched: FormikTouched<FormValues>
+}
+
+export interface CreateStepDTO {
+  order: number
+  prompt: number | null
+  files?: number[]
+  embeddings?: number[]
+  usePreviousStepFiles?: boolean
+  usePreviousStepEmbeddings?: boolean
+  llm?: number | null
+  maxTokens?: number | null
+  temperature?: number | null
+  maxContextSnippets?: number | null
+  documentSimilarityThreshold?: number | null
+}
+
+export interface CreateWorkflowDTO {
+  title: string
+  description: string
+  mode: number
+  steps: CreateStepDTO[]
+}
+
+export interface UpdateWorkflowDTO {
+  title?: string
+  description?: string
+  mode?: number
+  steps?: CreateStepDTO[]
+  layout?: Record<string, { x: number; y: number }>
+  viewport?: { x: number; y: number; zoom: number } | null
 }

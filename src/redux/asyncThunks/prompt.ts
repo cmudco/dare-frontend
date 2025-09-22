@@ -25,7 +25,7 @@ export const getPrompts = createAsyncThunk(
 
 export const getPromptById = createAsyncThunk(
   'prompts/getPromptById',
-  async (id: string, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       return (await getPromptByIdAPI(id)) as Prompt
     } catch (error) {
@@ -42,7 +42,7 @@ export const createOrUpdatePrompt = createAsyncThunk(
       promptData,
       bumpVersion,
     }: {
-      id?: string
+      id?: number
       promptData: {
         title: string
         content: string
@@ -70,7 +70,7 @@ export const createOrUpdatePrompt = createAsyncThunk(
 
 export const clonePrompt = createAsyncThunk(
   'prompts/clonePrompt',
-  async (id: string, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       return await clonePromptAPI(id)
     } catch (error) {
@@ -81,7 +81,7 @@ export const clonePrompt = createAsyncThunk(
 
 export const deletePrompt = createAsyncThunk(
   'prompts/deletePrompt',
-  async (id: string, { rejectWithValue, getState }) => {
+  async (id: number, { rejectWithValue, getState }) => {
     try {
       const state = getState() as RootState
       const promptState = state.prompt

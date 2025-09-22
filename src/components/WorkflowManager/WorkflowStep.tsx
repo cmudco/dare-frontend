@@ -29,7 +29,7 @@ import { getRunStatusBadge } from '@/utils/constants/workflow'
 import { getWallet } from '@/redux/asyncThunks/billing'
 
 export const WorkflowStep: React.FC<{
-  runId: string | null
+  runId: number | null
   isOpen: boolean
   workflowName?: string
 }> = ({ runId, isOpen }) => {
@@ -38,11 +38,11 @@ export const WorkflowStep: React.FC<{
     (state: RootState) => state.workflow
   )
   const hasDispatchedGetWorkflows = useRef(false)
-  const [openSnippets, setOpenSnippets] = useState<{ [key: string]: boolean }>(
+  const [openSnippets, setOpenSnippets] = useState<{ [key: number]: boolean }>(
     {}
   )
 
-  const toggleSnippets = (stepId: string) => {
+  const toggleSnippets = (stepId: number) => {
     setOpenSnippets((prev) => ({
       ...prev,
       [stepId]: !prev[stepId],

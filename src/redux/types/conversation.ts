@@ -14,7 +14,7 @@ export interface Conversation {
   maxTokens: number
   historyLimit: number
   prompt?: Prompt | null
-  promptId?: string | null
+  promptId?: number | null
   sortOrder?: number
   selectedEmbeddingIds?: number[]
   selectedFileIds?: number[]

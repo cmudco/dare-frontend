@@ -25,7 +25,7 @@ export const getWorkflows = createAsyncThunk(
 
 export const getWorkflowById = createAsyncThunk(
   'workflows/getWorkflowById',
-  async (id: string, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       return await getWorkflowByIdAPI(id)
     } catch (error) {
@@ -41,7 +41,7 @@ export const createOrUpdateWorkflow = createAsyncThunk(
       id,
       workflowData,
     }: {
-      id?: string
+      id?: number
       workflowData: {
         title: string
         description: string
@@ -49,9 +49,9 @@ export const createOrUpdateWorkflow = createAsyncThunk(
         layout?: Record<string, { x: number; y: number }>
         viewport?: { x: number; y: number; zoom: number } | null
         steps: {
-          id?: string
+          id?: number
           order: number
-          prompt: string | null
+          prompt: number | null
           files?: number[]
           embeddings?: number[]
           llm?: number | null
@@ -82,7 +82,7 @@ export const createOrUpdateWorkflow = createAsyncThunk(
 
 export const deleteWorkflow = createAsyncThunk(
   'workflows/deleteWorkflow',
-  async (id: string, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       await deleteWorkflowAPI(id)
       return id
@@ -94,11 +94,11 @@ export const deleteWorkflow = createAsyncThunk(
 
 export const startWorkflowRun = createAsyncThunk<
   WorkflowRun,
-  string,
+  number,
   { rejectValue: string }
 >(
   'workflows/startWorkflowRun',
-  async (workflowId: string, { rejectWithValue }) => {
+  async (workflowId: number, { rejectWithValue }) => {
     try {
       const response = await startWorkflowRunAPI(workflowId)
       return response
@@ -110,7 +110,7 @@ export const startWorkflowRun = createAsyncThunk<
 
 export const getWorkflowRunById = createAsyncThunk(
   'workflows/getWorkflowRunById',
-  async (runId: string, { rejectWithValue }) => {
+  async (runId: number, { rejectWithValue }) => {
     try {
       return await getWorkflowRunByIdAPI(runId)
     } catch (error) {
@@ -121,7 +121,7 @@ export const getWorkflowRunById = createAsyncThunk(
 
 export const cloneWorkflow = createAsyncThunk(
   'workflows/cloneWorkflow',
-  async (id: string, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       return await cloneWorkflowAPI(id)
     } catch (error) {
