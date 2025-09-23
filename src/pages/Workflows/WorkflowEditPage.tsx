@@ -27,18 +27,18 @@ import {
 } from '@/redux/asyncThunks/workflow'
 import { clearSelectedWorkflow } from '@/redux/workflowSlice'
 import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
-import { useState } from 'react'
 import { toast } from '@/utils/toast'
 
 const WorkflowEditPage = () => {
   const navigate = useNavigate()
-  const { id } = useParams<{ id: string }>()
+  const { id: idParam } = useParams<{ id: string }>()
+  const id = idParam ? Number(idParam) : undefined
   const dispatch = useAppDispatch()
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
   const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
-  const [isRunning, setIsRunning] = useState(false)
+  const isRunning = useAppSelector((s) => s.workflowBuilder.isRunning)
 
   const handleSave = () => {
     const validation = validateWorkflow(nodes, edges)
@@ -60,7 +60,7 @@ const WorkflowEditPage = () => {
     }
 
     // Dispatch save action
-    const targetId = id || ''
+    const targetId = id
     const action = targetId
       ? createOrUpdateWorkflow({
           id: targetId,
@@ -100,9 +100,8 @@ const WorkflowEditPage = () => {
         dispatch(setSelectedWorkflowRun(null))
         toast.success('Workflow updated!')
       })
-      .catch((error: unknown) => {
-        // Handle error via toast
-        console.error('Network error:', error)
+      .catch(() => {
+        toast.error('Failed to update workflow. Please try again.')
       })
   }
 
@@ -119,14 +118,6 @@ const WorkflowEditPage = () => {
       dispatch(setSelectedWorkflowRun(null))
     }
   }, [dispatch, id])
-
-  // Check if workflow is running (now handled by WorkflowBuilder, but needed for UI state)
-  const workflowBuilderState = useAppSelector((s) => s.workflowBuilder)
-  const workflowIsRunning = workflowBuilderState.isRunning
-
-  useEffect(() => {
-    setIsRunning(workflowIsRunning)
-  }, [workflowIsRunning])
 
   return (
     <div className='flex h-full flex-col'>
@@ -163,7 +154,7 @@ const WorkflowEditPage = () => {
           {id && (
             <Button
               variant='outline'
-              onClick={() => dispatch(startWorkflowRun(id))}
+              onClick={() => dispatch(startWorkflowRun(id!))}
               disabled={isRunning}
               className='normal-case'
             >

@@ -83,7 +83,7 @@ const workflowBuilderSlice = createSlice({
       if (field) {
         // remove the specific field error
         const copy = { ...nodeErrors }
-        delete (copy as Record<string, string | undefined>)[field]
+        delete copy[field]
         if (Object.keys(copy).length) {
           state.errorsByNodeId[nodeId] = copy
         } else {
@@ -99,7 +99,7 @@ const workflowBuilderSlice = createSlice({
     ) => {
       state.currentMode = action.payload
     },
-    setLastWorkflowId: (state, action: PayloadAction<string | undefined>) => {
+    setLastWorkflowId: (state, action: PayloadAction<number | undefined>) => {
       state.lastWorkflowId = action.payload
     },
     setSavedViewport: (
@@ -214,7 +214,7 @@ const workflowBuilderSlice = createSlice({
         state.loadedWorkflow = action.payload.workflow
         state.currentRun = action.payload.currentRun
         state.isRunning = action.payload.currentRun?.status === 'running'
-        state.lastWorkflowId = action.payload.workflow.id?.toString()
+        state.lastWorkflowId = action.payload.workflow.id
         state.savedViewport = action.payload.viewport ?? null
       })
       .addCase(startWorkflowRun.fulfilled, (state, action) => {

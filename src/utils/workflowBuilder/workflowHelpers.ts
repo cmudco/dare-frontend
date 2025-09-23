@@ -2,37 +2,6 @@ import { type Node, type Edge } from '@xyflow/react'
 import { type NodeErrors } from '@/redux/types/workflowBuilder'
 import type { StepNodeData } from '@/pages/Workflows/_builder/nodes/StepNode'
 
-const normalizeIdValue = (value: unknown): string | null => {
-  if (value == null || value === '') return null
-  if (typeof value === 'object') {
-    const maybeId =
-      (value as { id?: unknown; value?: unknown }).id ??
-      (value as { value?: unknown }).value
-    if (maybeId == null || maybeId === '') return null
-    return String(maybeId)
-  }
-  return String(value)
-}
-
-const toNumberOrNull = (value: unknown): number | null => {
-  const normalized = normalizeIdValue(value)
-  if (normalized == null) return null
-  const asNumber = Number(normalized)
-  return Number.isNaN(asNumber) ? null : asNumber
-}
-
-const toNumericArray = (values: unknown[] | undefined): number[] => {
-  if (!Array.isArray(values)) return []
-  return values
-    .map((value) => toNumberOrNull(value))
-    .filter((value): value is number => value != null)
-}
-
-const getNumberWithDefault = (value: unknown, defaultValue: number): number => {
-  const coerced = toNumberOrNull(value)
-  return coerced ?? defaultValue
-}
-
 export interface ValidationResult {
   isValid: boolean
   nodeErrors: Record<string, NodeErrors>
@@ -287,9 +256,9 @@ export interface SerializedWorkflow {
   layout?: Record<string, { x: number; y: number }>
   viewport?: { x: number; y: number; zoom: number } | null
   steps: {
-    id?: string
+    id?: number
     order: number
-    prompt: string | null
+    prompt: number | null
     files?: number[]
     embeddings?: number[]
     llm?: number | null
@@ -369,27 +338,22 @@ export const serializeWorkflow = (
 
       const stepData: SerializedWorkflow['steps'][0] = {
         order: idx + 1,
-        prompt: normalizeIdValue(nodeData?.prompt),
-        files: toNumericArray(nodeData?.contentFiles),
-        embeddings: toNumericArray(nodeData?.embeddingFiles),
-        llm: toNumberOrNull(nodeData?.llm),
-        maxTokens: getNumberWithDefault(nodeData?.maxTokens, 2048),
-        temperature: getNumberWithDefault(nodeData?.temperature, 0.7),
-        maxContextSnippets: getNumberWithDefault(
-          nodeData?.maxContextSnippets,
-          4
-        ),
-        documentSimilarityThreshold: getNumberWithDefault(
-          nodeData?.documentSimilarityThreshold,
-          0.2
-        ),
+        prompt: nodeData?.prompt || null,
+        files: nodeData?.contentFiles || [],
+        embeddings: nodeData?.embeddingFiles || [],
+        llm: nodeData?.llm || null,
+        maxTokens: nodeData?.maxTokens || 2048,
+        temperature: nodeData?.temperature || 0.7,
+        maxContextSnippets: nodeData?.maxContextSnippets || 4,
+        documentSimilarityThreshold:
+          nodeData?.documentSimilarityThreshold || 0.2,
         usePreviousStepFiles: Boolean(nodeData?.usePreviousStepFiles),
         usePreviousStepEmbeddings: Boolean(nodeData?.usePreviousStepEmbeddings),
       }
 
       // Include API ID if this is an existing step (for updates)
       if (nodeData?.apiId) {
-        stepData.id = nodeData.apiId.toString()
+        stepData.id = nodeData.apiId
       }
 
       return stepData

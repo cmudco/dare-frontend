@@ -7,16 +7,6 @@ import type {
   WorkflowRun,
   WorkflowRunStep,
 } from '../types/workflow'
-import type { MyFile } from '../types/files'
-
-const toIdString = (value: unknown): string | undefined => {
-  if (value == null) return undefined
-  if (typeof value === 'object') {
-    const maybeId = (value as { id?: unknown }).id
-    if (maybeId != null) return String(maybeId)
-  }
-  return String(value)
-}
 
 type LoadWorkflowResult = {
   nodes: Node[]
@@ -28,7 +18,7 @@ type LoadWorkflowResult = {
 
 export const loadWorkflowIntoBuilder = createAsyncThunk<
   LoadWorkflowResult,
-  string
+  number
 >('workflowBuilder/loadWorkflow', async (workflowId, { dispatch }) => {
   // Fetch the workflow
   const result = await dispatch(getWorkflowById(workflowId))
@@ -66,26 +56,14 @@ export const loadWorkflowIntoBuilder = createAsyncThunk<
     const stepData = {
       stepNumber: step.order || idx + 1,
       apiId: step.id, // Store API ID
-      prompt: toIdString(step.prompt) || '',
-      contentFiles: (step.files || []).map((f: MyFile | string | number) =>
-        String(((f as MyFile)?.id ?? f) as string | number)
-      ),
-      embeddingFiles: (step.embeddings || []).map(
-        (e: MyFile | string | number) =>
-          String(((e as MyFile)?.id ?? e) as string | number)
-      ),
-      llm: toIdString(step.llm) || '',
-      maxTokens: typeof step.maxTokens === 'number' ? step.maxTokens : 2048,
-      temperature:
-        typeof step.temperature === 'number' ? step.temperature : 0.7,
-      maxContextSnippets:
-        typeof step.maxContextSnippets === 'number'
-          ? step.maxContextSnippets
-          : 4,
-      documentSimilarityThreshold:
-        typeof step.documentSimilarityThreshold === 'number'
-          ? step.documentSimilarityThreshold
-          : 0.2,
+      prompt: step.prompt?.id || null,
+      contentFiles: (step.files || []).map((file) => file.id),
+      embeddingFiles: (step.embeddings || []).map((file) => file.id),
+      llm: step.llm?.id || null,
+      maxTokens: step.maxTokens || 2048,
+      temperature: step.temperature || 0.7,
+      maxContextSnippets: step.maxContextSnippets || 4,
+      documentSimilarityThreshold: step.documentSimilarityThreshold || 0.2,
       usePreviousStepFiles: Boolean(step.usePreviousStepFiles),
       usePreviousStepEmbeddings: Boolean(step.usePreviousStepEmbeddings),
     }

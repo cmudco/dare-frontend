@@ -76,9 +76,8 @@ const WorkflowCreatePage = () => {
         toast.success('Workflow saved!')
         navigate(`/workflows/${savedId}/edit`)
       })
-      .catch((error: unknown) => {
-        // Handle error via toast
-        console.error('Network error:', error)
+      .catch(() => {
+        toast.error('Failed to save workflow. Please try again.')
       })
   }
 

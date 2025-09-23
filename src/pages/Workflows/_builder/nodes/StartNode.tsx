@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Play, GitBranch, ArrowRight } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useErrorsContext } from '../ErrorsContext'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
@@ -34,60 +34,46 @@ type StartData = {
 }
 
 export default function StartNode({ id, data, selected }: NodeProps) {
-  const startData = (data as StartData) || {}
-  const [title, setTitle] = useState(startData.title || '')
-  const [description, setDescription] = useState(startData.description || '')
-  const [mode, setMode] = useState<Mode>(startData.mode || 'sequential')
+  const nodeId = id as string // ReactFlow guarantees id is string when component renders
+  const startData = data as StartData
 
   const { errorsByNodeId, clearNodeError } = useErrorsContext()
-  const startFieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
+  const startFieldErrors = (errorsByNodeId[nodeId] || {}) as Record<
+    string,
+    string
+  >
   const dispatch = useAppDispatch()
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
 
   // Update Redux when user changes values
   const updateNodeData = (updates: Partial<StartData>) => {
-    dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
+    dispatch(updateNodeDataById({ nodeId: nodeId, newData: updates }))
   }
-
-  // Sync local state with props data when it changes (from Redux)
-  useEffect(() => {
-    const newData = data as StartData
-    if (newData.title !== undefined && newData.title !== title) {
-      setTitle(newData.title)
-    }
-    if (
-      newData.description !== undefined &&
-      newData.description !== description
-    ) {
-      setDescription(newData.description)
-    }
-    if (newData.mode !== undefined && newData.mode !== mode) {
-      setMode(newData.mode)
-    }
-  }, [data])
 
   // Get number of step nodes for parallel mode handle rendering
   const stepCount = nodes.filter((n) => n.type === 'step').length
   const updateNodeInternals = useUpdateNodeInternals()
 
   useEffect(() => {
-    updateNodeInternals(String(id))
-  }, [updateNodeInternals, id, mode, stepCount])
+    updateNodeInternals(nodeId)
+  }, [updateNodeInternals, nodeId, startData?.mode, stepCount])
 
   useEffect(() => {
-    const startId = String(id)
-    if (!nodes.some((n) => n.id === startId)) return
+    if (!nodes.some((n) => n.id === nodeId)) return
 
-    const rebuiltEdges = rebuildEdgesForMode(startId, mode, nodes)
+    const rebuiltEdges = rebuildEdgesForMode(
+      nodeId,
+      startData?.mode || 'sequential',
+      nodes
+    )
     if (edgesChanged(edges, rebuiltEdges)) {
       dispatch(setEdges(rebuiltEdges))
     }
-  }, [dispatch, edges, id, mode, nodes])
+  }, [dispatch, edges, nodeId, startData?.mode, nodes])
 
-  // Simple handle rendering based on mode
   const renderOutputHandles = () => {
-    if (mode === 'parallel') {
+    if ((startData?.mode || 'sequential') === 'parallel') {
       // Render handles for each step + one extra for potential new steps
       const handleCount = Math.max(stepCount, 1)
       const handles = []
@@ -136,12 +122,11 @@ export default function StartNode({ id, data, selected }: NodeProps) {
           </Label>
           <Input
             id='title'
-            value={title}
+            value={startData?.title || ''}
             onChange={(e) => {
               const newTitle = e.target.value
-              setTitle(newTitle)
               updateNodeData({ title: newTitle })
-              clearNodeError(String(id), 'title')
+              clearNodeError(nodeId, 'title')
             }}
             placeholder='Enter workflow title'
             required
@@ -161,12 +146,11 @@ export default function StartNode({ id, data, selected }: NodeProps) {
           </Label>
           <Textarea
             id='description'
-            value={description}
+            value={startData?.description || ''}
             onChange={(e) => {
               const newDescription = e.target.value
-              setDescription(newDescription)
               updateNodeData({ description: newDescription })
-              clearNodeError(String(id), 'description')
+              clearNodeError(nodeId, 'description')
             }}
             placeholder='Enter your description here'
             required
@@ -186,9 +170,8 @@ export default function StartNode({ id, data, selected }: NodeProps) {
             Execution Mode
           </Label>
           <Select
-            value={mode}
+            value={startData?.mode || 'sequential'}
             onValueChange={(value: 'sequential' | 'parallel') => {
-              setMode(value)
               updateNodeData({ mode: value })
             }}
           >
@@ -212,7 +195,7 @@ export default function StartNode({ id, data, selected }: NodeProps) {
           </Select>
         </div>
         <div className='text-xs text-muted-foreground'>
-          {mode === 'sequential'
+          {(startData?.mode || 'sequential') === 'sequential'
             ? 'Steps execute one after another in sequence'
             : 'Multiple steps can execute simultaneously from this start point'}
         </div>

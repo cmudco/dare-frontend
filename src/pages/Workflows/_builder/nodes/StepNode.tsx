@@ -22,17 +22,17 @@ import {
   Database,
   X,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 
 export type StepNodeData = {
-  prompt: string | null
-  contentFiles: string[]
-  embeddingFiles: string[]
-  llm: string | null
+  prompt: number | null
+  contentFiles: number[]
+  embeddingFiles: number[]
+  llm: number | null
   stepNumber: number
   maxTokens?: number
   temperature?: number
@@ -45,36 +45,14 @@ export type StepNodeData = {
 }
 
 export default function StepNode({ id, data, selected }: NodeProps) {
-  const nodeData = (data as unknown as StepNodeData) || ({} as StepNodeData)
+  const nodeId = id as string // ReactFlow guarantees id is string when component renders
+  const stepData = data as StepNodeData
   const { errorsByNodeId, clearNodeError } = useErrorsContext()
-  const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
+  const fieldErrors = (errorsByNodeId[nodeId] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
 
-  // Local state for form inputs
-  const [prompt, setPrompt] = useState(
-    nodeData.prompt ? String(nodeData.prompt) : ''
-  )
-  const [contentFiles, setContentFiles] = useState<string[]>(
-    nodeData.contentFiles || []
-  )
-  const [embeddingFiles, setEmbeddingFiles] = useState<string[]>(
-    nodeData.embeddingFiles || []
-  )
-  const [llm, setLlm] = useState<string | number>(nodeData.llm ?? '')
-  const [maxTokens, setMaxTokens] = useState<number>(
-    Number(nodeData?.maxTokens ?? 2048)
-  )
-  const [temperature, setTemperature] = useState<number>(
-    Number(nodeData?.temperature ?? 0.7)
-  )
-  const [maxContextSnippets, setMaxContextSnippets] = useState<number>(
-    Number(nodeData?.maxContextSnippets ?? 4)
-  )
-  const [documentSimilarityThreshold, setDocumentSimilarityThreshold] =
-    useState<number>(Number(nodeData?.documentSimilarityThreshold ?? 0.2))
   const [showAdvanced, setShowAdvanced] = useState(false)
 
-  // Redux selectors
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
@@ -82,53 +60,19 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
   // Update Redux when form changes
   const updateNodeData = (updates: Partial<StepNodeData>) => {
-    dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
+    dispatch(updateNodeDataById({ nodeId: nodeId, newData: updates }))
   }
 
-  // Sync local state with props data when it changes (from Redux)
-  useEffect(() => {
-    const newData = data as StepNodeData
-    if (newData.prompt !== undefined && newData.prompt !== prompt) {
-      setPrompt(newData.prompt ? String(newData.prompt) : '')
-    }
-    if (newData.llm !== undefined && newData.llm !== llm) {
-      setLlm(newData.llm ?? '')
-    }
-    if (
-      newData.contentFiles &&
-      JSON.stringify(newData.contentFiles) !== JSON.stringify(contentFiles)
-    ) {
-      setContentFiles(newData.contentFiles)
-    }
-    if (
-      newData.embeddingFiles &&
-      JSON.stringify(newData.embeddingFiles) !== JSON.stringify(embeddingFiles)
-    ) {
-      setEmbeddingFiles(newData.embeddingFiles)
-    }
-    if (newData.maxTokens !== undefined && newData.maxTokens !== maxTokens) {
-      setMaxTokens(newData.maxTokens)
-    }
-    if (
-      newData.temperature !== undefined &&
-      newData.temperature !== temperature
-    ) {
-      setTemperature(newData.temperature)
-    }
-  }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Get the status of this step from the current workflow run
   const getStepStatus = () => {
     if (!currentRun || !currentRun.steps) return null
     const runStep = currentRun.steps.find(
-      (rs) => (rs.order || rs.step) === nodeData.stepNumber
+      (rs) => (rs.order || rs.step) === stepData?.stepNumber
     )
     return runStep?.status || null
   }
 
   const stepStatus = getStepStatus()
 
-  // Render status pill for the step
   const renderStatusPill = () => {
     if (!stepStatus) return null
 
@@ -182,7 +126,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             <div className='flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20'>
               <Brain className='h-3 w-3 text-primary' />
             </div>
-            Step {nodeData.stepNumber}
+            Step {stepData?.stepNumber}
           </div>
           {renderStatusPill()}
         </CardTitle>
@@ -193,11 +137,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             Prompt
           </Label>
           <Select
-            value={prompt}
+            value={stepData.prompt ? stepData.prompt.toString() : ''}
             onValueChange={(value) => {
-              setPrompt(value)
-              updateNodeData({ prompt: value })
-              clearNodeError(id, 'prompt')
+              updateNodeData({ prompt: Number(value) })
+              clearNodeError(nodeId, 'prompt')
             }}
           >
             <SelectTrigger
@@ -229,8 +172,8 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             Content Files
           </Label>
           <div className='flex flex-wrap gap-1'>
-            {contentFiles.map((fileId) => {
-              const file = files.find((f) => f.id.toString() === fileId)
+            {(stepData.contentFiles || []).map((fileId) => {
+              const file = files.find((f) => f.id === fileId)
               return (
                 <Badge key={fileId} variant='secondary' className='text-xs'>
                   {file?.name || `File ${fileId}`}
@@ -239,10 +182,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                     variant='ghost'
                     className='ml-1 h-4 w-4 p-0'
                     onClick={() => {
-                      const newFiles = contentFiles.filter(
+                      const newFiles = (stepData.contentFiles || []).filter(
                         (id) => id !== fileId
                       )
-                      setContentFiles(newFiles)
                       updateNodeData({ contentFiles: newFiles })
                     }}
                   >
@@ -254,9 +196,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             <Select
               value=''
               onValueChange={(value) => {
-                if (value && !contentFiles.includes(value)) {
-                  const newFiles = [...contentFiles, value]
-                  setContentFiles(newFiles)
+                const fileId = Number(value)
+                const currentFiles = stepData.contentFiles || []
+                if (value && !currentFiles.includes(fileId)) {
+                  const newFiles = [...currentFiles, fileId]
                   updateNodeData({ contentFiles: newFiles })
                 }
               }}
@@ -266,7 +209,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               </SelectTrigger>
               <SelectContent>
                 {files
-                  .filter((f) => !contentFiles.includes(f.id.toString()))
+                  .filter((f) => !(stepData.contentFiles || []).includes(f.id))
                   .map((file) => (
                     <SelectItem key={file.id} value={file.id.toString()}>
                       {file.name}
@@ -284,8 +227,8 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             Embedding Files
           </Label>
           <div className='flex flex-wrap gap-1'>
-            {embeddingFiles.map((fileId) => {
-              const file = files.find((f) => f.id.toString() === fileId)
+            {(stepData.embeddingFiles || []).map((fileId) => {
+              const file = files.find((f) => f.id === fileId)
               return (
                 <Badge key={fileId} variant='secondary' className='text-xs'>
                   {file?.name || `File ${fileId}`}
@@ -294,10 +237,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                     variant='ghost'
                     className='ml-1 h-4 w-4 p-0'
                     onClick={() => {
-                      const newFiles = embeddingFiles.filter(
+                      const newFiles = (stepData.embeddingFiles || []).filter(
                         (id) => id !== fileId
                       )
-                      setEmbeddingFiles(newFiles)
                       updateNodeData({ embeddingFiles: newFiles })
                     }}
                   >
@@ -309,9 +251,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             <Select
               value=''
               onValueChange={(value) => {
-                if (value && !embeddingFiles.includes(value)) {
-                  const newFiles = [...embeddingFiles, value]
-                  setEmbeddingFiles(newFiles)
+                const fileId = Number(value)
+                const currentFiles = stepData.embeddingFiles || []
+                if (value && !currentFiles.includes(fileId)) {
+                  const newFiles = [...currentFiles, fileId]
                   updateNodeData({ embeddingFiles: newFiles })
                 }
               }}
@@ -321,7 +264,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               </SelectTrigger>
               <SelectContent>
                 {files
-                  .filter((f) => !embeddingFiles.includes(f.id.toString()))
+                  .filter(
+                    (f) => !(stepData.embeddingFiles || []).includes(f.id)
+                  )
                   .map((file) => (
                     <SelectItem key={file.id} value={file.id.toString()}>
                       {file.name}
@@ -337,11 +282,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             LLM Model
           </Label>
           <Select
-            value={llm.toString()}
+            value={stepData.llm ? stepData.llm.toString() : ''}
             onValueChange={(value) => {
-              setLlm(value)
-              updateNodeData({ llm: value })
-              clearNodeError(id, 'llm')
+              updateNodeData({ llm: Number(value) })
+              clearNodeError(nodeId, 'llm')
             }}
           >
             <SelectTrigger
@@ -381,12 +325,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
           <div className='space-y-4 border-t pt-4'>
             <div className='space-y-2'>
               <Label className='text-xs font-medium'>
-                Max Tokens: {maxTokens}
+                Max Tokens: {stepData.maxTokens || 2048}
               </Label>
               <Slider
-                value={[maxTokens]}
+                value={[stepData.maxTokens || 2048]}
                 onValueChange={(value) => {
-                  setMaxTokens(value[0])
                   updateNodeData({ maxTokens: value[0] })
                 }}
                 max={8192}
@@ -398,12 +341,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs font-medium'>
-                Temperature: {temperature}
+                Temperature: {stepData.temperature || 0.7}
               </Label>
               <Slider
-                value={[temperature]}
+                value={[stepData.temperature || 0.7]}
                 onValueChange={(value) => {
-                  setTemperature(value[0])
                   updateNodeData({ temperature: value[0] })
                 }}
                 max={2}
@@ -415,12 +357,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs font-medium'>
-                Max Context Snippets: {maxContextSnippets}
+                Max Context Snippets: {stepData.maxContextSnippets || 4}
               </Label>
               <Slider
-                value={[maxContextSnippets]}
+                value={[stepData.maxContextSnippets || 4]}
                 onValueChange={(value) => {
-                  setMaxContextSnippets(value[0])
                   updateNodeData({ maxContextSnippets: value[0] })
                 }}
                 max={20}
@@ -432,12 +373,12 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs font-medium'>
-                Document Similarity Threshold: {documentSimilarityThreshold}
+                Document Similarity Threshold:{' '}
+                {stepData.documentSimilarityThreshold || 0.2}
               </Label>
               <Slider
-                value={[documentSimilarityThreshold]}
+                value={[stepData.documentSimilarityThreshold || 0.2]}
                 onValueChange={(value) => {
-                  setDocumentSimilarityThreshold(value[0])
                   updateNodeData({ documentSimilarityThreshold: value[0] })
                 }}
                 max={1}

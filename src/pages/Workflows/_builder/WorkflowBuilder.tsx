@@ -24,7 +24,7 @@ import Sidebar from './components/Sidebar'
 
 export interface WorkflowBuilderProps {
   initialWorkflow?: Workflow
-  workflowId?: string
+  workflowId?: number
   disableEditing?: boolean
 }
 

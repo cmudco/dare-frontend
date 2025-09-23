@@ -1,7 +1,6 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import {
-  Step,
   Workflow,
   WorkflowRun,
   CreateWorkflowDTO,
@@ -47,18 +46,6 @@ export const deleteWorkflowAPI = async (id: number): Promise<void> => {
   await baseRequest<void>({
     url: `api/workflows/${id}/`,
     method: METHOD.DELETE,
-  })
-}
-
-export const createStepAPI = async (stepData: {
-  prompt: string
-  order: number
-  user?: string
-}): Promise<Step> => {
-  return await baseRequest<Step>({
-    url: 'api/steps/',
-    method: METHOD.POST,
-    data: stepData,
   })
 }
 
