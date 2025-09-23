@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Cog, Trash2 } from 'lucide-react'
+import { Play, Cog, Trash2, Gauge } from 'lucide-react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import {
@@ -28,6 +28,13 @@ const nodeComponents = [
     icon: Cog,
     color: 'bg-primary',
   },
+  {
+    type: 'aggregator',
+    label: 'Aggregator',
+    description: 'Evaluate multiple inputs and route based on scoring',
+    icon: Gauge,
+    color: 'bg-orange-500',
+  },
   // { type: 'chatOutput', label: 'Output', description: 'Configure how results are displayed', icon: Cog, color: 'bg-primary' },
 ]
 
@@ -39,6 +46,7 @@ export default function Sidebar({ disabled }: SidebarProps) {
     selectedWorkflowRun?.status === WorkflowRunStepStatus.Running
 
   const hasStartNode = nodes.some((n) => n.type === 'start')
+  const hasAggregatorNode = nodes.some((n) => n.type === 'aggregator')
 
   const calculateOptimalPosition = (type: string) => {
     const startNode = nodes.find((n) => n.type === 'start')
@@ -59,7 +67,17 @@ export default function Sidebar({ disabled }: SidebarProps) {
       }
     }
 
-    return { x: startPosition.x + 800, y: startPosition.y }
+    if (type === 'aggregator') {
+      const aggregatorCount = nodes.filter(
+        (n) => n.type === 'aggregator'
+      ).length
+      return {
+        x: startPosition.x + 800,
+        y: startPosition.y + aggregatorCount * stepSpacing,
+      }
+    }
+
+    return { x: startPosition.x + 1200, y: startPosition.y }
   }
 
   const handleAddNode = (type: string) => {
@@ -105,9 +123,13 @@ export default function Sidebar({ disabled }: SidebarProps) {
                   isWorkflowRunning ||
                   (component.type === 'start'
                     ? Boolean(disabled?.start) || hasStartNode
-                    : component.type === 'chatOutput'
-                      ? Boolean(disabled?.output) || !hasStartNode
-                      : Boolean(disabled?.step) || !hasStartNode)
+                    : component.type === 'aggregator'
+                      ? Boolean(disabled?.step) ||
+                        !hasStartNode ||
+                        hasAggregatorNode
+                      : component.type === 'chatOutput'
+                        ? Boolean(disabled?.output) || !hasStartNode
+                        : Boolean(disabled?.step) || !hasStartNode)
                 }
               >
                 Add to Canvas

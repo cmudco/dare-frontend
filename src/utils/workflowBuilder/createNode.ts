@@ -104,6 +104,34 @@ export const createNode = (
     }
 
     return { nodes: nextNodes, edges: nextEdges }
+  } else if (type === 'aggregator') {
+    // Handle aggregator node - only one per workflow
+    const hasAggregator = nodes.some((n) => n.type === 'aggregator')
+
+    if (hasAggregator) {
+      return {
+        nodes,
+        edges,
+        shouldShowToast: {
+          type: 'info',
+          message: 'Only one Aggregator node is allowed per workflow.',
+        },
+      }
+    }
+
+    const aggregatorNode: Node = {
+      id: 'aggregator',
+      type: 'aggregator',
+      position,
+      data: {
+        stepNumber: 1,
+        scoringMode: 'quantitative',
+        customPrompt:
+          'Evaluate the quality of the responses and provide a score based on accuracy, relevance, and clarity.',
+      },
+    }
+
+    return { nodes: [...nodes, aggregatorNode], edges }
   } else {
     // Handle start node with initial data
     const newNode: Node = {
