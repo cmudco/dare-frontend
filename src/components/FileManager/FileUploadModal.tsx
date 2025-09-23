@@ -11,6 +11,7 @@ import {
 import { getFiles, uploadNewFile } from '../../redux/asyncThunks/file'
 import { addTag, getTags } from '../../redux/asyncThunks/tag'
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
+import { Settings, Info } from 'lucide-react'
 
 import {
   Dialog,
@@ -32,21 +33,32 @@ import {
 import { Badge } from '../ui/badge'
 import { getTagColor, isAllowedFileType } from '@/utils/files'
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from '@/utils/constants/file'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { fetchChunkSettings } from '@/redux/asyncThunks/user'
+import { ChunkSettingsForm } from '@/components/Auth/ChunkSettingsForm'
 
 const FileUploadModal: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [fileErrors, setFileErrors] = useState<string[]>([])
   const [newTag, setNewTag] = useState<string>('')
+  const [isChunkPopoverOpen, setIsChunkPopoverOpen] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
+
+  const { selectedTags, isModalOpen, loading, error } = useSelector(
+    (state: RootState) => state.files
+  )
 
   useEffect(() => {
     dispatch(getTags())
   }, [dispatch])
 
-  const { selectedTags, isModalOpen, loading, error } = useSelector(
-    (state: RootState) => state.files
-  )
+  useEffect(() => {
+    if (isModalOpen) {
+      dispatch(fetchChunkSettings())
+    }
+  }, [dispatch, isModalOpen])
   const { tags } = useSelector((state: RootState) => state.tags)
+  const { chunkSettings } = useSelector((state: RootState) => state.user)
 
   const handleUploadClick = async () => {
     if (selectedFiles.length > 0) {
@@ -131,6 +143,7 @@ const FileUploadModal: React.FC = () => {
         if (!open) {
           setSelectedFiles([])
           setFileErrors([])
+          setIsChunkPopoverOpen(false)
           dispatch(closeModal())
         }
       }}
@@ -138,12 +151,53 @@ const FileUploadModal: React.FC = () => {
       <DialogContent className='mx-auto w-[90vw] max-w-md rounded-lg bg-background bg-white p-6 shadow-lg'>
         {/* Header */}
         <DialogHeader>
-          <DialogTitle className='text-lg font-semibold text-gray-900 dark:text-white'>
-            File Upload
-          </DialogTitle>
-          <DialogDescription className='text-sm text-gray-500 dark:text-dark-icon-unselected'>
-            Upload multiple files and add tags to categorize them.
-          </DialogDescription>
+          <div className='flex items-start justify-between gap-3'>
+            <div>
+              <DialogTitle className='text-lg font-semibold text-gray-900 dark:text-white'>
+                File Upload
+              </DialogTitle>
+              <DialogDescription className='text-sm text-gray-500 dark:text-dark-icon-unselected'>
+                Upload multiple files and add tags to categorize them.
+              </DialogDescription>
+            </div>
+            <Popover
+              open={isChunkPopoverOpen}
+              onOpenChange={(open) => {
+                setIsChunkPopoverOpen(open)
+              }}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='text-gray-600 hover:text-gray-900 dark:text-dark-icon-unselected dark:hover:text-white'
+                  aria-label='Adjust chunk settings'
+                >
+                  <Settings className='h-5 w-5' />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align='end'
+                className='w-80 space-y-4'
+                sideOffset={8}
+                onOpenAutoFocus={(event) => event.preventDefault()}
+                onCloseAutoFocus={(event) => event.preventDefault()}
+              >
+                <div>
+                  <h3 className='text-sm font-semibold text-gray-900 dark:text-white'>
+                    Chunk settings
+                  </h3>
+                  <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+                    Control how your documents are split into chunks for
+                    retrieval.
+                  </p>
+                </div>
+                <ChunkSettingsForm
+                  onSuccess={() => setIsChunkPopoverOpen(false)}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </DialogHeader>
 
         <div className='space-y-4'>
@@ -278,6 +332,40 @@ const FileUploadModal: React.FC = () => {
               </ul>
             </div>
           )}
+          <div className='flex items-center justify-between text-xs text-gray-500 dark:text-gray-400'>
+            <span>
+              Chunk size: {chunkSettings?.chunkSize ?? 1000}, overlap:{' '}
+              {chunkSettings?.overlapSize ?? 20}
+            </span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type='button'
+                  className='rounded-md p-1 hover:bg-gray-200 dark:hover:bg-white/10'
+                  aria-label='Learn about chunking'
+                >
+                  <Info className='h-4 w-4' />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className='w-64 space-y-2 text-xs' align='end'>
+                <p>
+                  Files are split into overlapping chunks to improve recall
+                  during search.
+                </p>
+                <ul className='list-disc space-y-1 pl-4'>
+                  <li>
+                    <span className='font-medium'>Chunk size:</span> number of
+                    characters in each piece.
+                  </li>
+                  <li>
+                    <span className='font-medium'>Overlap:</span> characters
+                    carried into the next chunk to keep context.
+                  </li>
+                </ul>
+                <p>Adjust the values with the gear icon before uploading.</p>
+              </PopoverContent>
+            </Popover>
+          </div>
           {error && (
             <div className='text-center text-sm text-red-500 dark:text-red-400'>
               {error}

@@ -113,6 +113,8 @@ const workflowSlice = createSlice({
           state.workflows.push(updatedWorkflow)
         }
         state.selectedWorkflow = updatedWorkflow
+        // Clear any selected run after save so unrelated polling stops
+        state.selectedWorkflowRun = null
       })
       .addCase(createOrUpdateWorkflow.rejected, (state, action) => {
         state.loading = false

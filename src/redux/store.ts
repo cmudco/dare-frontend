@@ -7,6 +7,7 @@ import promptReducer from './promptSlice'
 import websocketReducer from './websocketSlice'
 import tagsReducer from './tagslice'
 import workflowReducer from './workflowSlice'
+import workflowBuilderReducer from './workflowBuilderSlice'
 import billingReducer from './billingSlice'
 import themeReducer from './themeSlice'
 import notificationReducer from './notificationSlice'
@@ -42,6 +43,7 @@ export const store = configureStore({
     websocket: websocketReducer,
     tags: tagsReducer,
     workflow: workflowReducer,
+    workflowBuilder: workflowBuilderReducer,
     billing: billingReducer,
     theme: themeReducer,
     notification: notificationReducer,
