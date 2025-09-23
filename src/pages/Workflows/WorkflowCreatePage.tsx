@@ -14,10 +14,8 @@ import {
   setErrorsByNodeId,
   updateStepApiIds,
 } from '@/redux/workflowBuilderSlice'
-import {
-  serializeWorkflow,
-  validateWorkflow,
-} from '@/utils/workflowBuilder/workflowHelpers'
+import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
+import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { createOrUpdateWorkflow } from '@/redux/asyncThunks/workflow'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'

@@ -20,10 +20,8 @@ import { useEffect } from 'react'
 import { useErrorsContext } from '../ErrorsContext'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
-import {
-  rebuildEdgesForMode,
-  edgesChanged,
-} from '@/utils/workflowBuilder/layoutHelpers'
+import { rebuildEdgesForMode } from '@/utils/workflowBuilder/rebuildEdgesForMode'
+import { edgesChanged } from '@/utils/workflowBuilder/edgesChanged'
 
 type Mode = 'sequential' | 'parallel'
 type StartData = {

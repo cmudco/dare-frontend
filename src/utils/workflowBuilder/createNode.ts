@@ -73,11 +73,9 @@ export const createNode = (
 
     // If in sequential mode, auto-wire previous output -> this step
     const start = nodes.find((n) => n.type === 'start')
-    const mode: 'sequential' | 'parallel' =
-      (start?.data as { mode?: 'sequential' | 'parallel' } | undefined)
-        ?.mode === 'parallel'
-        ? 'parallel'
-        : 'sequential'
+    const mode: 'sequential' | 'parallel' = start
+      ? (start.data as { mode: 'sequential' | 'parallel' }).mode
+      : 'sequential'
 
     if (mode === 'sequential') {
       const prevStepNumber = stepNumber - 1
@@ -125,27 +123,4 @@ export const createNode = (
 
     return { nodes: [...nodes, newNode], edges }
   }
-}
-
-export const removeNodeById = (
-  nodeId: string,
-  nodes: Node[],
-  edges: Edge[]
-): { nodes: Node[]; edges: Edge[] } => {
-  const updatedNodes = nodes.filter((node) => node.id !== nodeId)
-  const updatedEdges = edges.filter(
-    (edge) => edge.source !== nodeId && edge.target !== nodeId
-  )
-
-  return { nodes: updatedNodes, edges: updatedEdges }
-}
-
-export const updateNodeData = (
-  nodeId: string,
-  newData: Record<string, unknown>,
-  nodes: Node[]
-): Node[] => {
-  return nodes.map((node) =>
-    node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node
-  )
 }

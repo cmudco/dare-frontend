@@ -10,13 +10,11 @@ import {
 } from '@xyflow/react'
 import { initialState } from './initialState/workflowBuilder'
 import { NodeErrors } from './types/workflowBuilder'
-import { handleConnection } from '@/utils/workflowBuilder/connectionHelpers'
-import {
-  createNode,
-  removeNodeById as removeNodeByIdHelper,
-  updateNodeData as updateNodeDataHelper,
-} from '@/utils/workflowBuilder/nodeHelpers'
-import { validateWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
+import { handleConnection } from '@/utils/workflowBuilder/handleConnection'
+import { createNode } from '@/utils/workflowBuilder/createNode'
+import { removeNodeById as removeNodeByIdHelper } from '@/utils/workflowBuilder/removeNodeById'
+import { updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/updateNodeData'
+import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
 import { startWorkflowRun } from './asyncThunks/workflow'
 import type { WorkflowRun } from './types/workflow'
