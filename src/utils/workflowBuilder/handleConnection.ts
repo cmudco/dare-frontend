@@ -85,7 +85,11 @@ export const handleConnection = (
     }
   }
 
-  // Default connection
-  const newEdges = addEdge(params, edges)
+  // Default connection with clean naming
+  const cleanEdge = {
+    ...params,
+    id: `e-${params.source}-${params.target}`,
+  }
+  const newEdges = addEdge(cleanEdge, edges)
   return { nodes, edges: newEdges }
 }

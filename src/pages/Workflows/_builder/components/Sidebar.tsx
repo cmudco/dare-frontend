@@ -50,16 +50,30 @@ export default function Sidebar({ disabled }: SidebarProps) {
 
   const calculateOptimalPosition = (type: string) => {
     const startNode = nodes.find((n) => n.type === 'start')
+    const aggregatorNode = nodes.find((n) => n.type === 'aggregator')
     const mode =
       (startNode?.data as { mode?: 'sequential' | 'parallel' })?.mode ||
       'sequential'
 
     const startPosition = { x: 100, y: 200 }
-    const stepSpacing = mode === 'parallel' ? 440 : 300 // Good spacing for both modes
+    const stepSpacing = mode === 'parallel' ? 440 : 300
 
     if (type === 'start') return startPosition
 
     if (type === 'step') {
+      // Enhanced logic when both start and aggregator exist
+      if (startNode && aggregatorNode) {
+        // Find rightmost node position
+        const rightmostX = Math.max(...nodes.map((n) => n.position.x + 320)) // Add node width estimate
+        const stepCount = nodes.filter((n) => n.type === 'step').length
+
+        return {
+          x: rightmostX + 100, // 100px spacing from rightmost node
+          y: startPosition.y + stepCount * 150, // Tighter vertical spacing
+        }
+      }
+
+      // Default positioning when no aggregator
       const stepCount = nodes.filter((n) => n.type === 'step').length
       return {
         x: startPosition.x + 400,

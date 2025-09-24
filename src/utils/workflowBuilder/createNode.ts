@@ -71,13 +71,15 @@ export const createNode = (
     const nextNodes = [...nodes, stepNode, outputNode]
     let nextEdges = [...edges, stepToOutputEdge]
 
-    // If in sequential mode, auto-wire previous output -> this step
+    // Enhanced logic: Skip auto-wiring when both start and aggregator exist
     const start = nodes.find((n) => n.type === 'start')
+    const aggregator = nodes.find((n) => n.type === 'aggregator')
     const mode: 'sequential' | 'parallel' = start
       ? (start.data as { mode: 'sequential' | 'parallel' }).mode
       : 'sequential'
 
-    if (mode === 'sequential') {
+    // Only auto-wire if aggregator doesn't exist (traditional workflow)
+    if (mode === 'sequential' && !aggregator) {
       const prevStepNumber = stepNumber - 1
       if (prevStepNumber >= 1) {
         // Previous output node ID follows pattern: "{prevStepNumber}o"

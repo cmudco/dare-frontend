@@ -1,4 +1,9 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import {
+  Handle,
+  Position,
+  type NodeProps,
+  useUpdateNodeInternals,
+} from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -6,8 +11,9 @@ import { Button } from '@/components/ui/button'
 import { Gauge, Info, ToggleLeft, ToggleRight } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { updateNodeDataById } from '@/redux/workflowBuilderSlice'
+import { updateNodeDataById, setEdges } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
+import React from 'react'
 
 export type AggregatorNodeData = {
   scoringMode: 'quantitative' | 'qualitative'
@@ -22,28 +28,11 @@ export default function AggregatorNode({ id, data, selected }: NodeProps) {
   const { errorsByNodeId } = useErrorsContext()
   const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
-
-  // Get the number of output nodes and mode to determine input handles
-  const nodes = useAppSelector((state) => state.workflowBuilder.nodes)
   const edges = useAppSelector((state) => state.workflowBuilder.edges)
-  const outputNodeCount = nodes.filter((n) => n.type === 'chatOutput').length
+  const updateNodeInternals = useUpdateNodeInternals()
 
-  // Debug: Check what edges exist
-  console.log('Current edges:', edges)
-  console.log(
-    'Edges to aggregator:',
-    edges.filter((e) => e.target === 'aggregator')
-  )
-
-  // Get execution mode from start node
-  const startNode = nodes.find((n) => n.type === 'start')
-  const mode =
-    (startNode?.data as { mode?: 'sequential' | 'parallel' })?.mode ||
-    'sequential'
-
-  // Calculate input handles based on mode
-  const inputHandleCount =
-    mode === 'parallel' ? Math.max(1, outputNodeCount) : 1
+  // Fixed 3 input handles for simplicity
+  const inputHandleCount = 3
 
   // Local state for form inputs
   const [scoringMode, setScoringMode] = useState<
@@ -76,9 +65,23 @@ export default function AggregatorNode({ id, data, selected }: NodeProps) {
   const handleScoringModeToggle = () => {
     const newMode =
       scoringMode === 'quantitative' ? 'qualitative' : 'quantitative'
+
+    // Remove ALL aggregator edges to avoid ReactFlow state confusion
+    const cleanedEdges = edges.filter((edge) => edge.source !== id)
+
+    // Update edges synchronously before changing mode
+    if (cleanedEdges.length !== edges.length) {
+      dispatch(setEdges(cleanedEdges))
+    }
+
+    // Then change the mode
     setScoringMode(newMode)
     updateNodeData({ scoringMode: newMode })
   }
+
+  useEffect(() => {
+    updateNodeInternals(id)
+  }, [updateNodeInternals, id, scoringMode])
 
   const handlePromptChange = (value: string) => {
     setCustomPrompt(value)
@@ -192,7 +195,9 @@ export default function AggregatorNode({ id, data, selected }: NodeProps) {
       {/* Dynamic input handles based on mode and output node count */}
       {Array.from({ length: inputHandleCount }, (_, index) => {
         const handleId = `input-${index + 1}`
-        console.log('Rendering handle:', handleId)
+        // Fixed positioning for 3 handles: 25%, 50%, 75%
+        const topPercent = 25 + index * 25
+
         return (
           <Handle
             key={handleId}
@@ -200,22 +205,62 @@ export default function AggregatorNode({ id, data, selected }: NodeProps) {
             position={Position.Left}
             id={handleId}
             style={{
-              top:
-                inputHandleCount === 1
-                  ? '50%'
-                  : `${25 + index * (50 / inputHandleCount)}%`,
+              top: `${topPercent}%`,
             }}
             className='h-3 w-3 bg-orange-500'
           />
         )
       })}
 
-      {/* Single output handle */}
-      <Handle
-        type='source'
-        position={Position.Right}
-        className='h-4 w-4 border-2 border-white bg-orange-500'
-      />
+      {/* Dynamic output handles based on scoring mode */}
+      {(() => {
+        const outputs =
+          scoringMode === 'quantitative'
+            ? [
+                { id: 'bad', label: 'Bad', color: 'bg-red-500' },
+                { id: 'average', label: 'Average', color: 'bg-yellow-500' },
+                { id: 'good', label: 'Good', color: 'bg-green-500' },
+              ]
+            : [
+                { id: 'false', label: 'False', color: 'bg-red-500' },
+                { id: 'true', label: 'True', color: 'bg-green-500' },
+              ]
+
+        return outputs.map((output, index) => {
+          const totalOutputs = outputs.length
+          // Calculate proper vertical positioning
+          const topPercent =
+            totalOutputs === 2
+              ? 30 + index * 40 // 30%, 70% for 2 outputs
+              : 20 + index * 30 // 20%, 50%, 80% for 3 outputs
+
+          return (
+            <React.Fragment key={output.id}>
+              <Handle
+                type='source'
+                position={Position.Right}
+                id={`output-${output.id}`}
+                style={{
+                  top: `${topPercent}%`,
+                }}
+                className={`h-3 w-3 border-2 border-white ${output.color}`}
+              />
+              {/* Label positioned to the right of handle */}
+              <div
+                className='pointer-events-none absolute z-10 text-xs font-medium text-muted-foreground'
+                style={{
+                  left: '105%', // Position to the right of the card
+                  top: `${topPercent}%`,
+                  transform: 'translateY(-50%)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {output.label}
+              </div>
+            </React.Fragment>
+          )
+        })
+      })()}
     </Card>
   )
 }

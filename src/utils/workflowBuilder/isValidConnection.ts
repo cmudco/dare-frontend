@@ -34,6 +34,16 @@ export const isValidConnection = (
   const sType = sourceNode.type
   const tType = targetNode.type
 
+  // Handle aggregator connections FIRST (before other constraints)
+  if (tType === 'aggregator') {
+    const isAllowed = sType === 'chatOutput' || sType === 'step'
+    return isAllowed
+  }
+
+  if (sType === 'aggregator') {
+    return true
+  }
+
   // Allow Start <-> Step regardless of drag direction
   if (
     (sType === 'start' && tType === 'step') ||

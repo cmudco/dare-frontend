@@ -68,7 +68,7 @@ export default function StartNode({ id, data, selected }: NodeProps) {
     if (edgesChanged(edges, rebuiltEdges)) {
       dispatch(setEdges(rebuiltEdges))
     }
-  }, [dispatch, edges, nodeId, startData?.mode, nodes])
+  }, [dispatch, startData?.mode])
 
   const renderOutputHandles = () => {
     if ((startData?.mode || 'sequential') === 'parallel') {

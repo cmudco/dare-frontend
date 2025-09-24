@@ -111,7 +111,6 @@ const workflowBuilderSlice = createSlice({
       state.nodes = applyNodeChanges(action.payload, state.nodes)
     },
     onEdgesChange: (state, action: PayloadAction<EdgeChange[]>) => {
-      // Apply changes using ReactFlow's utility
       state.edges = applyEdgeChanges(action.payload, state.edges)
     },
     onConnect: (state, action: PayloadAction<Connection>) => {
