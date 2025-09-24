@@ -7,7 +7,8 @@ export const initialState: WorkflowState = {
   selectedWorkflowRun: null,
   loading: false,
   error: null,
-  isModalOpen: false,
+  // LEGACY: Commenting out modal state
+  // isModalOpen: false,
   savedStepIds: [],
   tempSteps: [],
 }

@@ -84,7 +84,8 @@ export interface WorkflowState {
   selectedWorkflowRun: WorkflowRun | null
   loading: boolean
   error: string | null
-  isModalOpen: boolean
+  // LEGACY: Commenting out modal state
+  // isModalOpen: boolean
   savedStepIds: number[]
   tempSteps: Step[]
 }

@@ -29,6 +29,8 @@ const workflowSlice = createSlice({
     clearWorkflowError: (state) => {
       state.error = null
     },
+    // LEGACY MODAL ACTIONS - COMMENTED OUT
+    /*
     openModal: (state) => {
       state.selectedWorkflow = null
       state.tempSteps = []
@@ -44,6 +46,7 @@ const workflowSlice = createSlice({
       state.isModalOpen = false
       state.selectedWorkflow = null
     },
+    */
     setSteps: (state, action: PayloadAction<Step[]>) => {
       if (state.selectedWorkflow) {
         state.selectedWorkflow.steps = action.payload
@@ -193,9 +196,10 @@ export const {
   clearSelectedWorkflowRun,
   setSelectedWorkflowRun,
   clearWorkflowError,
-  openModal,
-  openEditModal,
-  closeModal,
+  // LEGACY MODAL ACTIONS - COMMENTED OUT
+  // openModal,
+  // openEditModal,
+  // closeModal,
   setSteps,
   selectWorkflowForView,
   setSavedStepIds,
