@@ -5,6 +5,8 @@ export type NodeErrors = {
   title?: string
   description?: string
   llm?: string
+  customPrompt?: string
+  connections?: string
 }
 
 export type ErrorsContextValue = {

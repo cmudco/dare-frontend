@@ -1,6 +1,7 @@
 import { type Node, type Edge } from '@xyflow/react'
 import { type NodeErrors } from '@/redux/types/workflowBuilder'
 import type { StepNodeData } from '@/pages/Workflows/_builder/nodes/StepNode'
+import type { AggregatorNodeData } from '@/pages/Workflows/_builder/nodes/AggregatorNode'
 
 export interface ValidationResult {
   isValid: boolean
@@ -43,7 +44,7 @@ export const validateWorkflow = (
     const existingMessage = existingNodeErrors[field]
     nodeErrors[nodeId] = {
       ...existingNodeErrors,
-      [field]: existingMessage ? `${existingMessage} ${message}` : message,
+      [field]: existingMessage ? `${existingMessage}\n${message}` : message,
     }
   }
 
@@ -77,6 +78,22 @@ export const validateWorkflow = (
     if (!d?.llm) {
       appendFieldError(sn.id, 'llm', 'Please select an LLM')
       pushErrorMessage(`Step ${idx + 1} requires an LLM selection`)
+    }
+  })
+
+  // Validate aggregator nodes
+  const aggregatorNodes = nodes.filter((n) => n.type === 'aggregator')
+  aggregatorNodes.forEach((aggregatorNode) => {
+    const data = (aggregatorNode.data as Partial<AggregatorNodeData>) || {}
+    const customPrompt = data?.customPrompt?.trim() || ''
+
+    if (!customPrompt) {
+      appendFieldError(
+        aggregatorNode.id,
+        'customPrompt',
+        'Custom evaluation prompt is required'
+      )
+      pushErrorMessage(`Aggregator requires a custom evaluation prompt`)
     }
   })
 
@@ -160,15 +177,29 @@ export const validateWorkflow = (
 
     if (mode === 'parallel') {
       sortedSteps.forEach((step) => {
-        if (!hasConnection(start.id, step.id)) {
+        const hasStartConnection = hasConnection(start.id, step.id)
+
+        // If aggregator nodes exist, allow step to connect to aggregator instead of start
+        const hasAggregatorConnection =
+          aggregatorNodes.length > 0 &&
+          aggregatorNodes.some((aggregator) =>
+            hasConnection(aggregator.id, step.id)
+          )
+
+        if (!hasStartConnection && !hasAggregatorConnection) {
           const label = getStepLabel(step)
+          const connectionRequirement =
+            aggregatorNodes.length > 0
+              ? 'must connect to either the Start node or an Aggregator node'
+              : 'must connect directly to the Start node'
+
           appendFieldError(
             step.id,
             'connections',
-            `${label} must connect directly to the Start node.`
+            `${label} ${connectionRequirement}.`
           )
           pushErrorMessage(
-            `${label} must connect directly to the Start node in parallel mode.`
+            `${label} ${connectionRequirement} in parallel mode.`
           )
         }
       })
@@ -236,6 +267,104 @@ export const validateWorkflow = (
         pushErrorMessage(message)
       }
     })
+
+    // Validate aggregator connections
+    if (aggregatorNodes.length > 0) {
+      aggregatorNodes.forEach((aggregatorNode) => {
+        const incomingEdges = edges.filter(
+          (edge) => edge.target === aggregatorNode.id
+        )
+        const connectedOutputs = incomingEdges
+          .map((edge) => nodes.find((n) => n.id === edge.source))
+          .filter((node) => node?.type === 'chatOutput')
+
+        if (mode === 'sequential') {
+          // Sequential: last step's output must connect to aggregator
+          if (sortedSteps.length > 0) {
+            const lastStep = sortedSteps[sortedSteps.length - 1]
+            const lastStepNumber = getStepNumber(lastStep)
+            const lastStepOutputs =
+              lastStepNumber != null
+                ? (outputsByStep.get(lastStepNumber) ?? [])
+                : []
+
+            const hasLastStepConnection = lastStepOutputs.some((output) =>
+              connectedOutputs.some(
+                (connectedOutput) => connectedOutput?.id === output.id
+              )
+            )
+
+            if (!hasLastStepConnection && lastStepOutputs.length > 0) {
+              appendFieldError(
+                aggregatorNode.id,
+                'connections',
+                "Aggregator must connect from the last step's output in sequential mode"
+              )
+              pushErrorMessage(
+                "Aggregator must connect from the last step's output in sequential mode"
+              )
+            }
+
+            // Sequential: ensure ONLY the last step's output connects to aggregator
+            const invalidConnections = connectedOutputs.filter(
+              (connectedOutput) => {
+                const isFromLastStep = lastStepOutputs.some(
+                  (lastOutput) => lastOutput.id === connectedOutput?.id
+                )
+                return !isFromLastStep
+              }
+            )
+
+            if (invalidConnections.length > 0) {
+              appendFieldError(
+                aggregatorNode.id,
+                'connections',
+                "Aggregator can only connect from the last step's output in sequential mode"
+              )
+              pushErrorMessage(
+                "Aggregator can only connect from the last step's output in sequential mode"
+              )
+            }
+          }
+        } else {
+          // Parallel: at least one step output must connect to aggregator
+          if (connectedOutputs.length === 0) {
+            appendFieldError(
+              aggregatorNode.id,
+              'connections',
+              'Aggregator must connect from at least one step output in parallel mode'
+            )
+            pushErrorMessage(
+              'Aggregator must connect from at least one step output in parallel mode'
+            )
+          }
+        }
+
+        // Validate aggregator output connections based on scoring mode
+        const outgoingEdges = edges.filter(
+          (edge) => edge.source === aggregatorNode.id
+        )
+        const connectedSteps = outgoingEdges
+          .map((edge) => nodes.find((n) => n.id === edge.target))
+          .filter((node) => node?.type === 'step')
+
+        const aggregatorData =
+          (aggregatorNode.data as Partial<AggregatorNodeData>) || {}
+        const scoringMode = aggregatorData.scoringMode || 'quantitative'
+
+        const expectedConnections = scoringMode === 'qualitative' ? 2 : 3
+        const scoringModeLabel =
+          scoringMode === 'qualitative'
+            ? 'qualitative (true/false)'
+            : 'quantitative (bad/average/good)'
+
+        if (connectedSteps.length !== expectedConnections) {
+          const message = `Aggregator with ${scoringModeLabel} scoring mode must connect to exactly ${expectedConnections} step nodes`
+          appendFieldError(aggregatorNode.id, 'connections', message)
+          pushErrorMessage(message)
+        }
+      })
+    }
   }
 
   return {

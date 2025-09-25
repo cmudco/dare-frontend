@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Gauge, Info, ToggleLeft, ToggleRight } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { updateNodeDataById, setEdges } from '@/redux/workflowBuilderSlice'
+import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
 import React from 'react'
 
@@ -25,14 +25,24 @@ export type AggregatorNodeData = {
 export default function AggregatorNode({ id, data, selected }: NodeProps) {
   const nodeData =
     (data as unknown as AggregatorNodeData) || ({} as AggregatorNodeData)
-  const { errorsByNodeId } = useErrorsContext()
+  const { errorsByNodeId, clearNodeError } = useErrorsContext()
   const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
-  const edges = useAppSelector((state) => state.workflowBuilder.edges)
+  const edges = useAppSelector((s) => s.workflowBuilder.edges)
+  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const updateNodeInternals = useUpdateNodeInternals()
 
-  // Fixed 3 input handles for simplicity
-  const inputHandleCount = 3
+  // Calculate input handles based on actual connections
+  const connectedInputEdges = edges.filter((edge) => {
+    const sourceNode = nodes.find((n) => n.id === edge.source)
+    return (
+      edge.target === id &&
+      (sourceNode?.type === 'step' || sourceNode?.type === 'chatOutput')
+    )
+  })
+
+  // Show connected inputs + one spare handle for new connections
+  const inputHandleCount = Math.max(connectedInputEdges.length + 1, 1)
 
   // Local state for form inputs
   const [scoringMode, setScoringMode] = useState<
@@ -62,30 +72,46 @@ export default function AggregatorNode({ id, data, selected }: NodeProps) {
     }
   }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const pruneInvalidAggregatorEdges = (
+    mode: 'quantitative' | 'qualitative'
+  ) => {
+    const allowedHandles =
+      mode === 'qualitative'
+        ? new Set(['output-true', 'output-false'])
+        : new Set(['output-bad', 'output-average', 'output-good'])
+
+    const filtered = edges.filter((e) => {
+      if (e.source !== id) return true
+      // keep only edges whose sourceHandle is valid for the current mode
+      return e.sourceHandle ? allowedHandles.has(e.sourceHandle) : false
+    })
+
+    if (filtered.length !== edges.length) {
+      dispatch(setEdges(filtered))
+    }
+  }
+
   const handleScoringModeToggle = () => {
     const newMode =
       scoringMode === 'quantitative' ? 'qualitative' : 'quantitative'
 
-    // Remove ALL aggregator edges to avoid ReactFlow state confusion
-    const cleanedEdges = edges.filter((edge) => edge.source !== id)
-
-    // Update edges synchronously before changing mode
-    if (cleanedEdges.length !== edges.length) {
-      dispatch(setEdges(cleanedEdges))
-    }
-
-    // Then change the mode
     setScoringMode(newMode)
     updateNodeData({ scoringMode: newMode })
+    // Drop any aggregator->step edges that use handles not available in the new mode
+    pruneInvalidAggregatorEdges(newMode)
   }
 
   useEffect(() => {
     updateNodeInternals(id)
-  }, [updateNodeInternals, id, scoringMode])
+  }, [updateNodeInternals, id, scoringMode, edges])
 
   const handlePromptChange = (value: string) => {
     setCustomPrompt(value)
     updateNodeData({ customPrompt: value })
+
+    if (fieldErrors.customPrompt) {
+      clearNodeError(id, 'customPrompt')
+    }
   }
 
   return (
@@ -190,13 +216,31 @@ export default function AggregatorNode({ id, data, selected }: NodeProps) {
             )}
           </div>
         </div>
+
+        {/* Connection validation errors */}
+        {fieldErrors.connections && (
+          <div className='rounded-md border border-destructive/20 bg-destructive/10 p-3'>
+            <p className='text-xs font-medium text-destructive'>
+              Connection Error
+            </p>
+            <div className='mt-1 text-xs text-destructive'>
+              <pre className='whitespace-pre-wrap font-sans'>
+                {fieldErrors.connections}
+              </pre>
+            </div>
+          </div>
+        )}
       </CardContent>
 
-      {/* Dynamic input handles based on mode and output node count */}
+      {/* Dynamic input handles based on actual connections */}
       {Array.from({ length: inputHandleCount }, (_, index) => {
         const handleId = `input-${index + 1}`
-        // Fixed positioning for 3 handles: 25%, 50%, 75%
-        const topPercent = 25 + index * 25
+        // Dynamic positioning based on number of handles
+        const topPercent =
+          inputHandleCount === 1
+            ? 50
+            : 25 + (index * 50) / (inputHandleCount - 1)
+        const isConnected = index < connectedInputEdges.length
 
         return (
           <Handle
@@ -205,9 +249,11 @@ export default function AggregatorNode({ id, data, selected }: NodeProps) {
             position={Position.Left}
             id={handleId}
             style={{
-              top: `${topPercent}%`,
+              top: `${Math.min(Math.max(topPercent, 10), 90)}%`,
             }}
-            className='h-3 w-3 bg-orange-500'
+            className={`h-3 w-3 ${
+              isConnected ? 'bg-orange-500' : 'bg-muted-foreground'
+            }`}
           />
         )
       })}
