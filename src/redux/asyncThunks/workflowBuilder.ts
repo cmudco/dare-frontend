@@ -1,12 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { getWorkflowById } from './workflow'
 import { type Node, type Edge } from '@xyflow/react'
-import type {
-  Workflow,
-  Step as ApiStep,
-  WorkflowRun,
-  WorkflowRunStep,
-} from '../types/workflow'
+import type { Workflow, WorkflowRun } from '../types/workflow'
 
 type LoadWorkflowResult = {
   nodes: Node[]
@@ -28,153 +23,11 @@ export const loadWorkflowIntoBuilder = createAsyncThunk<
     throw new Error('Workflow not found')
   }
 
-  const workflowSteps = (workflow?.steps || []) as ApiStep[]
-  const savedLayout = workflow.layout ?? {}
-  const getPosition = (nodeId: string, fallback: { x: number; y: number }) => {
-    const saved = savedLayout[nodeId]
-    if (saved) {
-      return { x: saved.x, y: saved.y }
-    }
-    return { x: fallback.x, y: fallback.y }
-  }
-
-  // Create start node with ID "0"
-  const startNode: Node = {
-    id: '0',
-    type: 'start',
-    position: getPosition('0', { x: 100, y: 100 }),
-    data: {
-      title: workflow?.title || '',
-      description: workflow?.description || '',
-      mode: workflow?.mode === 2 ? 'parallel' : 'sequential',
-      spareHandle: true,
-    },
-  }
-
-  // Create step nodes with IDs "1", "2", "3"
-  const stepNodes: Node[] = workflowSteps.map((step: ApiStep, idx: number) => {
-    const stepData = {
-      stepNumber: step.order || idx + 1,
-      apiId: step.id, // Store API ID
-      prompt: step.prompt?.id || null,
-      contentFiles: (step.files || []).map((file) => file.id),
-      embeddingFiles: (step.embeddings || []).map((file) => file.id),
-      llm: step.llm?.id || null,
-      maxTokens: step.maxTokens || 2048,
-      temperature: step.temperature || 0.7,
-      maxContextSnippets: step.maxContextSnippets || 4,
-      documentSimilarityThreshold: step.documentSimilarityThreshold || 0.2,
-      usePreviousStepFiles: Boolean(step.usePreviousStepFiles),
-      usePreviousStepEmbeddings: Boolean(step.usePreviousStepEmbeddings),
-    }
-
-    const nodeId = (idx + 1).toString()
-    return {
-      id: nodeId, // "1", "2", "3"
-      type: 'step',
-      position: getPosition(nodeId, { x: 300 + idx * 400, y: 100 }),
-      data: stepData,
-    }
-  })
-
-  // Create output nodes with IDs "1o", "2o", "3o"
-  let outputNodes: Node[] = workflowSteps.map((step: ApiStep, idx: number) => {
-    const outputId = `${idx + 1}o`
-    return {
-      id: outputId, // "1o", "2o", "3o"
-      type: 'chatOutput',
-      position: getPosition(outputId, { x: 300 + idx * 400, y: 300 }),
-      data: {
-        label: `Step ${step.order || idx + 1} Output`,
-        stepNumber: step.order || idx + 1,
-      },
-    }
-  })
-
-  // If workflow has a latest run, populate output nodes with responses
-  const latestRun: WorkflowRun | null | undefined = workflow.latestRun
-  const runSteps: WorkflowRunStep[] | undefined = latestRun?.steps
-  if (Array.isArray(runSteps) && runSteps.length) {
-    const findRunForStep = (stepNumber: number) =>
-      runSteps.find((rs) => (rs.order || rs.step) === stepNumber)
-
-    outputNodes = outputNodes.map((outNode, idx) => {
-      const stepNumber = stepNodes[idx]?.data?.stepNumber
-      if (!stepNumber || typeof stepNumber !== 'number') return outNode
-
-      const runStep = findRunForStep(stepNumber)
-      if (!runStep) return outNode
-
-      return {
-        ...outNode,
-        data: {
-          ...outNode.data,
-          response: runStep.response,
-          status: runStep.status,
-        },
-      }
-    })
-  }
-
-  // Create edges: Start -> Steps, Steps -> Outputs
-  const startToStepEdges: Edge[] = (() => {
-    const isParallel = workflow?.mode === 2
-    if (isParallel) {
-      return stepNodes.map((step, idx) => ({
-        id: `e-start-${step.id}`,
-        source: '0', // Start node is always "0"
-        target: step.id,
-        type: 'smoothstep',
-        sourceHandle: `output-${idx + 1}`,
-      }))
-    }
-
-    // Sequential: only connect to the first step
-    if (stepNodes.length === 0) return []
-    const first = stepNodes[0]
-    return [
-      {
-        id: `e-start-${first.id}`,
-        source: '0', // Start node is always "0"
-        target: first.id,
-        type: 'smoothstep',
-        sourceHandle: null,
-      },
-    ]
-  })()
-
-  const stepToOutputEdges: Edge[] = stepNodes.map((step, idx) => ({
-    id: `e-${step.id}-${outputNodes[idx].id}`,
-    source: step.id,
-    target: outputNodes[idx].id,
-    type: 'smoothstep',
-  }))
-
-  // Sequential mode: connect outputs to next steps
-  const outputToStepEdges: Edge[] = []
-  if (workflow?.mode !== 2 && stepNodes.length > 1) {
-    for (let i = 0; i < stepNodes.length - 1; i++) {
-      outputToStepEdges.push({
-        id: `e-${outputNodes[i].id}-${stepNodes[i + 1].id}`,
-        source: outputNodes[i].id,
-        target: stepNodes[i + 1].id,
-        type: 'smoothstep',
-      })
-    }
-  }
-
-  const allNodes = [startNode, ...stepNodes, ...outputNodes]
-  const allEdges = [
-    ...startToStepEdges,
-    ...stepToOutputEdges,
-    ...outputToStepEdges,
-  ]
-
   return {
-    nodes: allNodes,
-    edges: allEdges,
+    nodes: workflow.nodes || [],
+    edges: workflow.edges || [],
     workflow,
-    currentRun: latestRun || null,
+    currentRun: workflow.latestRun || null,
     viewport: workflow.viewport ?? null,
   }
 })

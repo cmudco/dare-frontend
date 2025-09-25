@@ -17,4 +17,3 @@ export { serializeWorkflow } from './serializeWorkflow'
 // Re-export types
 export type { Mode } from './isValidConnection'
 export type { ValidationResult } from './validateWorkflow'
-export type { SerializedWorkflow } from './serializeWorkflow'

@@ -13,5 +13,5 @@ export const getModeBadge = (mode: WorkflowMode) => {
 }
 
 export const getStepCount = (workflow: Workflow): number => {
-  return workflow.steps?.length || 0
+  return workflow.nodes?.filter((node) => node.type === 'step').length || 0
 }

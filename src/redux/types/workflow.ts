@@ -1,8 +1,7 @@
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
-import { LLMModel } from './conversation'
 import { MyFile } from './files'
-import { Prompt } from './prompt'
 import { FormikErrors, FormikTouched } from 'formik'
+import { type Node, type Edge } from '@xyflow/react'
 
 export enum WorkflowMode {
   Serial = 1,
@@ -18,27 +17,9 @@ export interface WorkflowStepSnippet {
   vectorDbSource?: string
 }
 
-export interface Step {
-  id?: number
-  workflow?: number
-  prompt: Prompt | null
-  files: MyFile[]
-  embeddings: MyFile[]
-  usePreviousStepFiles?: boolean
-  usePreviousStepEmbeddings?: boolean
-  llm: LLMModel | null
-  order: number
-  createdAt?: string
-  user?: number
-  maxTokens?: number
-  temperature?: number
-  maxContextSnippets?: number
-  documentSimilarityThreshold?: number
-}
-
 export interface WorkflowRunStep {
   id: number
-  step: number
+  step_node: number
   order: number
   status: WorkflowRunStepStatus
   response: string | null
@@ -62,18 +43,19 @@ export interface WorkflowRun {
 
 export interface Workflow {
   id: number
-  title: string
-  description: string
-  mode: WorkflowMode
+  user: string
   version?: number
   parent?: number | null
   createdAt?: string
-  created_at?: string
-  user: string
-  steps?: Step[]
-  lastRunId?: number | null
+  nodes: Node[]
+  edges: Edge[]
   latestRun?: WorkflowRun | null
-  layout?: Record<string, { x: number; y: number }>
+  lastRunId?: number | null
+
+  // Dynamic properties from StartNodeData
+  title: string
+  description: string
+  mode: WorkflowMode
   viewport?: { x: number; y: number; zoom: number }
 }
 
@@ -86,15 +68,17 @@ export interface WorkflowState {
   error: string | null
   // LEGACY: Commenting out modal state
   // isModalOpen: boolean
-  savedStepIds: number[]
-  tempSteps: Step[]
+  savedNodeIds: string[]
+  tempNodes: Node[]
+  tempEdges: Edge[]
 }
 
 export interface FormValues {
   title: string
   description: string
   mode: number
-  steps: Step[]
+  nodes: Node[]
+  edges: Edge[]
 }
 
 export interface WorkflowTableProps {
@@ -119,57 +103,22 @@ export interface WorkflowFooterProps {
   loading: boolean
   isValid: boolean
   dirty: boolean
-  unsavedSteps: number
-  stepsCount: number
-}
-
-export interface WorkflowStepProps {
-  index: number
-  step: Step
-  prompts: Prompt[]
-  files: MyFile[]
-  llms: LLMModel[]
-  totalSteps: number
-  onStepChange: (index: number, field: keyof Step, value: unknown) => void
-  onStepRemove: (index: number) => void
-  onStepReorder: (fromIndex: number, toIndex: number) => void
-  error?: FormikErrors<Step>
-  touched?: FormikTouched<Step>
-}
-
-export interface WorkflowStepsProps {
-  steps: Step[]
-  setSteps: (steps: Step[]) => void
-  errors: FormikErrors<FormValues>
-  touched: FormikTouched<FormValues>
-}
-
-export interface CreateStepDTO {
-  order: number
-  prompt: number | null
-  files?: number[]
-  embeddings?: number[]
-  usePreviousStepFiles?: boolean
-  usePreviousStepEmbeddings?: boolean
-  llm?: number | null
-  maxTokens?: number | null
-  temperature?: number | null
-  maxContextSnippets?: number | null
-  documentSimilarityThreshold?: number | null
+  unsavedNodes: number
+  nodesCount: number
 }
 
 export interface CreateWorkflowDTO {
-  title: string
-  description: string
-  mode: number
-  steps: CreateStepDTO[]
+  nodes: Node[] // Direct React Flow nodes
+  edges: Edge[] // Direct React Flow edges
+  viewport_x?: number
+  viewport_y?: number
+  viewport_zoom?: number
 }
 
 export interface UpdateWorkflowDTO {
-  title?: string
-  description?: string
-  mode?: number
-  steps?: CreateStepDTO[]
-  layout?: Record<string, { x: number; y: number }>
-  viewport?: { x: number; y: number; zoom: number } | null
+  nodes?: Node[] // Direct React Flow nodes
+  edges?: Edge[] // Direct React Flow edges
+  viewport_x?: number
+  viewport_y?: number
+  viewport_zoom?: number
 }

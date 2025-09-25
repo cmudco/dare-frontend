@@ -66,7 +66,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const getStepStatus = () => {
     if (!currentRun || !currentRun.steps) return null
     const runStep = currentRun.steps.find(
-      (rs) => (rs.order || rs.step) === stepData?.stepNumber
+      (rs) => (rs.order || rs.step_node) === stepData?.stepNumber
     )
     return runStep?.status || null
   }

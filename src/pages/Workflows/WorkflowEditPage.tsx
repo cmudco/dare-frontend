@@ -10,10 +10,7 @@ import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import {
-  setErrorsByNodeId,
-  updateStepApiIds,
-} from '@/redux/workflowBuilderSlice'
+import { setErrorsByNodeId } from '@/redux/workflowBuilderSlice'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
@@ -68,33 +65,7 @@ const WorkflowEditPage = () => {
 
     dispatch(action)
       .unwrap()
-      .then((saved) => {
-        // Map ReactFlow step IDs to API step IDs for new steps only
-        const stepApiIds: Record<string, number> = {}
-        const newStepNodes = nodes.filter(
-          (n) => n.type === 'step' && !n.data.apiId
-        )
-
-        if (saved.steps && newStepNodes.length > 0) {
-          // For existing workflows, new steps are added at the end
-          const existingStepsCount = nodes.filter(
-            (n) => n.type === 'step' && n.data.apiId
-          ).length
-
-          saved.steps
-            ?.slice(existingStepsCount)
-            .forEach((apiStep, idx: number) => {
-              if (newStepNodes[idx] && apiStep.id) {
-                stepApiIds[newStepNodes[idx].id] = Number(apiStep.id)
-              }
-            })
-
-          // Update step nodes with their API IDs
-          if (Object.keys(stepApiIds).length > 0) {
-            dispatch(updateStepApiIds({ stepApiIds }))
-          }
-        }
-
+      .then(() => {
         dispatch(setSelectedWorkflowRun(null))
         toast.success('Workflow updated!')
       })

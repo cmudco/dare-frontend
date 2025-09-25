@@ -232,7 +232,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                   {getStepCount(workflow)}
                 </TableCell>
                 <TableCell className='p-4 text-foreground'>
-                  {formatDate(workflow.createdAt || workflow.created_at)}
+                  {formatDate(workflow.createdAt)}
                 </TableCell>
                 <TableCell className='p-4 text-center'>
                   <DropdownMenu>
