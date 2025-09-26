@@ -174,36 +174,38 @@ export default function ChatOutputNode({ selected, data }: NodeProps) {
                 </ReactMarkdown>
               </div>
             </div>
-            <div className='mt-2 flex items-center justify-end gap-2'>
-              <Button
-                size='sm'
-                variant='ghost'
-                className='h-7 px-2 text-xs'
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={copyToClipboard}
-              >
-                Copy
-              </Button>
-              <Button
-                size='sm'
-                variant='ghost'
-                className='h-7 px-2 text-xs'
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={() => setExpanded((v) => !v)}
-              >
-                {expanded ? (
-                  <>
-                    <ChevronUp className='mr-1 h-3 w-3' />
-                    Collapse
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className='mr-1 h-3 w-3' />
-                    Expand
-                  </>
-                )}
-              </Button>
-            </div>
+            {status !== WorkflowRunStepStatus.Skipped && (
+              <div className='mt-2 flex items-center justify-end gap-2'>
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  className='h-7 px-2 text-xs'
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={copyToClipboard}
+                >
+                  Copy
+                </Button>
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  className='h-7 px-2 text-xs'
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={() => setExpanded((v) => !v)}
+                >
+                  {expanded ? (
+                    <>
+                      <ChevronUp className='mr-1 h-3 w-3' />
+                      Collapse
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className='mr-1 h-3 w-3' />
+                      Expand
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <p className='text-xs text-muted-foreground'>
