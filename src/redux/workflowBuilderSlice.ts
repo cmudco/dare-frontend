@@ -190,8 +190,8 @@ const workflowBuilderSlice = createSlice({
               data: {
                 ...node.data,
                 status: stepRun.status,
-                response: stepRun.response,
-                error: stepRun.error,
+                response: stepRun.response || '',
+                error: stepRun.error || '',
               },
             }
           }

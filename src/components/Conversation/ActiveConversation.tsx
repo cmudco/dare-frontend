@@ -85,7 +85,7 @@ const ActiveConversation: React.FC = () => {
         })
       )
     }
-  }, [activeConversation?.conversationId, files, dispatch])
+  }, [activeConversation?.conversationId, files, dispatch]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const handleWebSocketConnection = async () => {

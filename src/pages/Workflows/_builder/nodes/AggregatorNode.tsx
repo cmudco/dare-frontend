@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
+import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
 import React from 'react'
 
 export type AggregatorNodeData = {
@@ -30,6 +31,7 @@ export default function AggregatorNode({ id, data, selected }: NodeProps) {
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const { currentRun } = useAppSelector((s) => s.workflowBuilder)
   const updateNodeInternals = useUpdateNodeInternals()
 
   // Calculate input handles based on actual connections
@@ -126,6 +128,7 @@ export default function AggregatorNode({ id, data, selected }: NodeProps) {
             </div>
             Aggregator
           </div>
+          {renderStatusPill(getStepStatus(currentRun, nodeData?.stepNumber))}
         </CardTitle>
       </CardHeader>
       <CardContent className='space-y-4'>

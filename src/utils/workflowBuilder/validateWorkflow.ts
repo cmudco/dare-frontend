@@ -236,14 +236,20 @@ export const validateWorkflow = (
           hasConnection(output.id, step.id)
         )
 
-        if (!hasPrevLink) {
+        // Also check if step connects from aggregator output
+        const incomingFromAggregator = edges.some((edge) => {
+          const sourceNode = nodes.find((n) => n.id === edge.source)
+          return edge.target === step.id && sourceNode?.type === 'aggregator'
+        })
+
+        if (!hasPrevLink && !incomingFromAggregator) {
           appendFieldError(
             step.id,
             'connections',
-            `${getStepLabel(step)} must connect from the previous step's output.`
+            `${getStepLabel(step)} must connect from the previous step's output or aggregator output.`
           )
           pushErrorMessage(
-            'Sequential workflows require each step to connect from the previous output.'
+            'Sequential workflows require each step to connect from the previous output or aggregator output.'
           )
         }
       }
@@ -279,52 +285,16 @@ export const validateWorkflow = (
           .filter((node) => node?.type === 'chatOutput')
 
         if (mode === 'sequential') {
-          // Sequential: last step's output must connect to aggregator
-          if (sortedSteps.length > 0) {
-            const lastStep = sortedSteps[sortedSteps.length - 1]
-            const lastStepNumber = getStepNumber(lastStep)
-            const lastStepOutputs =
-              lastStepNumber != null
-                ? (outputsByStep.get(lastStepNumber) ?? [])
-                : []
-
-            const hasLastStepConnection = lastStepOutputs.some((output) =>
-              connectedOutputs.some(
-                (connectedOutput) => connectedOutput?.id === output.id
-              )
+          // Sequential: aggregator can connect from multiple step outputs
+          if (connectedOutputs.length === 0) {
+            appendFieldError(
+              aggregatorNode.id,
+              'connections',
+              'Aggregator must connect from at least one step output in sequential mode'
             )
-
-            if (!hasLastStepConnection && lastStepOutputs.length > 0) {
-              appendFieldError(
-                aggregatorNode.id,
-                'connections',
-                "Aggregator must connect from the last step's output in sequential mode"
-              )
-              pushErrorMessage(
-                "Aggregator must connect from the last step's output in sequential mode"
-              )
-            }
-
-            // Sequential: ensure ONLY the last step's output connects to aggregator
-            const invalidConnections = connectedOutputs.filter(
-              (connectedOutput) => {
-                const isFromLastStep = lastStepOutputs.some(
-                  (lastOutput) => lastOutput.id === connectedOutput?.id
-                )
-                return !isFromLastStep
-              }
+            pushErrorMessage(
+              'Aggregator must connect from at least one step output in sequential mode'
             )
-
-            if (invalidConnections.length > 0) {
-              appendFieldError(
-                aggregatorNode.id,
-                'connections',
-                "Aggregator can only connect from the last step's output in sequential mode"
-              )
-              pushErrorMessage(
-                "Aggregator can only connect from the last step's output in sequential mode"
-              )
-            }
           }
         } else {
           // Parallel: at least one step output must connect to aggregator

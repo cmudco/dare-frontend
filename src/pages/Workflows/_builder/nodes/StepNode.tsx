@@ -11,22 +11,12 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Brain,
-  Settings,
-  FileText,
-  Database,
-  X,
-} from 'lucide-react'
+import { Brain, Settings, FileText, Database, X } from 'lucide-react'
 import { useState } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
 
 export type StepNodeData = {
   prompt: number | null
@@ -63,58 +53,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     dispatch(updateNodeDataById({ nodeId: nodeId, newData: updates }))
   }
 
-  const getStepStatus = () => {
-    if (!currentRun || !currentRun.steps) return null
-    const runStep = currentRun.steps.find(
-      (rs) => (rs.order || rs.step_node) === stepData?.stepNumber
-    )
-    return runStep?.status || null
-  }
-
-  const stepStatus = getStepStatus()
-
-  const renderStatusPill = () => {
-    if (!stepStatus) return null
-
-    const getStatusIcon = () => {
-      switch (stepStatus) {
-        case WorkflowRunStepStatus.Pending:
-          return <Clock className='h-3 w-3' />
-        case WorkflowRunStepStatus.Running:
-          return <Loader2 className='h-3 w-3 animate-spin' />
-        case WorkflowRunStepStatus.Completed:
-          return <CheckCircle className='h-3 w-3' />
-        case WorkflowRunStepStatus.Failed:
-          return <XCircle className='h-3 w-3' />
-        default:
-          return null
-      }
-    }
-
-    const getStatusColor = () => {
-      switch (stepStatus) {
-        case WorkflowRunStepStatus.Pending:
-          return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800'
-        case WorkflowRunStepStatus.Running:
-          return 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800'
-        case WorkflowRunStepStatus.Completed:
-          return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800'
-        case WorkflowRunStepStatus.Failed:
-          return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800'
-        default:
-          return 'bg-muted text-muted-foreground border-border'
-      }
-    }
-
-    return (
-      <div
-        className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium ${getStatusColor()}`}
-      >
-        {getStatusIcon()}
-        <span className='capitalize'>{stepStatus}</span>
-      </div>
-    )
-  }
+  const stepStatus = getStepStatus(currentRun, stepData?.stepNumber)
 
   return (
     <Card
@@ -128,7 +67,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             </div>
             Step {stepData?.stepNumber}
           </div>
-          {renderStatusPill()}
+          {renderStatusPill(stepStatus)}
         </CardTitle>
       </CardHeader>
       <CardContent className='space-y-4'>

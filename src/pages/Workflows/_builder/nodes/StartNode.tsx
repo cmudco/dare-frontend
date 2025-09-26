@@ -80,7 +80,7 @@ export default function StartNode({ id, data, selected }: NodeProps) {
     }
 
     prevMode.current = currentMode
-  }, [dispatch, startData?.mode, nodes])
+  }, [dispatch, startData?.mode, nodes]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const renderOutputHandles = () => {
     if ((startData?.mode || 'sequential') === 'parallel') {
