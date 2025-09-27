@@ -176,7 +176,7 @@ const workflowBuilderSlice = createSlice({
       state.currentRun = runData
       state.isRunning = runData.status === 'running'
 
-      // Update output nodes with step responses and status
+      // Update output nodes and conditional nodes with step responses and status
       state.nodes = state.nodes.map((node) => {
         if (node.type === 'chatOutput') {
           const stepNumber = node.data.stepNumber
@@ -191,6 +191,23 @@ const workflowBuilderSlice = createSlice({
                 ...node.data,
                 status: stepRun.status,
                 response: stepRun.response || '',
+                error: stepRun.error || '',
+              },
+            }
+          }
+        } else if (node.type === 'conditional') {
+          const stepNumber = node.data.stepNumber
+          const stepRun = runData.steps?.find(
+            (s) => (s.order || s.step_node) === stepNumber
+          )
+
+          if (stepRun) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                status: stepRun.status,
+                selectedRoute: stepRun.response || '', // Store selected route from backend
                 error: stepRun.error || '',
               },
             }

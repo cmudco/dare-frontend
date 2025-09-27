@@ -2,6 +2,7 @@ import { type Node, type Edge } from '@xyflow/react'
 import { type NodeErrors } from '@/redux/types/workflowBuilder'
 import type { StepNodeData } from '@/pages/Workflows/_builder/nodes/StepNode'
 import type { AggregatorNodeData } from '@/pages/Workflows/_builder/nodes/AggregatorNode'
+import type { ConditionalNodeData } from '@/pages/Workflows/_builder/nodes/ConditionalNode'
 
 export interface ValidationResult {
   isValid: boolean
@@ -97,6 +98,58 @@ export const validateWorkflow = (
     }
   })
 
+  // Validate conditional nodes
+  const conditionalNodes = nodes.filter((n) => n.type === 'conditional')
+  conditionalNodes.forEach((conditionalNode) => {
+    const data = (conditionalNode.data as Partial<ConditionalNodeData>) || {}
+    const customPrompt = data?.customPrompt?.trim() || ''
+    const routeAName = data?.routeAName?.trim() || ''
+    const routeBName = data?.routeBName?.trim() || ''
+
+    // Validate required fields
+    if (!customPrompt) {
+      appendFieldError(
+        conditionalNode.id,
+        'customPrompt',
+        'Custom evaluation prompt is required'
+      )
+      pushErrorMessage(`Conditional node requires a custom evaluation prompt`)
+    }
+
+    if (!routeAName) {
+      appendFieldError(
+        conditionalNode.id,
+        'routeAName',
+        'Route A name is required'
+      )
+      pushErrorMessage(`Conditional node requires a name for Route A`)
+    }
+
+    if (!routeBName) {
+      appendFieldError(
+        conditionalNode.id,
+        'routeBName',
+        'Route B name is required'
+      )
+      pushErrorMessage(`Conditional node requires a name for Route B`)
+    }
+
+    // Validate route names are different
+    if (routeAName && routeBName && routeAName === routeBName) {
+      appendFieldError(
+        conditionalNode.id,
+        'routeAName',
+        'Route names must be different'
+      )
+      appendFieldError(
+        conditionalNode.id,
+        'routeBName',
+        'Route names must be different'
+      )
+      pushErrorMessage(`Conditional node route names must be different`)
+    }
+  })
+
   const getStepNumber = (node: Node | undefined): number | null => {
     if (!node) return null
     return (node.data as { stepNumber: number }).stepNumber
@@ -186,12 +239,29 @@ export const validateWorkflow = (
             hasConnection(aggregator.id, step.id)
           )
 
-        if (!hasStartConnection && !hasAggregatorConnection) {
+        // Check if step has connections from other steps, chatOutputs, or conditional nodes (multi-input scenario)
+        const hasStepInputConnections = edges.some((edge) => {
+          const sourceNode = nodes.find((n) => n.id === edge.source)
+          return (
+            edge.target === step.id &&
+            (sourceNode?.type === 'step' ||
+              sourceNode?.type === 'chatOutput' ||
+              sourceNode?.type === 'conditional')
+          )
+        })
+
+        // Step is valid if it connects to: start, aggregator, or has multi-input connections
+        const hasValidConnection =
+          hasStartConnection ||
+          hasAggregatorConnection ||
+          hasStepInputConnections
+
+        if (!hasValidConnection) {
           const label = getStepLabel(step)
           const connectionRequirement =
             aggregatorNodes.length > 0
-              ? 'must connect to either the Start node or an Aggregator node'
-              : 'must connect directly to the Start node'
+              ? 'must connect to the Start node, an Aggregator node, or receive input from other steps'
+              : 'must connect to the Start node or receive input from other steps'
 
           appendFieldError(
             step.id,
@@ -332,6 +402,125 @@ export const validateWorkflow = (
           const message = `Aggregator with ${scoringModeLabel} scoring mode must connect to exactly ${expectedConnections} step nodes`
           appendFieldError(aggregatorNode.id, 'connections', message)
           pushErrorMessage(message)
+        }
+      })
+    }
+
+    // Validate conditional node connections
+    if (conditionalNodes.length > 0) {
+      conditionalNodes.forEach((conditionalNode) => {
+        // Validate input connections - must have exactly 1 from chatOutput
+        const incomingEdges = edges.filter(
+          (edge) => edge.target === conditionalNode.id
+        )
+        const connectedInputs = incomingEdges
+          .map((edge) => nodes.find((n) => n.id === edge.source))
+          .filter((node) => node?.type === 'chatOutput')
+
+        if (connectedInputs.length === 0) {
+          appendFieldError(
+            conditionalNode.id,
+            'connections',
+            'Conditional node must connect from exactly one output node'
+          )
+          pushErrorMessage(
+            'Conditional node must connect from exactly one output node'
+          )
+        } else if (connectedInputs.length > 1) {
+          appendFieldError(
+            conditionalNode.id,
+            'connections',
+            'Conditional node can only connect from one output node'
+          )
+          pushErrorMessage(
+            'Conditional node can only connect from one output node'
+          )
+        }
+
+        // Validate output connections - must have exactly 2 to step nodes (one for each route)
+        const outgoingEdges = edges.filter(
+          (edge) => edge.source === conditionalNode.id
+        )
+        const connectedOutputs = outgoingEdges
+          .map((edge) => nodes.find((n) => n.id === edge.target))
+          .filter((node) => node?.type === 'step')
+
+        if (connectedOutputs.length === 0) {
+          appendFieldError(
+            conditionalNode.id,
+            'connections',
+            'Conditional node must connect to exactly two step nodes (one for each route)'
+          )
+          pushErrorMessage(
+            'Conditional node must connect to exactly two step nodes (one for each route)'
+          )
+        } else if (connectedOutputs.length === 1) {
+          appendFieldError(
+            conditionalNode.id,
+            'connections',
+            'Conditional node needs one more output connection (both routes must be connected)'
+          )
+          pushErrorMessage('Conditional node needs connections for both routes')
+        } else if (connectedOutputs.length > 2) {
+          appendFieldError(
+            conditionalNode.id,
+            'connections',
+            'Conditional node can only connect to exactly two step nodes (one per route)'
+          )
+          pushErrorMessage('Conditional node has too many output connections')
+        }
+
+        // Validate that both route handles are used
+        const conditionalData = conditionalNode.data as ConditionalNodeData
+        const routeAHandle = `output-${conditionalData?.routeAName || 'Route A'}`
+        const routeBHandle = `output-${conditionalData?.routeBName || 'Route B'}`
+
+        const routeAConnections = outgoingEdges.filter(
+          (edge) => edge.sourceHandle === routeAHandle
+        )
+        const routeBConnections = outgoingEdges.filter(
+          (edge) => edge.sourceHandle === routeBHandle
+        )
+
+        if (routeAConnections.length === 0) {
+          appendFieldError(
+            conditionalNode.id,
+            'connections',
+            `Route A (${conditionalData?.routeAName || 'Route A'}) must be connected to a step node`
+          )
+          pushErrorMessage(`Conditional node Route A must be connected`)
+        }
+
+        if (routeBConnections.length === 0) {
+          appendFieldError(
+            conditionalNode.id,
+            'connections',
+            `Route B (${conditionalData?.routeBName || 'Route B'}) must be connected to a step node`
+          )
+          pushErrorMessage(`Conditional node Route B must be connected`)
+        }
+
+        // Ensure no route has multiple connections
+        if (routeAConnections.length > 1) {
+          appendFieldError(
+            conditionalNode.id,
+            'connections',
+            `Route A can only connect to one step node`
+          )
+          pushErrorMessage(
+            `Conditional node Route A can only have one connection`
+          )
+        }
+
+        if (routeBConnections.length > 1) {
+          appendFieldError(
+            conditionalNode.id,
+            'connections',
+            `Route B can only connect to one step node`
+          )
+          pushErrorMessage(
+            `Conditional node Route B can only have one connection`
+          )
         }
       })
     }

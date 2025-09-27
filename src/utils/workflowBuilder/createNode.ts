@@ -134,6 +134,34 @@ export const createNode = (
     }
 
     return { nodes: [...nodes, aggregatorNode], edges }
+  } else if (type === 'conditional') {
+    // Handle conditional node
+    const conditionalCount = nodes.filter(
+      (n) => n.type === 'conditional'
+    ).length
+    const conditionalId = `conditional-${conditionalCount + 1}`
+
+    // Get unique step number for conditional node (should be after all regular steps and aggregators)
+    const stepCount = nodes.filter((n) => n.type === 'step').length
+    const aggregatorCount = nodes.filter((n) => n.type === 'aggregator').length
+    const conditionalStepNumber =
+      stepCount + aggregatorCount + conditionalCount + 1
+
+    const conditionalNode: Node = {
+      id: conditionalId,
+      type: 'conditional',
+      position,
+      data: {
+        customPrompt: 'Evaluate the input and choose the appropriate route.',
+        routeAName: 'Route A',
+        routeBName: 'Route B',
+        routeADescription: '',
+        routeBDescription: '',
+        stepNumber: conditionalStepNumber,
+      },
+    }
+
+    return { nodes: [...nodes, conditionalNode], edges }
   } else {
     // Handle start node with initial data
     const newNode: Node = {
