@@ -69,7 +69,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
       edge.target === nodeId &&
       (sourceNode?.type === 'step' ||
         sourceNode?.type === 'chatOutput' ||
-        sourceNode?.type === 'aggregator')
+        sourceNode?.type === 'conditional')
     )
   })
 

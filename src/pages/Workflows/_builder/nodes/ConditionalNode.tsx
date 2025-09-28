@@ -86,8 +86,11 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
 
   const handleRouteANameChange = (value: string) => {
     updateNodeData({ routeAName: value })
-    // Prune invalid edges when route names change
-    pruneInvalidConditionalEdges(value, nodeData.routeBName || 'Route B')
+    // Prune invalid edges when route names change (only if both routes have values)
+    const routeBName = nodeData.routeBName || ''
+    if (value && routeBName) {
+      pruneInvalidConditionalEdges(value, routeBName)
+    }
 
     if (fieldErrors.routeAName) {
       clearNodeError(id, 'routeAName')
@@ -96,8 +99,11 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
 
   const handleRouteBNameChange = (value: string) => {
     updateNodeData({ routeBName: value })
-    // Prune invalid edges when route names change
-    pruneInvalidConditionalEdges(nodeData.routeAName || 'Route A', value)
+    // Prune invalid edges when route names change (only if both routes have values)
+    const routeAName = nodeData.routeAName || ''
+    if (routeAName && value) {
+      pruneInvalidConditionalEdges(routeAName, value)
+    }
 
     if (fieldErrors.routeBName) {
       clearNodeError(id, 'routeBName')
@@ -120,9 +126,9 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
     }
   }
 
-  // Get current values from Redux state (nodeData)
-  const currentRouteAName = nodeData.routeAName || 'Route A'
-  const currentRouteBName = nodeData.routeBName || 'Route B'
+  // Get current values from Redux state (nodeData) - allow empty values for editing
+  const currentRouteAName = nodeData.routeAName ?? ''
+  const currentRouteBName = nodeData.routeBName ?? ''
   const currentCustomPrompt =
     nodeData.customPrompt ||
     'Evaluate the input and choose the appropriate route.'
@@ -263,22 +269,22 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
             <div className='space-y-1 text-xs text-muted-foreground'>
               <div className='font-medium'>AI evaluates input and chooses:</div>
               <div className='flex justify-between'>
-                <span>{currentRouteAName}:</span>
+                <span>{currentRouteAName || 'Route A'}:</span>
                 <span
-                  className={`font-medium ${selectedRoute === currentRouteAName ? 'text-green-600' : 'text-blue-600'}`}
+                  className={`font-medium ${selectedRoute === (currentRouteAName || 'Route A') ? 'text-green-600' : 'text-blue-600'}`}
                 >
-                  {selectedRoute === currentRouteAName &&
+                  {selectedRoute === (currentRouteAName || 'Route A') &&
                   stepStatus === 'completed'
                     ? '✓ SELECTED'
                     : currentRouteADescription || 'Custom route A'}
                 </span>
               </div>
               <div className='flex justify-between'>
-                <span>{currentRouteBName}:</span>
+                <span>{currentRouteBName || 'Route B'}:</span>
                 <span
-                  className={`font-medium ${selectedRoute === currentRouteBName ? 'text-green-600' : 'text-purple-600'}`}
+                  className={`font-medium ${selectedRoute === (currentRouteBName || 'Route B') ? 'text-green-600' : 'text-purple-600'}`}
                 >
-                  {selectedRoute === currentRouteBName &&
+                  {selectedRoute === (currentRouteBName || 'Route B') &&
                   stepStatus === 'completed'
                     ? '✓ SELECTED'
                     : currentRouteBDescription || 'Custom route B'}
@@ -326,8 +332,16 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
 
       {/* Two output handles on the right with custom route names */}
       {[
-        { name: currentRouteAName, color: 'bg-blue-500', position: 35 },
-        { name: currentRouteBName, color: 'bg-purple-500', position: 65 },
+        {
+          name: currentRouteAName || 'Route A',
+          color: 'bg-blue-500',
+          position: 35,
+        },
+        {
+          name: currentRouteBName || 'Route B',
+          color: 'bg-purple-500',
+          position: 65,
+        },
       ].map((route) => (
         <React.Fragment key={route.name}>
           <Handle

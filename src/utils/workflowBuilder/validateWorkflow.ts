@@ -1,7 +1,6 @@
 import { type Node, type Edge } from '@xyflow/react'
 import { type NodeErrors } from '@/redux/types/workflowBuilder'
 import type { StepNodeData } from '@/pages/Workflows/_builder/nodes/StepNode'
-import type { AggregatorNodeData } from '@/pages/Workflows/_builder/nodes/AggregatorNode'
 import type { ConditionalNodeData } from '@/pages/Workflows/_builder/nodes/ConditionalNode'
 
 export interface ValidationResult {
@@ -82,21 +81,7 @@ export const validateWorkflow = (
     }
   })
 
-  // Validate aggregator nodes
-  const aggregatorNodes = nodes.filter((n) => n.type === 'aggregator')
-  aggregatorNodes.forEach((aggregatorNode) => {
-    const data = (aggregatorNode.data as Partial<AggregatorNodeData>) || {}
-    const customPrompt = data?.customPrompt?.trim() || ''
-
-    if (!customPrompt) {
-      appendFieldError(
-        aggregatorNode.id,
-        'customPrompt',
-        'Custom evaluation prompt is required'
-      )
-      pushErrorMessage(`Aggregator requires a custom evaluation prompt`)
-    }
-  })
+  // Aggregator nodes removed - using conditional nodes for routing instead
 
   // Validate conditional nodes
   const conditionalNodes = nodes.filter((n) => n.type === 'conditional')
@@ -232,12 +217,7 @@ export const validateWorkflow = (
       sortedSteps.forEach((step) => {
         const hasStartConnection = hasConnection(start.id, step.id)
 
-        // If aggregator nodes exist, allow step to connect to aggregator instead of start
-        const hasAggregatorConnection =
-          aggregatorNodes.length > 0 &&
-          aggregatorNodes.some((aggregator) =>
-            hasConnection(aggregator.id, step.id)
-          )
+        // No aggregator logic - steps connect to start, other steps, or conditional nodes
 
         // Check if step has connections from other steps, chatOutputs, or conditional nodes (multi-input scenario)
         const hasStepInputConnections = edges.some((edge) => {
@@ -250,18 +230,13 @@ export const validateWorkflow = (
           )
         })
 
-        // Step is valid if it connects to: start, aggregator, or has multi-input connections
-        const hasValidConnection =
-          hasStartConnection ||
-          hasAggregatorConnection ||
-          hasStepInputConnections
+        // Step is valid if it connects to: start or has multi-input connections
+        const hasValidConnection = hasStartConnection || hasStepInputConnections
 
         if (!hasValidConnection) {
           const label = getStepLabel(step)
           const connectionRequirement =
-            aggregatorNodes.length > 0
-              ? 'must connect to the Start node, an Aggregator node, or receive input from other steps'
-              : 'must connect to the Start node or receive input from other steps'
+            'must connect to the Start node or receive input from other steps'
 
           appendFieldError(
             step.id,
@@ -306,20 +281,15 @@ export const validateWorkflow = (
           hasConnection(output.id, step.id)
         )
 
-        // Also check if step connects from aggregator output
-        const incomingFromAggregator = edges.some((edge) => {
-          const sourceNode = nodes.find((n) => n.id === edge.source)
-          return edge.target === step.id && sourceNode?.type === 'aggregator'
-        })
-
-        if (!hasPrevLink && !incomingFromAggregator) {
+        // Simplified validation - only check for previous step connection
+        if (!hasPrevLink) {
           appendFieldError(
             step.id,
             'connections',
-            `${getStepLabel(step)} must connect from the previous step's output or aggregator output.`
+            `${getStepLabel(step)} must connect from the previous step's output.`
           )
           pushErrorMessage(
-            'Sequential workflows require each step to connect from the previous output or aggregator output.'
+            'Sequential workflows require each step to connect from the previous output.'
           )
         }
       }
@@ -344,67 +314,7 @@ export const validateWorkflow = (
       }
     })
 
-    // Validate aggregator connections
-    if (aggregatorNodes.length > 0) {
-      aggregatorNodes.forEach((aggregatorNode) => {
-        const incomingEdges = edges.filter(
-          (edge) => edge.target === aggregatorNode.id
-        )
-        const connectedOutputs = incomingEdges
-          .map((edge) => nodes.find((n) => n.id === edge.source))
-          .filter((node) => node?.type === 'chatOutput')
-
-        if (mode === 'sequential') {
-          // Sequential: aggregator can connect from multiple step outputs
-          if (connectedOutputs.length === 0) {
-            appendFieldError(
-              aggregatorNode.id,
-              'connections',
-              'Aggregator must connect from at least one step output in sequential mode'
-            )
-            pushErrorMessage(
-              'Aggregator must connect from at least one step output in sequential mode'
-            )
-          }
-        } else {
-          // Parallel: at least one step output must connect to aggregator
-          if (connectedOutputs.length === 0) {
-            appendFieldError(
-              aggregatorNode.id,
-              'connections',
-              'Aggregator must connect from at least one step output in parallel mode'
-            )
-            pushErrorMessage(
-              'Aggregator must connect from at least one step output in parallel mode'
-            )
-          }
-        }
-
-        // Validate aggregator output connections based on scoring mode
-        const outgoingEdges = edges.filter(
-          (edge) => edge.source === aggregatorNode.id
-        )
-        const connectedSteps = outgoingEdges
-          .map((edge) => nodes.find((n) => n.id === edge.target))
-          .filter((node) => node?.type === 'step')
-
-        const aggregatorData =
-          (aggregatorNode.data as Partial<AggregatorNodeData>) || {}
-        const scoringMode = aggregatorData.scoringMode || 'quantitative'
-
-        const expectedConnections = scoringMode === 'qualitative' ? 2 : 3
-        const scoringModeLabel =
-          scoringMode === 'qualitative'
-            ? 'qualitative (true/false)'
-            : 'quantitative (bad/average/good)'
-
-        if (connectedSteps.length !== expectedConnections) {
-          const message = `Aggregator with ${scoringModeLabel} scoring mode must connect to exactly ${expectedConnections} step nodes`
-          appendFieldError(aggregatorNode.id, 'connections', message)
-          pushErrorMessage(message)
-        }
-      })
-    }
+    // Aggregator validation removed - using conditional nodes for routing
 
     // Validate conditional node connections
     if (conditionalNodes.length > 0) {

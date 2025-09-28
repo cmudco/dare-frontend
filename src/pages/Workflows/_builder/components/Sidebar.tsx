@@ -29,13 +29,6 @@ const nodeComponents = [
     icon: Cog,
     color: 'bg-primary',
   },
-  // {
-  //   type: 'aggregator',
-  //   label: 'Aggregator',
-  //   description: 'Evaluate multiple inputs and route based on scoring',
-  //   icon: Gauge,
-  //   color: 'bg-orange-500',
-  // },
   {
     type: 'conditional',
     label: 'Conditional',
@@ -55,7 +48,6 @@ export default function Sidebar({ disabled }: SidebarProps) {
     selectedWorkflowRun?.status === WorkflowRunStepStatus.Running
 
   const hasStartNode = nodes.some((n) => n.type === 'start')
-  const hasAggregatorNode = nodes.some((n) => n.type === 'aggregator')
 
   const getViewportCenterPosition = () => {
     try {
@@ -140,13 +132,9 @@ export default function Sidebar({ disabled }: SidebarProps) {
                   isWorkflowRunning ||
                   (component.type === 'start'
                     ? Boolean(disabled?.start) || hasStartNode
-                    : component.type === 'aggregator'
-                      ? Boolean(disabled?.step) ||
-                        !hasStartNode ||
-                        hasAggregatorNode
-                      : component.type === 'chatOutput'
-                        ? Boolean(disabled?.output) || !hasStartNode
-                        : Boolean(disabled?.step) || !hasStartNode)
+                    : component.type === 'chatOutput'
+                      ? Boolean(disabled?.output) || !hasStartNode
+                      : Boolean(disabled?.step) || !hasStartNode)
                 }
               >
                 Add to Canvas

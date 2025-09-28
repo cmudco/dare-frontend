@@ -69,71 +69,9 @@ export const createNode = (
     }
 
     const nextNodes = [...nodes, stepNode, outputNode]
-    let nextEdges = [...edges, stepToOutputEdge]
-
-    // Enhanced logic: Skip auto-wiring when both start and aggregator exist
-    const start = nodes.find((n) => n.type === 'start')
-    const aggregator = nodes.find((n) => n.type === 'aggregator')
-    const mode: 'sequential' | 'parallel' = start
-      ? (start.data as { mode: 'sequential' | 'parallel' }).mode
-      : 'sequential'
-
-    // Only auto-wire if aggregator doesn't exist (traditional workflow)
-    if (mode === 'sequential' && !aggregator) {
-      const prevStepNumber = stepNumber - 1
-      if (prevStepNumber >= 1) {
-        // Previous output node ID follows pattern: "{prevStepNumber}o"
-        const prevOutputId = `${prevStepNumber}o`
-
-        // Check if previous output exists and connection doesn't already exist
-        const prevOutputExists = nodes.some((n) => n.id === prevOutputId)
-        const connectionExists = edges.some(
-          (e) => e.source === prevOutputId && e.target === stepId
-        )
-
-        if (prevOutputExists && !connectionExists) {
-          nextEdges = [
-            ...nextEdges,
-            {
-              id: `e-${prevOutputId}-${stepId}`,
-              source: prevOutputId,
-              target: stepId,
-              type: 'smoothstep',
-            },
-          ]
-        }
-      }
-    }
+    const nextEdges = [...edges, stepToOutputEdge]
 
     return { nodes: nextNodes, edges: nextEdges }
-  } else if (type === 'aggregator') {
-    // Handle aggregator node - only one per workflow
-    const hasAggregator = nodes.some((n) => n.type === 'aggregator')
-
-    if (hasAggregator) {
-      return {
-        nodes,
-        edges,
-        shouldShowToast: {
-          type: 'info',
-          message: 'Only one Aggregator node is allowed per workflow.',
-        },
-      }
-    }
-
-    const aggregatorNode: Node = {
-      id: 'aggregator',
-      type: 'aggregator',
-      position,
-      data: {
-        stepNumber: 1,
-        scoringMode: 'quantitative',
-        customPrompt:
-          'Evaluate the quality of the responses and provide a score based on accuracy, relevance, and clarity.',
-      },
-    }
-
-    return { nodes: [...nodes, aggregatorNode], edges }
   } else if (type === 'conditional') {
     // Handle conditional node
     const conditionalCount = nodes.filter(
@@ -141,11 +79,9 @@ export const createNode = (
     ).length
     const conditionalId = `conditional-${conditionalCount + 1}`
 
-    // Get unique step number for conditional node (should be after all regular steps and aggregators)
+    // Get unique step number for conditional node (should be after all regular steps)
     const stepCount = nodes.filter((n) => n.type === 'step').length
-    const aggregatorCount = nodes.filter((n) => n.type === 'aggregator').length
-    const conditionalStepNumber =
-      stepCount + aggregatorCount + conditionalCount + 1
+    const conditionalStepNumber = stepCount + conditionalCount + 1
 
     const conditionalNode: Node = {
       id: conditionalId,
