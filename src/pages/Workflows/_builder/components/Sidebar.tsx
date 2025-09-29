@@ -90,8 +90,6 @@ export default function Sidebar({ disabled }: SidebarProps) {
     // Get the center position of the current viewport
     const position = getViewportCenterPosition()
 
-    console.log('Adding node at position:', position) // Debug log
-
     dispatch(createNodeAtPosition({ type, position }))
   }
 
