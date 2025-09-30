@@ -103,53 +103,51 @@ export const sendWebSocketMessage = createAsyncThunk<
   Partial<Message>,
   { dispatch: AppDispatch; state: RootState }
 >('websocket/sendMessage', async (message, { rejectWithValue, getState }) => {
-  const state = getState()
-  const fileIds = state.conversation.selectedFiles.map((file) => file.id)
-  const embeddingIds = state.conversation.selectedEmbeddings.map(
-    (file) => file.id
-  )
-  const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
-  const folderIds = state.conversation.selectedFolders.map(
-    (folder) => folder.id
-  )
-  const referencedConversationIds =
-    state.conversation.referencedConversations.map(
-      (conversation) => conversation.conversationId
-    )
-  const prompt = state.conversation.activeConversation?.prompt
-  const temperature = state.conversation.activeConversation?.temperature
-  const maxTokens = state.conversation.activeConversation?.maxTokens
-  const maxContextSnippets =
-    state.conversation.activeConversation?.maxContextSnippets
-  const documentSimilarityThreshold =
-    state.conversation.activeConversation?.documentSimilarityThreshold
-  const historyLimit = state.conversation.activeConversation?.historyLimit
-  const referencedConversationHistoryLimit =
-    state.conversation.referencedConversationHistoryLimit
-
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    const payload = {
-      message: message.message,
-      sender_type: 1,
-      file_ids: fileIds,
-      embedding_ids: embeddingIds,
-      tag_ids: tagIds,
-      folder_ids: folderIds,
-      referenced_conversation_ids: referencedConversationIds,
-      referenced_conversation_history_limit: referencedConversationHistoryLimit,
-      llm_id: state.conversation.selectedModel,
-      prompt_id: prompt?.id,
-      temperature: temperature,
-      max_tokens: maxTokens,
-      max_context_snippets: maxContextSnippets,
-      document_similarity_threshold: documentSimilarityThreshold,
-      history_limit: historyLimit,
-    }
-
-    socket.send(JSON.stringify(payload))
-  } else {
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
     return rejectWithValue('WebSocket is not connected')
   }
+
+  const state = getState()
+  const { conversation } = state
+  const {
+    activeConversation,
+    selectedFiles,
+    selectedEmbeddings,
+    selectedTags,
+    selectedFolders,
+    referencedConversations,
+    referencedConversationHistoryLimit,
+    selectedModel,
+    attachedImages,
+  } = conversation
+
+  const payload = {
+    message: message.message,
+    sender_type: 1,
+    file_ids: selectedFiles.map((file) => file.id),
+    embedding_ids: selectedEmbeddings.map((file) => file.id),
+    tag_ids: selectedTags.map((tag) => tag.id),
+    folder_ids: selectedFolders.map((folder) => folder.id),
+    referenced_conversation_ids: referencedConversations.map(
+      (conv) => conv.conversationId
+    ),
+    referenced_conversation_history_limit: referencedConversationHistoryLimit,
+    llm_id: selectedModel,
+    prompt_id: activeConversation?.prompt?.id,
+    temperature: activeConversation?.temperature,
+    max_tokens: activeConversation?.maxTokens,
+    max_context_snippets: activeConversation?.maxContextSnippets,
+    document_similarity_threshold:
+      activeConversation?.documentSimilarityThreshold,
+    history_limit: activeConversation?.historyLimit,
+    images: attachedImages.map(({ preview, name, type }) => ({
+      preview,
+      name,
+      type,
+    })),
+  }
+
+  socket.send(JSON.stringify(payload))
 })
 
 export const editMessage = createAsyncThunk<
