@@ -69,41 +69,35 @@ export const createNode = (
     }
 
     const nextNodes = [...nodes, stepNode, outputNode]
-    let nextEdges = [...edges, stepToOutputEdge]
-
-    // If in sequential mode, auto-wire previous output -> this step
-    const start = nodes.find((n) => n.type === 'start')
-    const mode: 'sequential' | 'parallel' = start
-      ? (start.data as { mode: 'sequential' | 'parallel' }).mode
-      : 'sequential'
-
-    if (mode === 'sequential') {
-      const prevStepNumber = stepNumber - 1
-      if (prevStepNumber >= 1) {
-        // Previous output node ID follows pattern: "{prevStepNumber}o"
-        const prevOutputId = `${prevStepNumber}o`
-
-        // Check if previous output exists and connection doesn't already exist
-        const prevOutputExists = nodes.some((n) => n.id === prevOutputId)
-        const connectionExists = edges.some(
-          (e) => e.source === prevOutputId && e.target === stepId
-        )
-
-        if (prevOutputExists && !connectionExists) {
-          nextEdges = [
-            ...nextEdges,
-            {
-              id: `e-${prevOutputId}-${stepId}`,
-              source: prevOutputId,
-              target: stepId,
-              type: 'smoothstep',
-            },
-          ]
-        }
-      }
-    }
+    const nextEdges = [...edges, stepToOutputEdge]
 
     return { nodes: nextNodes, edges: nextEdges }
+  } else if (type === 'conditional') {
+    // Handle conditional node
+    const conditionalCount = nodes.filter(
+      (n) => n.type === 'conditional'
+    ).length
+    const conditionalId = `conditional-${conditionalCount + 1}`
+
+    // Get unique step number for conditional node (should be after all regular steps)
+    const stepCount = nodes.filter((n) => n.type === 'step').length
+    const conditionalStepNumber = stepCount + conditionalCount + 1
+
+    const conditionalNode: Node = {
+      id: conditionalId,
+      type: 'conditional',
+      position,
+      data: {
+        customPrompt: 'Evaluate the input and choose the appropriate route.',
+        routeAName: 'Route A',
+        routeBName: 'Route B',
+        routeADescription: '',
+        routeBDescription: '',
+        stepNumber: conditionalStepNumber,
+      },
+    }
+
+    return { nodes: [...nodes, conditionalNode], edges }
   } else {
     // Handle start node with initial data
     const newNode: Node = {

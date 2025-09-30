@@ -34,6 +34,26 @@ export const isValidConnection = (
   const sType = sourceNode.type
   const tType = targetNode.type
 
+  // Aggregator connections removed - using conditional nodes for routing
+
+  // Handle conditional node connections
+  if (tType === 'conditional') {
+    // Conditional nodes accept input only from chatOutput nodes (need step output to evaluate)
+    const isAllowed = sType === 'chatOutput'
+    if (!isAllowed) return false
+
+    // Conditional nodes accept only one input connection
+    const existingInputs = edges.filter((e) => e.target === connection.target)
+    if (existingInputs.length >= 1) return false
+
+    return true
+  }
+
+  if (sType === 'conditional') {
+    // Conditional nodes can only connect to step nodes
+    return tType === 'step'
+  }
+
   // Allow Start <-> Step regardless of drag direction
   if (
     (sType === 'start' && tType === 'step') ||
@@ -47,14 +67,47 @@ export const isValidConnection = (
   }
 
   if (sType === 'step') {
-    return tType === 'chatOutput'
+    if (tType === 'chatOutput') return true
+
+    // Allow step -> step connections for multi-input scenarios
+    if (tType === 'step') {
+      // Check if target step is already connected to start node
+      const targetConnectedToStart = edges.some(
+        (e) =>
+          e.target === targetNode.id &&
+          nodes.find((n) => n.id === e.source)?.type === 'start'
+      )
+
+      // If target step is connected to start node, don't allow step->step connections
+      if (targetConnectedToStart) return false
+
+      // Allow step -> step connections when not connected to start
+      return true
+    }
+
+    return false
   }
 
   if (sType === 'chatOutput') {
-    if (modeValue === 'parallel') return false
     if (tType !== 'step') return false
 
-    // Sequential: enforce output -> next step only
+    // Check if target step is already connected to start node
+    const targetConnectedToStart = edges.some(
+      (e) =>
+        e.target === targetNode.id &&
+        nodes.find((n) => n.id === e.source)?.type === 'start'
+    )
+
+    // If step is connected to start node, don't allow chatOutput connections
+    if (targetConnectedToStart) return false
+
+    // For parallel mode: allow multiple chatOutput -> step connections
+    if (modeValue === 'parallel') {
+      // Allow multiple chatOutput nodes to connect to the same step (multi-input)
+      return true
+    }
+
+    // Sequential mode: maintain original sequential logic
     const chatOutputId = connection.source as string
     // find the step that feeds this output
     const incomingFromStep = edges.find(
@@ -80,7 +133,7 @@ export const isValidConnection = (
     )
     if (alreadyHasNext) return false
 
-    // Disallow multiple previous outputs into the same step
+    // In sequential mode, still disallow multiple previous outputs into the same step
     const targetHasPrev = edges.some(
       (e) =>
         e.target === targetStep.id &&

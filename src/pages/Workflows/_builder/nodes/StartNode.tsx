@@ -16,12 +16,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Play, GitBranch, ArrowRight } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useErrorsContext } from '../ErrorsContext'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
-import { rebuildEdgesForMode } from '@/utils/workflowBuilder/rebuildEdgesForMode'
-import { edgesChanged } from '@/utils/workflowBuilder/edgesChanged'
 
 type Mode = 'sequential' | 'parallel'
 type StartData = {
@@ -55,28 +53,50 @@ export default function StartNode({ id, data, selected }: NodeProps) {
 
   useEffect(() => {
     updateNodeInternals(nodeId)
-  }, [updateNodeInternals, nodeId, startData?.mode, stepCount])
+  }, [updateNodeInternals, nodeId, startData?.mode, stepCount, edges])
+
+  // Track the previous mode to only rebuild when mode actually changes
+  const prevMode = useRef<string | undefined>()
 
   useEffect(() => {
-    if (!nodes.some((n) => n.id === nodeId)) return
+    const currentMode = startData?.mode || 'sequential'
 
-    const rebuiltEdges = rebuildEdgesForMode(
-      nodeId,
-      startData?.mode || 'sequential',
-      nodes
-    )
-    if (edgesChanged(edges, rebuiltEdges)) {
-      dispatch(setEdges(rebuiltEdges))
+    // Only rebuild edges if mode actually changed, not during initial load
+    if (prevMode.current !== undefined && prevMode.current !== currentMode) {
+      if (!nodes.some((n) => n.id === nodeId)) return
+
+      // Drop only Start <-> Step connection edges; keep all others
+      const filtered = edges.filter((e) => {
+        const sourceNode = nodes.find((n) => n.id === e.source)
+        const targetNode = nodes.find((n) => n.id === e.target)
+        const involvesStart = e.source === nodeId || e.target === nodeId
+        if (!involvesStart) return true
+        // Remove only if the counterpart is a step node
+        const otherNode = e.source === nodeId ? targetNode : sourceNode
+        return otherNode?.type !== 'step'
+      })
+
+      dispatch(setEdges(filtered))
     }
-  }, [dispatch, edges, nodeId, startData?.mode, nodes])
+
+    prevMode.current = currentMode
+  }, [dispatch, startData?.mode, nodes]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const renderOutputHandles = () => {
     if ((startData?.mode || 'sequential') === 'parallel') {
-      // Render handles for each step + one extra for potential new steps
-      const handleCount = Math.max(stepCount, 1)
+      // Get edges that start from this node and connect to step nodes
+      const connectedStepEdges = edges.filter((edge) => {
+        const targetNode = nodes.find((n) => n.id === edge.target)
+        return edge.source === nodeId && targetNode?.type === 'step'
+      })
+
+      // Render handles for connected step nodes + one spare handle for new connections
+      const handleCount = Math.max(connectedStepEdges.length + 1, 1)
       const handles = []
+
       for (let i = 0; i < handleCount; i++) {
         const topPosition = 45 + i * 10 // Simple spacing
+        const isConnected = i < connectedStepEdges.length
         handles.push(
           <Handle
             key={`output-${i + 1}`}
@@ -84,7 +104,9 @@ export default function StartNode({ id, data, selected }: NodeProps) {
             position={Position.Right}
             id={`output-${i + 1}`}
             style={{ top: `${Math.min(topPosition, 85)}%` }}
-            className='h-4 w-4 border-2 border-white bg-primary'
+            className={`h-4 w-4 border-2 border-white ${
+              isConnected ? 'bg-primary' : 'bg-muted-foreground'
+            }`}
           />
         )
       }

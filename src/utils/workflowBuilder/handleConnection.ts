@@ -85,7 +85,18 @@ export const handleConnection = (
     }
   }
 
-  // Default connection
-  const newEdges = addEdge(params, edges)
+  // Default connection with clean naming
+  const cleanEdge = {
+    ...params,
+    id: `e-${params.source}-${params.target}`,
+    sourceHandle: params.sourceHandle ?? null,
+    targetHandle: params.targetHandle ?? null,
+  }
+  const normalizedEdges = edges.map((edge) => ({
+    ...edge,
+    sourceHandle: edge.sourceHandle ?? null,
+    targetHandle: edge.targetHandle ?? null,
+  }))
+  const newEdges = addEdge(cleanEdge, normalizedEdges)
   return { nodes, edges: newEdges }
 }

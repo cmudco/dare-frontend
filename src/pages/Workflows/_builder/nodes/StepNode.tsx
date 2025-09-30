@@ -1,4 +1,9 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import {
+  Handle,
+  Position,
+  type NodeProps,
+  useUpdateNodeInternals,
+} from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import {
@@ -11,22 +16,12 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Brain,
-  Settings,
-  FileText,
-  Database,
-  X,
-} from 'lucide-react'
-import { useState } from 'react'
+import { Brain, Settings, FileText, Database, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
 
 export type StepNodeData = {
   prompt: number | null
@@ -57,64 +52,43 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const files = useAppSelector((s) => s.files.files)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+  const edges = useAppSelector((s) => s.workflowBuilder.edges)
+  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const updateNodeInternals = useUpdateNodeInternals()
+
+  // Check if this step node is connected to a start node
+  const isConnectedToStart = edges.some((edge) => {
+    const sourceNode = nodes.find((n) => n.id === edge.source)
+    return edge.target === nodeId && sourceNode?.type === 'start'
+  })
+
+  // Calculate input handles based on actual connections (excluding start nodes)
+  const connectedInputEdges = edges.filter((edge) => {
+    const sourceNode = nodes.find((n) => n.id === edge.source)
+    return (
+      edge.target === nodeId &&
+      (sourceNode?.type === 'step' ||
+        sourceNode?.type === 'chatOutput' ||
+        sourceNode?.type === 'conditional')
+    )
+  })
+
+  // Show connected inputs + one spare handle for new connections
+  // Only use dynamic handles if NOT connected to start node
+  const inputHandleCount = isConnectedToStart
+    ? 1
+    : Math.max(connectedInputEdges.length + 1, 1)
 
   // Update Redux when form changes
   const updateNodeData = (updates: Partial<StepNodeData>) => {
     dispatch(updateNodeDataById({ nodeId: nodeId, newData: updates }))
   }
 
-  const getStepStatus = () => {
-    if (!currentRun || !currentRun.steps) return null
-    const runStep = currentRun.steps.find(
-      (rs) => (rs.order || rs.step) === stepData?.stepNumber
-    )
-    return runStep?.status || null
-  }
+  useEffect(() => {
+    updateNodeInternals(nodeId)
+  }, [updateNodeInternals, nodeId, edges])
 
-  const stepStatus = getStepStatus()
-
-  const renderStatusPill = () => {
-    if (!stepStatus) return null
-
-    const getStatusIcon = () => {
-      switch (stepStatus) {
-        case WorkflowRunStepStatus.Pending:
-          return <Clock className='h-3 w-3' />
-        case WorkflowRunStepStatus.Running:
-          return <Loader2 className='h-3 w-3 animate-spin' />
-        case WorkflowRunStepStatus.Completed:
-          return <CheckCircle className='h-3 w-3' />
-        case WorkflowRunStepStatus.Failed:
-          return <XCircle className='h-3 w-3' />
-        default:
-          return null
-      }
-    }
-
-    const getStatusColor = () => {
-      switch (stepStatus) {
-        case WorkflowRunStepStatus.Pending:
-          return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800'
-        case WorkflowRunStepStatus.Running:
-          return 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800'
-        case WorkflowRunStepStatus.Completed:
-          return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800'
-        case WorkflowRunStepStatus.Failed:
-          return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800'
-        default:
-          return 'bg-muted text-muted-foreground border-border'
-      }
-    }
-
-    return (
-      <div
-        className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium ${getStatusColor()}`}
-      >
-        {getStatusIcon()}
-        <span className='capitalize'>{stepStatus}</span>
-      </div>
-    )
-  }
+  const stepStatus = getStepStatus(currentRun, stepData?.stepNumber)
 
   return (
     <Card
@@ -128,7 +102,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             </div>
             Step {stepData?.stepNumber}
           </div>
-          {renderStatusPill()}
+          {renderStatusPill(stepStatus)}
         </CardTitle>
       </CardHeader>
       <CardContent className='space-y-4'>
@@ -391,11 +365,43 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         )}
       </CardContent>
 
-      <Handle
-        type='target'
-        position={Position.Left}
-        className='h-4 w-4 bg-secondary'
-      />
+      {/* Input handles - single static handle if connected to start, dynamic handles otherwise */}
+      {isConnectedToStart ? (
+        // Traditional single input handle when connected to start node
+        <Handle
+          type='target'
+          position={Position.Left}
+          id='input-1'
+          className='h-4 w-4 bg-secondary'
+        />
+      ) : (
+        // Dynamic input handles when NOT connected to start node
+        Array.from({ length: inputHandleCount }, (_, index) => {
+          const handleId = `input-${index + 1}`
+          // Dynamic positioning based on number of handles
+          const topPercent =
+            inputHandleCount === 1
+              ? 50
+              : 25 + (index * 50) / (inputHandleCount - 1)
+          const isConnected = index < connectedInputEdges.length
+
+          return (
+            <Handle
+              key={handleId}
+              type='target'
+              position={Position.Left}
+              id={handleId}
+              style={{
+                top: `${Math.min(Math.max(topPercent, 10), 90)}%`,
+              }}
+              className={`h-3 w-3 ${
+                isConnected ? 'bg-primary' : 'bg-muted-foreground'
+              }`}
+            />
+          )
+        })
+      )}
+
       <Handle
         type='source'
         position={Position.Right}

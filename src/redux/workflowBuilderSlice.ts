@@ -111,7 +111,6 @@ const workflowBuilderSlice = createSlice({
       state.nodes = applyNodeChanges(action.payload, state.nodes)
     },
     onEdgesChange: (state, action: PayloadAction<EdgeChange[]>) => {
-      // Apply changes using ReactFlow's utility
       state.edges = applyEdgeChanges(action.payload, state.edges)
     },
     onConnect: (state, action: PayloadAction<Connection>) => {
@@ -177,12 +176,12 @@ const workflowBuilderSlice = createSlice({
       state.currentRun = runData
       state.isRunning = runData.status === 'running'
 
-      // Update output nodes with step responses and status
+      // Update output nodes and conditional nodes with step responses and status
       state.nodes = state.nodes.map((node) => {
         if (node.type === 'chatOutput') {
           const stepNumber = node.data.stepNumber
           const stepRun = runData.steps?.find(
-            (s) => (s.order || s.step) === stepNumber
+            (s) => (s.order || s.step_node) === stepNumber
           )
 
           if (stepRun) {
@@ -191,8 +190,25 @@ const workflowBuilderSlice = createSlice({
               data: {
                 ...node.data,
                 status: stepRun.status,
-                response: stepRun.response,
-                error: stepRun.error,
+                response: stepRun.response || '',
+                error: stepRun.error || '',
+              },
+            }
+          }
+        } else if (node.type === 'conditional') {
+          const stepNumber = node.data.stepNumber
+          const stepRun = runData.steps?.find(
+            (s) => (s.order || s.step_node) === stepNumber
+          )
+
+          if (stepRun) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                status: stepRun.status,
+                selectedRoute: stepRun.response || '', // Store selected route from backend
+                error: stepRun.error || '',
               },
             }
           }

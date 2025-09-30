@@ -1,3 +1,5 @@
+// LEGACY WORKFLOW FORM - COMMENTED OUT
+/*
 import React from 'react'
 import { Formik, Form, FormikHelpers } from 'formik'
 import { useDispatch, useSelector } from 'react-redux'
@@ -118,6 +120,16 @@ const WorkflowForm: React.FC = () => {
       )}
     </Formik>
   )
+}
+
+export default WorkflowForm
+*/
+
+// Placeholder component to prevent import errors
+import React from 'react'
+
+const WorkflowForm: React.FC = () => {
+  return null
 }
 
 export default WorkflowForm

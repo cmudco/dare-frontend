@@ -9,7 +9,9 @@ import {
 } from '../../redux/asyncThunks/workflow'
 import { formatDate } from '../../utils/constants/prompts'
 import { WORKFLOWS_TABLE_HEAD } from '../../utils/constants/workflows'
-import { openEditModal, selectWorkflowForView } from '../../redux/workflowSlice'
+// LEGACY: Commenting out legacy modal import
+// import { openEditModal, selectWorkflowForView } from '../../redux/workflowSlice'
+import { selectWorkflowForView } from '../../redux/workflowSlice'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../ui/button'
 import {
@@ -44,7 +46,8 @@ import {
 } from '@heroicons/react/20/solid'
 import { ChevronUpDownIcon } from '@heroicons/react/24/outline'
 import { DeleteConfirmation } from '../DeleteConfirmation'
-import SelectModeDialog from './SelectModeDialog'
+// LEGACY: Commenting out SelectModeDialog since only "New" mode is available
+// import SelectModeDialog from './SelectModeDialog'
 import {
   SortDirection,
   updateSortState,
@@ -62,9 +65,10 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
     (state: RootState) => state.workflow
   )
   const navigate = useNavigate()
-  const [editModePromptOpen, setEditModePromptOpen] = useState<number | null>(
-    null
-  )
+  // LEGACY: Removing editModePromptOpen since we directly navigate to edit mode
+  // const [editModePromptOpen, setEditModePromptOpen] = useState<number | null>(
+  //   null
+  // )
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -106,7 +110,8 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   }
 
   const handleEdit = (id: number) => {
-    setEditModePromptOpen(id)
+    // Directly navigate to edit mode since legacy modal is disabled
+    navigate(`/workflows/${id}/edit`)
   }
 
   const handleRun = async (id: number) => {
@@ -144,7 +149,9 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
       if (cloneWorkflow.fulfilled.match(action)) {
         const payload = action.payload as Workflow
         dispatch(getWorkflows()).then(() => {
-          dispatch(openEditModal(payload.id))
+          // LEGACY: Commenting out legacy modal usage, redirecting to new editor instead
+          // dispatch(openEditModal(payload.id))
+          navigate(`/workflows/${payload.id}/edit`)
         })
       }
     })
@@ -225,7 +232,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                   {getStepCount(workflow)}
                 </TableCell>
                 <TableCell className='p-4 text-foreground'>
-                  {formatDate(workflow.createdAt || workflow.created_at)}
+                  {formatDate(workflow.createdAt)}
                 </TableCell>
                 <TableCell className='p-4 text-center'>
                   <DropdownMenu>
@@ -345,21 +352,8 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
 
       <WorkflowViewer />
 
-      <SelectModeDialog
-        open={!!editModePromptOpen}
-        onOpenChange={(open) => !open && setEditModePromptOpen(null)}
-        title='Select mode'
-        onSelectNew={() => {
-          const id = editModePromptOpen
-          setEditModePromptOpen(null)
-          if (id) navigate(`/workflows/${id}/edit`)
-        }}
-        onSelectLegacy={() => {
-          const id = editModePromptOpen
-          setEditModePromptOpen(null)
-          if (id) dispatch(openEditModal(id))
-        }}
-      />
+      {/* LEGACY: SelectModeDialog removed since only "New" mode is available */}
+      {/* Users now directly navigate to /workflows/[id]/edit */}
     </div>
   )
 }

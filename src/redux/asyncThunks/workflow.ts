@@ -9,6 +9,7 @@ import {
   getWorkflowRunByIdAPI,
   cloneWorkflowAPI,
 } from '@/api/workflows'
+import { CreateWorkflowDTO, UpdateWorkflowDTO } from '@/redux/types/workflow'
 
 export const getWorkflows = createAsyncThunk(
   'workflows/getWorkflows',
@@ -41,33 +42,15 @@ export const createOrUpdateWorkflow = createAsyncThunk(
       workflowData,
     }: {
       id?: number
-      workflowData: {
-        title: string
-        description: string
-        mode: number
-        layout?: Record<string, { x: number; y: number }>
-        viewport?: { x: number; y: number; zoom: number } | null
-        steps: {
-          id?: number
-          order: number
-          prompt: number | null
-          files?: number[]
-          embeddings?: number[]
-          llm?: number | null
-          maxTokens?: number | null
-          temperature?: number | null
-          maxContextSnippets?: number | null
-          documentSimilarityThreshold?: number | null
-        }[]
-      }
+      workflowData: CreateWorkflowDTO | UpdateWorkflowDTO
     },
     { rejectWithValue }
   ) => {
     try {
       if (id) {
-        return await updateWorkflowAPI(id, workflowData)
+        return await updateWorkflowAPI(id, workflowData as UpdateWorkflowDTO)
       } else {
-        return await createWorkflowAPI(workflowData)
+        return await createWorkflowAPI(workflowData as CreateWorkflowDTO)
       }
     } catch (error) {
       return rejectWithValue((error as Error).message)
