@@ -1,3 +1,6 @@
+// LEGACY SELECT MODE DIALOG - NO LONGER NEEDED
+// Since legacy mode is commented out, users only have "New" mode available
+/*
 import {
   Dialog,
   DialogContent,
@@ -47,3 +50,13 @@ export default function SelectModeDialog({
     </Dialog>
   )
 }
+*/
+
+// Placeholder component to prevent import errors
+import React from 'react'
+
+const SelectModeDialog: React.FC = () => {
+  return null
+}
+
+export default SelectModeDialog

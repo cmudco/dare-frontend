@@ -5,6 +5,12 @@ export type NodeErrors = {
   title?: string
   description?: string
   llm?: string
+  customPrompt?: string
+  connections?: string
+  routeAName?: string
+  routeBName?: string
+  routeADescription?: string
+  routeBDescription?: string
 }
 
 export type ErrorsContextValue = {

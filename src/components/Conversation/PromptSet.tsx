@@ -55,7 +55,7 @@ const PromptSet: React.FC = () => {
   )
   const { activeConversation } = useAppSelector((state) => state.conversation)
 
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     if (selectedPrompt) {
@@ -120,7 +120,7 @@ const PromptSet: React.FC = () => {
     )
   })
 
-  const toggleExpand = (rootId: string) => {
+  const toggleExpand = (rootId: number) => {
     setExpandedGroups((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(rootId)) {

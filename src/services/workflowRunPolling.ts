@@ -4,7 +4,7 @@ import { updateWorkflowRunStatus } from '@/redux/workflowBuilderSlice'
 import type { WorkflowRun } from '@/redux/types/workflow'
 
 export const startWorkflowRunPolling = (
-  runId: string,
+  runId: number,
   dispatch: AppDispatch
 ): (() => void) => {
   const interval = setInterval(async () => {

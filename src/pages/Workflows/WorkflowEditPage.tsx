@@ -10,14 +10,9 @@ import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import {
-  setErrorsByNodeId,
-  updateStepApiIds,
-} from '@/redux/workflowBuilderSlice'
-import {
-  serializeWorkflow,
-  validateWorkflow,
-} from '@/utils/workflowBuilder/workflowHelpers'
+import { setErrorsByNodeId } from '@/redux/workflowBuilderSlice'
+import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
+import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
@@ -27,18 +22,18 @@ import {
 } from '@/redux/asyncThunks/workflow'
 import { clearSelectedWorkflow } from '@/redux/workflowSlice'
 import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
-import { useState } from 'react'
 import { toast } from '@/utils/toast'
 
 const WorkflowEditPage = () => {
   const navigate = useNavigate()
-  const { id } = useParams<{ id: string }>()
+  const { id: idParam } = useParams<{ id: string }>()
+  const id = idParam ? Number(idParam) : undefined
   const dispatch = useAppDispatch()
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
   const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
-  const [isRunning, setIsRunning] = useState(false)
+  const isRunning = useAppSelector((s) => s.workflowBuilder.isRunning)
 
   const handleSave = () => {
     const validation = validateWorkflow(nodes, edges)
@@ -60,7 +55,7 @@ const WorkflowEditPage = () => {
     }
 
     // Dispatch save action
-    const targetId = id || ''
+    const targetId = id
     const action = targetId
       ? createOrUpdateWorkflow({
           id: targetId,
@@ -70,39 +65,12 @@ const WorkflowEditPage = () => {
 
     dispatch(action)
       .unwrap()
-      .then((saved) => {
-        // Map ReactFlow step IDs to API step IDs for new steps only
-        const stepApiIds: Record<string, number> = {}
-        const newStepNodes = nodes.filter(
-          (n) => n.type === 'step' && !n.data.apiId
-        )
-
-        if (saved.steps && newStepNodes.length > 0) {
-          // For existing workflows, new steps are added at the end
-          const existingStepsCount = nodes.filter(
-            (n) => n.type === 'step' && n.data.apiId
-          ).length
-
-          saved.steps
-            ?.slice(existingStepsCount)
-            .forEach((apiStep, idx: number) => {
-              if (newStepNodes[idx] && apiStep.id) {
-                stepApiIds[newStepNodes[idx].id] = Number(apiStep.id)
-              }
-            })
-
-          // Update step nodes with their API IDs
-          if (Object.keys(stepApiIds).length > 0) {
-            dispatch(updateStepApiIds({ stepApiIds }))
-          }
-        }
-
+      .then(() => {
         dispatch(setSelectedWorkflowRun(null))
         toast.success('Workflow updated!')
       })
-      .catch((error: unknown) => {
-        // Handle error via toast
-        console.error('Network error:', error)
+      .catch(() => {
+        toast.error('Failed to update workflow. Please try again.')
       })
   }
 
@@ -119,14 +87,6 @@ const WorkflowEditPage = () => {
       dispatch(setSelectedWorkflowRun(null))
     }
   }, [dispatch, id])
-
-  // Check if workflow is running (now handled by WorkflowBuilder, but needed for UI state)
-  const workflowBuilderState = useAppSelector((s) => s.workflowBuilder)
-  const workflowIsRunning = workflowBuilderState.isRunning
-
-  useEffect(() => {
-    setIsRunning(workflowIsRunning)
-  }, [workflowIsRunning])
 
   return (
     <div className='flex h-full flex-col'>
@@ -163,7 +123,7 @@ const WorkflowEditPage = () => {
           {id && (
             <Button
               variant='outline'
-              onClick={() => dispatch(startWorkflowRun(id))}
+              onClick={() => dispatch(startWorkflowRun(id!))}
               disabled={isRunning}
               className='normal-case'
             >

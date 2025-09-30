@@ -1,16 +1,9 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  ChevronDown,
-  ChevronUp,
-  Send,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Loader2,
-} from 'lucide-react'
+import { ChevronDown, ChevronUp, Send } from 'lucide-react'
 import { useState } from 'react'
+import { renderStatusPill } from '@/utils/workflowUtils'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -52,50 +45,6 @@ export default function ChatOutputNode({ selected, data }: NodeProps) {
     }
   }
 
-  // Render status pill for the output
-  const renderStatusPill = () => {
-    if (!status) return null
-
-    const getStatusIcon = () => {
-      switch (status) {
-        case WorkflowRunStepStatus.Pending:
-          return <Clock className='h-3 w-3' />
-        case WorkflowRunStepStatus.Running:
-          return <Loader2 className='h-3 w-3 animate-spin' />
-        case WorkflowRunStepStatus.Completed:
-          return <CheckCircle className='h-3 w-3' />
-        case WorkflowRunStepStatus.Failed:
-          return <XCircle className='h-3 w-3' />
-        default:
-          return null
-      }
-    }
-
-    const getStatusColor = () => {
-      switch (status) {
-        case WorkflowRunStepStatus.Pending:
-          return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800'
-        case WorkflowRunStepStatus.Running:
-          return 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800'
-        case WorkflowRunStepStatus.Completed:
-          return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800'
-        case WorkflowRunStepStatus.Failed:
-          return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800'
-        default:
-          return 'bg-muted text-muted-foreground border-border'
-      }
-    }
-
-    return (
-      <div
-        className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium ${getStatusColor()}`}
-      >
-        {getStatusIcon()}
-        <span className='capitalize'>{status}</span>
-      </div>
-    )
-  }
-
   const hasResponse = Boolean((response || '').trim())
   const hasError = Boolean((error || '').trim())
   const widthClass = hasResponse || hasError ? 'w-[40rem]' : 'w-80'
@@ -111,7 +60,7 @@ export default function ChatOutputNode({ selected, data }: NodeProps) {
             </div>
             Chat Output
           </div>
-          {renderStatusPill()}
+          {renderStatusPill(status || null)}
         </CardTitle>
       </CardHeader>
       <CardContent className='space-y-2'>
@@ -225,36 +174,38 @@ export default function ChatOutputNode({ selected, data }: NodeProps) {
                 </ReactMarkdown>
               </div>
             </div>
-            <div className='mt-2 flex items-center justify-end gap-2'>
-              <Button
-                size='sm'
-                variant='ghost'
-                className='h-7 px-2 text-xs'
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={copyToClipboard}
-              >
-                Copy
-              </Button>
-              <Button
-                size='sm'
-                variant='ghost'
-                className='h-7 px-2 text-xs'
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={() => setExpanded((v) => !v)}
-              >
-                {expanded ? (
-                  <>
-                    <ChevronUp className='mr-1 h-3 w-3' />
-                    Collapse
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className='mr-1 h-3 w-3' />
-                    Expand
-                  </>
-                )}
-              </Button>
-            </div>
+            {status !== WorkflowRunStepStatus.Skipped && (
+              <div className='mt-2 flex items-center justify-end gap-2'>
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  className='h-7 px-2 text-xs'
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={copyToClipboard}
+                >
+                  Copy
+                </Button>
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  className='h-7 px-2 text-xs'
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={() => setExpanded((v) => !v)}
+                >
+                  {expanded ? (
+                    <>
+                      <ChevronUp className='mr-1 h-3 w-3' />
+                      Collapse
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className='mr-1 h-3 w-3' />
+                      Expand
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <p className='text-xs text-muted-foreground'>

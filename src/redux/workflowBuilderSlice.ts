@@ -10,13 +10,11 @@ import {
 } from '@xyflow/react'
 import { initialState } from './initialState/workflowBuilder'
 import { NodeErrors } from './types/workflowBuilder'
-import { handleConnection } from '@/utils/workflowBuilder/connectionHelpers'
-import {
-  createNode,
-  removeNodeById as removeNodeByIdHelper,
-  updateNodeData as updateNodeDataHelper,
-} from '@/utils/workflowBuilder/nodeHelpers'
-import { validateWorkflow } from '@/utils/workflowBuilder/workflowHelpers'
+import { handleConnection } from '@/utils/workflowBuilder/handleConnection'
+import { createNode } from '@/utils/workflowBuilder/createNode'
+import { removeNodeById as removeNodeByIdHelper } from '@/utils/workflowBuilder/removeNodeById'
+import { updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/updateNodeData'
+import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
 import { startWorkflowRun } from './asyncThunks/workflow'
 import type { WorkflowRun } from './types/workflow'
@@ -83,7 +81,7 @@ const workflowBuilderSlice = createSlice({
       if (field) {
         // remove the specific field error
         const copy = { ...nodeErrors }
-        delete (copy as Record<string, string | undefined>)[field]
+        delete copy[field]
         if (Object.keys(copy).length) {
           state.errorsByNodeId[nodeId] = copy
         } else {
@@ -99,7 +97,7 @@ const workflowBuilderSlice = createSlice({
     ) => {
       state.currentMode = action.payload
     },
-    setLastWorkflowId: (state, action: PayloadAction<string | undefined>) => {
+    setLastWorkflowId: (state, action: PayloadAction<number | undefined>) => {
       state.lastWorkflowId = action.payload
     },
     setSavedViewport: (
@@ -113,7 +111,6 @@ const workflowBuilderSlice = createSlice({
       state.nodes = applyNodeChanges(action.payload, state.nodes)
     },
     onEdgesChange: (state, action: PayloadAction<EdgeChange[]>) => {
-      // Apply changes using ReactFlow's utility
       state.edges = applyEdgeChanges(action.payload, state.edges)
     },
     onConnect: (state, action: PayloadAction<Connection>) => {
@@ -179,12 +176,12 @@ const workflowBuilderSlice = createSlice({
       state.currentRun = runData
       state.isRunning = runData.status === 'running'
 
-      // Update output nodes with step responses and status
+      // Update output nodes and conditional nodes with step responses and status
       state.nodes = state.nodes.map((node) => {
         if (node.type === 'chatOutput') {
           const stepNumber = node.data.stepNumber
           const stepRun = runData.steps?.find(
-            (s) => (s.order || s.step) === stepNumber
+            (s) => (s.order || s.step_node) === stepNumber
           )
 
           if (stepRun) {
@@ -193,8 +190,25 @@ const workflowBuilderSlice = createSlice({
               data: {
                 ...node.data,
                 status: stepRun.status,
-                response: stepRun.response,
-                error: stepRun.error,
+                response: stepRun.response || '',
+                error: stepRun.error || '',
+              },
+            }
+          }
+        } else if (node.type === 'conditional') {
+          const stepNumber = node.data.stepNumber
+          const stepRun = runData.steps?.find(
+            (s) => (s.order || s.step_node) === stepNumber
+          )
+
+          if (stepRun) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                status: stepRun.status,
+                selectedRoute: stepRun.response || '', // Store selected route from backend
+                error: stepRun.error || '',
               },
             }
           }
@@ -214,7 +228,7 @@ const workflowBuilderSlice = createSlice({
         state.loadedWorkflow = action.payload.workflow
         state.currentRun = action.payload.currentRun
         state.isRunning = action.payload.currentRun?.status === 'running'
-        state.lastWorkflowId = action.payload.workflow.id?.toString()
+        state.lastWorkflowId = action.payload.workflow.id
         state.savedViewport = action.payload.viewport ?? null
       })
       .addCase(startWorkflowRun.fulfilled, (state, action) => {

@@ -33,7 +33,7 @@ const PromptVersionHistoryModal: React.FC<PromptVersionHistoryModalProps> = ({
 
   const handleVersionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const versionId = e.target.value
-    const version = versions.find((v) => v.id == versionId)
+    const version = versions.find((v) => v.id.toString() === versionId)
     if (version) {
       setSelectedVersion(version)
     }

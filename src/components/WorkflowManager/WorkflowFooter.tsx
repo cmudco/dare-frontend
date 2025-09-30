@@ -1,3 +1,5 @@
+// LEGACY WORKFLOW FOOTER - COMMENTED OUT
+/*
 import React from 'react'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from '../../redux/store'
@@ -23,6 +25,16 @@ const WorkflowFooter: React.FC<WorkflowFooterProps> = ({ loading }) => {
       </Button>
     </DialogFooter>
   )
+}
+
+export default WorkflowFooter
+*/
+
+// Placeholder component to prevent import errors
+import React from 'react'
+
+const WorkflowFooter: React.FC = () => {
+  return null
 }
 
 export default WorkflowFooter

@@ -50,6 +50,11 @@ export const WORKFLOW_RUN_STATUSES = [
     name: 'Failed',
     description: 'The workflow encountered an error.',
   },
+  {
+    id: 'skipped',
+    name: 'Skipped',
+    description: 'The workflow was skipped and not executed.',
+  },
 ]
 
 export enum WorkflowRunStepStatus {
@@ -57,6 +62,7 @@ export enum WorkflowRunStepStatus {
   Running = 'running',
   Completed = 'completed',
   Failed = 'failed',
+  Skipped = 'skipped',
 }
 
 export enum WorkflowViewMode {
