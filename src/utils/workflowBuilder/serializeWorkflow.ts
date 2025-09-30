@@ -1,0 +1,22 @@
+import { type Node, type Edge } from '@xyflow/react'
+import { validateWorkflow } from './validateWorkflow'
+import { CreateWorkflowDTO } from '@/redux/types/workflow'
+
+export const serializeWorkflow = (
+  nodes: Node[],
+  edges: Edge[],
+  viewport?: { x: number; y: number; zoom: number } | null
+): CreateWorkflowDTO | null => {
+  const validation = validateWorkflow(nodes, edges)
+  if (!validation.isValid) {
+    return null
+  }
+
+  return {
+    nodes,
+    edges,
+    viewport_x: viewport?.x,
+    viewport_y: viewport?.y,
+    viewport_zoom: viewport?.zoom,
+  }
+}

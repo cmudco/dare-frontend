@@ -57,10 +57,10 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [deletePromptId, setDeletePromptId] = useState<string | null>(null)
+  const [deletePromptId, setDeletePromptId] = useState<number | null>(null)
   const [deletePromptTitle, setDeletePromptTitle] = useState<string>('')
   const [versionHistoryPromptId, setVersionHistoryPromptId] = useState<
-    string | null
+    number | null
   >(null)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -120,16 +120,16 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
     setDeletePromptId(null)
   }
 
-  const handleDelete = async (id: string, title: string) => {
+  const handleDelete = async (id: number, title: string) => {
     setDeletePromptId(id)
     setDeletePromptTitle(title || 'Untitled')
   }
 
-  const handleEdit = (id: string) => {
+  const handleEdit = (id: number) => {
     dispatch(openEditModal(id))
   }
 
-  const handleClone = (id: string) => {
+  const handleClone = (id: number) => {
     dispatch(clonePrompt(id)).then((result) => {
       if (result.meta.requestStatus === 'fulfilled') {
         const payload = result.payload as Prompt
@@ -138,7 +138,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
     })
   }
 
-  const handleViewVersions = (id: string) => {
+  const handleViewVersions = (id: number) => {
     setVersionHistoryPromptId(id)
   }
 

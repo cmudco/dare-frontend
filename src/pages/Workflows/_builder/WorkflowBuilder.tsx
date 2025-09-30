@@ -8,7 +8,7 @@ import {
   onConnect,
   setSavedViewport,
 } from '@/redux/workflowBuilderSlice'
-import { isValidConnection } from '@/utils/workflowBuilder/connectionHelpers'
+import { isValidConnection } from '@/utils/workflowBuilder/isValidConnection'
 import {
   WORKFLOW_NODE_TYPES,
   DEFAULT_EDGE_OPTIONS,
@@ -24,7 +24,7 @@ import Sidebar from './components/Sidebar'
 
 export interface WorkflowBuilderProps {
   initialWorkflow?: Workflow
-  workflowId?: string
+  workflowId?: number
   disableEditing?: boolean
 }
 

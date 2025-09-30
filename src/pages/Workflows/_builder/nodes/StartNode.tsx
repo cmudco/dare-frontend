@@ -16,14 +16,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Play, GitBranch, ArrowRight } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useErrorsContext } from '../ErrorsContext'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
-import {
-  rebuildEdgesForMode,
-  edgesChanged,
-} from '@/utils/workflowBuilder/layoutHelpers'
 
 type Mode = 'sequential' | 'parallel'
 type StartData = {
@@ -34,65 +30,73 @@ type StartData = {
 }
 
 export default function StartNode({ id, data, selected }: NodeProps) {
-  const startData = (data as StartData) || {}
-  const [title, setTitle] = useState(startData.title || '')
-  const [description, setDescription] = useState(startData.description || '')
-  const [mode, setMode] = useState<Mode>(startData.mode || 'sequential')
+  const nodeId = id as string // ReactFlow guarantees id is string when component renders
+  const startData = data as StartData
 
   const { errorsByNodeId, clearNodeError } = useErrorsContext()
-  const startFieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
+  const startFieldErrors = (errorsByNodeId[nodeId] || {}) as Record<
+    string,
+    string
+  >
   const dispatch = useAppDispatch()
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
 
   // Update Redux when user changes values
   const updateNodeData = (updates: Partial<StartData>) => {
-    dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
+    dispatch(updateNodeDataById({ nodeId: nodeId, newData: updates }))
   }
-
-  // Sync local state with props data when it changes (from Redux)
-  useEffect(() => {
-    const newData = data as StartData
-    if (newData.title !== undefined && newData.title !== title) {
-      setTitle(newData.title)
-    }
-    if (
-      newData.description !== undefined &&
-      newData.description !== description
-    ) {
-      setDescription(newData.description)
-    }
-    if (newData.mode !== undefined && newData.mode !== mode) {
-      setMode(newData.mode)
-    }
-  }, [data])
 
   // Get number of step nodes for parallel mode handle rendering
   const stepCount = nodes.filter((n) => n.type === 'step').length
   const updateNodeInternals = useUpdateNodeInternals()
 
   useEffect(() => {
-    updateNodeInternals(String(id))
-  }, [updateNodeInternals, id, mode, stepCount])
+    updateNodeInternals(nodeId)
+  }, [updateNodeInternals, nodeId, startData?.mode, stepCount, edges])
+
+  // Track the previous mode to only rebuild when mode actually changes
+  const prevMode = useRef<string | undefined>()
 
   useEffect(() => {
-    const startId = String(id)
-    if (!nodes.some((n) => n.id === startId)) return
+    const currentMode = startData?.mode || 'sequential'
 
-    const rebuiltEdges = rebuildEdgesForMode(startId, mode, nodes)
-    if (edgesChanged(edges, rebuiltEdges)) {
-      dispatch(setEdges(rebuiltEdges))
+    // Only rebuild edges if mode actually changed, not during initial load
+    if (prevMode.current !== undefined && prevMode.current !== currentMode) {
+      if (!nodes.some((n) => n.id === nodeId)) return
+
+      // Drop only Start <-> Step connection edges; keep all others
+      const filtered = edges.filter((e) => {
+        const sourceNode = nodes.find((n) => n.id === e.source)
+        const targetNode = nodes.find((n) => n.id === e.target)
+        const involvesStart = e.source === nodeId || e.target === nodeId
+        if (!involvesStart) return true
+        // Remove only if the counterpart is a step node
+        const otherNode = e.source === nodeId ? targetNode : sourceNode
+        return otherNode?.type !== 'step'
+      })
+
+      dispatch(setEdges(filtered))
     }
-  }, [dispatch, edges, id, mode, nodes])
 
-  // Simple handle rendering based on mode
+    prevMode.current = currentMode
+  }, [dispatch, startData?.mode, nodes]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const renderOutputHandles = () => {
-    if (mode === 'parallel') {
-      // Render handles for each step + one extra for potential new steps
-      const handleCount = Math.max(stepCount, 1)
+    if ((startData?.mode || 'sequential') === 'parallel') {
+      // Get edges that start from this node and connect to step nodes
+      const connectedStepEdges = edges.filter((edge) => {
+        const targetNode = nodes.find((n) => n.id === edge.target)
+        return edge.source === nodeId && targetNode?.type === 'step'
+      })
+
+      // Render handles for connected step nodes + one spare handle for new connections
+      const handleCount = Math.max(connectedStepEdges.length + 1, 1)
       const handles = []
+
       for (let i = 0; i < handleCount; i++) {
         const topPosition = 45 + i * 10 // Simple spacing
+        const isConnected = i < connectedStepEdges.length
         handles.push(
           <Handle
             key={`output-${i + 1}`}
@@ -100,7 +104,9 @@ export default function StartNode({ id, data, selected }: NodeProps) {
             position={Position.Right}
             id={`output-${i + 1}`}
             style={{ top: `${Math.min(topPosition, 85)}%` }}
-            className='h-4 w-4 border-2 border-white bg-primary'
+            className={`h-4 w-4 border-2 border-white ${
+              isConnected ? 'bg-primary' : 'bg-muted-foreground'
+            }`}
           />
         )
       }
@@ -136,12 +142,11 @@ export default function StartNode({ id, data, selected }: NodeProps) {
           </Label>
           <Input
             id='title'
-            value={title}
+            value={startData?.title || ''}
             onChange={(e) => {
               const newTitle = e.target.value
-              setTitle(newTitle)
               updateNodeData({ title: newTitle })
-              clearNodeError(String(id), 'title')
+              clearNodeError(nodeId, 'title')
             }}
             placeholder='Enter workflow title'
             required
@@ -161,12 +166,11 @@ export default function StartNode({ id, data, selected }: NodeProps) {
           </Label>
           <Textarea
             id='description'
-            value={description}
+            value={startData?.description || ''}
             onChange={(e) => {
               const newDescription = e.target.value
-              setDescription(newDescription)
               updateNodeData({ description: newDescription })
-              clearNodeError(String(id), 'description')
+              clearNodeError(nodeId, 'description')
             }}
             placeholder='Enter your description here'
             required
@@ -186,9 +190,8 @@ export default function StartNode({ id, data, selected }: NodeProps) {
             Execution Mode
           </Label>
           <Select
-            value={mode}
+            value={startData?.mode || 'sequential'}
             onValueChange={(value: 'sequential' | 'parallel') => {
-              setMode(value)
               updateNodeData({ mode: value })
             }}
           >
@@ -212,7 +215,7 @@ export default function StartNode({ id, data, selected }: NodeProps) {
           </Select>
         </div>
         <div className='text-xs text-muted-foreground'>
-          {mode === 'sequential'
+          {(startData?.mode || 'sequential') === 'sequential'
             ? 'Steps execute one after another in sequence'
             : 'Multiple steps can execute simultaneously from this start point'}
         </div>

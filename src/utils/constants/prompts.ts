@@ -31,10 +31,10 @@ export interface PromptGroup {
   versions: Prompt[]
 }
 
-export const findRootPromptId = (
+const findRootPromptId = (
   prompt: Prompt,
-  promptMap: Map<string, Prompt>
-): string => {
+  promptMap: Map<number, Prompt>
+): number => {
   let current = prompt
   while (current.parent) {
     const parent = promptMap.get(current.parent)
@@ -45,11 +45,11 @@ export const findRootPromptId = (
 }
 
 export const groupPrompts = (prompts: Prompt[]): PromptGroup[] => {
-  const promptMap = new Map<string, Prompt>()
+  const promptMap = new Map<number, Prompt>()
   prompts.forEach((prompt) => promptMap.set(prompt.id, prompt))
 
   const groups: PromptGroup[] = []
-  const groupMap = new Map<string, PromptGroup>()
+  const groupMap = new Map<number, PromptGroup>()
 
   prompts.forEach((prompt) => {
     const rootId = findRootPromptId(prompt, promptMap)

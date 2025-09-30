@@ -105,8 +105,8 @@ export const getRunStatusBadge = (status: WorkflowRunStepStatus) => {
  * @returns The number of steps in the workflow.
  */
 export const getStepCount = (workflow: Workflow) => {
-  if (workflow.steps) {
-    return workflow.steps.length
+  if (workflow.nodes) {
+    return workflow.nodes.filter((node) => node.type === 'step').length
   } else {
     return 0
   }
