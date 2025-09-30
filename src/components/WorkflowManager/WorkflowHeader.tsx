@@ -1,11 +1,13 @@
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid'
-import { useDispatch } from 'react-redux'
+// LEGACY: Commenting out unused dispatch since legacy modal is disabled
+// import { useDispatch } from 'react-redux'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { useState } from 'react'
-import { openModal } from '@/redux/workflowSlice'
+// LEGACY: Commenting out legacy modal import and SelectModeDialog since only "New" mode is available
+// import { openModal } from '@/redux/workflowSlice'
+// import SelectModeDialog from './SelectModeDialog'
 import { Plus } from 'lucide-react'
-import SelectModeDialog from './SelectModeDialog'
 import { useNavigate } from 'react-router-dom'
 
 interface WorkflowHeaderProps {
@@ -13,10 +15,10 @@ interface WorkflowHeaderProps {
 }
 
 const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
-  const dispatch = useDispatch()
+  // LEGACY: Commenting out unused dispatch since legacy modal is disabled
+  // const dispatch = useDispatch()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
-  const [modePromptOpen, setModePromptOpen] = useState(false)
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -25,7 +27,8 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
   }
 
   const handleCreateWorkflow = () => {
-    setModePromptOpen(true)
+    // Directly navigate to new workflow creation since legacy mode is disabled
+    navigate('/workflows/create')
   }
 
   return (
@@ -50,19 +53,8 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
         Create Workflow
       </Button>
 
-      <SelectModeDialog
-        open={modePromptOpen}
-        onOpenChange={setModePromptOpen}
-        title='Select mode'
-        onSelectNew={() => {
-          setModePromptOpen(false)
-          navigate('/workflows/create')
-        }}
-        onSelectLegacy={() => {
-          setModePromptOpen(false)
-          dispatch(openModal())
-        }}
-      />
+      {/* LEGACY: SelectModeDialog removed since only "New" mode is available */}
+      {/* Users now directly navigate to /workflows/create */}
     </div>
   )
 }

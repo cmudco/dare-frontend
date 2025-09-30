@@ -1,12 +1,12 @@
 export interface Prompt {
-  id: string
+  id: number
   title: string
   content: string
   createdAt: string
   uploadedAt?: string
   user: string
   version: number
-  parent?: string
+  parent?: number
   isDefault?: boolean
 }
 

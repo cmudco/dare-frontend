@@ -2,11 +2,7 @@ import type { Edge, Node } from '@xyflow/react'
 
 const getStepNumber = (node?: Node): number | null => {
   if (!node) return null
-  const dataStep = (node.data as { stepNumber?: number } | undefined)
-    ?.stepNumber
-  if (typeof dataStep === 'number') return dataStep
-  const parsed = Number.parseInt(node.id, 10)
-  return Number.isNaN(parsed) ? null : parsed
+  return (node.data as { stepNumber: number }).stepNumber
 }
 
 const sortNodesByStep = (nodes: Node[]): Node[] => {
@@ -109,23 +105,4 @@ export const rebuildEdgesForMode = (
   }
 
   return normalizeEdges(nextEdges)
-}
-
-export const edgesChanged = (current: Edge[], rebuilt: Edge[]): boolean => {
-  const normalize = (edges: Edge[]) =>
-    edges
-      .map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle ?? null,
-        targetHandle: edge.targetHandle ?? null,
-        type: edge.type ?? 'smoothstep',
-      }))
-      .sort((a, b) => a.id.localeCompare(b.id))
-
-  const currentNormalized = normalize(current)
-  const rebuiltNormalized = normalize(rebuilt)
-
-  return JSON.stringify(currentNormalized) !== JSON.stringify(rebuiltNormalized)
 }

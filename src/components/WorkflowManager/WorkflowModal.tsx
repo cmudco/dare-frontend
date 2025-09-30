@@ -1,3 +1,5 @@
+// LEGACY MODAL - COMMENTED OUT
+/*
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
@@ -25,6 +27,16 @@ const WorkflowModal: React.FC = () => {
       </DialogContent>
     </Dialog>
   )
+}
+
+export default WorkflowModal
+*/
+
+// Placeholder component to prevent import errors
+import React from 'react'
+
+const WorkflowModal: React.FC = () => {
+  return null
 }
 
 export default WorkflowModal

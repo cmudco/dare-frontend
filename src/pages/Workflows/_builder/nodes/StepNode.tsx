@@ -1,4 +1,9 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import {
+  Handle,
+  Position,
+  type NodeProps,
+  useUpdateNodeInternals,
+} from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import {
@@ -11,28 +16,18 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Brain,
-  Settings,
-  FileText,
-  Database,
-  X,
-} from 'lucide-react'
+import { Brain, Settings, FileText, Database, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
 
 export type StepNodeData = {
-  prompt: string | null
-  contentFiles: string[]
-  embeddingFiles: string[]
-  llm: string | null
+  prompt: number | null
+  contentFiles: number[]
+  embeddingFiles: number[]
+  llm: number | null
   stepNumber: number
   maxTokens?: number
   temperature?: number
@@ -45,132 +40,55 @@ export type StepNodeData = {
 }
 
 export default function StepNode({ id, data, selected }: NodeProps) {
-  const nodeData = (data as unknown as StepNodeData) || ({} as StepNodeData)
+  const nodeId = id as string // ReactFlow guarantees id is string when component renders
+  const stepData = data as StepNodeData
   const { errorsByNodeId, clearNodeError } = useErrorsContext()
-  const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
+  const fieldErrors = (errorsByNodeId[nodeId] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
 
-  // Local state for form inputs
-  const [prompt, setPrompt] = useState(
-    nodeData.prompt ? String(nodeData.prompt) : ''
-  )
-  const [contentFiles, setContentFiles] = useState<string[]>(
-    nodeData.contentFiles || []
-  )
-  const [embeddingFiles, setEmbeddingFiles] = useState<string[]>(
-    nodeData.embeddingFiles || []
-  )
-  const [llm, setLlm] = useState<string | number>(nodeData.llm ?? '')
-  const [maxTokens, setMaxTokens] = useState<number>(
-    Number(nodeData?.maxTokens ?? 2048)
-  )
-  const [temperature, setTemperature] = useState<number>(
-    Number(nodeData?.temperature ?? 0.7)
-  )
-  const [maxContextSnippets, setMaxContextSnippets] = useState<number>(
-    Number(nodeData?.maxContextSnippets ?? 4)
-  )
-  const [documentSimilarityThreshold, setDocumentSimilarityThreshold] =
-    useState<number>(Number(nodeData?.documentSimilarityThreshold ?? 0.2))
   const [showAdvanced, setShowAdvanced] = useState(false)
 
-  // Redux selectors
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+  const edges = useAppSelector((s) => s.workflowBuilder.edges)
+  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const updateNodeInternals = useUpdateNodeInternals()
+
+  // Check if this step node is connected to a start node
+  const isConnectedToStart = edges.some((edge) => {
+    const sourceNode = nodes.find((n) => n.id === edge.source)
+    return edge.target === nodeId && sourceNode?.type === 'start'
+  })
+
+  // Calculate input handles based on actual connections (excluding start nodes)
+  const connectedInputEdges = edges.filter((edge) => {
+    const sourceNode = nodes.find((n) => n.id === edge.source)
+    return (
+      edge.target === nodeId &&
+      (sourceNode?.type === 'step' ||
+        sourceNode?.type === 'chatOutput' ||
+        sourceNode?.type === 'conditional')
+    )
+  })
+
+  // Show connected inputs + one spare handle for new connections
+  // Only use dynamic handles if NOT connected to start node
+  const inputHandleCount = isConnectedToStart
+    ? 1
+    : Math.max(connectedInputEdges.length + 1, 1)
 
   // Update Redux when form changes
   const updateNodeData = (updates: Partial<StepNodeData>) => {
-    dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
+    dispatch(updateNodeDataById({ nodeId: nodeId, newData: updates }))
   }
 
-  // Sync local state with props data when it changes (from Redux)
   useEffect(() => {
-    const newData = data as StepNodeData
-    if (newData.prompt !== undefined && newData.prompt !== prompt) {
-      setPrompt(newData.prompt ? String(newData.prompt) : '')
-    }
-    if (newData.llm !== undefined && newData.llm !== llm) {
-      setLlm(newData.llm ?? '')
-    }
-    if (
-      newData.contentFiles &&
-      JSON.stringify(newData.contentFiles) !== JSON.stringify(contentFiles)
-    ) {
-      setContentFiles(newData.contentFiles)
-    }
-    if (
-      newData.embeddingFiles &&
-      JSON.stringify(newData.embeddingFiles) !== JSON.stringify(embeddingFiles)
-    ) {
-      setEmbeddingFiles(newData.embeddingFiles)
-    }
-    if (newData.maxTokens !== undefined && newData.maxTokens !== maxTokens) {
-      setMaxTokens(newData.maxTokens)
-    }
-    if (
-      newData.temperature !== undefined &&
-      newData.temperature !== temperature
-    ) {
-      setTemperature(newData.temperature)
-    }
-  }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
+    updateNodeInternals(nodeId)
+  }, [updateNodeInternals, nodeId, edges])
 
-  // Get the status of this step from the current workflow run
-  const getStepStatus = () => {
-    if (!currentRun || !currentRun.steps) return null
-    const runStep = currentRun.steps.find(
-      (rs) => (rs.order || rs.step) === nodeData.stepNumber
-    )
-    return runStep?.status || null
-  }
-
-  const stepStatus = getStepStatus()
-
-  // Render status pill for the step
-  const renderStatusPill = () => {
-    if (!stepStatus) return null
-
-    const getStatusIcon = () => {
-      switch (stepStatus) {
-        case WorkflowRunStepStatus.Pending:
-          return <Clock className='h-3 w-3' />
-        case WorkflowRunStepStatus.Running:
-          return <Loader2 className='h-3 w-3 animate-spin' />
-        case WorkflowRunStepStatus.Completed:
-          return <CheckCircle className='h-3 w-3' />
-        case WorkflowRunStepStatus.Failed:
-          return <XCircle className='h-3 w-3' />
-        default:
-          return null
-      }
-    }
-
-    const getStatusColor = () => {
-      switch (stepStatus) {
-        case WorkflowRunStepStatus.Pending:
-          return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800'
-        case WorkflowRunStepStatus.Running:
-          return 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800'
-        case WorkflowRunStepStatus.Completed:
-          return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800'
-        case WorkflowRunStepStatus.Failed:
-          return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800'
-        default:
-          return 'bg-muted text-muted-foreground border-border'
-      }
-    }
-
-    return (
-      <div
-        className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium ${getStatusColor()}`}
-      >
-        {getStatusIcon()}
-        <span className='capitalize'>{stepStatus}</span>
-      </div>
-    )
-  }
+  const stepStatus = getStepStatus(currentRun, stepData?.stepNumber)
 
   return (
     <Card
@@ -182,9 +100,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             <div className='flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20'>
               <Brain className='h-3 w-3 text-primary' />
             </div>
-            Step {nodeData.stepNumber}
+            Step {stepData?.stepNumber}
           </div>
-          {renderStatusPill()}
+          {renderStatusPill(stepStatus)}
         </CardTitle>
       </CardHeader>
       <CardContent className='space-y-4'>
@@ -193,11 +111,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             Prompt
           </Label>
           <Select
-            value={prompt}
+            value={stepData.prompt ? stepData.prompt.toString() : ''}
             onValueChange={(value) => {
-              setPrompt(value)
-              updateNodeData({ prompt: value })
-              clearNodeError(id, 'prompt')
+              updateNodeData({ prompt: Number(value) })
+              clearNodeError(nodeId, 'prompt')
             }}
           >
             <SelectTrigger
@@ -229,8 +146,8 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             Content Files
           </Label>
           <div className='flex flex-wrap gap-1'>
-            {contentFiles.map((fileId) => {
-              const file = files.find((f) => f.id.toString() === fileId)
+            {(stepData.contentFiles || []).map((fileId) => {
+              const file = files.find((f) => f.id === fileId)
               return (
                 <Badge key={fileId} variant='secondary' className='text-xs'>
                   {file?.name || `File ${fileId}`}
@@ -239,10 +156,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                     variant='ghost'
                     className='ml-1 h-4 w-4 p-0'
                     onClick={() => {
-                      const newFiles = contentFiles.filter(
+                      const newFiles = (stepData.contentFiles || []).filter(
                         (id) => id !== fileId
                       )
-                      setContentFiles(newFiles)
                       updateNodeData({ contentFiles: newFiles })
                     }}
                   >
@@ -254,9 +170,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             <Select
               value=''
               onValueChange={(value) => {
-                if (value && !contentFiles.includes(value)) {
-                  const newFiles = [...contentFiles, value]
-                  setContentFiles(newFiles)
+                const fileId = Number(value)
+                const currentFiles = stepData.contentFiles || []
+                if (value && !currentFiles.includes(fileId)) {
+                  const newFiles = [...currentFiles, fileId]
                   updateNodeData({ contentFiles: newFiles })
                 }
               }}
@@ -266,7 +183,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               </SelectTrigger>
               <SelectContent>
                 {files
-                  .filter((f) => !contentFiles.includes(f.id.toString()))
+                  .filter((f) => !(stepData.contentFiles || []).includes(f.id))
                   .map((file) => (
                     <SelectItem key={file.id} value={file.id.toString()}>
                       {file.name}
@@ -284,8 +201,8 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             Embedding Files
           </Label>
           <div className='flex flex-wrap gap-1'>
-            {embeddingFiles.map((fileId) => {
-              const file = files.find((f) => f.id.toString() === fileId)
+            {(stepData.embeddingFiles || []).map((fileId) => {
+              const file = files.find((f) => f.id === fileId)
               return (
                 <Badge key={fileId} variant='secondary' className='text-xs'>
                   {file?.name || `File ${fileId}`}
@@ -294,10 +211,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                     variant='ghost'
                     className='ml-1 h-4 w-4 p-0'
                     onClick={() => {
-                      const newFiles = embeddingFiles.filter(
+                      const newFiles = (stepData.embeddingFiles || []).filter(
                         (id) => id !== fileId
                       )
-                      setEmbeddingFiles(newFiles)
                       updateNodeData({ embeddingFiles: newFiles })
                     }}
                   >
@@ -309,9 +225,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             <Select
               value=''
               onValueChange={(value) => {
-                if (value && !embeddingFiles.includes(value)) {
-                  const newFiles = [...embeddingFiles, value]
-                  setEmbeddingFiles(newFiles)
+                const fileId = Number(value)
+                const currentFiles = stepData.embeddingFiles || []
+                if (value && !currentFiles.includes(fileId)) {
+                  const newFiles = [...currentFiles, fileId]
                   updateNodeData({ embeddingFiles: newFiles })
                 }
               }}
@@ -321,7 +238,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               </SelectTrigger>
               <SelectContent>
                 {files
-                  .filter((f) => !embeddingFiles.includes(f.id.toString()))
+                  .filter(
+                    (f) => !(stepData.embeddingFiles || []).includes(f.id)
+                  )
                   .map((file) => (
                     <SelectItem key={file.id} value={file.id.toString()}>
                       {file.name}
@@ -337,11 +256,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             LLM Model
           </Label>
           <Select
-            value={llm.toString()}
+            value={stepData.llm ? stepData.llm.toString() : ''}
             onValueChange={(value) => {
-              setLlm(value)
-              updateNodeData({ llm: value })
-              clearNodeError(id, 'llm')
+              updateNodeData({ llm: Number(value) })
+              clearNodeError(nodeId, 'llm')
             }}
           >
             <SelectTrigger
@@ -381,12 +299,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
           <div className='space-y-4 border-t pt-4'>
             <div className='space-y-2'>
               <Label className='text-xs font-medium'>
-                Max Tokens: {maxTokens}
+                Max Tokens: {stepData.maxTokens || 2048}
               </Label>
               <Slider
-                value={[maxTokens]}
+                value={[stepData.maxTokens || 2048]}
                 onValueChange={(value) => {
-                  setMaxTokens(value[0])
                   updateNodeData({ maxTokens: value[0] })
                 }}
                 max={8192}
@@ -398,12 +315,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs font-medium'>
-                Temperature: {temperature}
+                Temperature: {stepData.temperature || 0.7}
               </Label>
               <Slider
-                value={[temperature]}
+                value={[stepData.temperature || 0.7]}
                 onValueChange={(value) => {
-                  setTemperature(value[0])
                   updateNodeData({ temperature: value[0] })
                 }}
                 max={2}
@@ -415,12 +331,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs font-medium'>
-                Max Context Snippets: {maxContextSnippets}
+                Max Context Snippets: {stepData.maxContextSnippets || 4}
               </Label>
               <Slider
-                value={[maxContextSnippets]}
+                value={[stepData.maxContextSnippets || 4]}
                 onValueChange={(value) => {
-                  setMaxContextSnippets(value[0])
                   updateNodeData({ maxContextSnippets: value[0] })
                 }}
                 max={20}
@@ -432,12 +347,12 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs font-medium'>
-                Document Similarity Threshold: {documentSimilarityThreshold}
+                Document Similarity Threshold:{' '}
+                {stepData.documentSimilarityThreshold || 0.2}
               </Label>
               <Slider
-                value={[documentSimilarityThreshold]}
+                value={[stepData.documentSimilarityThreshold || 0.2]}
                 onValueChange={(value) => {
-                  setDocumentSimilarityThreshold(value[0])
                   updateNodeData({ documentSimilarityThreshold: value[0] })
                 }}
                 max={1}
@@ -450,11 +365,43 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         )}
       </CardContent>
 
-      <Handle
-        type='target'
-        position={Position.Left}
-        className='h-4 w-4 bg-secondary'
-      />
+      {/* Input handles - single static handle if connected to start, dynamic handles otherwise */}
+      {isConnectedToStart ? (
+        // Traditional single input handle when connected to start node
+        <Handle
+          type='target'
+          position={Position.Left}
+          id='input-1'
+          className='h-4 w-4 bg-secondary'
+        />
+      ) : (
+        // Dynamic input handles when NOT connected to start node
+        Array.from({ length: inputHandleCount }, (_, index) => {
+          const handleId = `input-${index + 1}`
+          // Dynamic positioning based on number of handles
+          const topPercent =
+            inputHandleCount === 1
+              ? 50
+              : 25 + (index * 50) / (inputHandleCount - 1)
+          const isConnected = index < connectedInputEdges.length
+
+          return (
+            <Handle
+              key={handleId}
+              type='target'
+              position={Position.Left}
+              id={handleId}
+              style={{
+                top: `${Math.min(Math.max(topPercent, 10), 90)}%`,
+              }}
+              className={`h-3 w-3 ${
+                isConnected ? 'bg-primary' : 'bg-muted-foreground'
+              }`}
+            />
+          )
+        })
+      )}
+
       <Handle
         type='source'
         position={Position.Right}

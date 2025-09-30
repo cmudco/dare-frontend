@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Cog, Trash2 } from 'lucide-react'
+import { Play, Cog, Trash2, GitBranch } from 'lucide-react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { useReactFlow } from '@xyflow/react'
 import {
   createNodeAtPosition,
   resetBuilder,
@@ -28,11 +29,19 @@ const nodeComponents = [
     icon: Cog,
     color: 'bg-primary',
   },
+  {
+    type: 'conditional',
+    label: 'Conditional',
+    description: 'AI-powered routing with custom evaluation criteria',
+    icon: GitBranch,
+    color: 'bg-blue-500',
+  },
   // { type: 'chatOutput', label: 'Output', description: 'Configure how results are displayed', icon: Cog, color: 'bg-primary' },
 ]
 
 export default function Sidebar({ disabled }: SidebarProps) {
   const dispatch = useAppDispatch()
+  const reactFlowInstance = useReactFlow()
   const { selectedWorkflowRun } = useAppSelector((state) => state.workflow)
   const nodes = useAppSelector((state) => state.workflowBuilder.nodes)
   const isWorkflowRunning =
@@ -40,31 +49,47 @@ export default function Sidebar({ disabled }: SidebarProps) {
 
   const hasStartNode = nodes.some((n) => n.type === 'start')
 
-  const calculateOptimalPosition = (type: string) => {
-    const startNode = nodes.find((n) => n.type === 'start')
-    const mode =
-      (startNode?.data as { mode?: 'sequential' | 'parallel' })?.mode ||
-      'sequential'
+  const getViewportCenterPosition = () => {
+    try {
+      // Get the React Flow wrapper element
+      const reactFlowElement = document.querySelector('.react-flow')
 
-    const startPosition = { x: 100, y: 200 }
-    const stepSpacing = mode === 'parallel' ? 440 : 300 // Good spacing for both modes
-
-    if (type === 'start') return startPosition
-
-    if (type === 'step') {
-      const stepCount = nodes.filter((n) => n.type === 'step').length
-      return {
-        x: startPosition.x + 400,
-        y: startPosition.y + stepCount * stepSpacing,
+      if (!reactFlowElement) {
+        // Fallback to default position if React Flow element not available
+        return { x: 400, y: 300 }
       }
-    }
 
-    return { x: startPosition.x + 800, y: startPosition.y }
+      const bounds = reactFlowElement.getBoundingClientRect()
+
+      // Calculate the center point, but account for sidebar by moving more to the right
+      // The sidebar is 320px (w-80 = 320px), so we adjust the center accordingly
+      const centerX = bounds.width * 0.8 // Move more toward right side of canvas
+      const centerY = bounds.height / 2
+
+      // Convert the center point from screen coordinates to flow coordinates
+      // screenToFlowPosition expects coordinates relative to the React Flow element
+      const graphPosition = reactFlowInstance.screenToFlowPosition({
+        x: centerX,
+        y: centerY,
+      })
+
+      return graphPosition
+    } catch (error) {
+      console.warn(
+        'Failed to get viewport center, using fallback position:',
+        error
+      )
+      // Fallback position if anything goes wrong
+      return { x: 400, y: 300 }
+    }
   }
 
   const handleAddNode = (type: string) => {
     if (isWorkflowRunning) return
-    const position = calculateOptimalPosition(type)
+
+    // Get the center position of the current viewport
+    const position = getViewportCenterPosition()
+
     dispatch(createNodeAtPosition({ type, position }))
   }
 

@@ -8,7 +8,8 @@ import {
   getWorkflowRunById,
 } from './asyncThunks/workflow'
 import { initialState } from './initialState/workflow'
-import { WorkflowRun, Step } from './types/workflow'
+import { WorkflowRun } from './types/workflow'
+import { type Node, type Edge } from '@xyflow/react'
 
 const workflowSlice = createSlice({
   name: 'workflows',
@@ -29,12 +30,14 @@ const workflowSlice = createSlice({
     clearWorkflowError: (state) => {
       state.error = null
     },
+    // LEGACY MODAL ACTIONS - COMMENTED OUT
+    /*
     openModal: (state) => {
       state.selectedWorkflow = null
       state.tempSteps = []
       state.isModalOpen = true
     },
-    openEditModal: (state, action: PayloadAction<string>) => {
+    openEditModal: (state, action: PayloadAction<number>) => {
       state.isModalOpen = true
       state.selectedWorkflow =
         state.workflows.find((workflow) => workflow.id === action.payload) ||
@@ -44,14 +47,20 @@ const workflowSlice = createSlice({
       state.isModalOpen = false
       state.selectedWorkflow = null
     },
-    setSteps: (state, action: PayloadAction<Step[]>) => {
+    */
+    setNodes: (state, action: PayloadAction<Node[]>) => {
       if (state.selectedWorkflow) {
-        state.selectedWorkflow.steps = action.payload
+        state.selectedWorkflow.nodes = action.payload
+      }
+    },
+    setEdges: (state, action: PayloadAction<Edge[]>) => {
+      if (state.selectedWorkflow) {
+        state.selectedWorkflow.edges = action.payload
       }
     },
     selectWorkflowForView: (
       state,
-      action: PayloadAction<{ workflowId: string; mode: 'run' | 'view' }>
+      action: PayloadAction<{ workflowId: number; mode: 'run' | 'view' }>
     ) => {
       const { workflowId, mode } = action.payload
       const workflow = state.workflows.find((w) => w.id === workflowId)
@@ -64,11 +73,14 @@ const workflowSlice = createSlice({
         }
       }
     },
-    setSavedStepIds: (state, action: PayloadAction<string[]>) => {
-      state.savedStepIds = action.payload
+    setSavedNodeIds: (state, action: PayloadAction<string[]>) => {
+      state.savedNodeIds = action.payload
     },
-    setTempSteps: (state, action: PayloadAction<Step[]>) => {
-      state.tempSteps = action.payload
+    setTempNodes: (state, action: PayloadAction<Node[]>) => {
+      state.tempNodes = action.payload
+    },
+    setTempEdges: (state, action: PayloadAction<Edge[]>) => {
+      state.tempEdges = action.payload
     },
   },
   extraReducers: (builder) => {
@@ -154,9 +166,7 @@ const workflowSlice = createSlice({
           state.workflowRuns.push(newRun)
         }
         state.selectedWorkflowRun = newRun
-        const workflow = state.workflows.find(
-          (w) => w.id === String(newRun.workflow)
-        )
+        const workflow = state.workflows.find((w) => w.id === newRun.workflow)
         if (workflow) {
           workflow.latestRun = newRun
           workflow.lastRunId = newRun.id
@@ -195,13 +205,16 @@ export const {
   clearSelectedWorkflowRun,
   setSelectedWorkflowRun,
   clearWorkflowError,
-  openModal,
-  openEditModal,
-  closeModal,
-  setSteps,
+  // LEGACY MODAL ACTIONS - COMMENTED OUT
+  // openModal,
+  // openEditModal,
+  // closeModal,
+  setNodes,
+  setEdges,
   selectWorkflowForView,
-  setSavedStepIds,
-  setTempSteps,
+  setSavedNodeIds,
+  setTempNodes,
+  setTempEdges,
 } = workflowSlice.actions
 
 export default workflowSlice.reducer

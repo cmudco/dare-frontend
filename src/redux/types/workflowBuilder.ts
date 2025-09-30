@@ -13,7 +13,7 @@ export interface WorkflowBuilderState {
   edges: Edge[]
   errorsByNodeId: Record<string, NodeErrors>
   currentMode: 'sequential' | 'parallel'
-  lastWorkflowId: string | undefined
+  lastWorkflowId: number | undefined
   savedViewport: { x: number; y: number; zoom: number } | null
   currentRun: WorkflowRun | null
   isRunning: boolean
