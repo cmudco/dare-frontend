@@ -250,6 +250,26 @@ export const conversationSlice = createSlice({
     setAutoSaveEnabled(state, action: PayloadAction<boolean>) {
       state.autoSaveEnabled = action.payload
     },
+    addAttachedImage(
+      state,
+      action: PayloadAction<{
+        id: string
+        preview: string
+        name: string
+        size: number
+        type: string
+      }>
+    ) {
+      state.attachedImages.push(action.payload)
+    },
+    removeAttachedImage(state, action: PayloadAction<string>) {
+      state.attachedImages = state.attachedImages.filter(
+        (img) => img.id !== action.payload
+      )
+    },
+    clearAttachedImages(state) {
+      state.attachedImages = []
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -474,5 +494,8 @@ export const {
   clearDraftForConversation,
   clearOldDrafts,
   setAutoSaveEnabled,
+  addAttachedImage,
+  removeAttachedImage,
+  clearAttachedImages,
 } = conversationSlice.actions
 export default conversationSlice.reducer
