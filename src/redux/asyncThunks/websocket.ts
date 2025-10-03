@@ -119,10 +119,8 @@ export const sendWebSocketMessage = createAsyncThunk<
     referencedConversationHistoryLimit,
     selectedModel,
     attachedImages,
+    webSearchEnabled,
   } = conversation
-
-  const webSearchEnabled =
-    activeConversation?.webSearchEnabled ?? conversation.webSearchEnabled
 
   const payload = {
     message: message.message,
