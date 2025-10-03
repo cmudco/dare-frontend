@@ -32,9 +32,8 @@ export const conversationSlice = createSlice({
       action: PayloadAction<Conversation | null>
     ) {
       state.activeConversation = action.payload
-      // Restore web search state from conversation
-      if (action.payload?.webSearchEnabled !== undefined) {
-        state.webSearchEnabled = action.payload.webSearchEnabled
+      if (action.payload) {
+        state.webSearchEnabled = action.payload.webSearchEnabled ?? false
       }
     },
     loadSelectedFilesFromIds(
