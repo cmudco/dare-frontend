@@ -26,4 +26,5 @@ export const initialState: ConversationState = {
   conversationDrafts: loadDraftsFromLocalStorage(),
   autoSaveEnabled: true,
   attachedImages: [],
+  webSearchEnabled: false,
 }

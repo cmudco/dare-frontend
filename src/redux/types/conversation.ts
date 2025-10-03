@@ -13,6 +13,7 @@ export interface Conversation {
   temperature: number
   maxTokens: number
   historyLimit: number
+  webSearchEnabled?: boolean
   prompt?: Prompt | null
   promptId?: number | null
   sortOrder?: number
@@ -105,6 +106,7 @@ export interface ConversationState {
   conversationDrafts: ConversationDraft[]
   autoSaveEnabled: boolean
   attachedImages: AttachedImage[]
+  webSearchEnabled: boolean
 }
 
 export interface ConversationResponse {
