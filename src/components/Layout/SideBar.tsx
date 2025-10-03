@@ -104,7 +104,7 @@ const Sidebar = () => {
         <div className='flex items-center justify-between p-4'>
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`hover:bg-primary-dark border-border-gray dark:bg-dark-chat-history absolute -right-4 top-4 mt-1 translate-x-0 transform rounded-full border-2 bg-white p-1 transition-all dark:border-slate-600`}
+            className={`hover:bg-primary-dark border-border-gray dark:bg-dark-chat-history absolute -right-4 top-4 z-10 mt-1 translate-x-0 transform rounded-full border-2 bg-white p-1 transition-all dark:border-slate-600`}
           >
             <ChevronLeftIcon
               className={`h-5 w-5 font-bold text-primary transition-transform duration-300 ${

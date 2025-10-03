@@ -25,4 +25,5 @@ export const initialState: ConversationState = {
   allModels: [],
   conversationDrafts: loadDraftsFromLocalStorage(),
   autoSaveEnabled: true,
+  attachedImages: [],
 }

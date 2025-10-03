@@ -74,6 +74,14 @@ export interface ConversationDraft {
   timestamp: number
 }
 
+export interface AttachedImage {
+  id: string
+  preview: string
+  name: string
+  size: number
+  type: string
+}
+
 export interface ConversationState {
   conversations: Conversation[]
   activeConversation: Conversation | null
@@ -96,6 +104,7 @@ export interface ConversationState {
   allModels: LLMModel[]
   conversationDrafts: ConversationDraft[]
   autoSaveEnabled: boolean
+  attachedImages: AttachedImage[]
 }
 
 export interface ConversationResponse {
