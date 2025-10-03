@@ -5,6 +5,8 @@ import {
   updateSelectedTags,
   saveDraftForConversation,
   clearDraftForConversation,
+  addAttachedImage,
+  clearAttachedImages,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker'
@@ -19,6 +21,7 @@ import ConversationFileSelect from './ConversationFileSelect'
 import ConversationReferenceSelect from './ConversationReferenceSelect'
 import ModelConfigurationPanel from './ModelConfigurationPanel'
 import ExportButton from './ExportButton'
+import ImagePreview from './ImagePreview'
 import { ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
@@ -133,6 +136,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       dispatch(sendMessage(newMessage))
       dispatch(updateConversationInput(''))
       dispatch(clearDraftForConversation(activeConversation.conversationId))
+      dispatch(clearAttachedImages())
       if (editMessageId && onCancelEdit) {
         onCancelEdit()
       }
@@ -144,6 +148,38 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     if (event.key === 'Enter' && !event.shiftKey && !event.altKey) {
       event.preventDefault()
       handleSendMessage()
+    }
+  }
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (disabled) return
+    const items = event.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.type.indexOf('image') !== -1) {
+        event.preventDefault()
+        const file = item.getAsFile()
+        if (file) {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            const preview = e.target?.result as string
+            const id = `${Date.now()}-${Math.random()}`
+            // Only store serializable data in Redux (no File object)
+            dispatch(
+              addAttachedImage({
+                id,
+                preview,
+                name: file.name || 'pasted-image.png',
+                size: file.size,
+                type: file.type,
+              })
+            )
+          }
+          reader.readAsDataURL(file)
+        }
+      }
     }
   }
 
@@ -183,12 +219,14 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             </button>
           </div>
         )}
+        <ImagePreview />
         <div className='relative flex w-full items-center rounded-md px-4'>
           <textarea
             ref={textareaRef}
             value={conversationInput}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
+            onPaste={handlePaste}
             placeholder={
               disabled
                 ? 'Select a conversation to start chatting'
