@@ -32,6 +32,10 @@ export const conversationSlice = createSlice({
       action: PayloadAction<Conversation | null>
     ) {
       state.activeConversation = action.payload
+      // Restore web search state from conversation
+      if (action.payload?.webSearchEnabled !== undefined) {
+        state.webSearchEnabled = action.payload.webSearchEnabled
+      }
     },
     loadSelectedFilesFromIds(
       state,
@@ -112,6 +116,12 @@ export const conversationSlice = createSlice({
     updateHistoryLimit(state, action: PayloadAction<number>) {
       if (state.activeConversation) {
         state.activeConversation.historyLimit = action.payload
+      }
+    },
+    updateWebSearchEnabled(state, action: PayloadAction<boolean>) {
+      state.webSearchEnabled = action.payload
+      if (state.activeConversation) {
+        state.activeConversation.webSearchEnabled = action.payload
       }
     },
     addMessage(state, action: PayloadAction<Message>) {
@@ -468,6 +478,7 @@ export const {
   updateTemperature,
   updateMaxTokens,
   updateHistoryLimit,
+  updateWebSearchEnabled,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,
