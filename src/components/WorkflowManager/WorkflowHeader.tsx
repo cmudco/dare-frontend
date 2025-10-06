@@ -19,6 +19,7 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
   // const dispatch = useDispatch()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+  const [modePromptOpen, setModePromptOpen] = useState(false)
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
