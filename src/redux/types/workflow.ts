@@ -17,6 +17,20 @@ export interface WorkflowStepSnippet {
   vectorDbSource?: string
 }
 
+export interface ConditionalRoute {
+  name: string
+  description: string
+}
+
+export interface PendingValidation {
+  nodeId: string
+  stepNumber: number
+  customPrompt: string
+  availableRoutes: ConditionalRoute[]
+  currentResponse: string
+  stepId: number
+}
+
 export interface WorkflowRunStep {
   id: number
   step_node: number
@@ -39,6 +53,8 @@ export interface WorkflowRun {
   steps: WorkflowRunStep[]
   workflowTitle: string
   workflowDescription: string
+  hasPendingValidation?: boolean
+  pendingValidations?: PendingValidation[]
 }
 
 export interface Workflow {

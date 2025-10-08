@@ -55,6 +55,12 @@ export const WORKFLOW_RUN_STATUSES = [
     name: 'Skipped',
     description: 'The workflow was skipped and not executed.',
   },
+  {
+    id: 'pending_human_input',
+    name: 'Awaiting Decision',
+    description:
+      'The workflow is paused and waiting for user to choose a route.',
+  },
 ]
 
 export enum WorkflowRunStepStatus {
@@ -63,6 +69,7 @@ export enum WorkflowRunStepStatus {
   Completed = 'completed',
   Failed = 'failed',
   Skipped = 'skipped',
+  PendingHumanInput = 'pending_human_input',
 }
 
 export enum WorkflowViewMode {

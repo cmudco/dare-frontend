@@ -174,7 +174,8 @@ const workflowBuilderSlice = createSlice({
     updateWorkflowRunStatus: (state, action: PayloadAction<WorkflowRun>) => {
       const runData = action.payload
       state.currentRun = runData
-      state.isRunning = runData.status === 'running'
+      state.isRunning =
+        runData.status === 'running' || runData.status === 'pending_human_input'
 
       // Update output nodes and conditional nodes with step responses and status
       state.nodes = state.nodes.map((node) => {
@@ -227,14 +228,18 @@ const workflowBuilderSlice = createSlice({
         state.edges = action.payload.edges
         state.loadedWorkflow = action.payload.workflow
         state.currentRun = action.payload.currentRun
-        state.isRunning = action.payload.currentRun?.status === 'running'
+        state.isRunning =
+          action.payload.currentRun?.status === 'running' ||
+          action.payload.currentRun?.status === 'pending_human_input'
         state.lastWorkflowId = action.payload.workflow.id
         state.savedViewport = action.payload.viewport ?? null
       })
       .addCase(startWorkflowRun.fulfilled, (state, action) => {
         // When a new run starts, update the current run and start polling
         state.currentRun = action.payload
-        state.isRunning = action.payload.status === 'running'
+        state.isRunning =
+          action.payload.status === 'running' ||
+          action.payload.status === 'pending_human_input'
       })
   },
 })
