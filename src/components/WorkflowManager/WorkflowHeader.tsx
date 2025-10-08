@@ -1,17 +1,23 @@
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid'
-import { useDispatch } from 'react-redux'
+// LEGACY: Commenting out unused dispatch since legacy modal is disabled
+// import { useDispatch } from 'react-redux'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { useState } from 'react'
-import { openModal } from '@/redux/workflowSlice'
+// LEGACY: Commenting out legacy modal import and SelectModeDialog since only "New" mode is available
+// import { openModal } from '@/redux/workflowSlice'
+// import SelectModeDialog from './SelectModeDialog'
 import { Plus } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 interface WorkflowHeaderProps {
   onSearch: (query: string) => void
 }
 
 const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
-  const dispatch = useDispatch()
+  // LEGACY: Commenting out unused dispatch since legacy modal is disabled
+  // const dispatch = useDispatch()
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,7 +27,8 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
   }
 
   const handleCreateWorkflow = () => {
-    dispatch(openModal())
+    // Directly navigate to new workflow creation since legacy mode is disabled
+    navigate('/workflows/create')
   }
 
   return (
@@ -45,6 +52,9 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
         <Plus />
         Create Workflow
       </Button>
+
+      {/* LEGACY: SelectModeDialog removed since only "New" mode is available */}
+      {/* Users now directly navigate to /workflows/create */}
     </div>
   )
 }

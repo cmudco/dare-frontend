@@ -5,7 +5,7 @@ import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { Tag } from '@/redux/types/tags'
 import type { Prompt } from '@/redux/types/prompt'
 import { PromptGroup } from './constants/prompts'
-import { Workflow, Step, WorkflowMode } from '@/redux/types/workflow'
+import { Workflow, WorkflowMode } from '@/redux/types/workflow'
 import { WORKFLOW_TABLE_HEADER_TO_KEY } from './constants/workflows'
 import { getStepCount } from './workflowUtils'
 import { SortDirectionEnum } from './constants/sort'
@@ -264,8 +264,8 @@ export function sortWorkflows(
   if (!prop) return sortedWorkflows
 
   return sortedWorkflows.sort((a, b) => {
-    let aValue: string | number | undefined | null | Step[] | WorkflowMode
-    let bValue: string | number | undefined | null | Step[] | WorkflowMode
+    let aValue: string | number | undefined | null | WorkflowMode
+    let bValue: string | number | undefined | null | WorkflowMode
 
     if (prop === 'steps') {
       aValue = getStepCount(a)
@@ -280,14 +280,12 @@ export function sortWorkflows(
           | number
           | undefined
           | null
-          | Step[]
           | WorkflowMode
         bValue = b[prop as keyof Workflow] as
           | string
           | number
           | undefined
           | null
-          | Step[]
           | WorkflowMode
       } else {
         return 0

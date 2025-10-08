@@ -136,7 +136,7 @@ const BillingScreen = () => {
                     <TableRow key={transaction.id}>
                       <TableCell>{transaction.displayAmount}</TableCell>
                       <TableCell>{transaction.message}</TableCell>
-                      <TableCell>{transaction.llm?.name || 'N/A'}</TableCell>
+                      <TableCell>{transaction.llmName || 'N/A'}</TableCell>
                       <TableCell>
                         <div className='flex flex-col'>
                           <div className='text-center'>

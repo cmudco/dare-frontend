@@ -19,6 +19,8 @@ import {
 import { Card } from '../ui/card'
 import EmptyConversation from './EmptyConversation'
 import CreditErrorAlert from './CreditErrorAlert'
+import ImageDropOverlay from './ImageDropOverlay'
+import { useImageDragAndDrop } from '../../hooks/useImageDragAndDrop'
 
 const ActiveConversation: React.FC = () => {
   const navigate = useNavigate()
@@ -48,6 +50,15 @@ const ActiveConversation: React.FC = () => {
 
   const [editMessageId, setEditMessageId] = useState<string | null>(null)
   const prevActiveConversationRef = useRef<typeof activeConversation>(null)
+
+  // Use custom hook for drag and drop functionality
+  const {
+    isDragging,
+    handleDragEnter,
+    handleDragLeave,
+    handleDragOver,
+    handleDrop,
+  } = useImageDragAndDrop()
 
   const handleEditMessage = (id: string, content: string) => {
     setEditMessageId(id)
@@ -85,7 +96,7 @@ const ActiveConversation: React.FC = () => {
         })
       )
     }
-  }, [activeConversation?.conversationId, files, dispatch])
+  }, [activeConversation?.conversationId, files, dispatch]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const handleWebSocketConnection = async () => {
@@ -152,7 +163,14 @@ const ActiveConversation: React.FC = () => {
   return (
     <>
       <CreditErrorAlert />
-      <Card className='flex-2 dark:bg-dark-gradient flex h-[90vh] w-full min-w-[65vw] flex-col justify-end rounded-none border-none'>
+      <Card
+        className='flex-2 dark:bg-dark-gradient relative flex h-[90vh] w-full min-w-[65vw] flex-col justify-end rounded-none border-none'
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        <ImageDropOverlay isVisible={isDragging} />
         <div className={`flex h-full flex-col justify-between`}>
           {!activeConversation && <NewConversation />}
           {activeConversation && conversationHistory.length === 0 && (

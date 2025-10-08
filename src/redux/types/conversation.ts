@@ -13,8 +13,9 @@ export interface Conversation {
   temperature: number
   maxTokens: number
   historyLimit: number
+  webSearchEnabled?: boolean
   prompt?: Prompt | null
-  promptId?: string | null
+  promptId?: number | null
   sortOrder?: number
   selectedEmbeddingIds?: number[]
   selectedFileIds?: number[]
@@ -74,6 +75,14 @@ export interface ConversationDraft {
   timestamp: number
 }
 
+export interface AttachedImage {
+  id: string
+  preview: string
+  name: string
+  size: number
+  type: string
+}
+
 export interface ConversationState {
   conversations: Conversation[]
   activeConversation: Conversation | null
@@ -96,6 +105,8 @@ export interface ConversationState {
   allModels: LLMModel[]
   conversationDrafts: ConversationDraft[]
   autoSaveEnabled: boolean
+  attachedImages: AttachedImage[]
+  webSearchEnabled: boolean
 }
 
 export interface ConversationResponse {

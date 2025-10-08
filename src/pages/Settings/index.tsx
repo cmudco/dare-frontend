@@ -1,5 +1,4 @@
 import { ChangePasswordForm } from '@/components/Auth/ChangePasswordForm'
-import { ChunkSettingsForm } from '@/components/Auth/ChunkSettingsForm'
 import ConversationSettingsForm from '@/components/Auth/ConversationSettingsForm'
 const Settings = () => {
   return (
@@ -11,7 +10,6 @@ const Settings = () => {
         </p>
       </div>
       <ConversationSettingsForm />
-      <ChunkSettingsForm />
       <ChangePasswordForm />
     </div>
   )
