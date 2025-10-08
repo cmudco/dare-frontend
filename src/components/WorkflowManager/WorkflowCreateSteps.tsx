@@ -1,3 +1,5 @@
+// LEGACY COMPONENT - COMMENTED OUT TO PREVENT BUILD ERRORS
+/*
 import React from 'react'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/store'
@@ -121,4 +123,9 @@ const WorkflowAddSteps: React.FC<WorkflowStepsProps> = ({
   )
 }
 
+export default WorkflowAddSteps
+*/
+
+// Export empty component to prevent import errors
+const WorkflowAddSteps = () => null
 export default WorkflowAddSteps

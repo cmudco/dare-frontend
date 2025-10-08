@@ -32,6 +32,9 @@ export const conversationSlice = createSlice({
       action: PayloadAction<Conversation | null>
     ) {
       state.activeConversation = action.payload
+      if (action.payload) {
+        state.webSearchEnabled = action.payload.webSearchEnabled ?? false
+      }
     },
     loadSelectedFilesFromIds(
       state,
@@ -112,6 +115,12 @@ export const conversationSlice = createSlice({
     updateHistoryLimit(state, action: PayloadAction<number>) {
       if (state.activeConversation) {
         state.activeConversation.historyLimit = action.payload
+      }
+    },
+    updateWebSearchEnabled(state, action: PayloadAction<boolean>) {
+      state.webSearchEnabled = action.payload
+      if (state.activeConversation) {
+        state.activeConversation.webSearchEnabled = action.payload
       }
     },
     addMessage(state, action: PayloadAction<Message>) {
@@ -249,6 +258,26 @@ export const conversationSlice = createSlice({
     },
     setAutoSaveEnabled(state, action: PayloadAction<boolean>) {
       state.autoSaveEnabled = action.payload
+    },
+    addAttachedImage(
+      state,
+      action: PayloadAction<{
+        id: string
+        preview: string
+        name: string
+        size: number
+        type: string
+      }>
+    ) {
+      state.attachedImages.push(action.payload)
+    },
+    removeAttachedImage(state, action: PayloadAction<string>) {
+      state.attachedImages = state.attachedImages.filter(
+        (img) => img.id !== action.payload
+      )
+    },
+    clearAttachedImages(state) {
+      state.attachedImages = []
     },
   },
   extraReducers: (builder) => {
@@ -448,6 +477,7 @@ export const {
   updateTemperature,
   updateMaxTokens,
   updateHistoryLimit,
+  updateWebSearchEnabled,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,
@@ -474,5 +504,8 @@ export const {
   clearDraftForConversation,
   clearOldDrafts,
   setAutoSaveEnabled,
+  addAttachedImage,
+  removeAttachedImage,
+  clearAttachedImages,
 } = conversationSlice.actions
 export default conversationSlice.reducer

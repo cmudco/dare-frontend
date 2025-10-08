@@ -26,7 +26,7 @@ const promptSlice = createSlice({
     openModal: (state) => {
       state.isModalOpen = true
     },
-    openEditModal: (state, action: PayloadAction<string>) => {
+    openEditModal: (state, action: PayloadAction<number>) => {
       state.isModalOpen = true
       state.selectedPrompt =
         state.prompts.find((prompt) => prompt.id === action.payload) || null

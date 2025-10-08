@@ -5,6 +5,8 @@ import {
   updateSelectedTags,
   saveDraftForConversation,
   clearDraftForConversation,
+  addAttachedImage,
+  clearAttachedImages,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker'
@@ -19,6 +21,7 @@ import ConversationFileSelect from './ConversationFileSelect'
 import ConversationReferenceSelect from './ConversationReferenceSelect'
 import ModelConfigurationPanel from './ModelConfigurationPanel'
 import ExportButton from './ExportButton'
+import ImagePreview from './ImagePreview'
 import { ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
@@ -53,11 +56,16 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   )
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  const clearPendingDraftSave = useCallback(() => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+      debounceTimeoutRef.current = null
+    }
+  }, [debounceTimeoutRef])
+
   const debouncedSaveDraft = useCallback(
     (conversationId: string, text: string) => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current)
-      }
+      clearPendingDraftSave()
 
       debounceTimeoutRef.current = setTimeout(() => {
         if (autoSaveEnabled && text.trim()) {
@@ -65,7 +73,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
         }
       }, 500)
     },
-    [dispatch, autoSaveEnabled]
+    [dispatch, autoSaveEnabled, clearPendingDraftSave]
   )
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -90,12 +98,22 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       }
       dispatch(sendMessage(newMessage))
       dispatch(updateConversationInput(''))
+      dispatch(clearDraftForConversation(activeConversation.conversationId))
+      clearPendingDraftSave()
       setPendingMessage(null)
     }
-  }, [pendingMessage, isConnected, activeConversation, dispatch])
+  }, [
+    pendingMessage,
+    isConnected,
+    activeConversation,
+    dispatch,
+    clearPendingDraftSave,
+  ])
 
   const handleSendMessage = () => {
     if (disabled || conversationInput.trim() === '') return
+
+    clearPendingDraftSave()
 
     const newMessage: Partial<Message> = {
       message: conversationInput,
@@ -118,6 +136,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       dispatch(sendMessage(newMessage))
       dispatch(updateConversationInput(''))
       dispatch(clearDraftForConversation(activeConversation.conversationId))
+      dispatch(clearAttachedImages())
       if (editMessageId && onCancelEdit) {
         onCancelEdit()
       }
@@ -132,6 +151,38 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     }
   }
 
+  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (disabled) return
+    const items = event.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.type.indexOf('image') !== -1) {
+        event.preventDefault()
+        const file = item.getAsFile()
+        if (file) {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            const preview = e.target?.result as string
+            const id = `${Date.now()}-${Math.random()}`
+            // Only store serializable data in Redux (no File object)
+            dispatch(
+              addAttachedImage({
+                id,
+                preview,
+                name: file.name || 'pasted-image.png',
+                size: file.size,
+                type: file.type,
+              })
+            )
+          }
+          reader.readAsDataURL(file)
+        }
+      }
+    }
+  }
+
   useEffect(() => {
     const textarea = textareaRef.current
     if (textarea) {
@@ -139,6 +190,12 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`
     }
   }, [conversationInput])
+
+  useEffect(() => {
+    return () => {
+      clearPendingDraftSave()
+    }
+  }, [clearPendingDraftSave])
 
   return (
     <>
@@ -162,12 +219,14 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             </button>
           </div>
         )}
+        <ImagePreview />
         <div className='relative flex w-full items-center rounded-md px-4'>
           <textarea
             ref={textareaRef}
             value={conversationInput}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
+            onPaste={handlePaste}
             placeholder={
               disabled
                 ? 'Select a conversation to start chatting'
@@ -212,9 +271,11 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <div className='h-8 w-[2px] rounded-lg bg-gray-300'></div>
             <ConversationReferenceSelect />
             <ModelPicker />
-            <ExportButton />
           </div>
-          <ModelConfigurationPanel />
+          <div className='flex items-center gap-3'>
+            <ExportButton />
+            <ModelConfigurationPanel />
+          </div>
         </div>
       </div>
       <p className='mt-2 text-center text-sm text-gray-500'>

@@ -7,8 +7,10 @@ import {
   updateTemperature,
   updateMaxTokens,
   updateHistoryLimit,
+  updateWebSearchEnabled,
 } from '../../redux/conversationSlice'
 import { Slider } from '../ui/slider'
+import { Switch } from '../ui/switch'
 import { Settings } from 'lucide-react'
 import { MODEL_CONFIG } from '../../config/modelConfig'
 import {
@@ -32,6 +34,11 @@ const ModelConfigurationPanel: React.FC = () => {
   const maxTokens = activeConversation?.maxTokens ?? MODEL_CONFIG.maxTokens
   const historyLimit =
     activeConversation?.historyLimit ?? MODEL_CONFIG.historyLimit
+  const webSearchEnabled = useSelector(
+    (state: RootState) =>
+      activeConversation?.webSearchEnabled ??
+      state.conversation.webSearchEnabled
+  )
 
   const handleTemperatureChange = (values: number[]) => {
     dispatch(updateTemperature(values[0]))
@@ -69,11 +76,24 @@ const ModelConfigurationPanel: React.FC = () => {
     }
   }
 
+  const handleWebSearchToggle = (checked: boolean) => {
+    dispatch(updateWebSearchEnabled(checked))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { webSearchEnabled: checked },
+        })
+      )
+    }
+  }
+
   const resetToDefaults = () => {
     if (activeConversation) {
       dispatch(updateTemperature(MODEL_CONFIG.temperature))
       dispatch(updateMaxTokens(MODEL_CONFIG.maxTokens))
       dispatch(updateHistoryLimit(MODEL_CONFIG.historyLimit))
+      dispatch(updateWebSearchEnabled(false))
 
       dispatch(
         updateConversation({
@@ -82,6 +102,7 @@ const ModelConfigurationPanel: React.FC = () => {
             temperature: MODEL_CONFIG.temperature,
             maxTokens: MODEL_CONFIG.maxTokens,
             historyLimit: MODEL_CONFIG.historyLimit,
+            webSearchEnabled: false,
           },
         })
       )
@@ -93,7 +114,7 @@ const ModelConfigurationPanel: React.FC = () => {
       <PopoverTrigger asChild>
         <Button
           variant='ghost'
-          className='absolute right-[10px] h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
+          className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
         >
           <Settings className='h-5 w-5 text-gray-600 dark:text-gray-300' />
         </Button>
@@ -112,6 +133,22 @@ const ModelConfigurationPanel: React.FC = () => {
               </Button>
             </div>
           )}
+
+          <div className='space-y-4'>
+            {/* Web Search Toggle */}
+            <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+              <div className='flex flex-col'>
+                <h4 className='font-medium dark:text-white'>Web Search</h4>
+                <p className='text-xs text-gray-500 dark:text-gray-400'>
+                  Enable real-time web search for up-to-date information
+                </p>
+              </div>
+              <Switch
+                checked={webSearchEnabled}
+                onCheckedChange={handleWebSearchToggle}
+              />
+            </div>
+          </div>
 
           <div className='space-y-4'>
             <div className='flex items-center justify-between'>

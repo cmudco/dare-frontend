@@ -25,6 +25,7 @@ export interface Transaction {
   type: string
   message: string
   llm: LLMModel
+  llmName: string
   inputTokens: number
   outputTokens: number
   createdAt: string

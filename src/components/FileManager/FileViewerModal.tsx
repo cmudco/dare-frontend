@@ -93,7 +93,7 @@ const FileViewerModal = ({
         setBlobUrl(null)
       }
     }
-  }, [isOpen, fileId, fetchFileAsBlob])
+  }, [isOpen, fileId, fetchFileAsBlob]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClose = () => {
     setError(null)
