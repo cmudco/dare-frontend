@@ -10,6 +10,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { GitBranch, Info, Plus, Trash2, UserCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
@@ -28,6 +35,7 @@ export interface ConditionalRoute {
 
 export type ConditionalNodeData = {
   customPrompt: string
+  llm: number | null
   // New structure
   routes: ConditionalRoute[]
   requireHumanValidation: boolean
@@ -44,6 +52,7 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+  const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const updateNodeInternals = useUpdateNodeInternals()
   const [showValidationModal, setShowValidationModal] = useState(false)
 
@@ -221,6 +230,39 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
             <p className='mt-1 text-xs text-destructive'>
               {fieldErrors.customPrompt}
             </p>
+          )}
+        </div>
+
+        {/* LLM Model Selector */}
+        <div className='space-y-2'>
+          <Label htmlFor='llm' className='text-xs font-medium'>
+            LLM Model
+          </Label>
+          <Select
+            value={nodeData.llm ? nodeData.llm.toString() : ''}
+            onValueChange={(value) => {
+              updateNodeData({ llm: Number(value) })
+              clearNodeError(id, 'llm')
+            }}
+          >
+            <SelectTrigger
+              id='llm'
+              className={`text-sm ${
+                fieldErrors.llm ? 'border-destructive' : ''
+              }`}
+            >
+              <SelectValue placeholder='Select an LLM' />
+            </SelectTrigger>
+            <SelectContent>
+              {availableModels.map((model) => (
+                <SelectItem key={model.id} value={model.id.toString()}>
+                  {model.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {fieldErrors.llm && (
+            <p className='mt-1 text-xs text-destructive'>{fieldErrors.llm}</p>
           )}
         </div>
 
