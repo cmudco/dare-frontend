@@ -189,8 +189,9 @@ const ConversationFileSelect: React.FC = () => {
                 <SettingsPopoverContent
                   align='start'
                   side='right'
-                  sideOffset={8}
-                  className='w-[25rem] border border-border bg-popover p-4'
+                  sideOffset={12}
+                  collisionPadding={20}
+                  className='mb-6 w-[24rem] max-w-[90vw] border border-border bg-popover p-4'
                 >
                   <ModelContextSettings
                     onClose={() => setSettingsOpen(false)}
