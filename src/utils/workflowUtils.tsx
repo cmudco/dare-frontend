@@ -20,13 +20,13 @@ export const getStepCount = (workflow: Workflow): number => {
 
 export const getStepStatus = (
   currentRun: {
-    steps?: Array<{ order?: number; step_node?: number; status?: string }>
+    steps?: Array<{ order?: number; stepNode?: number; status?: string }>
   } | null,
   stepNumber: number
 ) => {
   if (!currentRun || !currentRun.steps) return null
   const runStep = currentRun.steps.find(
-    (rs) => (rs.order || rs.step_node) === stepNumber
+    (rs) => (rs.order || rs.stepNode) === stepNumber
   )
   return runStep?.status || null
 }
