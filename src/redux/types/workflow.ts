@@ -29,15 +29,27 @@ export interface PendingValidation {
   availableRoutes: ConditionalRoute[]
   currentResponse: string
   stepId: number
+  aiRecommendation?: string
+  aiAnalysis?: string
 }
 
 export interface WorkflowRunStep {
   id: number
-  step_node: number
+  stepNode: number
   order: number
   status: WorkflowRunStepStatus
   response: string | null
   error: string | null
+  metadata?: {
+    routingDecision?: string
+    analysis?: string
+    aiRecommendation?: string
+    availableRoutes?: string[]
+    isHumanValidated?: boolean
+    fullResponse?: string
+    pendingHumanDecision?: boolean
+    userChoice?: string
+  } | null
   createdAt: string
   updatedAt: string
   snippets?: WorkflowStepSnippet[]

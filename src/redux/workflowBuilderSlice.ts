@@ -182,7 +182,7 @@ const workflowBuilderSlice = createSlice({
         if (node.type === 'chatOutput') {
           const stepNumber = node.data.stepNumber
           const stepRun = runData.steps?.find(
-            (s) => (s.order || s.step_node) === stepNumber
+            (s) => (s.order || s.stepNode) === stepNumber
           )
 
           if (stepRun) {
@@ -199,7 +199,7 @@ const workflowBuilderSlice = createSlice({
         } else if (node.type === 'conditional') {
           const stepNumber = node.data.stepNumber
           const stepRun = runData.steps?.find(
-            (s) => (s.order || s.step_node) === stepNumber
+            (s) => (s.order || s.stepNode) === stepNumber
           )
 
           if (stepRun) {
