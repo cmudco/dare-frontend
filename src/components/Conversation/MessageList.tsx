@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useMemo } from 'react'
 import { RootState } from '../../redux/store'
 import Message from './Message'
 
@@ -12,12 +12,26 @@ const MessageList = ({
     (state: RootState) => state.conversation.activeConversationMessages
   )
   const messageEndRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const isStreaming = useMemo(() => {
+    const last = messages[messages.length - 1]
+    return Boolean(last?.streaming)
+  }, [messages])
 
   const scrollToBottom = useCallback(() => {
-    if (messageEndRef.current) {
-      messageEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    const container = containerRef.current
+    const anchor = messageEndRef.current
+    if (!container || !anchor) return
+
+    const threshold = 120 //pixels
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight
+
+    if (distanceFromBottom <= threshold) {
+      anchor.scrollIntoView({ behavior: isStreaming ? 'auto' : 'smooth' })
     }
-  }, [])
+  }, [isStreaming])
 
   useEffect(() => {
     scrollToBottom()
@@ -28,7 +42,10 @@ const MessageList = ({
   }, [scrollToBottom])
 
   return (
-    <div className='flex max-h-[90%] flex-col gap-2 overflow-y-auto pt-2'>
+    <div
+      ref={containerRef}
+      className='flex max-h-[90%] flex-col gap-2 overflow-y-auto pt-2'
+    >
       {messages.map(
         (message, idx) =>
           message && (
