@@ -8,35 +8,69 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
-import { GitBranch, Info } from 'lucide-react'
-import { useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { GitBranch, Info, Plus, Trash2, UserCheck } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
-import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
+import { renderStatusPill } from '@/utils/workflowUtils'
 import React from 'react'
+import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
+import { submitHumanValidationAPI } from '@/api/workflows'
+import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
+
+export interface ConditionalRoute {
+  name: string
+  description: string
+}
 
 export type ConditionalNodeData = {
   customPrompt: string
-  routeAName: string
-  routeBName: string
-  routeADescription?: string
-  routeBDescription?: string
+  llm: number | null
+  // New structure
+  routes: ConditionalRoute[]
+  requireHumanValidation: boolean
   stepNumber: number
   selectedRoute?: string // Store which route was selected during execution
   id?: string
 }
 
 export default function ConditionalNode({ id, data, selected }: NodeProps) {
-  const nodeData =
-    (data as unknown as ConditionalNodeData) || ({} as ConditionalNodeData)
+  const nodeData = (data as ConditionalNodeData) || ({} as ConditionalNodeData)
   const { errorsByNodeId, clearNodeError } = useErrorsContext()
   const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+  const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const updateNodeInternals = useUpdateNodeInternals()
+  const [showValidationModal, setShowValidationModal] = useState(false)
+
+  // Check if this node has a pending validation
+  const pendingValidation = currentRun?.pendingValidations?.find(
+    (v) => v.nodeId === id
+  )
+  const hasPendingValidation = !!pendingValidation
+
+  const routes = nodeData.routes || [
+    { name: 'Route A', description: '' },
+    { name: 'Route B', description: '' },
+  ]
+
+  // Routes are now guaranteed to be in the new format from the backend.
+  // Provide a default for new nodes that haven't been saved yet.
+
+  const requireHumanValidation = nodeData.requireHumanValidation || false
 
   // Calculate input handles - conditional nodes accept only one input from chatOutput
   const connectedInputEdges = edges.filter((edge) => {
@@ -52,14 +86,10 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
     dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
   }
 
-  const pruneInvalidConditionalEdges = (
-    newRouteAName: string,
-    newRouteBName: string
-  ) => {
-    const allowedHandles = new Set([
-      `output-${newRouteAName}`,
-      `output-${newRouteBName}`,
-    ])
+  const pruneInvalidConditionalEdges = (newRoutes: ConditionalRoute[]) => {
+    const allowedHandles = new Set(
+      newRoutes.map((route) => `output-${route.name}`)
+    )
 
     const filtered = edges.filter((e) => {
       if (e.source !== id) return true
@@ -72,9 +102,66 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
     }
   }
 
+  // Route management functions
+  const addRoute = () => {
+    const newRoutes = [
+      ...routes,
+      {
+        name: `Route ${String.fromCharCode(65 + routes.length)}`,
+        description: '',
+      },
+    ]
+    updateNodeData({ routes: newRoutes })
+    pruneInvalidConditionalEdges(newRoutes)
+  }
+
+  const removeRoute = (index: number) => {
+    if (routes.length <= 2) return // Minimum 2 routes
+    const newRoutes = routes.filter((_, i) => i !== index)
+    updateNodeData({ routes: newRoutes })
+    pruneInvalidConditionalEdges(newRoutes)
+  }
+
+  const updateRoute = (
+    index: number,
+    field: 'name' | 'description',
+    value: string
+  ) => {
+    const newRoutes = routes.map((route, i) =>
+      i === index ? { ...route, [field]: value } : route
+    )
+    updateNodeData({ routes: newRoutes })
+    if (field === 'name') {
+      pruneInvalidConditionalEdges(newRoutes)
+    }
+  }
+
+  const toggleHumanValidation = (checked: boolean) => {
+    updateNodeData({ requireHumanValidation: checked })
+  }
+
+  const handleSubmitValidation = async (
+    nodeId: string,
+    chosenRoute: string
+  ) => {
+    if (!currentRun?.id) return
+
+    try {
+      await submitHumanValidationAPI(currentRun.id, nodeId, chosenRoute)
+      // Refresh the workflow run to get updated status
+      void dispatch(getWorkflowRunById(currentRun.id))
+      setShowValidationModal(false)
+    } catch (error) {
+      console.error('Failed to submit validation:', error)
+      throw error
+    }
+  }
+
+  const routeNames = routes.map((r) => r.name).join(',')
+
   useEffect(() => {
     updateNodeInternals(id)
-  }, [updateNodeInternals, id, nodeData.routeAName, nodeData.routeBName, edges])
+  }, [updateNodeInternals, id, routes.length, routeNames, edges])
 
   const handlePromptChange = (value: string) => {
     updateNodeData({ customPrompt: value })
@@ -84,63 +171,29 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
     }
   }
 
-  const handleRouteANameChange = (value: string) => {
-    updateNodeData({ routeAName: value })
-    // Prune invalid edges when route names change (only if both routes have values)
-    const routeBName = nodeData.routeBName || ''
-    if (value && routeBName) {
-      pruneInvalidConditionalEdges(value, routeBName)
-    }
-
-    if (fieldErrors.routeAName) {
-      clearNodeError(id, 'routeAName')
-    }
-  }
-
-  const handleRouteBNameChange = (value: string) => {
-    updateNodeData({ routeBName: value })
-    // Prune invalid edges when route names change (only if both routes have values)
-    const routeAName = nodeData.routeAName || ''
-    if (routeAName && value) {
-      pruneInvalidConditionalEdges(routeAName, value)
-    }
-
-    if (fieldErrors.routeBName) {
-      clearNodeError(id, 'routeBName')
-    }
-  }
-
-  const handleRouteADescriptionChange = (value: string) => {
-    updateNodeData({ routeADescription: value })
-
-    if (fieldErrors.routeADescription) {
-      clearNodeError(id, 'routeADescription')
-    }
-  }
-
-  const handleRouteBDescriptionChange = (value: string) => {
-    updateNodeData({ routeBDescription: value })
-
-    if (fieldErrors.routeBDescription) {
-      clearNodeError(id, 'routeBDescription')
-    }
-  }
-
-  // Get current values from Redux state (nodeData) - allow empty values for editing
-  const currentRouteAName = nodeData.routeAName ?? ''
-  const currentRouteBName = nodeData.routeBName ?? ''
   const currentCustomPrompt =
     nodeData.customPrompt ||
     'Evaluate the input and choose the appropriate route.'
-  const currentRouteADescription = nodeData.routeADescription || ''
-  const currentRouteBDescription = nodeData.routeBDescription || ''
 
-  // Get the selected route from workflow run data
-  const stepStatus = getStepStatus(currentRun, nodeData?.stepNumber)
-  const stepRun = currentRun?.steps?.find(
-    (s) => (s.order || s.step_node) === nodeData?.stepNumber
-  )
-  const selectedRoute = stepRun?.response // Backend should store selected route in response
+  // Get the step run for this conditional node
+  // Match by order and look for the step with routing metadata (indicates conditional node)
+  const stepRun =
+    currentRun?.steps?.find(
+      (s) =>
+        s.order === nodeData?.stepNumber &&
+        s.metadata?.routingDecision !== undefined
+    ) || currentRun?.steps?.find((s) => s.id === pendingValidation?.stepId)
+
+  const stepStatus = stepRun?.status || null
+  const selectedRoute = stepRun?.response
+  const metadata = stepRun?.metadata
+
+  // Get AI analysis from pendingValidation if available (during human validation),
+  // otherwise from metadata (after execution)
+  const aiAnalysis = pendingValidation?.aiAnalysis || metadata?.analysis
+  const aiRecommendation =
+    pendingValidation?.aiRecommendation || metadata?.aiRecommendation
+  const isHumanValidated = metadata?.isHumanValidated
 
   return (
     <Card
@@ -154,7 +207,7 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
             </div>
             Conditional
           </div>
-          {renderStatusPill(getStepStatus(currentRun, nodeData?.stepNumber))}
+          {renderStatusPill(stepStatus)}
         </CardTitle>
       </CardHeader>
       <CardContent className='space-y-4'>
@@ -180,83 +233,195 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
           )}
         </div>
 
+        {/* LLM Model Selector */}
+        <div className='space-y-2'>
+          <Label htmlFor='llm' className='text-xs font-medium'>
+            LLM Model
+          </Label>
+          <Select
+            value={nodeData.llm ? nodeData.llm.toString() : ''}
+            onValueChange={(value) => {
+              updateNodeData({ llm: Number(value) })
+              clearNodeError(id, 'llm')
+            }}
+          >
+            <SelectTrigger
+              id='llm'
+              className={`text-sm ${
+                fieldErrors.llm ? 'border-destructive' : ''
+              }`}
+            >
+              <SelectValue placeholder='Select an LLM' />
+            </SelectTrigger>
+            <SelectContent>
+              {availableModels.map((model) => (
+                <SelectItem key={model.id} value={model.id.toString()}>
+                  {model.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {fieldErrors.llm && (
+            <p className='mt-1 text-xs text-destructive'>{fieldErrors.llm}</p>
+          )}
+        </div>
+
+        {/* AI Decision Display - Shows after execution */}
+        {stepStatus === 'completed' && selectedRoute && aiAnalysis && (
+          <div className='rounded-lg border-2 border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20'>
+            <div className='mb-2 flex items-center gap-2'>
+              <div className='flex h-6 w-6 items-center justify-center rounded-full bg-green-500/20'>
+                <span className='text-xs font-bold text-green-600 dark:text-green-400'>
+                  ✓
+                </span>
+              </div>
+              <span className='font-semibold text-green-900 dark:text-green-100'>
+                {isHumanValidated ? 'User Decision' : 'AI Routing Decision'}
+              </span>
+            </div>
+            <div className='space-y-2'>
+              <div className='flex items-center gap-2'>
+                <span className='text-sm text-green-700 dark:text-green-300'>
+                  Selected Route:
+                </span>
+                <span className='rounded-md bg-green-600 px-2 py-0.5 text-xs font-medium text-white'>
+                  {selectedRoute}
+                </span>
+              </div>
+              <div className='rounded-md bg-white/50 p-3 dark:bg-black/20'>
+                <p className='mb-1 text-xs font-medium text-green-700 dark:text-green-300'>
+                  {isHumanValidated ? 'AI Analysis:' : 'AI Reasoning:'}
+                </p>
+                <p className='text-sm text-green-900 dark:text-green-100'>
+                  {aiAnalysis}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Human Validation Alert - Shows when workflow is waiting */}
+        {hasPendingValidation && pendingValidation && (
+          <div className='rounded-lg border-2 border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20'>
+            <div className='mb-3 flex items-start gap-3'>
+              <UserCheck className='mt-0.5 h-5 w-5 flex-shrink-0 text-purple-600 dark:text-purple-400' />
+              <div className='flex-1'>
+                <h3 className='font-semibold text-purple-900 dark:text-purple-100'>
+                  Human Validation Required
+                </h3>
+                <p className='mt-1 text-sm text-purple-700 dark:text-purple-300'>
+                  Choose which route the workflow should take to continue
+                  execution.
+                </p>
+              </div>
+            </div>
+
+            {/* AI Recommendation in Node */}
+            {aiRecommendation && (
+              <div className='mb-3 rounded-md border border-blue-300 bg-blue-50/50 p-3 dark:border-blue-700 dark:bg-blue-900/20'>
+                <div className='mb-1 flex items-center gap-2'>
+                  <div className='flex h-5 w-5 items-center justify-center rounded-full bg-blue-500/20'>
+                    <span className='text-xs font-bold text-blue-600 dark:text-blue-400'>
+                      AI
+                    </span>
+                  </div>
+                  <span className='text-xs font-semibold text-blue-900 dark:text-blue-100'>
+                    AI Suggests: {aiRecommendation}
+                  </span>
+                </div>
+                {aiAnalysis && (
+                  <p className='ml-7 text-xs text-blue-700 dark:text-blue-300'>
+                    {aiAnalysis}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <Button
+              onClick={() => setShowValidationModal(true)}
+              size='sm'
+              className='w-full bg-purple-600 hover:bg-purple-700'
+            >
+              Make Decision
+            </Button>
+          </div>
+        )}
+
+        {/* Human Validation Toggle */}
+        <div className='flex items-center space-x-2 rounded-md border border-muted bg-muted/30 p-3'>
+          <Checkbox
+            id={`human-validation-${id}`}
+            checked={requireHumanValidation}
+            onCheckedChange={toggleHumanValidation}
+          />
+          <div className='flex-1'>
+            <Label
+              htmlFor={`human-validation-${id}`}
+              className='flex cursor-pointer items-center gap-2 text-xs font-medium'
+            >
+              <UserCheck className='h-3 w-3' />
+              Require Human Validation
+            </Label>
+            <p className='mt-0.5 text-xs text-muted-foreground'>
+              Pause workflow and ask user to choose route
+            </p>
+          </div>
+        </div>
+
         {/* Route Configuration */}
         <div className='space-y-3'>
-          <Label className='text-xs font-medium'>Route Configuration</Label>
-
-          {/* Route A */}
-          <div className='space-y-2'>
-            <Label
-              htmlFor='routeAName'
-              className='text-xs text-muted-foreground'
-            >
-              Route A Name
+          <div className='flex items-center justify-between'>
+            <Label className='text-xs font-medium'>
+              Routes ({routes.length})
             </Label>
-            <Input
-              id='routeAName'
-              placeholder='Route A'
-              value={currentRouteAName}
-              onChange={(e) => handleRouteANameChange(e.target.value)}
-              className={`text-sm ${
-                fieldErrors.routeAName ? 'border-destructive' : ''
-              }`}
-            />
-            {fieldErrors.routeAName && (
-              <p className='mt-1 text-xs text-destructive'>
-                {fieldErrors.routeAName}
-              </p>
-            )}
-            <Input
-              placeholder='Optional description for Route A'
-              value={currentRouteADescription}
-              onChange={(e) => handleRouteADescriptionChange(e.target.value)}
-              className={`text-sm ${
-                fieldErrors.routeADescription ? 'border-destructive' : ''
-              }`}
-            />
-            {fieldErrors.routeADescription && (
-              <p className='mt-1 text-xs text-destructive'>
-                {fieldErrors.routeADescription}
-              </p>
-            )}
+            <Button
+              size='sm'
+              variant='outline'
+              onClick={addRoute}
+              className='h-6 px-2 text-xs'
+            >
+              <Plus className='mr-1 h-3 w-3' />
+              Add Route
+            </Button>
           </div>
 
-          {/* Route B */}
-          <div className='space-y-2'>
-            <Label
-              htmlFor='routeBName'
-              className='text-xs text-muted-foreground'
+          {/* Dynamic Routes */}
+          {routes.map((route, index) => (
+            <div
+              key={index}
+              className='space-y-2 rounded-md border border-muted bg-muted/20 p-3'
             >
-              Route B Name
-            </Label>
-            <Input
-              id='routeBName'
-              placeholder='Route B'
-              value={currentRouteBName}
-              onChange={(e) => handleRouteBNameChange(e.target.value)}
-              className={`text-sm ${
-                fieldErrors.routeBName ? 'border-destructive' : ''
-              }`}
-            />
-            {fieldErrors.routeBName && (
-              <p className='mt-1 text-xs text-destructive'>
-                {fieldErrors.routeBName}
-              </p>
-            )}
-            <Input
-              placeholder='Optional description for Route B'
-              value={currentRouteBDescription}
-              onChange={(e) => handleRouteBDescriptionChange(e.target.value)}
-              className={`text-sm ${
-                fieldErrors.routeBDescription ? 'border-destructive' : ''
-              }`}
-            />
-            {fieldErrors.routeBDescription && (
-              <p className='mt-1 text-xs text-destructive'>
-                {fieldErrors.routeBDescription}
-              </p>
-            )}
-          </div>
+              <div className='flex items-center justify-between'>
+                <Label className='text-xs text-muted-foreground'>
+                  Route {String.fromCharCode(65 + index)}
+                </Label>
+                {routes.length > 2 && (
+                  <Button
+                    size='sm'
+                    variant='ghost'
+                    onClick={() => removeRoute(index)}
+                    className='h-5 w-5 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
+                  >
+                    <Trash2 className='h-3 w-3' />
+                  </Button>
+                )}
+              </div>
+              <Input
+                placeholder='Route name'
+                value={route.name}
+                onChange={(e) => updateRoute(index, 'name', e.target.value)}
+                className='text-sm'
+              />
+              <Input
+                placeholder='Optional description'
+                value={route.description}
+                onChange={(e) =>
+                  updateRoute(index, 'description', e.target.value)
+                }
+                className='text-sm'
+              />
+            </div>
+          ))}
         </div>
 
         {/* Instructions Section */}
@@ -267,34 +432,35 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
           </Label>
           <div className='rounded-md border border-muted bg-muted/30 p-3'>
             <div className='space-y-1 text-xs text-muted-foreground'>
-              <div className='font-medium'>AI evaluates input and chooses:</div>
-              <div className='flex justify-between'>
-                <span>{currentRouteAName || 'Route A'}:</span>
-                <span
-                  className={`font-medium ${selectedRoute === (currentRouteAName || 'Route A') ? 'text-green-600' : 'text-blue-600'}`}
-                >
-                  {selectedRoute === (currentRouteAName || 'Route A') &&
-                  stepStatus === 'completed'
-                    ? '✓ SELECTED'
-                    : currentRouteADescription || 'Custom route A'}
-                </span>
+              <div className='font-medium'>
+                {requireHumanValidation
+                  ? 'User chooses route:'
+                  : 'AI evaluates input and chooses:'}
               </div>
-              <div className='flex justify-between'>
-                <span>{currentRouteBName || 'Route B'}:</span>
-                <span
-                  className={`font-medium ${selectedRoute === (currentRouteBName || 'Route B') ? 'text-green-600' : 'text-purple-600'}`}
-                >
-                  {selectedRoute === (currentRouteBName || 'Route B') &&
-                  stepStatus === 'completed'
-                    ? '✓ SELECTED'
-                    : currentRouteBDescription || 'Custom route B'}
-                </span>
-              </div>
-              {/* {stepStatus === 'completed' && selectedRoute && (
-                <div className='mt-2 rounded bg-green-50 p-2 text-xs text-green-700 dark:bg-green-900/20 dark:text-green-300'>
-                  <span className='font-medium'>Route Selected:</span> {selectedRoute}
-                </div>
-              )} */}
+              {routes.map((route, index) => {
+                const colors = [
+                  'text-blue-600',
+                  'text-purple-600',
+                  'text-orange-600',
+                  'text-green-600',
+                  'text-pink-600',
+                ]
+                const isSelected =
+                  selectedRoute === route.name && stepStatus === 'completed'
+                return (
+                  <div key={index} className='flex justify-between'>
+                    <span>{route.name}:</span>
+                    <span
+                      className={`font-medium ${isSelected ? 'text-green-600' : colors[index % colors.length]}`}
+                    >
+                      {isSelected
+                        ? '✓ SELECTED'
+                        : route.description ||
+                          `Route ${String.fromCharCode(65 + index)}`}
+                    </span>
+                  </div>
+                )
+              })}
               <div className='mt-2 text-xs text-muted-foreground'>
                 Accepts single input from output node only
               </div>
@@ -330,43 +496,58 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
         }`}
       />
 
-      {/* Two output handles on the right with custom route names */}
-      {[
-        {
-          name: currentRouteAName || 'Route A',
-          color: 'bg-blue-500',
-          position: 35,
-        },
-        {
-          name: currentRouteBName || 'Route B',
-          color: 'bg-purple-500',
-          position: 65,
-        },
-      ].map((route) => (
-        <React.Fragment key={route.name}>
-          <Handle
-            type='source'
-            position={Position.Right}
-            id={`output-${route.name}`}
-            style={{
-              top: `${route.position}%`,
-            }}
-            className={`h-3 w-3 border-2 border-white ${route.color}`}
-          />
-          {/* Label positioned to the right of handle */}
-          <div
-            className='pointer-events-none absolute z-10 text-xs font-medium text-muted-foreground'
-            style={{
-              left: '105%', // Position to the right of the card
-              top: `${route.position}%`,
-              transform: 'translateY(-50%)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {route.name}
-          </div>
-        </React.Fragment>
-      ))}
+      {/* Dynamic output handles on the right */}
+      {routes.map((route, index) => {
+        const colors = [
+          'bg-blue-500',
+          'bg-purple-500',
+          'bg-orange-500',
+          'bg-green-500',
+          'bg-pink-500',
+        ]
+        const color = colors[index % colors.length]
+
+        // Calculate evenly distributed positions
+        const count = routes.length
+        const spacing = 80 / (count + 1) // Use 80% of height, divided by count+1 for spacing
+        const position = (index + 1) * spacing + 10 // Start at 10% from top
+
+        return (
+          <React.Fragment key={route.name}>
+            <Handle
+              type='source'
+              position={Position.Right}
+              id={`output-${route.name}`}
+              style={{
+                top: `${position}%`,
+              }}
+              className={`h-3 w-3 border-2 border-white ${color}`}
+            />
+            {/* Label positioned to the right of handle */}
+            <div
+              className='pointer-events-none absolute z-10 text-xs font-medium text-muted-foreground'
+              style={{
+                left: '105%', // Position to the right of the card
+                top: `${position}%`,
+                transform: 'translateY(-50%)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {route.name}
+            </div>
+          </React.Fragment>
+        )
+      })}
+
+      {/* Human Validation Modal */}
+      {pendingValidation && (
+        <HumanValidationModal
+          isOpen={showValidationModal}
+          onClose={() => setShowValidationModal(false)}
+          validation={pendingValidation}
+          onSubmit={handleSubmitValidation}
+        />
+      )}
     </Card>
   )
 }

@@ -89,10 +89,11 @@ export const createNode = (
       position,
       data: {
         customPrompt: 'Evaluate the input and choose the appropriate route.',
-        routeAName: 'Route A',
-        routeBName: 'Route B',
-        routeADescription: '',
-        routeBDescription: '',
+        routes: [
+          { name: 'Route A', description: '' },
+          { name: 'Route B', description: '' },
+        ],
+        requireHumanValidation: false,
         stepNumber: conditionalStepNumber,
       },
     }
