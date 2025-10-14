@@ -1,27 +1,7 @@
 import React from 'react'
 import { Button } from '../ui/button'
 import { Copy } from 'lucide-react'
-
-// Helper function to extract text content from React elements
-const extractTextFromChildren = (children: React.ReactNode): string => {
-  if (typeof children === 'string') {
-    return children
-  }
-
-  if (typeof children === 'number') {
-    return String(children)
-  }
-
-  if (Array.isArray(children)) {
-    return children.map(extractTextFromChildren).join('')
-  }
-
-  if (React.isValidElement(children)) {
-    return extractTextFromChildren(children.props.children)
-  }
-
-  return ''
-}
+import { extractTextFromChildren } from '../../utils/textUtils'
 
 export const CodeBlock: React.FC<{
   className?: string
