@@ -214,7 +214,11 @@ const Message: React.FC<MessageProps> = ({
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
+                rehypePlugins={
+                  message.streaming
+                    ? [rehypeKatex, rehypeRaw]
+                    : [rehypeKatex, rehypeHighlight, rehypeRaw]
+                }
                 components={{
                   // Handle tables
                   table({ children, ...props }) {
@@ -230,7 +234,7 @@ const Message: React.FC<MessageProps> = ({
                   pre({ children, ...props }) {
                     return (
                       <pre
-                        className='max-w-full overflow-x-auto whitespace-pre-wrap break-words'
+                        className='max-w-full overflow-x-auto whitespace-pre-wrap break-words break-all'
                         {...props}
                       >
                         {children}
