@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Cog, Trash2, GitBranch } from 'lucide-react'
+import { Play, Cog, Trash2, GitBranch, Split } from 'lucide-react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useReactFlow } from '@xyflow/react'
@@ -35,6 +35,13 @@ const nodeComponents = [
     description: 'AI-powered routing with custom evaluation criteria',
     icon: GitBranch,
     color: 'bg-blue-500',
+  },
+  {
+    type: 'structuredOutput',
+    label: 'Structured Output',
+    description: 'Define multiple output paths with specific route values',
+    icon: Split,
+    color: 'bg-purple-500',
   },
   // { type: 'chatOutput', label: 'Output', description: 'Configure how results are displayed', icon: Cog, color: 'bg-primary' },
 ]
