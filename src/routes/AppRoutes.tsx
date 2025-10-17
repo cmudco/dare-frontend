@@ -20,6 +20,7 @@ import Workflows from '@/pages/Workflows/index.tsx'
 import WorkflowEditPage from '@/pages/Workflows/WorkflowEditPage.tsx'
 import ProfileScreen from '@/pages/ProfileScreen/index.tsx'
 import BillingScreen from '@/pages/Billing/index.tsx'
+import OnboardingScreen from '@/pages/Onboarding/index.tsx'
 import WorkflowCreatePage from '@/pages/Workflows/WorkflowCreatePage.tsx'
 
 const AppRoutes = () => {
@@ -41,6 +42,15 @@ const AppRoutes = () => {
             element={<ResetPasswordScreen />}
           />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
+
+          <Route
+            path='/onboarding'
+            element={
+              <ProtectedRoute>
+                <OnboardingScreen />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path='/'

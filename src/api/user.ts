@@ -44,3 +44,12 @@ export const updateChunkSettingsAPI = async (
     includeAuthToken: true,
   })
 }
+
+export const updateUserAPI = async (data: Partial<User>): Promise<User> => {
+  return await baseRequest<User>({
+    url: 'users/api/dj-rest-auth/user/',
+    method: METHOD.PUT,
+    data,
+    includeAuthToken: true,
+  })
+}

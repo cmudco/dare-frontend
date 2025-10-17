@@ -17,6 +17,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
     return <Navigate to='/login' state={{ from: location }} replace />
   }
 
+  if (
+    user &&
+    !user.isOnboardingCompleted &&
+    location.pathname !== '/onboarding'
+  ) {
+    return <Navigate to='/onboarding' replace />
+  }
+
   return <>{children}</>
 }
 
