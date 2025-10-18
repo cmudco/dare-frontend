@@ -11,6 +11,7 @@ import workflowBuilderReducer from './workflowBuilderSlice'
 import billingReducer from './billingSlice'
 import themeReducer from './themeSlice'
 import notificationReducer from './notificationSlice'
+import apiKeysReducer from './apiKeysSlice'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({})
 
@@ -47,6 +48,7 @@ export const store = configureStore({
     billing: billingReducer,
     theme: themeReducer,
     notification: notificationReducer,
+    apiKeys: apiKeysReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(draftPersistenceMiddleware),
