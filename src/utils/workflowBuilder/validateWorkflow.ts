@@ -201,104 +201,8 @@ export const validateWorkflow = (
       )
     })
   } else {
-    const mode: 'sequential' | 'parallel' = startData?.mode || 'sequential'
-
-    const sortedSteps = [...stepNodesRaw].sort((a, b) => {
-      const aStepNum = getStepNumber(a) ?? Number.POSITIVE_INFINITY
-      const bStepNum = getStepNumber(b) ?? Number.POSITIVE_INFINITY
-      return aStepNum - bStepNum
-    })
-
-    if (mode === 'parallel') {
-      sortedSteps.forEach((step) => {
-        const hasStartConnection = hasConnection(start.id, step.id)
-
-        const hasStepInputConnections = edges.some((edge) => {
-          const sourceNode = nodes.find((n) => n.id === edge.source)
-          return (
-            edge.target === step.id &&
-            (sourceNode?.type === 'step' ||
-              sourceNode?.type === 'chatOutput' ||
-              sourceNode?.type === 'conditional')
-          )
-        })
-
-        // Step is valid if it connects to: start or has multi-input connections
-        const hasValidConnection = hasStartConnection || hasStepInputConnections
-
-        if (!hasValidConnection) {
-          const label = getStepLabel(step)
-          const connectionRequirement =
-            'must connect to the Start node or receive input from other steps'
-
-          appendFieldError(
-            step.id,
-            'connections',
-            `${label} ${connectionRequirement}.`
-          )
-          pushErrorMessage(
-            `${label} ${connectionRequirement} in parallel mode.`
-          )
-        }
-      })
-    } else if (sortedSteps.length > 0) {
-      const firstStep = sortedSteps[0]
-      if (!hasConnection(start.id, firstStep.id)) {
-        appendFieldError(
-          firstStep.id,
-          'connections',
-          `${getStepLabel(firstStep)} must connect to the Start node.`
-        )
-        appendFieldError(
-          start.id,
-          'connections',
-          'Start node must connect to the first step.'
-        )
-        pushErrorMessage(
-          'Sequential workflows require the Start node to connect to the first step.'
-        )
-      }
-
-      for (let i = 1; i < sortedSteps.length; i++) {
-        const step = sortedSteps[i]
-        const prevStep = sortedSteps[i - 1]
-        const prevStepNumber = getStepNumber(prevStep)
-        const prevOutputs =
-          prevStepNumber != null
-            ? (outputsByStep.get(prevStepNumber) ?? [])
-            : []
-
-        const prevUsesStructured =
-          ((prevStep.data as Partial<StepNodeData>) || {})
-            .useStructuredOutputNode || false
-
-        const hasOutputLink = prevOutputs.some((output) =>
-          hasConnection(output.id, step.id)
-        )
-        const hasRouteLink = edges.some(
-          (e) =>
-            e.source === prevStep.id &&
-            e.target === step.id &&
-            (e.sourceHandle || '').toString().startsWith('output-')
-        )
-
-        const hasPrevLink = prevUsesStructured ? hasRouteLink : hasOutputLink
-
-        if (!hasPrevLink) {
-          appendFieldError(
-            step.id,
-            'connections',
-            `${getStepLabel(
-              step
-            )} must connect from the previous step's output or route.`
-          )
-          pushErrorMessage(
-            'Sequential workflows require each step to connect from the previous output or route.'
-          )
-        }
-      }
-    }
-
+    // Validate that all steps are reachable from start node via edge traversal
+    // This replaces mode-specific validation - edges determine execution flow
     const reachable = new Set<string>()
     const stack = [start.id]
     while (stack.length) {
@@ -310,9 +214,9 @@ export const validateWorkflow = (
       )
     }
 
-    sortedSteps.forEach((step) => {
+    stepNodesRaw.forEach((step) => {
       if (!reachable.has(step.id)) {
-        const message = `${getStepLabel(step)} must connect to the Start node.`
+        const message = `${getStepLabel(step)} must be reachable from the Start node.`
         appendFieldError(step.id, 'connections', message)
         pushErrorMessage(message)
       }
