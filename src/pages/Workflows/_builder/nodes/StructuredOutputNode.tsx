@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { GitBranch, Info, Plus, Trash2 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
@@ -94,11 +94,14 @@ export default function StructuredOutputNode({
     updateNodeData({ routes: newRoutes })
   }
 
-  const routeNames = routes.map((r) => r.name).join(',')
+  const routeNames = useMemo(
+    () => routes.map((r) => r.name).join(','),
+    [routes]
+  )
 
   useEffect(() => {
     updateNodeInternals(id)
-  }, [updateNodeInternals, id, routes.length, routeNames, edges])
+  }, [updateNodeInternals, id, routes.length, routeNames])
 
   // Get the step run for the connected step node
   const stepRun = currentRun?.steps?.find(

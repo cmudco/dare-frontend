@@ -27,7 +27,7 @@ import {
 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
@@ -118,6 +118,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const structuredNodeId = connectedStructuredOutputNode?.id
   const routesCount = structuredRoutes.length
 
+  const routeNames = useMemo(
+    () => structuredRoutes.map((r) => r.name).join(','),
+    [structuredRoutes]
+  )
+
   useEffect(() => {
     updateNodeInternals(nodeId)
   }, [
@@ -126,6 +131,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     useStructuredOutputNode,
     structuredNodeId,
     routesCount,
+    routeNames, // Track route name changes, not just count
   ])
 
   // When using a structured output node, prune any invalid or stale outgoing edges from this step
