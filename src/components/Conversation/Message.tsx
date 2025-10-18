@@ -266,6 +266,13 @@ const Message: React.FC<MessageProps> = ({
                           wordBreak: 'break-all',
                           overflowWrap: 'break-word',
                         }}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        onClick={(e) => {
+                          if (!href) return
+                          e.preventDefault()
+                          window.open(href, '_blank', 'noopener,noreferrer')
+                        }}
                         {...props}
                       >
                         {children}
