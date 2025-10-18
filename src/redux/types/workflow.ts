@@ -49,6 +49,9 @@ export interface WorkflowRunStep {
     fullResponse?: string
     pendingHumanDecision?: boolean
     userChoice?: string
+    selectedRoute?: string // For structured output nodes
+    rawResponse?: string // For structured output nodes
+    useStructuredOutputNode?: boolean // For structured output nodes
   } | null
   createdAt: string
   updatedAt: string

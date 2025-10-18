@@ -2,6 +2,8 @@ import { type Node, type Edge } from '@xyflow/react'
 import { type NodeErrors } from '@/redux/types/workflowBuilder'
 import type { StepNodeData } from '@/pages/Workflows/_builder/nodes/StepNode'
 import type { ConditionalNodeData } from '@/pages/Workflows/_builder/nodes/ConditionalNode'
+import type { StructuredOutputNodeData } from '@/pages/Workflows/_builder/nodes/StructuredOutputNode'
+import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
 
 export interface ValidationResult {
   isValid: boolean
@@ -156,8 +158,12 @@ export const validateWorkflow = (
   const hasConnection = (source: string, target: string): boolean =>
     Boolean(edgesBySource[source]?.includes(target))
 
-  // Ensure each step is wired to its output node
+  // Ensure each step is wired to its output node (skip if using Structured Output)
   stepNodesRaw.forEach((step) => {
+    const stepData = (step.data as Partial<StepNodeData>) || {}
+    if (stepData.useStructuredOutputNode) {
+      return
+    }
     const stepNumber = getStepNumber(step)
     if (stepNumber == null) return
     const stepLabel = getStepLabel(step)
@@ -195,93 +201,8 @@ export const validateWorkflow = (
       )
     })
   } else {
-    const mode: 'sequential' | 'parallel' = startData?.mode || 'sequential'
-
-    const sortedSteps = [...stepNodesRaw].sort((a, b) => {
-      const aStepNum = getStepNumber(a) ?? Number.POSITIVE_INFINITY
-      const bStepNum = getStepNumber(b) ?? Number.POSITIVE_INFINITY
-      return aStepNum - bStepNum
-    })
-
-    if (mode === 'parallel') {
-      sortedSteps.forEach((step) => {
-        const hasStartConnection = hasConnection(start.id, step.id)
-
-        const hasStepInputConnections = edges.some((edge) => {
-          const sourceNode = nodes.find((n) => n.id === edge.source)
-          return (
-            edge.target === step.id &&
-            (sourceNode?.type === 'step' ||
-              sourceNode?.type === 'chatOutput' ||
-              sourceNode?.type === 'conditional')
-          )
-        })
-
-        // Step is valid if it connects to: start or has multi-input connections
-        const hasValidConnection = hasStartConnection || hasStepInputConnections
-
-        if (!hasValidConnection) {
-          const label = getStepLabel(step)
-          const connectionRequirement =
-            'must connect to the Start node or receive input from other steps'
-
-          appendFieldError(
-            step.id,
-            'connections',
-            `${label} ${connectionRequirement}.`
-          )
-          pushErrorMessage(
-            `${label} ${connectionRequirement} in parallel mode.`
-          )
-        }
-      })
-    } else if (sortedSteps.length > 0) {
-      const firstStep = sortedSteps[0]
-      if (!hasConnection(start.id, firstStep.id)) {
-        appendFieldError(
-          firstStep.id,
-          'connections',
-          `${getStepLabel(firstStep)} must connect to the Start node.`
-        )
-        appendFieldError(
-          start.id,
-          'connections',
-          'Start node must connect to the first step.'
-        )
-        pushErrorMessage(
-          'Sequential workflows require the Start node to connect to the first step.'
-        )
-      }
-
-      for (let i = 1; i < sortedSteps.length; i++) {
-        const step = sortedSteps[i]
-        const prevStep = sortedSteps[i - 1]
-        const prevStepNumber = getStepNumber(prevStep)
-        const prevOutputs =
-          prevStepNumber != null
-            ? (outputsByStep.get(prevStepNumber) ?? [])
-            : []
-
-        if (prevOutputs.length === 0) continue
-
-        const hasPrevLink = prevOutputs.some((output) =>
-          hasConnection(output.id, step.id)
-        )
-
-        // Simplified validation - only check for previous step connection
-        if (!hasPrevLink) {
-          appendFieldError(
-            step.id,
-            'connections',
-            `${getStepLabel(step)} must connect from the previous step's output.`
-          )
-          pushErrorMessage(
-            'Sequential workflows require each step to connect from the previous output.'
-          )
-        }
-      }
-    }
-
+    // Validate that all steps are reachable from start node via edge traversal
+    // This replaces mode-specific validation - edges determine execution flow
     const reachable = new Set<string>()
     const stack = [start.id]
     while (stack.length) {
@@ -293,9 +214,9 @@ export const validateWorkflow = (
       )
     }
 
-    sortedSteps.forEach((step) => {
+    stepNodesRaw.forEach((step) => {
       if (!reachable.has(step.id)) {
-        const message = `${getStepLabel(step)} must connect to the Start node.`
+        const message = `${getStepLabel(step)} must be reachable from the Start node.`
         appendFieldError(step.id, 'connections', message)
         pushErrorMessage(message)
       }
@@ -343,31 +264,20 @@ export const validateWorkflow = (
         return
       }
 
-      // Validate output connections - must have one connection per route
+      // Validate output connections - ensure connections are valid; not all routes must be connected
       const outgoingEdges = edges.filter(
         (edge) => edge.source === conditionalNode.id
       )
-      const connectedOutputs = outgoingEdges
-        .map((edge) => nodes.find((n) => n.id === edge.target))
-        .filter((node) => node?.type === 'step')
+      // Note: Collecting of connectedOutputs removed to avoid unused variable; we validate per-route and overall count instead
 
-      // Check that each route has exactly one connection to a step node
+      // Check that each route has at most one connection to a step node
       routes.forEach((route) => {
-        const routeHandle = `output-${route.name}`
+        const routeHandle = `${ROUTE_HANDLE_PREFIX}${route.name}`
         const routeConnections = outgoingEdges.filter(
           (edge) => edge.sourceHandle === routeHandle
         )
 
-        if (routeConnections.length === 0) {
-          appendFieldError(
-            conditionalNode.id,
-            'connections',
-            `Route "${route.name}" must be connected to a step node`
-          )
-          pushErrorMessage(
-            `Conditional node route "${route.name}" must be connected`
-          )
-        } else if (routeConnections.length > 1) {
+        if (routeConnections.length > 1) {
           appendFieldError(
             conditionalNode.id,
             'connections',
@@ -376,7 +286,7 @@ export const validateWorkflow = (
           pushErrorMessage(
             `Conditional node route "${route.name}" can only have one connection`
           )
-        } else {
+        } else if (routeConnections.length === 1) {
           // Verify the connection is to a step node
           const targetNode = nodes.find(
             (n) => n.id === routeConnections[0].target
@@ -394,18 +304,133 @@ export const validateWorkflow = (
         }
       })
 
-      // Validate that all routes are connected
-      const expectedConnections = routes.length
-      if (connectedOutputs.length < expectedConnections) {
-        const missingCount = expectedConnections - connectedOutputs.length
+      // Require at least one route connected overall (so the node leads somewhere)
+      const totalRouteConnections = outgoingEdges.filter(
+        (e) => e.sourceHandle && e.sourceHandle.startsWith(ROUTE_HANDLE_PREFIX)
+      ).length
+      if (totalRouteConnections === 0) {
         appendFieldError(
           conditionalNode.id,
           'connections',
-          `Conditional node needs ${missingCount} more connection(s). All ${expectedConnections} routes must be connected to step nodes.`
+          'Conditional node must have at least one route connected to a step node'
         )
         pushErrorMessage(
-          `Conditional node needs all ${expectedConnections} routes connected to step nodes`
+          'Conditional node must have at least one connected route'
         )
+      }
+    })
+
+    // Validate Structured Output usage on steps
+    const stepsUsingStructured = stepNodesRaw.filter(
+      (s) => ((s.data as Partial<StepNodeData>) || {}).useStructuredOutputNode
+    )
+
+    stepsUsingStructured.forEach((step) => {
+      const stepLabel = getStepLabel(step)
+      // Find the structured output node connected to this step
+      const incomingFromStructured = edges.filter((e) => {
+        if (e.target !== step.id) return false
+        const src = nodes.find((n) => n.id === e.source)
+        return src?.type === 'structuredOutput'
+      })
+
+      if (incomingFromStructured.length === 0) {
+        appendFieldError(
+          step.id,
+          'connections',
+          `${stepLabel} is set to use a Structured Output node but none is connected.`
+        )
+        pushErrorMessage(
+          `${stepLabel} requires a Structured Output node connection`
+        )
+        return
+      }
+      if (incomingFromStructured.length > 1) {
+        appendFieldError(
+          step.id,
+          'connections',
+          `${stepLabel} can only be connected to one Structured Output node.`
+        )
+        pushErrorMessage(
+          `${stepLabel} must connect to exactly one Structured Output node`
+        )
+        return
+      }
+
+      const structuredNode = nodes.find(
+        (n) => n.id === incomingFromStructured[0].source
+      )
+      const routes =
+        ((structuredNode?.data as Partial<StructuredOutputNodeData>) || {})
+          .routes || []
+
+      // Validate routes
+      if (routes.length < 2) {
+        appendFieldError(
+          step.id,
+          'connections',
+          `${stepLabel} Structured Output requires at least 2 routes.`
+        )
+        pushErrorMessage(
+          `${stepLabel} Structured Output requires at least 2 routes.`
+        )
+      }
+      const routeNames = routes
+        .map((r) => (r.name || '').trim())
+        .filter(Boolean)
+      const uniqueRouteNames = new Set(routeNames)
+      if (routeNames.length !== uniqueRouteNames.size) {
+        appendFieldError(
+          step.id,
+          'connections',
+          `${stepLabel} Structured Output route names must be unique.`
+        )
+        pushErrorMessage(
+          `${stepLabel} Structured Output route names must be unique.`
+        )
+      }
+
+      const outgoing = edges.filter((e) => e.source === step.id)
+      // Note: Previous aggregate of connectedStepsFromRoutes removed; per-route and total connections validated below
+
+      routes.forEach((route) => {
+        const handle = `${ROUTE_HANDLE_PREFIX}${route.name}`
+        const conns = outgoing.filter((e) => e.sourceHandle === handle)
+        if (conns.length > 1) {
+          appendFieldError(
+            step.id,
+            'connections',
+            `${stepLabel} route "${route.name}" can connect to only one step.`
+          )
+          pushErrorMessage(
+            `${stepLabel} route "${route.name}" can connect to only one step.`
+          )
+        } else if (conns.length === 1) {
+          const tgt = nodes.find((n) => n.id === conns[0].target)
+          if (tgt?.type !== 'step') {
+            appendFieldError(
+              step.id,
+              'connections',
+              `${stepLabel} route "${route.name}" must connect to a step node.`
+            )
+            pushErrorMessage(
+              `${stepLabel} route "${route.name}" must connect to a step node.`
+            )
+          }
+        }
+      })
+
+      // Require at least one route connected overall
+      const totalRouteConnections = outgoing.filter(
+        (e) => e.sourceHandle && e.sourceHandle.startsWith(ROUTE_HANDLE_PREFIX)
+      ).length
+      if (totalRouteConnections === 0) {
+        appendFieldError(
+          step.id,
+          'connections',
+          `${stepLabel} requires at least one connected route.`
+        )
+        pushErrorMessage(`${stepLabel} must have at least one connected route.`)
       }
     })
   }

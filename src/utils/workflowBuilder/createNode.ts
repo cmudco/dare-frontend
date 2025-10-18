@@ -99,6 +99,36 @@ export const createNode = (
     }
 
     return { nodes: [...nodes, conditionalNode], edges }
+  } else if (type === 'structuredOutput') {
+    const structuredOutputCount = nodes.filter(
+      (n) => n.type === 'structuredOutput'
+    ).length
+    const structuredOutputId = `structured-output-${structuredOutputCount + 1}`
+
+    const stepCount = nodes.filter((n) => n.type === 'step').length
+    const conditionalCount = nodes.filter(
+      (n) => n.type === 'conditional'
+    ).length
+    const existingStructuredOutputCount = nodes.filter(
+      (n) => n.type === 'structuredOutput'
+    ).length
+    const structuredOutputStepNumber =
+      stepCount + conditionalCount + existingStructuredOutputCount + 1
+
+    const structuredOutputNode: Node = {
+      id: structuredOutputId,
+      type: 'structuredOutput',
+      position,
+      data: {
+        routes: [
+          { name: '1', description: 'First route' },
+          { name: '2', description: 'Second route' },
+        ],
+        stepNumber: structuredOutputStepNumber,
+      },
+    }
+
+    return { nodes: [...nodes, structuredOutputNode], edges }
   } else {
     // Handle start node with initial data
     const newNode: Node = {
