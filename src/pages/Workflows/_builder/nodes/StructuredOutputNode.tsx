@@ -47,6 +47,18 @@ export default function StructuredOutputNode({
   ]
 
   // Structured Output node config only; Step hosts outward connectors
+  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+
+  // Find the step node that this structured output node is connected to
+  const connectedStepEdge = edges.find((edge) => {
+    return edge.source === id && edge.target
+  })
+
+  const connectedStepNode = connectedStepEdge
+    ? nodes.find((n) => n.id === connectedStepEdge.target)
+    : undefined
+
+  const connectedStepNumber = connectedStepNode?.data?.stepNumber
 
   // Update Redux when form changes
   const updateNodeData = (updates: Partial<StructuredOutputNodeData>) => {
@@ -88,13 +100,13 @@ export default function StructuredOutputNode({
     updateNodeInternals(id)
   }, [updateNodeInternals, id, routes.length, routeNames, edges])
 
-  // Get the step run for this structured output node
+  // Get the step run for the connected step node
   const stepRun = currentRun?.steps?.find(
-    (s) => s.order === nodeData?.stepNumber
+    (s) => s.order === connectedStepNumber
   )
 
   const stepStatus = stepRun?.status || null
-  const selectedRoute = stepRun?.response
+  const selectedRoute = stepRun?.metadata?.selectedRoute || null
 
   return (
     <Card
