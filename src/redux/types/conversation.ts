@@ -93,6 +93,7 @@ export interface ConversationState {
   selectedModel: number | null
   selectedFiles: MyFile[]
   selectedEmbeddings: MyFile[]
+  selectedMediaFiles: MyFile[] // NEW: Persistent media files (images/videos)
   selectedTags: Tag[]
   selectedFolders: MyFolder[]
   selectedConversations: string[]

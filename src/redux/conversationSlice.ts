@@ -62,6 +62,9 @@ export const conversationSlice = createSlice({
     updateSelectedEmbeddings(state, action: PayloadAction<MyFile[]>) {
       state.selectedEmbeddings = action.payload
     },
+    updateSelectedMediaFiles(state, action: PayloadAction<MyFile[]>) {
+      state.selectedMediaFiles = action.payload
+    },
     updateSelectedTags(state, action: PayloadAction<Tag[]>) {
       state.selectedTags = action.payload
     },
@@ -472,6 +475,7 @@ export const {
   updateSelectedModel,
   updateSelectedFiles,
   updateSelectedEmbeddings,
+  updateSelectedMediaFiles,
   updateSelectedTags,
   updateSelectedFolders,
   updateTemperature,

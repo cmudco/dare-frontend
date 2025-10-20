@@ -32,8 +32,12 @@ export const filterFiles = (
       selectedTags.length === 0 ||
       (file.tags && file.tags.some((tagId) => selectedTags.includes(tagId)))
 
+    // Media files (images/videos) don't have vectorDbSource, so allow them through
+    // Only filter by vectorDb for document files that have embeddings
     const matchesVectorDb =
-      vectorDb === undefined || file.vectorDbSource === vectorDb
+      vectorDb === undefined ||
+      file.vectorDbSource === vectorDb ||
+      file.isMedia === true
 
     return matchesSearch && matchesTags && matchesVectorDb
   })

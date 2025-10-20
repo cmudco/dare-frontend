@@ -113,6 +113,7 @@ export const sendWebSocketMessage = createAsyncThunk<
     activeConversation,
     selectedFiles,
     selectedEmbeddings,
+    selectedMediaFiles,
     selectedTags,
     selectedFolders,
     referencedConversations,
@@ -127,6 +128,7 @@ export const sendWebSocketMessage = createAsyncThunk<
     sender_type: 1,
     file_ids: selectedFiles.map((file) => file.id),
     embedding_ids: selectedEmbeddings.map((file) => file.id),
+    media_ids: selectedMediaFiles.map((file) => file.id), // NEW: Media file IDs
     tag_ids: selectedTags.map((tag) => tag.id),
     folder_ids: selectedFolders.map((folder) => folder.id),
     referenced_conversation_ids: referencedConversations.map(
@@ -185,6 +187,9 @@ export const regenerateResponse = createAsyncThunk<
     const embeddingIds = state.conversation.selectedEmbeddings.map(
       (file) => file.id
     )
+    const mediaIds = state.conversation.selectedMediaFiles.map(
+      (file) => file.id
+    ) // NEW: Media file IDs
     const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
     const folderIds = state.conversation.selectedFolders.map(
       (folder) => folder.id
@@ -219,6 +224,7 @@ export const regenerateResponse = createAsyncThunk<
           llm_id: state.conversation.selectedModel,
           file_ids: fileIds,
           embedding_ids: embeddingIds,
+          media_ids: mediaIds, // NEW: Media file IDs
           tag_ids: tagIds,
           folder_ids: folderIds,
           referenced_conversation_ids: referencedConversationIds,

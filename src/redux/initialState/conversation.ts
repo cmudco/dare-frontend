@@ -13,6 +13,7 @@ export const initialState: ConversationState = {
   selectedModel: null,
   selectedFiles: [] as MyFile[],
   selectedEmbeddings: [] as MyFile[],
+  selectedMediaFiles: [] as MyFile[], // NEW: Persistent media files
   selectedTags: [] as Tag[],
   selectedFolders: [] as MyFolder[],
   selectedConversations: [],

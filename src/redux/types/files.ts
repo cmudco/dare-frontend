@@ -13,6 +13,8 @@ export interface MyFile {
   status: FileStatus
   vectorDbSource: VectorDbSource
   errorMessage?: string
+  isMedia?: boolean
+  mediaType?: 'image' | 'video' | 'document'
 }
 
 export interface MyFolder {
