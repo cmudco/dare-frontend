@@ -87,12 +87,14 @@ const ActiveConversation: React.FC = () => {
     if (activeConversation && files.length > 0) {
       const selectedFileIds = activeConversation.selectedFileIds || []
       const selectedEmbeddingIds = activeConversation.selectedEmbeddingIds || []
+      const selectedMediaIds = activeConversation.selectedMediaIds || []
 
       dispatch(
         loadSelectedFilesFromIds({
           files,
           selectedFileIds,
           selectedEmbeddingIds,
+          selectedMediaIds,
         })
       )
     }

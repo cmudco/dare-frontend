@@ -8,6 +8,8 @@ import {
   updateMaxTokens,
   updateHistoryLimit,
   updateWebSearchEnabled,
+  updateImageGenerationEnabled,
+  updateSelectedModel,
 } from '../../redux/conversationSlice'
 import { Slider } from '../ui/slider'
 import { Switch } from '../ui/switch'
@@ -38,6 +40,14 @@ const ModelConfigurationPanel: React.FC = () => {
     (state: RootState) =>
       activeConversation?.webSearchEnabled ??
       state.conversation.webSearchEnabled
+  )
+  const imageGenerationEnabled = useSelector(
+    (state: RootState) =>
+      activeConversation?.imageGenerationEnabled ??
+      state.conversation.imageGenerationEnabled
+  )
+  const allModels = useSelector(
+    (state: RootState) => state.conversation.allModels
   )
 
   const handleTemperatureChange = (values: number[]) => {
@@ -88,12 +98,45 @@ const ModelConfigurationPanel: React.FC = () => {
     }
   }
 
+  const handleImageGenerationToggle = (checked: boolean) => {
+    dispatch(updateImageGenerationEnabled(checked))
+
+    // Auto-select DALL-E model when enabled
+    if (checked) {
+      const dalleModel =
+        allModels.find(
+          (model) =>
+            model.identifier === 'dall-e-3' ||
+            model.name.toLowerCase().includes('dall-e-3')
+        ) ||
+        allModels.find(
+          (model) =>
+            model.identifier === 'dall-e-2' ||
+            model.name.toLowerCase().includes('dall-e-2')
+        )
+
+      if (dalleModel) {
+        dispatch(updateSelectedModel(dalleModel.id))
+      }
+    }
+
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { imageGenerationEnabled: checked },
+        })
+      )
+    }
+  }
+
   const resetToDefaults = () => {
     if (activeConversation) {
       dispatch(updateTemperature(MODEL_CONFIG.temperature))
       dispatch(updateMaxTokens(MODEL_CONFIG.maxTokens))
       dispatch(updateHistoryLimit(MODEL_CONFIG.historyLimit))
       dispatch(updateWebSearchEnabled(false))
+      dispatch(updateImageGenerationEnabled(false))
 
       dispatch(
         updateConversation({
@@ -103,6 +146,7 @@ const ModelConfigurationPanel: React.FC = () => {
             maxTokens: MODEL_CONFIG.maxTokens,
             historyLimit: MODEL_CONFIG.historyLimit,
             webSearchEnabled: false,
+            imageGenerationEnabled: false,
           },
         })
       )
@@ -146,6 +190,22 @@ const ModelConfigurationPanel: React.FC = () => {
               <Switch
                 checked={webSearchEnabled}
                 onCheckedChange={handleWebSearchToggle}
+              />
+            </div>
+
+            {/* Image Generation Toggle */}
+            <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+              <div className='flex flex-col'>
+                <h4 className='font-medium dark:text-white'>
+                  Image Generation
+                </h4>
+                <p className='text-xs text-gray-500 dark:text-gray-400'>
+                  Enable AI image generation with DALL-E models
+                </p>
+              </div>
+              <Switch
+                checked={imageGenerationEnabled}
+                onCheckedChange={handleImageGenerationToggle}
               />
             </div>
           </div>

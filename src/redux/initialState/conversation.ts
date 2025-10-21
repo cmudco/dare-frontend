@@ -28,4 +28,7 @@ export const initialState: ConversationState = {
   autoSaveEnabled: true,
   attachedImages: [],
   webSearchEnabled: false,
+  imageGenerationEnabled: false,
+  isGeneratingImage: false,
+  imageGenerationPrompt: null,
 }
