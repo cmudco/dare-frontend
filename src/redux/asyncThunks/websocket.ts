@@ -121,6 +121,7 @@ export const sendWebSocketMessage = createAsyncThunk<
     selectedModel,
     attachedImages,
     webSearchEnabled,
+    imageGenerationEnabled,
   } = conversation
 
   const payload = {
@@ -144,6 +145,7 @@ export const sendWebSocketMessage = createAsyncThunk<
       activeConversation?.documentSimilarityThreshold,
     history_limit: activeConversation?.historyLimit,
     web_search_enabled: webSearchEnabled,
+    image_generation_enabled: imageGenerationEnabled,
     images: attachedImages.map(({ preview, name, type }) => ({
       preview,
       name,
