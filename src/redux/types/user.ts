@@ -40,6 +40,8 @@ export interface User {
     description?: string
     isActive: boolean
   }
+  billingMode?: string
+  billingModeDisplay?: string
 }
 
 export interface ChunkSettings {
