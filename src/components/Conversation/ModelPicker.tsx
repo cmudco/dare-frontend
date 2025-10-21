@@ -8,6 +8,7 @@ import { AppDispatch, RootState } from '../../redux/store'
 import {
   getAvailableModels,
   getAllModels,
+  updateConversation,
 } from '../../redux/asyncThunks/conversation'
 import { LLMModel } from '@/redux/types/conversation'
 import {
@@ -29,6 +30,9 @@ const ModelPicker: React.FC = () => {
   const models = useSelector(
     (state: RootState) => state.conversation.availableModels
   )
+  const activeConversation = useSelector(
+    (state: RootState) => state.conversation.activeConversation
+  )
   const loading = useSelector((state: RootState) => state.conversation.loading)
   const error = useSelector((state: RootState) => state.conversation.error)
   const user = useSelector((state: RootState) => state.user.user)
@@ -42,6 +46,15 @@ const ModelPicker: React.FC = () => {
   const handleModelSelect = (llmId: number) => {
     dispatch(updateSelectedModel(llmId))
     dispatch(toggleDropdown())
+
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { selectedModel: llmId },
+        })
+      )
+    }
   }
 
   const getModelButtonText = () => {
