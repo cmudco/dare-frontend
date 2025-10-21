@@ -13,6 +13,17 @@ export interface MyFile {
   status: FileStatus
   vectorDbSource: VectorDbSource
   errorMessage?: string
+  isMedia?: boolean
+  mediaType?: 'image' | 'video' | 'document' | 'generated_image'
+  isGenerated?: boolean
+  generationPrompt?: string
+  revisedPrompt?: string
+  generationParams?: {
+    model: string
+    size: string
+    quality: string
+    style: string
+  }
 }
 
 export interface MyFolder {

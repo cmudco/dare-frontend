@@ -125,18 +125,20 @@ export const updateConversationSelectedIds = createAsyncThunk<
     conversationId: string
     selectedEmbeddingIds: number[]
     selectedFileIds: number[]
+    selectedMediaIds: number[]
   },
   { rejectValue: string }
 >(
   'conversation/updateConversationSelectedIds',
   async (
-    { conversationId, selectedEmbeddingIds, selectedFileIds },
+    { conversationId, selectedEmbeddingIds, selectedFileIds, selectedMediaIds },
     thunkAPI
   ) => {
     try {
       const updatedConversation = await updateConversationAPI(conversationId, {
         selectedEmbeddingIds,
         selectedFileIds,
+        selectedMediaIds,
       })
       return updatedConversation
     } catch (error) {
