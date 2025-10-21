@@ -321,6 +321,81 @@ const Message: React.FC<MessageProps> = ({
               >
                 {message.streaming ? `${displayMessage}\u258b` : displayMessage}
               </ReactMarkdown>
+
+              {/* Generated Image Display */}
+              {(() => {
+                // Check for generated image in generatedImage field (WebSocket)
+                if (message.generatedImage) {
+                  return (
+                    <div className='not-prose mt-4'>
+                      <img
+                        src={`${import.meta.env.VITE_DJANGO_BACKEND_URL}${message.generatedImage.fileUrl}`}
+                        alt={message.generatedImage.prompt}
+                        className='max-w-full rounded-lg shadow-md'
+                      />
+                      <div className='mt-2 space-y-1 text-xs text-muted-foreground'>
+                        <p>
+                          <span className='font-medium'>Prompt:</span>{' '}
+                          {message.generatedImage.prompt}
+                        </p>
+                        {message.generatedImage.revisedPrompt && (
+                          <p>
+                            <span className='font-medium'>Revised:</span>{' '}
+                            {message.generatedImage.revisedPrompt}
+                          </p>
+                        )}
+                        <p>
+                          {message.generatedImage.model} •{' '}
+                          {message.generatedImage.size} • $
+                          {message.generatedImage.cost}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                }
+
+                // Check for generated images in files array (from history)
+                const generatedImages = message.files?.filter(
+                  (file) =>
+                    file.isGenerated && file.mediaType === 'generated_image'
+                )
+
+                if (generatedImages && generatedImages.length > 0) {
+                  return (
+                    <>
+                      {generatedImages.map((file) => (
+                        <div key={file.id} className='not-prose mt-4'>
+                          <img
+                            src={`${import.meta.env.VITE_DJANGO_BACKEND_URL}${file.file}`}
+                            alt={file.generationPrompt || file.name}
+                            className='max-w-full rounded-lg shadow-md'
+                          />
+                          <div className='mt-2 space-y-1 text-xs text-muted-foreground'>
+                            <p>
+                              <span className='font-medium'>Prompt:</span>{' '}
+                              {file.generationPrompt}
+                            </p>
+                            {file.revisedPrompt && (
+                              <p>
+                                <span className='font-medium'>Revised:</span>{' '}
+                                {file.revisedPrompt}
+                              </p>
+                            )}
+                            {file.generationParams && (
+                              <p>
+                                {file.generationParams.model} •{' '}
+                                {file.generationParams.size}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )
+                }
+
+                return null
+              })()}
             </div>
           </div>
         </div>
