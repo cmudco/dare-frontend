@@ -238,8 +238,16 @@ const FileTable = () => {
                       }}
                     />
                   </TableCell>
-                  <TableCell className='p-4'>{name || 'Unnamed'}</TableCell>
-                  <TableCell className='p-4'>{fileType || 'Unknown'}</TableCell>
+                  <TableCell className='max-w-[250px] p-4'>
+                    <div className='truncate' title={name || 'Unnamed'}>
+                      {name || 'Unnamed'}
+                    </div>
+                  </TableCell>
+                  <TableCell className='max-w-[150px] p-4'>
+                    <div className='truncate' title={fileType || 'Unknown'}>
+                      {fileType || 'Unknown'}
+                    </div>
+                  </TableCell>
                   <TableCell className='p-4'>{formatFileSize(size)}</TableCell>
                   <TableCell className='p-4'>
                     <TagsDisplay
