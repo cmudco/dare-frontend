@@ -2,6 +2,7 @@ import { ConversationState } from '../types/conversation'
 import { MyFile, MyFolder } from '../types/files'
 import { Tag } from '../types/tags'
 import { loadDraftsFromLocalStorage } from '../../utils/draftStorage'
+import { DEFAULT_IMAGE_SETTINGS } from '../../utils/constants/imageGeneration'
 
 export const initialState: ConversationState = {
   conversations: [],
@@ -31,4 +32,5 @@ export const initialState: ConversationState = {
   imageGenerationEnabled: false,
   isGeneratingImage: false,
   imageGenerationPrompt: null,
+  imageGenerationSettings: DEFAULT_IMAGE_SETTINGS,
 }

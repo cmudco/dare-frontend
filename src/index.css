@@ -308,26 +308,29 @@ input:-webkit-autofill + label {
 .gradient-border {
   position: relative;
   background: white;
+  border: 2px solid transparent;
+  background-image: linear-gradient(white, white),
+    linear-gradient(
+      180deg,
+      #ef3a47 0%,
+      #ef3a47 50%,
+      #023572 50%,
+      #023572 100%
+    );
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
   border-radius: 1rem;
-  padding: 1px;
 }
 
-.gradient-border::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  right: -1px;
-  bottom: -1px;
-  background: linear-gradient(
-    180deg,
-    #ef3a47 0%,
-    #ef3a47 50%,
-    #023572 50%,
-    #023572 100%
-  );
-  border-radius: 1rem;
-  z-index: -1;
+.dark .gradient-border {
+  background-image: linear-gradient(transparent, transparent),
+    linear-gradient(
+      180deg,
+      #ef3a47 0%,
+      #ef3a47 50%,
+      #023572 50%,
+      #023572 100%
+    ) !important;
 }
 
 /* Additional dark mode modal fixes */
