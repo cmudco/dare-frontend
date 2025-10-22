@@ -149,18 +149,26 @@ export const conversationSlice = createSlice({
       }
 
       if (action.payload) {
-        const imageModel = state.availableModels.find(
+        // Switching to image generation mode
+        // Update availableModels to show only image generators
+        const imageModels = state.allModels.filter(
           (model) => model.isImageGenerator === true
         )
-        if (imageModel) {
-          state.selectedModel = imageModel.id
+        state.availableModels = imageModels
+        // Select first image generator model
+        if (imageModels[0]) {
+          state.selectedModel = imageModels[0].id
         }
       } else {
-        const textModel = state.availableModels.find(
+        // Switching back from image generation mode
+        // Update availableModels to show only non-image models
+        const textModels = state.allModels.filter(
           (model) => !model.isImageGenerator
         )
-        if (textModel) {
-          state.selectedModel = textModel.id
+        state.availableModels = textModels
+        // Select first text model
+        if (textModels[0]) {
+          state.selectedModel = textModels[0].id
         }
       }
     },
@@ -359,8 +367,12 @@ export const conversationSlice = createSlice({
         getAvailableModels.fulfilled,
         (state, action: PayloadAction<LLMModel[]>) => {
           state.loading = false
-          state.availableModels = action.payload
-          state.selectedModel = action.payload[0]?.id
+          // Filter out image generation models by default (they'll be shown when image mode is enabled)
+          const nonImageModels = action.payload.filter(
+            (model) => !model.isImageGenerator
+          )
+          state.availableModels = nonImageModels
+          state.selectedModel = nonImageModels[0]?.id
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
