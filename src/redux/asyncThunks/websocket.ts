@@ -122,6 +122,7 @@ export const sendWebSocketMessage = createAsyncThunk<
     attachedImages,
     webSearchEnabled,
     imageGenerationEnabled,
+    imageGenerationSettings,
   } = conversation
 
   const payload = {
@@ -146,6 +147,11 @@ export const sendWebSocketMessage = createAsyncThunk<
     history_limit: activeConversation?.historyLimit,
     web_search_enabled: webSearchEnabled,
     image_generation_enabled: imageGenerationEnabled,
+    image_generation_settings: {
+      size: imageGenerationSettings.size,
+      quality: imageGenerationSettings.quality,
+      style: imageGenerationSettings.style,
+    },
     images: attachedImages.map(({ preview, name, type }) => ({
       preview,
       name,
@@ -210,6 +216,9 @@ export const regenerateResponse = createAsyncThunk<
     const documentSimilarityThreshold =
       state.conversation.activeConversation?.documentSimilarityThreshold
     const historyLimit = state.conversation.activeConversation?.historyLimit
+    const webSearchEnabled = state.conversation.webSearchEnabled
+    const imageGenerationEnabled = state.conversation.imageGenerationEnabled
+    const imageGenerationSettings = state.conversation.imageGenerationSettings
 
     dispatch(
       updateMessage({
@@ -238,6 +247,13 @@ export const regenerateResponse = createAsyncThunk<
           max_context_snippets: maxContextSnippets,
           document_similarity_threshold: documentSimilarityThreshold,
           history_limit: historyLimit,
+          web_search_enabled: webSearchEnabled,
+          image_generation_enabled: imageGenerationEnabled,
+          image_generation_settings: {
+            size: imageGenerationSettings.size,
+            quality: imageGenerationSettings.quality,
+            style: imageGenerationSettings.style,
+          },
         })
       )
     } else {

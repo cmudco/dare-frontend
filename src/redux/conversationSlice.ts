@@ -13,7 +13,12 @@ import {
   cloneConversation,
   updateConversationSelectedIds,
 } from './asyncThunks/conversation'
-import { Message, Conversation, LLMModel } from './types/conversation'
+import {
+  Message,
+  Conversation,
+  LLMModel,
+  ImageGenerationSettings,
+} from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
@@ -142,6 +147,28 @@ export const conversationSlice = createSlice({
       if (state.activeConversation) {
         state.activeConversation.imageGenerationEnabled = action.payload
       }
+
+      if (action.payload) {
+        const imageModel = state.availableModels.find(
+          (model) => model.isImageGenerator === true
+        )
+        if (imageModel) {
+          state.selectedModel = imageModel.id
+        }
+      } else {
+        const textModel = state.availableModels.find(
+          (model) => !model.isImageGenerator
+        )
+        if (textModel) {
+          state.selectedModel = textModel.id
+        }
+      }
+    },
+    updateImageGenerationSettings(
+      state,
+      action: PayloadAction<ImageGenerationSettings>
+    ) {
+      state.imageGenerationSettings = action.payload
     },
     addMessage(state, action: PayloadAction<Message>) {
       const index = state.activeConversationMessages.findIndex(
@@ -507,6 +534,7 @@ export const {
   updateHistoryLimit,
   updateWebSearchEnabled,
   updateImageGenerationEnabled,
+  updateImageGenerationSettings,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,
