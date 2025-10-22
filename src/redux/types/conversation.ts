@@ -1,4 +1,9 @@
 import { SenderType, FeedbackType } from '@/utils/constants/conversation'
+import type {
+  ImageSizeType,
+  ImageQualityType,
+  ImageStyleType,
+} from '@/utils/constants/imageGeneration'
 import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
@@ -74,6 +79,7 @@ export interface LLMModel {
   provider: string
   description: string | null
   isReasoning: boolean
+  isImageGenerator?: boolean
   inputTokenRatePerMillion: number
   outputTokenRatePerMillion: number
 }
@@ -99,6 +105,12 @@ export interface AttachedImage {
   name: string
   size: number
   type: string
+}
+
+export interface ImageGenerationSettings {
+  size: ImageSizeType
+  quality: ImageQualityType
+  style: ImageStyleType
 }
 
 export interface ConversationState {
@@ -129,6 +141,7 @@ export interface ConversationState {
   imageGenerationEnabled: boolean
   isGeneratingImage: boolean
   imageGenerationPrompt: string | null
+  imageGenerationSettings: ImageGenerationSettings
 }
 
 export interface ConversationResponse {
