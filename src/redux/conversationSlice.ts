@@ -13,7 +13,12 @@ import {
   cloneConversation,
   updateConversationSelectedIds,
 } from './asyncThunks/conversation'
-import { Message, Conversation, LLMModel } from './types/conversation'
+import {
+  Message,
+  Conversation,
+  LLMModel,
+  ImageGenerationSettings,
+} from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
@@ -142,6 +147,36 @@ export const conversationSlice = createSlice({
       if (state.activeConversation) {
         state.activeConversation.imageGenerationEnabled = action.payload
       }
+
+      if (action.payload) {
+        // Switching to image generation mode
+        // Update availableModels to show only image generators
+        const imageModels = state.allModels.filter(
+          (model) => model.isImageGenerator === true
+        )
+        state.availableModels = imageModels
+        // Select first image generator model
+        if (imageModels[0]) {
+          state.selectedModel = imageModels[0].id
+        }
+      } else {
+        // Switching back from image generation mode
+        // Update availableModels to show only non-image models
+        const textModels = state.allModels.filter(
+          (model) => !model.isImageGenerator
+        )
+        state.availableModels = textModels
+        // Select first text model
+        if (textModels[0]) {
+          state.selectedModel = textModels[0].id
+        }
+      }
+    },
+    updateImageGenerationSettings(
+      state,
+      action: PayloadAction<ImageGenerationSettings>
+    ) {
+      state.imageGenerationSettings = action.payload
     },
     addMessage(state, action: PayloadAction<Message>) {
       const index = state.activeConversationMessages.findIndex(
@@ -332,8 +367,12 @@ export const conversationSlice = createSlice({
         getAvailableModels.fulfilled,
         (state, action: PayloadAction<LLMModel[]>) => {
           state.loading = false
-          state.availableModels = action.payload
-          state.selectedModel = action.payload[0]?.id
+          // Filter out image generation models by default (they'll be shown when image mode is enabled)
+          const nonImageModels = action.payload.filter(
+            (model) => !model.isImageGenerator
+          )
+          state.availableModels = nonImageModels
+          state.selectedModel = nonImageModels[0]?.id
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
@@ -507,6 +546,7 @@ export const {
   updateHistoryLimit,
   updateWebSearchEnabled,
   updateImageGenerationEnabled,
+  updateImageGenerationSettings,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,
