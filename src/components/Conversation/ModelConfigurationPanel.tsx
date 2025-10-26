@@ -24,6 +24,7 @@ import {
   getHistoryLimitDescription,
 } from '@/utils/modelConfigUtils'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
+import { features } from '@/config/environment'
 
 const ModelConfigurationPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -193,21 +194,23 @@ const ModelConfigurationPanel: React.FC = () => {
               />
             </div>
 
-            {/* Image Generation Toggle */}
-            <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
-              <div className='flex flex-col'>
-                <h4 className='font-medium dark:text-white'>
-                  Image Generation
-                </h4>
-                <p className='text-xs text-gray-500 dark:text-gray-400'>
-                  Enable AI image generation with DALL-E models
-                </p>
+            {/* Image Generation Toggle - Only show in Georgia Tech and Development */}
+            {features.enableImageGeneration && (
+              <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                <div className='flex flex-col'>
+                  <h4 className='font-medium dark:text-white'>
+                    Image Generation
+                  </h4>
+                  <p className='text-xs text-gray-500 dark:text-gray-400'>
+                    Enable AI image generation with DALL-E models
+                  </p>
+                </div>
+                <Switch
+                  checked={imageGenerationEnabled}
+                  onCheckedChange={handleImageGenerationToggle}
+                />
               </div>
-              <Switch
-                checked={imageGenerationEnabled}
-                onCheckedChange={handleImageGenerationToggle}
-              />
-            </div>
+            )}
           </div>
 
           <div className='space-y-4'>
