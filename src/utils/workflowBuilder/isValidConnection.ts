@@ -1,4 +1,7 @@
 import { type Node, type Edge, type Connection } from '@xyflow/react'
+import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
+
+type StepDataShape = { useStructuredOutputNode?: boolean }
 
 export type Mode = 'sequential' | 'parallel'
 
@@ -34,6 +37,23 @@ export const isValidConnection = (
   const sType = sourceNode.type
   const tType = targetNode.type
 
+  if (sType === 'structuredOutput' && tType === 'step') {
+    // Only one Structured Output node should connect to a given step
+    const existingStructured = edges.filter(
+      (e) =>
+        e.target === (connection.target as string) &&
+        nodes.find((n) => n.id === e.source)?.type === 'structuredOutput'
+    )
+    if (existingStructured.length >= 1) {
+      // If the existing one is the same node, allow; otherwise, block
+      const sameNode = existingStructured.some(
+        (e) => e.source === connection.source
+      )
+      if (!sameNode) return false
+    }
+    return true
+  }
+
   // Aggregator connections removed - using conditional nodes for routing
 
   // Handle conditional node connections
@@ -67,10 +87,26 @@ export const isValidConnection = (
   }
 
   if (sType === 'step') {
-    if (tType === 'chatOutput') return true
+    // If this step uses a Structured Output node, do not allow linking to chatOutput
+    const stepUsesStructured = Boolean(
+      (sourceNode.data as StepDataShape)?.useStructuredOutputNode
+    )
+    if (tType === 'chatOutput') {
+      return stepUsesStructured ? false : true
+    }
 
     // Allow step -> step connections for multi-input scenarios
     if (tType === 'step') {
+      // If using structured outputs, require a valid route handle and enforce single connection per route
+      if (stepUsesStructured) {
+        const sh = (connection as Connection).sourceHandle || null
+        if (!sh || !sh.startsWith(ROUTE_HANDLE_PREFIX)) return false
+        const duplicateRoute = edges.some(
+          (e) => e.source === connection.source && e.sourceHandle === sh
+        )
+        if (duplicateRoute) return false
+      }
+
       // Check if target step is already connected to start node
       const targetConnectedToStart = edges.some(
         (e) =>

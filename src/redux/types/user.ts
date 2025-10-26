@@ -18,7 +18,11 @@ export interface User {
   email: string
   username: string | null
   name: string
-  role: string
+  role: string // Hoping it's ok to commandeer this for the user.role from the BE
+  industry?: string
+  purpose?: string
+  referralSource?: string
+  isOnboardingCompleted?: boolean
   is_2fa_enabled: boolean
   is_2fa_pending: boolean
   isActive: boolean
@@ -36,6 +40,8 @@ export interface User {
     description?: string
     isActive: boolean
   }
+  billingMode?: string
+  billingModeDisplay?: string
 }
 
 export interface ChunkSettings {

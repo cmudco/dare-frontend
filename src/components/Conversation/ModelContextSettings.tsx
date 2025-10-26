@@ -10,6 +10,7 @@ import {
 import { MODEL_CONFIG } from '../../config/modelConfig'
 import { RotateCw, X } from 'lucide-react'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
+import VectorDatabaseInfoBanner from './VectorDatabaseInfoBanner'
 
 interface ModelContextSettingsProps {
   onClose: () => void
@@ -159,6 +160,13 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
           <X className='h-4 w-4' />
         </Button>
       </div>
+
+      {/* Dynamic Info Banner */}
+      <VectorDatabaseInfoBanner
+        maxContextSnippets={maxContextSnippets}
+        documentSimilarityThreshold={documentSimilarityThreshold}
+      />
+
       <hr />
       <div className='space-y-4'>
         <div className='space-y-2'>

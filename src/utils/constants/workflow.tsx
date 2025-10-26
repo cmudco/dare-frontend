@@ -5,6 +5,7 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  UserCheck,
 } from 'lucide-react'
 import { Workflow, WorkflowMode } from '@/redux/types/workflow'
 import { Badge } from '@/components/ui/badge'
@@ -85,6 +86,16 @@ export const getRunStatusBadge = (status: WorkflowRunStepStatus) => {
         >
           <XCircle className='mr-1 h-3.5 w-3.5' />
           Failed
+        </Badge>
+      )
+    case WorkflowRunStepStatus.PendingHumanInput:
+      return (
+        <Badge
+          variant='outline'
+          className='border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+        >
+          <UserCheck className='mr-1 h-3.5 w-3.5' />
+          Awaiting Decision
         </Badge>
       )
     default:

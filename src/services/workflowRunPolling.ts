@@ -16,8 +16,13 @@ export const startWorkflowRunPolling = (
         // Update the workflow run status in Redux
         dispatch(updateWorkflowRunStatus(runData as WorkflowRun))
 
-        // Stop polling if the run is no longer running
-        if ('status' in runData && runData.status !== 'running') {
+        // Stop polling if the run is no longer running or waiting for human input
+        // Keep polling for 'running' and 'pending_human_input' states
+        if (
+          'status' in runData &&
+          runData.status !== 'running' &&
+          runData.status !== 'pending_human_input'
+        ) {
           clearInterval(interval)
         }
       }

@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
+  UserCheck,
 } from 'lucide-react'
 import {
   Collapsible,
@@ -27,6 +28,10 @@ import { getWorkflowRunById, getWorkflows } from '@/redux/asyncThunks/workflow'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { getRunStatusBadge } from '@/utils/constants/workflow'
 import { getWallet } from '@/redux/asyncThunks/billing'
+import { HumanValidationModal } from './HumanValidationModal'
+import { submitHumanValidationAPI } from '@/api/workflows'
+import { Button } from '@/components/ui/button'
+import type { PendingValidation } from '@/redux/types/workflow'
 
 export const WorkflowStep: React.FC<{
   runId: number | null
@@ -41,6 +46,9 @@ export const WorkflowStep: React.FC<{
   const [openSnippets, setOpenSnippets] = useState<{ [key: number]: boolean }>(
     {}
   )
+  const [showValidationModal, setShowValidationModal] = useState(false)
+  const [currentValidation, setCurrentValidation] =
+    useState<PendingValidation | null>(null)
 
   const toggleSnippets = (stepId: number) => {
     setOpenSnippets((prev) => ({
@@ -49,13 +57,38 @@ export const WorkflowStep: React.FC<{
     }))
   }
 
+  const handleOpenValidation = (validation: PendingValidation) => {
+    setCurrentValidation(validation)
+    setShowValidationModal(true)
+  }
+
+  const handleSubmitValidation = async (
+    nodeId: string,
+    chosenRoute: string
+  ) => {
+    if (!runId) return
+
+    try {
+      await submitHumanValidationAPI(runId, nodeId, chosenRoute)
+      // Refresh the workflow run to get updated status
+      dispatch(getWorkflowRunById(runId))
+    } catch (error) {
+      console.error('Failed to submit validation:', error)
+      throw error
+    }
+  }
+
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined
 
     if (runId && isOpen) {
       dispatch(getWorkflowRunById(runId))
 
-      if (selectedWorkflowRun?.status === WorkflowRunStepStatus.Running) {
+      // Keep polling for Running and PendingHumanInput statuses
+      if (
+        selectedWorkflowRun?.status === WorkflowRunStepStatus.Running ||
+        selectedWorkflowRun?.status === WorkflowRunStepStatus.PendingHumanInput
+      ) {
         intervalId = setInterval(() => {
           dispatch(getWorkflowRunById(runId))
         }, 5000)
@@ -101,9 +134,18 @@ export const WorkflowStep: React.FC<{
     )
   }
 
+  // Helper to check if this step has a pending validation
+  const getPendingValidationForStep = (stepId: number) => {
+    return selectedWorkflowRun.pendingValidations?.find(
+      (validation) => validation.stepId === stepId
+    )
+  }
+
   return (
     <div className='space-y-6'>
+      {/* Steps */}
       {selectedWorkflowRun.steps.map((step) => {
+        const pendingValidation = getPendingValidationForStep(step.id)
         const isWorkflowCompleted =
           selectedWorkflowRun?.status === WorkflowRunStepStatus.Completed
         const isStepCompleted = step.status === WorkflowRunStepStatus.Completed
@@ -135,6 +177,32 @@ export const WorkflowStep: React.FC<{
               <div>{getRunStatusBadge(step.status)}</div>
             </CollapsibleTrigger>
             <CollapsibleContent className='bg-card p-4'>
+              {/* Human Validation UI for Conditional Steps */}
+              {pendingValidation &&
+                step.status === WorkflowRunStepStatus.PendingHumanInput && (
+                  <div className='mb-4 rounded-lg border-2 border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20'>
+                    <div className='mb-3 flex items-start gap-3'>
+                      <UserCheck className='mt-0.5 h-5 w-5 flex-shrink-0 text-purple-600 dark:text-purple-400' />
+                      <div className='flex-1'>
+                        <h3 className='font-semibold text-purple-900 dark:text-purple-100'>
+                          Human Validation Required
+                        </h3>
+                        <p className='mt-1 text-sm text-purple-700 dark:text-purple-300'>
+                          Choose which route the workflow should take to
+                          continue.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleOpenValidation(pendingValidation)}
+                      size='sm'
+                      className='w-full bg-purple-600 hover:bg-purple-700'
+                    >
+                      Make Decision
+                    </Button>
+                  </div>
+                )}
+
               {step.response && (
                 <div className='p-4'>
                   <h5 className='mb-2 flex items-center text-sm font-medium text-foreground'>
@@ -255,6 +323,14 @@ export const WorkflowStep: React.FC<{
           </Collapsible>
         )
       })}
+
+      {/* Human Validation Modal */}
+      <HumanValidationModal
+        isOpen={showValidationModal}
+        onClose={() => setShowValidationModal(false)}
+        validation={currentValidation}
+        onSubmit={handleSubmitValidation}
+      />
     </div>
   )
 }
