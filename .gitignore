@@ -29,8 +29,10 @@ dist-ssr
 *.vite
 
 
+# Environment files
 .env
 .env.local
 .env.production
+.env.gatech
 
 package-lock.json
