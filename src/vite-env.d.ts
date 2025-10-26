@@ -3,9 +3,13 @@
 interface ImportMetaEnv {
   /**
    * The environment the app is running in
-   * @values 'development' | 'gatech' | 'production'
+   * @values 'local' | 'dare-staging' | 'dare-production' | 'gt-production'
    */
-  readonly VITE_APP_ENVIRONMENT: 'development' | 'gatech' | 'production'
+  readonly VITE_APP_ENVIRONMENT:
+    | 'local'
+    | 'dare-staging'
+    | 'dare-production'
+    | 'gt-production'
 
   /**
    * Django backend API URL
