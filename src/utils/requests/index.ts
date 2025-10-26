@@ -2,8 +2,9 @@ import axios, { AxiosRequestConfig, AxiosError, AxiosResponse } from 'axios'
 import { getErrorMessage } from '@/utils/errorHandler'
 import { METHOD } from '../constants/requests'
 import { tokenExpirationService } from '@/services/tokenExpirationService'
+import { config } from '@/config/environment'
 
-const BASE_URL = import.meta.env.VITE_DJANGO_BACKEND_URL
+const BASE_URL = config.apiUrl
 
 interface BaseRequestParams {
   url: string
