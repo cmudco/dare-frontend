@@ -6,9 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:dev": "tsc -b && vite build --mode development",
-    "build:gatech": "tsc -b && vite build --mode gatech",
-    "build:production": "tsc -b && vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview",
     "format": "prettier --write .",

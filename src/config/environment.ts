@@ -5,20 +5,26 @@
  * The VITE_APP_ENVIRONMENT variable determines which environment is active.
  *
  * Supported environments:
- * - development: Local development
- * - gatech: Georgia Tech deployment (using main branch)
- * - production: DARE production deployment (using main branch)
+ * - local: Local development
+ * - dare-staging: DARE staging environment
+ * - dare-production: DARE production deployment
+ * - gt-production: Georgia Tech production deployment
  */
 
 // Environment types
-export type AppEnvironment = 'development' | 'gatech' | 'production'
+export type AppEnvironment =
+  | 'local'
+  | 'dare-staging'
+  | 'dare-production'
+  | 'gt-production'
 
 // Environment configuration interface
 export interface EnvironmentConfig {
   environment: AppEnvironment
-  isDevelopment: boolean
-  isGaTech: boolean
-  isProduction: boolean
+  isLocal: boolean
+  isDareStaging: boolean
+  isDareProduction: boolean
+  isGtProduction: boolean
   apiUrl: string
   websocketUrl: string
   socraticBooksUrl?: string
@@ -39,12 +45,15 @@ export interface FeatureFlags {
 function getEnvironment(): AppEnvironment {
   const env = import.meta.env.VITE_APP_ENVIRONMENT as AppEnvironment | undefined
 
-  // Default to development if not specified
-  if (!env || !['development', 'gatech', 'production'].includes(env)) {
+  // Default to local if not specified
+  if (
+    !env ||
+    !['local', 'dare-staging', 'dare-production', 'gt-production'].includes(env)
+  ) {
     console.warn(
-      `Invalid or missing VITE_APP_ENVIRONMENT: "${env}". Defaulting to "development".`
+      `Invalid or missing VITE_APP_ENVIRONMENT: "${env}". Defaulting to "local".`
     )
-    return 'development'
+    return 'local'
   }
 
   return env
@@ -55,22 +64,28 @@ function getEnvironment(): AppEnvironment {
  */
 function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
   switch (environment) {
-    case 'development':
+    case 'local':
       return {
         enableBYOK: true,
         enableImageGeneration: true,
       }
 
-    case 'gatech':
+    case 'dare-staging':
       return {
-        enableBYOK: true, // Georgia Tech has BYOK
-        enableImageGeneration: true, // Georgia Tech has Image Generation
+        enableBYOK: true, // DARE Staging: HAS BYOK
+        enableImageGeneration: true, // DARE Staging: HAS Image Generation
       }
 
-    case 'production':
+    case 'dare-production':
       return {
         enableBYOK: false, // DARE Production: NO BYOK
         enableImageGeneration: false, // DARE Production: NO Image Generation
+      }
+
+    case 'gt-production':
+      return {
+        enableBYOK: true, // Georgia Tech: HAS BYOK
+        enableImageGeneration: true, // Georgia Tech: HAS Image Generation
       }
 
     default:
@@ -89,9 +104,10 @@ function buildEnvironmentConfig(): EnvironmentConfig {
 
   return {
     environment,
-    isDevelopment: environment === 'development',
-    isGaTech: environment === 'gatech',
-    isProduction: environment === 'production',
+    isLocal: environment === 'local',
+    isDareStaging: environment === 'dare-staging',
+    isDareProduction: environment === 'dare-production',
+    isGtProduction: environment === 'gt-production',
     apiUrl: import.meta.env.VITE_DJANGO_BACKEND_URL || 'http://localhost:8000',
     websocketUrl:
       import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8000/ws',
@@ -104,15 +120,16 @@ function buildEnvironmentConfig(): EnvironmentConfig {
 export const config: EnvironmentConfig = buildEnvironmentConfig()
 
 // Helper functions for common checks
-export const isDevelopment = config.isDevelopment
-export const isGaTech = config.isGaTech
-export const isProduction = config.isProduction
+export const isLocal = config.isLocal
+export const isDareStaging = config.isDareStaging
+export const isDareProduction = config.isDareProduction
+export const isGtProduction = config.isGtProduction
 
 // Feature flag helpers
 export const features = config.features
 
-// Log environment on initialization (development only)
-if (config.isDevelopment) {
+// Log environment on initialization (local only)
+if (config.isLocal) {
   console.log('🚀 DARE Environment Configuration:', {
     environment: config.environment,
     apiUrl: config.apiUrl,
