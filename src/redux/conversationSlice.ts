@@ -13,7 +13,12 @@ import {
   cloneConversation,
   updateConversationSelectedIds,
 } from './asyncThunks/conversation'
-import { Message, Conversation, LLMModel } from './types/conversation'
+import {
+  Message,
+  Conversation,
+  LLMModel,
+  ImageGenerationSettings,
+} from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
@@ -34,6 +39,10 @@ export const conversationSlice = createSlice({
       state.activeConversation = action.payload
       if (action.payload) {
         state.webSearchEnabled = action.payload.webSearchEnabled ?? false
+        state.imageGenerationEnabled =
+          action.payload.imageGenerationEnabled ?? false
+        state.selectedModel =
+          action.payload.selectedModel ?? state.selectedModel
       }
     },
     loadSelectedFilesFromIds(
@@ -42,9 +51,11 @@ export const conversationSlice = createSlice({
         files: MyFile[]
         selectedFileIds: number[]
         selectedEmbeddingIds: number[]
+        selectedMediaIds?: number[]
       }>
     ) {
-      const { files, selectedFileIds, selectedEmbeddingIds } = action.payload
+      const { files, selectedFileIds, selectedEmbeddingIds, selectedMediaIds } =
+        action.payload
 
       state.selectedFiles = files.filter((file) =>
         selectedFileIds.includes(file.id)
@@ -52,6 +63,11 @@ export const conversationSlice = createSlice({
       state.selectedEmbeddings = files.filter((file) =>
         selectedEmbeddingIds.includes(file.id)
       )
+      if (selectedMediaIds) {
+        state.selectedMediaFiles = files.filter((file) =>
+          selectedMediaIds.includes(file.id)
+        )
+      }
     },
     updateSelectedModel(state, action: PayloadAction<number>) {
       state.selectedModel = action.payload
@@ -61,6 +77,9 @@ export const conversationSlice = createSlice({
     },
     updateSelectedEmbeddings(state, action: PayloadAction<MyFile[]>) {
       state.selectedEmbeddings = action.payload
+    },
+    updateSelectedMediaFiles(state, action: PayloadAction<MyFile[]>) {
+      state.selectedMediaFiles = action.payload
     },
     updateSelectedTags(state, action: PayloadAction<Tag[]>) {
       state.selectedTags = action.payload
@@ -122,6 +141,42 @@ export const conversationSlice = createSlice({
       if (state.activeConversation) {
         state.activeConversation.webSearchEnabled = action.payload
       }
+    },
+    updateImageGenerationEnabled(state, action: PayloadAction<boolean>) {
+      state.imageGenerationEnabled = action.payload
+      if (state.activeConversation) {
+        state.activeConversation.imageGenerationEnabled = action.payload
+      }
+
+      if (action.payload) {
+        // Switching to image generation mode
+        // Update availableModels to show only image generators
+        const imageModels = state.allModels.filter(
+          (model) => model.isImageGenerator === true
+        )
+        state.availableModels = imageModels
+        // Select first image generator model
+        if (imageModels[0]) {
+          state.selectedModel = imageModels[0].id
+        }
+      } else {
+        // Switching back from image generation mode
+        // Update availableModels to show only non-image models
+        const textModels = state.allModels.filter(
+          (model) => !model.isImageGenerator
+        )
+        state.availableModels = textModels
+        // Select first text model
+        if (textModels[0]) {
+          state.selectedModel = textModels[0].id
+        }
+      }
+    },
+    updateImageGenerationSettings(
+      state,
+      action: PayloadAction<ImageGenerationSettings>
+    ) {
+      state.imageGenerationSettings = action.payload
     },
     addMessage(state, action: PayloadAction<Message>) {
       const index = state.activeConversationMessages.findIndex(
@@ -279,6 +334,13 @@ export const conversationSlice = createSlice({
     clearAttachedImages(state) {
       state.attachedImages = []
     },
+    setImageGenerating(
+      state,
+      action: PayloadAction<{ generating: boolean; prompt: string | null }>
+    ) {
+      state.isGeneratingImage = action.payload.generating
+      state.imageGenerationPrompt = action.payload.prompt
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -305,8 +367,12 @@ export const conversationSlice = createSlice({
         getAvailableModels.fulfilled,
         (state, action: PayloadAction<LLMModel[]>) => {
           state.loading = false
-          state.availableModels = action.payload
-          state.selectedModel = action.payload[0]?.id
+          // Filter out image generation models by default (they'll be shown when image mode is enabled)
+          const nonImageModels = action.payload.filter(
+            (model) => !model.isImageGenerator
+          )
+          state.availableModels = nonImageModels
+          state.selectedModel = nonImageModels[0]?.id
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
@@ -472,12 +538,15 @@ export const {
   updateSelectedModel,
   updateSelectedFiles,
   updateSelectedEmbeddings,
+  updateSelectedMediaFiles,
   updateSelectedTags,
   updateSelectedFolders,
   updateTemperature,
   updateMaxTokens,
   updateHistoryLimit,
   updateWebSearchEnabled,
+  updateImageGenerationEnabled,
+  updateImageGenerationSettings,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,

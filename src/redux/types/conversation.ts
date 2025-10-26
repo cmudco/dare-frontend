@@ -1,4 +1,9 @@
 import { SenderType, FeedbackType } from '@/utils/constants/conversation'
+import type {
+  ImageSizeType,
+  ImageQualityType,
+  ImageStyleType,
+} from '@/utils/constants/imageGeneration'
 import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
@@ -14,6 +19,9 @@ export interface Conversation {
   maxTokens: number
   historyLimit: number
   webSearchEnabled?: boolean
+  imageGenerationEnabled?: boolean
+  selectedModel?: number | null
+  selectedMediaIds?: number[]
   prompt?: Prompt | null
   promptId?: number | null
   sortOrder?: number
@@ -41,6 +49,21 @@ export interface Message {
   cost?: string | null
   inputTokens?: number | null
   outputTokens?: number | null
+  // Image generation fields
+  generatedImage?: GeneratedImage
+}
+
+export interface GeneratedImage {
+  fileId: number
+  filename: string
+  fileUrl: string
+  prompt: string
+  revisedPrompt?: string
+  cost: string
+  model: string
+  size: string
+  quality: string
+  style: string
 }
 
 export interface MessageProps {
@@ -56,6 +79,7 @@ export interface LLMModel {
   provider: string
   description: string | null
   isReasoning: boolean
+  isImageGenerator?: boolean
   inputTokenRatePerMillion: number
   outputTokenRatePerMillion: number
 }
@@ -83,6 +107,12 @@ export interface AttachedImage {
   type: string
 }
 
+export interface ImageGenerationSettings {
+  size: ImageSizeType
+  quality: ImageQualityType
+  style: ImageStyleType
+}
+
 export interface ConversationState {
   conversations: Conversation[]
   activeConversation: Conversation | null
@@ -93,6 +123,7 @@ export interface ConversationState {
   selectedModel: number | null
   selectedFiles: MyFile[]
   selectedEmbeddings: MyFile[]
+  selectedMediaFiles: MyFile[] // NEW: Persistent media files (images/videos)
   selectedTags: Tag[]
   selectedFolders: MyFolder[]
   selectedConversations: string[]
@@ -107,6 +138,10 @@ export interface ConversationState {
   autoSaveEnabled: boolean
   attachedImages: AttachedImage[]
   webSearchEnabled: boolean
+  imageGenerationEnabled: boolean
+  isGeneratingImage: boolean
+  imageGenerationPrompt: string | null
+  imageGenerationSettings: ImageGenerationSettings
 }
 
 export interface ConversationResponse {

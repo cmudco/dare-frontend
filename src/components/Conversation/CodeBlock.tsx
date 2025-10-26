@@ -1,18 +1,25 @@
 import React from 'react'
 import { Button } from '../ui/button'
 import { Copy } from 'lucide-react'
+import { extractTextFromChildren } from '../../utils/textUtils'
 
 export const CodeBlock: React.FC<{
   className?: string
   children: React.ReactNode
   props?: React.HTMLAttributes<HTMLElement>
 }> = ({ className, children, props }) => {
-  const codeString = String(children).trim()
+  const codeString = extractTextFromChildren(children).trim()
   const [copied, setCopied] = React.useState(false)
   return (
-    <div className='group relative my-4'>
-      <pre className='not-prose overflow-x-auto rounded-md bg-transparent text-foreground'>
-        <code className={className + ' text-foreground'} {...props}>
+    <div className='group relative my-4 max-w-full'>
+      <pre className='not-prose max-w-full overflow-x-auto whitespace-pre-wrap break-words break-all rounded-md bg-transparent text-foreground'>
+        <code
+          className={
+            (className || '') + ' break-words break-all text-foreground'
+          }
+          style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}
+          {...props}
+        >
           {children}
         </code>
       </pre>

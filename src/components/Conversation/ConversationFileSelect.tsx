@@ -7,11 +7,13 @@ import {
   Tag as TagIcon,
   Settings,
   Folder,
+  Image,
 } from 'lucide-react'
 import type { RootState, AppDispatch } from '@/redux/store'
 import {
   updateSelectedFiles,
   updateSelectedEmbeddings,
+  updateSelectedMediaFiles,
   updateSelectedTags,
   updateSelectedFolders,
 } from '@/redux/conversationSlice'
@@ -45,6 +47,9 @@ const ConversationFileSelect: React.FC = () => {
   const selectedEmbeddings = useSelector(
     (state: RootState) => state.conversation.selectedEmbeddings
   )
+  const selectedMediaFiles = useSelector(
+    (state: RootState) => state.conversation.selectedMediaFiles
+  )
   const selectedTags = useSelector(
     (state: RootState) => state.conversation.selectedTags
   )
@@ -60,27 +65,36 @@ const ConversationFileSelect: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<
-    'files' | 'embeddings' | 'tags' | 'folders'
+    'files' | 'embeddings' | 'media' | 'tags' | 'folders'
   >('embeddings')
 
   const saveSelectedIds = useCallback(() => {
     if (activeConversation) {
       const selectedFileIds = selectedFiles.map((file) => file.id)
       const selectedEmbeddingIds = selectedEmbeddings.map((file) => file.id)
+      const selectedMediaIds = selectedMediaFiles.map((file) => file.id)
 
       dispatch(
         updateConversationSelectedIds({
           conversationId: activeConversation.conversationId,
           selectedFileIds,
           selectedEmbeddingIds,
+          selectedMediaIds,
         })
       )
     }
-  }, [dispatch, activeConversation, selectedFiles, selectedEmbeddings])
+  }, [
+    dispatch,
+    activeConversation,
+    selectedFiles,
+    selectedEmbeddings,
+    selectedMediaFiles,
+  ])
 
   useDebounce(saveSelectedIds, 1000, [
     selectedFiles,
     selectedEmbeddings,
+    selectedMediaFiles,
     activeConversation?.conversationId,
   ])
 
@@ -95,9 +109,21 @@ const ConversationFileSelect: React.FC = () => {
         .includes(searchQuery.toLowerCase())
       const matchesVectorDb = file.vectorDbSource === user.vectorDb
       const isProcessed = file.status === FileStatus.PROCESSED
-      return matchesSearch && matchesVectorDb && isProcessed
+      const isNotMedia = !file.isMedia // Exclude media files from document tabs
+      return matchesSearch && matchesVectorDb && isProcessed && isNotMedia
     })
   }, [files, searchQuery, user])
+
+  const filteredMediaFiles = useMemo(() => {
+    return files.filter((file) => {
+      const matchesSearch = file.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+      const isMedia = file.isMedia === true
+      const isProcessed = file.status === FileStatus.PROCESSED
+      return matchesSearch && isMedia && isProcessed
+    })
+  }, [files, searchQuery])
 
   const filteredTags = useMemo(() => {
     return tags.filter((tag) =>
@@ -127,6 +153,15 @@ const ConversationFileSelect: React.FC = () => {
     dispatch(updateSelectedEmbeddings(newSelectedEmbeddings))
   }
 
+  const handleToggleMedia = (file: MyFile) => {
+    const newSelectedMediaFiles = selectedMediaFiles.some(
+      (f) => f.id === file.id
+    )
+      ? selectedMediaFiles.filter((f) => f.id !== file.id)
+      : [...selectedMediaFiles, file]
+    dispatch(updateSelectedMediaFiles(newSelectedMediaFiles))
+  }
+
   const handleToggleTag = (tag: Tag) => {
     const newSelectedTags = selectedTags.some((t) => t.id === tag.id)
       ? selectedTags.filter((t) => t.id !== tag.id)
@@ -144,6 +179,7 @@ const ConversationFileSelect: React.FC = () => {
   const clearSelections = () => {
     dispatch(updateSelectedFiles([]))
     dispatch(updateSelectedEmbeddings([]))
+    dispatch(updateSelectedMediaFiles([]))
     dispatch(updateSelectedTags([]))
     dispatch(updateSelectedFolders([]))
   }
@@ -160,7 +196,7 @@ const ConversationFileSelect: React.FC = () => {
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className='w-[400px] border border-border bg-popover p-4'
+          className='w-[500px] border border-border bg-popover p-4'
           align='start'
           side='top'
           sideOffset={8}
@@ -189,8 +225,9 @@ const ConversationFileSelect: React.FC = () => {
                 <SettingsPopoverContent
                   align='start'
                   side='right'
-                  sideOffset={8}
-                  className='w-[25rem] border border-border bg-popover p-4'
+                  sideOffset={12}
+                  collisionPadding={20}
+                  className='mb-6 w-[24rem] max-w-[90vw] border border-border bg-popover p-4'
                 >
                   <ModelContextSettings
                     onClose={() => setSettingsOpen(false)}
@@ -203,11 +240,11 @@ const ConversationFileSelect: React.FC = () => {
               value={activeTab}
               onValueChange={(value) =>
                 setActiveTab(
-                  value as 'files' | 'embeddings' | 'tags' | 'folders'
+                  value as 'files' | 'embeddings' | 'media' | 'tags' | 'folders'
                 )
               }
             >
-              <TabsList className='grid w-full grid-cols-4 border-border bg-muted/30 dark:bg-muted/50'>
+              <TabsList className='grid w-full grid-cols-5 border-border bg-muted/30 dark:bg-muted/50'>
                 <TabsTrigger
                   value='embeddings'
                   className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
@@ -219,6 +256,12 @@ const ConversationFileSelect: React.FC = () => {
                   className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
                 >
                   Files
+                </TabsTrigger>
+                <TabsTrigger
+                  value='media'
+                  className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
+                >
+                  Media
                 </TabsTrigger>
                 <TabsTrigger
                   value='tags'
@@ -297,6 +340,44 @@ const ConversationFileSelect: React.FC = () => {
                   {filteredFiles.length === 0 && (
                     <p className='py-4 text-center text-muted-foreground'>
                       No files found
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value='media' className='mt-4'>
+                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                  {filteredMediaFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      onClick={() => handleToggleMedia(file)}
+                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+                    >
+                      <div
+                        className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
+                          selectedMediaFiles.some((f) => f.id === file.id)
+                            ? 'border-primary bg-primary'
+                            : 'border-input hover:border-muted-foreground dark:border-dark-icon-unselected dark:hover:border-gray-300'
+                        }`}
+                      >
+                        {selectedMediaFiles.some((f) => f.id === file.id) && (
+                          <Check className='h-3 w-3 text-primary-foreground' />
+                        )}
+                      </div>
+                      <Image className='mr-2 h-4 w-4 text-muted-foreground' />
+                      <span
+                        className={`text-sm ${selectedMediaFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'} dark:text-white`}
+                      >
+                        {file.name}
+                      </span>
+                      <span className='ml-2 text-xs text-muted-foreground'>
+                        ({file.mediaType})
+                      </span>
+                    </div>
+                  ))}
+                  {filteredMediaFiles.length === 0 && (
+                    <p className='py-4 text-center text-muted-foreground'>
+                      No media files found
                     </p>
                   )}
                 </div>
@@ -418,8 +499,8 @@ const ConversationFileSelect: React.FC = () => {
                 className='dark:bg-dark-button-primary dark:text-white dark:hover:bg-dark-button-primary/80'
               >
                 Done ({selectedEmbeddings.length} embeddings,{' '}
-                {selectedFiles.length} files, {selectedTags.length} tags,{' '}
-                {selectedFolders.length} folders)
+                {selectedFiles.length} files, {selectedMediaFiles.length} media,{' '}
+                {selectedTags.length} tags, {selectedFolders.length} folders)
               </Button>
             </div>
           </div>

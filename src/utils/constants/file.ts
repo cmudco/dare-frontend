@@ -24,6 +24,7 @@ export const TAG_COLORS: {
 }
 
 export const ALLOWED_FILE_EXTENSIONS = [
+  // Documents
   '.docx',
   '.doc',
   '.pdf',
@@ -34,9 +35,26 @@ export const ALLOWED_FILE_EXTENSIONS = [
   '.csv',
   '.xls',
   '.xlsx',
+  // Images
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.webp',
+  '.bmp',
+  '.tiff',
+  '.svg',
+  // Videos
+  '.mp4',
+  '.webm',
+  '.mov',
+  '.avi',
+  '.mpeg',
+  '.ogg',
 ]
 
 export const ALLOWED_FILE_TYPES = [
+  // Documents
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/msword',
   'application/pdf',
@@ -49,6 +67,21 @@ export const ALLOWED_FILE_TYPES = [
   'text/csv',
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  // Images
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/bmp',
+  'image/tiff',
+  'image/svg+xml',
+  // Videos
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+  'video/x-msvideo',
+  'video/mpeg',
+  'video/ogg',
 ]
 
 export const MAX_FILE_SIZE_MB = 30

@@ -2,6 +2,7 @@ import { ConversationState } from '../types/conversation'
 import { MyFile, MyFolder } from '../types/files'
 import { Tag } from '../types/tags'
 import { loadDraftsFromLocalStorage } from '../../utils/draftStorage'
+import { DEFAULT_IMAGE_SETTINGS } from '../../utils/constants/imageGeneration'
 
 export const initialState: ConversationState = {
   conversations: [],
@@ -13,6 +14,7 @@ export const initialState: ConversationState = {
   selectedModel: null,
   selectedFiles: [] as MyFile[],
   selectedEmbeddings: [] as MyFile[],
+  selectedMediaFiles: [] as MyFile[], // NEW: Persistent media files
   selectedTags: [] as Tag[],
   selectedFolders: [] as MyFolder[],
   selectedConversations: [],
@@ -27,4 +29,8 @@ export const initialState: ConversationState = {
   autoSaveEnabled: true,
   attachedImages: [],
   webSearchEnabled: false,
+  imageGenerationEnabled: false,
+  isGeneratingImage: false,
+  imageGenerationPrompt: null,
+  imageGenerationSettings: DEFAULT_IMAGE_SETTINGS,
 }

@@ -84,3 +84,43 @@ export const exportWorkflowRunPdfAPI = async (
     responseType: 'blob',
   })
 }
+
+export const submitHumanValidationAPI = async (
+  runId: number,
+  nodeId: string,
+  chosenRoute: string
+): Promise<{
+  message: string
+  chosenRoute: string
+  nodeId: string
+  workflowRunId: number
+}> => {
+  return await baseRequest({
+    url: `api/workflow-runs/${runId}/submit-human-validation/`,
+    method: METHOD.POST,
+    data: {
+      nodeId,
+      chosenRoute,
+    },
+  })
+}
+
+export const getPendingValidationsAPI = async (
+  runId: number
+): Promise<{
+  workflowRunId: number
+  pendingValidations: Array<{
+    nodeId: string
+    stepNumber: number
+    customPrompt: string
+    availableRoutes: Array<{ name: string; description: string }>
+    currentResponse: string
+    stepId: number
+  }>
+  count: number
+}> => {
+  return await baseRequest({
+    url: `api/workflow-runs/${runId}/pending-validations/`,
+    method: METHOD.GET,
+  })
+}

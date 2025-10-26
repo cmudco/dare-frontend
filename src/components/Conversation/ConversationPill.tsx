@@ -22,6 +22,7 @@ import ConversationReferenceSelect from './ConversationReferenceSelect'
 import ModelConfigurationPanel from './ModelConfigurationPanel'
 import ExportButton from './ExportButton'
 import ImagePreview from './ImagePreview'
+import ImageGenerationPanel from './ImageGenerationPanel'
 import { ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
@@ -55,6 +56,11 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     (state: RootState) => state.conversation.autoSaveEnabled
   )
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const imageGenerationEnabled = useSelector(
+    (state: RootState) =>
+      activeConversation?.imageGenerationEnabled ??
+      state.conversation.imageGenerationEnabled
+  )
 
   const clearPendingDraftSave = useCallback(() => {
     if (debounceTimeoutRef.current) {
@@ -201,7 +207,11 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     <>
       <div
         className={clsx(
-          'flex w-[90%] flex-col justify-end rounded-2xl border-2 border-gray-200 dark:border-dark-icon-unselected dark:bg-transparent',
+          'flex w-[90%] flex-col justify-end rounded-2xl transition-all duration-300',
+          imageGenerationEnabled
+            ? 'gradient-border'
+            : 'border-2 border-gray-200 dark:border-dark-icon-unselected',
+          'dark:bg-transparent',
           disabled && 'pointer-events-none opacity-60'
         )}
       >
@@ -273,6 +283,9 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <ModelPicker />
           </div>
           <div className='flex items-center gap-3'>
+            <div className={clsx(!imageGenerationEnabled && 'hidden')}>
+              <ImageGenerationPanel />
+            </div>
             <ExportButton />
             <ModelConfigurationPanel />
           </div>
