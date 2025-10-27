@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { getWallet, getTransactions } from '@/redux/asyncThunks/billing'
 import {
@@ -8,18 +8,11 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/Table'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { Wallet as WalletIcon, FileSpreadsheet } from 'lucide-react'
+import { FileSpreadsheet } from 'lucide-react'
 import { useExportToCSV } from '@/utils/billingExportUtils'
+import { WalletBalanceCard, TransactionTabs } from './components'
+import { TransactionTab } from '@/utils/constants/billing'
 
 const BillingScreen = () => {
   const dispatch = useAppDispatch()
@@ -31,6 +24,8 @@ const BillingScreen = () => {
     previousPage,
     loading,
   } = useAppSelector((state) => state.billing)
+
+  const [activeTab, setActiveTab] = useState<TransactionTab>(TransactionTab.ALL)
 
   useEffect(() => {
     dispatch(getWallet())
@@ -57,35 +52,7 @@ const BillingScreen = () => {
         </p>
       </div>
 
-      {loading ? (
-        <Card className='overflow-hidden'>
-          <CardHeader className='pb-2'>
-            <Skeleton className='h-4 w-24' />
-            <Skeleton className='h-8 w-28' />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className='h-4 w-full' />
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className='overflow-hidden'>
-          <div className='h-1 w-full bg-gradient-to-r from-teal-500 to-cyan-500' />
-          <CardHeader className='pb-2'>
-            <div className='flex items-center justify-between'>
-              <CardTitle className='text-lg font-medium'>
-                Wallet Balance
-              </CardTitle>
-              <WalletIcon className='h-5 w-5 text-teal-500' />
-            </div>
-            <CardDescription>Current wallet balance</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='text-3xl font-bold'>
-              {wallet?.displayBalance || '$0.00'}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <WalletBalanceCard wallet={wallet} loading={loading} />
 
       <Card className='overflow-hidden'>
         <CardHeader>
@@ -107,65 +74,12 @@ const BillingScreen = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className='space-y-4'>
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className='h-12 w-full' />
-              ))}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Message</TableHead>
-                  <TableHead>LLM</TableHead>
-                  <TableHead>Tokens</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.length === 0 ? (
-                  <TableRow key='no-transactions'>
-                    <TableCell colSpan={5} className='text-center'>
-                      No transactions found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  transactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>{transaction.displayAmount}</TableCell>
-                      <TableCell>{transaction.message}</TableCell>
-                      <TableCell>{transaction.llmName || 'N/A'}</TableCell>
-                      <TableCell>
-                        <div className='flex flex-col'>
-                          <div className='text-center'>
-                            <span className='text-xs text-muted-foreground'>
-                              input{' '}
-                            </span>
-                            <span className='text-sm font-medium text-foreground'>
-                              {transaction.inputTokens}
-                            </span>
-                          </div>
-                          <div className='text-center'>
-                            <span className='text-xs text-muted-foreground'>
-                              output{' '}
-                            </span>
-                            <span className='text-sm font-medium text-foreground'>
-                              {transaction.outputTokens}
-                            </span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(transaction.createdAt).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          )}
+          <TransactionTabs
+            transactions={transactions}
+            loading={loading}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
         </CardContent>
         {transactionCount > 0 && (
           <div className='flex justify-between p-4'>
