@@ -440,3 +440,9 @@ input:-webkit-autofill + label {
 .dark .bg-gray-200 {
   background-color: hsl(var(--muted)) !important;
 }
+
+/* React Flow handle styles */
+.react-flow__handle {
+  width: 0.75rem !important; /* 12px - equivalent to w-3 */
+  height: 0.75rem !important; /* 12px - equivalent to h-3 */
+}

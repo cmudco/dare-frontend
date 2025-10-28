@@ -33,7 +33,12 @@ import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
 import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
 import type { StructuredOutputNodeData } from './StructuredOutputNode'
-import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
+import {
+  ROUTE_HANDLE_PREFIX,
+  HANDLE_NUMBERS,
+  HANDLE_COLORS,
+  ROUTE_COLORS,
+} from '@/utils/constants/workflowBuilder'
 
 export type StepNodeData = {
   prompt: number | null
@@ -88,12 +93,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         sourceNode?.type === 'conditional')
     )
   })
-
-  // Show connected inputs + one spare handle for new connections
-  // Only use dynamic handles if NOT connected to start node
-  const inputHandleCount = isConnectedToStart
-    ? 1
-    : Math.max(connectedInputEdges.length + 1, 1)
 
   // Update Redux when form changes
   const updateNodeData = (updates: Partial<StepNodeData>) => {
@@ -475,41 +474,54 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         )}
       </CardContent>
 
-      {/* Input handles - single static handle if connected to start, dynamic handles otherwise */}
+      {/* Input handles - single static handle if connected to start, 5 fixed colorful handles otherwise */}
       {isConnectedToStart ? (
         // Traditional single input handle when connected to start node
         <Handle
           type='target'
           position={Position.Left}
           id='input-1'
-          className='h-4 w-4 bg-secondary'
+          className='bg-secondary'
         />
       ) : (
-        // Dynamic input handles when NOT connected to start node
-        Array.from({ length: inputHandleCount }, (_, index) => {
-          const handleId = `input-${index + 1}`
-          // Dynamic positioning based on number of handles
-          const topPercent =
-            inputHandleCount === 1
-              ? 50
-              : 25 + (index * 50) / (inputHandleCount - 1)
-          const isConnected = index < connectedInputEdges.length
+        // Pre-create 5 handles at fixed positions with different colors
+        <>
+          {HANDLE_NUMBERS.map((num) => {
+            const handleId = `input-${num}`
+            const isConnected = connectedInputEdges.some(
+              (edge) => edge.targetHandle === handleId
+            )
 
-          return (
-            <Handle
-              key={handleId}
-              type='target'
-              position={Position.Left}
-              id={handleId}
-              style={{
-                top: `${Math.min(Math.max(topPercent, 10), 90)}%`,
-              }}
-              className={`h-3 w-3 ${
-                isConnected ? 'bg-primary' : 'bg-muted-foreground'
-              }`}
-            />
-          )
-        })
+            // Fixed positions: 20%, 35%, 50%, 65%, 80%
+            const topPercent = 5 + num * 15
+
+            // Show logic: always show connected handles + one extra for next connection
+            const connectedCount = connectedInputEdges.length
+            const shouldShow = num <= connectedCount + 1
+
+            // Get color from constants
+            const handleColor = HANDLE_COLORS[num - 1]
+
+            return (
+              <Handle
+                key={handleId}
+                type='target'
+                position={Position.Left}
+                id={handleId}
+                style={{
+                  top: `${topPercent}%`,
+                }}
+                className={`transition-all duration-200 ${
+                  isConnected
+                    ? `${handleColor} !opacity-100`
+                    : shouldShow
+                      ? `${handleColor} !opacity-50 hover:!opacity-80`
+                      : '!opacity-0'
+                }`}
+              />
+            )
+          })}
+        </>
       )}
 
       {!useStructuredOutputNode && (
@@ -517,7 +529,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
           type='source'
           position={Position.Right}
           id='default'
-          className='h-4 w-4 border-2 border-white bg-primary'
+          className='border-2 border-white bg-primary'
         />
       )}
 
@@ -526,14 +538,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         structuredRoutes.length > 0 && (
           <>
             {structuredRoutes.map((route, index) => {
-              const colors = [
-                'bg-blue-500',
-                'bg-purple-500',
-                'bg-orange-500',
-                'bg-green-500',
-                'bg-pink-500',
-              ]
-              const color = colors[index % colors.length]
+              const color = ROUTE_COLORS[index % ROUTE_COLORS.length]
 
               const count = structuredRoutes.length
               const spacing = 80 / (count + 1)
