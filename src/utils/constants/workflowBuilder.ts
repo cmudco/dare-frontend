@@ -22,6 +22,28 @@ export const DEFAULT_EDGE_OPTIONS = {
 // Shared handle id prefix for route-based outputs
 export const ROUTE_HANDLE_PREFIX = 'output-'
 
+// Handle configuration for step nodes
+export const HANDLE_COUNT = 5
+export const HANDLE_NUMBERS = [1, 2, 3, 4, 5] as const
+
+// Input handle colors (with !important for overriding React Flow styles)
+export const HANDLE_COLORS = [
+  '!bg-blue-500',
+  '!bg-purple-500',
+  '!bg-green-500',
+  '!bg-orange-500',
+  '!bg-pink-500',
+] as const
+
+// Output route colors (for structured output nodes)
+export const ROUTE_COLORS = [
+  'bg-blue-500',
+  'bg-purple-500',
+  'bg-orange-500',
+  'bg-green-500',
+  'bg-pink-500',
+] as const
+
 // Initial empty state for workflow builder
 export const INITIAL_NODES: Node[] = []
 export const INITIAL_EDGES: Edge[] = []
