@@ -5,8 +5,10 @@ import Message from './Message'
 
 const MessageList = ({
   onEditMessage,
+  shouldShowAutoFeedbackModal,
 }: {
   onEditMessage?: (id: string, content: string) => void
+  shouldShowAutoFeedbackModal?: boolean
 }) => {
   const messages = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages
@@ -46,17 +48,23 @@ const MessageList = ({
       ref={containerRef}
       className='flex max-h-[90%] flex-col gap-2 overflow-y-auto pt-2'
     >
-      {messages.map(
-        (message, idx) =>
+      {messages.map((message, idx) => {
+        const isLastMessage = idx === messages.length - 1
+
+        return (
           message && (
             <Message
               key={idx}
               message={message}
               onEditMessage={onEditMessage}
               onContentRendered={handleContentRendered}
+              shouldShowAutoFeedback={
+                shouldShowAutoFeedbackModal && isLastMessage
+              }
             />
           )
-      )}
+        )
+      })}
       <div ref={messageEndRef} />
     </div>
   )
