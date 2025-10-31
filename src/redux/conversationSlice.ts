@@ -12,6 +12,7 @@ import {
   deleteMultipleConversations,
   cloneConversation,
   updateConversationSelectedIds,
+  updateConversationFeedbackTracking,
 } from './asyncThunks/conversation'
 import { Message, Conversation, LLMModel } from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
@@ -489,6 +490,39 @@ export const conversationSlice = createSlice({
       .addCase(updateConversationSelectedIds.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
+      })
+      .addCase(
+        updateConversationFeedbackTracking.fulfilled,
+        (state, action) => {
+          // Update the active conversation with new feedback tracking values
+          if (
+            state.activeConversation?.conversationId ===
+            action.payload.conversationId
+          ) {
+            state.activeConversation.feedbackAutoPromptCount =
+              action.payload.feedbackAutoPromptCount
+            state.activeConversation.feedbackLastPromptMessageCount =
+              action.payload.feedbackLastPromptMessageCount
+            state.activeConversation.feedbackLastPromptTimestamp =
+              action.payload.feedbackLastPromptTimestamp
+          }
+
+          // Also update in conversations array
+          const idx = state.conversations.findIndex(
+            (c) => c.conversationId === action.payload.conversationId
+          )
+          if (idx !== -1) {
+            state.conversations[idx].feedbackAutoPromptCount =
+              action.payload.feedbackAutoPromptCount
+            state.conversations[idx].feedbackLastPromptMessageCount =
+              action.payload.feedbackLastPromptMessageCount
+            state.conversations[idx].feedbackLastPromptTimestamp =
+              action.payload.feedbackLastPromptTimestamp
+          }
+        }
+      )
+      .addCase(updateConversationFeedbackTracking.rejected, (state, action) => {
+        console.error('Failed to update feedback tracking:', action.payload)
       })
   },
 })
