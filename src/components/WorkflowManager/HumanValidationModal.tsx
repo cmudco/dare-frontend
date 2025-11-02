@@ -128,14 +128,18 @@ export const HumanValidationModal: React.FC<HumanValidationModalProps> = ({
             </label>
             <div className='space-y-2'>
               {validation.availableRoutes.map((route) => {
+                // Routes are always objects with name and description
+                const routeName = route.name
+                const routeDescription = route.description
+
                 const isAiRecommended =
-                  validation.aiRecommendation === route.name
-                const isSelected = selectedRoute === route.name
+                  validation.aiRecommendation === routeName
+                const isSelected = selectedRoute === routeName
 
                 return (
                   <button
-                    key={route.name}
-                    onClick={() => setSelectedRoute(route.name)}
+                    key={routeName}
+                    onClick={() => setSelectedRoute(routeName)}
                     disabled={submitting}
                     className={`w-full rounded-lg border-2 p-4 text-left transition-all ${
                       isSelected
@@ -149,7 +153,7 @@ export const HumanValidationModal: React.FC<HumanValidationModalProps> = ({
                       <div className='flex-1'>
                         <div className='flex items-center gap-2'>
                           <span className='font-medium text-foreground'>
-                            {route.name}
+                            {routeName}
                           </span>
                           {isSelected && (
                             <CheckCircle className='h-4 w-4 text-primary' />
@@ -163,9 +167,9 @@ export const HumanValidationModal: React.FC<HumanValidationModalProps> = ({
                             </Badge>
                           )}
                         </div>
-                        {route.description && (
+                        {routeDescription && (
                           <p className='mt-1 text-sm text-muted-foreground'>
-                            {route.description}
+                            {routeDescription}
                           </p>
                         )}
                       </div>
