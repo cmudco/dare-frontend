@@ -86,15 +86,18 @@ export const validateWorkflow = (
   const conditionalNodes = nodes.filter((n) => n.type === 'conditional')
   conditionalNodes.forEach((conditionalNode) => {
     const data = (conditionalNode.data as Partial<ConditionalNodeData>) || {}
-    const customPrompt = data?.customPrompt?.trim() || ''
     const routes = data.routes || []
-    if (!customPrompt) {
-      appendFieldError(
-        conditionalNode.id,
-        'customPrompt',
-        'Custom evaluation prompt is required'
-      )
-      pushErrorMessage(`Conditional node requires a custom evaluation prompt`)
+
+    // Validate prompt
+    if (!data?.prompt) {
+      appendFieldError(conditionalNode.id, 'prompt', 'Please select a prompt')
+      pushErrorMessage(`Conditional node requires a prompt`)
+    }
+
+    // Validate LLM
+    if (!data?.llm) {
+      appendFieldError(conditionalNode.id, 'llm', 'Please select an LLM')
+      pushErrorMessage(`Conditional node requires an LLM selection`)
     }
 
     if (routes.length < 2) {
@@ -360,9 +363,20 @@ export const validateWorkflow = (
       const structuredNode = nodes.find(
         (n) => n.id === incomingFromStructured[0].source
       )
-      const routes =
-        ((structuredNode?.data as Partial<StructuredOutputNodeData>) || {})
-          .routes || []
+      const structuredData =
+        (structuredNode?.data as Partial<StructuredOutputNodeData>) || {}
+      const routes = structuredData.routes || []
+
+      // Validate prompt and LLM on Structured Output node
+      if (structuredNode && !structuredData.prompt) {
+        appendFieldError(structuredNode.id, 'prompt', 'Please select a prompt')
+        pushErrorMessage(`Structured Output node requires a prompt`)
+      }
+
+      if (structuredNode && !structuredData.llm) {
+        appendFieldError(structuredNode.id, 'llm', 'Please select an LLM')
+        pushErrorMessage(`Structured Output node requires an LLM selection`)
+      }
 
       // Validate routes
       if (routes.length < 2) {

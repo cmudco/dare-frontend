@@ -44,7 +44,7 @@ export interface WorkflowRunStep {
     routingDecision?: string
     analysis?: string
     aiRecommendation?: string
-    availableRoutes?: string[]
+    availableRoutes?: ConditionalRoute[] // Route objects for both Conditional and StructuredOutput nodes
     isHumanValidated?: boolean
     fullResponse?: string
     pendingHumanDecision?: boolean

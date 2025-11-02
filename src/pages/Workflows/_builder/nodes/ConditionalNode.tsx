@@ -6,7 +6,6 @@ import {
 } from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -47,7 +46,7 @@ export interface ConditionalRoute {
 }
 
 export type ConditionalNodeData = {
-  customPrompt: string
+  prompt: number | null // Prompt ID
   llm: number | null
   // New structure
   routes: ConditionalRoute[]
@@ -67,6 +66,7 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const { currentRun } = useAppSelector((s) => s.workflowBuilder)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
+  const prompts = useAppSelector((s) => s.prompt.prompts)
   const updateNodeInternals = useUpdateNodeInternals()
   const [showValidationModal, setShowValidationModal] = useState(false)
 
@@ -177,30 +177,19 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
     updateNodeInternals(id)
   }, [updateNodeInternals, id, routes.length, routeNames, edges])
 
-  const handlePromptChange = (value: string) => {
-    updateNodeData({ customPrompt: value })
-
-    if (fieldErrors.customPrompt) {
-      clearNodeError(id, 'customPrompt')
-    }
-  }
-
-  const currentCustomPrompt =
-    nodeData.customPrompt ||
-    'Evaluate the input and choose the appropriate route.'
-
   // Get the step run for this conditional node
-  // Match by order and look for the step with routing metadata (indicates conditional node)
+  // Match by order and look for the step with availableRoutes metadata (indicates conditional node)
   const stepRun =
     currentRun?.steps?.find(
       (s) =>
         s.order === nodeData?.stepNumber &&
-        s.metadata?.routingDecision !== undefined
+        s.metadata?.availableRoutes !== undefined
     ) || currentRun?.steps?.find((s) => s.id === pendingValidation?.stepId)
 
   const stepStatus = stepRun?.status || null
-  const selectedRoute = stepRun?.response
   const metadata = stepRun?.metadata
+  // Use selectedRoute from metadata (shows what route was actually taken)
+  const selectedRoute = metadata?.selectedRoute || stepRun?.response
 
   // Get AI analysis from pendingValidation if available (during human validation),
   // otherwise from metadata (after execution)
@@ -208,6 +197,7 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
   const aiRecommendation =
     pendingValidation?.aiRecommendation || metadata?.aiRecommendation
   const isHumanValidated = metadata?.isHumanValidated
+  const userChoice = metadata?.userChoice // The route the user actually chose
 
   const isCollapsed = nodeData?.isCollapsed || false
 
@@ -252,24 +242,37 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
       </CardHeader>
       {!isCollapsed && (
         <CardContent className='space-y-4'>
-          {/* Custom Prompt */}
+          {/* Prompt Selector */}
           <div className='space-y-2'>
-            <Label htmlFor='customPrompt' className='text-xs font-medium'>
-              Evaluation Prompt
+            <Label htmlFor='prompt' className='text-xs font-medium'>
+              Prompt Template
             </Label>
-            <Textarea
-              id='customPrompt'
-              placeholder='Describe how to evaluate and route the input...'
-              value={currentCustomPrompt}
-              onChange={(e) => handlePromptChange(e.target.value)}
-              className={`resize-none text-sm ${
-                fieldErrors.customPrompt ? 'border-destructive' : ''
-              }`}
-              rows={3}
-            />
-            {fieldErrors.customPrompt && (
+            <Select
+              value={nodeData.prompt ? nodeData.prompt.toString() : ''}
+              onValueChange={(value) => {
+                updateNodeData({ prompt: Number(value) })
+                clearNodeError(id, 'prompt')
+              }}
+            >
+              <SelectTrigger
+                id='prompt'
+                className={`text-sm ${
+                  fieldErrors.prompt ? 'border-destructive' : ''
+                }`}
+              >
+                <SelectValue placeholder='Select a prompt' />
+              </SelectTrigger>
+              <SelectContent>
+                {prompts.map((prompt) => (
+                  <SelectItem key={prompt.id} value={prompt.id.toString()}>
+                    {prompt.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldErrors.prompt && (
               <p className='mt-1 text-xs text-destructive'>
-                {fieldErrors.customPrompt}
+                {fieldErrors.prompt}
               </p>
             )}
           </div>
@@ -308,7 +311,7 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
           </div>
 
           {/* AI Decision Display - Shows after execution */}
-          {stepStatus === 'completed' && selectedRoute && aiAnalysis && (
+          {stepStatus === 'completed' && selectedRoute && (
             <div className='rounded-lg border-2 border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20'>
               <div className='mb-2 flex items-center gap-2'>
                 <div className='flex h-6 w-6 items-center justify-center rounded-full bg-green-500/20'>
@@ -329,14 +332,28 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
                     {selectedRoute}
                   </span>
                 </div>
-                <div className='rounded-md bg-white/50 p-3 dark:bg-black/20'>
-                  <p className='mb-1 text-xs font-medium text-green-700 dark:text-green-300'>
-                    {isHumanValidated ? 'AI Analysis:' : 'AI Reasoning:'}
-                  </p>
-                  <p className='text-sm text-green-900 dark:text-green-100'>
-                    {aiAnalysis}
-                  </p>
-                </div>
+                {/* Show AI recommendation if user chose differently */}
+                {isHumanValidated &&
+                  userChoice &&
+                  aiRecommendation &&
+                  userChoice !== aiRecommendation && (
+                    <div className='rounded-md bg-blue-50/50 p-2 dark:bg-blue-900/20'>
+                      <p className='text-xs text-blue-700 dark:text-blue-300'>
+                        AI recommended:{' '}
+                        <span className='font-medium'>{aiRecommendation}</span>
+                      </p>
+                    </div>
+                  )}
+                {aiAnalysis && (
+                  <div className='rounded-md bg-white/50 p-3 dark:bg-black/20'>
+                    <p className='mb-1 text-xs font-medium text-green-700 dark:text-green-300'>
+                      {isHumanValidated ? 'AI Analysis:' : 'AI Reasoning:'}
+                    </p>
+                    <p className='text-sm text-green-900 dark:text-green-100'>
+                      {aiAnalysis}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
