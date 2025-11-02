@@ -217,6 +217,37 @@ const workflowBuilderSlice = createSlice({
         return node
       })
     },
+    collapseAllNodes: (state) => {
+      state.nodes = state.nodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          isCollapsed: true,
+        },
+      }))
+    },
+    expandAllNodes: (state) => {
+      state.nodes = state.nodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          isCollapsed: false,
+        },
+      }))
+    },
+    toggleNodeCollapse: (state, action: PayloadAction<string>) => {
+      const nodeId = action.payload
+      const nodeIndex = state.nodes.findIndex((node) => node.id === nodeId)
+      if (nodeIndex !== -1) {
+        state.nodes[nodeIndex] = {
+          ...state.nodes[nodeIndex],
+          data: {
+            ...state.nodes[nodeIndex].data,
+            isCollapsed: !state.nodes[nodeIndex].data.isCollapsed,
+          },
+        }
+      }
+    },
     resetBuilder: () => {
       return initialState
     },
@@ -267,6 +298,9 @@ export const {
   validateWorkflowData,
   updateStepApiIds,
   updateWorkflowRunStatus,
+  collapseAllNodes,
+  expandAllNodes,
+  toggleNodeCollapse,
   resetBuilder,
 } = workflowBuilderSlice.actions
 

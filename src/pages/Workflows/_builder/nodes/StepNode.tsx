@@ -24,12 +24,20 @@ import {
   X,
   Type,
   Split,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
-import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
+import {
+  setEdges,
+  updateNodeDataById,
+  toggleNodeCollapse,
+  removeNodeWithEdges,
+} from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
 import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
 import type { StructuredOutputNodeData } from './StructuredOutputNode'
@@ -56,6 +64,7 @@ export type StepNodeData = {
   textInput?: string
   useStructuredOutputNode?: boolean
   id?: string
+  isCollapsed?: boolean
 }
 
 export default function StepNode({ id, data, selected }: NodeProps) {
@@ -154,6 +163,8 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
   const stepStatus = getStepStatus(currentRun, stepData?.stepNumber)
 
+  const isCollapsed = stepData?.isCollapsed || false
+
   return (
     <Card
       className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
@@ -166,313 +177,341 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             </div>
             Step {stepData?.stepNumber}
           </div>
-          {renderStatusPill(stepStatus)}
+          <div className='flex items-center gap-1'>
+            {renderStatusPill(stepStatus)}
+            <Button
+              size='sm'
+              variant='ghost'
+              onClick={() => dispatch(toggleNodeCollapse(nodeId))}
+              className='h-6 w-6 p-0'
+              title={isCollapsed ? 'Expand' : 'Collapse'}
+            >
+              {isCollapsed ? (
+                <ChevronDown className='h-4 w-4' />
+              ) : (
+                <ChevronUp className='h-4 w-4' />
+              )}
+            </Button>
+            <Button
+              size='sm'
+              variant='ghost'
+              onClick={() => dispatch(removeNodeWithEdges({ nodeId }))}
+              className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
+              title='Delete node'
+            >
+              <Trash2 className='h-4 w-4' />
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className='space-y-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='prompt' className='text-xs font-medium'>
-            Prompt
-          </Label>
-          <Select
-            value={stepData.prompt ? stepData.prompt.toString() : ''}
-            onValueChange={(value) => {
-              updateNodeData({ prompt: Number(value) })
-              clearNodeError(nodeId, 'prompt')
-            }}
-          >
-            <SelectTrigger
-              className={`bg-background text-sm ${
-                fieldErrors.prompt ? 'border-destructive' : ''
-              }`}
-            >
-              <SelectValue placeholder='Select a prompt' />
-            </SelectTrigger>
-            <SelectContent>
-              {prompts.map((p) => (
-                <SelectItem key={p.id} value={p.id.toString()}>
-                  {p.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {fieldErrors.prompt && (
-            <p className='mt-1 text-xs text-destructive'>
-              {fieldErrors.prompt}
-            </p>
-          )}
-        </div>
-
-        <div className='space-y-2'>
-          <Label
-            htmlFor='textInput'
-            className='flex items-center gap-2 text-xs font-medium'
-          >
-            <Type className='h-3 w-3' />
-            Text Input (Optional)
-          </Label>
-          <Textarea
-            id='textInput'
-            placeholder='Enter text to be included in this step...'
-            value={stepData.textInput || ''}
-            onChange={(e) => {
-              updateNodeData({ textInput: e.target.value })
-            }}
-            className='min-h-[80px] resize-y text-sm'
-          />
-          <p className='text-xs text-muted-foreground'>
-            This text will be passed directly to the LLM along with any selected
-            files.
-          </p>
-        </div>
-
-        {/* Content Files */}
-        <div className='space-y-2'>
-          <Label className='flex items-center gap-2 text-xs font-medium'>
-            <FileText className='h-3 w-3' />
-            Content Files
-          </Label>
-          <div className='flex flex-wrap gap-1'>
-            {(stepData.contentFiles || []).map((fileId) => {
-              const file = files.find((f) => f.id === fileId)
-              return (
-                <Badge key={fileId} variant='secondary' className='text-xs'>
-                  {file?.name || `File ${fileId}`}
-                  <Button
-                    size='sm'
-                    variant='ghost'
-                    className='ml-1 h-4 w-4 p-0'
-                    onClick={() => {
-                      const newFiles = (stepData.contentFiles || []).filter(
-                        (id) => id !== fileId
-                      )
-                      updateNodeData({ contentFiles: newFiles })
-                    }}
-                  >
-                    <X className='h-3 w-3' />
-                  </Button>
-                </Badge>
-              )
-            })}
-            <Select
-              value=''
-              onValueChange={(value) => {
-                const fileId = Number(value)
-                const currentFiles = stepData.contentFiles || []
-                if (value && !currentFiles.includes(fileId)) {
-                  const newFiles = [...currentFiles, fileId]
-                  updateNodeData({ contentFiles: newFiles })
-                }
-              }}
-            >
-              <SelectTrigger className='bg-background text-sm'>
-                <SelectValue placeholder='+ Add' />
-              </SelectTrigger>
-              <SelectContent>
-                {files
-                  .filter((f) => !(stepData.contentFiles || []).includes(f.id))
-                  .map((file) => (
-                    <SelectItem key={file.id} value={file.id.toString()}>
-                      {file.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Embedding Files */}
-        <div className='space-y-2'>
-          <Label className='flex items-center gap-2 text-xs font-medium'>
-            <Database className='h-3 w-3' />
-            Embedding Files
-          </Label>
-          <div className='flex flex-wrap gap-1'>
-            {(stepData.embeddingFiles || []).map((fileId) => {
-              const file = files.find((f) => f.id === fileId)
-              return (
-                <Badge key={fileId} variant='secondary' className='text-xs'>
-                  {file?.name || `File ${fileId}`}
-                  <Button
-                    size='sm'
-                    variant='ghost'
-                    className='ml-1 h-4 w-4 p-0'
-                    onClick={() => {
-                      const newFiles = (stepData.embeddingFiles || []).filter(
-                        (id) => id !== fileId
-                      )
-                      updateNodeData({ embeddingFiles: newFiles })
-                    }}
-                  >
-                    <X className='h-3 w-3' />
-                  </Button>
-                </Badge>
-              )
-            })}
-            <Select
-              value=''
-              onValueChange={(value) => {
-                const fileId = Number(value)
-                const currentFiles = stepData.embeddingFiles || []
-                if (value && !currentFiles.includes(fileId)) {
-                  const newFiles = [...currentFiles, fileId]
-                  updateNodeData({ embeddingFiles: newFiles })
-                }
-              }}
-            >
-              <SelectTrigger className='bg-background text-sm'>
-                <SelectValue placeholder='+ Add' />
-              </SelectTrigger>
-              <SelectContent>
-                {files
-                  .filter(
-                    (f) => !(stepData.embeddingFiles || []).includes(f.id)
-                  )
-                  .map((file) => (
-                    <SelectItem key={file.id} value={file.id.toString()}>
-                      {file.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className='space-y-2'>
-          <Label htmlFor='llm' className='text-xs font-medium'>
-            LLM Model
-          </Label>
-          <Select
-            value={stepData.llm ? stepData.llm.toString() : ''}
-            onValueChange={(value) => {
-              updateNodeData({ llm: Number(value) })
-              clearNodeError(nodeId, 'llm')
-            }}
-          >
-            <SelectTrigger
-              className={`bg-background text-sm ${
-                fieldErrors.llm ? 'border-destructive' : ''
-              }`}
-            >
-              <SelectValue placeholder='Select an LLM' />
-            </SelectTrigger>
-            <SelectContent>
-              {availableModels.map((model) => (
-                <SelectItem key={model.id} value={model.id.toString()}>
-                  {model.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {fieldErrors.llm && (
-            <p className='mt-1 text-xs text-destructive'>{fieldErrors.llm}</p>
-          )}
-        </div>
-
-        <div className='flex items-center space-x-2 rounded-md border border-muted bg-muted/30 p-3'>
-          <Checkbox
-            id={`use-structured-output-node-${nodeId}`}
-            checked={useStructuredOutputNode}
-            onCheckedChange={(checked) => {
-              updateNodeData({ useStructuredOutputNode: !!checked })
-            }}
-          />
-          <div className='flex-1'>
-            <Label
-              htmlFor={`use-structured-output-node-${nodeId}`}
-              className='flex cursor-pointer items-center gap-2 text-xs font-medium'
-            >
-              <Split className='h-3 w-3' />
-              Use Structured Output Node
+      {!isCollapsed && (
+        <CardContent className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='prompt' className='text-xs font-medium'>
+              Prompt
             </Label>
-            <p className='mt-0.5 text-xs text-muted-foreground'>
-              Connect a Structured Output node to define routing paths
+            <Select
+              value={stepData.prompt ? stepData.prompt.toString() : ''}
+              onValueChange={(value) => {
+                updateNodeData({ prompt: Number(value) })
+                clearNodeError(nodeId, 'prompt')
+              }}
+            >
+              <SelectTrigger
+                className={`bg-background text-sm ${
+                  fieldErrors.prompt ? 'border-destructive' : ''
+                }`}
+              >
+                <SelectValue placeholder='Select a prompt' />
+              </SelectTrigger>
+              <SelectContent>
+                {prompts.map((p) => (
+                  <SelectItem key={p.id} value={p.id.toString()}>
+                    {p.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldErrors.prompt && (
+              <p className='mt-1 text-xs text-destructive'>
+                {fieldErrors.prompt}
+              </p>
+            )}
+          </div>
+
+          <div className='space-y-2'>
+            <Label
+              htmlFor='textInput'
+              className='flex items-center gap-2 text-xs font-medium'
+            >
+              <Type className='h-3 w-3' />
+              Text Input (Optional)
+            </Label>
+            <Textarea
+              id='textInput'
+              placeholder='Enter text to be included in this step...'
+              value={stepData.textInput || ''}
+              onChange={(e) => {
+                updateNodeData({ textInput: e.target.value })
+              }}
+              className='min-h-[80px] resize-y text-sm'
+            />
+            <p className='text-xs text-muted-foreground'>
+              This text will be passed directly to the LLM along with any
+              selected files.
             </p>
           </div>
-        </div>
 
-        {/* Advanced Settings Toggle */}
-        <Button
-          type='button'
-          variant='outline'
-          size='sm'
-          className='w-full text-xs'
-          onClick={() => setShowAdvanced(!showAdvanced)}
-        >
-          <Settings className='mr-2 h-3 w-3' />
-          {showAdvanced ? 'Hide' : 'Show'} Advanced Settings
-        </Button>
-
-        {/* Advanced Settings */}
-        {showAdvanced && (
-          <div className='space-y-4 border-t pt-4'>
-            <div className='space-y-2'>
-              <Label className='text-xs font-medium'>
-                Max Tokens: {stepData.maxTokens || 2048}
-              </Label>
-              <Slider
-                value={[stepData.maxTokens || 2048]}
+          {/* Content Files */}
+          <div className='space-y-2'>
+            <Label className='flex items-center gap-2 text-xs font-medium'>
+              <FileText className='h-3 w-3' />
+              Content Files
+            </Label>
+            <div className='flex flex-wrap gap-1'>
+              {(stepData.contentFiles || []).map((fileId) => {
+                const file = files.find((f) => f.id === fileId)
+                return (
+                  <Badge key={fileId} variant='secondary' className='text-xs'>
+                    {file?.name || `File ${fileId}`}
+                    <Button
+                      size='sm'
+                      variant='ghost'
+                      className='ml-1 h-4 w-4 p-0'
+                      onClick={() => {
+                        const newFiles = (stepData.contentFiles || []).filter(
+                          (id) => id !== fileId
+                        )
+                        updateNodeData({ contentFiles: newFiles })
+                      }}
+                    >
+                      <X className='h-3 w-3' />
+                    </Button>
+                  </Badge>
+                )
+              })}
+              <Select
+                value=''
                 onValueChange={(value) => {
-                  updateNodeData({ maxTokens: value[0] })
+                  const fileId = Number(value)
+                  const currentFiles = stepData.contentFiles || []
+                  if (value && !currentFiles.includes(fileId)) {
+                    const newFiles = [...currentFiles, fileId]
+                    updateNodeData({ contentFiles: newFiles })
+                  }
                 }}
-                max={8192}
-                min={100}
-                step={100}
-                className='w-full'
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label className='text-xs font-medium'>
-                Temperature: {stepData.temperature || 0.7}
-              </Label>
-              <Slider
-                value={[stepData.temperature || 0.7]}
-                onValueChange={(value) => {
-                  updateNodeData({ temperature: value[0] })
-                }}
-                max={2}
-                min={0}
-                step={0.1}
-                className='w-full'
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label className='text-xs font-medium'>
-                Max Context Snippets: {stepData.maxContextSnippets || 4}
-              </Label>
-              <Slider
-                value={[stepData.maxContextSnippets || 4]}
-                onValueChange={(value) => {
-                  updateNodeData({ maxContextSnippets: value[0] })
-                }}
-                max={20}
-                min={1}
-                step={1}
-                className='w-full'
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label className='text-xs font-medium'>
-                Document Similarity Threshold:{' '}
-                {stepData.documentSimilarityThreshold || 0.2}
-              </Label>
-              <Slider
-                value={[stepData.documentSimilarityThreshold || 0.2]}
-                onValueChange={(value) => {
-                  updateNodeData({ documentSimilarityThreshold: value[0] })
-                }}
-                max={1}
-                min={0}
-                step={0.1}
-                className='w-full'
-              />
+              >
+                <SelectTrigger className='bg-background text-sm'>
+                  <SelectValue placeholder='+ Add' />
+                </SelectTrigger>
+                <SelectContent>
+                  {files
+                    .filter(
+                      (f) => !(stepData.contentFiles || []).includes(f.id)
+                    )
+                    .map((file) => (
+                      <SelectItem key={file.id} value={file.id.toString()}>
+                        {file.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        )}
-      </CardContent>
+
+          {/* Embedding Files */}
+          <div className='space-y-2'>
+            <Label className='flex items-center gap-2 text-xs font-medium'>
+              <Database className='h-3 w-3' />
+              Embedding Files
+            </Label>
+            <div className='flex flex-wrap gap-1'>
+              {(stepData.embeddingFiles || []).map((fileId) => {
+                const file = files.find((f) => f.id === fileId)
+                return (
+                  <Badge key={fileId} variant='secondary' className='text-xs'>
+                    {file?.name || `File ${fileId}`}
+                    <Button
+                      size='sm'
+                      variant='ghost'
+                      className='ml-1 h-4 w-4 p-0'
+                      onClick={() => {
+                        const newFiles = (stepData.embeddingFiles || []).filter(
+                          (id) => id !== fileId
+                        )
+                        updateNodeData({ embeddingFiles: newFiles })
+                      }}
+                    >
+                      <X className='h-3 w-3' />
+                    </Button>
+                  </Badge>
+                )
+              })}
+              <Select
+                value=''
+                onValueChange={(value) => {
+                  const fileId = Number(value)
+                  const currentFiles = stepData.embeddingFiles || []
+                  if (value && !currentFiles.includes(fileId)) {
+                    const newFiles = [...currentFiles, fileId]
+                    updateNodeData({ embeddingFiles: newFiles })
+                  }
+                }}
+              >
+                <SelectTrigger className='bg-background text-sm'>
+                  <SelectValue placeholder='+ Add' />
+                </SelectTrigger>
+                <SelectContent>
+                  {files
+                    .filter(
+                      (f) => !(stepData.embeddingFiles || []).includes(f.id)
+                    )
+                    .map((file) => (
+                      <SelectItem key={file.id} value={file.id.toString()}>
+                        {file.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='llm' className='text-xs font-medium'>
+              LLM Model
+            </Label>
+            <Select
+              value={stepData.llm ? stepData.llm.toString() : ''}
+              onValueChange={(value) => {
+                updateNodeData({ llm: Number(value) })
+                clearNodeError(nodeId, 'llm')
+              }}
+            >
+              <SelectTrigger
+                className={`bg-background text-sm ${
+                  fieldErrors.llm ? 'border-destructive' : ''
+                }`}
+              >
+                <SelectValue placeholder='Select an LLM' />
+              </SelectTrigger>
+              <SelectContent>
+                {availableModels.map((model) => (
+                  <SelectItem key={model.id} value={model.id.toString()}>
+                    {model.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldErrors.llm && (
+              <p className='mt-1 text-xs text-destructive'>{fieldErrors.llm}</p>
+            )}
+          </div>
+
+          <div className='flex items-center space-x-2 rounded-md border border-muted bg-muted/30 p-3'>
+            <Checkbox
+              id={`use-structured-output-node-${nodeId}`}
+              checked={useStructuredOutputNode}
+              onCheckedChange={(checked) => {
+                updateNodeData({ useStructuredOutputNode: !!checked })
+              }}
+            />
+            <div className='flex-1'>
+              <Label
+                htmlFor={`use-structured-output-node-${nodeId}`}
+                className='flex cursor-pointer items-center gap-2 text-xs font-medium'
+              >
+                <Split className='h-3 w-3' />
+                Use Structured Output Node
+              </Label>
+              <p className='mt-0.5 text-xs text-muted-foreground'>
+                Connect a Structured Output node to define routing paths
+              </p>
+            </div>
+          </div>
+
+          {/* Advanced Settings Toggle */}
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            className='w-full text-xs'
+            onClick={() => setShowAdvanced(!showAdvanced)}
+          >
+            <Settings className='mr-2 h-3 w-3' />
+            {showAdvanced ? 'Hide' : 'Show'} Advanced Settings
+          </Button>
+
+          {/* Advanced Settings */}
+          {showAdvanced && (
+            <div className='space-y-4 border-t pt-4'>
+              <div className='space-y-2'>
+                <Label className='text-xs font-medium'>
+                  Max Tokens: {stepData.maxTokens || 2048}
+                </Label>
+                <Slider
+                  value={[stepData.maxTokens || 2048]}
+                  onValueChange={(value) => {
+                    updateNodeData({ maxTokens: value[0] })
+                  }}
+                  max={8192}
+                  min={100}
+                  step={100}
+                  className='w-full'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <Label className='text-xs font-medium'>
+                  Temperature: {stepData.temperature || 0.7}
+                </Label>
+                <Slider
+                  value={[stepData.temperature || 0.7]}
+                  onValueChange={(value) => {
+                    updateNodeData({ temperature: value[0] })
+                  }}
+                  max={2}
+                  min={0}
+                  step={0.1}
+                  className='w-full'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <Label className='text-xs font-medium'>
+                  Max Context Snippets: {stepData.maxContextSnippets || 4}
+                </Label>
+                <Slider
+                  value={[stepData.maxContextSnippets || 4]}
+                  onValueChange={(value) => {
+                    updateNodeData({ maxContextSnippets: value[0] })
+                  }}
+                  max={20}
+                  min={1}
+                  step={1}
+                  className='w-full'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <Label className='text-xs font-medium'>
+                  Document Similarity Threshold:{' '}
+                  {stepData.documentSimilarityThreshold || 0.2}
+                </Label>
+                <Slider
+                  value={[stepData.documentSimilarityThreshold || 0.2]}
+                  onValueChange={(value) => {
+                    updateNodeData({ documentSimilarityThreshold: value[0] })
+                  }}
+                  max={1}
+                  min={0}
+                  step={0.1}
+                  className='w-full'
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      )}
 
       {/* Input handles - single static handle if connected to start, 5 fixed colorful handles otherwise */}
       {isConnectedToStart ? (
