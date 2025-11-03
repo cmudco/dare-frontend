@@ -15,11 +15,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Play, GitBranch, ArrowRight } from 'lucide-react'
+import {
+  Play,
+  GitBranch,
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+} from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { useErrorsContext } from '../ErrorsContext'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { setEdges, updateNodeDataById } from '@/redux/workflowBuilderSlice'
+import {
+  setEdges,
+  updateNodeDataById,
+  toggleNodeCollapse,
+  removeNodeWithEdges,
+} from '@/redux/workflowBuilderSlice'
+import { Button } from '@/components/ui/button'
 
 type Mode = 'sequential' | 'parallel'
 type StartData = {
@@ -27,6 +40,7 @@ type StartData = {
   description?: string
   mode?: Mode
   spareHandle?: boolean
+  isCollapsed?: boolean
 }
 
 export default function StartNode({ id, data, selected }: NodeProps) {
@@ -123,103 +137,133 @@ export default function StartNode({ id, data, selected }: NodeProps) {
     )
   }
 
+  const isCollapsed = startData?.isCollapsed || false
+
   return (
     <Card
       className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
       <CardHeader className='pb-3'>
-        <CardTitle className='flex items-center gap-2 text-sm font-medium text-card-foreground'>
-          <div className='flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20'>
-            <Play className='h-3 w-3 text-primary' />
+        <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
+          <div className='flex items-center gap-2'>
+            <div className='flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20'>
+              <Play className='h-3 w-3 text-primary' />
+            </div>
+            Start Workflow
           </div>
-          Start Workflow
+          <div className='flex items-center gap-1'>
+            <Button
+              size='sm'
+              variant='ghost'
+              onClick={() => dispatch(toggleNodeCollapse(nodeId))}
+              className='h-6 w-6 p-0'
+              title={isCollapsed ? 'Expand' : 'Collapse'}
+            >
+              {isCollapsed ? (
+                <ChevronDown className='h-4 w-4' />
+              ) : (
+                <ChevronUp className='h-4 w-4' />
+              )}
+            </Button>
+            <Button
+              size='sm'
+              variant='ghost'
+              onClick={() => dispatch(removeNodeWithEdges({ nodeId }))}
+              className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
+              title='Delete node'
+            >
+              <Trash2 className='h-4 w-4' />
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className='space-y-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='title' className='text-xs font-medium'>
-            Title
-          </Label>
-          <Input
-            id='title'
-            value={startData?.title || ''}
-            onChange={(e) => {
-              const newTitle = e.target.value
-              updateNodeData({ title: newTitle })
-              clearNodeError(nodeId, 'title')
-            }}
-            placeholder='Enter workflow title'
-            required
-            className={`bg-background text-sm ${
-              startFieldErrors.title ? 'border-destructive' : ''
-            }`}
-          />
-          {startFieldErrors.title && (
-            <p className='mt-1 text-xs text-destructive'>
-              {startFieldErrors.title}
-            </p>
-          )}
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='description' className='text-xs font-medium'>
-            Description
-          </Label>
-          <Textarea
-            id='description'
-            value={startData?.description || ''}
-            onChange={(e) => {
-              const newDescription = e.target.value
-              updateNodeData({ description: newDescription })
-              clearNodeError(nodeId, 'description')
-            }}
-            placeholder='Enter your description here'
-            required
-            className={`resize-none bg-background text-sm ${
-              startFieldErrors.description ? 'border-destructive' : ''
-            }`}
-            rows={3}
-          />
-          {startFieldErrors.description && (
-            <p className='mt-1 text-xs text-destructive'>
-              {startFieldErrors.description}
-            </p>
-          )}
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='mode' className='text-xs font-medium'>
-            Execution Mode
-          </Label>
-          <Select
-            value={startData?.mode || 'sequential'}
-            onValueChange={(value: 'sequential' | 'parallel') => {
-              updateNodeData({ mode: value })
-            }}
-          >
-            <SelectTrigger className='bg-background text-sm'>
-              <SelectValue placeholder='Select execution mode' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='sequential'>
-                <div className='flex items-center gap-2'>
-                  <ArrowRight className='h-3 w-3' />
-                  Sequential
-                </div>
-              </SelectItem>
-              <SelectItem value='parallel'>
-                <div className='flex items-center gap-2'>
-                  <GitBranch className='h-3 w-3' />
-                  Parallel
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className='text-xs text-muted-foreground'>
-          {(startData?.mode || 'sequential') === 'sequential'
-            ? 'Steps execute one after another in sequence'
-            : 'Multiple steps can execute simultaneously from this start point'}
-        </div>
-      </CardContent>
+      {!isCollapsed && (
+        <CardContent className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='title' className='text-xs font-medium'>
+              Title
+            </Label>
+            <Input
+              id='title'
+              value={startData?.title || ''}
+              onChange={(e) => {
+                const newTitle = e.target.value
+                updateNodeData({ title: newTitle })
+                clearNodeError(nodeId, 'title')
+              }}
+              placeholder='Enter workflow title'
+              required
+              className={`bg-background text-sm ${
+                startFieldErrors.title ? 'border-destructive' : ''
+              }`}
+            />
+            {startFieldErrors.title && (
+              <p className='mt-1 text-xs text-destructive'>
+                {startFieldErrors.title}
+              </p>
+            )}
+          </div>
+          <div className='space-y-2'>
+            <Label htmlFor='description' className='text-xs font-medium'>
+              Description
+            </Label>
+            <Textarea
+              id='description'
+              value={startData?.description || ''}
+              onChange={(e) => {
+                const newDescription = e.target.value
+                updateNodeData({ description: newDescription })
+                clearNodeError(nodeId, 'description')
+              }}
+              placeholder='Enter your description here'
+              required
+              className={`resize-none bg-background text-sm ${
+                startFieldErrors.description ? 'border-destructive' : ''
+              }`}
+              rows={3}
+            />
+            {startFieldErrors.description && (
+              <p className='mt-1 text-xs text-destructive'>
+                {startFieldErrors.description}
+              </p>
+            )}
+          </div>
+          <div className='space-y-2'>
+            <Label htmlFor='mode' className='text-xs font-medium'>
+              Execution Mode
+            </Label>
+            <Select
+              value={startData?.mode || 'sequential'}
+              onValueChange={(value: 'sequential' | 'parallel') => {
+                updateNodeData({ mode: value })
+              }}
+            >
+              <SelectTrigger className='bg-background text-sm'>
+                <SelectValue placeholder='Select execution mode' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='sequential'>
+                  <div className='flex items-center gap-2'>
+                    <ArrowRight className='h-3 w-3' />
+                    Sequential
+                  </div>
+                </SelectItem>
+                <SelectItem value='parallel'>
+                  <div className='flex items-center gap-2'>
+                    <GitBranch className='h-3 w-3' />
+                    Parallel
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className='text-xs text-muted-foreground'>
+            {(startData?.mode || 'sequential') === 'sequential'
+              ? 'Steps execute one after another in sequence'
+              : 'Multiple steps can execute simultaneously from this start point'}
+          </div>
+        </CardContent>
+      )}
       {renderOutputHandles()}
     </Card>
   )
