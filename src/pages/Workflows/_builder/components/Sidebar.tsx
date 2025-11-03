@@ -101,70 +101,74 @@ export default function Sidebar({ disabled }: SidebarProps) {
   }
 
   return (
-    <div className='w-80 border-r border-border bg-muted/30 p-4 backdrop-blur supports-[backdrop-filter]:bg-muted/20'>
-      <div className='space-y-4'>
-        <h2 className='text-lg font-semibold text-foreground'>Components</h2>
-        <Card className='border-dashed'>
-          <CardContent className='py-3 text-xs text-muted-foreground'>
-            {disabled?.start
-              ? 'Add steps to build your workflow. Each step includes an output automatically.'
-              : 'Start creating your workflow by adding a Start node first.'}
-          </CardContent>
-        </Card>
-        {nodeComponents.map((component) => (
-          <Card
-            key={component.type}
-            className='cursor-pointer transition-shadow hover:shadow-md'
-          >
-            <CardHeader className='pb-2'>
-              <CardTitle className='flex items-center gap-2 text-sm'>
-                <div className={`rounded p-1 ${component.color}`}>
-                  <component.icon className='h-4 w-4 text-card' />
-                </div>
-                {component.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='pt-0'>
-              <p className='mb-3 text-xs text-muted-foreground'>
-                {component.description}
-              </p>
-              <Button
-                size='sm'
-                variant='secondary'
-                onClick={() => handleAddNode(component.type)}
-                className={`w-full ${isWorkflowRunning ? 'cursor-not-allowed bg-muted text-muted-foreground opacity-50' : ''}`}
-                disabled={
-                  isWorkflowRunning ||
-                  (component.type === 'start'
-                    ? Boolean(disabled?.start) || hasStartNode
-                    : component.type === 'chatOutput'
-                      ? Boolean(disabled?.output) || !hasStartNode
-                      : Boolean(disabled?.step) || !hasStartNode)
-                }
-              >
-                Add to Canvas
-              </Button>
+    <div className='flex h-full w-64 flex-col overflow-hidden border-r border-border bg-muted/30 backdrop-blur supports-[backdrop-filter]:bg-muted/20'>
+      <div className='flex-shrink-0 p-3'>
+        <h2 className='text-base font-semibold text-foreground'>Components</h2>
+      </div>
+      <div className='flex-1 overflow-y-auto px-3 pb-3'>
+        <div className='space-y-3'>
+          <Card className='border-dashed'>
+            <CardContent className='py-2 text-xs text-muted-foreground'>
+              {disabled?.start
+                ? 'Add steps to build your workflow. Each step includes an output automatically.'
+                : 'Start creating your workflow by adding a Start node first.'}
             </CardContent>
           </Card>
-        ))}
+          {nodeComponents.map((component) => (
+            <Card
+              key={component.type}
+              className='cursor-pointer transition-shadow hover:shadow-md'
+            >
+              <CardHeader className='pb-1 pt-3'>
+                <CardTitle className='flex items-center gap-2 text-sm'>
+                  <div className={`rounded p-1 ${component.color}`}>
+                    <component.icon className='h-3.5 w-3.5 text-card' />
+                  </div>
+                  {component.label}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className='pb-3 pt-0'>
+                <p className='mb-2 text-xs text-muted-foreground'>
+                  {component.description}
+                </p>
+                <Button
+                  size='sm'
+                  variant='secondary'
+                  onClick={() => handleAddNode(component.type)}
+                  className={`h-7 w-full text-xs ${isWorkflowRunning ? 'cursor-not-allowed bg-muted text-muted-foreground opacity-50' : ''}`}
+                  disabled={
+                    isWorkflowRunning ||
+                    (component.type === 'start'
+                      ? Boolean(disabled?.start) || hasStartNode
+                      : component.type === 'chatOutput'
+                        ? Boolean(disabled?.output) || !hasStartNode
+                        : Boolean(disabled?.step) || !hasStartNode)
+                  }
+                >
+                  Add to Canvas
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
 
-        {/* Clear All Button */}
-        {nodes.length > 0 && (
-          <Card className='border-destructive/20'>
-            <CardContent className='py-3'>
-              <Button
-                size='sm'
-                variant='destructive'
-                onClick={() => dispatch(resetBuilder())}
-                disabled={isWorkflowRunning}
-                className={`w-full ${isWorkflowRunning ? 'cursor-not-allowed opacity-50' : ''}`}
-              >
-                <Trash2 className='mr-2 h-4 w-4' />
-                Clear All Nodes
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+          {/* Clear All Button */}
+          {nodes.length > 0 && (
+            <Card className='border-destructive/20'>
+              <CardContent className='py-2'>
+                <Button
+                  size='sm'
+                  variant='destructive'
+                  onClick={() => dispatch(resetBuilder())}
+                  disabled={isWorkflowRunning}
+                  className={`h-7 w-full text-xs ${isWorkflowRunning ? 'cursor-not-allowed opacity-50' : ''}`}
+                >
+                  <Trash2 className='mr-2 h-3.5 w-3.5' />
+                  Clear All Nodes
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   )
