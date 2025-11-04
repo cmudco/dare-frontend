@@ -560,9 +560,12 @@ export const conversationSlice = createSlice({
           }
         }
       )
-      .addCase(updateConversationFeedbackTracking.rejected, (state, action) => {
-        console.error('Failed to update feedback tracking:', action.payload)
-      })
+      .addCase(
+        updateConversationFeedbackTracking.rejected,
+        (_state, action) => {
+          console.error('Failed to update feedback tracking:', action.payload)
+        }
+      )
   },
 })
 
