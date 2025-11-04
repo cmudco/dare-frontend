@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DeleteConfirmation } from '@/components/DeleteConfirmation'
 import { Eye, EyeOff, Key, Trash2, Save } from 'lucide-react'
-import { ProviderType } from '@/redux/types/apiKeys'
+import { ProviderType, Provider } from '@/redux/types/apiKeys'
 import { toast } from '@/utils/toast'
 
 interface ApiKeyInputProps {
@@ -37,6 +37,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
   const providerInfo = providerStatus?.[provider]
   const hasKey = providerInfo?.hasKey || false
   const maskedKey = providerInfo?.maskedKey
+  const isLlama = provider === Provider.LLAMA
 
   const handleSave = async () => {
     if (!apiKey.trim()) return
@@ -79,77 +80,93 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
 
   return (
     <>
-      <div className='space-y-3 rounded-lg border border-border bg-muted/30 p-4'>
-        <div className='flex items-center justify-between'>
+      <div
+        className={`space-y-3 rounded-lg border border-border p-4 ${isLlama ? 'bg-muted/50 opacity-75' : 'bg-muted/30'}`}
+      >
+        <div className='space-y-2'>
           <div className='flex items-center gap-2'>
-            <Key className='h-4 w-4 text-muted-foreground' />
+            <Key className='h-4 w-4 flex-shrink-0 text-muted-foreground' />
             <Label className='text-sm font-medium text-foreground'>
               {label}
             </Label>
-            {hasKey && (
+            {isLlama && (
+              <span className='rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300'>
+                No API Key Required
+              </span>
+            )}
+            {!isLlama && hasKey && (
               <span className='rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300'>
                 Active
               </span>
             )}
           </div>
-          {hasKey && maskedKey && (
-            <span className='font-mono text-xs text-muted-foreground'>
+          {hasKey && maskedKey && !isLlama && (
+            <div className='break-all pl-6 font-mono text-xs text-muted-foreground'>
               {maskedKey}
-            </span>
+            </div>
           )}
         </div>
 
-        <div className='flex gap-2'>
-          <div className='relative flex-1'>
-            <Input
-              type={isVisible ? 'text' : 'password'}
-              placeholder={
-                hasKey
-                  ? 'Enter new API key to update'
-                  : `Enter your ${label} API key`
-              }
-              value={apiKey}
-              onChange={(e) => handleChange(e.target.value)}
-              className='border-border bg-background pr-10 font-mono text-sm text-foreground'
-            />
-            {apiKey && (
-              <button
-                type='button'
-                onClick={() => setIsVisible(!isVisible)}
-                className='absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground'
-              >
-                {isVisible ? (
-                  <EyeOff className='h-4 w-4' />
-                ) : (
-                  <Eye className='h-4 w-4' />
-                )}
-              </button>
-            )}
-          </div>
+        {isLlama && (
+          <p className='text-xs text-muted-foreground'>
+            LLaMA runs locally via Ollama and doesn't require an API key. Make
+            sure Ollama is installed and running on your system.
+          </p>
+        )}
 
-          <Button
-            onClick={handleSave}
-            disabled={!apiKey.trim() || isSaving || updating}
-            size='sm'
-            className='gap-2'
-          >
-            <Save className='h-4 w-4' />
-            {isSaving ? 'Saving...' : hasKey ? 'Update' : 'Save'}
-          </Button>
+        {!isLlama && (
+          <div className='flex gap-2'>
+            <div className='relative flex-1'>
+              <Input
+                type={isVisible ? 'text' : 'password'}
+                placeholder={
+                  hasKey
+                    ? 'Enter new API key to update'
+                    : `Enter your ${label} API key`
+                }
+                value={apiKey}
+                onChange={(e) => handleChange(e.target.value)}
+                className='border-border bg-background pr-10 font-mono text-sm text-foreground'
+              />
+              {apiKey && (
+                <button
+                  type='button'
+                  onClick={() => setIsVisible(!isVisible)}
+                  className='absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground'
+                >
+                  {isVisible ? (
+                    <EyeOff className='h-4 w-4' />
+                  ) : (
+                    <Eye className='h-4 w-4' />
+                  )}
+                </button>
+              )}
+            </div>
 
-          {hasKey && (
             <Button
-              onClick={handleDeleteClick}
-              disabled={isSaving || updating}
+              onClick={handleSave}
+              disabled={!apiKey.trim() || isSaving || updating}
               size='sm'
-              variant='destructive'
               className='gap-2'
             >
-              <Trash2 className='h-4 w-4' />
-              Delete
+              <Save className='h-4 w-4' />
+              {isSaving ? 'Saving...' : hasKey ? 'Update' : 'Save'}
             </Button>
-          )}
-        </div>
+
+            {hasKey && (
+              <Button
+                onClick={handleDeleteClick}
+                disabled={isSaving || updating}
+                size='sm'
+                variant='destructive'
+                className='gap-2'
+              >
+                <Trash2 className='h-4 w-4' />
+                Delete
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <DeleteConfirmation
