@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { MessageProps } from '../../redux/types/conversation'
+import { MessageProps, MessageReaction } from '@/redux/types/conversation'
 import { FeedbackType } from '@/utils/constants/conversation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -25,7 +25,10 @@ import rehypeHighlight from 'rehype-highlight'
 import { CodeBlock } from './CodeBlock'
 import { MermaidBlock } from './MermaidBlock'
 import { PencilIcon } from '@heroicons/react/20/solid'
-import { updateMessageThunk } from '../../redux/asyncThunks/conversation'
+import {
+  updateMessageThunk,
+  updateConversationFeedbackTracking,
+} from '@/redux/asyncThunks/conversation'
 import { AppDispatch } from '../../redux/store'
 import { regenerateResponse } from '@/redux/asyncThunks/websocket'
 import FeedbackModal from './FeedbackModal'
@@ -41,6 +44,7 @@ const Message: React.FC<MessageProps> = ({
   message,
   onEditMessage,
   onContentRendered,
+  shouldShowAutoFeedback,
 }) => {
   const dispatch = useDispatch<AppDispatch>()
   const llms = useSelector((state: RootState) => state.conversation.allModels)
@@ -48,11 +52,34 @@ const Message: React.FC<MessageProps> = ({
   const conversationSettings = useSelector(
     (state: RootState) => state.user.conversationSettings
   )
+  const activeConversation = useSelector(
+    (state: RootState) => state.conversation.activeConversation
+  )
+  const activeConversationMessages = useSelector(
+    (state: RootState) => state.conversation.activeConversationMessages
+  )
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
   const [showOriginal, setShowOriginal] = useState(false)
-  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
   const [feedbackIsLike, setFeedbackIsLike] = useState(false)
   const [isMetadataOpen, setIsMetadataOpen] = useState(false)
+  const [feedbackModalState, setFeedbackModalState] = useState<{
+    isOpen: boolean
+    source: 'thumbs' | 'manual' | 'auto'
+  }>({
+    isOpen: false,
+    source: 'auto', // Just an arbitrary default
+  })
+
+  // Open modal when parent signals auto-feedback should show
+  useEffect(() => {
+    if (shouldShowAutoFeedback && !feedbackModalState.isOpen) {
+      setFeedbackIsLike(undefined) // re-set this state
+      setFeedbackModalState({
+        isOpen: true,
+        source: 'auto',
+      })
+    }
+  }, [shouldShowAutoFeedback])
 
   // Function to get font size classes based on user preference
   const getFontSizeClasses = () => {
@@ -88,23 +115,62 @@ const Message: React.FC<MessageProps> = ({
     if (!message.id) return
 
     setFeedbackIsLike(isLike)
-    setIsFeedbackModalOpen(true)
+    setFeedbackModalState({
+      isOpen: true,
+      source: 'thumbs',
+    })
   }
 
-  const handleFeedbackSubmit = (feedback: string) => {
+  const handleShowFeedback = () => {
+    if (!message.id) return
+
+    setFeedbackIsLike(undefined)
+    setFeedbackModalState({
+      isOpen: true,
+      source: 'manual',
+    })
+  }
+
+  const handleFeedbackSubmit = (
+    feedback: string,
+    source: 'thumbs' | 'manual' | 'auto',
+    thumbSelection?: boolean
+  ) => {
     if (message.id) {
-      dispatch(
-        updateMessageThunk({
-          messageId: message.id,
-          reaction: {
-            feedbackType: feedbackIsLike
-              ? FeedbackType.LIKE
-              : FeedbackType.DISLIKE,
-            feedbackText: feedback.trim() || undefined,
-          },
-        })
-      )
+      const reaction: MessageReaction = {
+        feedbackText: feedback.trim() || undefined,
+        feedbackSource: source,
+      }
+      if (thumbSelection !== undefined) {
+        reaction.feedbackType = thumbSelection
+          ? FeedbackType.LIKE
+          : FeedbackType.DISLIKE
+      }
+      console.log('Sending reaction:', reaction)
+
+      dispatch(updateMessageThunk({ messageId: message.id, reaction }))
+
+      // If feedback is triggering by clicking thumb or manually providing it, reset the auto-prompt interval timer
+      if ((source === 'manual' || source === 'thumbs') && activeConversation) {
+        const messageResponseCount = activeConversationMessages.filter(
+          (m) => !m.isSender
+        ).length
+
+        dispatch(
+          updateConversationFeedbackTracking({
+            conversationId: activeConversation.conversationId,
+            feedbackAutoPromptCount:
+              (activeConversation.feedbackAutoPromptCount || 0) + 1, // remove if we still want an auto-prompt
+            feedbackLastPromptMessageCount: messageResponseCount,
+            feedbackLastPromptTimestamp: new Date().toISOString(),
+          })
+        )
+      }
     }
+  }
+
+  const handleModalClose = () => {
+    setFeedbackModalState({ ...feedbackModalState, isOpen: false })
   }
 
   const handleEdit = () => {
@@ -452,6 +518,20 @@ const Message: React.FC<MessageProps> = ({
           </button>
 
           <button
+            onClick={() => handleShowFeedback()}
+            className={`ml-2 px-2 text-sm ${!(message.feedbackType || message.feedbackText) ? 'hover:underline' : ''}`}
+          >
+            {message.feedbackType || message.feedbackText ? (
+              <>
+                <span className='text-green-600'>✓</span>
+                <span className='text-gray-600'> Feedback Recorded</span>
+              </>
+            ) : (
+              <span className='text-gray-600'>Give Feedback</span>
+            )}
+          </button>
+
+          <button
             className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
             onClick={() => navigator.clipboard.writeText(message.message)}
             aria-label='Copy AI response'
@@ -560,10 +640,11 @@ const Message: React.FC<MessageProps> = ({
         )}
 
       <FeedbackModal
-        isOpen={isFeedbackModalOpen}
-        onClose={() => setIsFeedbackModalOpen(false)}
+        isOpen={feedbackModalState.isOpen}
+        onClose={handleModalClose}
         onSubmit={handleFeedbackSubmit}
         isLike={feedbackIsLike}
+        source={feedbackModalState.source}
       />
 
       <MessageMetadata

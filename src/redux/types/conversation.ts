@@ -27,6 +27,9 @@ export interface Conversation {
   sortOrder?: number
   selectedEmbeddingIds?: number[]
   selectedFileIds?: number[]
+  feedbackAutoPromptCount?: number // How many auto-prompts have been shown
+  feedbackLastPromptMessageCount?: number // Message # when last shown
+  feedbackLastPromptTimestamp?: number // When last shown
 }
 
 export interface Message {
@@ -43,6 +46,7 @@ export interface Message {
   snippets?: Snippet[]
   feedbackType?: FeedbackType | null
   feedbackText?: string
+  feedbackSource?: string
   isEdited?: boolean
   isRegenerated?: boolean
   originalMessage?: string
@@ -70,6 +74,7 @@ export interface MessageProps {
   message: Message
   onEditMessage?: (id: string, content: string) => void
   onContentRendered?: () => void
+  shouldShowAutoFeedback?: boolean
 }
 
 export interface LLMModel {
@@ -151,6 +156,7 @@ export interface ConversationResponse {
 export interface MessageReaction {
   feedbackType?: FeedbackType | null
   feedbackText?: string
+  feedbackSource?: string
 }
 
 export interface ConversationSortOrder {
