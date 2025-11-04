@@ -23,6 +23,7 @@ import {
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
+import { syncModelsWithImageGenerationState } from './utils/modelSyncHelpers'
 
 export const conversationSlice = createSlice({
   name: 'conversation',
@@ -39,11 +40,17 @@ export const conversationSlice = createSlice({
     ) {
       state.activeConversation = action.payload
       if (action.payload) {
+        // Update toggle states from conversation
         state.webSearchEnabled = action.payload.webSearchEnabled ?? false
         state.imageGenerationEnabled =
           action.payload.imageGenerationEnabled ?? false
-        state.selectedModel =
-          action.payload.selectedModel ?? state.selectedModel
+
+        // Sync available models and selected model with image generation state
+        syncModelsWithImageGenerationState(
+          state,
+          action.payload.imageGenerationEnabled ?? false,
+          action.payload.selectedModel
+        )
       }
     },
     loadSelectedFilesFromIds(
@@ -144,34 +151,14 @@ export const conversationSlice = createSlice({
       }
     },
     updateImageGenerationEnabled(state, action: PayloadAction<boolean>) {
+      // Update global and conversation-level state
       state.imageGenerationEnabled = action.payload
       if (state.activeConversation) {
         state.activeConversation.imageGenerationEnabled = action.payload
       }
 
-      if (action.payload) {
-        // Switching to image generation mode
-        // Update availableModels to show only image generators
-        const imageModels = state.allModels.filter(
-          (model) => model.isImageGenerator === true
-        )
-        state.availableModels = imageModels
-        // Select first image generator model
-        if (imageModels[0]) {
-          state.selectedModel = imageModels[0].id
-        }
-      } else {
-        // Switching back from image generation mode
-        // Update availableModels to show only non-image models
-        const textModels = state.allModels.filter(
-          (model) => !model.isImageGenerator
-        )
-        state.availableModels = textModels
-        // Select first text model
-        if (textModels[0]) {
-          state.selectedModel = textModels[0].id
-        }
-      }
+      // Sync available models and auto-select appropriate model
+      syncModelsWithImageGenerationState(state, action.payload)
     },
     updateImageGenerationSettings(
       state,
@@ -231,6 +218,7 @@ export const conversationSlice = createSlice({
       }
     },
     resetConversation(state) {
+      // Clear conversation and related data
       state.activeConversation = null
       state.activeConversationMessages = []
       state.selectedFiles = []
@@ -238,8 +226,14 @@ export const conversationSlice = createSlice({
       state.selectedTags = []
       state.selectedFolders = []
       state.conversationInput = ''
-      state.selectedModel = state.availableModels[0]?.id
       state.referencedConversations = []
+
+      // Reset feature toggles
+      state.imageGenerationEnabled = false
+      state.webSearchEnabled = false
+
+      // Reset to text models with appropriate selection
+      syncModelsWithImageGenerationState(state, false)
     },
     updateConversationOrder(state, action: PayloadAction<string[]>) {
       const orderedConversations: Conversation[] = []
