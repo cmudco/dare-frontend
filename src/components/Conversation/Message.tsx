@@ -60,7 +60,9 @@ const Message: React.FC<MessageProps> = ({
   )
   const [isSnippetsOpen, setIsSnippetsOpen] = useState(false)
   const [showOriginal, setShowOriginal] = useState(false)
-  const [feedbackIsLike, setFeedbackIsLike] = useState(false)
+  const [feedbackIsLike, setFeedbackIsLike] = useState<boolean | undefined>(
+    undefined
+  )
   const [isMetadataOpen, setIsMetadataOpen] = useState(false)
   const [feedbackModalState, setFeedbackModalState] = useState<{
     isOpen: boolean
