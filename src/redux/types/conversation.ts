@@ -29,7 +29,7 @@ export interface Conversation {
   selectedFileIds?: number[]
   feedbackAutoPromptCount?: number // How many auto-prompts have been shown
   feedbackLastPromptMessageCount?: number // Message # when last shown
-  feedbackLastPromptTimestamp?: number // When last shown
+  feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
 }
 
 export interface Message {
