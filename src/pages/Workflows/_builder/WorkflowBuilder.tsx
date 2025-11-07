@@ -3,7 +3,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   Panel,
   useReactFlow,
   BackgroundVariant,
@@ -120,7 +119,9 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
             color='#e5e7eb'
           />
           <Controls showZoom={true} showFitView={true} showInteractive={true} />
-          <MiniMap
+          {/* MiniMap temporarily disabled due to null stepNode serialization issue */}
+          {/* TODO: Re-enable after backend fix to properly serialize step_node in WorkflowRunStep */}
+          {/* <MiniMap
             nodeColor={(node) => {
               // Color nodes based on their type or state
               if (errorsByNodeId[node.id]) {
@@ -145,7 +146,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
               border: '1px solid #e5e7eb',
               borderRadius: '8px',
             }}
-          />
+          /> */}
           <Panel
             position='top-right'
             className='rounded-lg border border-gray-200 bg-white p-3 shadow-md'
