@@ -28,6 +28,7 @@ export interface Transaction {
   llmName: string
   inputTokens: number
   outputTokens: number
+  billingMode: string
   createdAt: string
   updatedAt: string
 }
