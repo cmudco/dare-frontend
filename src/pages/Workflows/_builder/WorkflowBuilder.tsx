@@ -128,8 +128,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
               }
               if (
                 currentRun?.steps?.some(
-                  (step) =>
-                    step.stepNode && step.stepNode.toString() === node.id
+                  (step) => step.stepNode.toString() === node.id
                 )
               ) {
                 return '#10b981' // Green for completed
