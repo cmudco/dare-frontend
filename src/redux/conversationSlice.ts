@@ -12,6 +12,7 @@ import {
   deleteMultipleConversations,
   cloneConversation,
   updateConversationSelectedIds,
+  updateConversationFeedbackTracking,
 } from './asyncThunks/conversation'
 import {
   Message,
@@ -22,6 +23,7 @@ import {
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
+import { syncModelsWithImageGenerationState } from './utils/modelSyncHelpers'
 
 export const conversationSlice = createSlice({
   name: 'conversation',
@@ -38,11 +40,17 @@ export const conversationSlice = createSlice({
     ) {
       state.activeConversation = action.payload
       if (action.payload) {
+        // Update toggle states from conversation
         state.webSearchEnabled = action.payload.webSearchEnabled ?? false
         state.imageGenerationEnabled =
           action.payload.imageGenerationEnabled ?? false
-        state.selectedModel =
-          action.payload.selectedModel ?? state.selectedModel
+
+        // Sync available models and selected model with image generation state
+        syncModelsWithImageGenerationState(
+          state,
+          action.payload.imageGenerationEnabled ?? false,
+          action.payload.selectedModel
+        )
       }
     },
     loadSelectedFilesFromIds(
@@ -143,34 +151,14 @@ export const conversationSlice = createSlice({
       }
     },
     updateImageGenerationEnabled(state, action: PayloadAction<boolean>) {
+      // Update global and conversation-level state
       state.imageGenerationEnabled = action.payload
       if (state.activeConversation) {
         state.activeConversation.imageGenerationEnabled = action.payload
       }
 
-      if (action.payload) {
-        // Switching to image generation mode
-        // Update availableModels to show only image generators
-        const imageModels = state.allModels.filter(
-          (model) => model.isImageGenerator === true
-        )
-        state.availableModels = imageModels
-        // Select first image generator model
-        if (imageModels[0]) {
-          state.selectedModel = imageModels[0].id
-        }
-      } else {
-        // Switching back from image generation mode
-        // Update availableModels to show only non-image models
-        const textModels = state.allModels.filter(
-          (model) => !model.isImageGenerator
-        )
-        state.availableModels = textModels
-        // Select first text model
-        if (textModels[0]) {
-          state.selectedModel = textModels[0].id
-        }
-      }
+      // Sync available models and auto-select appropriate model
+      syncModelsWithImageGenerationState(state, action.payload)
     },
     updateImageGenerationSettings(
       state,
@@ -230,6 +218,7 @@ export const conversationSlice = createSlice({
       }
     },
     resetConversation(state) {
+      // Clear conversation and related data
       state.activeConversation = null
       state.activeConversationMessages = []
       state.selectedFiles = []
@@ -237,8 +226,14 @@ export const conversationSlice = createSlice({
       state.selectedTags = []
       state.selectedFolders = []
       state.conversationInput = ''
-      state.selectedModel = state.availableModels[0]?.id
       state.referencedConversations = []
+
+      // Reset feature toggles
+      state.imageGenerationEnabled = false
+      state.webSearchEnabled = false
+
+      // Reset to text models with appropriate selection
+      syncModelsWithImageGenerationState(state, false)
     },
     updateConversationOrder(state, action: PayloadAction<string[]>) {
       const orderedConversations: Conversation[] = []
@@ -529,6 +524,42 @@ export const conversationSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
+      .addCase(
+        updateConversationFeedbackTracking.fulfilled,
+        (state, action) => {
+          // Update the active conversation with new feedback tracking values
+          if (
+            state.activeConversation?.conversationId ===
+            action.payload.conversationId
+          ) {
+            state.activeConversation.feedbackAutoPromptCount =
+              action.payload.feedbackAutoPromptCount
+            state.activeConversation.feedbackLastPromptMessageCount =
+              action.payload.feedbackLastPromptMessageCount
+            state.activeConversation.feedbackLastPromptTimestamp =
+              action.payload.feedbackLastPromptTimestamp
+          }
+
+          // Also update in conversations array
+          const idx = state.conversations.findIndex(
+            (c) => c.conversationId === action.payload.conversationId
+          )
+          if (idx !== -1) {
+            state.conversations[idx].feedbackAutoPromptCount =
+              action.payload.feedbackAutoPromptCount
+            state.conversations[idx].feedbackLastPromptMessageCount =
+              action.payload.feedbackLastPromptMessageCount
+            state.conversations[idx].feedbackLastPromptTimestamp =
+              action.payload.feedbackLastPromptTimestamp
+          }
+        }
+      )
+      .addCase(
+        updateConversationFeedbackTracking.rejected,
+        (_state, action) => {
+          console.error('Failed to update feedback tracking:', action.payload)
+        }
+      )
   },
 })
 

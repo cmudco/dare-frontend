@@ -1,5 +1,4 @@
 // Re-export all workflow builder utilities from their respective files
-export { rebuildEdgesForMode } from './rebuildEdgesForMode'
 export { edgesChanged } from './edgesChanged'
 export { createNode } from './createNode'
 export { removeNodeById } from './removeNodeById'

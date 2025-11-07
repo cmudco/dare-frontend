@@ -2,6 +2,13 @@
  * API Keys types for Redux state management
  */
 
+export enum Provider {
+  OPENAI = 'openai',
+  CLAUDE = 'claude',
+  GEMINI = 'gemini',
+  LLAMA = 'llama',
+}
+
 export type ProviderType = 'openai' | 'claude' | 'gemini' | 'llama'
 
 export type BillingModeType = 'wallet' | 'own_api'

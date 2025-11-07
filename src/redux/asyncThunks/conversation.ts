@@ -198,3 +198,29 @@ export const cloneConversation = createAsyncThunk(
     }
   }
 )
+
+export const updateConversationFeedbackTracking = createAsyncThunk<
+  Conversation,
+  {
+    conversationId: string
+    feedbackAutoPromptCount?: number
+    feedbackLastPromptMessageCount?: number
+    feedbackLastPromptTimestamp?: string
+  },
+  { rejectValue: string }
+>('conversation/updateFeedbackTracking', async (updates, thunkAPI) => {
+  try {
+    const updatedConversation = await updateConversationAPI(
+      updates.conversationId,
+      {
+        feedbackAutoPromptCount: updates.feedbackAutoPromptCount,
+        feedbackLastPromptMessageCount: updates.feedbackLastPromptMessageCount,
+        feedbackLastPromptTimestamp: updates.feedbackLastPromptTimestamp,
+      }
+    )
+    return updatedConversation
+  } catch (error) {
+    console.error('Error updating conversation feedback tracking:', error)
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
