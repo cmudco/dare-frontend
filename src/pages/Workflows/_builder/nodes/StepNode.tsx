@@ -27,9 +27,11 @@ import {
   ChevronDown,
   ChevronUp,
   Trash2,
+  Globe,
 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
@@ -63,6 +65,7 @@ export type StepNodeData = {
   usePreviousStepEmbeddings?: boolean
   textInput?: string
   useStructuredOutputNode?: boolean
+  enableWebSearch?: boolean
   id?: string
   isCollapsed?: boolean
 }
@@ -506,6 +509,26 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                   min={0}
                   step={0.1}
                   className='w-full'
+                />
+              </div>
+
+              <div className='flex items-center justify-between rounded-md border border-muted bg-muted/20 p-3'>
+                <div className='flex-1'>
+                  <Label className='flex cursor-pointer items-center gap-2 text-xs font-medium'>
+                    <Globe className='h-3 w-3' />
+                    Enable Web Search
+                  </Label>
+                  <p className='mt-0.5 text-xs text-muted-foreground'>
+                    Allow the LLM to search the web for real-time information
+                  </p>
+                </div>
+                <Switch
+                  id={`enable-web-search-${nodeId}`}
+                  checked={stepData.enableWebSearch || false}
+                  onCheckedChange={(checked) => {
+                    updateNodeData({ enableWebSearch: checked })
+                  }}
+                  className='ml-2'
                 />
               </div>
             </div>
