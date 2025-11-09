@@ -49,6 +49,7 @@ import {
   HANDLE_COLORS,
   ROUTE_COLORS,
 } from '@/utils/constants/workflowBuilder'
+import type { Agent } from '@/redux/types/agent'
 
 export type StepNodeData = {
   prompt: number | null
@@ -82,6 +83,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
+  const agents = useAppSelector((s) => s.agent.agents)
   const { currentRun } = useAppSelector((s) => s.workflowBuilder)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
@@ -109,6 +111,21 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   // Update Redux when form changes
   const updateNodeData = (updates: Partial<StepNodeData>) => {
     dispatch(updateNodeDataById({ nodeId: nodeId, newData: updates }))
+  }
+
+  // Inject agent properties into step node
+  const injectAgentProperties = (agent: Agent) => {
+    updateNodeData({
+      prompt: agent.prompt,
+      contentFiles: agent.contentFiles || [],
+      embeddingFiles: agent.embeddingFiles || [],
+      llm: agent.llm,
+      maxTokens: agent.maxTokens,
+      temperature: agent.temperature,
+      maxContextSnippets: agent.maxContextSnippets,
+      documentSimilarityThreshold: agent.documentSimilarityThreshold,
+      enableWebSearch: agent.enableWebSearch,
+    })
   }
 
   const connectedStructuredOutputEdge = edges.find((edge) => {
@@ -172,7 +189,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     <Card
       className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
-      <CardHeader className='pb-3'>
+      <CardHeader className='pb-2'>
         <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
           <div className='flex items-center gap-2'>
             <div className='flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20'>
@@ -206,6 +223,31 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             </Button>
           </div>
         </CardTitle>
+        {/* Agent Template Selector in Header */}
+        {!isCollapsed && agents.length > 0 && (
+          <div className='mt-2 flex items-center gap-2'>
+            <Select
+              value=''
+              onValueChange={(value) => {
+                const selectedAgent = agents.find((a) => a.id === Number(value))
+                if (selectedAgent) {
+                  injectAgentProperties(selectedAgent)
+                }
+              }}
+            >
+              <SelectTrigger className='h-7 bg-blue-50 text-xs dark:bg-blue-900/20'>
+                <SelectValue placeholder='Load agent...' />
+              </SelectTrigger>
+              <SelectContent>
+                {agents.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id.toString()}>
+                    {agent.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </CardHeader>
       {!isCollapsed && (
         <CardContent className='space-y-4'>

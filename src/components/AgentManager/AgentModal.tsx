@@ -29,12 +29,17 @@ import { Slider } from '@/components/ui/slider'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
+import { getFiles } from '@/redux/asyncThunks/file'
+import { FileText, Database, X } from 'lucide-react'
 
 const agentValidationSchema = Yup.object().shape({
   name: Yup.string().required('Agent name is required'),
   description: Yup.string(),
   prompt: Yup.number().required('Prompt is required'),
   llm: Yup.number().required('Language model is required'),
+  contentFiles: Yup.array().of(Yup.number()),
+  embeddingFiles: Yup.array().of(Yup.number()),
   maxTokens: Yup.number()
     .min(1, 'Max tokens must be at least 1')
     .required('Max tokens is required'),
@@ -61,6 +66,7 @@ const AgentModal: React.FC = () => {
   const { availableModels } = useSelector(
     (state: RootState) => state.conversation
   )
+  const { files } = useSelector((state: RootState) => state.files)
 
   const isEditMode = !!selectedAgent
 
@@ -72,14 +78,25 @@ const AgentModal: React.FC = () => {
       if (availableModels.length === 0) {
         dispatch(getAvailableModels())
       }
+      if (files.length === 0) {
+        dispatch(getFiles())
+      }
     }
-  }, [isModalOpen, dispatch, prompts.length, availableModels.length])
+  }, [
+    isModalOpen,
+    dispatch,
+    prompts.length,
+    availableModels.length,
+    files.length,
+  ])
 
   const initialValues = {
     name: selectedAgent?.name || '',
     description: selectedAgent?.description || '',
     prompt: selectedAgent?.prompt || '',
     llm: selectedAgent?.llm || 1,
+    contentFiles: selectedAgent?.contentFiles || [],
+    embeddingFiles: selectedAgent?.embeddingFiles || [],
     maxTokens: selectedAgent?.maxTokens || 2000,
     temperature: selectedAgent?.temperature || 0.6,
     maxContextSnippets: selectedAgent?.maxContextSnippets || 10,
@@ -100,6 +117,8 @@ const AgentModal: React.FC = () => {
     description: string
     prompt: number | string
     llm: number
+    contentFiles: number[]
+    embeddingFiles: number[]
     maxTokens: number
     temperature: number
     maxContextSnippets: number
@@ -112,6 +131,8 @@ const AgentModal: React.FC = () => {
         description: values.description,
         prompt: Number(values.prompt),
         llm: values.llm,
+        contentFiles: values.contentFiles,
+        embeddingFiles: values.embeddingFiles,
         maxTokens: values.maxTokens,
         temperature: values.temperature,
         maxContextSnippets: values.maxContextSnippets,
@@ -270,6 +291,137 @@ const AgentModal: React.FC = () => {
                     {errors.llm && touched.llm && (
                       <p className='mt-1 text-xs text-red-500'>{errors.llm}</p>
                     )}
+                  </div>
+
+                  {/* Content Files */}
+                  <div className='space-y-2'>
+                    <Label className='flex items-center gap-2 text-xs font-medium'>
+                      <FileText className='h-3 w-3' />
+                      Content Files
+                    </Label>
+                    <div className='flex flex-wrap gap-1'>
+                      {(values.contentFiles || []).map((fileId) => {
+                        const file = files.find((f) => f.id === fileId)
+                        return (
+                          <Badge
+                            key={fileId}
+                            variant='secondary'
+                            className='text-xs'
+                          >
+                            {file?.name || `File ${fileId}`}
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              className='ml-1 h-4 w-4 p-0'
+                              type='button'
+                              onClick={() => {
+                                const newFiles = (
+                                  values.contentFiles || []
+                                ).filter((id) => id !== fileId)
+                                setFieldValue('contentFiles', newFiles)
+                              }}
+                            >
+                              <X className='h-3 w-3' />
+                            </Button>
+                          </Badge>
+                        )
+                      })}
+                      <Select
+                        value=''
+                        onValueChange={(value) => {
+                          const fileId = Number(value)
+                          const currentFiles = values.contentFiles || []
+                          if (value && !currentFiles.includes(fileId)) {
+                            const newFiles = [...currentFiles, fileId]
+                            setFieldValue('contentFiles', newFiles)
+                          }
+                        }}
+                      >
+                        <SelectTrigger className='w-full bg-background text-xs'>
+                          <SelectValue placeholder='+ Add' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {files
+                            .filter(
+                              (f) => !(values.contentFiles || []).includes(f.id)
+                            )
+                            .map((file) => (
+                              <SelectItem
+                                key={file.id}
+                                value={file.id.toString()}
+                              >
+                                {file.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Embedding Files */}
+                  <div className='space-y-2'>
+                    <Label className='flex items-center gap-2 text-xs font-medium'>
+                      <Database className='h-3 w-3' />
+                      Embedding Files
+                    </Label>
+                    <div className='flex flex-wrap gap-1'>
+                      {(values.embeddingFiles || []).map((fileId) => {
+                        const file = files.find((f) => f.id === fileId)
+                        return (
+                          <Badge
+                            key={fileId}
+                            variant='secondary'
+                            className='text-xs'
+                          >
+                            {file?.name || `File ${fileId}`}
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              className='ml-1 h-4 w-4 p-0'
+                              type='button'
+                              onClick={() => {
+                                const newFiles = (
+                                  values.embeddingFiles || []
+                                ).filter((id) => id !== fileId)
+                                setFieldValue('embeddingFiles', newFiles)
+                              }}
+                            >
+                              <X className='h-3 w-3' />
+                            </Button>
+                          </Badge>
+                        )
+                      })}
+                      <Select
+                        value=''
+                        onValueChange={(value) => {
+                          const fileId = Number(value)
+                          const currentFiles = values.embeddingFiles || []
+                          if (value && !currentFiles.includes(fileId)) {
+                            const newFiles = [...currentFiles, fileId]
+                            setFieldValue('embeddingFiles', newFiles)
+                          }
+                        }}
+                      >
+                        <SelectTrigger className='w-full bg-background text-xs'>
+                          <SelectValue placeholder='+ Add' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {files
+                            .filter(
+                              (f) =>
+                                !(values.embeddingFiles || []).includes(f.id)
+                            )
+                            .map((file) => (
+                              <SelectItem
+                                key={file.id}
+                                value={file.id.toString()}
+                              >
+                                {file.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </TabsContent>
 

@@ -33,6 +33,7 @@ import { clearNodeError as clearNodeErrorAction } from '@/redux/workflowBuilderS
 import Sidebar from './components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Minimize2, Maximize2 } from 'lucide-react'
+import { getAgents } from '@/redux/asyncThunks/agent'
 
 export interface WorkflowBuilderProps {
   initialWorkflow?: Workflow
@@ -53,6 +54,11 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     isRunning: isWorkflowRunning,
     savedViewport,
   } = useAppSelector((state) => state.workflowBuilder)
+
+  // Load agents on mount
+  useEffect(() => {
+    dispatch(getAgents())
+  }, [dispatch])
 
   // Load workflow when workflowId or initialWorkflow changes
   useEffect(() => {
