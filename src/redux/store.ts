@@ -4,6 +4,7 @@ import userReducer from './userSlice'
 import fileReducer from './fileSlice'
 import conversationReducer from './conversationSlice'
 import promptReducer from './promptSlice'
+import agentReducer from './agentSlice'
 import websocketReducer from './websocketSlice'
 import tagsReducer from './tagslice'
 import workflowReducer from './workflowSlice'
@@ -41,6 +42,7 @@ export const store = configureStore({
     files: fileReducer,
     conversation: conversationReducer,
     prompt: promptReducer,
+    agent: agentReducer,
     websocket: websocketReducer,
     tags: tagsReducer,
     workflow: workflowReducer,
