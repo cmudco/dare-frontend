@@ -17,7 +17,8 @@ const nodeComponents = [
   {
     type: 'start',
     label: 'Start',
-    description: 'Define workflow title and description',
+    description:
+      'Define workflow configuration (multiple starts for comparison)',
     icon: Play,
     color: 'bg-primary',
   },
@@ -55,6 +56,7 @@ export default function Sidebar({ disabled }: SidebarProps) {
     selectedWorkflowRun?.status === WorkflowRunStepStatus.Running
 
   const hasStartNode = nodes.some((n) => n.type === 'start')
+  const startNodeCount = nodes.filter((n) => n.type === 'start').length
 
   const getViewportCenterPosition = () => {
     try {
@@ -111,7 +113,9 @@ export default function Sidebar({ disabled }: SidebarProps) {
             <CardContent className='py-2 text-xs text-muted-foreground'>
               {disabled?.start
                 ? 'Add steps to build your workflow. Each step includes an output automatically.'
-                : 'Start creating your workflow by adding a Start node first.'}
+                : startNodeCount > 0
+                  ? `${startNodeCount} start node${startNodeCount > 1 ? 's' : ''} added. Add more start nodes to compare different approaches.`
+                  : 'Start creating your workflow by adding a Start node first.'}
             </CardContent>
           </Card>
           {nodeComponents.map((component) => (
@@ -139,7 +143,7 @@ export default function Sidebar({ disabled }: SidebarProps) {
                   disabled={
                     isWorkflowRunning ||
                     (component.type === 'start'
-                      ? Boolean(disabled?.start) || hasStartNode
+                      ? Boolean(disabled?.start)
                       : component.type === 'chatOutput'
                         ? Boolean(disabled?.output) || !hasStartNode
                         : Boolean(disabled?.step) || !hasStartNode)
