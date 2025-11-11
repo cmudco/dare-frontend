@@ -9,6 +9,10 @@ export const getStartNode = (nodes: Node[]): Node | undefined => {
   return nodes.find((n) => n.type === 'start')
 }
 
+export const getStartNodes = (nodes: Node[]): Node[] => {
+  return nodes.filter((n) => n.type === 'start')
+}
+
 export const getMode = (startNode?: Node): Mode => {
   if (!startNode) return 'sequential'
   return (startNode.data as { mode: Mode }).mode
@@ -80,7 +84,10 @@ export const isValidConnection = (
     (sType === 'step' && tType === 'start')
   ) {
     if (modeValue === 'sequential') {
-      const existing = edges.filter((e) => e.source === start?.id)
+      // For multiple start nodes, check if THIS specific start node already has a connection
+      const thisStartNodeId =
+        sType === 'start' ? connection.source : connection.target
+      const existing = edges.filter((e) => e.source === thisStartNodeId)
       if (existing.length >= 1) return false
     }
     return true
