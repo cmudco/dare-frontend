@@ -22,17 +22,6 @@ export const createNode = (
     }
   }
 
-  if (hasStart && type === 'start') {
-    return {
-      nodes,
-      edges,
-      shouldShowToast: {
-        type: 'info',
-        message: 'Only one Start node is allowed.',
-      },
-    }
-  }
-
   if (type === 'step') {
     // Auto-create step + output node pair
     const stepNumber = nodes.filter((n) => n.type === 'step').length + 1
@@ -131,8 +120,18 @@ export const createNode = (
     return { nodes: [...nodes, structuredOutputNode], edges }
   } else {
     // Handle start node with initial data
+    let nodeId: string
+
+    if (type === 'start') {
+      // Generate unique ID for start nodes
+      const startNodeCount = nodes.filter((n) => n.type === 'start').length
+      nodeId = startNodeCount === 0 ? '0' : `start-${startNodeCount}`
+    } else {
+      nodeId = '0' // Fallback for other types
+    }
+
     const newNode: Node = {
-      id: '0', // Start node is always "0"
+      id: nodeId,
       type,
       position,
       data:
