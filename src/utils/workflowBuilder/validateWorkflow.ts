@@ -15,16 +15,7 @@ export const validateWorkflow = (
   nodes: Node[],
   edges: Edge[]
 ): ValidationResult => {
-  const start = nodes.find((n) => n.type === 'start')
-  const startData = start?.data as
-    | {
-        title: string
-        description: string
-        mode: 'sequential' | 'parallel'
-      }
-    | undefined
-  const title = startData?.title?.trim() || ''
-  const description = startData?.description?.trim() || ''
+  const startNodes = nodes.filter((n) => n.type === 'start')
 
   const nodeErrors: Record<string, NodeErrors> = {}
   const errorMessages: string[] = []
@@ -50,19 +41,30 @@ export const validateWorkflow = (
     }
   }
 
-  // Validate start node
-  if (!start) {
-    pushErrorMessage('Start node is required')
+  // Validate start nodes (allow multiple)
+  if (startNodes.length === 0) {
+    pushErrorMessage('At least one start node is required')
   } else {
-    if (!title) {
-      const sid = start?.id || '0'
-      appendFieldError(sid, 'title', 'Title is required')
-      pushErrorMessage('Workflow title is required')
-    }
-    if (!description) {
-      const sid = start?.id || '0'
-      appendFieldError(sid, 'description', 'Description is required')
-    }
+    // Validate each start node independently
+    startNodes.forEach((start, index) => {
+      const startData = start.data as
+        | {
+            title: string
+            description: string
+            mode: 'sequential' | 'parallel'
+          }
+        | undefined
+      const title = startData?.title?.trim() || ''
+      const description = startData?.description?.trim() || ''
+
+      if (!title) {
+        appendFieldError(start.id, 'title', 'Title is required')
+        pushErrorMessage(`Start node ${index + 1} requires a title`)
+      }
+      if (!description) {
+        appendFieldError(start.id, 'description', 'Description is required')
+      }
+    })
   }
 
   // Validate step nodes
@@ -195,7 +197,7 @@ export const validateWorkflow = (
     }
   })
 
-  if (!start) {
+  if (startNodes.length === 0) {
     stepNodesRaw.forEach((step) => {
       appendFieldError(
         step.id,
@@ -204,10 +206,10 @@ export const validateWorkflow = (
       )
     })
   } else {
-    // Validate that all steps are reachable from start node via edge traversal
+    // Validate that all steps are reachable from ANY start node via edge traversal
     // This replaces mode-specific validation - edges determine execution flow
     const reachable = new Set<string>()
-    const stack = [start.id]
+    const stack = [...startNodes.map((s) => s.id)]
     while (stack.length) {
       const current = stack.pop()!
       if (reachable.has(current)) continue
@@ -219,7 +221,7 @@ export const validateWorkflow = (
 
     stepNodesRaw.forEach((step) => {
       if (!reachable.has(step.id)) {
-        const message = `${getStepLabel(step)} must be reachable from the Start node.`
+        const message = `${getStepLabel(step)} must be reachable from a Start node.`
         appendFieldError(step.id, 'connections', message)
         pushErrorMessage(message)
       }
