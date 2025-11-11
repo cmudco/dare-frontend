@@ -22,6 +22,7 @@ import ProfileScreen from '@/pages/ProfileScreen/index.tsx'
 import BillingScreen from '@/pages/Billing/index.tsx'
 import OnboardingScreen from '@/pages/Onboarding/index.tsx'
 import WorkflowCreatePage from '@/pages/Workflows/WorkflowCreatePage.tsx'
+import Agents from '@/pages/Agents/index.tsx'
 
 const AppRoutes = () => {
   return (
@@ -66,6 +67,7 @@ const AppRoutes = () => {
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/files' element={<Files />} />
             <Route path='/prompts' element={<Prompt />} />
+            <Route path='/agents' element={<Agents />} />
             <Route path='/workflows' element={<Workflows />} />
             <Route path='/workflows/create' element={<WorkflowCreatePage />} />
             <Route path='/workflows/:id/edit' element={<WorkflowEditPage />} />

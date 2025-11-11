@@ -3,7 +3,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   Panel,
   useReactFlow,
   BackgroundVariant,
@@ -33,6 +32,7 @@ import { clearNodeError as clearNodeErrorAction } from '@/redux/workflowBuilderS
 import Sidebar from './components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Minimize2, Maximize2 } from 'lucide-react'
+import { getAgents } from '@/redux/asyncThunks/agent'
 
 export interface WorkflowBuilderProps {
   initialWorkflow?: Workflow
@@ -53,6 +53,11 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     isRunning: isWorkflowRunning,
     savedViewport,
   } = useAppSelector((state) => state.workflowBuilder)
+
+  // Load agents on mount
+  useEffect(() => {
+    dispatch(getAgents())
+  }, [dispatch])
 
   // Load workflow when workflowId or initialWorkflow changes
   useEffect(() => {
@@ -120,7 +125,9 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
             color='#e5e7eb'
           />
           <Controls showZoom={true} showFitView={true} showInteractive={true} />
-          <MiniMap
+          {/* MiniMap temporarily disabled due to null stepNode serialization issue */}
+          {/* TODO: Re-enable after backend fix to properly serialize step_node in WorkflowRunStep */}
+          {/* <MiniMap
             nodeColor={(node) => {
               // Color nodes based on their type or state
               if (errorsByNodeId[node.id]) {
@@ -128,7 +135,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
               }
               if (
                 currentRun?.steps?.some(
-                  (step) => step.stepNode.toString() === node.id
+                  (step) =>
+                    step.stepNode && step.stepNode.toString() === node.id
                 )
               ) {
                 return '#10b981' // Green for completed
@@ -144,7 +152,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
               border: '1px solid #e5e7eb',
               borderRadius: '8px',
             }}
-          />
+          /> */}
           <Panel
             position='top-right'
             className='rounded-lg border border-gray-200 bg-white p-3 shadow-md'
