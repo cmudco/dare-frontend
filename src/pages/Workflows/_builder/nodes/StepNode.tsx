@@ -52,6 +52,7 @@ import {
 import type { Agent } from '@/redux/types/agent'
 
 export type StepNodeData = {
+  agent: number | null
   prompt: number | null
   contentFiles: number[]
   embeddingFiles: number[]
@@ -116,6 +117,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   // Inject agent properties into step node
   const injectAgentProperties = (agent: Agent) => {
     updateNodeData({
+      agent: agent.id,
       prompt: agent.prompt,
       contentFiles: agent.contentFiles || [],
       embeddingFiles: agent.embeddingFiles || [],
@@ -185,6 +187,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
   const isCollapsed = stepData?.isCollapsed || false
 
+  // Get the selected agent for display purposes
+  const selectedAgent = stepData.agent
+    ? agents.find((a) => a.id === stepData.agent)
+    : null
+
   return (
     <Card
       className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
@@ -225,27 +232,46 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         </CardTitle>
         {/* Agent Template Selector in Header */}
         {!isCollapsed && agents.length > 0 && (
-          <div className='mt-2 flex items-center gap-2'>
-            <Select
-              value=''
-              onValueChange={(value) => {
-                const selectedAgent = agents.find((a) => a.id === Number(value))
-                if (selectedAgent) {
-                  injectAgentProperties(selectedAgent)
-                }
-              }}
-            >
-              <SelectTrigger className='h-7 bg-blue-50 text-xs dark:bg-blue-900/20'>
-                <SelectValue placeholder='Load agent...' />
-              </SelectTrigger>
-              <SelectContent>
-                {agents.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id.toString()}>
-                    {agent.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className='mt-2 space-y-1'>
+            <div className='flex items-center gap-2'>
+              <Select
+                value={stepData.agent ? stepData.agent.toString() : ''}
+                onValueChange={(value) => {
+                  const agent = agents.find((a) => a.id === Number(value))
+                  if (agent) {
+                    injectAgentProperties(agent)
+                  }
+                }}
+              >
+                <SelectTrigger className='h-7 flex-1 text-xs'>
+                  <SelectValue placeholder='Load agent...' />
+                </SelectTrigger>
+                <SelectContent>
+                  {agents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id.toString()}>
+                      {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedAgent && (
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  onClick={() => updateNodeData({ agent: null })}
+                  className='h-7 px-2 text-xs'
+                  title='Clear agent'
+                >
+                  <X className='h-3 w-3' />
+                </Button>
+              )}
+            </div>
+            {selectedAgent && (
+              <p className='text-xs text-muted-foreground'>
+                Using agent:{' '}
+                <span className='font-medium'>{selectedAgent.name}</span>
+              </p>
+            )}
           </div>
         )}
       </CardHeader>
