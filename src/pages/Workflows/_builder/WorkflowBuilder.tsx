@@ -113,9 +113,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
           onMoveEnd={(_, viewport) => dispatch(setSavedViewport(viewport))}
           fitView={!savedViewport}
-          panOnScroll={true}
-          panOnScrollSpeed={0.5}
-          zoomOnScroll={false}
+          panOnScroll={false}
+          zoomOnScroll={true}
           zoomOnPinch={true}
         >
           <Background
