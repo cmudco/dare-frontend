@@ -80,6 +80,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const dispatch = useAppDispatch()
 
   const [showAdvanced, setShowAdvanced] = useState(false)
+  // Store snapshot of values before agent injection for clean revert
+  const [preAgentSnapshot, setPreAgentSnapshot] =
+    useState<Partial<StepNodeData> | null>(null)
 
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
@@ -116,6 +119,20 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
   // Inject agent properties into step node
   const injectAgentProperties = (agent: Agent) => {
+    // Save current state before injecting agent properties
+    setPreAgentSnapshot({
+      prompt: stepData.prompt,
+      contentFiles: stepData.contentFiles,
+      embeddingFiles: stepData.embeddingFiles,
+      llm: stepData.llm,
+      maxTokens: stepData.maxTokens,
+      temperature: stepData.temperature,
+      maxContextSnippets: stepData.maxContextSnippets,
+      documentSimilarityThreshold: stepData.documentSimilarityThreshold,
+      enableWebSearch: stepData.enableWebSearch,
+    })
+
+    // Inject agent properties
     updateNodeData({
       agent: agent.id,
       prompt: agent.prompt,
@@ -128,6 +145,21 @@ export default function StepNode({ id, data, selected }: NodeProps) {
       documentSimilarityThreshold: agent.documentSimilarityThreshold,
       enableWebSearch: agent.enableWebSearch,
     })
+  }
+
+  // Clear agent and revert to previous values
+  const clearAgent = () => {
+    if (preAgentSnapshot) {
+      // Revert to pre-agent values
+      updateNodeData({
+        agent: null,
+        ...preAgentSnapshot,
+      })
+      setPreAgentSnapshot(null)
+    } else {
+      // No snapshot available, just clear agent
+      updateNodeData({ agent: null })
+    }
   }
 
   const connectedStructuredOutputEdge = edges.find((edge) => {
@@ -258,9 +290,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                 <Button
                   size='sm'
                   variant='ghost'
-                  onClick={() => updateNodeData({ agent: null })}
+                  onClick={clearAgent}
                   className='h-7 px-2 text-xs'
-                  title='Clear agent'
+                  title='Clear agent and revert to previous values'
                 >
                   <X className='h-3 w-3' />
                 </Button>
