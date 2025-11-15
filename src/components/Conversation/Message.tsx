@@ -17,6 +17,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   Info,
+  Trash2,
 } from 'lucide-react'
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
@@ -28,11 +29,13 @@ import { PencilIcon } from '@heroicons/react/20/solid'
 import {
   updateMessageThunk,
   updateConversationFeedbackTracking,
+  deleteMessage,
 } from '@/redux/asyncThunks/conversation'
 import { AppDispatch } from '../../redux/store'
 import { regenerateResponse } from '@/redux/asyncThunks/websocket'
 import FeedbackModal from './FeedbackModal'
 import MessageMetadata from './MessageMetadata'
+import { DeleteConfirmation } from '../DeleteConfirmation'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -71,6 +74,7 @@ const Message: React.FC<MessageProps> = ({
     isOpen: false,
     source: 'auto', // Just an arbitrary default
   })
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
   // Open modal when parent signals auto-feedback should show
   useEffect(() => {
@@ -187,6 +191,12 @@ const Message: React.FC<MessageProps> = ({
     }
   }
 
+  const handleDeleteMessage = async () => {
+    if (message.id) {
+      await dispatch(deleteMessage(message.id.toString()))
+    }
+  }
+
   const displayMessage =
     showOriginal && message.originalMessage
       ? message.originalMessage
@@ -239,6 +249,13 @@ const Message: React.FC<MessageProps> = ({
               aria-label='Edit message'
             >
               <PencilIcon className='h-4 w-4' />
+            </button>
+            <button
+              className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-red-500'
+              onClick={() => setIsDeleteModalOpen(true)}
+              aria-label='Delete message'
+            >
+              <Trash2 className='h-4 w-4' />
             </button>
             {(message.isEdited || message.isRegenerated) && buttonLabel && (
               <button
@@ -547,6 +564,13 @@ const Message: React.FC<MessageProps> = ({
           >
             <Info className='h-4 w-4' />
           </button>
+          <button
+            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-red-500'
+            onClick={() => setIsDeleteModalOpen(true)}
+            aria-label='Delete message'
+          >
+            <Trash2 className='h-4 w-4' />
+          </button>
           {(message.isEdited || message.isRegenerated) && buttonLabel && (
             <button
               className={`mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
@@ -653,6 +677,16 @@ const Message: React.FC<MessageProps> = ({
         isOpen={isMetadataOpen}
         onClose={() => setIsMetadataOpen(false)}
         message={message}
+      />
+
+      <DeleteConfirmation
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onDelete={handleDeleteMessage}
+        title='Delete Message'
+        description='Are you sure you want to delete this message? This will remove it from the conversation history.'
+        confirmText='Delete'
+        cancelText='Cancel'
       />
     </div>
   )
