@@ -1,5 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialState } from './initialState/user'
+import { User, ConversationSettings } from './types/user'
 import {
   forgotPassword,
   userLogin,
@@ -23,7 +24,7 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    updateUser(state, action) {
+    updateUser(state, action: PayloadAction<User>) {
       state.user = action.payload
     },
     logout(state) {
@@ -33,13 +34,19 @@ const userSlice = createSlice({
     resetError(state) {
       state.error = null
     },
-    updateConversationSettings(state, action) {
+    updateConversationSettings(
+      state,
+      action: PayloadAction<Partial<ConversationSettings>>
+    ) {
       state.conversationSettings = {
-        ...state.conversationSettings,
-        ...action.payload
-      }
+        ...(state.conversationSettings || { fontSize: 'sm' }),
+        ...action.payload,
+      } as ConversationSettings
       // Also store in localStorage for persistence
-      localStorage.setItem('conversationSettings', JSON.stringify(state.conversationSettings))
+      localStorage.setItem(
+        'conversationSettings',
+        JSON.stringify(state.conversationSettings)
+      )
     },
   },
   extraReducers: (builder) => {
@@ -281,6 +288,7 @@ const userSlice = createSlice({
   },
 })
 
-export const { updateUser, logout, resetError, updateConversationSettings } = userSlice.actions
+export const { updateUser, logout, resetError, updateConversationSettings } =
+  userSlice.actions
 
 export default userSlice.reducer
