@@ -1,4 +1,5 @@
 import { type Node, type Edge } from '@xyflow/react'
+import { nanoid } from 'nanoid'
 
 interface NodeCreationResult {
   nodes: Node[]
@@ -25,8 +26,8 @@ export const createNode = (
   if (type === 'step') {
     // Auto-create step + output node pair
     const stepNumber = nodes.filter((n) => n.type === 'step').length + 1
-    const stepId = stepNumber.toString() // "1", "2", "3"
-    const outputId = `${stepNumber}o` // "1o", "2o", "3o"
+    const stepId = nanoid() // UUID for React Flow (guaranteed unique)
+    const outputId = nanoid() // UUID for output node (guaranteed unique)
 
     const stepNode: Node = {
       id: stepId,
@@ -34,7 +35,7 @@ export const createNode = (
       position,
       data: {
         label: 'step',
-        stepNumber,
+        stepNumber, // Keep stepNumber for display/execution order only
         apiId: null, // Will be set after save
       },
     }
@@ -45,7 +46,7 @@ export const createNode = (
       position: { x: position.x + 400, y: position.y }, // Keep same Y as step for now
       data: {
         label: `Step ${stepNumber} Output`,
-        stepNumber,
+        stepNumber, // Keep stepNumber for display only
       },
     }
 
@@ -63,13 +64,13 @@ export const createNode = (
     return { nodes: nextNodes, edges: nextEdges }
   } else if (type === 'conditional') {
     // Handle conditional node
-    const conditionalCount = nodes.filter(
-      (n) => n.type === 'conditional'
-    ).length
-    const conditionalId = `conditional-${conditionalCount + 1}`
+    const conditionalId = nanoid() // UUID for React Flow (guaranteed unique)
 
     // Get unique step number for conditional node (should be after all regular steps)
     const stepCount = nodes.filter((n) => n.type === 'step').length
+    const conditionalCount = nodes.filter(
+      (n) => n.type === 'conditional'
+    ).length
     const conditionalStepNumber = stepCount + conditionalCount + 1
 
     const conditionalNode: Node = {
@@ -83,16 +84,13 @@ export const createNode = (
           { name: 'Route B', description: '' },
         ],
         requireHumanValidation: false,
-        stepNumber: conditionalStepNumber,
+        stepNumber: conditionalStepNumber, // Keep stepNumber for display/execution order only
       },
     }
 
     return { nodes: [...nodes, conditionalNode], edges }
   } else if (type === 'structuredOutput') {
-    const structuredOutputCount = nodes.filter(
-      (n) => n.type === 'structuredOutput'
-    ).length
-    const structuredOutputId = `structured-output-${structuredOutputCount + 1}`
+    const structuredOutputId = nanoid() // UUID for React Flow (guaranteed unique)
 
     const stepCount = nodes.filter((n) => n.type === 'step').length
     const conditionalCount = nodes.filter(
@@ -113,22 +111,14 @@ export const createNode = (
           { name: '1', description: 'First route' },
           { name: '2', description: 'Second route' },
         ],
-        stepNumber: structuredOutputStepNumber,
+        stepNumber: structuredOutputStepNumber, // Keep stepNumber for display/execution order only
       },
     }
 
     return { nodes: [...nodes, structuredOutputNode], edges }
   } else {
-    // Handle start node with initial data
-    let nodeId: string
-
-    if (type === 'start') {
-      // Generate unique ID for start nodes
-      const startNodeCount = nodes.filter((n) => n.type === 'start').length
-      nodeId = startNodeCount === 0 ? '0' : `start-${startNodeCount}`
-    } else {
-      nodeId = '0' // Fallback for other types
-    }
+    // Handle start node and other node types with UUID
+    const nodeId = nanoid() // UUID for React Flow (guaranteed unique)
 
     const newNode: Node = {
       id: nodeId,
