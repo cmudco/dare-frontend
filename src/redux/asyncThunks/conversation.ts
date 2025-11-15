@@ -16,6 +16,7 @@ import {
   updateConversationSortOrderAPI,
   deleteMultipleConversationsAPI,
   cloneConversationAPI,
+  deleteMessageAPI,
 } from '../../api/conversation'
 import { AppDispatch } from '../store'
 import { sendWebSocketMessage } from './websocket'
@@ -221,6 +222,20 @@ export const updateConversationFeedbackTracking = createAsyncThunk<
     return updatedConversation
   } catch (error) {
     console.error('Error updating conversation feedback tracking:', error)
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const deleteMessage = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>('conversation/deleteMessage', async (messageId, thunkAPI) => {
+  try {
+    await deleteMessageAPI(messageId)
+    return messageId
+  } catch (error) {
+    console.error('Error deleting message:', error)
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })

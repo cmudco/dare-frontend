@@ -115,3 +115,10 @@ export const exportConversationPdfAPI = async (
     responseType: 'blob',
   })
 }
+
+export const deleteMessageAPI = async (messageId: string): Promise<void> => {
+  await baseRequest<void>({
+    url: `api/messages/${messageId}/soft-delete/`,
+    method: METHOD.POST,
+  })
+}
