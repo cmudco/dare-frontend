@@ -18,4 +18,6 @@ export const initialState: WorkflowBuilderState = {
   manualModeEnabled: false,
   currentPartialRunId: null,
   executedStepNodeIds: [],
+  availableRuns: [],
+  selectedRunIds: {},
 }

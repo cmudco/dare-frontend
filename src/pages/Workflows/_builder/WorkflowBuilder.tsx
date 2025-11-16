@@ -25,6 +25,7 @@ import {
   DEFAULT_EDGE_OPTIONS,
 } from '@/utils/constants/workflowBuilder'
 import { loadWorkflowIntoBuilder } from '@/redux/asyncThunks/workflowBuilder'
+import { getWorkflowRuns } from '@/redux/asyncThunks/workflow'
 import { startWorkflowRunPolling } from '@/services/workflowRunPolling'
 import { useEffect } from 'react'
 import { ErrorsContext } from './ErrorsContext'
@@ -35,6 +36,7 @@ import Sidebar from './components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Minimize2, Maximize2, Undo2, Redo2 } from 'lucide-react'
 import { getAgents } from '@/redux/asyncThunks/agent'
+import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 
 export interface WorkflowBuilderProps {
   initialWorkflow?: Workflow
@@ -70,6 +72,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   useEffect(() => {
     if (props.workflowId) {
       dispatch(loadWorkflowIntoBuilder(props.workflowId))
+      // Fetch all runs for this workflow to populate version dropdown
+      dispatch(getWorkflowRuns(props.workflowId))
     } else if (props.initialWorkflow) {
       // For cases where workflow is passed directly (shouldn't happen often with new approach)
       console.warn(
@@ -85,6 +89,20 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
       return cleanup
     }
   }, [currentRun?.id, isWorkflowRunning, dispatch])
+
+  // Refresh runs list when workflow run completes or status changes
+  useEffect(() => {
+    // Only refresh if we have a workflow ID and the run just completed
+    if (
+      props.workflowId &&
+      currentRun &&
+      !isWorkflowRunning &&
+      (currentRun.status === WorkflowRunStepStatus.Completed ||
+        currentRun.status === WorkflowRunStepStatus.Failed)
+    ) {
+      dispatch(getWorkflowRuns(props.workflowId))
+    }
+  }, [props.workflowId, currentRun, isWorkflowRunning, dispatch])
 
   useEffect(() => {
     if (savedViewport && nodes.length > 0) {

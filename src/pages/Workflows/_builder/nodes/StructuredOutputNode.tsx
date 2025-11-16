@@ -31,9 +31,10 @@ import {
   updateNodeDataById,
   toggleNodeCollapse,
   removeNodeWithEdges,
+  setNodeSelectedRun,
 } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
-import { renderStatusPill } from '@/utils/workflowUtils'
+import { renderStatusPill, formatWorkflowRunLabel } from '@/utils/workflowUtils'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
 import { submitHumanValidationAPI } from '@/api/workflows'
 import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
@@ -65,11 +66,22 @@ export default function StructuredOutputNode({
   const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+  const { currentRun, availableRuns, selectedRunIds } = useAppSelector(
+    (s) => s.workflowBuilder
+  )
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const updateNodeInternals = useUpdateNodeInternals()
   const [showValidationModal, setShowValidationModal] = useState(false)
+
+  // Get the selected run ID for this node, default to current run
+  const selectedRunId = selectedRunIds[id] || currentRun?.id
+  const hasMultipleRuns = availableRuns.length > 1
+
+  const handleRunChange = (runIdStr: string) => {
+    const runId = parseInt(runIdStr, 10)
+    dispatch(setNodeSelectedRun({ nodeId: id, runId }))
+  }
 
   // Check if this node has a pending validation
   const pendingValidation = currentRun?.pendingValidations?.find(
@@ -180,39 +192,68 @@ export default function StructuredOutputNode({
       className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
       <CardHeader className='pb-3'>
-        <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
-          <div className='flex items-center gap-2'>
-            <div className='flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/10 dark:bg-purple-500/20'>
-              <GitBranch className='h-3 w-3 text-purple-600' />
+        <div className='space-y-2'>
+          <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
+            <div className='flex items-center gap-2'>
+              <div className='flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/10 dark:bg-purple-500/20'>
+                <GitBranch className='h-3 w-3 text-purple-600' />
+              </div>
+              <span>Structured Output</span>
             </div>
-            Structured Output
-          </div>
-          <div className='flex items-center gap-1'>
-            {renderStatusPill(stepStatus)}
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => dispatch(toggleNodeCollapse(id))}
-              className='h-6 w-6 p-0'
-              title={isCollapsed ? 'Expand' : 'Collapse'}
-            >
-              {isCollapsed ? (
-                <ChevronDown className='h-4 w-4' />
-              ) : (
-                <ChevronUp className='h-4 w-4' />
-              )}
-            </Button>
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
-              className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
-              title='Delete node'
-            >
-              <Trash2 className='h-4 w-4' />
-            </Button>
-          </div>
-        </CardTitle>
+            <div className='flex items-center gap-1'>
+              {renderStatusPill(stepStatus)}
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(toggleNodeCollapse(id))}
+                className='h-6 w-6 p-0'
+                title={isCollapsed ? 'Expand' : 'Collapse'}
+              >
+                {isCollapsed ? (
+                  <ChevronDown className='h-4 w-4' />
+                ) : (
+                  <ChevronUp className='h-4 w-4' />
+                )}
+              </Button>
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
+                className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
+                title='Delete node'
+              >
+                <Trash2 className='h-4 w-4' />
+              </Button>
+            </div>
+          </CardTitle>
+          {hasMultipleRuns && selectedRunId && (
+            <div className='flex items-center gap-2'>
+              <span className='text-xs text-muted-foreground'>Version:</span>
+              <Select
+                value={selectedRunId.toString()}
+                onValueChange={handleRunChange}
+              >
+                <SelectTrigger className='h-7 w-full text-xs'>
+                  <SelectValue placeholder='Select version' />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableRuns.map((run, index) => (
+                    <SelectItem
+                      key={run.id}
+                      value={run.id.toString()}
+                      className='text-xs'
+                    >
+                      {formatWorkflowRunLabel(
+                        run,
+                        availableRuns.length - index
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
       </CardHeader>
       {!isCollapsed && (
         <CardContent className='space-y-4'>
