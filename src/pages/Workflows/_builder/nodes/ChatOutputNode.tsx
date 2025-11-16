@@ -2,13 +2,6 @@ import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   ChevronDown,
   ChevronUp,
   Send,
@@ -16,14 +9,20 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { useState } from 'react'
-import { renderStatusPill, formatWorkflowRunLabel } from '@/utils/workflowUtils'
+import { renderStatusPill } from '@/utils/workflowUtils'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   toggleNodeCollapse,
   removeNodeWithEdges,
-  setNodeSelectedRun,
 } from '@/redux/workflowBuilderSlice'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
+import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
+import {
+  getDisplayRun,
+  getStepFromRun,
+  extractStepOutputData,
+} from '@/utils/workflowRunHelpers'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -35,14 +34,7 @@ import 'highlight.js/styles/atom-one-light.css'
 import { CodeBlock } from '@/components/Conversation/CodeBlock'
 import { MermaidBlock } from '@/components/Conversation/MermaidBlock'
 import mermaid from 'mermaid'
-
-type OutputData = {
-  response?: string
-  status?: string
-  stepNumber?: number
-  error?: string
-  isCollapsed?: boolean
-}
+import type { ChatOutputNodeData } from '@/types/workflowNodes'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -50,58 +42,45 @@ mermaid.initialize({
   securityLevel: 'loose',
 })
 
+/**
+ * ChatOutputNode - Displays AI chat responses from workflow execution.
+ *
+ * DATA FLOW:
+ * - Default mode: Shows data from selected version (via version dropdown)
+ * - Manual mode: Shows data from partial run (live execution)
+ * - Running mode: Shows data from current run (polling updates)
+ */
 export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const dispatch = useAppDispatch()
-  const {
-    executedStepNodeIds,
-    availableRuns,
-    selectedRunIds,
-    currentRun,
-    isRunning,
-    manualModeEnabled,
-  } = useAppSelector((s) => s.workflowBuilder)
-  const isOutputExecuted = executedStepNodeIds.includes(id)
 
-  const outputData = (data as OutputData) || {}
+  // VERSION SELECTION: Hook handles all version dropdown logic
+  const versionState = useWorkflowRunVersion(id)
+
+  // REDUX STATE: Get workflow execution data
+  const { executedStepNodeIds, availableRuns, selectedRunIds, currentRun } =
+    useAppSelector((s) => s.workflowBuilder)
+
+  // NODE STATE
+  const outputData = (data as Partial<ChatOutputNodeData>) || {}
   const isCollapsed = outputData?.isCollapsed || false
+  const isOutputExecuted = executedStepNodeIds.includes(id)
   const [expanded, setExpanded] = useState(false)
 
-  // Filter runs: exclude partial runs, only show completed/failed full runs
-  const versionRuns = availableRuns.filter(
-    (run) =>
-      !run.isPartial &&
-      (run.status === WorkflowRunStepStatus.Completed ||
-        run.status === WorkflowRunStepStatus.Failed)
+  // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
+  const displayRun = getDisplayRun(
+    id,
+    selectedRunIds,
+    availableRuns,
+    currentRun
   )
 
-  // Get the selected run ID for this node, default to current run
-  const selectedRunId = selectedRunIds[id] || currentRun?.id
+  // STEP LOOKUP: Find this node's step in the display run
+  const stepRun = getStepFromRun(displayRun, outputData?.stepNumber)
 
-  // Find the run to display (either selected version or current run)
-  const displayRun = selectedRunIds[id]
-    ? availableRuns.find((run) => run.id === selectedRunIds[id])
-    : currentRun
+  // DATA EXTRACTION: Pull out display values
+  const { response, status, error } = extractStepOutputData(stepRun)
 
-  // Get step data from the display run
-  const stepNumber = outputData?.stepNumber
-  const stepRun = displayRun?.steps?.find(
-    (s) => (s.order || s.stepNode) === stepNumber
-  )
-
-  // Extract display data from step run
-  const response: string | null = stepRun?.response ?? null
-  const status = stepRun?.status
-  const error = stepRun?.error
-
-  // Only show dropdown when not running, not in manual mode, and has multiple versions
-  const showVersionDropdown =
-    !isRunning && !manualModeEnabled && versionRuns.length > 1
-
-  const handleRunChange = (runIdStr: string) => {
-    const runId = parseInt(runIdStr, 10)
-    dispatch(setNodeSelectedRun({ nodeId: id, runId }))
-  }
-
+  // UI HANDLERS
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(response || '')
@@ -159,30 +138,12 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
               </Button>
             </div>
           </CardTitle>
-          {showVersionDropdown && selectedRunId && (
-            <div className='flex items-center gap-2'>
-              <span className='text-xs text-muted-foreground'>Version:</span>
-              <Select
-                value={selectedRunId.toString()}
-                onValueChange={handleRunChange}
-              >
-                <SelectTrigger className='h-7 w-full text-xs'>
-                  <SelectValue placeholder='Select version' />
-                </SelectTrigger>
-                <SelectContent>
-                  {versionRuns.map((run, index) => (
-                    <SelectItem
-                      key={run.id}
-                      value={run.id.toString()}
-                      className='text-xs'
-                    >
-                      {formatWorkflowRunLabel(run, versionRuns.length - index)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <VersionDropdown
+            versionRuns={versionState.versionRuns}
+            selectedRunId={versionState.selectedRunId}
+            onRunChange={versionState.handleRunChange}
+            show={versionState.showVersionDropdown}
+          />
         </div>
       </CardHeader>
       {!isCollapsed && (

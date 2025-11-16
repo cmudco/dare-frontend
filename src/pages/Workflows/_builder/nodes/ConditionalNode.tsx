@@ -32,71 +32,46 @@ import {
   updateNodeDataById,
   toggleNodeCollapse,
   removeNodeWithEdges,
-  setNodeSelectedRun,
 } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
-import { renderStatusPill, formatWorkflowRunLabel } from '@/utils/workflowUtils'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { renderStatusPill } from '@/utils/workflowUtils'
 import React from 'react'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
 import { submitHumanValidationAPI } from '@/api/workflows'
 import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
+import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
+import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
+import {
+  getDisplayRun,
+  getStepFromRun,
+  extractRoutingDecision,
+} from '@/utils/workflowRunHelpers'
+import type { ConditionalNodeData as ConditionalNodeDataType } from '@/types/workflowNodes'
 
 export interface ConditionalRoute {
   name: string
   description: string
 }
 
-export type ConditionalNodeData = {
-  prompt: number | null // Prompt ID
-  llm: number | null
-  // New structure
-  routes: ConditionalRoute[]
-  requireHumanValidation: boolean
-  stepNumber: number
-  selectedRoute?: string // Store which route was selected during execution
-  id?: string
-  isCollapsed?: boolean
-}
-
 export default function ConditionalNode({ id, data, selected }: NodeProps) {
-  const nodeData = (data as ConditionalNodeData) || ({} as ConditionalNodeData)
+  const nodeData =
+    (data as Partial<ConditionalNodeDataType>) ||
+    ({} as Partial<ConditionalNodeDataType>)
   const { errorsByNodeId, clearNodeError } = useErrorsContext()
   const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
-  const {
-    currentRun,
-    availableRuns,
-    selectedRunIds,
-    isRunning,
-    manualModeEnabled,
-  } = useAppSelector((s) => s.workflowBuilder)
+  const { currentRun, availableRuns, selectedRunIds } = useAppSelector(
+    (s) => s.workflowBuilder
+  )
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const updateNodeInternals = useUpdateNodeInternals()
   const [showValidationModal, setShowValidationModal] = useState(false)
 
-  // Filter runs: exclude partial runs, only show completed/failed full runs
-  const versionRuns = availableRuns.filter(
-    (run) =>
-      !run.isPartial &&
-      (run.status === WorkflowRunStepStatus.Completed ||
-        run.status === WorkflowRunStepStatus.Failed)
-  )
-
-  // Get the selected run ID for this node, default to current run
-  const selectedRunId = selectedRunIds[id] || currentRun?.id
-
-  // Only show dropdown when not running, not in manual mode, and has multiple versions
-  const showVersionDropdown =
-    !isRunning && !manualModeEnabled && versionRuns.length > 1
-
-  const handleRunChange = (runIdStr: string) => {
-    const runId = parseInt(runIdStr, 10)
-    dispatch(setNodeSelectedRun({ nodeId: id, runId }))
-  }
+  // VERSION SELECTION: Hook handles all version dropdown logic
+  const versionState = useWorkflowRunVersion(id)
 
   // Check if this node has a pending validation
   const pendingValidation = currentRun?.pendingValidations?.find(
@@ -124,7 +99,7 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
   const hasInput = connectedInputEdges.length > 0
 
   // Update Redux when form changes
-  const updateNodeData = (updates: Partial<ConditionalNodeData>) => {
+  const updateNodeData = (updates: Partial<ConditionalNodeDataType>) => {
     dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
   }
 
@@ -205,32 +180,29 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
     updateNodeInternals(id)
   }, [updateNodeInternals, id, routes.length, routeNames, edges])
 
-  // Find the run to display (either selected version or current run)
-  const displayRun = selectedRunIds[id]
-    ? availableRuns.find((run) => run.id === selectedRunIds[id])
-    : currentRun
+  // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
+  const displayRun = getDisplayRun(
+    id,
+    selectedRunIds,
+    availableRuns,
+    currentRun
+  )
 
-  // Get the step run for this conditional node
-  // Match by order and look for the step with availableRoutes metadata (indicates conditional node)
+  // STEP LOOKUP: Find this node's step in the display run (conditional node requires isConditional flag)
   const stepRun =
-    displayRun?.steps?.find(
-      (s) =>
-        s.order === nodeData?.stepNumber &&
-        s.metadata?.availableRoutes !== undefined
-    ) || displayRun?.steps?.find((s) => s.id === pendingValidation?.stepId)
+    getStepFromRun(displayRun, nodeData?.stepNumber, { isConditional: true }) ||
+    displayRun?.steps?.find((s) => s.id === pendingValidation?.stepId)
+
+  // DATA EXTRACTION: Pull out routing decision values
+  const {
+    selectedRoute,
+    aiAnalysis,
+    aiRecommendation,
+    isHumanValidated,
+    userChoice,
+  } = extractRoutingDecision(stepRun || null, pendingValidation)
 
   const stepStatus = stepRun?.status || null
-  const metadata = stepRun?.metadata
-  // Use selectedRoute from metadata (shows what route was actually taken)
-  const selectedRoute = metadata?.selectedRoute || stepRun?.response
-
-  // Get AI analysis from pendingValidation if available (during human validation),
-  // otherwise from metadata (after execution)
-  const aiAnalysis = pendingValidation?.aiAnalysis || metadata?.analysis
-  const aiRecommendation =
-    pendingValidation?.aiRecommendation || metadata?.aiRecommendation
-  const isHumanValidated = metadata?.isHumanValidated
-  const userChoice = metadata?.userChoice // The route the user actually chose
 
   const isCollapsed = nodeData?.isCollapsed || false
 
@@ -273,30 +245,12 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
               </Button>
             </div>
           </CardTitle>
-          {showVersionDropdown && selectedRunId && (
-            <div className='flex items-center gap-2'>
-              <span className='text-xs text-muted-foreground'>Version:</span>
-              <Select
-                value={selectedRunId.toString()}
-                onValueChange={handleRunChange}
-              >
-                <SelectTrigger className='h-7 w-full text-xs'>
-                  <SelectValue placeholder='Select version' />
-                </SelectTrigger>
-                <SelectContent>
-                  {versionRuns.map((run, index) => (
-                    <SelectItem
-                      key={run.id}
-                      value={run.id.toString()}
-                      className='text-xs'
-                    >
-                      {formatWorkflowRunLabel(run, versionRuns.length - index)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <VersionDropdown
+            versionRuns={versionState.versionRuns}
+            selectedRunId={versionState.selectedRunId}
+            onRunChange={versionState.handleRunChange}
+            show={versionState.showVersionDropdown}
+          />
         </div>
       </CardHeader>
       {!isCollapsed && (
