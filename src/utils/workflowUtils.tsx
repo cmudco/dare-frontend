@@ -73,3 +73,45 @@ export const renderStatusPill = (status: string | null) => {
     </div>
   )
 }
+
+/**
+ * Get status emoji for workflow run status
+ */
+export const getRunStatusEmoji = (status: WorkflowRunStepStatus): string => {
+  switch (status) {
+    case WorkflowRunStepStatus.Completed:
+      return '✓'
+    case WorkflowRunStepStatus.Failed:
+      return '⚠'
+    case WorkflowRunStepStatus.Running:
+      return '⏳'
+    case WorkflowRunStepStatus.Pending:
+      return '○'
+    case WorkflowRunStepStatus.PendingHumanInput:
+      return '⏸'
+    case WorkflowRunStepStatus.Skipped:
+      return '⊘'
+    default:
+      return '○'
+  }
+}
+
+/**
+ * Format workflow run label for version dropdown
+ * @param run - The workflow run to format
+ * @param versionNumber - The version number to display (e.g., 5 for "Version 5")
+ */
+export const formatWorkflowRunLabel = (
+  run: { startedAt: string; status: WorkflowRunStepStatus },
+  versionNumber: number
+): string => {
+  const date = new Date(run.startedAt)
+  const formattedDate = date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const statusEmoji = getRunStatusEmoji(run.status)
+  return `${statusEmoji} Version ${versionNumber} - ${formattedDate}`
+}

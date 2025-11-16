@@ -45,12 +45,15 @@ import {
   markStepExecuted,
   setCurrentPartialRunId,
 } from '@/redux/workflowBuilderSlice'
-import { executeSingleStep } from '@/redux/asyncThunks/workflow'
+import {
+  executeSingleStep,
+  getActivePartialRun,
+} from '@/redux/asyncThunks/workflow'
 import { unwrapResult } from '@reduxjs/toolkit'
 import { toast } from '@/utils/toast'
 import { useErrorsContext } from '../ErrorsContext'
 import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
-import type { StructuredOutputNodeData } from './StructuredOutputNode'
+import type { StructuredOutputNodeData } from '@/types/workflowNodes'
 import {
   ROUTE_HANDLE_PREFIX,
   HANDLE_NUMBERS,
@@ -197,6 +200,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         dispatch(markStepExecuted(nodeId))
         dispatch(setCurrentPartialRunId(result.workflowRunId))
 
+        // Refresh partial run data to update node displays
+        await dispatch(getActivePartialRun(loadedWorkflow.id))
+
         // Mark connected output node as executed
         const connectedOutputEdge = edges.find((edge) => edge.source === nodeId)
         if (connectedOutputEdge) {
@@ -333,10 +339,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
           <div className='flex items-center gap-1'>
             {renderStatusPill(stepStatus)}
             {isStepExecuted && (
-              <CheckCircle2
-                className='h-4 w-4 text-green-500'
-                title='Step executed'
-              />
+              <CheckCircle2 className='h-4 w-4 text-green-500' />
             )}
             {manualModeEnabled && (
               <Button
