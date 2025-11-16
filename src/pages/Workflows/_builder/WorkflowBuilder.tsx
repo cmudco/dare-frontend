@@ -42,6 +42,7 @@ export interface WorkflowBuilderProps {
   initialWorkflow?: Workflow
   workflowId?: number
   disableEditing?: boolean
+  viewMode?: boolean // True when viewing completed runs, false when editing/running
 }
 
 const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
@@ -72,7 +73,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   useEffect(() => {
     if (props.workflowId) {
       dispatch(loadWorkflowIntoBuilder(props.workflowId))
-      // Fetch all runs for this workflow to populate version dropdown
+      // Fetch workflow run versions for the dropdown
       dispatch(getWorkflowRuns(props.workflowId))
     } else if (props.initialWorkflow) {
       // For cases where workflow is passed directly (shouldn't happen often with new approach)
