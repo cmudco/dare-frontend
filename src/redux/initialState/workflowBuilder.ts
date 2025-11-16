@@ -20,4 +20,5 @@ export const initialState: WorkflowBuilderState = {
   executedStepNodeIds: [],
   availableRuns: [],
   selectedRunIds: {},
+  viewMode: false,
 }

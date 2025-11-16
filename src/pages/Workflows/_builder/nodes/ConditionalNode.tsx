@@ -32,9 +32,11 @@ import {
   updateNodeDataById,
   toggleNodeCollapse,
   removeNodeWithEdges,
+  setNodeSelectedRun,
 } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
-import { renderStatusPill } from '@/utils/workflowUtils'
+import { renderStatusPill, formatWorkflowRunLabel } from '@/utils/workflowUtils'
+import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import React from 'react'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
 import { submitHumanValidationAPI } from '@/api/workflows'
@@ -64,11 +66,37 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
-  const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+  const {
+    currentRun,
+    availableRuns,
+    selectedRunIds,
+    isRunning,
+    manualModeEnabled,
+  } = useAppSelector((s) => s.workflowBuilder)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const updateNodeInternals = useUpdateNodeInternals()
   const [showValidationModal, setShowValidationModal] = useState(false)
+
+  // Filter runs: exclude partial runs, only show completed/failed full runs
+  const versionRuns = availableRuns.filter(
+    (run) =>
+      !run.isPartial &&
+      (run.status === WorkflowRunStepStatus.Completed ||
+        run.status === WorkflowRunStepStatus.Failed)
+  )
+
+  // Get the selected run ID for this node, default to current run
+  const selectedRunId = selectedRunIds[id] || currentRun?.id
+
+  // Only show dropdown when not running, not in manual mode, and has multiple versions
+  const showVersionDropdown =
+    !isRunning && !manualModeEnabled && versionRuns.length > 1
+
+  const handleRunChange = (runIdStr: string) => {
+    const runId = parseInt(runIdStr, 10)
+    dispatch(setNodeSelectedRun({ nodeId: id, runId }))
+  }
 
   // Check if this node has a pending validation
   const pendingValidation = currentRun?.pendingValidations?.find(
@@ -177,14 +205,19 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
     updateNodeInternals(id)
   }, [updateNodeInternals, id, routes.length, routeNames, edges])
 
+  // Find the run to display (either selected version or current run)
+  const displayRun = selectedRunIds[id]
+    ? availableRuns.find((run) => run.id === selectedRunIds[id])
+    : currentRun
+
   // Get the step run for this conditional node
   // Match by order and look for the step with availableRoutes metadata (indicates conditional node)
   const stepRun =
-    currentRun?.steps?.find(
+    displayRun?.steps?.find(
       (s) =>
         s.order === nodeData?.stepNumber &&
         s.metadata?.availableRoutes !== undefined
-    ) || currentRun?.steps?.find((s) => s.id === pendingValidation?.stepId)
+    ) || displayRun?.steps?.find((s) => s.id === pendingValidation?.stepId)
 
   const stepStatus = stepRun?.status || null
   const metadata = stepRun?.metadata
@@ -206,39 +239,65 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
       className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
       <CardHeader className='pb-3'>
-        <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
-          <div className='flex items-center gap-2'>
-            <div className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 dark:bg-blue-500/20'>
-              <GitBranch className='h-3 w-3 text-blue-600' />
+        <div className='space-y-2'>
+          <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
+            <div className='flex items-center gap-2'>
+              <div className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 dark:bg-blue-500/20'>
+                <GitBranch className='h-3 w-3 text-blue-600' />
+              </div>
+              Conditional
             </div>
-            Conditional
-          </div>
-          <div className='flex items-center gap-1'>
-            {renderStatusPill(stepStatus)}
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => dispatch(toggleNodeCollapse(id))}
-              className='h-6 w-6 p-0'
-              title={isCollapsed ? 'Expand' : 'Collapse'}
-            >
-              {isCollapsed ? (
-                <ChevronDown className='h-4 w-4' />
-              ) : (
-                <ChevronUp className='h-4 w-4' />
-              )}
-            </Button>
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
-              className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
-              title='Delete node'
-            >
-              <Trash2 className='h-4 w-4' />
-            </Button>
-          </div>
-        </CardTitle>
+            <div className='flex items-center gap-1'>
+              {renderStatusPill(stepStatus)}
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(toggleNodeCollapse(id))}
+                className='h-6 w-6 p-0'
+                title={isCollapsed ? 'Expand' : 'Collapse'}
+              >
+                {isCollapsed ? (
+                  <ChevronDown className='h-4 w-4' />
+                ) : (
+                  <ChevronUp className='h-4 w-4' />
+                )}
+              </Button>
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
+                className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
+                title='Delete node'
+              >
+                <Trash2 className='h-4 w-4' />
+              </Button>
+            </div>
+          </CardTitle>
+          {showVersionDropdown && selectedRunId && (
+            <div className='flex items-center gap-2'>
+              <span className='text-xs text-muted-foreground'>Version:</span>
+              <Select
+                value={selectedRunId.toString()}
+                onValueChange={handleRunChange}
+              >
+                <SelectTrigger className='h-7 w-full text-xs'>
+                  <SelectValue placeholder='Select version' />
+                </SelectTrigger>
+                <SelectContent>
+                  {versionRuns.map((run, index) => (
+                    <SelectItem
+                      key={run.id}
+                      value={run.id.toString()}
+                      className='text-xs'
+                    >
+                      {formatWorkflowRunLabel(run, versionRuns.length - index)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
       </CardHeader>
       {!isCollapsed && (
         <CardContent className='space-y-4'>

@@ -52,20 +52,50 @@ mermaid.initialize({
 
 export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const dispatch = useAppDispatch()
-  const { executedStepNodeIds, availableRuns, selectedRunIds, currentRun } =
-    useAppSelector((s) => s.workflowBuilder)
+  const {
+    executedStepNodeIds,
+    availableRuns,
+    selectedRunIds,
+    currentRun,
+    isRunning,
+    manualModeEnabled,
+  } = useAppSelector((s) => s.workflowBuilder)
   const isOutputExecuted = executedStepNodeIds.includes(id)
 
   const outputData = (data as OutputData) || {}
-  const response: string | null = outputData?.response ?? null
-  const status = outputData?.status
-  const error = outputData?.error
   const isCollapsed = outputData?.isCollapsed || false
   const [expanded, setExpanded] = useState(false)
 
+  // Filter runs: exclude partial runs, only show completed/failed full runs
+  const versionRuns = availableRuns.filter(
+    (run) =>
+      !run.isPartial &&
+      (run.status === WorkflowRunStepStatus.Completed ||
+        run.status === WorkflowRunStepStatus.Failed)
+  )
+
   // Get the selected run ID for this node, default to current run
   const selectedRunId = selectedRunIds[id] || currentRun?.id
-  const hasMultipleRuns = availableRuns.length > 1
+
+  // Find the run to display (either selected version or current run)
+  const displayRun = selectedRunIds[id]
+    ? availableRuns.find((run) => run.id === selectedRunIds[id])
+    : currentRun
+
+  // Get step data from the display run
+  const stepNumber = outputData?.stepNumber
+  const stepRun = displayRun?.steps?.find(
+    (s) => (s.order || s.stepNode) === stepNumber
+  )
+
+  // Extract display data from step run
+  const response: string | null = stepRun?.response ?? null
+  const status = stepRun?.status
+  const error = stepRun?.error
+
+  // Only show dropdown when not running, not in manual mode, and has multiple versions
+  const showVersionDropdown =
+    !isRunning && !manualModeEnabled && versionRuns.length > 1
 
   const handleRunChange = (runIdStr: string) => {
     const runId = parseInt(runIdStr, 10)
@@ -129,7 +159,7 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
               </Button>
             </div>
           </CardTitle>
-          {hasMultipleRuns && selectedRunId && (
+          {showVersionDropdown && selectedRunId && (
             <div className='flex items-center gap-2'>
               <span className='text-xs text-muted-foreground'>Version:</span>
               <Select
@@ -140,16 +170,13 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
                   <SelectValue placeholder='Select version' />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableRuns.map((run, index) => (
+                  {versionRuns.map((run, index) => (
                     <SelectItem
                       key={run.id}
                       value={run.id.toString()}
                       className='text-xs'
                     >
-                      {formatWorkflowRunLabel(
-                        run,
-                        availableRuns.length - index
-                      )}
+                      {formatWorkflowRunLabel(run, versionRuns.length - index)}
                     </SelectItem>
                   ))}
                 </SelectContent>
