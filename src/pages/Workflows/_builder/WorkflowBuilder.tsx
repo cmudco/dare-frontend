@@ -16,6 +16,8 @@ import {
   setSavedViewport,
   collapseAllNodes,
   expandAllNodes,
+  undo,
+  redo,
 } from '@/redux/workflowBuilderSlice'
 import { isValidConnection } from '@/utils/workflowBuilder/isValidConnection'
 import {
@@ -31,7 +33,7 @@ import type { Workflow } from '@/redux/types/workflow'
 import { clearNodeError as clearNodeErrorAction } from '@/redux/workflowBuilderSlice'
 import Sidebar from './components/Sidebar'
 import { Button } from '@/components/ui/button'
-import { Minimize2, Maximize2 } from 'lucide-react'
+import { Minimize2, Maximize2, Undo2, Redo2 } from 'lucide-react'
 import { getAgents } from '@/redux/asyncThunks/agent'
 
 export interface WorkflowBuilderProps {
@@ -52,7 +54,12 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     currentRun,
     isRunning: isWorkflowRunning,
     savedViewport,
+    history,
   } = useAppSelector((state) => state.workflowBuilder)
+
+  // Check if undo/redo is available
+  const canUndo = history.past.length > 0
+  const canRedo = history.future.length > 0
 
   // Load agents on mount
   useEffect(() => {
@@ -88,6 +95,35 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
       return () => clearTimeout(timeoutId)
     }
   }, [reactFlowInstance, savedViewport, nodes.length])
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if Cmd (Mac) or Ctrl (Windows/Linux) is pressed
+      const isCmdOrCtrl = event.metaKey || event.ctrlKey
+
+      if (!isCmdOrCtrl) return
+
+      // Undo: Cmd+Z or Ctrl+Z (without Shift)
+      if (event.key === 'z' && !event.shiftKey) {
+        event.preventDefault()
+        if (canUndo) {
+          dispatch(undo())
+        }
+      }
+
+      // Redo: Cmd+Shift+Z or Ctrl+Shift+Z
+      if (event.key === 'z' && event.shiftKey) {
+        event.preventDefault()
+        if (canRedo) {
+          dispatch(redo())
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [dispatch, canUndo, canRedo])
 
   return (
     <div className='flex h-full w-full'>
@@ -172,27 +208,53 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
                   ⚠ {Object.keys(errorsByNodeId).length} Error(s)
                 </div>
               )}
-              <div className='flex gap-1 border-t border-gray-200 pt-2'>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => dispatch(collapseAllNodes())}
-                  className='h-6 flex-1 px-2 text-xs'
-                  title='Collapse all nodes'
-                >
-                  <Minimize2 className='mr-1 h-3 w-3' />
-                  Collapse
-                </Button>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => dispatch(expandAllNodes())}
-                  className='h-6 flex-1 px-2 text-xs'
-                  title='Expand all nodes'
-                >
-                  <Maximize2 className='mr-1 h-3 w-3' />
-                  Expand
-                </Button>
+              <div className='space-y-1 border-t border-gray-200 pt-2'>
+                <div className='flex gap-1'>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={() => dispatch(undo())}
+                    disabled={!canUndo}
+                    className='h-6 flex-1 px-2 text-xs'
+                    title='Undo (Cmd/Ctrl+Z)'
+                  >
+                    <Undo2 className='mr-1 h-3 w-3' />
+                    Undo
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={() => dispatch(redo())}
+                    disabled={!canRedo}
+                    className='h-6 flex-1 px-2 text-xs'
+                    title='Redo (Cmd/Ctrl+Shift+Z)'
+                  >
+                    <Redo2 className='mr-1 h-3 w-3' />
+                    Redo
+                  </Button>
+                </div>
+                <div className='flex gap-1'>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={() => dispatch(collapseAllNodes())}
+                    className='h-6 flex-1 px-2 text-xs'
+                    title='Collapse all nodes'
+                  >
+                    <Minimize2 className='mr-1 h-3 w-3' />
+                    Collapse
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={() => dispatch(expandAllNodes())}
+                    className='h-6 flex-1 px-2 text-xs'
+                    title='Expand all nodes'
+                  >
+                    <Maximize2 className='mr-1 h-3 w-3' />
+                    Expand
+                  </Button>
+                </div>
               </div>
             </div>
           </Panel>
