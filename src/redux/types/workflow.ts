@@ -89,6 +89,7 @@ export interface Workflow {
   description: string
   mode: WorkflowMode
   viewport?: { x: number; y: number; zoom: number }
+  manualModeEnabled?: boolean
 }
 
 export interface WorkflowState {
@@ -188,4 +189,45 @@ export interface ExecuteSingleStepRequest {
   workflowId: number
   stepNodeId: string
   workflowRunId?: number | null
+}
+
+export interface PartialRunStep {
+  id: number
+  stepNode: number
+  order: number
+  status: WorkflowRunStepStatus
+  response: string | null
+  error: string | null
+  metadata: {
+    routingDecision?: string
+    analysis?: string
+    aiRecommendation?: string
+    availableRoutes?: ConditionalRoute[]
+    isHumanValidated?: boolean
+    fullResponse?: string
+    pendingHumanDecision?: boolean
+    userChoice?: string
+    selectedRoute?: string
+    rawResponse?: string
+    useStructuredOutputNode?: boolean
+  } | null
+  createdAt: string
+  updatedAt: string
+  nodeId: string // Enriched field from backend containing the workflow node ID
+}
+
+export interface GetActivePartialRunResponse {
+  partialRun: WorkflowRun | null
+  executedStepNodeIds: string[]
+}
+
+export interface RestorePartialRunPayload {
+  partialRunId: number
+  executedStepNodeIds: string[]
+  steps: Array<{
+    stepNode: string
+    response: string | null
+    status: WorkflowRunStepStatus
+    error: string | null
+  }>
 }

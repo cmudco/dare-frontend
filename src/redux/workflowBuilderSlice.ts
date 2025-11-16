@@ -16,7 +16,7 @@ import { removeNodeById as removeNodeByIdHelper } from '@/utils/workflowBuilder/
 import { updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/updateNodeData'
 import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
-import { startWorkflowRun } from './asyncThunks/workflow'
+import { startWorkflowRun, getActivePartialRun } from './asyncThunks/workflow'
 import type { WorkflowRun } from './types/workflow'
 import {
   createSnapshot,
@@ -422,6 +422,9 @@ const workflowBuilderSlice = createSlice({
           action.payload.currentRun?.status === 'pending_human_input'
         state.lastWorkflowId = action.payload.workflow.id
         state.savedViewport = action.payload.viewport ?? null
+        // Load manual mode state from workflow
+        state.manualModeEnabled =
+          action.payload.workflow.manualModeEnabled ?? false
         // Clear history when loading a workflow
         state.history.past = []
         state.history.future = []
@@ -432,6 +435,55 @@ const workflowBuilderSlice = createSlice({
         state.isRunning =
           action.payload.status === 'running' ||
           action.payload.status === 'pending_human_input'
+      })
+      .addCase(getActivePartialRun.fulfilled, (state, action) => {
+        const { partialRun, executedStepNodeIds } = action.payload
+
+        if (!partialRun) {
+          return
+        }
+
+        // Update partial run state
+        state.currentPartialRunId = partialRun.id
+        state.executedStepNodeIds = executedStepNodeIds
+
+        // Update node data with step results
+        partialRun.steps.forEach((step) => {
+          // Find the step node
+          const stepNodeIndex = state.nodes.findIndex(
+            (n) => n.id === String(step.stepNode)
+          )
+          if (stepNodeIndex === -1) {
+            return // Skip if step node not found
+          }
+
+          // Find connected output node (chatOutput or conditional)
+          const connectedEdge = state.edges.find(
+            (e) => e.source === String(step.stepNode)
+          )
+          if (!connectedEdge) {
+            return // Skip if no connected edge
+          }
+
+          const outputNodeIndex = state.nodes.findIndex(
+            (n) => n.id === connectedEdge.target
+          )
+          if (outputNodeIndex === -1) {
+            return // Skip if output node not found
+          }
+
+          // Update the output node with step results
+          const outputNode = state.nodes[outputNodeIndex]
+          state.nodes[outputNodeIndex] = {
+            ...outputNode,
+            data: {
+              ...outputNode.data,
+              response: step.response ?? '',
+              status: step.status,
+              error: step.error ?? '',
+            },
+          }
+        })
       })
   },
 })
