@@ -53,7 +53,7 @@ import { unwrapResult } from '@reduxjs/toolkit'
 import { toast } from '@/utils/toast'
 import { useErrorsContext } from '../ErrorsContext'
 import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
-import type { StructuredOutputNodeData } from './StructuredOutputNode'
+import type { StructuredOutputNodeData } from '@/types/workflowNodes'
 import {
   ROUTE_HANDLE_PREFIX,
   HANDLE_NUMBERS,

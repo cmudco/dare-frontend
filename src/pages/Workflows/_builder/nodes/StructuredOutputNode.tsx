@@ -31,29 +31,24 @@ import {
   updateNodeDataById,
   toggleNodeCollapse,
   removeNodeWithEdges,
-  setNodeSelectedRun,
 } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
-import { renderStatusPill, formatWorkflowRunLabel } from '@/utils/workflowUtils'
+import { renderStatusPill } from '@/utils/workflowUtils'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
 import { submitHumanValidationAPI } from '@/api/workflows'
 import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
+import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
+import {
+  getDisplayRun,
+  getStepFromRun,
+  extractRoutingDecision,
+} from '@/utils/workflowRunHelpers'
+import type { StructuredOutputNodeData as StructuredOutputNodeDataType } from '@/types/workflowNodes'
 
 export interface StructuredOutputRoute {
   name: string
   description: string
-}
-
-export type StructuredOutputNodeData = {
-  prompt: number | null // Prompt ID
-  llm: number | null // LLM ID
-  routes: StructuredOutputRoute[]
-  requireHumanValidation: boolean
-  stepNumber: number
-  selectedRoute?: string // Store which route was selected during execution
-  id?: string
-  isCollapsed?: boolean
 }
 
 export default function StructuredOutputNode({
@@ -62,42 +57,22 @@ export default function StructuredOutputNode({
   selected,
 }: NodeProps) {
   const nodeData =
-    (data as StructuredOutputNodeData) || ({} as StructuredOutputNodeData)
+    (data as Partial<StructuredOutputNodeDataType>) ||
+    ({} as Partial<StructuredOutputNodeDataType>)
   const { errorsByNodeId, clearNodeError } = useErrorsContext()
   const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const {
-    currentRun,
-    availableRuns,
-    selectedRunIds,
-    isRunning,
-    manualModeEnabled,
-  } = useAppSelector((s) => s.workflowBuilder)
+  const { currentRun, availableRuns, selectedRunIds } = useAppSelector(
+    (s) => s.workflowBuilder
+  )
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const updateNodeInternals = useUpdateNodeInternals()
   const [showValidationModal, setShowValidationModal] = useState(false)
 
-  // Filter runs: exclude partial runs, only show completed/failed full runs
-  const versionRuns = availableRuns.filter(
-    (run) =>
-      !run.isPartial &&
-      (run.status === WorkflowRunStepStatus.Completed ||
-        run.status === WorkflowRunStepStatus.Failed)
-  )
-
-  // Get the selected run ID for this node, default to current run
-  const selectedRunId = selectedRunIds[id] || currentRun?.id
-
-  // Only show dropdown when not running, not in manual mode, and has multiple versions
-  const showVersionDropdown =
-    !isRunning && !manualModeEnabled && versionRuns.length > 1
-
-  const handleRunChange = (runIdStr: string) => {
-    const runId = parseInt(runIdStr, 10)
-    dispatch(setNodeSelectedRun({ nodeId: id, runId }))
-  }
+  // VERSION SELECTION: Hook handles all version dropdown logic
+  const versionState = useWorkflowRunVersion(id)
 
   // Check if this node has a pending validation
   const pendingValidation = currentRun?.pendingValidations?.find(
@@ -105,10 +80,15 @@ export default function StructuredOutputNode({
   )
   const hasPendingValidation = !!pendingValidation
 
-  const routes = nodeData.routes || [
-    { name: '1', description: 'First route' },
-    { name: '2', description: 'Second route' },
-  ]
+  // Memoize routes to prevent dependency issues in useMemo hook below
+  const routes = useMemo(
+    () =>
+      nodeData.routes || [
+        { name: '1', description: 'First route' },
+        { name: '2', description: 'Second route' },
+      ],
+    [nodeData.routes]
+  )
 
   // Structured Output node config only; Step hosts outward connectors
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
@@ -122,10 +102,12 @@ export default function StructuredOutputNode({
     ? nodes.find((n) => n.id === connectedStepEdge.target)
     : undefined
 
-  const connectedStepNumber = connectedStepNode?.data?.stepNumber
+  const connectedStepNumber = connectedStepNode?.data?.stepNumber as
+    | number
+    | undefined
 
   // Update Redux when form changes
-  const updateNodeData = (updates: Partial<StructuredOutputNodeData>) => {
+  const updateNodeData = (updates: Partial<StructuredOutputNodeDataType>) => {
     dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
   }
 
@@ -188,23 +170,27 @@ export default function StructuredOutputNode({
     updateNodeInternals(id)
   }, [updateNodeInternals, id, routes.length, routeNames])
 
-  // Find the run to display (either selected version or current run)
-  const displayRun = selectedRunIds[id]
-    ? availableRuns.find((run) => run.id === selectedRunIds[id])
-    : currentRun
-
-  // Get the step run for the connected step node
-  const stepRun = displayRun?.steps?.find(
-    (s) => s.order === connectedStepNumber
+  // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
+  const displayRun = getDisplayRun(
+    id,
+    selectedRunIds,
+    availableRuns,
+    currentRun
   )
 
+  // STEP LOOKUP: Find the connected step node's data
+  const stepRun = getStepFromRun(displayRun, connectedStepNumber)
+
+  // DATA EXTRACTION: Pull out routing decision values
+  const {
+    selectedRoute,
+    aiAnalysis,
+    aiRecommendation,
+    isHumanValidated,
+    userChoice,
+  } = extractRoutingDecision(stepRun, pendingValidation)
+
   const stepStatus = stepRun?.status || null
-  const metadata = stepRun?.metadata
-  const selectedRoute = metadata?.selectedRoute || null
-  const aiAnalysis = metadata?.analysis
-  const aiRecommendation = metadata?.aiRecommendation
-  const isHumanValidated = metadata?.isHumanValidated
-  const userChoice = metadata?.userChoice
 
   const isCollapsed = nodeData?.isCollapsed || false
 
@@ -247,30 +233,12 @@ export default function StructuredOutputNode({
               </Button>
             </div>
           </CardTitle>
-          {showVersionDropdown && selectedRunId && (
-            <div className='flex items-center gap-2'>
-              <span className='text-xs text-muted-foreground'>Version:</span>
-              <Select
-                value={selectedRunId.toString()}
-                onValueChange={handleRunChange}
-              >
-                <SelectTrigger className='h-7 w-full text-xs'>
-                  <SelectValue placeholder='Select version' />
-                </SelectTrigger>
-                <SelectContent>
-                  {versionRuns.map((run, index) => (
-                    <SelectItem
-                      key={run.id}
-                      value={run.id.toString()}
-                      className='text-xs'
-                    >
-                      {formatWorkflowRunLabel(run, versionRuns.length - index)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <VersionDropdown
+            versionRuns={versionState.versionRuns}
+            selectedRunId={versionState.selectedRunId}
+            onRunChange={versionState.handleRunChange}
+            show={versionState.showVersionDropdown}
+          />
         </div>
       </CardHeader>
       {!isCollapsed && (
