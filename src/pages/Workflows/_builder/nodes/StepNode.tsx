@@ -28,6 +28,9 @@ import {
   ChevronUp,
   Trash2,
   Globe,
+  Play,
+  Loader2,
+  CheckCircle2,
 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -39,7 +42,12 @@ import {
   updateNodeDataById,
   toggleNodeCollapse,
   removeNodeWithEdges,
+  markStepExecuted,
+  setCurrentPartialRunId,
 } from '@/redux/workflowBuilderSlice'
+import { executeSingleStep } from '@/redux/asyncThunks/workflow'
+import { unwrapResult } from '@reduxjs/toolkit'
+import { toast } from '@/utils/toast'
 import { useErrorsContext } from '../ErrorsContext'
 import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
 import type { StructuredOutputNodeData } from './StructuredOutputNode'
@@ -88,10 +96,19 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const files = useAppSelector((s) => s.files.files)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const agents = useAppSelector((s) => s.agent.agents)
-  const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+  const {
+    currentRun,
+    manualModeEnabled,
+    executedStepNodeIds,
+    currentPartialRunId,
+    loadedWorkflow,
+  } = useAppSelector((s) => s.workflowBuilder)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const updateNodeInternals = useUpdateNodeInternals()
+
+  const [isExecutingStep, setIsExecutingStep] = useState(false)
+  const isStepExecuted = executedStepNodeIds.includes(nodeId)
 
   const useStructuredOutputNode = stepData.useStructuredOutputNode || false
 
@@ -154,6 +171,74 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     } else {
       // No snapshot available, just clear agent
       updateNodeData({ agent: null })
+    }
+  }
+
+  // Execute single step
+  const handleExecuteStep = async () => {
+    if (!loadedWorkflow?.id) {
+      toast.error('No workflow loaded')
+      return
+    }
+
+    setIsExecutingStep(true)
+    try {
+      const resultAction = await dispatch(
+        executeSingleStep({
+          workflowId: loadedWorkflow.id,
+          stepNodeId: nodeId,
+          workflowRunId: currentPartialRunId,
+        })
+      )
+      const result = unwrapResult(resultAction)
+
+      if (result.success) {
+        toast.success(`Step ${stepData.stepNumber} executed successfully`)
+        dispatch(markStepExecuted(nodeId))
+        dispatch(setCurrentPartialRunId(result.workflowRunId))
+
+        // Mark connected output node as executed
+        const connectedOutputEdge = edges.find((edge) => edge.source === nodeId)
+        if (connectedOutputEdge) {
+          const outputNode = nodes.find(
+            (n) => n.id === connectedOutputEdge.target
+          )
+          if (
+            outputNode &&
+            (outputNode.type === 'chatOutput' ||
+              outputNode.type === 'structuredOutput')
+          ) {
+            dispatch(markStepExecuted(connectedOutputEdge.target))
+          }
+        }
+      } else if (
+        result.missingDependencies &&
+        result.missingDependencies.length > 0
+      ) {
+        // Find step numbers for missing dependencies
+        const missingStepNumbers = result.missingDependencies
+          .map((depNodeId) => {
+            const depNode = nodes.find((n) => n.id === depNodeId)
+            return depNode?.data?.stepNumber
+          })
+          .filter(Boolean)
+          .join(', ')
+
+        toast.error(
+          `Cannot execute Step ${stepData.stepNumber}. Please run: Step${missingStepNumbers.includes(',') ? 's' : ''} ${missingStepNumbers} first`
+        )
+      } else {
+        toast.error(result.error || 'Step execution failed')
+      }
+    } catch (error) {
+      console.error('Error executing step:', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to execute step'
+      toast.error(
+        `Step ${stepData.stepNumber} execution failed: ${errorMessage}`
+      )
+    } finally {
+      setIsExecutingStep(false)
     }
   }
 
@@ -231,7 +316,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
   return (
     <Card
-      className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
+      className={`w-80 ${
+        isStepExecuted
+          ? 'border-green-500/50 bg-green-50/30 dark:bg-green-950/20'
+          : 'border-border'
+      } ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
       <CardHeader className='pb-2'>
         <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
@@ -243,6 +332,28 @@ export default function StepNode({ id, data, selected }: NodeProps) {
           </div>
           <div className='flex items-center gap-1'>
             {renderStatusPill(stepStatus)}
+            {isStepExecuted && (
+              <CheckCircle2
+                className='h-4 w-4 text-green-500'
+                title='Step executed'
+              />
+            )}
+            {manualModeEnabled && (
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={handleExecuteStep}
+                disabled={isExecutingStep}
+                className='h-6 w-6 p-0 text-primary hover:bg-primary/10'
+                title='Run this step'
+              >
+                {isExecutingStep ? (
+                  <Loader2 className='h-4 w-4 animate-spin' />
+                ) : (
+                  <Play className='h-4 w-4' />
+                )}
+              </Button>
+            )}
             <Button
               size='sm'
               variant='ghost'

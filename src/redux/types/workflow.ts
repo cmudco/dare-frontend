@@ -70,6 +70,7 @@ export interface WorkflowRun {
   workflowDescription: string
   hasPendingValidation?: boolean
   pendingValidations?: PendingValidation[]
+  isPartial?: boolean
 }
 
 export interface Workflow {
@@ -152,4 +153,39 @@ export interface UpdateWorkflowDTO {
   viewport_x?: number
   viewport_y?: number
   viewport_zoom?: number
+}
+
+export interface SingleStepResult {
+  stepId: number
+  nodeId: string
+  status: WorkflowRunStepStatus
+  response: string | null
+  error: string | null
+  metadata: {
+    routingDecision?: string
+    analysis?: string
+    aiRecommendation?: string
+    availableRoutes?: ConditionalRoute[]
+    isHumanValidated?: boolean
+    fullResponse?: string
+    pendingHumanDecision?: boolean
+    userChoice?: string
+    selectedRoute?: string
+    rawResponse?: string
+    useStructuredOutputNode?: boolean
+  } | null
+}
+
+export interface SingleStepExecutionResponse {
+  success: boolean
+  workflowRunId: number
+  stepResult: SingleStepResult | null
+  missingDependencies: string[]
+  error: string | null
+}
+
+export interface ExecuteSingleStepRequest {
+  workflowId: number
+  stepNodeId: string
+  workflowRunId?: number | null
 }
