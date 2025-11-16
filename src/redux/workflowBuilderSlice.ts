@@ -16,8 +16,13 @@ import { removeNodeById as removeNodeByIdHelper } from '@/utils/workflowBuilder/
 import { updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/updateNodeData'
 import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
-import { startWorkflowRun, getActivePartialRun } from './asyncThunks/workflow'
+import {
+  startWorkflowRun,
+  getActivePartialRun,
+  getWorkflowRuns,
+} from './asyncThunks/workflow'
 import type { WorkflowRun } from './types/workflow'
+import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import {
   createSnapshot,
   pushToHistory,
@@ -312,7 +317,8 @@ const workflowBuilderSlice = createSlice({
       const runData = action.payload
       state.currentRun = runData
       state.isRunning =
-        runData.status === 'running' || runData.status === 'pending_human_input'
+        runData.status === WorkflowRunStepStatus.Running ||
+        runData.status === WorkflowRunStepStatus.PendingHumanInput
 
       // Update output nodes and conditional nodes with step responses and status
       state.nodes = state.nodes.map((node) => {
@@ -406,6 +412,45 @@ const workflowBuilderSlice = createSlice({
       state.currentPartialRunId = null
       state.executedStepNodeIds = []
     },
+    // Run version management
+    setNodeSelectedRun: (
+      state,
+      action: PayloadAction<{ nodeId: string; runId: number }>
+    ) => {
+      const { nodeId, runId } = action.payload
+      state.selectedRunIds[nodeId] = runId
+
+      // Find the selected run
+      const selectedRun = state.availableRuns.find((run) => run.id === runId)
+      if (!selectedRun) return
+
+      // Update the node with data from the selected run
+      const nodeIndex = state.nodes.findIndex((node) => node.id === nodeId)
+      if (nodeIndex === -1) return
+
+      const node = state.nodes[nodeIndex]
+
+      // For output nodes, find the corresponding step in the selected run
+      if (node.type === 'chatOutput' || node.type === 'conditional') {
+        const stepNumber = node.data.stepNumber
+        const stepRun = selectedRun.steps?.find(
+          (s) => (s.order || s.stepNode) === stepNumber
+        )
+
+        if (stepRun) {
+          state.nodes[nodeIndex] = {
+            ...node,
+            data: {
+              ...node.data,
+              status: stepRun.status,
+              response: stepRun.response || '',
+              error: stepRun.error || '',
+              selectedRoute: stepRun.response || '', // For conditional nodes
+            },
+          }
+        }
+      }
+    },
     resetBuilder: () => {
       return initialState
     },
@@ -418,8 +463,9 @@ const workflowBuilderSlice = createSlice({
         state.loadedWorkflow = action.payload.workflow
         state.currentRun = action.payload.currentRun
         state.isRunning =
-          action.payload.currentRun?.status === 'running' ||
-          action.payload.currentRun?.status === 'pending_human_input'
+          action.payload.currentRun?.status === WorkflowRunStepStatus.Running ||
+          action.payload.currentRun?.status ===
+            WorkflowRunStepStatus.PendingHumanInput
         state.lastWorkflowId = action.payload.workflow.id
         state.savedViewport = action.payload.viewport ?? null
         // Load manual mode state from workflow
@@ -433,8 +479,20 @@ const workflowBuilderSlice = createSlice({
         // When a new run starts, update the current run and start polling
         state.currentRun = action.payload
         state.isRunning =
-          action.payload.status === 'running' ||
-          action.payload.status === 'pending_human_input'
+          action.payload.status === WorkflowRunStepStatus.Running ||
+          action.payload.status === WorkflowRunStepStatus.PendingHumanInput
+
+        // Auto-switch all output nodes to the new run (latest version)
+        // Clear selectedRunIds so all nodes default to currentRun
+        state.selectedRunIds = {}
+
+        // Add the new run to availableRuns if not already there
+        const runExists = state.availableRuns.some(
+          (run) => run.id === action.payload.id
+        )
+        if (!runExists) {
+          state.availableRuns = [action.payload, ...state.availableRuns]
+        }
       })
       .addCase(getActivePartialRun.fulfilled, (state, action) => {
         const { partialRun, executedStepNodeIds } = action.payload
@@ -485,6 +543,10 @@ const workflowBuilderSlice = createSlice({
           }
         })
       })
+      .addCase(getWorkflowRuns.fulfilled, (state, action) => {
+        // Store all available runs for the workflow
+        state.availableRuns = action.payload
+      })
   },
 })
 
@@ -521,6 +583,7 @@ export const {
   setCurrentPartialRunId,
   markStepExecuted,
   resetPartialRun,
+  setNodeSelectedRun,
   resetBuilder,
 } = workflowBuilderSlice.actions
 

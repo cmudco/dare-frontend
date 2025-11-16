@@ -7,6 +7,7 @@ import {
   deleteWorkflowAPI,
   startWorkflowRunAPI,
   getWorkflowRunByIdAPI,
+  getWorkflowRunsAPI,
   cloneWorkflowAPI,
   executeSingleStepAPI,
   getActivePartialRunAPI,
@@ -94,6 +95,18 @@ export const getWorkflowRunById = createAsyncThunk(
   async (runId: number, { rejectWithValue }) => {
     try {
       return await getWorkflowRunByIdAPI(runId)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getWorkflowRuns = createAsyncThunk(
+  'workflows/getWorkflowRuns',
+  async (workflowId: number, { rejectWithValue }) => {
+    try {
+      const response = await getWorkflowRunsAPI(workflowId)
+      return response.results
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }

@@ -2,6 +2,13 @@ import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   ChevronDown,
   ChevronUp,
   Send,
@@ -9,11 +16,12 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { useState } from 'react'
-import { renderStatusPill } from '@/utils/workflowUtils'
+import { renderStatusPill, formatWorkflowRunLabel } from '@/utils/workflowUtils'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   toggleNodeCollapse,
   removeNodeWithEdges,
+  setNodeSelectedRun,
 } from '@/redux/workflowBuilderSlice'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import ReactMarkdown from 'react-markdown'
@@ -44,7 +52,8 @@ mermaid.initialize({
 
 export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const dispatch = useAppDispatch()
-  const { executedStepNodeIds } = useAppSelector((s) => s.workflowBuilder)
+  const { executedStepNodeIds, availableRuns, selectedRunIds, currentRun } =
+    useAppSelector((s) => s.workflowBuilder)
   const isOutputExecuted = executedStepNodeIds.includes(id)
 
   const outputData = (data as OutputData) || {}
@@ -53,6 +62,15 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const error = outputData?.error
   const isCollapsed = outputData?.isCollapsed || false
   const [expanded, setExpanded] = useState(false)
+
+  // Get the selected run ID for this node, default to current run
+  const selectedRunId = selectedRunIds[id] || currentRun?.id
+  const hasMultipleRuns = availableRuns.length > 1
+
+  const handleRunChange = (runIdStr: string) => {
+    const runId = parseInt(runIdStr, 10)
+    dispatch(setNodeSelectedRun({ nodeId: id, runId }))
+  }
 
   const copyToClipboard = async () => {
     try {
@@ -74,45 +92,71 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
       } ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
       <CardHeader className='pb-2'>
-        <CardTitle className='flex items-center justify-between text-sm text-card-foreground'>
-          <div className='flex items-center gap-2'>
-            <div className='rounded bg-primary/90 p-1'>
-              <Send className='h-4 w-4 text-white' />
+        <div className='space-y-2'>
+          <CardTitle className='flex items-center justify-between text-sm text-card-foreground'>
+            <div className='flex items-center gap-2'>
+              <div className='rounded bg-primary/90 p-1'>
+                <Send className='h-4 w-4 text-white' />
+              </div>
+              <span>Chat Output</span>
             </div>
-            Chat Output
-          </div>
-          <div className='flex items-center gap-1'>
-            {isOutputExecuted && (
-              <CheckCircle2
-                className='h-4 w-4 text-green-500'
-                title='Output generated'
-              />
-            )}
-            {renderStatusPill(status || null)}
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => dispatch(toggleNodeCollapse(id))}
-              className='h-6 w-6 p-0'
-              title={isCollapsed ? 'Expand' : 'Collapse'}
-            >
-              {isCollapsed ? (
-                <ChevronDown className='h-4 w-4' />
-              ) : (
-                <ChevronUp className='h-4 w-4' />
+            <div className='flex items-center gap-1'>
+              {isOutputExecuted && (
+                <CheckCircle2 className='h-4 w-4 text-green-500' />
               )}
-            </Button>
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
-              className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
-              title='Delete node'
-            >
-              <Trash2 className='h-4 w-4' />
-            </Button>
-          </div>
-        </CardTitle>
+              {renderStatusPill(status || null)}
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(toggleNodeCollapse(id))}
+                className='h-6 w-6 p-0'
+                title={isCollapsed ? 'Expand' : 'Collapse'}
+              >
+                {isCollapsed ? (
+                  <ChevronDown className='h-4 w-4' />
+                ) : (
+                  <ChevronUp className='h-4 w-4' />
+                )}
+              </Button>
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
+                className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
+                title='Delete node'
+              >
+                <Trash2 className='h-4 w-4' />
+              </Button>
+            </div>
+          </CardTitle>
+          {hasMultipleRuns && selectedRunId && (
+            <div className='flex items-center gap-2'>
+              <span className='text-xs text-muted-foreground'>Version:</span>
+              <Select
+                value={selectedRunId.toString()}
+                onValueChange={handleRunChange}
+              >
+                <SelectTrigger className='h-7 w-full text-xs'>
+                  <SelectValue placeholder='Select version' />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableRuns.map((run, index) => (
+                    <SelectItem
+                      key={run.id}
+                      value={run.id.toString()}
+                      className='text-xs'
+                    >
+                      {formatWorkflowRunLabel(
+                        run,
+                        availableRuns.length - index
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
       </CardHeader>
       {!isCollapsed && (
         <CardContent className='space-y-2'>
