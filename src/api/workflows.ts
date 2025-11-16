@@ -71,6 +71,15 @@ export const getWorkflowRunByIdAPI = async (
   })
 }
 
+export const getWorkflowRunsAPI = async (
+  workflowId: number
+): Promise<{ results: WorkflowRun[] }> => {
+  return await baseRequest<{ results: WorkflowRun[] }>({
+    url: `api/workflow-runs/?workflow=${workflowId}`,
+    method: METHOD.GET,
+  })
+}
+
 export const cloneWorkflowAPI = async (id: number): Promise<Workflow> => {
   return await baseRequest<Workflow>({
     url: `api/workflows/${id}/clone/`,

@@ -1,8 +1,11 @@
 import { type Node, type Edge } from '@xyflow/react'
 import { type NodeErrors } from '@/redux/types/workflowBuilder'
 import type { StepNodeData } from '@/pages/Workflows/_builder/nodes/StepNode'
-import type { ConditionalNodeData } from '@/pages/Workflows/_builder/nodes/ConditionalNode'
-import type { StructuredOutputNodeData } from '@/pages/Workflows/_builder/nodes/StructuredOutputNode'
+import type {
+  ConditionalNodeData,
+  StructuredOutputNodeData,
+  NodeRoute,
+} from '@/types/workflowNodes'
 import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
 
 export interface ValidationResult {
@@ -110,7 +113,7 @@ export const validateWorkflow = (
       )
       pushErrorMessage(`Conditional node requires at least 2 routes`)
     }
-    routes.forEach((route, index) => {
+    routes.forEach((route: NodeRoute, index: number) => {
       if (!route.name?.trim()) {
         appendFieldError(
           conditionalNode.id,
@@ -120,7 +123,9 @@ export const validateWorkflow = (
         pushErrorMessage(`Conditional node Route ${index + 1} requires a name`)
       }
     })
-    const routeNames = routes.map((r) => r.name?.trim()).filter(Boolean)
+    const routeNames = routes
+      .map((r: NodeRoute) => r.name?.trim())
+      .filter(Boolean)
     const uniqueRouteNames = new Set(routeNames)
     if (routeNames.length !== uniqueRouteNames.size) {
       appendFieldError(
@@ -256,7 +261,8 @@ export const validateWorkflow = (
         )
       }
 
-      const conditionalData = conditionalNode.data as ConditionalNodeData
+      const conditionalData =
+        conditionalNode.data as Partial<ConditionalNodeData>
       const routes = conditionalData?.routes || []
 
       if (routes.length === 0) {
@@ -276,7 +282,7 @@ export const validateWorkflow = (
       // Note: Collecting of connectedOutputs removed to avoid unused variable; we validate per-route and overall count instead
 
       // Check that each route has at most one connection to a step node
-      routes.forEach((route) => {
+      routes.forEach((route: NodeRoute) => {
         const routeHandle = `${ROUTE_HANDLE_PREFIX}${route.name}`
         const routeConnections = outgoingEdges.filter(
           (edge) => edge.sourceHandle === routeHandle
@@ -392,7 +398,7 @@ export const validateWorkflow = (
         )
       }
       const routeNames = routes
-        .map((r) => (r.name || '').trim())
+        .map((r: NodeRoute) => (r.name || '').trim())
         .filter(Boolean)
       const uniqueRouteNames = new Set(routeNames)
       if (routeNames.length !== uniqueRouteNames.size) {
@@ -409,7 +415,7 @@ export const validateWorkflow = (
       const outgoing = edges.filter((e) => e.source === step.id)
       // Note: Previous aggregate of connectedStepsFromRoutes removed; per-route and total connections validated below
 
-      routes.forEach((route) => {
+      routes.forEach((route: NodeRoute) => {
         const handle = `${ROUTE_HANDLE_PREFIX}${route.name}`
         const conns = outgoing.filter((e) => e.sourceHandle === handle)
         if (conns.length > 1) {

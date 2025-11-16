@@ -32,4 +32,8 @@ export interface WorkflowBuilderState {
   manualModeEnabled: boolean
   currentPartialRunId: number | null
   executedStepNodeIds: string[]
+  // Run version management
+  availableRuns: WorkflowRun[]
+  selectedRunIds: Record<string, number> // nodeId -> runId mapping
+  viewMode: boolean // True when viewing completed runs, false when editing/running
 }

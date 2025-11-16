@@ -37,21 +37,18 @@ import { renderStatusPill } from '@/utils/workflowUtils'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
 import { submitHumanValidationAPI } from '@/api/workflows'
 import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
+import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
+import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
+import {
+  getDisplayRun,
+  getStepFromRun,
+  extractRoutingDecision,
+} from '@/utils/workflowRunHelpers'
+import type { StructuredOutputNodeData as StructuredOutputNodeDataType } from '@/types/workflowNodes'
 
 export interface StructuredOutputRoute {
   name: string
   description: string
-}
-
-export type StructuredOutputNodeData = {
-  prompt: number | null // Prompt ID
-  llm: number | null // LLM ID
-  routes: StructuredOutputRoute[]
-  requireHumanValidation: boolean
-  stepNumber: number
-  selectedRoute?: string // Store which route was selected during execution
-  id?: string
-  isCollapsed?: boolean
 }
 
 export default function StructuredOutputNode({
@@ -60,16 +57,22 @@ export default function StructuredOutputNode({
   selected,
 }: NodeProps) {
   const nodeData =
-    (data as StructuredOutputNodeData) || ({} as StructuredOutputNodeData)
+    (data as Partial<StructuredOutputNodeDataType>) ||
+    ({} as Partial<StructuredOutputNodeDataType>)
   const { errorsByNodeId, clearNodeError } = useErrorsContext()
   const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+  const { currentRun, availableRuns, selectedRunIds } = useAppSelector(
+    (s) => s.workflowBuilder
+  )
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const updateNodeInternals = useUpdateNodeInternals()
   const [showValidationModal, setShowValidationModal] = useState(false)
+
+  // VERSION SELECTION: Hook handles all version dropdown logic
+  const versionState = useWorkflowRunVersion(id)
 
   // Check if this node has a pending validation
   const pendingValidation = currentRun?.pendingValidations?.find(
@@ -77,10 +80,15 @@ export default function StructuredOutputNode({
   )
   const hasPendingValidation = !!pendingValidation
 
-  const routes = nodeData.routes || [
-    { name: '1', description: 'First route' },
-    { name: '2', description: 'Second route' },
-  ]
+  // Memoize routes to prevent dependency issues in useMemo hook below
+  const routes = useMemo(
+    () =>
+      nodeData.routes || [
+        { name: '1', description: 'First route' },
+        { name: '2', description: 'Second route' },
+      ],
+    [nodeData.routes]
+  )
 
   // Structured Output node config only; Step hosts outward connectors
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
@@ -94,10 +102,12 @@ export default function StructuredOutputNode({
     ? nodes.find((n) => n.id === connectedStepEdge.target)
     : undefined
 
-  const connectedStepNumber = connectedStepNode?.data?.stepNumber
+  const connectedStepNumber = connectedStepNode?.data?.stepNumber as
+    | number
+    | undefined
 
   // Update Redux when form changes
-  const updateNodeData = (updates: Partial<StructuredOutputNodeData>) => {
+  const updateNodeData = (updates: Partial<StructuredOutputNodeDataType>) => {
     dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
   }
 
@@ -160,18 +170,27 @@ export default function StructuredOutputNode({
     updateNodeInternals(id)
   }, [updateNodeInternals, id, routes.length, routeNames])
 
-  // Get the step run for the connected step node
-  const stepRun = currentRun?.steps?.find(
-    (s) => s.order === connectedStepNumber
+  // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
+  const displayRun = getDisplayRun(
+    id,
+    selectedRunIds,
+    availableRuns,
+    currentRun
   )
 
+  // STEP LOOKUP: Find the connected step node's data
+  const stepRun = getStepFromRun(displayRun, connectedStepNumber)
+
+  // DATA EXTRACTION: Pull out routing decision values
+  const {
+    selectedRoute,
+    aiAnalysis,
+    aiRecommendation,
+    isHumanValidated,
+    userChoice,
+  } = extractRoutingDecision(stepRun, pendingValidation)
+
   const stepStatus = stepRun?.status || null
-  const metadata = stepRun?.metadata
-  const selectedRoute = metadata?.selectedRoute || null
-  const aiAnalysis = metadata?.analysis
-  const aiRecommendation = metadata?.aiRecommendation
-  const isHumanValidated = metadata?.isHumanValidated
-  const userChoice = metadata?.userChoice
 
   const isCollapsed = nodeData?.isCollapsed || false
 
@@ -180,39 +199,47 @@ export default function StructuredOutputNode({
       className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
       <CardHeader className='pb-3'>
-        <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
-          <div className='flex items-center gap-2'>
-            <div className='flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/10 dark:bg-purple-500/20'>
-              <GitBranch className='h-3 w-3 text-purple-600' />
+        <div className='space-y-2'>
+          <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
+            <div className='flex items-center gap-2'>
+              <div className='flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/10 dark:bg-purple-500/20'>
+                <GitBranch className='h-3 w-3 text-purple-600' />
+              </div>
+              <span>Structured Output</span>
             </div>
-            Structured Output
-          </div>
-          <div className='flex items-center gap-1'>
-            {renderStatusPill(stepStatus)}
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => dispatch(toggleNodeCollapse(id))}
-              className='h-6 w-6 p-0'
-              title={isCollapsed ? 'Expand' : 'Collapse'}
-            >
-              {isCollapsed ? (
-                <ChevronDown className='h-4 w-4' />
-              ) : (
-                <ChevronUp className='h-4 w-4' />
-              )}
-            </Button>
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
-              className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
-              title='Delete node'
-            >
-              <Trash2 className='h-4 w-4' />
-            </Button>
-          </div>
-        </CardTitle>
+            <div className='flex items-center gap-1'>
+              {renderStatusPill(stepStatus)}
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(toggleNodeCollapse(id))}
+                className='h-6 w-6 p-0'
+                title={isCollapsed ? 'Expand' : 'Collapse'}
+              >
+                {isCollapsed ? (
+                  <ChevronDown className='h-4 w-4' />
+                ) : (
+                  <ChevronUp className='h-4 w-4' />
+                )}
+              </Button>
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
+                className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
+                title='Delete node'
+              >
+                <Trash2 className='h-4 w-4' />
+              </Button>
+            </div>
+          </CardTitle>
+          <VersionDropdown
+            versionRuns={versionState.versionRuns}
+            selectedRunId={versionState.selectedRunId}
+            onRunChange={versionState.handleRunChange}
+            show={versionState.showVersionDropdown}
+          />
+        </div>
       </CardHeader>
       {!isCollapsed && (
         <CardContent className='space-y-4'>

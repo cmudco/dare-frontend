@@ -16,6 +16,13 @@ import {
   removeNodeWithEdges,
 } from '@/redux/workflowBuilderSlice'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
+import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
+import {
+  getDisplayRun,
+  getStepFromRun,
+  extractStepOutputData,
+} from '@/utils/workflowRunHelpers'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -27,14 +34,7 @@ import 'highlight.js/styles/atom-one-light.css'
 import { CodeBlock } from '@/components/Conversation/CodeBlock'
 import { MermaidBlock } from '@/components/Conversation/MermaidBlock'
 import mermaid from 'mermaid'
-
-type OutputData = {
-  response?: string
-  status?: string
-  stepNumber?: number
-  error?: string
-  isCollapsed?: boolean
-}
+import type { ChatOutputNodeData } from '@/types/workflowNodes'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -42,18 +42,45 @@ mermaid.initialize({
   securityLevel: 'loose',
 })
 
+/**
+ * ChatOutputNode - Displays AI chat responses from workflow execution.
+ *
+ * DATA FLOW:
+ * - Default mode: Shows data from selected version (via version dropdown)
+ * - Manual mode: Shows data from partial run (live execution)
+ * - Running mode: Shows data from current run (polling updates)
+ */
 export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const dispatch = useAppDispatch()
-  const { executedStepNodeIds } = useAppSelector((s) => s.workflowBuilder)
-  const isOutputExecuted = executedStepNodeIds.includes(id)
 
-  const outputData = (data as OutputData) || {}
-  const response: string | null = outputData?.response ?? null
-  const status = outputData?.status
-  const error = outputData?.error
+  // VERSION SELECTION: Hook handles all version dropdown logic
+  const versionState = useWorkflowRunVersion(id)
+
+  // REDUX STATE: Get workflow execution data
+  const { executedStepNodeIds, availableRuns, selectedRunIds, currentRun } =
+    useAppSelector((s) => s.workflowBuilder)
+
+  // NODE STATE
+  const outputData = (data as Partial<ChatOutputNodeData>) || {}
   const isCollapsed = outputData?.isCollapsed || false
+  const isOutputExecuted = executedStepNodeIds.includes(id)
   const [expanded, setExpanded] = useState(false)
 
+  // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
+  const displayRun = getDisplayRun(
+    id,
+    selectedRunIds,
+    availableRuns,
+    currentRun
+  )
+
+  // STEP LOOKUP: Find this node's step in the display run
+  const stepRun = getStepFromRun(displayRun, outputData?.stepNumber)
+
+  // DATA EXTRACTION: Pull out display values
+  const { response, status, error } = extractStepOutputData(stepRun)
+
+  // UI HANDLERS
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(response || '')
@@ -74,45 +101,50 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
       } ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
       <CardHeader className='pb-2'>
-        <CardTitle className='flex items-center justify-between text-sm text-card-foreground'>
-          <div className='flex items-center gap-2'>
-            <div className='rounded bg-primary/90 p-1'>
-              <Send className='h-4 w-4 text-white' />
+        <div className='space-y-2'>
+          <CardTitle className='flex items-center justify-between text-sm text-card-foreground'>
+            <div className='flex items-center gap-2'>
+              <div className='rounded bg-primary/90 p-1'>
+                <Send className='h-4 w-4 text-white' />
+              </div>
+              <span>Chat Output</span>
             </div>
-            Chat Output
-          </div>
-          <div className='flex items-center gap-1'>
-            {isOutputExecuted && (
-              <CheckCircle2
-                className='h-4 w-4 text-green-500'
-                title='Output generated'
-              />
-            )}
-            {renderStatusPill(status || null)}
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => dispatch(toggleNodeCollapse(id))}
-              className='h-6 w-6 p-0'
-              title={isCollapsed ? 'Expand' : 'Collapse'}
-            >
-              {isCollapsed ? (
-                <ChevronDown className='h-4 w-4' />
-              ) : (
-                <ChevronUp className='h-4 w-4' />
+            <div className='flex items-center gap-1'>
+              {isOutputExecuted && (
+                <CheckCircle2 className='h-4 w-4 text-green-500' />
               )}
-            </Button>
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
-              className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
-              title='Delete node'
-            >
-              <Trash2 className='h-4 w-4' />
-            </Button>
-          </div>
-        </CardTitle>
+              {renderStatusPill(status || null)}
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(toggleNodeCollapse(id))}
+                className='h-6 w-6 p-0'
+                title={isCollapsed ? 'Expand' : 'Collapse'}
+              >
+                {isCollapsed ? (
+                  <ChevronDown className='h-4 w-4' />
+                ) : (
+                  <ChevronUp className='h-4 w-4' />
+                )}
+              </Button>
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
+                className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
+                title='Delete node'
+              >
+                <Trash2 className='h-4 w-4' />
+              </Button>
+            </div>
+          </CardTitle>
+          <VersionDropdown
+            versionRuns={versionState.versionRuns}
+            selectedRunId={versionState.selectedRunId}
+            onRunChange={versionState.handleRunChange}
+            show={versionState.showVersionDropdown}
+          />
+        </div>
       </CardHeader>
       {!isCollapsed && (
         <CardContent className='space-y-2'>
