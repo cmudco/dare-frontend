@@ -7,6 +7,7 @@ import {
   UpdateWorkflowDTO,
   ExecuteSingleStepRequest,
   SingleStepExecutionResponse,
+  GetActivePartialRunResponse,
 } from '@/redux/types/workflow'
 
 export const getWorkflowsAPI = async (): Promise<{ results: Workflow[] }> => {
@@ -138,5 +139,25 @@ export const executeSingleStepAPI = async (
       step_node_id: request.stepNodeId,
       workflow_run_id: request.workflowRunId,
     },
+  })
+}
+
+export const getActivePartialRunAPI = async (
+  workflowId: number
+): Promise<GetActivePartialRunResponse> => {
+  return await baseRequest<GetActivePartialRunResponse>({
+    url: `api/workflow-runs/get-active-partial-run/?workflow_id=${workflowId}`,
+    method: METHOD.GET,
+  })
+}
+
+export const toggleManualModeAPI = async (
+  workflowId: number,
+  manualModeEnabled: boolean
+): Promise<Workflow> => {
+  return await baseRequest<Workflow>({
+    url: `api/workflows/${workflowId}/toggle-manual-mode/`,
+    method: METHOD.PATCH,
+    data: { manual_mode_enabled: manualModeEnabled },
   })
 }

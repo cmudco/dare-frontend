@@ -9,6 +9,8 @@ import {
   getWorkflowRunByIdAPI,
   cloneWorkflowAPI,
   executeSingleStepAPI,
+  getActivePartialRunAPI,
+  toggleManualModeAPI,
 } from '@/api/workflows'
 import {
   CreateWorkflowDTO,
@@ -114,6 +116,36 @@ export const executeSingleStep = createAsyncThunk(
   async (request: ExecuteSingleStepRequest, { rejectWithValue }) => {
     try {
       const response = await executeSingleStepAPI(request)
+      return response
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getActivePartialRun = createAsyncThunk(
+  'workflows/getActivePartialRun',
+  async (workflowId: number, { rejectWithValue }) => {
+    try {
+      const response = await getActivePartialRunAPI(workflowId)
+      return response
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const toggleManualMode = createAsyncThunk(
+  'workflows/toggleManualMode',
+  async (
+    {
+      workflowId,
+      manualModeEnabled,
+    }: { workflowId: number; manualModeEnabled: boolean },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await toggleManualModeAPI(workflowId, manualModeEnabled)
       return response
     } catch (error) {
       return rejectWithValue((error as Error).message)
