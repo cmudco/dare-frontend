@@ -1,10 +1,16 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp, Send, Trash2 } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronUp,
+  Send,
+  Trash2,
+  CheckCircle2,
+} from 'lucide-react'
 import { useState } from 'react'
 import { renderStatusPill } from '@/utils/workflowUtils'
-import { useAppDispatch } from '@/redux/hooks'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   toggleNodeCollapse,
   removeNodeWithEdges,
@@ -38,6 +44,9 @@ mermaid.initialize({
 
 export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const dispatch = useAppDispatch()
+  const { executedStepNodeIds } = useAppSelector((s) => s.workflowBuilder)
+  const isOutputExecuted = executedStepNodeIds.includes(id)
+
   const outputData = (data as OutputData) || {}
   const response: string | null = outputData?.response ?? null
   const status = outputData?.status
@@ -58,7 +67,11 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const widthClass = hasResponse || hasError ? 'w-[40rem]' : 'w-80'
   return (
     <Card
-      className={`${widthClass} border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
+      className={`${widthClass} ${
+        isOutputExecuted
+          ? 'border-green-500/50 bg-green-50/30 dark:bg-green-950/20'
+          : 'border-border'
+      } ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
       <CardHeader className='pb-2'>
         <CardTitle className='flex items-center justify-between text-sm text-card-foreground'>
@@ -69,6 +82,12 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
             Chat Output
           </div>
           <div className='flex items-center gap-1'>
+            {isOutputExecuted && (
+              <CheckCircle2
+                className='h-4 w-4 text-green-500'
+                title='Output generated'
+              />
+            )}
             {renderStatusPill(status || null)}
             <Button
               size='sm'
