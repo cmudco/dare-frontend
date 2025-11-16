@@ -11,4 +11,8 @@ export const initialState: WorkflowBuilderState = {
   currentRun: null,
   isRunning: false,
   loadedWorkflow: null,
+  history: {
+    past: [],
+    future: [],
+  },
 }

@@ -18,11 +18,56 @@ import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
 import { startWorkflowRun } from './asyncThunks/workflow'
 import type { WorkflowRun } from './types/workflow'
+import {
+  createSnapshot,
+  pushToHistory,
+  hasSignificantNodeChange,
+  hasSignificantEdgeChange,
+} from './utils/historyHelpers'
 
 const workflowBuilderSlice = createSlice({
   name: 'workflowBuilder',
   initialState,
   reducers: {
+    // Undo/Redo actions
+    undo: (state) => {
+      const previous = state.history.past.pop()
+      if (previous) {
+        // Save current state to future
+        const currentSnapshot = createSnapshot(
+          state.nodes,
+          state.edges,
+          state.errorsByNodeId
+        )
+        state.history.future.push(currentSnapshot)
+
+        // Restore previous state
+        state.nodes = previous.nodes
+        state.edges = previous.edges
+        state.errorsByNodeId = previous.errorsByNodeId
+      }
+    },
+    redo: (state) => {
+      const next = state.history.future.pop()
+      if (next) {
+        // Save current state to past
+        const currentSnapshot = createSnapshot(
+          state.nodes,
+          state.edges,
+          state.errorsByNodeId
+        )
+        state.history.past.push(currentSnapshot)
+
+        // Restore next state
+        state.nodes = next.nodes
+        state.edges = next.edges
+        state.errorsByNodeId = next.errorsByNodeId
+      }
+    },
+    clearHistory: (state) => {
+      state.history.past = []
+      state.history.future = []
+    },
     setNodes: (state, action: PayloadAction<Node[]>) => {
       state.nodes = action.payload
     },
@@ -30,15 +75,39 @@ const workflowBuilderSlice = createSlice({
       state.edges = action.payload
     },
     addNode: (state, action: PayloadAction<Node>) => {
+      // Save state before change
+      const snapshot = createSnapshot(
+        state.nodes,
+        state.edges,
+        state.errorsByNodeId
+      )
+      pushToHistory(state, snapshot)
+
       state.nodes.push(action.payload)
     },
     addEdge: (state, action: PayloadAction<Edge>) => {
+      // Save state before change
+      const snapshot = createSnapshot(
+        state.nodes,
+        state.edges,
+        state.errorsByNodeId
+      )
+      pushToHistory(state, snapshot)
+
       state.edges.push(action.payload)
     },
     updateNode: (
       state,
       action: PayloadAction<{ id: string; updates: Partial<Node> }>
     ) => {
+      // Save state before change
+      const snapshot = createSnapshot(
+        state.nodes,
+        state.edges,
+        state.errorsByNodeId
+      )
+      pushToHistory(state, snapshot)
+
       const { id, updates } = action.payload
       const nodeIndex = state.nodes.findIndex((node) => node.id === id)
       if (nodeIndex !== -1) {
@@ -46,6 +115,14 @@ const workflowBuilderSlice = createSlice({
       }
     },
     removeNode: (state, action: PayloadAction<string>) => {
+      // Save state before change
+      const snapshot = createSnapshot(
+        state.nodes,
+        state.edges,
+        state.errorsByNodeId
+      )
+      pushToHistory(state, snapshot)
+
       const nodeId = action.payload
       state.nodes = state.nodes.filter((node) => node.id !== nodeId)
       // Also remove any edges connected to this node
@@ -54,6 +131,14 @@ const workflowBuilderSlice = createSlice({
       )
     },
     removeEdge: (state, action: PayloadAction<string>) => {
+      // Save state before change
+      const snapshot = createSnapshot(
+        state.nodes,
+        state.edges,
+        state.errorsByNodeId
+      )
+      pushToHistory(state, snapshot)
+
       const edgeId = action.payload
       state.edges = state.edges.filter((edge) => edge.id !== edgeId)
     },
@@ -107,13 +192,41 @@ const workflowBuilderSlice = createSlice({
       state.savedViewport = action.payload
     },
     onNodesChange: (state, action: PayloadAction<NodeChange[]>) => {
+      // Check if this is a significant change (not just selection or dragging)
+      if (hasSignificantNodeChange(action.payload)) {
+        const snapshot = createSnapshot(
+          state.nodes,
+          state.edges,
+          state.errorsByNodeId
+        )
+        pushToHistory(state, snapshot)
+      }
+
       // Apply changes using ReactFlow's utility
       state.nodes = applyNodeChanges(action.payload, state.nodes)
     },
     onEdgesChange: (state, action: PayloadAction<EdgeChange[]>) => {
+      // Check if this is a significant change (not just selection)
+      if (hasSignificantEdgeChange(action.payload)) {
+        const snapshot = createSnapshot(
+          state.nodes,
+          state.edges,
+          state.errorsByNodeId
+        )
+        pushToHistory(state, snapshot)
+      }
+
       state.edges = applyEdgeChanges(action.payload, state.edges)
     },
     onConnect: (state, action: PayloadAction<Connection>) => {
+      // Save state before change
+      const snapshot = createSnapshot(
+        state.nodes,
+        state.edges,
+        state.errorsByNodeId
+      )
+      pushToHistory(state, snapshot)
+
       const result = handleConnection(action.payload, state.nodes, state.edges)
       state.nodes = result.nodes
       state.edges = result.edges
@@ -125,6 +238,14 @@ const workflowBuilderSlice = createSlice({
         position: { x: number; y: number }
       }>
     ) => {
+      // Save state before change
+      const snapshot = createSnapshot(
+        state.nodes,
+        state.edges,
+        state.errorsByNodeId
+      )
+      pushToHistory(state, snapshot)
+
       const { type, position } = action.payload
       const result = createNode(type, position, state.nodes, state.edges)
       state.nodes = result.nodes
@@ -132,6 +253,14 @@ const workflowBuilderSlice = createSlice({
       // Note: Toast handling will be done in the component via the shouldShowToast return value
     },
     removeNodeWithEdges: (state, action: PayloadAction<{ nodeId: string }>) => {
+      // Save state before change
+      const snapshot = createSnapshot(
+        state.nodes,
+        state.edges,
+        state.errorsByNodeId
+      )
+      pushToHistory(state, snapshot)
+
       const { nodeId } = action.payload
       const result = removeNodeByIdHelper(nodeId, state.nodes, state.edges)
       state.nodes = result.nodes
@@ -144,6 +273,14 @@ const workflowBuilderSlice = createSlice({
         newData: Record<string, unknown>
       }>
     ) => {
+      // Save state before change
+      const snapshot = createSnapshot(
+        state.nodes,
+        state.edges,
+        state.errorsByNodeId
+      )
+      pushToHistory(state, snapshot)
+
       const { nodeId, newData } = action.payload
       state.nodes = updateNodeDataHelper(nodeId, newData, state.nodes)
     },
@@ -264,6 +401,9 @@ const workflowBuilderSlice = createSlice({
           action.payload.currentRun?.status === 'pending_human_input'
         state.lastWorkflowId = action.payload.workflow.id
         state.savedViewport = action.payload.viewport ?? null
+        // Clear history when loading a workflow
+        state.history.past = []
+        state.history.future = []
       })
       .addCase(startWorkflowRun.fulfilled, (state, action) => {
         // When a new run starts, update the current run and start polling
@@ -276,6 +416,9 @@ const workflowBuilderSlice = createSlice({
 })
 
 export const {
+  undo,
+  redo,
+  clearHistory,
   setNodes,
   setEdges,
   addNode,
