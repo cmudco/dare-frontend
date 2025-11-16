@@ -28,4 +28,8 @@ export interface WorkflowBuilderState {
     past: HistorySnapshot[]
     future: HistorySnapshot[]
   }
+  // Manual execution mode
+  manualModeEnabled: boolean
+  currentPartialRunId: number | null
+  executedStepNodeIds: string[]
 }

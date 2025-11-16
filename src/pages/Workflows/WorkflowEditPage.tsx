@@ -1,4 +1,7 @@
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import {
   Tooltip,
   TooltipContent,
@@ -10,7 +13,11 @@ import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { setErrorsByNodeId } from '@/redux/workflowBuilderSlice'
+import {
+  setErrorsByNodeId,
+  setManualMode,
+  resetPartialRun,
+} from '@/redux/workflowBuilderSlice'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
@@ -34,6 +41,20 @@ const WorkflowEditPage = () => {
   const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
   const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
   const isRunning = useAppSelector((s) => s.workflowBuilder.isRunning)
+  const manualModeEnabled = useAppSelector(
+    (s) => s.workflowBuilder.manualModeEnabled
+  )
+  const executedStepNodeIds = useAppSelector(
+    (s) => s.workflowBuilder.executedStepNodeIds
+  )
+  const currentPartialRunId = useAppSelector(
+    (s) => s.workflowBuilder.currentPartialRunId
+  )
+
+  const stepNodes = nodes.filter((n) => n.type === 'step')
+  const executedStepsCount = stepNodes.filter((n) =>
+    executedStepNodeIds.includes(n.id)
+  ).length
 
   const handleSave = () => {
     const validation = validateWorkflow(nodes, edges)
@@ -97,7 +118,40 @@ const WorkflowEditPage = () => {
             Modify your workflow and save changes.
           </p>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-3'>
+          {/* Manual Mode Toggle */}
+          <div className='flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2'>
+            <Switch
+              id='manual-mode'
+              checked={manualModeEnabled}
+              onCheckedChange={(checked) => dispatch(setManualMode(checked))}
+              disabled={isRunning}
+            />
+            <Label
+              htmlFor='manual-mode'
+              className='cursor-pointer text-xs font-medium'
+            >
+              Manual Mode
+            </Label>
+          </div>
+
+          {/* Partial Run Status */}
+          {manualModeEnabled && currentPartialRunId && (
+            <div className='flex items-center gap-2'>
+              <Badge variant='secondary' className='text-xs'>
+                {executedStepsCount}/{stepNodes.length} steps executed
+              </Badge>
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(resetPartialRun())}
+                className='h-7 text-xs'
+              >
+                Reset
+              </Button>
+            </div>
+          )}
+
           <TooltipProvider>
             <Tooltip delayDuration={150}>
               <TooltipTrigger asChild>
@@ -120,14 +174,14 @@ const WorkflowEditPage = () => {
               )}
             </Tooltip>
           </TooltipProvider>
-          {id && (
+          {id && !manualModeEnabled && (
             <Button
               variant='outline'
               onClick={() => dispatch(startWorkflowRun(id!))}
-              disabled={isRunning}
+              disabled={isRunning || manualModeEnabled}
               className='normal-case'
             >
-              Run
+              Run All Steps
             </Button>
           )}
           <Button

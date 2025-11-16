@@ -385,6 +385,27 @@ const workflowBuilderSlice = createSlice({
         }
       }
     },
+    // Manual execution mode actions
+    setManualMode: (state, action: PayloadAction<boolean>) => {
+      state.manualModeEnabled = action.payload
+      // If disabling manual mode, reset partial run state
+      if (!action.payload) {
+        state.currentPartialRunId = null
+        state.executedStepNodeIds = []
+      }
+    },
+    setCurrentPartialRunId: (state, action: PayloadAction<number | null>) => {
+      state.currentPartialRunId = action.payload
+    },
+    markStepExecuted: (state, action: PayloadAction<string>) => {
+      if (!state.executedStepNodeIds.includes(action.payload)) {
+        state.executedStepNodeIds.push(action.payload)
+      }
+    },
+    resetPartialRun: (state) => {
+      state.currentPartialRunId = null
+      state.executedStepNodeIds = []
+    },
     resetBuilder: () => {
       return initialState
     },
@@ -444,6 +465,10 @@ export const {
   collapseAllNodes,
   expandAllNodes,
   toggleNodeCollapse,
+  setManualMode,
+  setCurrentPartialRunId,
+  markStepExecuted,
+  resetPartialRun,
   resetBuilder,
 } = workflowBuilderSlice.actions
 
