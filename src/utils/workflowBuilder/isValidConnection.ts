@@ -114,11 +114,15 @@ export const isValidConnection = (
   }
 
   if (sType === 'chatOutput') {
-    if (tType !== 'step') return false
-
     // Allow chatOutput -> step connections
-    // Backend handles execution order and multi-input scenarios via edges
-    return true
+    if (tType === 'step') return true
+
+    // Allow chatOutput -> start connections for workflow chaining
+    // This enables sequential workflow chains where output from Chain 1
+    // becomes input to Chain 2
+    if (tType === 'start') return true
+
+    return false
   }
 
   return false
