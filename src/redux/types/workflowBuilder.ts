@@ -14,6 +14,13 @@ export interface HistorySnapshot {
   errorsByNodeId: Record<string, NodeErrors>
 }
 
+export enum SavingStatus {
+  Idle = 'idle',
+  Saving = 'saving',
+  Saved = 'saved',
+  Error = 'error',
+}
+
 export interface WorkflowBuilderState {
   nodes: Node[]
   edges: Edge[]
@@ -28,12 +35,11 @@ export interface WorkflowBuilderState {
     past: HistorySnapshot[]
     future: HistorySnapshot[]
   }
-  // Manual execution mode
   manualModeEnabled: boolean
   currentPartialRunId: number | null
   executedStepNodeIds: string[]
-  // Run version management
   availableRuns: WorkflowRun[]
   selectedRunIds: Record<string, number> // nodeId -> runId mapping
   viewMode: boolean // True when viewing completed runs, false when editing/running
+  savingStatus: SavingStatus
 }

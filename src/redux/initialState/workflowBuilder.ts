@@ -1,4 +1,7 @@
-import { WorkflowBuilderState } from '../types/workflowBuilder'
+import {
+  type WorkflowBuilderState,
+  SavingStatus,
+} from '../types/workflowBuilder'
 import { INITIAL_NODES, INITIAL_EDGES } from '@/utils/constants/workflowBuilder'
 
 export const initialState: WorkflowBuilderState = {
@@ -21,4 +24,5 @@ export const initialState: WorkflowBuilderState = {
   availableRuns: [],
   selectedRunIds: {},
   viewMode: false,
+  savingStatus: SavingStatus.Idle,
 }
