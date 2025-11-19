@@ -11,13 +11,15 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   setErrorsByNodeId,
   setManualMode,
   resetPartialRun,
+  setSavingStatus,
 } from '@/redux/workflowBuilderSlice'
+import { SavingStatus } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
@@ -33,6 +35,8 @@ import { clearSelectedWorkflow } from '@/redux/workflowSlice'
 import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
 import { toast } from '@/utils/toast'
 import type { GetActivePartialRunResponse } from '@/redux/types/workflow'
+import { useDebounce } from '@/hooks/useDebounce'
+import { Loader2, Check, AlertCircle } from 'lucide-react'
 
 const WorkflowEditPage = () => {
   const navigate = useNavigate()
@@ -53,6 +57,7 @@ const WorkflowEditPage = () => {
   const currentPartialRunId = useAppSelector(
     (s) => s.workflowBuilder.currentPartialRunId
   )
+  const savingStatus = useAppSelector((s) => s.workflowBuilder.savingStatus)
 
   const stepNodes = nodes.filter((n) => n.type === 'step')
   const executedStepsCount = stepNodes.filter((n) =>
@@ -98,44 +103,58 @@ const WorkflowEditPage = () => {
     }
   }
 
-  const handleSave = () => {
-    const validation = validateWorkflow(nodes, edges)
-    dispatch(setErrorsByNodeId(validation.nodeErrors))
+  const handleSave = async () => {
+    dispatch(setSavingStatus(SavingStatus.Saving))
 
-    if (!validation.isValid) {
-      const message =
-        validation.errorMessages[0] || 'Please fix the highlighted nodes'
-      toast.error(message)
-      return
-    }
+    const validation = validateWorkflow(nodes, edges)
+    // We don't block saving on validation errors, but we update the error state
+    dispatch(setErrorsByNodeId(validation.nodeErrors))
 
     const serializedWorkflow = serializeWorkflow(nodes, edges, savedViewport)
     if (!serializedWorkflow) {
-      toast.error(
-        'Unable to serialize workflow. Please fix the highlighted nodes.'
-      )
+      dispatch(setSavingStatus(SavingStatus.Error))
       return
     }
 
-    // Dispatch save action
-    const targetId = id
-    const action = targetId
-      ? createOrUpdateWorkflow({
-          id: targetId,
+    try {
+      await dispatch(
+        createOrUpdateWorkflow({
+          id,
           workflowData: serializedWorkflow,
         })
-      : createOrUpdateWorkflow({ workflowData: serializedWorkflow })
+      ).unwrap()
+      dispatch(setSavingStatus(SavingStatus.Saved))
 
-    dispatch(action)
-      .unwrap()
-      .then(() => {
-        dispatch(setSelectedWorkflowRun(null))
-        toast.success('Workflow updated!')
-      })
-      .catch(() => {
-        toast.error('Failed to update workflow. Please try again.')
-      })
+      // Reset to idle after a few seconds
+      setTimeout(() => {
+        dispatch(setSavingStatus(SavingStatus.Idle))
+      }, 3000)
+    } catch (error) {
+      console.error('Save failed:', error)
+      dispatch(setSavingStatus(SavingStatus.Error))
+    }
   }
+
+  // Auto-save logic
+  const debouncedNodes = useDebounce(nodes, 3000)
+  const debouncedEdges = useDebounce(edges, 3000)
+  const debouncedViewport = useDebounce(savedViewport, 3000)
+
+  // Track if initial load is done to avoid saving on mount
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    if (loadedWorkflow) {
+      setIsLoaded(true)
+    }
+  }, [loadedWorkflow])
+
+  useEffect(() => {
+    if (!isLoaded || !id || isRunning || !hasAtLeastOneStep) return
+
+    handleSave()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedNodes, debouncedEdges, debouncedViewport, id])
 
   useEffect(() => {
     dispatch(getFiles())
@@ -183,6 +202,28 @@ const WorkflowEditPage = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
+          {/* Auto-save Status Indicator */}
+          <div className='flex items-center gap-2 px-2'>
+            {savingStatus === SavingStatus.Saving && (
+              <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+                <Loader2 className='h-3 w-3 animate-spin' />
+                Saving...
+              </div>
+            )}
+            {savingStatus === SavingStatus.Saved && (
+              <div className='flex items-center gap-1.5 text-xs text-green-600'>
+                <Check className='h-3 w-3' />
+                Saved
+              </div>
+            )}
+            {savingStatus === SavingStatus.Error && (
+              <div className='flex items-center gap-1.5 text-xs text-red-600'>
+                <AlertCircle className='h-3 w-3' />
+                Error saving
+              </div>
+            )}
+          </div>
+
           {/* Manual Mode Toggle */}
           <div className='flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2'>
             <Switch
