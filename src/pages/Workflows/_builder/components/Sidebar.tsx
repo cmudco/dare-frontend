@@ -8,6 +8,8 @@ import {
   createNodeAtPosition,
   resetBuilder,
 } from '@/redux/workflowBuilderSlice'
+import { DeleteConfirmation } from '@/components/DeleteConfirmation'
+import { useState } from 'react'
 
 interface SidebarProps {
   disabled?: { start: boolean; step: boolean; output: boolean }
@@ -54,6 +56,13 @@ export default function Sidebar({ disabled }: SidebarProps) {
   const nodes = useAppSelector((state) => state.workflowBuilder.nodes)
   const isWorkflowRunning =
     selectedWorkflowRun?.status === WorkflowRunStepStatus.Running
+
+  const [isClearConfirmationOpen, setIsClearConfirmationOpen] = useState(false)
+
+  const handleClearNodes = () => {
+    dispatch(resetBuilder())
+    setIsClearConfirmationOpen(false)
+  }
 
   const hasStartNode = nodes.some((n) => n.type === 'start')
   const startNodeCount = nodes.filter((n) => n.type === 'start').length
@@ -162,7 +171,7 @@ export default function Sidebar({ disabled }: SidebarProps) {
                 <Button
                   size='sm'
                   variant='destructive'
-                  onClick={() => dispatch(resetBuilder())}
+                  onClick={() => setIsClearConfirmationOpen(true)}
                   disabled={isWorkflowRunning}
                   className={`h-7 w-full text-xs ${isWorkflowRunning ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
@@ -174,6 +183,15 @@ export default function Sidebar({ disabled }: SidebarProps) {
           )}
         </div>
       </div>
+
+      <DeleteConfirmation
+        isOpen={isClearConfirmationOpen}
+        onClose={() => setIsClearConfirmationOpen(false)}
+        onDelete={handleClearNodes}
+        title='Clear All Nodes'
+        description='Are you sure you want to clear all nodes? This action cannot be undone.'
+        confirmText='Clear All'
+      />
     </div>
   )
 }
