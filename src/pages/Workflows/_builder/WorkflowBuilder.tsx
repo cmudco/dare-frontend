@@ -171,6 +171,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           panOnScroll={false}
           zoomOnScroll={true}
           zoomOnPinch={true}
+          minZoom={0.1}
         >
           <Background
             variant={BackgroundVariant.Dots}
