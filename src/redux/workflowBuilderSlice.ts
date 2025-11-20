@@ -9,7 +9,7 @@ import {
   applyEdgeChanges,
 } from '@xyflow/react'
 import { initialState } from './initialState/workflowBuilder'
-import { NodeErrors } from './types/workflowBuilder'
+import { NodeErrors, WorkflowBuilderState } from './types/workflowBuilder'
 import { handleConnection } from '@/utils/workflowBuilder/handleConnection'
 import { createNode } from '@/utils/workflowBuilder/createNode'
 import { removeNodeById as removeNodeByIdHelper } from '@/utils/workflowBuilder/removeNodeById'
@@ -389,6 +389,12 @@ const workflowBuilderSlice = createSlice({
     resetBuilder: () => {
       return initialState
     },
+    setSavingStatus: (
+      state,
+      action: PayloadAction<WorkflowBuilderState['savingStatus']>
+    ) => {
+      state.savingStatus = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -487,6 +493,7 @@ export const {
   resetPartialRun,
   setNodeSelectedRun,
   resetBuilder,
+  setSavingStatus,
 } = workflowBuilderSlice.actions
 
 export default workflowBuilderSlice.reducer
