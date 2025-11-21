@@ -1,4 +1,7 @@
-import { WorkflowBuilderState } from '../types/workflowBuilder'
+import {
+  type WorkflowBuilderState,
+  SavingStatus,
+} from '../types/workflowBuilder'
 import { INITIAL_NODES, INITIAL_EDGES } from '@/utils/constants/workflowBuilder'
 
 export const initialState: WorkflowBuilderState = {
@@ -11,4 +14,15 @@ export const initialState: WorkflowBuilderState = {
   currentRun: null,
   isRunning: false,
   loadedWorkflow: null,
+  history: {
+    past: [],
+    future: [],
+  },
+  manualModeEnabled: false,
+  currentPartialRunId: null,
+  executedStepNodeIds: [],
+  availableRuns: [],
+  selectedRunIds: {},
+  viewMode: false,
+  savingStatus: SavingStatus.Idle,
 }

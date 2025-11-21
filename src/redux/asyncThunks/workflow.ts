@@ -7,9 +7,17 @@ import {
   deleteWorkflowAPI,
   startWorkflowRunAPI,
   getWorkflowRunByIdAPI,
+  getWorkflowRunsAPI,
   cloneWorkflowAPI,
+  executeSingleStepAPI,
+  getActivePartialRunAPI,
+  toggleManualModeAPI,
 } from '@/api/workflows'
-import { CreateWorkflowDTO, UpdateWorkflowDTO } from '@/redux/types/workflow'
+import {
+  CreateWorkflowDTO,
+  UpdateWorkflowDTO,
+  ExecuteSingleStepRequest,
+} from '@/redux/types/workflow'
 
 export const getWorkflows = createAsyncThunk(
   'workflows/getWorkflows',
@@ -93,11 +101,65 @@ export const getWorkflowRunById = createAsyncThunk(
   }
 )
 
+export const getWorkflowRuns = createAsyncThunk(
+  'workflows/getWorkflowRuns',
+  async (workflowId: number, { rejectWithValue }) => {
+    try {
+      const response = await getWorkflowRunsAPI(workflowId)
+      return response.results
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
 export const cloneWorkflow = createAsyncThunk(
   'workflows/cloneWorkflow',
   async (id: number, { rejectWithValue }) => {
     try {
       return await cloneWorkflowAPI(id)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const executeSingleStep = createAsyncThunk(
+  'workflows/executeSingleStep',
+  async (request: ExecuteSingleStepRequest, { rejectWithValue }) => {
+    try {
+      const response = await executeSingleStepAPI(request)
+      return response
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getActivePartialRun = createAsyncThunk(
+  'workflows/getActivePartialRun',
+  async (workflowId: number, { rejectWithValue }) => {
+    try {
+      const response = await getActivePartialRunAPI(workflowId)
+      return response
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const toggleManualMode = createAsyncThunk(
+  'workflows/toggleManualMode',
+  async (
+    {
+      workflowId,
+      manualModeEnabled,
+    }: { workflowId: number; manualModeEnabled: boolean },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await toggleManualModeAPI(workflowId, manualModeEnabled)
+      return response
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }

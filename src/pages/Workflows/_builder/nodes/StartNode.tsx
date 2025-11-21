@@ -23,16 +23,19 @@ import {
   ChevronUp,
   Trash2,
 } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useErrorsContext } from '../ErrorsContext'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
-  setEdges,
   updateNodeDataById,
   toggleNodeCollapse,
   removeNodeWithEdges,
 } from '@/redux/workflowBuilderSlice'
 import { Button } from '@/components/ui/button'
+import {
+  HANDLE_NUMBERS,
+  HANDLE_COLORS,
+} from '@/utils/constants/workflowBuilder'
 
 type Mode = 'sequential' | 'parallel'
 type StartData = {
@@ -53,103 +56,152 @@ export default function StartNode({ id, data, selected }: NodeProps) {
     string
   >
   const dispatch = useAppDispatch()
-  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
+  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
 
   // Update Redux when user changes values
   const updateNodeData = (updates: Partial<StartData>) => {
     dispatch(updateNodeDataById({ nodeId: nodeId, newData: updates }))
   }
 
-  // Get number of step nodes for parallel mode handle rendering
-  const stepCount = nodes.filter((n) => n.type === 'step').length
   const updateNodeInternals = useUpdateNodeInternals()
 
   useEffect(() => {
     updateNodeInternals(nodeId)
-  }, [updateNodeInternals, nodeId, startData?.mode, stepCount, edges])
+  }, [updateNodeInternals, nodeId])
 
-  // Track the previous mode to only rebuild when mode actually changes
-  const prevMode = useRef<string | undefined>()
-
-  useEffect(() => {
-    const currentMode = startData?.mode || 'sequential'
-
-    // Only rebuild edges if mode actually changed, not during initial load
-    if (prevMode.current !== undefined && prevMode.current !== currentMode) {
-      if (!nodes.some((n) => n.id === nodeId)) return
-
-      // Drop only Start <-> Step connection edges; keep all others
-      const filtered = edges.filter((e) => {
-        const sourceNode = nodes.find((n) => n.id === e.source)
-        const targetNode = nodes.find((n) => n.id === e.target)
-        const involvesStart = e.source === nodeId || e.target === nodeId
-        if (!involvesStart) return true
-        // Remove only if the counterpart is a step node
-        const otherNode = e.source === nodeId ? targetNode : sourceNode
-        return otherNode?.type !== 'step'
-      })
-
-      dispatch(setEdges(filtered))
-    }
-
-    prevMode.current = currentMode
-  }, [dispatch, startData?.mode, nodes]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const renderOutputHandles = () => {
-    if ((startData?.mode || 'sequential') === 'parallel') {
-      // Get edges that start from this node and connect to step nodes
-      const connectedStepEdges = edges.filter((edge) => {
-        const targetNode = nodes.find((n) => n.id === edge.target)
-        return edge.source === nodeId && targetNode?.type === 'step'
-      })
-
-      // Render handles for connected step nodes + one spare handle for new connections
-      const handleCount = Math.max(connectedStepEdges.length + 1, 1)
-      const handles = []
-
-      for (let i = 0; i < handleCount; i++) {
-        const topPosition = 45 + i * 10 // Simple spacing
-        const isConnected = i < connectedStepEdges.length
-        handles.push(
-          <Handle
-            key={`output-${i + 1}`}
-            type='source'
-            position={Position.Right}
-            id={`output-${i + 1}`}
-            style={{ top: `${Math.min(topPosition, 85)}%` }}
-            className={`h-4 w-4 border-2 border-white ${
-              isConnected ? 'bg-primary' : 'bg-muted-foreground'
-            }`}
-          />
-        )
-      }
-      return <>{handles}</>
-    }
-
-    // Sequential mode - single handle
+  // Calculate input connections from previous chains (e.g., Chat Output nodes)
+  const connectedInputEdges = edges.filter((edge) => {
+    const sourceNode = nodes.find((n) => n.id === edge.source)
     return (
-      <Handle
-        type='source'
-        position={Position.Right}
-        className='h-3 w-3 border-2 border-white bg-primary'
-      />
+      edge.target === nodeId &&
+      (sourceNode?.type === 'chatOutput' || sourceNode?.type === 'start')
+    )
+  })
+
+  // Calculate output connections to step nodes
+  const connectedOutputEdges = edges.filter((edge) => {
+    const targetNode = nodes.find((n) => n.id === edge.target)
+    return edge.source === nodeId && targetNode?.type === 'step'
+  })
+
+  // Render input handles for chain connections (from Chat Output nodes)
+  const renderInputHandles = () => {
+    const hasInputConnection = connectedInputEdges.length > 0
+    const isChainedStartNode = hasInputConnection
+
+    return (
+      <>
+        {HANDLE_NUMBERS.slice(0, 3).map((num) => {
+          const handleId = `input-${num}`
+          const isConnected = connectedInputEdges.some(
+            (edge) => edge.targetHandle === handleId
+          )
+
+          // Fixed positions for input handles
+          const topPercent = 20 + num * 30
+
+          // Show logic: always show first handle, show more if connected
+          const connectedCount = connectedInputEdges.length
+          const shouldShow = num <= Math.max(1, connectedCount + 1)
+
+          // Use primary color for chain input handles
+          const handleColor = isChainedStartNode
+            ? 'bg-purple-500 border-purple-400'
+            : 'bg-blue-500 border-blue-400'
+
+          return (
+            <Handle
+              key={handleId}
+              type='target'
+              position={Position.Left}
+              id={handleId}
+              style={{
+                top: `${topPercent}%`,
+              }}
+              className={`transition-all duration-200 ${
+                isConnected
+                  ? `${handleColor} !opacity-100 ring-2 ring-purple-300`
+                  : shouldShow
+                    ? `${handleColor} !opacity-40 hover:!opacity-80`
+                    : '!opacity-0'
+              }`}
+            />
+          )
+        })}
+      </>
+    )
+  }
+
+  // Render multiple output handles (same pattern as StepNode inputs)
+  const renderOutputHandles = () => {
+    return (
+      <>
+        {HANDLE_NUMBERS.map((num) => {
+          const handleId = `output-${num}`
+          const isConnected = connectedOutputEdges.some(
+            (edge) => edge.sourceHandle === handleId
+          )
+
+          // Fixed positions: 20%, 35%, 50%, 65%, 80%
+          const topPercent = 5 + num * 15
+
+          // Show logic: always show connected handles + one extra for next connection
+          const connectedCount = connectedOutputEdges.length
+          const shouldShow = num <= connectedCount + 1
+
+          // Get color from constants
+          const handleColor = HANDLE_COLORS[num - 1]
+
+          return (
+            <Handle
+              key={handleId}
+              type='source'
+              position={Position.Right}
+              id={handleId}
+              style={{
+                top: `${topPercent}%`,
+              }}
+              className={`transition-all duration-200 ${
+                isConnected
+                  ? `${handleColor} !opacity-100`
+                  : shouldShow
+                    ? `${handleColor} !opacity-50 hover:!opacity-80`
+                    : '!opacity-0'
+              }`}
+            />
+          )
+        })}
+      </>
     )
   }
 
   const isCollapsed = startData?.isCollapsed || false
+  const isChainedStartNode = connectedInputEdges.length > 0
 
   return (
     <Card
-      className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
+      className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''} ${
+        isChainedStartNode ? 'border-l-4 border-l-purple-500' : ''
+      }`}
     >
       <CardHeader className='pb-3'>
         <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
           <div className='flex items-center gap-2'>
-            <div className='flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20'>
-              <Play className='h-3 w-3 text-primary' />
+            <div
+              className={`flex h-6 w-6 items-center justify-center rounded-full ${
+                isChainedStartNode
+                  ? 'bg-purple-500/20 dark:bg-purple-500/30'
+                  : 'bg-primary/10 dark:bg-primary/20'
+              }`}
+            >
+              <Play
+                className={`h-3 w-3 ${isChainedStartNode ? 'text-purple-600 dark:text-purple-400' : 'text-primary'}`}
+              />
             </div>
-            Start Workflow
+            <span>
+              {isChainedStartNode ? 'Chained Workflow' : 'Start Workflow'}
+            </span>
           </div>
           <div className='flex items-center gap-1'>
             <Button
@@ -262,8 +314,17 @@ export default function StartNode({ id, data, selected }: NodeProps) {
               ? 'Steps execute one after another in sequence'
               : 'Multiple steps can execute simultaneously from this start point'}
           </div>
+          {isChainedStartNode && (
+            <div className='mt-2 rounded-md bg-purple-50 p-2 text-xs text-purple-700 dark:bg-purple-950/30 dark:text-purple-300'>
+              <div className='flex items-center gap-1.5'>
+                <ArrowRight className='h-3 w-3' />
+                <span>This workflow receives input from a previous chain</span>
+              </div>
+            </div>
+          )}
         </CardContent>
       )}
+      {renderInputHandles()}
       {renderOutputHandles()}
     </Card>
   )

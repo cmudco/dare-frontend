@@ -1,4 +1,7 @@
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import {
   Tooltip,
   TooltipContent,
@@ -8,9 +11,15 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { setErrorsByNodeId } from '@/redux/workflowBuilderSlice'
+import {
+  setErrorsByNodeId,
+  setManualMode,
+  resetPartialRun,
+  setSavingStatus,
+} from '@/redux/workflowBuilderSlice'
+import { SavingStatus } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
@@ -19,10 +28,15 @@ import { getAvailableModels } from '@/redux/asyncThunks/conversation'
 import {
   startWorkflowRun,
   createOrUpdateWorkflow,
+  getActivePartialRun,
+  toggleManualMode,
 } from '@/redux/asyncThunks/workflow'
 import { clearSelectedWorkflow } from '@/redux/workflowSlice'
 import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
 import { toast } from '@/utils/toast'
+import type { GetActivePartialRunResponse } from '@/redux/types/workflow'
+import { useDebounce } from '@/hooks/useDebounce'
+import { Loader2, Check, AlertCircle } from 'lucide-react'
 
 const WorkflowEditPage = () => {
   const navigate = useNavigate()
@@ -34,45 +48,113 @@ const WorkflowEditPage = () => {
   const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
   const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
   const isRunning = useAppSelector((s) => s.workflowBuilder.isRunning)
+  const manualModeEnabled = useAppSelector(
+    (s) => s.workflowBuilder.manualModeEnabled
+  )
+  const executedStepNodeIds = useAppSelector(
+    (s) => s.workflowBuilder.executedStepNodeIds
+  )
+  const currentPartialRunId = useAppSelector(
+    (s) => s.workflowBuilder.currentPartialRunId
+  )
+  const savingStatus = useAppSelector((s) => s.workflowBuilder.savingStatus)
 
-  const handleSave = () => {
-    const validation = validateWorkflow(nodes, edges)
-    dispatch(setErrorsByNodeId(validation.nodeErrors))
+  const stepNodes = nodes.filter((n) => n.type === 'step')
+  const executedStepsCount = stepNodes.filter((n) =>
+    executedStepNodeIds.includes(n.id)
+  ).length
+  const loadedWorkflow = useAppSelector((s) => s.workflowBuilder.loadedWorkflow)
 
-    if (!validation.isValid) {
-      const message =
-        validation.errorMessages[0] || 'Please fix the highlighted nodes'
-      toast.error(message)
-      return
+  const handleManualModeToggle = async (checked: boolean) => {
+    if (!loadedWorkflow?.id) return
+
+    try {
+      // Update the workflow's manual mode setting
+      await dispatch(
+        toggleManualMode({
+          workflowId: loadedWorkflow.id,
+          manualModeEnabled: checked,
+        })
+      ).unwrap()
+
+      // Update local state
+      dispatch(setManualMode(checked))
+
+      if (checked) {
+        // Fetch and restore partial run if it exists
+        const result = await dispatch(getActivePartialRun(loadedWorkflow.id))
+        if (result.meta.requestStatus === 'fulfilled') {
+          const payload = result.payload as GetActivePartialRunResponse
+          if (payload.partialRun) {
+            toast.success(
+              `Restored partial run with ${payload.executedStepNodeIds.length} completed steps`
+            )
+          }
+        }
+      } else {
+        // Don't reset partial run - it will be continued when "Run All Steps" is clicked
+        toast.success(
+          'Manual mode disabled. Click "Run All Steps" to complete remaining steps.'
+        )
+      }
+    } catch (error) {
+      toast.error('Failed to toggle manual mode. Please try again.')
+      console.error('Error toggling manual mode:', error)
     }
+  }
+
+  const handleSave = async () => {
+    dispatch(setSavingStatus(SavingStatus.Saving))
+
+    const validation = validateWorkflow(nodes, edges)
+    // We don't block saving on validation errors, but we update the error state
+    dispatch(setErrorsByNodeId(validation.nodeErrors))
 
     const serializedWorkflow = serializeWorkflow(nodes, edges, savedViewport)
     if (!serializedWorkflow) {
-      toast.error(
-        'Unable to serialize workflow. Please fix the highlighted nodes.'
-      )
+      dispatch(setSavingStatus(SavingStatus.Error))
       return
     }
 
-    // Dispatch save action
-    const targetId = id
-    const action = targetId
-      ? createOrUpdateWorkflow({
-          id: targetId,
+    try {
+      await dispatch(
+        createOrUpdateWorkflow({
+          id,
           workflowData: serializedWorkflow,
         })
-      : createOrUpdateWorkflow({ workflowData: serializedWorkflow })
+      ).unwrap()
+      dispatch(setSavingStatus(SavingStatus.Saved))
 
-    dispatch(action)
-      .unwrap()
-      .then(() => {
-        dispatch(setSelectedWorkflowRun(null))
-        toast.success('Workflow updated!')
-      })
-      .catch(() => {
-        toast.error('Failed to update workflow. Please try again.')
-      })
+      // Reset to idle after a few seconds
+      setTimeout(() => {
+        dispatch(setSavingStatus(SavingStatus.Idle))
+      }, 3000)
+    } catch (error) {
+      console.error('Save failed:', error)
+      dispatch(setSavingStatus(SavingStatus.Error))
+    }
   }
+
+  // Auto-save logic
+  const debouncedNodes = useDebounce(nodes, 3000)
+  const debouncedEdges = useDebounce(edges, 3000)
+  const debouncedViewport = useDebounce(savedViewport, 3000)
+
+  // Track if initial load is done to avoid saving on mount
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    if (loadedWorkflow) {
+      setIsLoaded(true)
+    }
+  }, [loadedWorkflow])
+
+  useEffect(() => {
+    if (!isLoaded || !id || isRunning || !hasAtLeastOneStep) return
+
+    handleSave()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedNodes, debouncedEdges, debouncedViewport, id])
 
   useEffect(() => {
     dispatch(getFiles())
@@ -88,6 +170,28 @@ const WorkflowEditPage = () => {
     }
   }, [dispatch, id])
 
+  // Restore partial run on initial load if manual mode is enabled
+  // This only runs once when the workflow is loaded, not when toggling manual mode
+  useEffect(() => {
+    const restorePartialRunOnLoad = async (): Promise<void> => {
+      if (!manualModeEnabled || !loadedWorkflow?.id || currentPartialRunId) {
+        return
+      }
+
+      try {
+        // Simply dispatch the thunk - extraReducer handles the state update
+        await dispatch(getActivePartialRun(loadedWorkflow.id))
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error occurred'
+        console.error('Failed to restore partial run on load:', errorMessage)
+      }
+    }
+
+    restorePartialRunOnLoad()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadedWorkflow?.id])
+
   return (
     <div className='flex h-screen flex-col'>
       <div className='flex items-center justify-between border-b px-8 py-4'>
@@ -97,7 +201,62 @@ const WorkflowEditPage = () => {
             Modify your workflow and save changes.
           </p>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-3'>
+          {/* Auto-save Status Indicator */}
+          <div className='flex items-center gap-2 px-2'>
+            {savingStatus === SavingStatus.Saving && (
+              <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+                <Loader2 className='h-3 w-3 animate-spin' />
+                Saving...
+              </div>
+            )}
+            {savingStatus === SavingStatus.Saved && (
+              <div className='flex items-center gap-1.5 text-xs text-green-600'>
+                <Check className='h-3 w-3' />
+                Saved
+              </div>
+            )}
+            {savingStatus === SavingStatus.Error && (
+              <div className='flex items-center gap-1.5 text-xs text-red-600'>
+                <AlertCircle className='h-3 w-3' />
+                Error saving
+              </div>
+            )}
+          </div>
+
+          {/* Manual Mode Toggle */}
+          <div className='flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2'>
+            <Switch
+              id='manual-mode'
+              checked={manualModeEnabled}
+              onCheckedChange={handleManualModeToggle}
+              disabled={isRunning}
+            />
+            <Label
+              htmlFor='manual-mode'
+              className='cursor-pointer text-xs font-medium'
+            >
+              Manual Mode
+            </Label>
+          </div>
+
+          {/* Partial Run Status */}
+          {manualModeEnabled && currentPartialRunId && (
+            <div className='flex items-center gap-2'>
+              <Badge variant='secondary' className='text-xs'>
+                {executedStepsCount}/{stepNodes.length} steps executed
+              </Badge>
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => dispatch(resetPartialRun())}
+                className='h-7 text-xs'
+              >
+                Reset
+              </Button>
+            </div>
+          )}
+
           <TooltipProvider>
             <Tooltip delayDuration={150}>
               <TooltipTrigger asChild>
@@ -120,14 +279,14 @@ const WorkflowEditPage = () => {
               )}
             </Tooltip>
           </TooltipProvider>
-          {id && (
+          {id && !manualModeEnabled && (
             <Button
               variant='outline'
               onClick={() => dispatch(startWorkflowRun(id!))}
-              disabled={isRunning}
+              disabled={isRunning || manualModeEnabled}
               className='normal-case'
             >
-              Run
+              Run All Steps
             </Button>
           )}
           <Button
