@@ -28,6 +28,9 @@ import {
   ChevronUp,
   Trash2,
   Globe,
+  Play,
+  Loader2,
+  CheckCircle2,
 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -39,10 +42,18 @@ import {
   updateNodeDataById,
   toggleNodeCollapse,
   removeNodeWithEdges,
+  markStepExecuted,
+  setCurrentPartialRunId,
 } from '@/redux/workflowBuilderSlice'
+import {
+  executeSingleStep,
+  getActivePartialRun,
+} from '@/redux/asyncThunks/workflow'
+import { unwrapResult } from '@reduxjs/toolkit'
+import { toast } from '@/utils/toast'
 import { useErrorsContext } from '../ErrorsContext'
 import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
-import type { StructuredOutputNodeData } from './StructuredOutputNode'
+import type { StructuredOutputNodeData } from '@/types/workflowNodes'
 import {
   ROUTE_HANDLE_PREFIX,
   HANDLE_NUMBERS,
@@ -52,6 +63,7 @@ import {
 import type { Agent } from '@/redux/types/agent'
 
 export type StepNodeData = {
+  agent: number | null
   prompt: number | null
   contentFiles: number[]
   embeddingFiles: number[]
@@ -79,30 +91,37 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const dispatch = useAppDispatch()
 
   const [showAdvanced, setShowAdvanced] = useState(false)
+  // Store snapshot of values before agent injection for clean revert
+  const [preAgentSnapshot, setPreAgentSnapshot] =
+    useState<Partial<StepNodeData> | null>(null)
 
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const agents = useAppSelector((s) => s.agent.agents)
-  const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+  const {
+    currentRun,
+    manualModeEnabled,
+    executedStepNodeIds,
+    currentPartialRunId,
+    loadedWorkflow,
+  } = useAppSelector((s) => s.workflowBuilder)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const updateNodeInternals = useUpdateNodeInternals()
 
-  // Check if this step node is connected to a start node
-  const isConnectedToStart = edges.some((edge) => {
-    const sourceNode = nodes.find((n) => n.id === edge.source)
-    return edge.target === nodeId && sourceNode?.type === 'start'
-  })
+  const [isExecutingStep, setIsExecutingStep] = useState(false)
+  const isStepExecuted = executedStepNodeIds.includes(nodeId)
 
   const useStructuredOutputNode = stepData.useStructuredOutputNode || false
 
-  // Calculate input handles based on actual connections (excluding start nodes)
+  // Calculate input handles based on actual connections (all types including start nodes)
   const connectedInputEdges = edges.filter((edge) => {
     const sourceNode = nodes.find((n) => n.id === edge.source)
     return (
       edge.target === nodeId &&
-      (sourceNode?.type === 'step' ||
+      (sourceNode?.type === 'start' ||
+        sourceNode?.type === 'step' ||
         sourceNode?.type === 'chatOutput' ||
         sourceNode?.type === 'conditional')
     )
@@ -115,7 +134,22 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
   // Inject agent properties into step node
   const injectAgentProperties = (agent: Agent) => {
+    // Save current state before injecting agent properties
+    setPreAgentSnapshot({
+      prompt: stepData.prompt,
+      contentFiles: stepData.contentFiles,
+      embeddingFiles: stepData.embeddingFiles,
+      llm: stepData.llm,
+      maxTokens: stepData.maxTokens,
+      temperature: stepData.temperature,
+      maxContextSnippets: stepData.maxContextSnippets,
+      documentSimilarityThreshold: stepData.documentSimilarityThreshold,
+      enableWebSearch: stepData.enableWebSearch,
+    })
+
+    // Inject agent properties
     updateNodeData({
+      agent: agent.id,
       prompt: agent.prompt,
       contentFiles: agent.contentFiles || [],
       embeddingFiles: agent.embeddingFiles || [],
@@ -128,6 +162,92 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     })
   }
 
+  // Clear agent and revert to previous values
+  const clearAgent = () => {
+    if (preAgentSnapshot) {
+      // Revert to pre-agent values
+      updateNodeData({
+        agent: null,
+        ...preAgentSnapshot,
+      })
+      setPreAgentSnapshot(null)
+    } else {
+      // No snapshot available, just clear agent
+      updateNodeData({ agent: null })
+    }
+  }
+
+  // Execute single step
+  const handleExecuteStep = async () => {
+    if (!loadedWorkflow?.id) {
+      toast.error('No workflow loaded')
+      return
+    }
+
+    setIsExecutingStep(true)
+    try {
+      const resultAction = await dispatch(
+        executeSingleStep({
+          workflowId: loadedWorkflow.id,
+          stepNodeId: nodeId,
+          workflowRunId: currentPartialRunId,
+        })
+      )
+      const result = unwrapResult(resultAction)
+
+      if (result.success) {
+        toast.success(`Step ${stepData.stepNumber} executed successfully`)
+        dispatch(markStepExecuted(nodeId))
+        dispatch(setCurrentPartialRunId(result.workflowRunId))
+
+        // Refresh partial run data to update node displays
+        await dispatch(getActivePartialRun(loadedWorkflow.id))
+
+        // Mark connected output node as executed
+        const connectedOutputEdge = edges.find((edge) => edge.source === nodeId)
+        if (connectedOutputEdge) {
+          const outputNode = nodes.find(
+            (n) => n.id === connectedOutputEdge.target
+          )
+          if (
+            outputNode &&
+            (outputNode.type === 'chatOutput' ||
+              outputNode.type === 'structuredOutput')
+          ) {
+            dispatch(markStepExecuted(connectedOutputEdge.target))
+          }
+        }
+      } else if (
+        result.missingDependencies &&
+        result.missingDependencies.length > 0
+      ) {
+        // Find step numbers for missing dependencies
+        const missingStepNumbers = result.missingDependencies
+          .map((depNodeId) => {
+            const depNode = nodes.find((n) => n.id === depNodeId)
+            return depNode?.data?.stepNumber
+          })
+          .filter(Boolean)
+          .join(', ')
+
+        toast.error(
+          `Cannot execute Step ${stepData.stepNumber}. Please run: Step${missingStepNumbers.includes(',') ? 's' : ''} ${missingStepNumbers} first`
+        )
+      } else {
+        toast.error(result.error || 'Step execution failed')
+      }
+    } catch (error) {
+      console.error('Error executing step:', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to execute step'
+      toast.error(
+        `Step ${stepData.stepNumber} execution failed: ${errorMessage}`
+      )
+    } finally {
+      setIsExecutingStep(false)
+    }
+  }
+
   const connectedStructuredOutputEdge = edges.find((edge) => {
     const sourceNode = nodes.find((n) => n.id === edge.source)
     return edge.target === nodeId && sourceNode?.type === 'structuredOutput'
@@ -137,11 +257,14 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     ? nodes.find((n) => n.id === connectedStructuredOutputEdge.source)
     : undefined
 
-  const structuredRoutes: { name: string; description?: string }[] =
-    (
-      (connectedStructuredOutputNode?.data as Partial<StructuredOutputNodeData>) ||
-      {}
-    ).routes || []
+  const structuredRoutes: { name: string; description?: string }[] = useMemo(
+    () =>
+      (
+        (connectedStructuredOutputNode?.data as Partial<StructuredOutputNodeData>) ||
+        {}
+      ).routes || [],
+    [connectedStructuredOutputNode]
+  )
 
   const structuredNodeId = connectedStructuredOutputNode?.id
   const routesCount = structuredRoutes.length
@@ -179,15 +302,31 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     if (filtered.length !== edges.length) {
       dispatch(setEdges(filtered))
     }
-  }, [dispatch, edges, nodeId, connectedStructuredOutputNode, structuredRoutes])
+  }, [
+    dispatch,
+    edges,
+    nodeId,
+    useStructuredOutputNode,
+    connectedStructuredOutputNode,
+    structuredRoutes,
+  ])
 
   const stepStatus = getStepStatus(currentRun, stepData?.stepNumber)
 
   const isCollapsed = stepData?.isCollapsed || false
 
+  // Get the selected agent for display purposes
+  const selectedAgent = stepData.agent
+    ? agents.find((a) => a.id === stepData.agent)
+    : null
+
   return (
     <Card
-      className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
+      className={`w-80 ${
+        isStepExecuted
+          ? 'border-green-500/50 bg-green-50/30 dark:bg-green-950/20'
+          : 'border-border'
+      } ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
       <CardHeader className='pb-2'>
         <CardTitle className='flex items-center justify-between text-sm font-medium text-card-foreground'>
@@ -199,6 +338,25 @@ export default function StepNode({ id, data, selected }: NodeProps) {
           </div>
           <div className='flex items-center gap-1'>
             {renderStatusPill(stepStatus)}
+            {isStepExecuted && (
+              <CheckCircle2 className='h-4 w-4 text-green-500' />
+            )}
+            {manualModeEnabled && (
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={handleExecuteStep}
+                disabled={isExecutingStep}
+                className='h-6 w-6 p-0 text-primary hover:bg-primary/10'
+                title='Run this step'
+              >
+                {isExecutingStep ? (
+                  <Loader2 className='h-4 w-4 animate-spin' />
+                ) : (
+                  <Play className='h-4 w-4' />
+                )}
+              </Button>
+            )}
             <Button
               size='sm'
               variant='ghost'
@@ -225,27 +383,46 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         </CardTitle>
         {/* Agent Template Selector in Header */}
         {!isCollapsed && agents.length > 0 && (
-          <div className='mt-2 flex items-center gap-2'>
-            <Select
-              value=''
-              onValueChange={(value) => {
-                const selectedAgent = agents.find((a) => a.id === Number(value))
-                if (selectedAgent) {
-                  injectAgentProperties(selectedAgent)
-                }
-              }}
-            >
-              <SelectTrigger className='h-7 bg-blue-50 text-xs dark:bg-blue-900/20'>
-                <SelectValue placeholder='Load agent...' />
-              </SelectTrigger>
-              <SelectContent>
-                {agents.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id.toString()}>
-                    {agent.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className='mt-2 space-y-1'>
+            <div className='flex items-center gap-2'>
+              <Select
+                value={stepData.agent ? stepData.agent.toString() : ''}
+                onValueChange={(value) => {
+                  const agent = agents.find((a) => a.id === Number(value))
+                  if (agent) {
+                    injectAgentProperties(agent)
+                  }
+                }}
+              >
+                <SelectTrigger className='h-7 flex-1 text-xs'>
+                  <SelectValue placeholder='Load agent...' />
+                </SelectTrigger>
+                <SelectContent>
+                  {agents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id.toString()}>
+                      {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedAgent && (
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  onClick={clearAgent}
+                  className='h-7 px-2 text-xs'
+                  title='Clear agent and revert to previous values'
+                >
+                  <X className='h-3 w-3' />
+                </Button>
+              )}
+            </div>
+            {selectedAgent && (
+              <p className='text-xs text-muted-foreground'>
+                Using agent:{' '}
+                <span className='font-medium'>{selectedAgent.name}</span>
+              </p>
+            )}
           </div>
         )}
       </CardHeader>
@@ -578,55 +755,42 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         </CardContent>
       )}
 
-      {/* Input handles - single static handle if connected to start, 5 fixed colorful handles otherwise */}
-      {isConnectedToStart ? (
-        // Traditional single input handle when connected to start node
-        <Handle
-          type='target'
-          position={Position.Left}
-          id='input-1'
-          className='bg-secondary'
-        />
-      ) : (
-        // Pre-create 5 handles at fixed positions with different colors
-        <>
-          {HANDLE_NUMBERS.map((num) => {
-            const handleId = `input-${num}`
-            const isConnected = connectedInputEdges.some(
-              (edge) => edge.targetHandle === handleId
-            )
+      {/* Input handles - 5 fixed colorful handles for all connections */}
+      {HANDLE_NUMBERS.map((num) => {
+        const handleId = `input-${num}`
+        const isConnected = connectedInputEdges.some(
+          (edge) => edge.targetHandle === handleId
+        )
 
-            // Fixed positions: 20%, 35%, 50%, 65%, 80%
-            const topPercent = 5 + num * 15
+        // Fixed positions: 20%, 35%, 50%, 65%, 80%
+        const topPercent = 5 + num * 15
 
-            // Show logic: always show connected handles + one extra for next connection
-            const connectedCount = connectedInputEdges.length
-            const shouldShow = num <= connectedCount + 1
+        // Show logic: always show connected handles + one extra for next connection
+        const connectedCount = connectedInputEdges.length
+        const shouldShow = num <= connectedCount + 1
 
-            // Get color from constants
-            const handleColor = HANDLE_COLORS[num - 1]
+        // Get color from constants
+        const handleColor = HANDLE_COLORS[num - 1]
 
-            return (
-              <Handle
-                key={handleId}
-                type='target'
-                position={Position.Left}
-                id={handleId}
-                style={{
-                  top: `${topPercent}%`,
-                }}
-                className={`transition-all duration-200 ${
-                  isConnected
-                    ? `${handleColor} !opacity-100`
-                    : shouldShow
-                      ? `${handleColor} !opacity-50 hover:!opacity-80`
-                      : '!opacity-0'
-                }`}
-              />
-            )
-          })}
-        </>
-      )}
+        return (
+          <Handle
+            key={handleId}
+            type='target'
+            position={Position.Left}
+            id={handleId}
+            style={{
+              top: `${topPercent}%`,
+            }}
+            className={`transition-all duration-200 ${
+              isConnected
+                ? `${handleColor} !opacity-100`
+                : shouldShow
+                  ? `${handleColor} !opacity-50 hover:!opacity-80`
+                  : '!opacity-0'
+            }`}
+          />
+        )
+      })}
 
       {!useStructuredOutputNode && (
         <Handle

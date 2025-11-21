@@ -26,7 +26,9 @@ const VerifyCodeScreen: React.FC = () => {
 
     if (verifyCode.fulfilled.match(resultAction)) {
       const user = await getUserDataFromAPI()
-      dispatch(updateUser(user))
+      if (user) {
+        dispatch(updateUser(user))
+      }
       navigate('/dashboard')
     }
   }

@@ -13,6 +13,7 @@ import {
   cloneConversation,
   updateConversationSelectedIds,
   updateConversationFeedbackTracking,
+  deleteMessage,
 } from './asyncThunks/conversation'
 import {
   Message,
@@ -441,6 +442,21 @@ export const conversationSlice = createSlice({
         }
       })
       .addCase(updateMessageThunk.rejected, (state, action) => {
+        state.error = action.payload as string
+      })
+      .addCase(deleteMessage.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(deleteMessage.fulfilled, (state, action) => {
+        state.loading = false
+        state.activeConversationMessages =
+          state.activeConversationMessages.filter(
+            (msg) => msg?.id?.toString() !== action.payload
+          )
+      })
+      .addCase(deleteMessage.rejected, (state, action) => {
+        state.loading = false
         state.error = action.payload as string
       })
       .addCase(updateConversationSortOrder.pending, (state) => {
