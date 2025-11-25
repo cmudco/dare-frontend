@@ -1,7 +1,4 @@
 import { type Node, type Edge, type Connection } from '@xyflow/react'
-import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
-
-type StepDataShape = { useStructuredOutputNode?: boolean }
 
 export type Mode = 'sequential' | 'parallel'
 
@@ -39,20 +36,22 @@ export const isValidConnection = (
   const sType = sourceNode.type
   const tType = targetNode.type
 
-  if (sType === 'structuredOutput' && tType === 'step') {
-    // Only one Structured Output node should connect to a given step
-    const existingStructured = edges.filter(
-      (e) =>
-        e.target === (connection.target as string) &&
-        nodes.find((n) => n.id === e.source)?.type === 'structuredOutput'
-    )
-    if (existingStructured.length >= 1) {
-      // If the existing one is the same node, allow; otherwise, block
-      const sameNode = existingStructured.some(
-        (e) => e.source === connection.source
-      )
-      if (!sameNode) return false
-    }
+  // Structured Output node is now independent - can connect TO any node (step, chatOutput, etc.)
+  if (sType === 'structuredOutput') {
+    // Allow structured output to connect to step nodes, chatOutput, or other nodes
+    return tType === 'step' || tType === 'chatOutput'
+  }
+
+  // Allow connections TO structured output node FROM start, step, or chatOutput nodes
+  if (tType === 'structuredOutput') {
+    const isAllowed =
+      sType === 'start' || sType === 'step' || sType === 'chatOutput'
+    if (!isAllowed) return false
+
+    // Structured output nodes accept only one input connection
+    const existingInputs = edges.filter((e) => e.target === connection.target)
+    if (existingInputs.length >= 1) return false
+
     return true
   }
 
@@ -86,27 +85,13 @@ export const isValidConnection = (
   }
 
   if (sType === 'step') {
-    // If this step uses a Structured Output node, do not allow linking to chatOutput
-    const stepUsesStructured = Boolean(
-      (sourceNode.data as StepDataShape)?.useStructuredOutputNode
-    )
+    // Allow step -> chatOutput connections
     if (tType === 'chatOutput') {
-      return stepUsesStructured ? false : true
+      return true
     }
 
-    // Allow step -> step connections for multi-input scenarios
+    // Allow step -> step connections (backend handles execution order via edges)
     if (tType === 'step') {
-      // If using structured outputs, require a valid route handle and enforce single connection per route
-      if (stepUsesStructured) {
-        const sh = (connection as Connection).sourceHandle || null
-        if (!sh || !sh.startsWith(ROUTE_HANDLE_PREFIX)) return false
-        const duplicateRoute = edges.some(
-          (e) => e.source === connection.source && e.sourceHandle === sh
-        )
-        if (duplicateRoute) return false
-      }
-
-      // Allow step -> step connections (backend handles execution order via edges)
       return true
     }
 
