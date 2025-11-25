@@ -7,6 +7,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -31,6 +32,7 @@ import {
   updateNodeDataById,
   toggleNodeCollapse,
   removeNodeWithEdges,
+  setEdges,
 } from '@/redux/workflowBuilderSlice'
 import { useErrorsContext } from '../ErrorsContext'
 import { renderStatusPill } from '@/utils/workflowUtils'
@@ -45,6 +47,7 @@ import {
   extractRoutingDecision,
 } from '@/utils/workflowRunHelpers'
 import type { StructuredOutputNodeData as StructuredOutputNodeDataType } from '@/types/workflowNodes'
+import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
 
 export interface StructuredOutputRoute {
   name: string
@@ -90,25 +93,29 @@ export default function StructuredOutputNode({
     [nodeData.routes]
   )
 
-  // Structured Output node config only; Step hosts outward connectors
-  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
-
-  // Find the step node that this structured output node is connected to
-  const connectedStepEdge = edges.find((edge) => {
-    return edge.source === id && edge.target
-  })
-
-  const connectedStepNode = connectedStepEdge
-    ? nodes.find((n) => n.id === connectedStepEdge.target)
-    : undefined
-
-  const connectedStepNumber = connectedStepNode?.data?.stepNumber as
-    | number
-    | undefined
+  // Structured Output is now an independent node with its own stepNumber
+  const stepNumber = nodeData.stepNumber as number | undefined
 
   // Update Redux when form changes
   const updateNodeData = (updates: Partial<StructuredOutputNodeDataType>) => {
     dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
+  }
+
+  // Clean up edges when routes change to remove invalid connections
+  const pruneInvalidEdges = (newRoutes: StructuredOutputRoute[]) => {
+    const allowedHandles = new Set(
+      newRoutes.map((route) => `${ROUTE_HANDLE_PREFIX}${route.name}`)
+    )
+
+    const filtered = edges.filter((e) => {
+      if (e.source !== id) return true
+      // Keep only edges whose sourceHandle matches our current route names
+      return e.sourceHandle ? allowedHandles.has(e.sourceHandle) : false
+    })
+
+    if (filtered.length !== edges.length) {
+      dispatch(setEdges(filtered))
+    }
   }
 
   // Route management functions
@@ -121,12 +128,14 @@ export default function StructuredOutputNode({
       },
     ]
     updateNodeData({ routes: newRoutes })
+    pruneInvalidEdges(newRoutes)
   }
 
   const removeRoute = (index: number) => {
     if (routes.length <= 2) return // Minimum 2 routes
     const newRoutes = routes.filter((_, i) => i !== index)
     updateNodeData({ routes: newRoutes })
+    pruneInvalidEdges(newRoutes)
   }
 
   const updateRoute = (
@@ -138,6 +147,7 @@ export default function StructuredOutputNode({
       i === index ? { ...route, [field]: value } : route
     )
     updateNodeData({ routes: newRoutes })
+    pruneInvalidEdges(newRoutes)
   }
 
   const toggleHumanValidation = (checked: boolean) => {
@@ -178,8 +188,8 @@ export default function StructuredOutputNode({
     currentRun
   )
 
-  // STEP LOOKUP: Find the connected step node's data
-  const stepRun = getStepFromRun(displayRun, connectedStepNumber)
+  // STEP LOOKUP: Find this structured output node's own step data
+  const stepRun = getStepFromRun(displayRun, stepNumber)
 
   // DATA EXTRACTION: Pull out routing decision values
   const {
@@ -243,13 +253,46 @@ export default function StructuredOutputNode({
       </CardHeader>
       {!isCollapsed && (
         <CardContent className='space-y-4'>
+          {/* Text Input Field */}
+          <div className='space-y-2'>
+            <Label htmlFor='textInput' className='text-xs font-medium'>
+              Input Text (Optional)
+            </Label>
+            <Textarea
+              id='textInput'
+              placeholder='Enter input text to evaluate for routing decision...'
+              value={nodeData.textInput || ''}
+              onChange={(e) => updateNodeData({ textInput: e.target.value })}
+              className='min-h-[80px] text-sm'
+            />
+            <p className='text-xs text-muted-foreground'>
+              This text will be evaluated to determine which route to take.
+            </p>
+          </div>
+
           {/* Prompt Selector */}
           <div className='space-y-2'>
-            <Label htmlFor='prompt' className='text-xs font-medium'>
-              Prompt Template
-            </Label>
+            <div className='flex items-center justify-between'>
+              <Label htmlFor='prompt' className='text-xs font-medium'>
+                Prompt Template (Optional)
+              </Label>
+              {nodeData.prompt && (
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => {
+                    updateNodeData({ prompt: null })
+                    clearNodeError(id, 'prompt')
+                  }}
+                  className='h-6 px-2 text-xs text-muted-foreground hover:text-foreground'
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
             <Select
-              value={nodeData.prompt ? nodeData.prompt.toString() : ''}
+              value={nodeData.prompt ? nodeData.prompt.toString() : undefined}
               onValueChange={(value) => {
                 updateNodeData({ prompt: Number(value) })
                 clearNodeError(id, 'prompt')
@@ -261,7 +304,7 @@ export default function StructuredOutputNode({
                   fieldErrors.prompt ? 'border-destructive' : ''
                 }`}
               >
-                <SelectValue placeholder='Select a prompt' />
+                <SelectValue placeholder='Use default routing prompt' />
               </SelectTrigger>
               <SelectContent>
                 {prompts.map((prompt) => (
@@ -276,6 +319,9 @@ export default function StructuredOutputNode({
                 {fieldErrors.prompt}
               </p>
             )}
+            <p className='text-xs text-muted-foreground'>
+              Falls back to base routing prompt if not selected.
+            </p>
           </div>
 
           {/* LLM Model Selector */}
@@ -490,10 +536,17 @@ export default function StructuredOutputNode({
               </Label>
               <div className='space-y-1 text-xs text-purple-700 dark:text-purple-300'>
                 <p>
-                  Connect this node to a Step node. The LLM response should
-                  return one of the route values defined above.
+                  This node independently evaluates input and routes to
+                  different paths. Connect from any node (Start, Step, etc.) and
+                  route to multiple next nodes.
                 </p>
-                <p className='font-medium'>Example routes:</p>
+                <p className='mt-2 font-medium'>Input sources:</p>
+                <ul className='ml-4 list-disc space-y-0.5'>
+                  <li>Previous node output (via connection)</li>
+                  <li>Direct text input field</li>
+                  <li>Custom prompt template</li>
+                </ul>
+                <p className='mt-2 font-medium'>Available routes:</p>
                 <ul className='ml-4 list-disc space-y-0.5'>
                   {routes.map((route, index) => {
                     const colors = [
@@ -534,14 +587,32 @@ export default function StructuredOutputNode({
           )}
         </CardContent>
       )}
-      {/* Top handle - connects to Step node's top target handle */}
+      {/* Input handle - accepts connections from previous nodes */}
       <Handle
-        type='source'
-        position={Position.Top}
-        id='output-to-step'
-        style={{ left: '50%', transform: 'translateX(-50%)' }}
+        type='target'
+        position={Position.Left}
+        id='input'
+        style={{ top: '50%', transform: 'translateY(-50%)' }}
         className='h-3 w-3 bg-purple-500'
       />
+
+      {/* Output handles - one for each route */}
+      {routes.map((route, index) => {
+        const totalRoutes = routes.length
+        const spacing = 100 / (totalRoutes + 1)
+        const topPercentage = spacing * (index + 1)
+
+        return (
+          <Handle
+            key={`${ROUTE_HANDLE_PREFIX}${route.name}-${index}`}
+            type='source'
+            position={Position.Right}
+            id={`${ROUTE_HANDLE_PREFIX}${route.name}`}
+            style={{ top: `${topPercentage}%`, transform: 'translateY(-50%)' }}
+            className='h-3 w-3 bg-purple-500'
+          />
+        )
+      })}
 
       {/* Human Validation Modal */}
       {pendingValidation && (

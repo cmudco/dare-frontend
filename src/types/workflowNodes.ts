@@ -58,10 +58,12 @@ export interface ConditionalNodeData extends BaseOutputNodeData {
 
 /**
  * Structured output node specific data
+ * Independent routing node that evaluates input and selects a route
  */
 export interface StructuredOutputNodeData extends BaseOutputNodeData {
   prompt: number | null
   llm: number | null
   routes: NodeRoute[]
   requireHumanValidation: boolean
+  textInput?: string
 }

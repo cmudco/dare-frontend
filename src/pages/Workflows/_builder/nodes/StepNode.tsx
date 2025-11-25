@@ -1,9 +1,4 @@
-import {
-  Handle,
-  Position,
-  type NodeProps,
-  useUpdateNodeInternals,
-} from '@xyflow/react'
+import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import {
@@ -23,7 +18,6 @@ import {
   Database,
   X,
   Type,
-  Split,
   ChevronDown,
   ChevronUp,
   Trash2,
@@ -33,12 +27,10 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
-  setEdges,
   updateNodeDataById,
   toggleNodeCollapse,
   removeNodeWithEdges,
@@ -53,12 +45,9 @@ import { unwrapResult } from '@reduxjs/toolkit'
 import { toast } from '@/utils/toast'
 import { useErrorsContext } from '../ErrorsContext'
 import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
-import type { StructuredOutputNodeData } from '@/types/workflowNodes'
 import {
-  ROUTE_HANDLE_PREFIX,
   HANDLE_NUMBERS,
   HANDLE_COLORS,
-  ROUTE_COLORS,
 } from '@/utils/constants/workflowBuilder'
 import type { Agent } from '@/redux/types/agent'
 
@@ -77,8 +66,8 @@ export type StepNodeData = {
   usePreviousStepFiles?: boolean
   usePreviousStepEmbeddings?: boolean
   textInput?: string
-  useStructuredOutputNode?: boolean
   enableWebSearch?: boolean
+  useStructuredOutputNode?: boolean
   id?: string
   isCollapsed?: boolean
 }
@@ -108,12 +97,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   } = useAppSelector((s) => s.workflowBuilder)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
-  const updateNodeInternals = useUpdateNodeInternals()
 
   const [isExecutingStep, setIsExecutingStep] = useState(false)
   const isStepExecuted = executedStepNodeIds.includes(nodeId)
-
-  const useStructuredOutputNode = stepData.useStructuredOutputNode || false
 
   // Calculate input handles based on actual connections (all types including start nodes)
   const connectedInputEdges = edges.filter((edge) => {
@@ -247,69 +233,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
       setIsExecutingStep(false)
     }
   }
-
-  const connectedStructuredOutputEdge = edges.find((edge) => {
-    const sourceNode = nodes.find((n) => n.id === edge.source)
-    return edge.target === nodeId && sourceNode?.type === 'structuredOutput'
-  })
-
-  const connectedStructuredOutputNode = connectedStructuredOutputEdge
-    ? nodes.find((n) => n.id === connectedStructuredOutputEdge.source)
-    : undefined
-
-  const structuredRoutes: { name: string; description?: string }[] = useMemo(
-    () =>
-      (
-        (connectedStructuredOutputNode?.data as Partial<StructuredOutputNodeData>) ||
-        {}
-      ).routes || [],
-    [connectedStructuredOutputNode]
-  )
-
-  const structuredNodeId = connectedStructuredOutputNode?.id
-  const routesCount = structuredRoutes.length
-
-  const routeNames = useMemo(
-    () => structuredRoutes.map((r) => r.name).join(','),
-    [structuredRoutes]
-  )
-
-  useEffect(() => {
-    updateNodeInternals(nodeId)
-  }, [
-    updateNodeInternals,
-    nodeId,
-    useStructuredOutputNode,
-    structuredNodeId,
-    routesCount,
-    routeNames, // Track route name changes, not just count
-  ])
-
-  // When using a structured output node, prune any invalid or stale outgoing edges from this step
-  useEffect(() => {
-    if (!useStructuredOutputNode) return
-    if (!connectedStructuredOutputNode) return
-
-    const allowedHandles = new Set(
-      structuredRoutes.map((r) => `${ROUTE_HANDLE_PREFIX}${r.name}`)
-    )
-
-    const filtered = edges.filter((e) => {
-      if (e.source !== nodeId) return true
-      return e.sourceHandle ? allowedHandles.has(e.sourceHandle) : false
-    })
-
-    if (filtered.length !== edges.length) {
-      dispatch(setEdges(filtered))
-    }
-  }, [
-    dispatch,
-    edges,
-    nodeId,
-    useStructuredOutputNode,
-    connectedStructuredOutputNode,
-    structuredRoutes,
-  ])
 
   const stepStatus = getStepStatus(currentRun, stepData?.stepNumber)
 
@@ -629,28 +552,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             )}
           </div>
 
-          <div className='flex items-center space-x-2 rounded-md border border-muted bg-muted/30 p-3'>
-            <Checkbox
-              id={`use-structured-output-node-${nodeId}`}
-              checked={useStructuredOutputNode}
-              onCheckedChange={(checked) => {
-                updateNodeData({ useStructuredOutputNode: !!checked })
-              }}
-            />
-            <div className='flex-1'>
-              <Label
-                htmlFor={`use-structured-output-node-${nodeId}`}
-                className='flex cursor-pointer items-center gap-2 text-xs font-medium'
-              >
-                <Split className='h-3 w-3' />
-                Use Structured Output Node
-              </Label>
-              <p className='mt-0.5 text-xs text-muted-foreground'>
-                Connect a Structured Output node to define routing paths
-              </p>
-            </div>
-          </div>
-
           {/* Advanced Settings Toggle */}
           <Button
             type='button'
@@ -792,61 +693,13 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         )
       })}
 
-      {!useStructuredOutputNode && (
-        <Handle
-          type='source'
-          position={Position.Right}
-          id='default'
-          className='border-2 border-white bg-primary'
-        />
-      )}
-
-      {useStructuredOutputNode &&
-        connectedStructuredOutputNode &&
-        structuredRoutes.length > 0 && (
-          <>
-            {structuredRoutes.map((route, index) => {
-              const color = ROUTE_COLORS[index % ROUTE_COLORS.length]
-
-              const count = structuredRoutes.length
-              const spacing = 80 / (count + 1)
-              const position = (index + 1) * spacing + 10
-
-              return (
-                <React.Fragment key={`route-${route.name}`}>
-                  <Handle
-                    type='source'
-                    position={Position.Right}
-                    id={`${ROUTE_HANDLE_PREFIX}${route.name}`}
-                    style={{ top: `${position}%` }}
-                    className={`h-3 w-3 border-2 border-white ${color}`}
-                  />
-                  <div
-                    className='pointer-events-none absolute z-10 text-xs font-medium text-muted-foreground'
-                    style={{
-                      right: '-5%',
-                      top: `${position}%`,
-                      transform: 'translate(100%, -50%)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {route.name}
-                  </div>
-                </React.Fragment>
-              )
-            })}
-          </>
-        )}
-
-      {useStructuredOutputNode && (
-        <Handle
-          type='target'
-          position={Position.Bottom}
-          id='structured-output-input'
-          className='h-3 w-3 bg-purple-500'
-          style={{ left: '50%', transform: 'translateX(-50%)' }}
-        />
-      )}
+      {/* Default output handle */}
+      <Handle
+        type='source'
+        position={Position.Right}
+        id='default'
+        className='border-2 border-white bg-primary'
+      />
     </Card>
   )
 }
