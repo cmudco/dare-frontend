@@ -168,12 +168,8 @@ export const validateWorkflow = (
   const hasConnection = (source: string, target: string): boolean =>
     Boolean(edgesBySource[source]?.includes(target))
 
-  // Ensure each step is wired to its output node (skip if using Structured Output)
+  // Ensure each step is wired to its output node
   stepNodesRaw.forEach((step) => {
-    const stepData = (step.data as Partial<StepNodeData>) || {}
-    if (stepData.useStructuredOutputNode) {
-      return
-    }
     const stepNumber = getStepNumber(step)
     if (stepNumber == null) return
     const stepLabel = getStepLabel(step)
@@ -331,12 +327,17 @@ export const validateWorkflow = (
       }
     })
 
-    // Validate Structured Output usage on steps
-    const stepsUsingStructured = stepNodesRaw.filter(
-      (s) => ((s.data as Partial<StepNodeData>) || {}).useStructuredOutputNode
-    )
+    // Validate Structured Output usage on steps - find steps connected to structured output nodes
+    const stepsConnectedToStructured = stepNodesRaw.filter((step) => {
+      const incomingFromStructured = edges.filter((e) => {
+        if (e.target !== step.id) return false
+        const src = nodes.find((n) => n.id === e.source)
+        return src?.type === 'structuredOutput'
+      })
+      return incomingFromStructured.length > 0
+    })
 
-    stepsUsingStructured.forEach((step) => {
+    stepsConnectedToStructured.forEach((step) => {
       const stepLabel = getStepLabel(step)
       // Find the structured output node connected to this step
       const incomingFromStructured = edges.filter((e) => {
