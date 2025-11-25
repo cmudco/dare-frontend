@@ -67,7 +67,6 @@ export type StepNodeData = {
   usePreviousStepEmbeddings?: boolean
   textInput?: string
   enableWebSearch?: boolean
-  useStructuredOutputNode?: boolean
   id?: string
   isCollapsed?: boolean
 }
