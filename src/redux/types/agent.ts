@@ -45,7 +45,6 @@ export interface AgentNodeData {
   usePreviousAgentFiles: boolean
   usePreviousAgentEmbeddings: boolean
   textInput: string
-  useStructuredOutputNode: boolean
   enableWebSearch: boolean
   isCollapsed?: boolean
 }

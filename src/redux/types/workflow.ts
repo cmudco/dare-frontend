@@ -51,7 +51,6 @@ export interface WorkflowRunStep {
     userChoice?: string
     selectedRoute?: string // For structured output nodes
     rawResponse?: string // For structured output nodes
-    useStructuredOutputNode?: boolean // For structured output nodes
   } | null
   createdAt: string
   updatedAt: string
@@ -173,7 +172,6 @@ export interface SingleStepResult {
     userChoice?: string
     selectedRoute?: string
     rawResponse?: string
-    useStructuredOutputNode?: boolean
   } | null
 }
 
@@ -209,7 +207,6 @@ export interface PartialRunStep {
     userChoice?: string
     selectedRoute?: string
     rawResponse?: string
-    useStructuredOutputNode?: boolean
   } | null
   createdAt: string
   updatedAt: string
