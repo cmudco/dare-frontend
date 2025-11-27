@@ -78,6 +78,7 @@ export interface Workflow {
   version?: number
   parent?: number | null
   createdAt?: string
+  displayOrder?: number
   nodes: Node[]
   edges: Edge[]
   latestRun?: WorkflowRun | null
@@ -227,4 +228,9 @@ export interface RestorePartialRunPayload {
     status: WorkflowRunStepStatus
     error: string | null
   }>
+}
+
+export interface WorkflowDisplayOrder {
+  id: number
+  displayOrder: number
 }

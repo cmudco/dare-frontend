@@ -12,11 +12,13 @@ import {
   executeSingleStepAPI,
   getActivePartialRunAPI,
   toggleManualModeAPI,
+  updateWorkflowDisplayOrderAPI,
 } from '@/api/workflows'
 import {
   CreateWorkflowDTO,
   UpdateWorkflowDTO,
   ExecuteSingleStepRequest,
+  WorkflowDisplayOrder,
 } from '@/redux/types/workflow'
 
 export const getWorkflows = createAsyncThunk(
@@ -160,6 +162,18 @@ export const toggleManualMode = createAsyncThunk(
     try {
       const response = await toggleManualModeAPI(workflowId, manualModeEnabled)
       return response
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateWorkflowDisplayOrder = createAsyncThunk(
+  'workflows/updateWorkflowDisplayOrder',
+  async (updates: WorkflowDisplayOrder[], { rejectWithValue }) => {
+    try {
+      await updateWorkflowDisplayOrderAPI(updates)
+      return updates
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }
