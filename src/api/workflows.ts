@@ -8,6 +8,7 @@ import {
   ExecuteSingleStepRequest,
   SingleStepExecutionResponse,
   GetActivePartialRunResponse,
+  WorkflowDisplayOrder,
 } from '@/redux/types/workflow'
 
 export const getWorkflowsAPI = async (): Promise<{ results: Workflow[] }> => {
@@ -168,5 +169,15 @@ export const toggleManualModeAPI = async (
     url: `api/workflows/${workflowId}/toggle-manual-mode/`,
     method: METHOD.PATCH,
     data: { manual_mode_enabled: manualModeEnabled },
+  })
+}
+
+export const updateWorkflowDisplayOrderAPI = async (
+  updates: WorkflowDisplayOrder[]
+): Promise<void> => {
+  await baseRequest<void>({
+    url: 'api/workflows/update-display-order/',
+    method: METHOD.PATCH,
+    data: updates,
   })
 }

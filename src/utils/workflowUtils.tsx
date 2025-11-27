@@ -1,7 +1,19 @@
-import { Workflow, WorkflowMode } from '../redux/types/workflow'
+import {
+  Workflow,
+  WorkflowMode,
+  WorkflowDisplayOrder,
+} from '../redux/types/workflow'
 import { Badge } from '../components/ui/badge'
 import { Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { WorkflowRunStepStatus } from './constants/workflows'
+import {
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 export const getModeBadge = (mode: WorkflowMode) => {
   switch (mode) {
@@ -115,3 +127,98 @@ export const formatWorkflowRunLabel = (
   const statusEmoji = getRunStatusEmoji(run.status)
   return `${statusEmoji} Version ${versionNumber} - ${formattedDate}`
 }
+
+// ============================================================================
+// Drag & Drop Utilities
+// ============================================================================
+
+/**
+ * Filters workflows based on search query
+ */
+export const filterWorkflows = (
+  workflows: Workflow[],
+  searchQuery: string
+): Workflow[] => {
+  return workflows.filter((workflow) => {
+    const title = workflow.title?.toLowerCase() || ''
+    const description = workflow.description?.toLowerCase() || ''
+    const query = searchQuery.toLowerCase()
+    return title.includes(query) || description.includes(query)
+  })
+}
+
+/**
+ * Creates display order updates for backend persistence
+ */
+export const createDisplayOrderUpdates = (
+  workflows: Workflow[]
+): WorkflowDisplayOrder[] => {
+  return workflows.map((workflow, index) => ({
+    id: workflow.id,
+    displayOrder: (index + 1) * 10,
+  }))
+}
+
+/**
+ * Finds the old and new indexes for drag operations
+ */
+export const findWorkflowIndexes = (
+  workflows: Workflow[],
+  activeId: string | number,
+  overId: string | number | undefined
+): { oldIndex: number; newIndex: number } => {
+  const oldIndex = workflows.findIndex((workflow) => workflow.id === activeId)
+  const newIndex = workflows.findIndex((workflow) => workflow.id === overId)
+
+  return { oldIndex, newIndex }
+}
+
+/**
+ * Custom hook that creates configured sensors for drag and drop operations
+ */
+export const useDragSensors = () => {
+  return useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+}
+
+/**
+ * Checks if a drag operation is valid
+ */
+export const isDragOperationValid = (
+  oldIndex: number,
+  newIndex: number,
+  activeId: string | number | undefined,
+  overId: string | number | undefined
+): boolean => {
+  return activeId !== overId && oldIndex !== -1 && newIndex !== -1
+}
+
+/**
+ * Gets the workflow title with fallback
+ */
+export const getWorkflowTitle = (workflow: Workflow): string => {
+  return workflow.title || 'Untitled Workflow'
+}
+
+/**
+ * Creates the drag style for sortable table rows
+ */
+export const createDragStyle = (
+  transform: { x: number; y: number; scaleX: number; scaleY: number } | null,
+  transition: string | undefined,
+  isDragging: boolean
+) => ({
+  transform: CSS.Transform.toString(transform),
+  transition: isDragging ? 'none' : transition,
+  opacity: isDragging ? 0.5 : 1,
+  zIndex: isDragging ? 999 : 'auto',
+  cursor: isDragging ? 'grabbing' : 'grab',
+})
