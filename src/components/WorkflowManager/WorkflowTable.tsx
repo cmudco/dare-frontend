@@ -6,14 +6,38 @@ import {
   startWorkflowRun,
   cloneWorkflow,
   getWorkflows,
+  updateWorkflowDisplayOrder,
 } from '../../redux/asyncThunks/workflow'
-import { formatDate } from '../../utils/constants/prompts'
 import { WORKFLOWS_TABLE_HEAD } from '../../utils/constants/workflows'
 // LEGACY: Commenting out legacy modal import
 // import { openEditModal, selectWorkflowForView } from '../../redux/workflowSlice'
-import { selectWorkflowForView } from '../../redux/workflowSlice'
+import {
+  selectWorkflowForView,
+  updateWorkflowOrder,
+} from '../../redux/workflowSlice'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../ui/button'
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { GripVertical } from 'lucide-react'
+import SortableWorkflowRow from './SortableWorkflowRow'
+import {
+  useDragSensors,
+  createDisplayOrderUpdates,
+  findWorkflowIndexes,
+  isDragOperationValid,
+  getWorkflowTitle,
+} from '@/utils/workflowUtils'
 import {
   Select,
   SelectContent,
@@ -30,20 +54,6 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/Table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu'
-import {
-  DocumentDuplicateIcon,
-  EllipsisVerticalIcon,
-  EyeIcon,
-  PencilIcon,
-  PlayIcon,
-  TrashIcon,
-} from '@heroicons/react/20/solid'
 import { ChevronUpDownIcon } from '@heroicons/react/24/outline'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 // LEGACY: Commenting out SelectModeDialog since only "New" mode is available
@@ -53,7 +63,6 @@ import {
   updateSortState,
   sortWorkflows,
 } from '@/utils/sortUtils'
-import { getModeBadge, getStepCount } from '@/utils/workflowUtils'
 import WorkflowViewer from './WorkflowViewer'
 import { WorkflowTableProps } from '@/redux/types/workflow'
 import { SortDirectionEnum } from '@/utils/constants/sort'
@@ -78,6 +87,8 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   )
   const [deleteWorkflowId, setDeleteWorkflowId] = useState<number | null>(null)
   const [deleteWorkflowTitle, setDeleteWorkflowTitle] = useState<string>('')
+  const [activeId, setActiveId] = useState<number | null>(null)
+  const sensors = useDragSensors()
 
   const filteredWorkflows = useMemo(() => {
     return workflows.filter((workflow) => {
@@ -157,188 +168,195 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
     })
   }
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as number)
+  }
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveId(null)
+
+    if (active.id !== over?.id) {
+      const { oldIndex, newIndex } = findWorkflowIndexes(
+        workflows,
+        active.id,
+        over?.id
+      )
+
+      if (isDragOperationValid(oldIndex, newIndex, active.id, over?.id)) {
+        const newOrder = arrayMove(workflows, oldIndex, newIndex)
+        const orderedIds = newOrder.map((workflow) => workflow.id)
+
+        dispatch(updateWorkflowOrder(orderedIds))
+
+        const displayOrderUpdates = createDisplayOrderUpdates(newOrder)
+
+        try {
+          await dispatch(updateWorkflowDisplayOrder(displayOrderUpdates))
+        } catch (error) {
+          console.error('Failed to update workflow display order:', error)
+        }
+      }
+    }
+  }
+
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max bg-background text-left'>
-        <TableHeader>
-          <TableRow className='bg-muted'>
-            {WORKFLOWS_TABLE_HEAD.map((head) => (
-              <TableHead
-                key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold text-foreground transition-colors duration-150 ${
-                  head !== 'Action'
-                    ? 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
-                    : ''
-                }`}
-                onClick={() => head !== 'Action' && handleSort(head)}
-              >
-                <div className='flex items-center justify-between gap-2 opacity-70'>
-                  {head}
-                  {head !== 'Action' && (
-                    <ChevronUpDownIcon
-                      strokeWidth={2}
-                      className={`h-4 w-4 ${sortColumn === head ? 'text-blue-500' : ''}`}
-                      style={{
-                        transform:
-                          sortColumn === head &&
-                          sortDirection === SortDirectionEnum.DESC
-                            ? 'rotate(180deg)'
-                            : 'none',
-                        transition: 'transform 0.2s',
-                      }}
-                    />
-                  )}
-                </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <Table className='mt-4 w-full min-w-max bg-background text-left'>
+          <TableHeader>
+            <TableRow className='bg-muted'>
+              <TableHead className='w-12 p-4'>
+                {/* Drag handle column */}
               </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {workflows.length === 0 && loading ? (
-            <TableRow>
-              <TableCell
-                colSpan={WORKFLOWS_TABLE_HEAD.length}
-                className='p-4 text-center text-foreground'
-              >
-                Loading workflows...
-              </TableCell>
+              {WORKFLOWS_TABLE_HEAD.map((head) => (
+                <TableHead
+                  key={head}
+                  className={`cursor-pointer select-none p-4 text-sm font-semibold text-foreground transition-colors duration-150 ${
+                    head !== 'Action'
+                      ? 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+                      : ''
+                  }`}
+                  onClick={() => head !== 'Action' && handleSort(head)}
+                >
+                  <div className='flex items-center justify-between gap-2 opacity-70'>
+                    {head}
+                    {head !== 'Action' && (
+                      <ChevronUpDownIcon
+                        strokeWidth={2}
+                        className={`h-4 w-4 ${sortColumn === head ? 'text-blue-500' : ''}`}
+                        style={{
+                          transform:
+                            sortColumn === head &&
+                            sortDirection === SortDirectionEnum.DESC
+                              ? 'rotate(180deg)'
+                              : 'none',
+                          transition: 'transform 0.2s',
+                        }}
+                      />
+                    )}
+                  </div>
+                </TableHead>
+              ))}
             </TableRow>
-          ) : sortedWorkflows.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={WORKFLOWS_TABLE_HEAD.length}
-                className='p-4 text-center text-foreground'
-              >
-                No matching workflows found
-              </TableCell>
-            </TableRow>
-          ) : (
-            paginatedWorkflows.map((workflow) => (
-              <TableRow key={workflow.id} className='border-border'>
-                <TableCell className='p-4'>
-                  <h3 className='font-medium text-foreground'>
-                    {workflow.title || 'Untitled'}
-                  </h3>
-                </TableCell>
-                <TableCell className='p-4'>
-                  <p className='max-w-[300px] truncate text-sm text-muted-foreground'>
-                    {workflow.description || 'No description'}
-                  </p>
-                </TableCell>
-                <TableCell className='p-4'>
-                  {getModeBadge(workflow.mode)}
-                </TableCell>
-                <TableCell className='p-4 text-foreground'>
-                  {getStepCount(workflow)}
-                </TableCell>
-                <TableCell className='p-4 text-foreground'>
-                  {formatDate(workflow.createdAt)}
-                </TableCell>
-                <TableCell className='p-4 text-center'>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className='rounded-md p-2 transition-colors hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'>
-                      <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem
-                        onClick={() => handleRun(workflow.id)}
-                        className='cursor-pointer'
+          </TableHeader>
+          <TableBody>
+            <SortableContext
+              items={paginatedWorkflows.map((w) => w.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {workflows.length === 0 && loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={WORKFLOWS_TABLE_HEAD.length + 1}
+                    className='p-4 text-center text-foreground'
+                  >
+                    Loading workflows...
+                  </TableCell>
+                </TableRow>
+              ) : sortedWorkflows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={WORKFLOWS_TABLE_HEAD.length + 1}
+                    className='p-4 text-center text-foreground'
+                  >
+                    No matching workflows found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedWorkflows.map((workflow) => (
+                  <SortableWorkflowRow
+                    key={workflow.id}
+                    workflow={workflow}
+                    onRun={handleRun}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onClone={handleClone}
+                    onDelete={handleDelete}
+                  />
+                ))
+              )}
+            </SortableContext>
+          </TableBody>
+          {sortedWorkflows.length > 0 && (
+            <TableFooter>
+              <TableRow className='bg-background'>
+                <TableCell
+                  colSpan={WORKFLOWS_TABLE_HEAD.length + 1}
+                  className='w-full p-4'
+                >
+                  <div className='flex w-full items-center justify-between'>
+                    <div className='flex items-center gap-4'>
+                      <span className='text-sm dark:text-white'>
+                        Rows per page:
+                      </span>
+                      <Select
+                        value={String(itemsPerPage)}
+                        onValueChange={(val) => setItemsPerPage(Number(val))}
                       >
-                        <PlayIcon className='mr-2 h-4 w-4' />
-                        <span>Run</span>
-                      </DropdownMenuItem>
-                      {workflow.latestRun && (
-                        <DropdownMenuItem
-                          onClick={() => handleView(workflow.id)}
-                          className='cursor-pointer'
-                        >
-                          <EyeIcon className='mr-2 h-4 w-4' />
-                          <span>View Last Run</span>
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem
-                        onClick={() => handleEdit(workflow.id)}
-                        className='cursor-pointer'
+                        <SelectTrigger className='w-[80px]'>
+                          <SelectValue placeholder='Rows' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='5'>5</SelectItem>
+                          <SelectItem value='10'>10</SelectItem>
+                          <SelectItem value='20'>20</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className='flex items-center gap-4'>
+                      <Button
+                        variant='secondary'
+                        size='sm'
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((p) => p - 1)}
                       >
-                        <PencilIcon className='mr-2 h-4 w-4' />
-                        <span>Edit</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleClone(workflow.id)}
-                        className='cursor-pointer text-yellow-500'
-                      >
-                        <DocumentDuplicateIcon className='h-4 w-4' />
-                        <span>Clone</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className='cursor-pointer text-red-500'
-                        onClick={() =>
-                          handleDelete(workflow.id, workflow.title)
+                        Previous
+                      </Button>
+                      <span className='text-sm dark:text-white'>
+                        Page {currentPage} of {totalPages || 1}
+                      </span>
+                      <Button
+                        variant='secondary'
+                        size='sm'
+                        disabled={
+                          currentPage === totalPages || totalPages === 0
                         }
+                        onClick={() => setCurrentPage((p) => p + 1)}
                       >
-                        <TrashIcon className='mr-2 h-4 w-4' />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        Next
+                      </Button>
+                    </div>
+                  </div>
                 </TableCell>
               </TableRow>
-            ))
+            </TableFooter>
           )}
-        </TableBody>
-        {sortedWorkflows.length > 0 && (
-          <TableFooter>
-            <TableRow className='bg-background'>
-              <TableCell
-                colSpan={WORKFLOWS_TABLE_HEAD.length}
-                className='w-full p-4'
-              >
-                <div className='flex w-full items-center justify-between'>
-                  <div className='flex items-center gap-4'>
-                    <span className='text-sm dark:text-white'>
-                      Rows per page:
+        </Table>
+
+        <DragOverlay>
+          {activeId ? (
+            <div className='dark:bg-dark-chat-history min-h-[48px] rounded-md border border-gray-200 bg-white px-3 py-3 opacity-95 shadow-lg dark:border-dark-icon-unselected'>
+              {(() => {
+                const draggedWorkflow = workflows.find((w) => w.id === activeId)
+                return draggedWorkflow ? (
+                  <div className='flex items-center gap-2'>
+                    <GripVertical className='h-5 w-5 text-gray-600 dark:text-white' />
+                    <span className='text-gray-900 dark:text-white'>
+                      {getWorkflowTitle(draggedWorkflow)}
                     </span>
-                    <Select
-                      value={String(itemsPerPage)}
-                      onValueChange={(val) => setItemsPerPage(Number(val))}
-                    >
-                      <SelectTrigger className='w-[80px]'>
-                        <SelectValue placeholder='Rows' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='5'>5</SelectItem>
-                        <SelectItem value='10'>10</SelectItem>
-                        <SelectItem value='20'>20</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
-                  <div className='flex items-center gap-4'>
-                    <Button
-                      variant='secondary'
-                      size='sm'
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage((p) => p - 1)}
-                    >
-                      Previous
-                    </Button>
-                    <span className='text-sm dark:text-white'>
-                      Page {currentPage} of {totalPages || 1}
-                    </span>
-                    <Button
-                      variant='secondary'
-                      size='sm'
-                      disabled={currentPage === totalPages || totalPages === 0}
-                      onClick={() => setCurrentPage((p) => p + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableFooter>
-        )}
-      </Table>
+                ) : null
+              })()}
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       <DeleteConfirmation
         isOpen={!!deleteWorkflowId}
