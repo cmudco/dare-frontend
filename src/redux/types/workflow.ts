@@ -64,9 +64,12 @@ export interface WorkflowRunStep {
 /**
  * Validation context for conditional/structured output nodes.
  * Normalized structure across both node types.
+ *
+ * Backend ALWAYS returns availableRoutes as full route objects [{name, description}].
+ * This is guaranteed by NodeExecutionStateBuilder.
  */
 export interface ValidationContext {
-  availableRoutes: ConditionalRoute[]
+  availableRoutes: ConditionalRoute[] // Always full route objects from backend
   customPrompt: string
   aiRecommendation: string | null
   aiAnalysis: string | null
