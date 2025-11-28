@@ -36,11 +36,9 @@ import {
   removeNodeWithEdges,
   markStepExecuted,
   setCurrentPartialRunId,
+  updateWorkflowRunStatus,
 } from '@/redux/workflowBuilderSlice'
-import {
-  executeSingleStep,
-  getActivePartialRun,
-} from '@/redux/asyncThunks/workflow'
+import { executeSingleStepV2 } from '@/redux/asyncThunks/workflow'
 import { unwrapResult } from '@reduxjs/toolkit'
 import { toast } from '@/utils/toast'
 import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
@@ -159,7 +157,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     }
   }
 
-  // Execute single step
+  // Execute single step using V2 API
   const handleExecuteStep = async () => {
     if (!loadedWorkflow?.id) {
       toast.error('No workflow loaded')
@@ -168,8 +166,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
     setIsExecutingStep(true)
     try {
+      // Use V2 API - returns full workflowRun with nodeStates
       const resultAction = await dispatch(
-        executeSingleStep({
+        executeSingleStepV2({
           workflowId: loadedWorkflow.id,
           stepNodeId: nodeId,
           workflowRunId: currentPartialRunId,
@@ -180,10 +179,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
       if (result.success) {
         toast.success(`Step ${stepData.stepNumber} executed successfully`)
         dispatch(markStepExecuted(nodeId))
-        dispatch(setCurrentPartialRunId(result.workflowRunId))
+        dispatch(setCurrentPartialRunId(result.workflowRun.id))
 
-        // Refresh partial run data to update node displays
-        await dispatch(getActivePartialRun(loadedWorkflow.id))
+        // V2: Update Redux directly with the returned workflowRun (includes nodeStates)
+        dispatch(updateWorkflowRunStatus(result.workflowRun))
 
         // Mark connected output node as executed
         const connectedOutputEdge = edges.find((edge) => edge.source === nodeId)

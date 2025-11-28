@@ -2,6 +2,7 @@ import {
   WorkflowRun,
   WorkflowRunStep,
   PendingValidation,
+  NodeState,
 } from '@/redux/types/workflow'
 
 /**
@@ -218,4 +219,78 @@ export function extractRoutingDecision(
     isHumanValidated: metadata?.isHumanValidated || false,
     userChoice: metadata?.userChoice || null,
   }
+}
+
+// ==========================================
+// V2 API HELPERS (GRAPH-BASED NODE STATES)
+// ==========================================
+
+/**
+ * Get node execution state from V2 API workflow run.
+ *
+ * This is the V2 equivalent of getStepFromRun - provides direct O(1) access
+ * to node state without edge traversal or step lookup.
+ *
+ * @param run - Workflow run with nodeStates map (V2 API)
+ * @param nodeId - The node ID to get state for
+ * @returns Node execution state, or null if not found
+ *
+ * @example
+ * ```tsx
+ * // Simple direct access - no edge traversal needed!
+ * const nodeState = getNodeState(workflowRun, nodeId)
+ *
+ * if (nodeState) {
+ *   return (
+ *     <div>
+ *       <Response content={nodeState.response} />
+ *       <StatusBadge status={nodeState.status} />
+ *       {nodeState.validationContext && (
+ *         <ValidationModal context={nodeState.validationContext} />
+ *       )}
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
+export function getNodeState(
+  run: WorkflowRun | null,
+  nodeId: string
+): NodeState | null {
+  if (!run?.nodeStates) return null
+
+  // First try direct key lookup (works when keys aren't mangled)
+  if (run.nodeStates[nodeId]) {
+    return run.nodeStates[nodeId]
+  }
+
+  // Fallback: search by nodeId field inside state objects
+  // This handles cases where DRF CamelCase renderer mangles dictionary keys
+  // (e.g., keys containing underscore+lowercase like "abc_xyz" become "abcXyz")
+  for (const state of Object.values(run.nodeStates)) {
+    if (state.nodeId === nodeId) {
+      return state
+    }
+  }
+
+  return null
+}
+
+/**
+ * Check if workflow run uses V2 API (has nodeStates).
+ *
+ * Use this to determine which data access pattern to use.
+ *
+ * @param run - Workflow run to check
+ * @returns True if run has V2 nodeStates
+ *
+ * @example
+ * ```tsx
+ * const data = isV2Run(run)
+ *   ? getNodeState(run, nodeId)
+ *   : getStepFromRun(run, stepNumber)
+ * ```
+ */
+export function isV2Run(run: WorkflowRun | null): boolean {
+  return !!(run?.nodeStates && Object.keys(run.nodeStates).length > 0)
 }
