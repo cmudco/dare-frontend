@@ -66,11 +66,37 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
   // VERSION SELECTION: Hook handles all version dropdown logic
   const versionState = useWorkflowRunVersion(id)
 
-  // Check if this node has a pending validation
-  const pendingValidation = currentRun?.pendingValidations?.find(
-    (v) => v.nodeId === id
+  // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
+  const displayRun = getDisplayRun(
+    id,
+    selectedRunIds,
+    availableRuns,
+    currentRun
   )
-  const hasPendingValidation = !!pendingValidation
+
+  // V2 API: Direct node state access
+  const nodeState = getNodeState(displayRun, id)
+
+  // Check if this node has a pending validation using V2 nodeState
+  const hasPendingValidation =
+    nodeState?.status === 'pending_human_input' &&
+    !!nodeState?.validationContext
+
+  // Build validation object from nodeState for HumanValidationModal compatibility
+  // Backend guarantees availableRoutes is always [{name, description}] objects
+  const pendingValidation = hasPendingValidation
+    ? {
+        nodeId: id,
+        stepNumber: nodeState?.validationContext?.stepNumber ?? 0,
+        customPrompt: nodeState?.validationContext?.customPrompt ?? '',
+        availableRoutes: nodeState?.validationContext?.availableRoutes ?? [],
+        currentResponse: nodeState?.response ?? '',
+        stepId: nodeState?.stepId ?? 0,
+        aiRecommendation:
+          nodeState?.validationContext?.aiRecommendation ?? undefined,
+        aiAnalysis: nodeState?.validationContext?.aiAnalysis ?? undefined,
+      }
+    : null
 
   const routes = nodeData.routes || [
     { name: 'Route A', description: '' },
@@ -166,7 +192,7 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
         })
       )
       // Update Redux directly with the returned workflowRun
-      if (resultAction.payload) {
+      if (submitHumanValidationV2.fulfilled.match(resultAction)) {
         dispatch(updateWorkflowRunStatus(resultAction.payload))
       }
       setShowValidationModal(false)
@@ -182,27 +208,12 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
     updateNodeInternals(id)
   }, [updateNodeInternals, id, routes.length, routeNames, edges])
 
-  // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
-  const displayRun = getDisplayRun(
-    id,
-    selectedRunIds,
-    availableRuns,
-    currentRun
-  )
-
-  // V2 API: Direct node state access (no edge traversal needed!)
-  const nodeState = getNodeState(displayRun, id)
-
-  // DATA EXTRACTION: Pull directly from nodeState
+  // DATA EXTRACTION: Pull directly from nodeState (already defined above)
   const stepStatus = nodeState?.status || null
   const selectedRoute = nodeState?.response || null
   const validationContext = nodeState?.validationContext
-  const aiAnalysis =
-    validationContext?.aiAnalysis || pendingValidation?.aiAnalysis || null
-  const aiRecommendation =
-    validationContext?.aiRecommendation ||
-    pendingValidation?.aiRecommendation ||
-    null
+  const aiAnalysis = validationContext?.aiAnalysis || null
+  const aiRecommendation = validationContext?.aiRecommendation || null
   // Check if this was a human-validated decision (metadata would have been set)
   const isHumanValidated = stepStatus === 'completed' && !!selectedRoute
   const userChoice = selectedRoute // For completed decisions
