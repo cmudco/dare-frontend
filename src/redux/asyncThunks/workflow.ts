@@ -23,6 +23,8 @@ import {
   UpdateWorkflowDTO,
   ExecuteSingleStepRequest,
   WorkflowDisplayOrder,
+  WorkflowRun,
+  SingleStepExecutionResponseV2,
 } from '@/redux/types/workflow'
 
 export const getWorkflows = createAsyncThunk(
@@ -192,47 +194,45 @@ export const updateWorkflowDisplayOrder = createAsyncThunk(
  * Get workflow run by ID using V2 API with nodeStates.
  * Returns WorkflowRun with nodeStates map for direct O(1) node access.
  */
-export const getWorkflowRunByIdV2 = createAsyncThunk(
-  'workflows/getWorkflowRunByIdV2',
-  async (runId: number, { rejectWithValue }) => {
-    try {
-      return await getWorkflowRunByIdV2API(runId)
-    } catch (error) {
-      return rejectWithValue((error as Error).message)
-    }
+export const getWorkflowRunByIdV2 = createAsyncThunk<
+  WorkflowRun,
+  number,
+  { rejectValue: string }
+>('workflows/getWorkflowRunByIdV2', async (runId, { rejectWithValue }) => {
+  try {
+    return await getWorkflowRunByIdV2API(runId)
+  } catch (error) {
+    return rejectWithValue((error as Error).message)
   }
-)
+})
 
 /**
  * Execute single step using V2 API.
  * Returns full WorkflowRun with nodeStates instead of custom stepResult.
  */
-export const executeSingleStepV2 = createAsyncThunk(
-  'workflows/executeSingleStepV2',
-  async (request: ExecuteSingleStepRequest, { rejectWithValue }) => {
-    try {
-      const response = await executeSingleStepV2API(request)
-      return response
-    } catch (error) {
-      return rejectWithValue((error as Error).message)
-    }
+export const executeSingleStepV2 = createAsyncThunk<
+  SingleStepExecutionResponseV2,
+  ExecuteSingleStepRequest,
+  { rejectValue: string }
+>('workflows/executeSingleStepV2', async (request, { rejectWithValue }) => {
+  try {
+    return await executeSingleStepV2API(request)
+  } catch (error) {
+    return rejectWithValue((error as Error).message)
   }
-)
+})
 
 /**
  * Submit human validation using V2 API.
  * Returns full WorkflowRun with updated nodeStates.
  */
-export const submitHumanValidationV2 = createAsyncThunk(
+export const submitHumanValidationV2 = createAsyncThunk<
+  WorkflowRun,
+  { workflowRunId: number; nodeId: string; chosenRoute: string },
+  { rejectValue: string }
+>(
   'workflows/submitHumanValidationV2',
-  async (
-    {
-      workflowRunId,
-      nodeId,
-      chosenRoute,
-    }: { workflowRunId: number; nodeId: string; chosenRoute: string },
-    { rejectWithValue }
-  ) => {
+  async ({ workflowRunId, nodeId, chosenRoute }, { rejectWithValue }) => {
     try {
       return await submitHumanValidationV2API(
         workflowRunId,
