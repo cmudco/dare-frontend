@@ -199,32 +199,13 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             dispatch(markStepExecuted(connectedOutputEdge.target))
           }
         }
-      } else if (
-        result.missingDependencies &&
-        result.missingDependencies.length > 0
-      ) {
-        // Find step numbers for missing dependencies
-        const missingStepNumbers = result.missingDependencies
-          .map((depNodeId) => {
-            const depNode = nodes.find((n) => n.id === depNodeId)
-            return depNode?.data?.stepNumber
-          })
-          .filter(Boolean)
-          .join(', ')
-
-        toast.error(
-          `Cannot execute Step ${stepData.stepNumber}. Please run: Step${missingStepNumbers.includes(',') ? 's' : ''} ${missingStepNumbers} first`
-        )
       } else {
-        toast.error(result.error || 'Step execution failed')
+        // Display error from backend (already formatted)
+        toast.error(result.error || 'Step execution failed', 8000)
       }
     } catch (error) {
-      console.error('Error executing step:', error)
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to execute step'
-      toast.error(
-        `Step ${stepData.stepNumber} execution failed: ${errorMessage}`
-      )
+      // Error is already a formatted string from errorHandler
+      toast.error(String(error), 8000)
     } finally {
       setIsExecutingStep(false)
     }
