@@ -33,7 +33,6 @@ import {
   toggleNodeCollapse,
   removeNodeWithEdges,
 } from '@/redux/workflowBuilderSlice'
-import { useErrorsContext } from '../ErrorsContext'
 import { renderStatusPill } from '@/utils/workflowUtils'
 import React from 'react'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
@@ -57,8 +56,6 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
   const nodeData =
     (data as Partial<ConditionalNodeDataType>) ||
     ({} as Partial<ConditionalNodeDataType>)
-  const { errorsByNodeId, clearNodeError } = useErrorsContext()
-  const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
@@ -264,15 +261,9 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
               value={nodeData.prompt ? nodeData.prompt.toString() : ''}
               onValueChange={(value) => {
                 updateNodeData({ prompt: Number(value) })
-                clearNodeError(id, 'prompt')
               }}
             >
-              <SelectTrigger
-                id='prompt'
-                className={`text-sm ${
-                  fieldErrors.prompt ? 'border-destructive' : ''
-                }`}
-              >
+              <SelectTrigger id='prompt' className='text-sm'>
                 <SelectValue placeholder='Select a prompt' />
               </SelectTrigger>
               <SelectContent>
@@ -283,11 +274,6 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.prompt && (
-              <p className='mt-1 text-xs text-destructive'>
-                {fieldErrors.prompt}
-              </p>
-            )}
           </div>
 
           {/* LLM Model Selector */}
@@ -299,15 +285,9 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
               value={nodeData.llm ? nodeData.llm.toString() : ''}
               onValueChange={(value) => {
                 updateNodeData({ llm: Number(value) })
-                clearNodeError(id, 'llm')
               }}
             >
-              <SelectTrigger
-                id='llm'
-                className={`text-sm ${
-                  fieldErrors.llm ? 'border-destructive' : ''
-                }`}
-              >
+              <SelectTrigger id='llm' className='text-sm'>
                 <SelectValue placeholder='Select an LLM' />
               </SelectTrigger>
               <SelectContent>
@@ -318,9 +298,6 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.llm && (
-              <p className='mt-1 text-xs text-destructive'>{fieldErrors.llm}</p>
-            )}
           </div>
 
           {/* AI Decision Display - Shows after execution */}
@@ -540,18 +517,6 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
           </div>
 
           {/* Connection validation errors */}
-          {fieldErrors.connections && (
-            <div className='rounded-md border border-destructive/20 bg-destructive/10 p-3'>
-              <p className='text-xs font-medium text-destructive'>
-                Connection Error
-              </p>
-              <div className='mt-1 text-xs text-destructive'>
-                <pre className='whitespace-pre-wrap font-sans'>
-                  {fieldErrors.connections}
-                </pre>
-              </div>
-            </div>
-          )}
         </CardContent>
       )}
 
