@@ -36,15 +36,11 @@ import {
 } from '@/redux/workflowBuilderSlice'
 import { renderStatusPill } from '@/utils/workflowUtils'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
-import { submitHumanValidationAPI } from '@/api/workflows'
-import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
+import { submitHumanValidationV2 } from '@/redux/asyncThunks/workflow'
+import { updateWorkflowRunStatus } from '@/redux/workflowBuilderSlice'
 import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
 import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
-import {
-  getDisplayRun,
-  getStepFromRun,
-  extractRoutingDecision,
-} from '@/utils/workflowRunHelpers'
+import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import type { StructuredOutputNodeData as StructuredOutputNodeDataType } from '@/types/workflowNodes'
 import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
 
@@ -89,9 +85,6 @@ export default function StructuredOutputNode({
       ],
     [nodeData.routes]
   )
-
-  // Structured Output is now an independent node with its own stepNumber
-  const stepNumber = nodeData.stepNumber as number | undefined
 
   // Update Redux when form changes
   const updateNodeData = (updates: Partial<StructuredOutputNodeDataType>) => {
@@ -158,9 +151,18 @@ export default function StructuredOutputNode({
     if (!currentRun?.id) return
 
     try {
-      await submitHumanValidationAPI(currentRun.id, nodeId, chosenRoute)
-      // Refresh the workflow run to get updated status
-      void dispatch(getWorkflowRunById(currentRun.id))
+      // Use V2 API - returns updated workflowRun with nodeStates
+      const resultAction = await dispatch(
+        submitHumanValidationV2({
+          workflowRunId: currentRun.id,
+          nodeId,
+          chosenRoute,
+        })
+      )
+      // Update Redux directly with the returned workflowRun
+      if (resultAction.payload) {
+        dispatch(updateWorkflowRunStatus(resultAction.payload))
+      }
       setShowValidationModal(false)
     } catch (error) {
       console.error('Failed to submit validation:', error)
@@ -185,19 +187,22 @@ export default function StructuredOutputNode({
     currentRun
   )
 
-  // STEP LOOKUP: Find this structured output node's own step data
-  const stepRun = getStepFromRun(displayRun, stepNumber)
+  // V2 API: Direct node state access (no edge traversal needed!)
+  const nodeState = getNodeState(displayRun, id)
 
-  // DATA EXTRACTION: Pull out routing decision values
-  const {
-    selectedRoute,
-    aiAnalysis,
-    aiRecommendation,
-    isHumanValidated,
-    userChoice,
-  } = extractRoutingDecision(stepRun, pendingValidation)
-
-  const stepStatus = stepRun?.status || null
+  // DATA EXTRACTION: Pull directly from nodeState
+  const stepStatus = nodeState?.status || null
+  const selectedRoute = nodeState?.response || null
+  const validationContext = nodeState?.validationContext
+  const aiAnalysis =
+    validationContext?.aiAnalysis || pendingValidation?.aiAnalysis || null
+  const aiRecommendation =
+    validationContext?.aiRecommendation ||
+    pendingValidation?.aiRecommendation ||
+    null
+  // Check if this was a human-validated decision
+  const isHumanValidated = stepStatus === 'completed' && !!selectedRoute
+  const userChoice = selectedRoute // For completed decisions
 
   const isCollapsed = nodeData?.isCollapsed || false
 
