@@ -13,6 +13,21 @@ export const getErrorMessage = (error: unknown): string => {
     if (axiosError.response?.data) {
       const errorData = axiosError.response.data
 
+      // Handle workflow validation errors (camelCase from backend)
+      if (
+        errorData.validationErrors &&
+        Array.isArray(errorData.validationErrors)
+      ) {
+        const errors = errorData.validationErrors as string[]
+        if (errors.length === 1) {
+          return errors[0]
+        } else if (errors.length > 1) {
+          return errors
+            .map((err: string, i: number) => `${i + 1}. ${err}`)
+            .join('\n')
+        }
+      }
+
       if (errorData.message) {
         return errorData.message
       }
