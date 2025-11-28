@@ -28,10 +28,7 @@ import { loadWorkflowIntoBuilder } from '@/redux/asyncThunks/workflowBuilder'
 import { getWorkflowRuns } from '@/redux/asyncThunks/workflow'
 import { startWorkflowRunPolling } from '@/services/workflowRunPolling'
 import { useEffect } from 'react'
-import { ErrorsContext } from './ErrorsContext'
-import type { NodeErrors as NodeErrorsType } from '@/redux/types/workflowBuilder'
 import type { Workflow } from '@/redux/types/workflow'
-import { clearNodeError as clearNodeErrorAction } from '@/redux/workflowBuilderSlice'
 import Sidebar from './components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Minimize2, Maximize2, Undo2, Redo2 } from 'lucide-react'
@@ -53,7 +50,6 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   const {
     nodes,
     edges,
-    errorsByNodeId,
     currentRun,
     isRunning: isWorkflowRunning,
     savedViewport,
@@ -146,48 +142,38 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
 
   return (
     <div className='flex h-full w-full'>
-      <ErrorsContext.Provider
-        value={{
-          errorsByNodeId,
-          clearNodeError: (nodeId: string, field?: keyof NodeErrorsType) =>
-            dispatch(clearNodeErrorAction({ nodeId, field })),
-        }}
+      <Sidebar />
+      <ReactFlow
+        className='flex-1'
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={(changes) => dispatch(onNodesChange(changes))}
+        onEdgesChange={(changes) => dispatch(onEdgesChange(changes))}
+        onConnect={(connection) => dispatch(onConnect(connection))}
+        isValidConnection={(connection) =>
+          isValidConnection(connection, nodes, edges)
+        }
+        nodeTypes={WORKFLOW_NODE_TYPES}
+        defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
+        onMoveEnd={(_, viewport) => dispatch(setSavedViewport(viewport))}
+        fitView={!savedViewport}
+        panOnScroll={false}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        minZoom={0.1}
       >
-        <Sidebar />
-        <ReactFlow
-          className='flex-1'
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={(changes) => dispatch(onNodesChange(changes))}
-          onEdgesChange={(changes) => dispatch(onEdgesChange(changes))}
-          onConnect={(connection) => dispatch(onConnect(connection))}
-          isValidConnection={(connection) =>
-            isValidConnection(connection, nodes, edges)
-          }
-          nodeTypes={WORKFLOW_NODE_TYPES}
-          defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
-          onMoveEnd={(_, viewport) => dispatch(setSavedViewport(viewport))}
-          fitView={!savedViewport}
-          panOnScroll={false}
-          zoomOnScroll={true}
-          zoomOnPinch={true}
-          minZoom={0.1}
-        >
-          <Background
-            variant={BackgroundVariant.Dots}
-            gap={12}
-            size={1}
-            color='#e5e7eb'
-          />
-          <Controls showZoom={true} showFitView={true} showInteractive={true} />
-          {/* MiniMap temporarily disabled due to null stepNode serialization issue */}
-          {/* TODO: Re-enable after backend fix to properly serialize step_node in WorkflowRunStep */}
-          {/* <MiniMap
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={12}
+          size={1}
+          color='#e5e7eb'
+        />
+        <Controls showZoom={true} showFitView={true} showInteractive={true} />
+        {/* MiniMap temporarily disabled due to null stepNode serialization issue */}
+        {/* TODO: Re-enable after backend fix to properly serialize step_node in WorkflowRunStep */}
+        {/* <MiniMap
             nodeColor={(node) => {
               // Color nodes based on their type or state
-              if (errorsByNodeId[node.id]) {
-                return '#ef4444' // Red for errors
-              }
               if (
                 currentRun?.steps?.some(
                   (step) =>
@@ -208,78 +194,72 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
               borderRadius: '8px',
             }}
           /> */}
-          <Panel
-            position='top-right'
-            className='rounded-lg border border-gray-200 bg-white p-3 shadow-md'
-          >
-            <div className='space-y-2 text-sm'>
-              <div className='font-semibold text-gray-700'>Workflow Info</div>
-              <div className='text-gray-600'>
-                Nodes: <span className='font-medium'>{nodes.length}</span>
+        <Panel
+          position='top-right'
+          className='rounded-lg border border-gray-200 bg-white p-3 shadow-md'
+        >
+          <div className='space-y-2 text-sm'>
+            <div className='font-semibold text-gray-700'>Workflow Info</div>
+            <div className='text-gray-600'>
+              Nodes: <span className='font-medium'>{nodes.length}</span>
+            </div>
+            <div className='text-gray-600'>
+              Connections: <span className='font-medium'>{edges.length}</span>
+            </div>
+            {isWorkflowRunning && (
+              <div className='font-medium text-green-600'>▶ Running...</div>
+            )}
+            <div className='space-y-1 border-t border-gray-200 pt-2'>
+              <div className='flex gap-1'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => dispatch(undo())}
+                  disabled={!canUndo}
+                  className='h-6 flex-1 px-2 text-xs'
+                  title='Undo (Cmd/Ctrl+Z)'
+                >
+                  <Undo2 className='mr-1 h-3 w-3' />
+                  Undo
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => dispatch(redo())}
+                  disabled={!canRedo}
+                  className='h-6 flex-1 px-2 text-xs'
+                  title='Redo (Cmd/Ctrl+Shift+Z)'
+                >
+                  <Redo2 className='mr-1 h-3 w-3' />
+                  Redo
+                </Button>
               </div>
-              <div className='text-gray-600'>
-                Connections: <span className='font-medium'>{edges.length}</span>
-              </div>
-              {isWorkflowRunning && (
-                <div className='font-medium text-green-600'>▶ Running...</div>
-              )}
-              {Object.keys(errorsByNodeId).length > 0 && (
-                <div className='font-medium text-red-600'>
-                  ⚠ {Object.keys(errorsByNodeId).length} Error(s)
-                </div>
-              )}
-              <div className='space-y-1 border-t border-gray-200 pt-2'>
-                <div className='flex gap-1'>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    onClick={() => dispatch(undo())}
-                    disabled={!canUndo}
-                    className='h-6 flex-1 px-2 text-xs'
-                    title='Undo (Cmd/Ctrl+Z)'
-                  >
-                    <Undo2 className='mr-1 h-3 w-3' />
-                    Undo
-                  </Button>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    onClick={() => dispatch(redo())}
-                    disabled={!canRedo}
-                    className='h-6 flex-1 px-2 text-xs'
-                    title='Redo (Cmd/Ctrl+Shift+Z)'
-                  >
-                    <Redo2 className='mr-1 h-3 w-3' />
-                    Redo
-                  </Button>
-                </div>
-                <div className='flex gap-1'>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    onClick={() => dispatch(collapseAllNodes())}
-                    className='h-6 flex-1 px-2 text-xs'
-                    title='Collapse all nodes'
-                  >
-                    <Minimize2 className='mr-1 h-3 w-3' />
-                    Collapse
-                  </Button>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    onClick={() => dispatch(expandAllNodes())}
-                    className='h-6 flex-1 px-2 text-xs'
-                    title='Expand all nodes'
-                  >
-                    <Maximize2 className='mr-1 h-3 w-3' />
-                    Expand
-                  </Button>
-                </div>
+              <div className='flex gap-1'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => dispatch(collapseAllNodes())}
+                  className='h-6 flex-1 px-2 text-xs'
+                  title='Collapse all nodes'
+                >
+                  <Minimize2 className='mr-1 h-3 w-3' />
+                  Collapse
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => dispatch(expandAllNodes())}
+                  className='h-6 flex-1 px-2 text-xs'
+                  title='Expand all nodes'
+                >
+                  <Maximize2 className='mr-1 h-3 w-3' />
+                  Expand
+                </Button>
               </div>
             </div>
-          </Panel>
-        </ReactFlow>
-      </ErrorsContext.Provider>
+          </div>
+        </Panel>
+      </ReactFlow>
     </div>
   )
 }

@@ -43,7 +43,6 @@ import {
 } from '@/redux/asyncThunks/workflow'
 import { unwrapResult } from '@reduxjs/toolkit'
 import { toast } from '@/utils/toast'
-import { useErrorsContext } from '../ErrorsContext'
 import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
 import {
   HANDLE_NUMBERS,
@@ -74,8 +73,6 @@ export type StepNodeData = {
 export default function StepNode({ id, data, selected }: NodeProps) {
   const nodeId = id as string // ReactFlow guarantees id is string when component renders
   const stepData = data as StepNodeData
-  const { errorsByNodeId, clearNodeError } = useErrorsContext()
-  const fieldErrors = (errorsByNodeId[nodeId] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
 
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -358,14 +355,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               value={stepData.prompt ? stepData.prompt.toString() : ''}
               onValueChange={(value) => {
                 updateNodeData({ prompt: Number(value) })
-                clearNodeError(nodeId, 'prompt')
               }}
             >
-              <SelectTrigger
-                className={`bg-background text-sm ${
-                  fieldErrors.prompt ? 'border-destructive' : ''
-                }`}
-              >
+              <SelectTrigger className='bg-background text-sm'>
                 <SelectValue placeholder='Select a prompt' />
               </SelectTrigger>
               <SelectContent>
@@ -376,11 +368,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.prompt && (
-              <p className='mt-1 text-xs text-destructive'>
-                {fieldErrors.prompt}
-              </p>
-            )}
           </div>
 
           <div className='space-y-2'>
@@ -528,14 +515,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               value={stepData.llm ? stepData.llm.toString() : ''}
               onValueChange={(value) => {
                 updateNodeData({ llm: Number(value) })
-                clearNodeError(nodeId, 'llm')
               }}
             >
-              <SelectTrigger
-                className={`bg-background text-sm ${
-                  fieldErrors.llm ? 'border-destructive' : ''
-                }`}
-              >
+              <SelectTrigger className='bg-background text-sm'>
                 <SelectValue placeholder='Select an LLM' />
               </SelectTrigger>
               <SelectContent>
@@ -546,9 +528,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.llm && (
-              <p className='mt-1 text-xs text-destructive'>{fieldErrors.llm}</p>
-            )}
           </div>
 
           {/* Advanced Settings Toggle */}

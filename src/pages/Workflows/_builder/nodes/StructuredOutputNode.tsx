@@ -34,7 +34,6 @@ import {
   removeNodeWithEdges,
   setEdges,
 } from '@/redux/workflowBuilderSlice'
-import { useErrorsContext } from '../ErrorsContext'
 import { renderStatusPill } from '@/utils/workflowUtils'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
 import { submitHumanValidationAPI } from '@/api/workflows'
@@ -62,8 +61,6 @@ export default function StructuredOutputNode({
   const nodeData =
     (data as Partial<StructuredOutputNodeDataType>) ||
     ({} as Partial<StructuredOutputNodeDataType>)
-  const { errorsByNodeId, clearNodeError } = useErrorsContext()
-  const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const { currentRun, availableRuns, selectedRunIds } = useAppSelector(
@@ -283,7 +280,6 @@ export default function StructuredOutputNode({
                   size='sm'
                   onClick={() => {
                     updateNodeData({ prompt: null })
-                    clearNodeError(id, 'prompt')
                   }}
                   className='h-6 px-2 text-xs text-muted-foreground hover:text-foreground'
                 >
@@ -295,15 +291,9 @@ export default function StructuredOutputNode({
               value={nodeData.prompt ? nodeData.prompt.toString() : undefined}
               onValueChange={(value) => {
                 updateNodeData({ prompt: Number(value) })
-                clearNodeError(id, 'prompt')
               }}
             >
-              <SelectTrigger
-                id='prompt'
-                className={`text-sm ${
-                  fieldErrors.prompt ? 'border-destructive' : ''
-                }`}
-              >
+              <SelectTrigger id='prompt' className='text-sm'>
                 <SelectValue placeholder='Use default routing prompt' />
               </SelectTrigger>
               <SelectContent>
@@ -314,11 +304,6 @@ export default function StructuredOutputNode({
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.prompt && (
-              <p className='mt-1 text-xs text-destructive'>
-                {fieldErrors.prompt}
-              </p>
-            )}
             <p className='text-xs text-muted-foreground'>
               Falls back to base routing prompt if not selected.
             </p>
@@ -333,15 +318,9 @@ export default function StructuredOutputNode({
               value={nodeData.llm ? nodeData.llm.toString() : ''}
               onValueChange={(value) => {
                 updateNodeData({ llm: Number(value) })
-                clearNodeError(id, 'llm')
               }}
             >
-              <SelectTrigger
-                id='llm'
-                className={`text-sm ${
-                  fieldErrors.llm ? 'border-destructive' : ''
-                }`}
-              >
+              <SelectTrigger id='llm' className='text-sm'>
                 <SelectValue placeholder='Select an LLM' />
               </SelectTrigger>
               <SelectContent>
@@ -352,9 +331,6 @@ export default function StructuredOutputNode({
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.llm && (
-              <p className='mt-1 text-xs text-destructive'>{fieldErrors.llm}</p>
-            )}
           </div>
 
           {/* Execution Result Display */}
@@ -573,18 +549,6 @@ export default function StructuredOutputNode({
           </div>
 
           {/* Connection validation errors */}
-          {fieldErrors.connections && (
-            <div className='rounded-md border border-destructive/20 bg-destructive/10 p-3'>
-              <p className='text-xs font-medium text-destructive'>
-                Connection Error
-              </p>
-              <div className='mt-1 text-xs text-destructive'>
-                <pre className='whitespace-pre-wrap font-sans'>
-                  {fieldErrors.connections}
-                </pre>
-              </div>
-            </div>
-          )}
         </CardContent>
       )}
       {/* Input handle - accepts connections from previous nodes */}
