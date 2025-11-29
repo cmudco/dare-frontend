@@ -1,5 +1,3 @@
-import React from 'react'
-
 interface RoutingDecisionDisplayProps {
   /** The selected/chosen route */
   selectedRoute: string

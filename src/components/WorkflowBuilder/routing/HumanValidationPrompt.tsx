@@ -1,4 +1,3 @@
-import React from 'react'
 import { UserCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
