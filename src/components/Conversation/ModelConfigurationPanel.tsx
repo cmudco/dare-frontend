@@ -13,7 +13,7 @@ import {
 } from '../../redux/conversationSlice'
 import { Slider } from '../ui/slider'
 import { Switch } from '../ui/switch'
-import { Settings } from 'lucide-react'
+import { Settings, Info } from 'lucide-react'
 import { MODEL_CONFIG } from '../../config/modelConfig'
 import {
   getTemperatureColor,
@@ -25,6 +25,13 @@ import {
 } from '@/utils/modelConfigUtils'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
 import { features } from '@/config/environment'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip'
+import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
 
 const ModelConfigurationPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -155,153 +162,264 @@ const ModelConfigurationPanel: React.FC = () => {
   }
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant='ghost'
-          className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
-        >
-          <Settings className='h-5 w-5 text-gray-600 dark:text-gray-300' />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className='w-80 border border-border bg-popover p-4'>
-        <div className='flex flex-col justify-center gap-4 text-gray-900 dark:text-white'>
-          {activeConversation?.conversationId && (
-            <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
-              <h3 className='font-medium dark:text-white'>Configuration</h3>
-              <Button
-                size='sm'
-                onClick={resetToDefaults}
-                className='text-xs dark:bg-dark-button-primary dark:text-white dark:hover:bg-dark-button-primary/80'
-              >
-                Reset to Defaults
-              </Button>
-            </div>
-          )}
-
-          <div className='space-y-4'>
-            {/* Web Search Toggle */}
-            <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
-              <div className='flex flex-col'>
-                <h4 className='font-medium dark:text-white'>Web Search</h4>
-                <p className='text-xs text-gray-500 dark:text-gray-400'>
-                  Enable real-time web search for up-to-date information
-                </p>
-              </div>
-              <Switch
-                checked={webSearchEnabled}
-                onCheckedChange={handleWebSearchToggle}
-              />
-            </div>
-
-            {/* Image Generation Toggle - Only show in Georgia Tech and Development */}
-            {features.enableImageGeneration && (
+    <TooltipProvider>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant='ghost'
+            className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
+          >
+            <Settings className='h-5 w-5 text-gray-600 dark:text-gray-300' />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className='w-80 border border-border bg-popover p-4'>
+          <div className='flex flex-col justify-center gap-4 text-gray-900 dark:text-white'>
+            {activeConversation?.conversationId && (
               <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
-                <div className='flex flex-col'>
-                  <h4 className='font-medium dark:text-white'>
-                    Image Generation
-                  </h4>
+                <h3 className='font-medium dark:text-white'>Configuration</h3>
+                <Button
+                  size='sm'
+                  onClick={resetToDefaults}
+                  className='text-xs dark:bg-dark-button-primary dark:text-white dark:hover:bg-dark-button-primary/80'
+                >
+                  Reset to Defaults
+                </Button>
+              </div>
+            )}
+
+            <div className='space-y-4'>
+              {/* Web Search Toggle */}
+              <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                <div className='flex flex-col gap-1'>
+                  <div className='flex items-center gap-2'>
+                    <h4 className='font-medium dark:text-white'>Web Search</h4>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                      </TooltipTrigger>
+                      <TooltipContent className='max-w-xs'>
+                        <div className='space-y-2'>
+                          <p className='font-semibold'>
+                            {TOOLTIP_CONTENT.modelConfig.webSearch.title}
+                          </p>
+                          <p className='text-sm'>
+                            {TOOLTIP_CONTENT.modelConfig.webSearch.description}
+                          </p>
+                          <p className='text-xs text-muted-foreground'>
+                            💡 {TOOLTIP_CONTENT.modelConfig.webSearch.tip}
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <p className='text-xs text-gray-500 dark:text-gray-400'>
-                    Enable AI image generation with DALL-E models
+                    Enable real-time web search for up-to-date information
                   </p>
                 </div>
                 <Switch
-                  checked={imageGenerationEnabled}
-                  onCheckedChange={handleImageGenerationToggle}
+                  checked={webSearchEnabled}
+                  onCheckedChange={handleWebSearchToggle}
                 />
               </div>
+
+              {/* Image Generation Toggle - Only show in Georgia Tech and Development */}
+              {features.enableImageGeneration && (
+                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                  <div className='flex flex-col gap-1'>
+                    <div className='flex items-center gap-2'>
+                      <h4 className='font-medium dark:text-white'>
+                        Image Generation
+                      </h4>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-xs'>
+                          <div className='space-y-2'>
+                            <p className='font-semibold'>
+                              {
+                                TOOLTIP_CONTENT.modelConfig.imageGeneration
+                                  .title
+                              }
+                            </p>
+                            <p className='text-sm'>
+                              {
+                                TOOLTIP_CONTENT.modelConfig.imageGeneration
+                                  .description
+                              }
+                            </p>
+                            <p className='text-xs text-muted-foreground'>
+                              💡{' '}
+                              {TOOLTIP_CONTENT.modelConfig.imageGeneration.tip}
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <p className='text-xs text-gray-500 dark:text-gray-400'>
+                      Enable AI image generation with DALL-E models
+                    </p>
+                  </div>
+                  <Switch
+                    checked={imageGenerationEnabled}
+                    onCheckedChange={handleImageGenerationToggle}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className='space-y-4'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <h4 className='font-medium dark:text-white'>Temperature</h4>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                    </TooltipTrigger>
+                    <TooltipContent className='max-w-xs'>
+                      <div className='space-y-2'>
+                        <p className='font-semibold'>
+                          {TOOLTIP_CONTENT.modelConfig.temperature.title}
+                        </p>
+                        <p className='text-sm'>
+                          {TOOLTIP_CONTENT.modelConfig.temperature.description}
+                        </p>
+                        <p className='text-xs text-muted-foreground'>
+                          💡 {TOOLTIP_CONTENT.modelConfig.temperature.tip}
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
+                  {temperature.toFixed(1)}
+                </span>
+              </div>
+
+              <Slider
+                value={[temperature]}
+                min={0}
+                max={1}
+                step={0.1}
+                onValueChange={handleTemperatureChange}
+                className='my-4 cursor-pointer'
+              />
+
+              <div className='flex justify-between px-1 text-xs text-gray-500 dark:text-gray-400'>
+                <span>Precise</span>
+                <span>Balanced</span>
+                <span>Creative</span>
+              </div>
+
+              <div
+                className={`mt-2 text-sm ${getTemperatureColor(temperature)}`}
+              >
+                {getTemperatureDescription(temperature)}
+              </div>
+            </div>
+
+            <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <h4 className='font-medium dark:text-white'>Max Tokens</h4>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                    </TooltipTrigger>
+                    <TooltipContent className='max-w-xs'>
+                      <div className='space-y-2'>
+                        <p className='font-semibold'>
+                          {TOOLTIP_CONTENT.modelConfig.maxTokens.title}
+                        </p>
+                        <p className='text-sm'>
+                          {TOOLTIP_CONTENT.modelConfig.maxTokens.description}
+                        </p>
+                        <p className='text-xs text-muted-foreground'>
+                          💡 {TOOLTIP_CONTENT.modelConfig.maxTokens.tip}
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
+                  {maxTokens}
+                </span>
+              </div>
+
+              <Slider
+                value={[maxTokens]}
+                min={1}
+                max={8192}
+                step={256}
+                onValueChange={handleMaxTokensChange}
+                className='my-4 cursor-pointer'
+              />
+
+              <div className={`mt-2 text-sm ${getMaxTokensColor(maxTokens)}`}>
+                {getMaxTokensDescription(maxTokens)}
+              </div>
+            </div>
+
+            <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <h4 className='font-medium dark:text-white'>History Limit</h4>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                    </TooltipTrigger>
+                    <TooltipContent className='max-w-xs'>
+                      <div className='space-y-2'>
+                        <p className='font-semibold'>
+                          {TOOLTIP_CONTENT.modelConfig.historyLimit.title}
+                        </p>
+                        <p className='text-sm'>
+                          {TOOLTIP_CONTENT.modelConfig.historyLimit.description}
+                        </p>
+                        <p className='text-xs text-muted-foreground'>
+                          💡 {TOOLTIP_CONTENT.modelConfig.historyLimit.tip}
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
+                  {historyLimit === 50 ? 'Full Context' : historyLimit}
+                </span>
+              </div>
+
+              <Slider
+                value={[historyLimit]}
+                min={1}
+                max={50}
+                step={1}
+                onValueChange={handleHistoryLimitChange}
+                className='my-4 cursor-pointer'
+              />
+
+              <div className='flex justify-between px-1 text-xs text-gray-500 dark:text-gray-400'>
+                <span>Minimal</span>
+                <span>Standard</span>
+                <span>Max</span>
+              </div>
+
+              <div
+                className={`mt-2 text-sm ${getHistoryLimitColor(historyLimit)}`}
+              >
+                {getHistoryLimitDescription(historyLimit)}
+              </div>
+            </div>
+
+            {activeConversation?.conversationId && (
+              <p className='mt-2 border-t pt-2 text-xs text-gray-500 dark:border-dark-icon-unselected dark:text-gray-400'>
+                These settings are specific to this conversation and will be
+                remembered when you return.
+              </p>
             )}
           </div>
-
-          <div className='space-y-4'>
-            <div className='flex items-center justify-between'>
-              <h4 className='font-medium dark:text-white'>Temperature</h4>
-              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
-                {temperature.toFixed(1)}
-              </span>
-            </div>
-
-            <Slider
-              value={[temperature]}
-              min={0}
-              max={1}
-              step={0.1}
-              onValueChange={handleTemperatureChange}
-              className='my-4 cursor-pointer'
-            />
-
-            <div className='flex justify-between px-1 text-xs text-gray-500 dark:text-gray-400'>
-              <span>Precise</span>
-              <span>Balanced</span>
-              <span>Creative</span>
-            </div>
-
-            <div className={`mt-2 text-sm ${getTemperatureColor(temperature)}`}>
-              {getTemperatureDescription(temperature)}
-            </div>
-          </div>
-
-          <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
-            <div className='flex items-center justify-between'>
-              <h4 className='font-medium dark:text-white'>Max Tokens</h4>
-              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
-                {maxTokens}
-              </span>
-            </div>
-
-            <Slider
-              value={[maxTokens]}
-              min={1}
-              max={8192}
-              step={256}
-              onValueChange={handleMaxTokensChange}
-              className='my-4 cursor-pointer'
-            />
-
-            <div className={`mt-2 text-sm ${getMaxTokensColor(maxTokens)}`}>
-              {getMaxTokensDescription(maxTokens)}
-            </div>
-          </div>
-
-          <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
-            <div className='flex items-center justify-between'>
-              <h4 className='font-medium dark:text-white'>History Limit</h4>
-              <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
-                {historyLimit === 50 ? 'Full Context' : historyLimit}
-              </span>
-            </div>
-
-            <Slider
-              value={[historyLimit]}
-              min={1}
-              max={50}
-              step={1}
-              onValueChange={handleHistoryLimitChange}
-              className='my-4 cursor-pointer'
-            />
-
-            <div className='flex justify-between px-1 text-xs text-gray-500 dark:text-gray-400'>
-              <span>Minimal</span>
-              <span>Standard</span>
-              <span>Max</span>
-            </div>
-
-            <div
-              className={`mt-2 text-sm ${getHistoryLimitColor(historyLimit)}`}
-            >
-              {getHistoryLimitDescription(historyLimit)}
-            </div>
-          </div>
-
-          {activeConversation?.conversationId && (
-            <p className='mt-2 border-t pt-2 text-xs text-gray-500 dark:border-dark-icon-unselected dark:text-gray-400'>
-              These settings are specific to this conversation and will be
-              remembered when you return.
-            </p>
-          )}
-        </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+    </TooltipProvider>
   )
 }
 
