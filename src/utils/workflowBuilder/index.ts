@@ -10,9 +10,7 @@ export {
   getStepNumber,
 } from './isValidConnection'
 export { handleConnection } from './handleConnection'
-export { validateWorkflow } from './validateWorkflow'
 export { serializeWorkflow } from './serializeWorkflow'
 
 // Re-export types
 export type { Mode } from './isValidConnection'
-export type { ValidationResult } from './validateWorkflow'
