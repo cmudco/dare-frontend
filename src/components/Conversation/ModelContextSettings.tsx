@@ -8,9 +8,16 @@ import {
   updateDocumentSimilarityThreshold,
 } from '../../redux/conversationSlice'
 import { MODEL_CONFIG } from '../../config/modelConfig'
-import { RotateCw, X } from 'lucide-react'
+import { RotateCw, X, Info } from 'lucide-react'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
 import VectorDatabaseInfoBanner from './VectorDatabaseInfoBanner'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip'
+import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
 
 interface ModelContextSettingsProps {
   onClose: () => void
@@ -147,131 +154,176 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   }
 
   return (
-    <div className='space-y-4'>
-      <div className='flex items-center justify-between'>
-        <h3 className='text-md font-semibold'>Vector Database Settings</h3>
-        <Button
-          variant='ghost'
-          size='icon'
-          onClick={onClose}
-          aria-label='Close Settings'
-          className='h-6 w-6'
-        >
-          <X className='h-4 w-4' />
-        </Button>
-      </div>
-
-      {/* Dynamic Info Banner */}
-      <VectorDatabaseInfoBanner
-        maxContextSnippets={maxContextSnippets}
-        documentSimilarityThreshold={documentSimilarityThreshold}
-      />
-
-      <hr />
+    <TooltipProvider>
       <div className='space-y-4'>
-        <div className='space-y-2'>
-          <div className='flex items-center justify-between'>
-            <h4 className='font-semibold'>
-              Max Context Snippets (Recommended:{' '}
-              {MODEL_CONFIG.maxContextSnippets})
-            </h4>
-            <Button
-              variant='ghost'
-              size='icon'
-              onClick={handleResetMaxContextSnippets}
-              aria-label='Reset Max Context Snippets'
-            >
-              <RotateCw className='h-4 w-4' />
-            </Button>
-          </div>
-          <div className='flex items-center space-x-2'>
-            <Button
-              variant='outline'
-              className='h-auto px-2 py-1'
-              onClick={() =>
-                handleMaxContextSnippetsChange(
-                  Math.max(1, maxContextSnippets - 1)
-                )
-              }
-            >
-              -
-            </Button>
-            <Input
-              type='number'
-              min={1}
-              value={snippetInput}
-              onChange={handleSnippetInputChange}
-              onBlur={handleSnippetInputBlur}
-              onKeyDown={handleSnippetInputKeyDown}
-              className='hide-number-arrows h-8 w-16 text-center font-mono text-sm focus:outline-none focus-visible:outline-none'
-              aria-label='Max Context Snippets'
-              inputMode='numeric'
-              pattern='[0-9]*'
-            />
-            <Button
-              variant='outline'
-              className='h-auto px-2 py-1'
-              onClick={() =>
-                handleMaxContextSnippetsChange(maxContextSnippets + 1)
-              }
-            >
-              +
-            </Button>
-          </div>
+        <div className='flex items-center justify-between'>
+          <h3 className='text-md font-semibold'>Vector Database Settings</h3>
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={onClose}
+            aria-label='Close Settings'
+            className='h-6 w-6'
+          >
+            <X className='h-4 w-4' />
+          </Button>
         </div>
+
+        {/* Dynamic Info Banner */}
+        <VectorDatabaseInfoBanner
+          maxContextSnippets={maxContextSnippets}
+          documentSimilarityThreshold={documentSimilarityThreshold}
+        />
+
         <hr />
-        <div className='space-y-2'>
-          <div className='flex items-center justify-between'>
-            <h4 className='font-semibold'>Document Similarity threshold</h4>
-            <Button
-              variant='ghost'
-              size='icon'
-              onClick={handleResetDocumentSimilarityThreshold}
-              aria-label='Reset Document Similarity Threshold'
-            >
-              <RotateCw className='h-4 w-4' />
-            </Button>
+        <div className='space-y-4'>
+          <div className='space-y-2'>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center gap-2'>
+                <h4 className='font-semibold'>
+                  Max Context Snippets (Recommended:{' '}
+                  {MODEL_CONFIG.maxContextSnippets})
+                </h4>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                  </TooltipTrigger>
+                  <TooltipContent className='max-w-sm'>
+                    <div className='space-y-2'>
+                      <p className='font-semibold'>
+                        {TOOLTIP_CONTENT.modelContext.maxSnippets.title}
+                      </p>
+                      <p className='text-sm'>
+                        {TOOLTIP_CONTENT.modelContext.maxSnippets.description}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        💡 {TOOLTIP_CONTENT.modelContext.maxSnippets.tip}
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={handleResetMaxContextSnippets}
+                aria-label='Reset Max Context Snippets'
+              >
+                <RotateCw className='h-4 w-4' />
+              </Button>
+            </div>
+            <div className='flex items-center space-x-2'>
+              <Button
+                variant='outline'
+                className='h-auto px-2 py-1'
+                onClick={() =>
+                  handleMaxContextSnippetsChange(
+                    Math.max(1, maxContextSnippets - 1)
+                  )
+                }
+              >
+                -
+              </Button>
+              <Input
+                type='number'
+                min={1}
+                value={snippetInput}
+                onChange={handleSnippetInputChange}
+                onBlur={handleSnippetInputBlur}
+                onKeyDown={handleSnippetInputKeyDown}
+                className='hide-number-arrows h-8 w-16 text-center font-mono text-sm focus:outline-none focus-visible:outline-none'
+                aria-label='Max Context Snippets'
+                inputMode='numeric'
+                pattern='[0-9]*'
+              />
+              <Button
+                variant='outline'
+                className='h-auto px-2 py-1'
+                onClick={() =>
+                  handleMaxContextSnippetsChange(maxContextSnippets + 1)
+                }
+              >
+                +
+              </Button>
+            </div>
           </div>
-          <div className='flex items-center space-x-2'>
-            <Button
-              variant='outline'
-              className='h-auto px-2 py-1'
-              onClick={() =>
-                handleDocumentSimilarityThresholdChange(
-                  Math.max(0, documentSimilarityThreshold - 0.1).toFixed(1)
-                )
-              }
-            >
-              -
-            </Button>
-            <Input
-              type='number'
-              min={0}
-              max={1}
-              step={0.01}
-              value={thresholdInput}
-              onChange={handleThresholdInputChange}
-              onBlur={handleThresholdInputBlur}
-              onKeyDown={handleThresholdInputKeyDown}
-              className='hide-number-arrows h-8 w-20 text-center font-mono text-sm focus:outline-none focus-visible:outline-none'
-              aria-label='Document Similarity Threshold'
-              inputMode='decimal'
-            />
-            <Button
-              variant='outline'
-              className='h-auto px-2 py-1'
-              onClick={() =>
-                handleDocumentSimilarityThresholdChange(
-                  Math.min(1, documentSimilarityThreshold + 0.1).toFixed(1)
-                )
-              }
-            >
-              +
-            </Button>
+          <hr />
+          <div className='space-y-2'>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center gap-2'>
+                <h4 className='font-semibold'>Document Similarity threshold</h4>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                  </TooltipTrigger>
+                  <TooltipContent className='max-w-sm'>
+                    <div className='space-y-2'>
+                      <p className='font-semibold'>
+                        {TOOLTIP_CONTENT.modelContext.similarityThreshold.title}
+                      </p>
+                      <p className='text-sm'>
+                        {
+                          TOOLTIP_CONTENT.modelContext.similarityThreshold
+                            .description
+                        }
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        💡{' '}
+                        {TOOLTIP_CONTENT.modelContext.similarityThreshold.tip}
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={handleResetDocumentSimilarityThreshold}
+                aria-label='Reset Document Similarity Threshold'
+              >
+                <RotateCw className='h-4 w-4' />
+              </Button>
+            </div>
+            <div className='flex items-center space-x-2'>
+              <Button
+                variant='outline'
+                className='h-auto px-2 py-1'
+                onClick={() =>
+                  handleDocumentSimilarityThresholdChange(
+                    Math.max(0, documentSimilarityThreshold - 0.1).toFixed(1)
+                  )
+                }
+              >
+                -
+              </Button>
+              <Input
+                type='number'
+                min={0}
+                max={1}
+                step={0.01}
+                value={thresholdInput}
+                onChange={handleThresholdInputChange}
+                onBlur={handleThresholdInputBlur}
+                onKeyDown={handleThresholdInputKeyDown}
+                className='hide-number-arrows h-8 w-20 text-center font-mono text-sm focus:outline-none focus-visible:outline-none'
+                aria-label='Document Similarity Threshold'
+                inputMode='decimal'
+              />
+              <Button
+                variant='outline'
+                className='h-auto px-2 py-1'
+                onClick={() =>
+                  handleDocumentSimilarityThresholdChange(
+                    Math.min(1, documentSimilarityThreshold + 0.1).toFixed(1)
+                  )
+                }
+              >
+                +
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-      <style>{`
+        <style>{`
         input.hide-number-arrows::-webkit-outer-spin-button,
         input.hide-number-arrows::-webkit-inner-spin-button {
           -webkit-appearance: none;
@@ -286,7 +338,8 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
           box-shadow: none !important;
         }
       `}</style>
-    </div>
+      </div>
+    </TooltipProvider>
   )
 }
 
