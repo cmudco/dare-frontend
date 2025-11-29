@@ -34,18 +34,17 @@ import {
   removeNodeWithEdges,
   setEdges,
 } from '@/redux/workflowBuilderSlice'
-import { useErrorsContext } from '../ErrorsContext'
 import { renderStatusPill } from '@/utils/workflowUtils'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
-import { submitHumanValidationAPI } from '@/api/workflows'
-import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
+import { submitHumanValidationV2 } from '@/redux/asyncThunks/workflow'
+import { updateWorkflowRunStatus } from '@/redux/workflowBuilderSlice'
 import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
+import { useRoutingNode } from '@/hooks/useRoutingNode'
 import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
 import {
-  getDisplayRun,
-  getStepFromRun,
-  extractRoutingDecision,
-} from '@/utils/workflowRunHelpers'
+  RoutingDecisionDisplay,
+  HumanValidationPrompt,
+} from '@/components/WorkflowBuilder/routing'
 import type { StructuredOutputNodeData as StructuredOutputNodeDataType } from '@/types/workflowNodes'
 import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
 
@@ -62,13 +61,9 @@ export default function StructuredOutputNode({
   const nodeData =
     (data as Partial<StructuredOutputNodeDataType>) ||
     ({} as Partial<StructuredOutputNodeDataType>)
-  const { errorsByNodeId, clearNodeError } = useErrorsContext()
-  const fieldErrors = (errorsByNodeId[id] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const { currentRun, availableRuns, selectedRunIds } = useAppSelector(
-    (s) => s.workflowBuilder
-  )
+  const { currentRun } = useAppSelector((s) => s.workflowBuilder)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const updateNodeInternals = useUpdateNodeInternals()
@@ -77,11 +72,17 @@ export default function StructuredOutputNode({
   // VERSION SELECTION: Hook handles all version dropdown logic
   const versionState = useWorkflowRunVersion(id)
 
-  // Check if this node has a pending validation
-  const pendingValidation = currentRun?.pendingValidations?.find(
-    (v) => v.nodeId === id
-  )
-  const hasPendingValidation = !!pendingValidation
+  // ROUTING NODE STATE: Shared hook for all routing nodes
+  const {
+    stepStatus,
+    selectedRoute,
+    hasPendingValidation,
+    pendingValidation,
+    aiAnalysis,
+    aiRecommendation,
+    isHumanValidated,
+    userChoice,
+  } = useRoutingNode(id)
 
   // Memoize routes to prevent dependency issues in useMemo hook below
   const routes = useMemo(
@@ -92,9 +93,6 @@ export default function StructuredOutputNode({
       ],
     [nodeData.routes]
   )
-
-  // Structured Output is now an independent node with its own stepNumber
-  const stepNumber = nodeData.stepNumber as number | undefined
 
   // Update Redux when form changes
   const updateNodeData = (updates: Partial<StructuredOutputNodeDataType>) => {
@@ -161,9 +159,18 @@ export default function StructuredOutputNode({
     if (!currentRun?.id) return
 
     try {
-      await submitHumanValidationAPI(currentRun.id, nodeId, chosenRoute)
-      // Refresh the workflow run to get updated status
-      void dispatch(getWorkflowRunById(currentRun.id))
+      // Use V2 API - returns updated workflowRun with nodeStates
+      const resultAction = await dispatch(
+        submitHumanValidationV2({
+          workflowRunId: currentRun.id,
+          nodeId,
+          chosenRoute,
+        })
+      )
+      // Update Redux directly with the returned workflowRun
+      if (submitHumanValidationV2.fulfilled.match(resultAction)) {
+        dispatch(updateWorkflowRunStatus(resultAction.payload))
+      }
       setShowValidationModal(false)
     } catch (error) {
       console.error('Failed to submit validation:', error)
@@ -179,28 +186,6 @@ export default function StructuredOutputNode({
   useEffect(() => {
     updateNodeInternals(id)
   }, [updateNodeInternals, id, routes.length, routeNames])
-
-  // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
-  const displayRun = getDisplayRun(
-    id,
-    selectedRunIds,
-    availableRuns,
-    currentRun
-  )
-
-  // STEP LOOKUP: Find this structured output node's own step data
-  const stepRun = getStepFromRun(displayRun, stepNumber)
-
-  // DATA EXTRACTION: Pull out routing decision values
-  const {
-    selectedRoute,
-    aiAnalysis,
-    aiRecommendation,
-    isHumanValidated,
-    userChoice,
-  } = extractRoutingDecision(stepRun, pendingValidation)
-
-  const stepStatus = stepRun?.status || null
 
   const isCollapsed = nodeData?.isCollapsed || false
 
@@ -283,7 +268,6 @@ export default function StructuredOutputNode({
                   size='sm'
                   onClick={() => {
                     updateNodeData({ prompt: null })
-                    clearNodeError(id, 'prompt')
                   }}
                   className='h-6 px-2 text-xs text-muted-foreground hover:text-foreground'
                 >
@@ -295,15 +279,9 @@ export default function StructuredOutputNode({
               value={nodeData.prompt ? nodeData.prompt.toString() : undefined}
               onValueChange={(value) => {
                 updateNodeData({ prompt: Number(value) })
-                clearNodeError(id, 'prompt')
               }}
             >
-              <SelectTrigger
-                id='prompt'
-                className={`text-sm ${
-                  fieldErrors.prompt ? 'border-destructive' : ''
-                }`}
-              >
+              <SelectTrigger id='prompt' className='text-sm'>
                 <SelectValue placeholder='Use default routing prompt' />
               </SelectTrigger>
               <SelectContent>
@@ -314,11 +292,6 @@ export default function StructuredOutputNode({
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.prompt && (
-              <p className='mt-1 text-xs text-destructive'>
-                {fieldErrors.prompt}
-              </p>
-            )}
             <p className='text-xs text-muted-foreground'>
               Falls back to base routing prompt if not selected.
             </p>
@@ -333,15 +306,9 @@ export default function StructuredOutputNode({
               value={nodeData.llm ? nodeData.llm.toString() : ''}
               onValueChange={(value) => {
                 updateNodeData({ llm: Number(value) })
-                clearNodeError(id, 'llm')
               }}
             >
-              <SelectTrigger
-                id='llm'
-                className={`text-sm ${
-                  fieldErrors.llm ? 'border-destructive' : ''
-                }`}
-              >
+              <SelectTrigger id='llm' className='text-sm'>
                 <SelectValue placeholder='Select an LLM' />
               </SelectTrigger>
               <SelectContent>
@@ -352,104 +319,26 @@ export default function StructuredOutputNode({
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.llm && (
-              <p className='mt-1 text-xs text-destructive'>{fieldErrors.llm}</p>
-            )}
           </div>
 
-          {/* Execution Result Display */}
+          {/* Execution Result Display - Uses shared component */}
           {stepStatus === 'completed' && selectedRoute && (
-            <div className='rounded-lg border-2 border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20'>
-              <div className='mb-2 flex items-center gap-2'>
-                <div className='flex h-6 w-6 items-center justify-center rounded-full bg-green-500/20'>
-                  <span className='text-xs font-bold text-green-600 dark:text-green-400'>
-                    ✓
-                  </span>
-                </div>
-                <span className='font-semibold text-green-900 dark:text-green-100'>
-                  {isHumanValidated ? 'User Decision' : 'Output Route Selected'}
-                </span>
-              </div>
-              <div className='space-y-2'>
-                <div className='flex items-center gap-2'>
-                  <span className='text-sm text-green-700 dark:text-green-300'>
-                    Selected Route:
-                  </span>
-                  <span className='rounded-md bg-green-600 px-2 py-0.5 text-xs font-medium text-white'>
-                    {selectedRoute}
-                  </span>
-                </div>
-                {/* Show AI recommendation if user chose differently */}
-                {isHumanValidated &&
-                  userChoice &&
-                  aiRecommendation &&
-                  userChoice !== aiRecommendation && (
-                    <div className='rounded-md bg-blue-50/50 p-2 dark:bg-blue-900/20'>
-                      <p className='text-xs text-blue-700 dark:text-blue-300'>
-                        AI recommended:{' '}
-                        <span className='font-medium'>{aiRecommendation}</span>
-                      </p>
-                    </div>
-                  )}
-                {aiAnalysis && (
-                  <div className='rounded-md bg-white/50 p-3 dark:bg-black/20'>
-                    <p className='mb-1 text-xs font-medium text-green-700 dark:text-green-300'>
-                      AI Analysis:
-                    </p>
-                    <p className='text-sm text-green-900 dark:text-green-100'>
-                      {aiAnalysis}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+            <RoutingDecisionDisplay
+              selectedRoute={selectedRoute}
+              isHumanValidated={isHumanValidated}
+              aiAnalysis={aiAnalysis}
+              aiRecommendation={aiRecommendation}
+              userChoice={userChoice}
+            />
           )}
 
-          {/* Human Validation Alert - Shows when workflow is waiting */}
+          {/* Human Validation Alert - Uses shared component */}
           {hasPendingValidation && pendingValidation && (
-            <div className='rounded-lg border-2 border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20'>
-              <div className='mb-3 flex items-start gap-3'>
-                <UserCheck className='mt-0.5 h-5 w-5 flex-shrink-0 text-purple-600 dark:text-purple-400' />
-                <div className='flex-1'>
-                  <h3 className='font-semibold text-purple-900 dark:text-purple-100'>
-                    Human Validation Required
-                  </h3>
-                  <p className='mt-1 text-sm text-purple-700 dark:text-purple-300'>
-                    Choose which route the workflow should take to continue
-                    execution.
-                  </p>
-                </div>
-              </div>
-
-              {/* AI Recommendation in Node */}
-              {pendingValidation.aiRecommendation && (
-                <div className='mb-3 rounded-md border border-blue-300 bg-blue-50/50 p-3 dark:border-blue-700 dark:bg-blue-900/20'>
-                  <div className='mb-1 flex items-center gap-2'>
-                    <div className='flex h-5 w-5 items-center justify-center rounded-full bg-blue-500/20'>
-                      <span className='text-xs font-bold text-blue-600 dark:text-blue-400'>
-                        AI
-                      </span>
-                    </div>
-                    <span className='text-xs font-semibold text-blue-900 dark:text-blue-100'>
-                      AI Suggests: {pendingValidation.aiRecommendation}
-                    </span>
-                  </div>
-                  {pendingValidation.aiAnalysis && (
-                    <p className='ml-7 text-xs text-blue-700 dark:text-blue-300'>
-                      {pendingValidation.aiAnalysis}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <Button
-                onClick={() => setShowValidationModal(true)}
-                size='sm'
-                className='w-full bg-purple-600 hover:bg-purple-700'
-              >
-                Make Decision
-              </Button>
-            </div>
+            <HumanValidationPrompt
+              aiRecommendation={pendingValidation.aiRecommendation ?? null}
+              aiAnalysis={pendingValidation.aiAnalysis ?? null}
+              onOpenModal={() => setShowValidationModal(true)}
+            />
           )}
 
           {/* Human Validation Toggle */}
@@ -571,20 +460,6 @@ export default function StructuredOutputNode({
               </div>
             </div>
           </div>
-
-          {/* Connection validation errors */}
-          {fieldErrors.connections && (
-            <div className='rounded-md border border-destructive/20 bg-destructive/10 p-3'>
-              <p className='text-xs font-medium text-destructive'>
-                Connection Error
-              </p>
-              <div className='mt-1 text-xs text-destructive'>
-                <pre className='whitespace-pre-wrap font-sans'>
-                  {fieldErrors.connections}
-                </pre>
-              </div>
-            </div>
-          )}
         </CardContent>
       )}
       {/* Input handle - accepts connections from previous nodes */}

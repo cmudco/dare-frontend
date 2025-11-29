@@ -24,7 +24,6 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useEffect } from 'react'
-import { useErrorsContext } from '../ErrorsContext'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   updateNodeDataById,
@@ -50,11 +49,6 @@ export default function StartNode({ id, data, selected }: NodeProps) {
   const nodeId = id as string // ReactFlow guarantees id is string when component renders
   const startData = data as StartData
 
-  const { errorsByNodeId, clearNodeError } = useErrorsContext()
-  const startFieldErrors = (errorsByNodeId[nodeId] || {}) as Record<
-    string,
-    string
-  >
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
@@ -241,19 +235,11 @@ export default function StartNode({ id, data, selected }: NodeProps) {
               onChange={(e) => {
                 const newTitle = e.target.value
                 updateNodeData({ title: newTitle })
-                clearNodeError(nodeId, 'title')
               }}
               placeholder='Enter workflow title'
               required
-              className={`bg-background text-sm ${
-                startFieldErrors.title ? 'border-destructive' : ''
-              }`}
+              className='bg-background text-sm'
             />
-            {startFieldErrors.title && (
-              <p className='mt-1 text-xs text-destructive'>
-                {startFieldErrors.title}
-              </p>
-            )}
           </div>
           <div className='space-y-2'>
             <Label htmlFor='description' className='text-xs font-medium'>
@@ -265,20 +251,12 @@ export default function StartNode({ id, data, selected }: NodeProps) {
               onChange={(e) => {
                 const newDescription = e.target.value
                 updateNodeData({ description: newDescription })
-                clearNodeError(nodeId, 'description')
               }}
               placeholder='Enter your description here'
               required
-              className={`resize-none bg-background text-sm ${
-                startFieldErrors.description ? 'border-destructive' : ''
-              }`}
+              className='resize-none bg-background text-sm'
               rows={3}
             />
-            {startFieldErrors.description && (
-              <p className='mt-1 text-xs text-destructive'>
-                {startFieldErrors.description}
-              </p>
-            )}
           </div>
           <div className='space-y-2'>
             <Label htmlFor='mode' className='text-xs font-medium'>

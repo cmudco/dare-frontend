@@ -36,14 +36,11 @@ import {
   removeNodeWithEdges,
   markStepExecuted,
   setCurrentPartialRunId,
+  updateWorkflowRunStatus,
 } from '@/redux/workflowBuilderSlice'
-import {
-  executeSingleStep,
-  getActivePartialRun,
-} from '@/redux/asyncThunks/workflow'
+import { executeSingleStepV2 } from '@/redux/asyncThunks/workflow'
 import { unwrapResult } from '@reduxjs/toolkit'
 import { toast } from '@/utils/toast'
-import { useErrorsContext } from '../ErrorsContext'
 import { getStepStatus, renderStatusPill } from '@/utils/workflowUtils'
 import {
   HANDLE_NUMBERS,
@@ -74,8 +71,6 @@ export type StepNodeData = {
 export default function StepNode({ id, data, selected }: NodeProps) {
   const nodeId = id as string // ReactFlow guarantees id is string when component renders
   const stepData = data as StepNodeData
-  const { errorsByNodeId, clearNodeError } = useErrorsContext()
-  const fieldErrors = (errorsByNodeId[nodeId] || {}) as Record<string, string>
   const dispatch = useAppDispatch()
 
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -162,7 +157,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     }
   }
 
-  // Execute single step
+  // Execute single step using V2 API
   const handleExecuteStep = async () => {
     if (!loadedWorkflow?.id) {
       toast.error('No workflow loaded')
@@ -171,8 +166,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
 
     setIsExecutingStep(true)
     try {
+      // Use V2 API - returns full workflowRun with nodeStates
       const resultAction = await dispatch(
-        executeSingleStep({
+        executeSingleStepV2({
           workflowId: loadedWorkflow.id,
           stepNodeId: nodeId,
           workflowRunId: currentPartialRunId,
@@ -183,10 +179,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
       if (result.success) {
         toast.success(`Step ${stepData.stepNumber} executed successfully`)
         dispatch(markStepExecuted(nodeId))
-        dispatch(setCurrentPartialRunId(result.workflowRunId))
+        dispatch(setCurrentPartialRunId(result.workflowRun.id))
 
-        // Refresh partial run data to update node displays
-        await dispatch(getActivePartialRun(loadedWorkflow.id))
+        // V2: Update Redux directly with the returned workflowRun (includes nodeStates)
+        dispatch(updateWorkflowRunStatus(result.workflowRun))
 
         // Mark connected output node as executed
         const connectedOutputEdge = edges.find((edge) => edge.source === nodeId)
@@ -202,32 +198,13 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             dispatch(markStepExecuted(connectedOutputEdge.target))
           }
         }
-      } else if (
-        result.missingDependencies &&
-        result.missingDependencies.length > 0
-      ) {
-        // Find step numbers for missing dependencies
-        const missingStepNumbers = result.missingDependencies
-          .map((depNodeId) => {
-            const depNode = nodes.find((n) => n.id === depNodeId)
-            return depNode?.data?.stepNumber
-          })
-          .filter(Boolean)
-          .join(', ')
-
-        toast.error(
-          `Cannot execute Step ${stepData.stepNumber}. Please run: Step${missingStepNumbers.includes(',') ? 's' : ''} ${missingStepNumbers} first`
-        )
       } else {
-        toast.error(result.error || 'Step execution failed')
+        // Display error from backend (already formatted)
+        toast.error(result.error || 'Step execution failed', 8000)
       }
     } catch (error) {
-      console.error('Error executing step:', error)
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to execute step'
-      toast.error(
-        `Step ${stepData.stepNumber} execution failed: ${errorMessage}`
-      )
+      // Error is already a formatted string from errorHandler
+      toast.error(String(error), 8000)
     } finally {
       setIsExecutingStep(false)
     }
@@ -358,14 +335,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               value={stepData.prompt ? stepData.prompt.toString() : ''}
               onValueChange={(value) => {
                 updateNodeData({ prompt: Number(value) })
-                clearNodeError(nodeId, 'prompt')
               }}
             >
-              <SelectTrigger
-                className={`bg-background text-sm ${
-                  fieldErrors.prompt ? 'border-destructive' : ''
-                }`}
-              >
+              <SelectTrigger className='bg-background text-sm'>
                 <SelectValue placeholder='Select a prompt' />
               </SelectTrigger>
               <SelectContent>
@@ -376,11 +348,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.prompt && (
-              <p className='mt-1 text-xs text-destructive'>
-                {fieldErrors.prompt}
-              </p>
-            )}
           </div>
 
           <div className='space-y-2'>
@@ -528,14 +495,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
               value={stepData.llm ? stepData.llm.toString() : ''}
               onValueChange={(value) => {
                 updateNodeData({ llm: Number(value) })
-                clearNodeError(nodeId, 'llm')
               }}
             >
-              <SelectTrigger
-                className={`bg-background text-sm ${
-                  fieldErrors.llm ? 'border-destructive' : ''
-                }`}
-              >
+              <SelectTrigger className='bg-background text-sm'>
                 <SelectValue placeholder='Select an LLM' />
               </SelectTrigger>
               <SelectContent>
@@ -546,9 +508,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.llm && (
-              <p className='mt-1 text-xs text-destructive'>{fieldErrors.llm}</p>
-            )}
           </div>
 
           {/* Advanced Settings Toggle */}

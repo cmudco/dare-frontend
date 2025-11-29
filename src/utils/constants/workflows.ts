@@ -70,6 +70,11 @@ export enum WorkflowRunStepStatus {
   Failed = 'failed',
   Skipped = 'skipped',
   PendingHumanInput = 'pending_human_input',
+  // V2 nodeStates additional statuses
+  NotExecuted = 'not_executed', // Start nodes without incoming edges
+  NoSource = 'no_source', // Display nodes without connected execution node
+  Error = 'error', // Node encountered an error
+  Unknown = 'unknown', // Unknown node type
 }
 
 export enum WorkflowViewMode {
