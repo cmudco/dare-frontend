@@ -424,6 +424,74 @@ export const TOOLTIP_CONTENT = {
     },
   },
 
+  // Conversations
+  conversations: {
+    newConversation: {
+      title: 'New Conversation',
+      description:
+        'Start a fresh conversation with AI. Previous context will not be included.',
+      tip: 'Use Cmd/Ctrl + K shortcut to quickly create a new conversation.',
+    },
+    clearConversation: {
+      title: 'Clear Conversation',
+      description:
+        'Delete the current conversation and all its messages. This action cannot be undone.',
+      tip: 'Use Cmd/Ctrl + click to select multiple conversations to delete at once.',
+    },
+    editConversation: {
+      title: 'Edit Conversation Title',
+      description:
+        'Click to rename this conversation. Press Enter to save or Escape to cancel.',
+      tip: 'Descriptive titles help you find conversations later.',
+    },
+    cloneConversation: {
+      title: 'Clone Conversation',
+      description:
+        'Create an exact copy of this conversation including all messages and settings.',
+      tip: 'Useful for trying different approaches while keeping the original.',
+    },
+    dragReorder: {
+      title: 'Reorder Conversations',
+      description:
+        'Drag and drop conversations to reorder them. Your preferred order is saved automatically.',
+      tip: 'Keep frequently used conversations at the top for quick access.',
+    },
+  },
+
+  // Billing
+  billing2: {
+    walletBalance: {
+      title: 'Current Wallet Balance',
+      description:
+        'Your available credits for AI usage. Credits are deducted as you use AI models.',
+      tip: 'Low balance? Click "Add Credits" to purchase more.',
+    },
+    addCredits: {
+      title: 'Add Credits',
+      description:
+        'Purchase additional wallet credits to continue using AI services.',
+      tip: 'Credits never expire and can be used across all AI providers.',
+    },
+    transactionHistory: {
+      title: 'Transaction History',
+      description:
+        'Complete record of all credit purchases, usage, and refunds.',
+      tip: 'Export to CSV for detailed expense tracking and reporting.',
+    },
+    exportCSV: {
+      title: 'Export to CSV',
+      description:
+        'Download your complete transaction history as a spreadsheet file.',
+      tip: 'Includes transaction type, amount, model used, and timestamps.',
+    },
+    costPerModel: {
+      title: 'Cost by Model',
+      description:
+        'Breakdown of credits spent on each AI model. Helps identify expensive usage patterns.',
+      tip: 'Switch to cheaper models for simple tasks to reduce costs.',
+    },
+  },
+
   // General UI Elements
   general: {
     disabled: {
