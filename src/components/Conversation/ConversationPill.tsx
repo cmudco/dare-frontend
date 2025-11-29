@@ -105,6 +105,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       dispatch(sendMessage(newMessage))
       dispatch(updateConversationInput(''))
       dispatch(clearDraftForConversation(activeConversation.conversationId))
+      dispatch(clearAttachedImages())
       clearPendingDraftSave()
       setPendingMessage(null)
     }
