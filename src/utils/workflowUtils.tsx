@@ -46,13 +46,19 @@ export const getStepStatus = (
 export const getStatusIcon = (status: string) => {
   switch (status) {
     case WorkflowRunStepStatus.Pending:
+    case WorkflowRunStepStatus.NotExecuted:
       return <Clock className='h-3 w-3' />
     case WorkflowRunStepStatus.Running:
       return <Loader2 className='h-3 w-3 animate-spin' />
     case WorkflowRunStepStatus.Completed:
       return <CheckCircle className='h-3 w-3' />
     case WorkflowRunStepStatus.Failed:
+    case WorkflowRunStepStatus.Error:
+    case WorkflowRunStepStatus.NoSource:
       return <XCircle className='h-3 w-3' />
+    case WorkflowRunStepStatus.Skipped:
+    case WorkflowRunStepStatus.Unknown:
+      return null
     default:
       return null
   }
@@ -61,13 +67,19 @@ export const getStatusIcon = (status: string) => {
 export const getStatusColor = (status: string) => {
   switch (status) {
     case WorkflowRunStepStatus.Pending:
+    case WorkflowRunStepStatus.NotExecuted:
       return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800'
     case WorkflowRunStepStatus.Running:
       return 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800'
     case WorkflowRunStepStatus.Completed:
       return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800'
     case WorkflowRunStepStatus.Failed:
+    case WorkflowRunStepStatus.Error:
+    case WorkflowRunStepStatus.NoSource:
       return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800'
+    case WorkflowRunStepStatus.Skipped:
+    case WorkflowRunStepStatus.Unknown:
+      return 'bg-muted text-muted-foreground border-border'
     default:
       return 'bg-muted text-muted-foreground border-border'
   }
@@ -94,14 +106,18 @@ export const getRunStatusEmoji = (status: WorkflowRunStepStatus): string => {
     case WorkflowRunStepStatus.Completed:
       return '✓'
     case WorkflowRunStepStatus.Failed:
+    case WorkflowRunStepStatus.Error:
+    case WorkflowRunStepStatus.NoSource:
       return '⚠'
     case WorkflowRunStepStatus.Running:
       return '⏳'
     case WorkflowRunStepStatus.Pending:
+    case WorkflowRunStepStatus.NotExecuted:
       return '○'
     case WorkflowRunStepStatus.PendingHumanInput:
       return '⏸'
     case WorkflowRunStepStatus.Skipped:
+    case WorkflowRunStepStatus.Unknown:
       return '⊘'
     default:
       return '○'

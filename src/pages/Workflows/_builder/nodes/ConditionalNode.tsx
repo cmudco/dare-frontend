@@ -36,15 +36,15 @@ import {
 import { renderStatusPill } from '@/utils/workflowUtils'
 import React from 'react'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
-import { submitHumanValidationAPI } from '@/api/workflows'
-import { getWorkflowRunById } from '@/redux/asyncThunks/workflow'
+import { submitHumanValidationV2 } from '@/redux/asyncThunks/workflow'
+import { updateWorkflowRunStatus } from '@/redux/workflowBuilderSlice'
 import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
+import { useRoutingNode } from '@/hooks/useRoutingNode'
 import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
 import {
-  getDisplayRun,
-  getStepFromRun,
-  extractRoutingDecision,
-} from '@/utils/workflowRunHelpers'
+  RoutingDecisionDisplay,
+  HumanValidationPrompt,
+} from '@/components/WorkflowBuilder/routing'
 import type { ConditionalNodeData as ConditionalNodeDataType } from '@/types/workflowNodes'
 
 export interface ConditionalRoute {
@@ -59,9 +59,7 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
-  const { currentRun, availableRuns, selectedRunIds } = useAppSelector(
-    (s) => s.workflowBuilder
-  )
+  const { currentRun } = useAppSelector((s) => s.workflowBuilder)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const updateNodeInternals = useUpdateNodeInternals()
@@ -70,19 +68,22 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
   // VERSION SELECTION: Hook handles all version dropdown logic
   const versionState = useWorkflowRunVersion(id)
 
-  // Check if this node has a pending validation
-  const pendingValidation = currentRun?.pendingValidations?.find(
-    (v) => v.nodeId === id
-  )
-  const hasPendingValidation = !!pendingValidation
+  // ROUTING NODE STATE: Shared hook for all routing nodes
+  const {
+    stepStatus,
+    selectedRoute,
+    hasPendingValidation,
+    pendingValidation,
+    aiAnalysis,
+    aiRecommendation,
+    isHumanValidated,
+    userChoice,
+  } = useRoutingNode(id)
 
   const routes = nodeData.routes || [
     { name: 'Route A', description: '' },
     { name: 'Route B', description: '' },
   ]
-
-  // Routes are now guaranteed to be in the new format from the backend.
-  // Provide a default for new nodes that haven't been saved yet.
 
   const requireHumanValidation = nodeData.requireHumanValidation || false
 
@@ -161,9 +162,18 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
     if (!currentRun?.id) return
 
     try {
-      await submitHumanValidationAPI(currentRun.id, nodeId, chosenRoute)
-      // Refresh the workflow run to get updated status
-      void dispatch(getWorkflowRunById(currentRun.id))
+      // Use V2 API - returns updated workflowRun with nodeStates
+      const resultAction = await dispatch(
+        submitHumanValidationV2({
+          workflowRunId: currentRun.id,
+          nodeId,
+          chosenRoute,
+        })
+      )
+      // Update Redux directly with the returned workflowRun
+      if (submitHumanValidationV2.fulfilled.match(resultAction)) {
+        dispatch(updateWorkflowRunStatus(resultAction.payload))
+      }
       setShowValidationModal(false)
     } catch (error) {
       console.error('Failed to submit validation:', error)
@@ -176,30 +186,6 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
   useEffect(() => {
     updateNodeInternals(id)
   }, [updateNodeInternals, id, routes.length, routeNames, edges])
-
-  // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
-  const displayRun = getDisplayRun(
-    id,
-    selectedRunIds,
-    availableRuns,
-    currentRun
-  )
-
-  // STEP LOOKUP: Find this node's step in the display run (conditional node requires isConditional flag)
-  const stepRun =
-    getStepFromRun(displayRun, nodeData?.stepNumber, { isConditional: true }) ||
-    displayRun?.steps?.find((s) => s.id === pendingValidation?.stepId)
-
-  // DATA EXTRACTION: Pull out routing decision values
-  const {
-    selectedRoute,
-    aiAnalysis,
-    aiRecommendation,
-    isHumanValidated,
-    userChoice,
-  } = extractRoutingDecision(stepRun || null, pendingValidation)
-
-  const stepStatus = stepRun?.status || null
 
   const isCollapsed = nodeData?.isCollapsed || false
 
@@ -300,99 +286,24 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
             </Select>
           </div>
 
-          {/* AI Decision Display - Shows after execution */}
+          {/* AI Decision Display - Uses shared component */}
           {stepStatus === 'completed' && selectedRoute && (
-            <div className='rounded-lg border-2 border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20'>
-              <div className='mb-2 flex items-center gap-2'>
-                <div className='flex h-6 w-6 items-center justify-center rounded-full bg-green-500/20'>
-                  <span className='text-xs font-bold text-green-600 dark:text-green-400'>
-                    ✓
-                  </span>
-                </div>
-                <span className='font-semibold text-green-900 dark:text-green-100'>
-                  {isHumanValidated ? 'User Decision' : 'AI Routing Decision'}
-                </span>
-              </div>
-              <div className='space-y-2'>
-                <div className='flex items-center gap-2'>
-                  <span className='text-sm text-green-700 dark:text-green-300'>
-                    Selected Route:
-                  </span>
-                  <span className='rounded-md bg-green-600 px-2 py-0.5 text-xs font-medium text-white'>
-                    {selectedRoute}
-                  </span>
-                </div>
-                {/* Show AI recommendation if user chose differently */}
-                {isHumanValidated &&
-                  userChoice &&
-                  aiRecommendation &&
-                  userChoice !== aiRecommendation && (
-                    <div className='rounded-md bg-blue-50/50 p-2 dark:bg-blue-900/20'>
-                      <p className='text-xs text-blue-700 dark:text-blue-300'>
-                        AI recommended:{' '}
-                        <span className='font-medium'>{aiRecommendation}</span>
-                      </p>
-                    </div>
-                  )}
-                {aiAnalysis && (
-                  <div className='rounded-md bg-white/50 p-3 dark:bg-black/20'>
-                    <p className='mb-1 text-xs font-medium text-green-700 dark:text-green-300'>
-                      {isHumanValidated ? 'AI Analysis:' : 'AI Reasoning:'}
-                    </p>
-                    <p className='text-sm text-green-900 dark:text-green-100'>
-                      {aiAnalysis}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+            <RoutingDecisionDisplay
+              selectedRoute={selectedRoute}
+              isHumanValidated={isHumanValidated}
+              aiAnalysis={aiAnalysis}
+              aiRecommendation={aiRecommendation}
+              userChoice={userChoice}
+            />
           )}
 
-          {/* Human Validation Alert - Shows when workflow is waiting */}
+          {/* Human Validation Alert - Uses shared component */}
           {hasPendingValidation && pendingValidation && (
-            <div className='rounded-lg border-2 border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20'>
-              <div className='mb-3 flex items-start gap-3'>
-                <UserCheck className='mt-0.5 h-5 w-5 flex-shrink-0 text-purple-600 dark:text-purple-400' />
-                <div className='flex-1'>
-                  <h3 className='font-semibold text-purple-900 dark:text-purple-100'>
-                    Human Validation Required
-                  </h3>
-                  <p className='mt-1 text-sm text-purple-700 dark:text-purple-300'>
-                    Choose which route the workflow should take to continue
-                    execution.
-                  </p>
-                </div>
-              </div>
-
-              {/* AI Recommendation in Node */}
-              {aiRecommendation && (
-                <div className='mb-3 rounded-md border border-blue-300 bg-blue-50/50 p-3 dark:border-blue-700 dark:bg-blue-900/20'>
-                  <div className='mb-1 flex items-center gap-2'>
-                    <div className='flex h-5 w-5 items-center justify-center rounded-full bg-blue-500/20'>
-                      <span className='text-xs font-bold text-blue-600 dark:text-blue-400'>
-                        AI
-                      </span>
-                    </div>
-                    <span className='text-xs font-semibold text-blue-900 dark:text-blue-100'>
-                      AI Suggests: {aiRecommendation}
-                    </span>
-                  </div>
-                  {aiAnalysis && (
-                    <p className='ml-7 text-xs text-blue-700 dark:text-blue-300'>
-                      {aiAnalysis}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <Button
-                onClick={() => setShowValidationModal(true)}
-                size='sm'
-                className='w-full bg-purple-600 hover:bg-purple-700'
-              >
-                Make Decision
-              </Button>
-            </div>
+            <HumanValidationPrompt
+              aiRecommendation={aiRecommendation}
+              aiAnalysis={aiAnalysis}
+              onOpenModal={() => setShowValidationModal(true)}
+            />
           )}
 
           {/* Human Validation Toggle */}
@@ -515,8 +426,6 @@ export default function ConditionalNode({ id, data, selected }: NodeProps) {
               </div>
             </div>
           </div>
-
-          {/* Connection validation errors */}
         </CardContent>
       )}
 
