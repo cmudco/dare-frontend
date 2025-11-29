@@ -18,11 +18,7 @@ import {
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
 import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
-import {
-  getDisplayRun,
-  getStepFromRun,
-  extractStepOutputData,
-} from '@/utils/workflowRunHelpers'
+import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -74,11 +70,13 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
     currentRun
   )
 
-  // STEP LOOKUP: Find this node's step in the display run
-  const stepRun = getStepFromRun(displayRun, outputData?.stepNumber)
+  // V2 API: Direct node state access (no edge traversal needed!)
+  const nodeState = getNodeState(displayRun, id)
 
-  // DATA EXTRACTION: Pull out display values
-  const { response, status, error } = extractStepOutputData(stepRun)
+  // DATA EXTRACTION: Direct access from nodeStates
+  const response = nodeState?.response || null
+  const status = nodeState?.status || null
+  const error = nodeState?.error || null
 
   // UI HANDLERS
   const copyToClipboard = async () => {
