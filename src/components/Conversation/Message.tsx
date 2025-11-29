@@ -407,6 +407,33 @@ const Message: React.FC<MessageProps> = ({
                 {message.streaming ? `${displayMessage}\u258b` : displayMessage}
               </ReactMarkdown>
 
+              {/* User Uploaded Images Display */}
+              {(() => {
+                const uploadedImages = message.files?.filter(
+                  (file) => file.mediaType === 'image' && !file.isGenerated
+                )
+
+                if (uploadedImages?.length) {
+                  return (
+                    <div className='not-prose mb-3 flex flex-wrap gap-2'>
+                      {uploadedImages.map((file) => (
+                        <div
+                          key={file.id}
+                          className='relative rounded-lg border border-gray-200 dark:border-gray-700'
+                        >
+                          <img
+                            src={`${import.meta.env.VITE_DJANGO_BACKEND_URL}${file.file}`}
+                            alt={file.name}
+                            className='max-h-64 max-w-xs rounded-lg object-contain'
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )
+                }
+                return null
+              })()}
+
               {/* Generated Image Display */}
               {(() => {
                 // Check for generated image in generatedImage field (WebSocket)
