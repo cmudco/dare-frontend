@@ -1,7 +1,7 @@
-import { UserState } from '../types/user'
+import { UserState, ConversationSettings } from '../types/user'
 
 // Load conversation settings from localStorage with fallback
-const getStoredConversationSettings = () => {
+const getStoredConversationSettings = (): ConversationSettings => {
   try {
     const stored = localStorage.getItem('conversationSettings')
     return stored ? JSON.parse(stored) : { fontSize: 'sm' }
