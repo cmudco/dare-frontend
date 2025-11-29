@@ -37,7 +37,9 @@ const ToastItemView: React.FC<{
           <Info className='h-5 w-5' />
         )}
       </div>
-      <div className='min-w-0 flex-1 text-sm leading-5'>{toast.message}</div>
+      <div className='min-w-0 flex-1 whitespace-pre-line text-sm leading-5'>
+        {toast.message}
+      </div>
       <button
         className='inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition hover:bg-muted'
         aria-label='Dismiss'

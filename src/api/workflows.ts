@@ -7,6 +7,7 @@ import {
   UpdateWorkflowDTO,
   ExecuteSingleStepRequest,
   SingleStepExecutionResponse,
+  SingleStepExecutionResponseV2,
   GetActivePartialRunResponse,
   WorkflowDisplayOrder,
 } from '@/redux/types/workflow'
@@ -179,5 +180,60 @@ export const updateWorkflowDisplayOrderAPI = async (
     url: 'api/workflows/update-display-order/',
     method: METHOD.PATCH,
     data: updates,
+  })
+}
+
+// ==========================================
+// V2 API FUNCTIONS (GRAPH-BASED NODE STATES)
+// ==========================================
+
+/**
+ * Get workflow run by ID using V2 API with nodeStates.
+ * Returns WorkflowRun with nodeStates map for direct O(1) node access.
+ */
+export const getWorkflowRunByIdV2API = async (
+  runId: number
+): Promise<WorkflowRun> => {
+  return await baseRequest<WorkflowRun>({
+    url: `api/workflows/v2/runs/${runId}/`,
+    method: METHOD.GET,
+  })
+}
+
+/**
+ * Execute single step using V2 API.
+ * Returns full WorkflowRun with nodeStates instead of custom stepResult.
+ */
+export const executeSingleStepV2API = async (
+  request: ExecuteSingleStepRequest
+): Promise<SingleStepExecutionResponseV2> => {
+  return await baseRequest<SingleStepExecutionResponseV2>({
+    url: 'api/workflows/v2/runs/execute-single-step/',
+    method: METHOD.POST,
+    data: {
+      workflowId: request.workflowId,
+      stepNodeId: request.stepNodeId,
+      workflowRunId: request.workflowRunId,
+    },
+  })
+}
+
+/**
+ * Submit human validation choice using V2 API.
+ * Returns full WorkflowRun with updated nodeStates.
+ */
+export const submitHumanValidationV2API = async (
+  workflowRunId: number,
+  nodeId: string,
+  chosenRoute: string
+): Promise<WorkflowRun> => {
+  return await baseRequest<WorkflowRun>({
+    url: 'api/workflows/v2/runs/submit-human-validation/',
+    method: METHOD.POST,
+    data: {
+      workflowRunId,
+      nodeId,
+      chosenRoute,
+    },
   })
 }

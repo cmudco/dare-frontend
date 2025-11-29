@@ -57,6 +57,45 @@ export interface WorkflowRunStep {
   snippets?: WorkflowStepSnippet[]
 }
 
+// ==========================================
+// V2 API TYPES (GRAPH-BASED NODE STATES)
+// ==========================================
+
+/**
+ * Validation context for conditional/structured output nodes.
+ * Normalized structure across both node types.
+ *
+ * Backend ALWAYS returns availableRoutes as full route objects [{name, description}].
+ * This is guaranteed by NodeExecutionStateBuilder.
+ */
+export interface ValidationContext {
+  availableRoutes: ConditionalRoute[] // Always full route objects from backend
+  customPrompt: string
+  aiRecommendation: string | null
+  aiAnalysis: string | null
+  stepNumber: number | null
+}
+
+/**
+ * Node execution state in V2 API.
+ * Represents the runtime state of any node in the workflow graph.
+ */
+export interface NodeState {
+  nodeId: string // Node ID from the workflow graph (included to survive DRF CamelCase key mangling)
+  stepId: number | null // WorkflowRunStep ID (null for display nodes)
+  nodeType: string // 'step' | 'conditional' | 'structuredOutput' | 'chatOutput' | 'start'
+  status: WorkflowRunStepStatus
+  response: string | null
+  error: string | null
+  validationContext: ValidationContext | null // Only present when status is PENDING_HUMAN_INPUT
+}
+
+/**
+ * Map of node IDs to their execution states.
+ * All nodes in the workflow graph are guaranteed to be present.
+ */
+export type NodeStatesMap = Record<string, NodeState>
+
 export interface WorkflowRun {
   id: number
   workflow: number
@@ -64,12 +103,13 @@ export interface WorkflowRun {
   status: WorkflowRunStepStatus
   startedAt: string
   endedAt: string | null
-  steps: WorkflowRunStep[]
+  steps: WorkflowRunStep[] // V1 API (legacy)
   workflowTitle: string
   workflowDescription: string
   hasPendingValidation?: boolean
   pendingValidations?: PendingValidation[]
   isPartial?: boolean
+  nodeStates?: NodeStatesMap // V2 API (graph-based) - Direct O(1) access by node_id
 }
 
 export interface Workflow {
@@ -180,6 +220,17 @@ export interface SingleStepExecutionResponse {
   success: boolean
   workflowRunId: number
   stepResult: SingleStepResult | null
+  missingDependencies: string[]
+  error: string | null
+}
+
+/**
+ * V2 API response for execute-single-step endpoint.
+ * Returns full WorkflowRun with nodeStates instead of custom stepResult.
+ */
+export interface SingleStepExecutionResponseV2 {
+  success: boolean
+  workflowRun: WorkflowRun // Full run with nodeStates
   missingDependencies: string[]
   error: string | null
 }
