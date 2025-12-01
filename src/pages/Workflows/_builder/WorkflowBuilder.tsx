@@ -4,6 +4,7 @@ import {
   Background,
   Controls,
   Panel,
+  MiniMap,
   useReactFlow,
   BackgroundVariant,
 } from '@xyflow/react'
@@ -35,6 +36,7 @@ import { Minimize2, Maximize2, Undo2, Redo2 } from 'lucide-react'
 import { getAgents } from '@/redux/asyncThunks/agent'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useWorkflowPaste } from '@/hooks/useWorkflowPaste'
+import { getNodeColor } from '@/utils/workflowBuilder/getNodeColor'
 
 export interface WorkflowBuilderProps {
   initialWorkflow?: Workflow
@@ -174,31 +176,18 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           color='#e5e7eb'
         />
         <Controls showZoom={true} showFitView={true} showInteractive={true} />
-        {/* MiniMap temporarily disabled due to null stepNode serialization issue */}
-        {/* TODO: Re-enable after backend fix to properly serialize step_node in WorkflowRunStep */}
-        {/* <MiniMap
-            nodeColor={(node) => {
-              // Color nodes based on their type or state
-              if (
-                currentRun?.steps?.some(
-                  (step) =>
-                    step.stepNode && step.stepNode.toString() === node.id
-                )
-              ) {
-                return '#10b981' // Green for completed
-              }
-              return '#6366f1' // Default indigo
-            }}
-            nodeStrokeWidth={3}
-            zoomable
-            pannable
-            position='bottom-right'
-            style={{
-              backgroundColor: '#f9fafb',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-            }}
-          /> */}
+        <MiniMap
+          nodeColor={(node) => getNodeColor(node, currentRun?.nodeStates)}
+          nodeStrokeWidth={3}
+          zoomable
+          pannable
+          position='bottom-right'
+          style={{
+            backgroundColor: '#f9fafb',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+          }}
+        />
         <Panel
           position='top-right'
           className='rounded-lg border border-gray-200 bg-white p-3 shadow-md'
