@@ -25,6 +25,9 @@ export {
   parseWorkflowJson,
 } from './importWorkflow'
 
+// MiniMap utilities
+export { getNodeColor } from './getNodeColor'
+
 // Re-export types
 export type { Mode } from './isValidConnection'
 export type { ExportedWorkflow } from './exportWorkflow'
