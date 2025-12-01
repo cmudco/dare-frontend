@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button'
 import { Minimize2, Maximize2, Undo2, Redo2 } from 'lucide-react'
 import { getAgents } from '@/redux/asyncThunks/agent'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { useWorkflowPaste } from '@/hooks/useWorkflowPaste'
 
 export interface WorkflowBuilderProps {
   initialWorkflow?: Workflow
@@ -139,6 +140,10 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [dispatch, canUndo, canRedo])
+
+  // Enable workflow paste functionality (Ctrl+V / Cmd+V)
+  // Respects disableEditing prop and workflow running state
+  useWorkflowPaste({ disabled: props.disableEditing })
 
   return (
     <div className='flex h-full w-full'>
