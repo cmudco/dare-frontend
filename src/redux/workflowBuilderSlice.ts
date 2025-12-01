@@ -301,6 +301,26 @@ const workflowBuilderSlice = createSlice({
     ) => {
       state.savingStatus = action.payload
     },
+    /**
+     * Import nodes and edges from an external source (e.g., clipboard paste).
+     * This action:
+     * - Saves current state to history for undo support
+     * - Adds imported nodes/edges to existing canvas (does not replace)
+     * - Clears future history (new branch from current state)
+     */
+    importNodes: (
+      state,
+      action: PayloadAction<{ nodes: Node[]; edges: Edge[] }>
+    ) => {
+      // Save state before import for undo support
+      const snapshot = createSnapshot(state.nodes, state.edges)
+      pushToHistory(state, snapshot)
+
+      // Add imported nodes and edges to existing ones
+      const { nodes: importedNodes, edges: importedEdges } = action.payload
+      state.nodes = [...state.nodes, ...importedNodes]
+      state.edges = [...state.edges, ...importedEdges]
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -396,6 +416,7 @@ export const {
   setNodeSelectedRun,
   resetBuilder,
   setSavingStatus,
+  importNodes,
 } = workflowBuilderSlice.actions
 
 export default workflowBuilderSlice.reducer

@@ -34,7 +34,11 @@ import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
 import { toast } from '@/utils/toast'
 import type { GetActivePartialRunResponse } from '@/redux/types/workflow'
 import { useDebounce } from '@/hooks/useDebounce'
-import { Loader2, Check, AlertCircle } from 'lucide-react'
+import { Loader2, Check, AlertCircle, Copy } from 'lucide-react'
+import {
+  exportWorkflow,
+  exportWorkflowToString,
+} from '@/utils/workflowBuilder/exportWorkflow'
 
 const WorkflowEditPage = () => {
   const navigate = useNavigate()
@@ -201,6 +205,32 @@ const WorkflowEditPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedWorkflow?.id])
 
+  /**
+   * Copies the current workflow configuration to clipboard.
+   * The exported workflow is sanitized (user-specific FKs cleared) and can be
+   * shared with others or pasted into another workflow canvas.
+   */
+  const handleCopyWorkflow = async () => {
+    if (nodes.length === 0) {
+      toast.error('No nodes to copy. Add some nodes first.')
+      return
+    }
+
+    try {
+      const exportedWorkflow = exportWorkflow(nodes, edges, savedViewport)
+      const jsonString = exportWorkflowToString(exportedWorkflow)
+
+      await navigator.clipboard.writeText(jsonString)
+
+      toast.success(
+        `Workflow copied to clipboard (${nodes.length} nodes, ${edges.length} connections)`
+      )
+    } catch (error) {
+      console.error('Failed to copy workflow:', error)
+      toast.error('Failed to copy workflow to clipboard')
+    }
+  }
+
   return (
     <div className='flex h-screen flex-col'>
       <div className='flex items-center justify-between border-b px-8 py-4'>
@@ -265,6 +295,30 @@ const WorkflowEditPage = () => {
               </Button>
             </div>
           )}
+
+          {/* Copy Workflow Button */}
+          <TooltipProvider>
+            <Tooltip delayDuration={150}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='outline'
+                  size='icon'
+                  onClick={handleCopyWorkflow}
+                  disabled={isRunning || nodes.length === 0}
+                  className='h-9 w-9'
+                  aria-label='Copy workflow configuration'
+                >
+                  <Copy className='h-4 w-4' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Copy workflow to clipboard</p>
+                <p className='text-xs text-muted-foreground'>
+                  Share or paste into another workflow
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <TooltipProvider>
             <Tooltip delayDuration={150}>
