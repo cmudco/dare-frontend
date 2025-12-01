@@ -12,5 +12,20 @@ export {
 export { handleConnection } from './handleConnection'
 export { serializeWorkflow } from './serializeWorkflow'
 
+// Workflow copy-paste utilities
+export {
+  exportWorkflow,
+  exportWorkflowToString,
+  WORKFLOW_EXPORT_VERSION,
+  WORKFLOW_EXPORT_MARKER,
+} from './exportWorkflow'
+export {
+  importWorkflow,
+  importWorkflowFromString,
+  parseWorkflowJson,
+} from './importWorkflow'
+
 // Re-export types
 export type { Mode } from './isValidConnection'
+export type { ExportedWorkflow } from './exportWorkflow'
+export type { ImportResult, ImportOptions } from './importWorkflow'
