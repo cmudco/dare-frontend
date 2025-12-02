@@ -34,9 +34,9 @@ const nodeComponents = [
   },
   {
     type: 'structuredOutput',
-    label: 'Structured Output',
+    label: 'Conditional',
     description:
-      'AI-powered routing with custom evaluation criteria and multiple output paths',
+      'AI-powered decision node that routes to different paths based on input',
     icon: Split,
     color: 'bg-purple-500',
   },
