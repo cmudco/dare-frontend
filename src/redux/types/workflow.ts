@@ -82,6 +82,18 @@ export interface ValidationContext {
  * Node execution state in V2 API.
  * Represents the runtime state of any node in the workflow graph.
  */
+/**
+ * Metadata for completed routing nodes (structuredOutput).
+ * Contains AI analysis that should be displayed even after decision.
+ */
+export interface RoutingMetadata {
+  aiRecommendation: string | null
+  aiAnalysis: string | null
+  isHumanValidated: boolean
+  userChoice: string | null
+  selectedRoute: string | null
+}
+
 export interface NodeState {
   nodeId: string // Node ID from the workflow graph (included to survive DRF CamelCase key mangling)
   stepId: number | null // WorkflowRunStep ID (null for display nodes)
@@ -90,6 +102,7 @@ export interface NodeState {
   response: string | null
   error: string | null
   validationContext: ValidationContext | null // Only present when status is PENDING_HUMAN_INPUT
+  metadata: RoutingMetadata | null // Present for completed routing nodes with AI analysis
 }
 
 /**
