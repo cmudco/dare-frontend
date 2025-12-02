@@ -25,6 +25,9 @@ import {
   UserCheck,
   ChevronDown,
   ChevronUp,
+  Play,
+  Loader2,
+  CheckCircle2,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
@@ -33,11 +36,18 @@ import {
   toggleNodeCollapse,
   removeNodeWithEdges,
   setEdges,
+  markStepExecuted,
+  setCurrentPartialRunId,
+  updateWorkflowRunStatus,
 } from '@/redux/workflowBuilderSlice'
 import { renderStatusPill } from '@/utils/workflowUtils'
 import { HumanValidationModal } from '@/components/WorkflowManager/HumanValidationModal'
-import { submitHumanValidationV2 } from '@/redux/asyncThunks/workflow'
-import { updateWorkflowRunStatus } from '@/redux/workflowBuilderSlice'
+import {
+  executeSingleStepV2,
+  submitHumanValidationV2,
+} from '@/redux/asyncThunks/workflow'
+import { unwrapResult } from '@reduxjs/toolkit'
+import { toast } from '@/utils/toast'
 import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
 import { useRoutingNode } from '@/hooks/useRoutingNode'
 import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
@@ -63,11 +73,21 @@ export default function StructuredOutputNode({
     ({} as Partial<StructuredOutputNodeDataType>)
   const dispatch = useAppDispatch()
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const { currentRun } = useAppSelector((s) => s.workflowBuilder)
+  const {
+    currentRun,
+    currentPartialRunId,
+    executedStepNodeIds,
+    loadedWorkflow,
+  } = useAppSelector((s) => s.workflowBuilder)
+  const manualModeEnabled = loadedWorkflow?.manualModeEnabled ?? false
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const updateNodeInternals = useUpdateNodeInternals()
   const [showValidationModal, setShowValidationModal] = useState(false)
+  const [isExecutingNode, setIsExecutingNode] = useState(false)
+
+  // Check if this node has been executed in current partial run
+  const isNodeExecuted = executedStepNodeIds.includes(id)
 
   // VERSION SELECTION: Hook handles all version dropdown logic
   const versionState = useWorkflowRunVersion(id)
@@ -178,6 +198,44 @@ export default function StructuredOutputNode({
     }
   }
 
+  // Execute this structured output node manually (for manual mode)
+  const handleExecuteNode = async () => {
+    if (!loadedWorkflow?.id) {
+      toast.error('No workflow loaded')
+      return
+    }
+
+    setIsExecutingNode(true)
+    try {
+      // Use V2 API - returns full workflowRun with nodeStates
+      const resultAction = await dispatch(
+        executeSingleStepV2({
+          workflowId: loadedWorkflow.id,
+          stepNodeId: id,
+          workflowRunId: currentPartialRunId,
+        })
+      )
+      const result = unwrapResult(resultAction)
+
+      if (result.success) {
+        toast.success('Structured Output node executed successfully')
+        dispatch(markStepExecuted(id))
+        dispatch(setCurrentPartialRunId(result.workflowRun.id))
+
+        // V2: Update Redux directly with the returned workflowRun (includes nodeStates)
+        dispatch(updateWorkflowRunStatus(result.workflowRun))
+      } else {
+        // Display error from backend (already formatted)
+        toast.error(result.error || 'Node execution failed', 8000)
+      }
+    } catch (error) {
+      // Error is already a formatted string from errorHandler
+      toast.error(String(error), 8000)
+    } finally {
+      setIsExecutingNode(false)
+    }
+  }
+
   const routeNames = useMemo(
     () => routes.map((r) => r.name).join(','),
     [routes]
@@ -191,7 +249,11 @@ export default function StructuredOutputNode({
 
   return (
     <Card
-      className={`w-80 border-border ${selected ? 'ring-2 ring-primary/60' : ''}`}
+      className={`w-80 ${
+        isNodeExecuted
+          ? 'border-green-500/50 bg-green-50/30 dark:bg-green-950/20'
+          : 'border-border'
+      } ${selected ? 'ring-2 ring-primary/60' : ''}`}
     >
       <CardHeader className='pb-3'>
         <div className='space-y-2'>
@@ -204,6 +266,25 @@ export default function StructuredOutputNode({
             </div>
             <div className='flex items-center gap-1'>
               {renderStatusPill(stepStatus)}
+              {isNodeExecuted && (
+                <CheckCircle2 className='h-4 w-4 text-green-500' />
+              )}
+              {manualModeEnabled && (
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  onClick={handleExecuteNode}
+                  disabled={isExecutingNode}
+                  className='h-6 w-6 p-0 text-purple-600 hover:bg-purple-500/10'
+                  title='Run this node'
+                >
+                  {isExecutingNode ? (
+                    <Loader2 className='h-4 w-4 animate-spin' />
+                  ) : (
+                    <Play className='h-4 w-4' />
+                  )}
+                </Button>
+              )}
               <Button
                 size='sm'
                 variant='ghost'

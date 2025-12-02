@@ -99,8 +99,15 @@ export function useRoutingNode(nodeId: string): RoutingNodeState {
   const selectedRoute = nodeState?.response ?? null
   const validationContext =
     (nodeState?.validationContext as ValidationContext) ?? null
-  const aiAnalysis = validationContext?.aiAnalysis ?? null
-  const aiRecommendation = validationContext?.aiRecommendation ?? null
+
+  // Get metadata for completed steps (contains AI analysis even after decision)
+  const metadata = nodeState?.metadata ?? null
+
+  // AI analysis: prefer validationContext (pending), fallback to metadata (completed)
+  const aiAnalysis =
+    validationContext?.aiAnalysis ?? metadata?.aiAnalysis ?? null
+  const aiRecommendation =
+    validationContext?.aiRecommendation ?? metadata?.aiRecommendation ?? null
 
   // Check if this node has a pending validation
   const hasPendingValidation =
@@ -122,9 +129,10 @@ export function useRoutingNode(nodeId: string): RoutingNodeState {
       }
     : null
 
-  // Check if this was a human-validated decision
-  const isHumanValidated = stepStatus === 'completed' && !!selectedRoute
-  const userChoice = selectedRoute // For completed decisions
+  // Check if this was a human-validated decision (from metadata or inferred from completion)
+  const isHumanValidated = metadata?.isHumanValidated ?? false
+  const userChoice =
+    metadata?.userChoice ?? (isHumanValidated ? selectedRoute : null)
 
   return {
     nodeState,
