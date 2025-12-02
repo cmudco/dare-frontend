@@ -55,26 +55,6 @@ export const isValidConnection = (
     return true
   }
 
-  // Aggregator connections removed - using conditional nodes for routing
-
-  // Handle conditional node connections
-  if (tType === 'conditional') {
-    // Conditional nodes accept input only from chatOutput nodes (need step output to evaluate)
-    const isAllowed = sType === 'chatOutput'
-    if (!isAllowed) return false
-
-    // Conditional nodes accept only one input connection
-    const existingInputs = edges.filter((e) => e.target === connection.target)
-    if (existingInputs.length >= 1) return false
-
-    return true
-  }
-
-  if (sType === 'conditional') {
-    // Conditional nodes can only connect to step nodes
-    return tType === 'step'
-  }
-
   // Allow Start <-> Step regardless of drag direction
   // Backend uses edge-based execution, so no frontend restrictions needed
   if (

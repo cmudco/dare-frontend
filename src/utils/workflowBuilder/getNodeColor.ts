@@ -23,7 +23,6 @@ export const getNodeColor = (
         return '#8b5cf6' // Purple for start
       case 'chatOutput':
         return '#6b7280' // Gray for output
-      case 'conditional':
       case 'structuredOutput':
         return '#f59e0b' // Amber for routing nodes
       default:
