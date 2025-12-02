@@ -177,7 +177,7 @@ export const WorkflowStep: React.FC<{
               <div>{getRunStatusBadge(step.status)}</div>
             </CollapsibleTrigger>
             <CollapsibleContent className='bg-card p-4'>
-              {/* Human Validation UI for Conditional Steps */}
+              {/* Human Validation UI for Routing Steps */}
               {pendingValidation &&
                 step.status === WorkflowRunStepStatus.PendingHumanInput && (
                   <div className='mb-4 rounded-lg border-2 border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20'>

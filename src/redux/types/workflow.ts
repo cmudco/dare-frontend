@@ -17,7 +17,10 @@ export interface WorkflowStepSnippet {
   vectorDbSource?: string
 }
 
-export interface ConditionalRoute {
+/**
+ * Route definition for structured output nodes
+ */
+export interface RouteDef {
   name: string
   description: string
 }
@@ -26,7 +29,7 @@ export interface PendingValidation {
   nodeId: string
   stepNumber: number
   customPrompt: string
-  availableRoutes: ConditionalRoute[]
+  availableRoutes: RouteDef[]
   currentResponse: string
   stepId: number
   aiRecommendation?: string
@@ -44,7 +47,7 @@ export interface WorkflowRunStep {
     routingDecision?: string
     analysis?: string
     aiRecommendation?: string
-    availableRoutes?: ConditionalRoute[] // Route objects for both Conditional and StructuredOutput nodes
+    availableRoutes?: RouteDef[] // Route objects for StructuredOutput nodes
     isHumanValidated?: boolean
     fullResponse?: string
     pendingHumanDecision?: boolean
@@ -62,14 +65,13 @@ export interface WorkflowRunStep {
 // ==========================================
 
 /**
- * Validation context for conditional/structured output nodes.
- * Normalized structure across both node types.
+ * Validation context for structured output nodes.
  *
  * Backend ALWAYS returns availableRoutes as full route objects [{name, description}].
  * This is guaranteed by NodeExecutionStateBuilder.
  */
 export interface ValidationContext {
-  availableRoutes: ConditionalRoute[] // Always full route objects from backend
+  availableRoutes: RouteDef[] // Always full route objects from backend
   customPrompt: string
   aiRecommendation: string | null
   aiAnalysis: string | null
@@ -80,14 +82,27 @@ export interface ValidationContext {
  * Node execution state in V2 API.
  * Represents the runtime state of any node in the workflow graph.
  */
+/**
+ * Metadata for completed routing nodes (structuredOutput).
+ * Contains AI analysis that should be displayed even after decision.
+ */
+export interface RoutingMetadata {
+  aiRecommendation: string | null
+  aiAnalysis: string | null
+  isHumanValidated: boolean
+  userChoice: string | null
+  selectedRoute: string | null
+}
+
 export interface NodeState {
   nodeId: string // Node ID from the workflow graph (included to survive DRF CamelCase key mangling)
   stepId: number | null // WorkflowRunStep ID (null for display nodes)
-  nodeType: string // 'step' | 'conditional' | 'structuredOutput' | 'chatOutput' | 'start'
+  nodeType: string // 'step' | 'structuredOutput' | 'chatOutput' | 'start'
   status: WorkflowRunStepStatus
   response: string | null
   error: string | null
   validationContext: ValidationContext | null // Only present when status is PENDING_HUMAN_INPUT
+  metadata: RoutingMetadata | null // Present for completed routing nodes with AI analysis
 }
 
 /**
@@ -206,7 +221,7 @@ export interface SingleStepResult {
     routingDecision?: string
     analysis?: string
     aiRecommendation?: string
-    availableRoutes?: ConditionalRoute[]
+    availableRoutes?: RouteDef[]
     isHumanValidated?: boolean
     fullResponse?: string
     pendingHumanDecision?: boolean
@@ -252,7 +267,7 @@ export interface PartialRunStep {
     routingDecision?: string
     analysis?: string
     aiRecommendation?: string
-    availableRoutes?: ConditionalRoute[]
+    availableRoutes?: RouteDef[]
     isHumanValidated?: boolean
     fullResponse?: string
     pendingHumanDecision?: boolean

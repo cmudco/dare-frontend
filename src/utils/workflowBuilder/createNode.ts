@@ -62,45 +62,15 @@ export const createNode = (
     const nextEdges = [...edges, stepToOutputEdge]
 
     return { nodes: nextNodes, edges: nextEdges }
-  } else if (type === 'conditional') {
-    // Handle conditional node
-    const conditionalId = nanoid() // UUID for React Flow (guaranteed unique)
-
-    // Get unique step number for conditional node (should be after all regular steps)
-    const stepCount = nodes.filter((n) => n.type === 'step').length
-    const conditionalCount = nodes.filter(
-      (n) => n.type === 'conditional'
-    ).length
-    const conditionalStepNumber = stepCount + conditionalCount + 1
-
-    const conditionalNode: Node = {
-      id: conditionalId,
-      type: 'conditional',
-      position,
-      data: {
-        customPrompt: 'Evaluate the input and choose the appropriate route.',
-        routes: [
-          { name: 'Route A', description: '' },
-          { name: 'Route B', description: '' },
-        ],
-        requireHumanValidation: false,
-        stepNumber: conditionalStepNumber, // Keep stepNumber for display/execution order only
-      },
-    }
-
-    return { nodes: [...nodes, conditionalNode], edges }
   } else if (type === 'structuredOutput') {
     const structuredOutputId = nanoid() // UUID for React Flow (guaranteed unique)
 
     const stepCount = nodes.filter((n) => n.type === 'step').length
-    const conditionalCount = nodes.filter(
-      (n) => n.type === 'conditional'
-    ).length
     const existingStructuredOutputCount = nodes.filter(
       (n) => n.type === 'structuredOutput'
     ).length
     const structuredOutputStepNumber =
-      stepCount + conditionalCount + existingStructuredOutputCount + 1
+      stepCount + existingStructuredOutputCount + 1
 
     const structuredOutputNode: Node = {
       id: structuredOutputId,

@@ -103,7 +103,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
       (sourceNode?.type === 'start' ||
         sourceNode?.type === 'step' ||
         sourceNode?.type === 'chatOutput' ||
-        sourceNode?.type === 'conditional')
+        sourceNode?.type === 'structuredOutput')
     )
   })
 
