@@ -103,7 +103,6 @@ const sanitizeNodeData = (
       // Preserve: stepNumber, label
       break
 
-    case 'conditional':
     case 'structuredOutput':
       // Preserve: routes, requireHumanValidation, stepNumber, textInput
       break

@@ -9,7 +9,7 @@
 
 /**
  * Base interface for all output node data.
- * All output nodes (Chat, Conditional, StructuredOutput) extend this.
+ * All output nodes (Chat, StructuredOutput) extend this.
  */
 export interface BaseOutputNodeData {
   /**
@@ -34,31 +34,19 @@ export interface ChatOutputNodeData extends BaseOutputNodeData {
 }
 
 /**
- * Route definition for conditional/structured output nodes
+ * Route definition for structured output nodes
  */
 export interface NodeRoute {
   name: string
   description: string
 }
 
-// Export with different names for backward compatibility
-export type ConditionalRoute = NodeRoute
+// Export alias for backward compatibility
 export type StructuredOutputRoute = NodeRoute
 
 /**
- * Conditional node specific data
- */
-export interface ConditionalNodeData extends BaseOutputNodeData {
-  prompt: number | null
-  llm: number | null
-  routes: NodeRoute[]
-  requireHumanValidation: boolean
-  id?: string
-}
-
-/**
  * Structured output node specific data
- * Independent routing node that evaluates input and selects a route
+ * Routing node that evaluates input and selects a route
  */
 export interface StructuredOutputNodeData extends BaseOutputNodeData {
   prompt: number | null

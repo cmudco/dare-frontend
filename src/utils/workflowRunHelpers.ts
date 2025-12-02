@@ -73,34 +73,34 @@ export function getDisplayRun(
  *
  * STEP MATCHING STRATEGY:
  * - Standard nodes: Match by stepNumber (order field)
- * - Conditional nodes: Match by stepNumber AND verify metadata.availableRoutes exists
+ * - Routing nodes: Match by stepNumber AND verify metadata.availableRoutes exists
  *
  * @param run - The workflow run containing steps
  * @param stepNumber - The step number to find
  * @param options - Optional configuration
- * @param options.isConditional - Whether this is a conditional node (requires route metadata)
+ * @param options.isRoutingNode - Whether this is a routing node (requires route metadata)
  * @returns The matching step, or null if not found
  *
  * @example
  * ```tsx
- * // For chat output or structured output nodes
+ * // For chat output nodes
  * const stepRun = getStepFromRun(displayRun, stepNumber)
  *
- * // For conditional nodes
- * const stepRun = getStepFromRun(displayRun, stepNumber, { isConditional: true })
+ * // For structured output nodes
+ * const stepRun = getStepFromRun(displayRun, stepNumber, { isRoutingNode: true })
  * ```
  */
 export function getStepFromRun(
   run: WorkflowRun | null,
   stepNumber: number | undefined,
-  options: { isConditional?: boolean } = {}
+  options: { isRoutingNode?: boolean } = {}
 ): WorkflowRunStep | null {
   if (!run || !run.steps || stepNumber === undefined) return null
 
-  const { isConditional = false } = options
+  const { isRoutingNode = false } = options
 
-  if (isConditional) {
-    // Conditional nodes need availableRoutes metadata
+  if (isRoutingNode) {
+    // Routing nodes need availableRoutes metadata
     return (
       run.steps.find(
         (s) =>
@@ -163,7 +163,7 @@ export function extractStepOutputData(
 }
 
 /**
- * Extract routing decision data from conditional/structured output nodes.
+ * Extract routing decision data from structured output nodes.
  *
  * This handles the complex logic of retrieving routing information from
  * either pending validations (during human approval) or step metadata
@@ -175,7 +175,7 @@ export function extractStepOutputData(
  *
  * @example
  * ```tsx
- * const stepRun = getStepFromRun(displayRun, stepNumber, { isConditional: true })
+ * const stepRun = getStepFromRun(displayRun, stepNumber, { isRoutingNode: true })
  * const routingData = extractRoutingDecision(stepRun, pendingValidation)
  *
  * return (

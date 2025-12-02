@@ -1,7 +1,7 @@
 /**
  * Shared routing components for workflow routing nodes.
  *
- * These components provide unified UI for ConditionalNode and StructuredOutputNode:
+ * These components provide unified UI for StructuredOutputNode:
  * - RoutingDecisionDisplay: Shows completed routing decisions
  * - HumanValidationPrompt: Shows pending human validation UI
  * - RouteConfigPanel: Route name/description configuration inputs
