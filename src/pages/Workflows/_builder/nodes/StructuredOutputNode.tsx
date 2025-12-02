@@ -78,8 +78,8 @@ export default function StructuredOutputNode({
     currentPartialRunId,
     executedStepNodeIds,
     loadedWorkflow,
+    manualModeEnabled,
   } = useAppSelector((s) => s.workflowBuilder)
-  const manualModeEnabled = loadedWorkflow?.manualModeEnabled ?? false
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const updateNodeInternals = useUpdateNodeInternals()
@@ -262,7 +262,7 @@ export default function StructuredOutputNode({
               <div className='flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/10 dark:bg-purple-500/20'>
                 <GitBranch className='h-3 w-3 text-purple-600' />
               </div>
-              <span>Structured Output</span>
+              <span>Conditional</span>
             </div>
             <div className='flex items-center gap-1'>
               {renderStatusPill(stepStatus)}
@@ -447,7 +447,7 @@ export default function StructuredOutputNode({
           <div className='space-y-3 rounded-lg border border-purple-200 bg-purple-50/50 p-4 dark:border-purple-800 dark:bg-purple-900/20'>
             <div className='flex items-center justify-between'>
               <Label className='text-xs font-medium'>
-                Output Routes ({routes.length})
+                Structured Routes ({routes.length})
               </Label>
               <Button
                 size='sm'
@@ -506,17 +506,11 @@ export default function StructuredOutputNode({
               </Label>
               <div className='space-y-1 text-xs text-purple-700 dark:text-purple-300'>
                 <p>
-                  This node independently evaluates input and routes to
-                  different paths. Connect from any node (Start, Step, etc.) and
-                  route to multiple next nodes.
+                  AI analyzes the input and automatically chooses which path
+                  your workflow should take. Perfect for decision-making and
+                  branching logic.
                 </p>
-                <p className='mt-2 font-medium'>Input sources:</p>
-                <ul className='ml-4 list-disc space-y-0.5'>
-                  <li>Previous node output (via connection)</li>
-                  <li>Direct text input field</li>
-                  <li>Custom prompt template</li>
-                </ul>
-                <p className='mt-2 font-medium'>Available routes:</p>
+                <p className='mt-2 font-medium'>Your defined routes:</p>
                 <ul className='ml-4 list-disc space-y-0.5'>
                   {routes.map((route, index) => {
                     const colors = [
@@ -538,6 +532,10 @@ export default function StructuredOutputNode({
                     )
                   })}
                 </ul>
+                <p className='mt-2 text-[10px] italic text-purple-500 dark:text-purple-400'>
+                  Technical: This is a Structured Output node using AI to
+                  produce deterministic routing decisions.
+                </p>
               </div>
             </div>
           </div>
