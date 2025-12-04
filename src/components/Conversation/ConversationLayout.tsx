@@ -30,7 +30,7 @@ const ConversationLayout: React.FC = () => {
   }, [dispatch, id, location.pathname])
 
   return (
-    <div className='flex h-full'>
+    <div className='flex h-full min-h-0 overflow-hidden'>
       <ActiveConversation />
       <ConversationHistory />
     </div>

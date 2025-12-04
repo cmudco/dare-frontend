@@ -96,10 +96,9 @@ const ArtifactSidecar: React.FC = () => {
   return (
     <div
       className={cn(
-        'fixed right-0 top-0 z-40 flex h-full w-[600px] flex-col',
-        'border-l border-gray-200 bg-white shadow-xl',
-        'dark:border-gray-700 dark:bg-dark-bg',
-        'duration-300 animate-in slide-in-from-right'
+        'flex h-full w-[600px] shrink-0 flex-col',
+        'border-l border-gray-200 bg-white',
+        'dark:border-gray-700 dark:bg-dark-bg'
       )}
     >
       {/* Header */}
@@ -160,7 +159,6 @@ const ArtifactSidecar: React.FC = () => {
           artifactType={activeArtifact.artifactType}
           language={activeArtifact.language}
           status={activeArtifact.status}
-          currentSection={activeArtifact.currentSection}
         />
       </div>
 
