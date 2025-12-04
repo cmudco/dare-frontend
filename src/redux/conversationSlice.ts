@@ -45,6 +45,7 @@ export const conversationSlice = createSlice({
         state.webSearchEnabled = action.payload.webSearchEnabled ?? false
         state.imageGenerationEnabled =
           action.payload.imageGenerationEnabled ?? false
+        state.artifactsEnabled = action.payload.artifactsEnabled ?? false
 
         // Sync available models and selected model with image generation state
         syncModelsWithImageGenerationState(
@@ -161,6 +162,13 @@ export const conversationSlice = createSlice({
       // Sync available models and auto-select appropriate model
       syncModelsWithImageGenerationState(state, action.payload)
     },
+    updateArtifactsEnabled(state, action: PayloadAction<boolean>) {
+      // Update global and conversation-level state
+      state.artifactsEnabled = action.payload
+      if (state.activeConversation) {
+        state.activeConversation.artifactsEnabled = action.payload
+      }
+    },
     updateImageGenerationSettings(
       state,
       action: PayloadAction<ImageGenerationSettings>
@@ -232,6 +240,7 @@ export const conversationSlice = createSlice({
       // Reset feature toggles
       state.imageGenerationEnabled = false
       state.webSearchEnabled = false
+      state.artifactsEnabled = false
 
       // Reset to text models with appropriate selection
       syncModelsWithImageGenerationState(state, false)
@@ -593,6 +602,7 @@ export const {
   updateHistoryLimit,
   updateWebSearchEnabled,
   updateImageGenerationEnabled,
+  updateArtifactsEnabled,
   updateImageGenerationSettings,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,

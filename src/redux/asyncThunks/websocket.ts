@@ -6,6 +6,20 @@ import {
   updateConversationTitle,
   updateConversationHistory,
 } from '../conversationSlice'
+import {
+  initArtifact,
+  appendContent,
+  updateProgress,
+  setCurrentSection,
+  setStatus,
+  setSectionsRemaining,
+  setWordCount,
+  setArtifactError,
+  loadArtifacts,
+  setActiveArtifact,
+  openSidecar,
+} from '../artifactSlice'
+import type { Artifact } from '../types/artifact'
 import { Message } from '../types/conversation'
 import { AppDispatch, RootState } from '../store'
 import { setConnectionStatus, setCreditError } from '../websocketSlice'
@@ -52,8 +66,13 @@ export const connectWebSocket = createAsyncThunk<
 
       switch (data.type) {
         case 'conversation_history':
-          if (data.conversationHistory)
+          if (data.conversationHistory) {
             dispatch(updateConversationHistory(data.conversationHistory))
+            // Load any artifacts from conversation history
+            if (data.artifacts && Array.isArray(data.artifacts)) {
+              dispatch(loadArtifacts(data.artifacts as Artifact[]))
+            }
+          }
           break
         case 'message':
           if (data.regenerate) {
@@ -85,6 +104,94 @@ export const connectWebSocket = createAsyncThunk<
         case 'regenerate_response':
           dispatch(updateMessage(data as Partial<Message>))
           break
+
+        // Artifact message handlers
+        case 'artifact_init':
+          dispatch(
+            initArtifact({
+              id: data.artifactId,
+              title: data.title,
+              outline: data.outline,
+              estimatedSections: data.estimatedSections,
+            })
+          )
+          // Link artifact to the message and update title if messageId is provided
+          if (data.messageId) {
+            dispatch(
+              updateMessage({
+                id: data.messageId,
+                artifactId: data.artifactId,
+                message: `Generated artifact: ${data.title}`,
+                streaming: true, // Keep streaming true until complete
+              })
+            )
+          }
+          // Open the sidecar to show artifact generation
+          dispatch(setActiveArtifact(data.artifactId))
+          dispatch(openSidecar())
+          break
+
+        case 'artifact_stream':
+          dispatch(
+            appendContent({
+              artifactId: data.artifactId,
+              chunk: data.chunk,
+            })
+          )
+          dispatch(
+            updateProgress({
+              artifactId: data.artifactId,
+              progress: data.progress,
+            })
+          )
+          dispatch(
+            setCurrentSection({
+              artifactId: data.artifactId,
+              section: data.section,
+            })
+          )
+          break
+
+        case 'artifact_pause':
+          dispatch(
+            setStatus({
+              artifactId: data.artifactId,
+              status: 'paused',
+            })
+          )
+          dispatch(
+            setSectionsRemaining({
+              artifactId: data.artifactId,
+              sectionsRemaining: data.sectionsRemaining,
+            })
+          )
+          break
+
+        case 'artifact_complete':
+          dispatch(
+            setStatus({
+              artifactId: data.artifactId,
+              status: 'completed',
+            })
+          )
+          dispatch(
+            setWordCount({
+              artifactId: data.artifactId,
+              wordCount: data.totalWords,
+            })
+          )
+          dispatch(getWallet())
+          break
+
+        case 'artifact_error':
+          dispatch(
+            setArtifactError({
+              artifactId: data.artifactId,
+              error: data.errorMessage,
+            })
+          )
+          break
+
         default:
           console.warn('Unknown WebSocket message type:', data.type)
       }
@@ -123,6 +230,7 @@ export const sendWebSocketMessage = createAsyncThunk<
     webSearchEnabled,
     imageGenerationEnabled,
     imageGenerationSettings,
+    artifactsEnabled,
   } = conversation
 
   const payload = {
@@ -157,6 +265,7 @@ export const sendWebSocketMessage = createAsyncThunk<
       name,
       type,
     })),
+    artifacts_enabled: artifactsEnabled,
   }
 
   socket.send(JSON.stringify(payload))
@@ -280,3 +389,34 @@ export const disconnectWebSocket = createAsyncThunk<
     }
   })
 })
+
+// Continue a paused artifact
+export const continueArtifact = createAsyncThunk<
+  void,
+  { artifactId: string },
+  { dispatch: AppDispatch; state: RootState }
+>(
+  'websocket/continueArtifact',
+  async ({ artifactId }, { rejectWithValue, dispatch }) => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      dispatch(
+        setStatus({
+          artifactId,
+          status: 'generating',
+        })
+      )
+      socket.send(
+        JSON.stringify({
+          action: 'continue_artifact',
+          artifact_id: artifactId,
+        })
+      )
+    } else {
+      return rejectWithValue('WebSocket is not connected')
+    }
+  }
+)
+
+// Note: pauseArtifact has been moved to @/redux/asyncThunks/artifact.ts
+// It uses REST API instead of WebSocket because the WebSocket receive handler
+// is blocked during artifact streaming (single-threaded message processing)

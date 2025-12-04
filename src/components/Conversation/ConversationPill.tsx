@@ -61,6 +61,11 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       activeConversation?.imageGenerationEnabled ??
       state.conversation.imageGenerationEnabled
   )
+  const artifactsEnabled = useSelector(
+    (state: RootState) =>
+      activeConversation?.artifactsEnabled ??
+      state.conversation.artifactsEnabled
+  )
 
   const clearPendingDraftSave = useCallback(() => {
     if (debounceTimeoutRef.current) {
@@ -209,7 +214,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       <div
         className={clsx(
           'flex w-[90%] flex-col justify-end rounded-2xl transition-all duration-300',
-          imageGenerationEnabled
+          imageGenerationEnabled || artifactsEnabled
             ? 'gradient-border'
             : 'border-2 border-gray-200 dark:border-dark-icon-unselected',
           'dark:bg-transparent',
