@@ -20,6 +20,7 @@ export interface Conversation {
   historyLimit: number
   webSearchEnabled?: boolean
   imageGenerationEnabled?: boolean
+  artifactsEnabled?: boolean
   selectedModel?: number | null
   selectedMediaIds?: number[]
   prompt?: Prompt | null
@@ -55,6 +56,8 @@ export interface Message {
   outputTokens?: number | null
   // Image generation fields
   generatedImage?: GeneratedImage
+  // Artifact reference (when message has associated artifact)
+  artifactId?: string
 }
 
 export interface GeneratedImage {
@@ -144,6 +147,7 @@ export interface ConversationState {
   attachedImages: AttachedImage[]
   webSearchEnabled: boolean
   imageGenerationEnabled: boolean
+  artifactsEnabled: boolean
   isGeneratingImage: boolean
   imageGenerationPrompt: string | null
   imageGenerationSettings: ImageGenerationSettings
