@@ -9,20 +9,13 @@ import {
   updateHistoryLimit,
   updateWebSearchEnabled,
   updateImageGenerationEnabled,
+  updateArtifactsEnabled,
   updateSelectedModel,
 } from '../../redux/conversationSlice'
 import { Slider } from '../ui/slider'
 import { Switch } from '../ui/switch'
 import { Settings, Info } from 'lucide-react'
 import { MODEL_CONFIG } from '../../config/modelConfig'
-import {
-  getTemperatureColor,
-  getTemperatureDescription,
-  getMaxTokensColor,
-  getMaxTokensDescription,
-  getHistoryLimitColor,
-  getHistoryLimitDescription,
-} from '@/utils/modelConfigUtils'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
 import { features } from '@/config/environment'
 import {
@@ -53,6 +46,11 @@ const ModelConfigurationPanel: React.FC = () => {
     (state: RootState) =>
       activeConversation?.imageGenerationEnabled ??
       state.conversation.imageGenerationEnabled
+  )
+  const artifactsEnabled = useSelector(
+    (state: RootState) =>
+      activeConversation?.artifactsEnabled ??
+      state.conversation.artifactsEnabled
   )
   const allModels = useSelector(
     (state: RootState) => state.conversation.allModels
@@ -138,6 +136,18 @@ const ModelConfigurationPanel: React.FC = () => {
     }
   }
 
+  const handleArtifactsToggle = (checked: boolean) => {
+    dispatch(updateArtifactsEnabled(checked))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { artifactsEnabled: checked },
+        })
+      )
+    }
+  }
+
   const resetToDefaults = () => {
     if (activeConversation) {
       dispatch(updateTemperature(MODEL_CONFIG.temperature))
@@ -145,6 +155,7 @@ const ModelConfigurationPanel: React.FC = () => {
       dispatch(updateHistoryLimit(MODEL_CONFIG.historyLimit))
       dispatch(updateWebSearchEnabled(false))
       dispatch(updateImageGenerationEnabled(false))
+      dispatch(updateArtifactsEnabled(false))
 
       dispatch(
         updateConversation({
@@ -155,6 +166,7 @@ const ModelConfigurationPanel: React.FC = () => {
             historyLimit: MODEL_CONFIG.historyLimit,
             webSearchEnabled: false,
             imageGenerationEnabled: false,
+            artifactsEnabled: false,
           },
         })
       )
@@ -266,6 +278,45 @@ const ModelConfigurationPanel: React.FC = () => {
                   />
                 </div>
               )}
+
+              {/* Artifacts Toggle */}
+              <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                <div className='flex flex-col gap-1'>
+                  <div className='flex items-center gap-2'>
+                    <h4
+                      className={
+                        artifactsEnabled
+                          ? 'bg-gradient-to-r from-[#f7931e] via-[#8b5cf6] to-[#00c2ff] bg-clip-text font-medium text-transparent'
+                          : 'font-medium dark:text-white'
+                      }
+                    >
+                      Artifacts
+                    </h4>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                      </TooltipTrigger>
+                      <TooltipContent className='max-w-xs'>
+                        <div className='space-y-2'>
+                          <p className='font-semibold'>
+                            {TOOLTIP_CONTENT.modelConfig.artifacts.title}
+                          </p>
+                          <p className='text-sm'>
+                            {TOOLTIP_CONTENT.modelConfig.artifacts.description}
+                          </p>
+                          <p className='text-xs text-muted-foreground'>
+                            💡 {TOOLTIP_CONTENT.modelConfig.artifacts.tip}
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
+                <Switch
+                  checked={artifactsEnabled}
+                  onCheckedChange={handleArtifactsToggle}
+                />
+              </div>
             </div>
 
             <div className='space-y-4'>
@@ -310,12 +361,6 @@ const ModelConfigurationPanel: React.FC = () => {
                 <span>Balanced</span>
                 <span>Creative</span>
               </div>
-
-              <div
-                className={`mt-2 text-sm ${getTemperatureColor(temperature)}`}
-              >
-                {getTemperatureDescription(temperature)}
-              </div>
             </div>
 
             <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
@@ -354,10 +399,6 @@ const ModelConfigurationPanel: React.FC = () => {
                 onValueChange={handleMaxTokensChange}
                 className='my-4 cursor-pointer'
               />
-
-              <div className={`mt-2 text-sm ${getMaxTokensColor(maxTokens)}`}>
-                {getMaxTokensDescription(maxTokens)}
-              </div>
             </div>
 
             <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
@@ -401,12 +442,6 @@ const ModelConfigurationPanel: React.FC = () => {
                 <span>Minimal</span>
                 <span>Standard</span>
                 <span>Max</span>
-              </div>
-
-              <div
-                className={`mt-2 text-sm ${getHistoryLimitColor(historyLimit)}`}
-              >
-                {getHistoryLimitDescription(historyLimit)}
               </div>
             </div>
 

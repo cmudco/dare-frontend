@@ -24,6 +24,9 @@ import EmptyConversation from './EmptyConversation'
 import CreditErrorAlert from './CreditErrorAlert'
 import ImageDropOverlay from './ImageDropOverlay'
 import { useImageDragAndDrop } from '../../hooks/useImageDragAndDrop'
+import { ArtifactSidecar, ArtifactBanner } from '../Artifacts'
+import { features } from '@/config/environment'
+import { cn } from '@/lib/utils'
 
 const shouldShowAutoFeedback = (
   conversation: Conversation | null,
@@ -101,6 +104,11 @@ const ActiveConversation: React.FC = () => {
     useState(false)
   const hasCheckedAutoFeedback = useRef(false)
   const prevActiveConversationRef = useRef<typeof activeConversation>(null)
+
+  // Artifact state
+  const sidecarOpen = useSelector(
+    (state: RootState) => state.artifact.sidecarOpen
+  )
 
   // Use custom hook for drag and drop functionality
   const {
@@ -279,34 +287,47 @@ const ActiveConversation: React.FC = () => {
   return (
     <>
       <CreditErrorAlert />
-      <Card
-        className='flex-2 dark:bg-dark-gradient relative flex h-[90vh] w-full min-w-[65vw] flex-col justify-end rounded-none border-none'
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-      >
-        <ImageDropOverlay isVisible={isDragging} />
-        <div className={`flex h-full flex-col justify-between`}>
-          {!activeConversation && <NewConversation />}
-          {activeConversation && conversationHistory.length === 0 && (
-            <EmptyConversation />
+      <div className='flex h-full w-full'>
+        <Card
+          className={cn(
+            'flex-2 dark:bg-dark-gradient relative flex h-[90vh] flex-col justify-end rounded-none border-none transition-all duration-300',
+            sidecarOpen && features.enableArtifacts
+              ? 'w-[calc(100%-600px)] min-w-[45vw]'
+              : 'w-full min-w-[65vw]'
           )}
-          {activeConversation && conversationHistory.length > 0 && (
-            <MessageList
-              onEditMessage={handleEditMessage}
-              shouldShowAutoFeedbackModal={shouldShowAutoFeedbackModal}
-            />
-          )}
-          <div className='flex flex-col items-center justify-center'>
-            <ConversationPill
-              editMessageId={editMessageId}
-              onCancelEdit={handleCancelEdit}
-              disabled={!activeConversation}
-            />
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          <ImageDropOverlay isVisible={isDragging} />
+          <div className={`flex h-full flex-col justify-between`}>
+            {!activeConversation && <NewConversation />}
+            {activeConversation && conversationHistory.length === 0 && (
+              <EmptyConversation />
+            )}
+            {activeConversation && conversationHistory.length > 0 && (
+              <>
+                {/* Artifact Banner for paused/generating artifacts */}
+                {features.enableArtifacts && <ArtifactBanner />}
+                <MessageList
+                  onEditMessage={handleEditMessage}
+                  shouldShowAutoFeedbackModal={shouldShowAutoFeedbackModal}
+                />
+              </>
+            )}
+            <div className='flex flex-col items-center justify-center'>
+              <ConversationPill
+                editMessageId={editMessageId}
+                onCancelEdit={handleCancelEdit}
+                disabled={!activeConversation}
+              />
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+        {/* Artifact Sidecar Panel */}
+        {features.enableArtifacts && <ArtifactSidecar />}
+      </div>
     </>
   )
 }

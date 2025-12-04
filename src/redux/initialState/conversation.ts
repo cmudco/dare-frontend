@@ -30,6 +30,7 @@ export const initialState: ConversationState = {
   attachedImages: [],
   webSearchEnabled: false,
   imageGenerationEnabled: false,
+  artifactsEnabled: false,
   isGeneratingImage: false,
   imageGenerationPrompt: null,
   imageGenerationSettings: DEFAULT_IMAGE_SETTINGS,

@@ -36,6 +36,8 @@ import { regenerateResponse } from '@/redux/asyncThunks/websocket'
 import FeedbackModal from './FeedbackModal'
 import MessageMetadata from './MessageMetadata'
 import { DeleteConfirmation } from '../DeleteConfirmation'
+import { ArtifactCard } from '../Artifacts'
+import { features } from '@/config/environment'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -508,6 +510,11 @@ const Message: React.FC<MessageProps> = ({
 
                 return null
               })()}
+
+              {/* Artifact Card - Show when message has associated artifact */}
+              {features.enableArtifacts && message.artifactId && (
+                <ArtifactCard artifactId={message.artifactId} />
+              )}
             </div>
           </div>
         </div>

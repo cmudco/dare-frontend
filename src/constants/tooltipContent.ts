@@ -166,6 +166,12 @@ export const TOOLTIP_CONTENT = {
         'Allows AI to generate images using DALL-E. Automatically switches to GPT-4 when needed.',
       tip: 'Each image generation incurs additional costs. Check pricing in your billing dashboard.',
     },
+    artifacts: {
+      title: 'Artifacts',
+      description:
+        'Enable AI to generate long-form structured content (documents, code, tutorials) in a dedicated panel with pause/resume capability.',
+      tip: 'Best for comprehensive guides, documentation, and multi-section content that benefits from incremental generation.',
+    },
     resetDefaults: {
       title: 'Reset to Defaults',
       description:

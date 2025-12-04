@@ -37,6 +37,8 @@ export interface FeatureFlags {
   enableBYOK: boolean
   // Image Generation in chat configuration panel
   enableImageGeneration: boolean
+  // Artifacts - long-form document generation with sidecar panel
+  enableArtifacts: boolean
 }
 
 /**
@@ -68,30 +70,35 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
       return {
         enableBYOK: true,
         enableImageGeneration: true,
+        enableArtifacts: true,
       }
 
     case 'dare-staging':
       return {
         enableBYOK: true, // DARE Staging: HAS BYOK
         enableImageGeneration: true, // DARE Staging: HAS Image Generation
+        enableArtifacts: true, // DARE Staging: HAS Artifacts
       }
 
     case 'dare-production':
       return {
         enableBYOK: false, // DARE Production: NO BYOK
         enableImageGeneration: false, // DARE Production: NO Image Generation
+        enableArtifacts: false, // DARE Production: NO Artifacts (beta)
       }
 
     case 'gt-production':
       return {
         enableBYOK: true, // Georgia Tech: HAS BYOK
         enableImageGeneration: true, // Georgia Tech: HAS Image Generation
+        enableArtifacts: true, // Georgia Tech: HAS Artifacts
       }
 
     default:
       return {
         enableBYOK: true,
         enableImageGeneration: true,
+        enableArtifacts: true,
       }
   }
 }
