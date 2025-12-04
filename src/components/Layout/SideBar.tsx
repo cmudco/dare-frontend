@@ -116,9 +116,9 @@ const Sidebar = () => {
       </svg>
 
       <div
-        className={`relative flex ${
-          isCollapsed ? 'w-[80px]' : 'w-[160px] md:w-[200px] lg:w-[18vw]'
-        } shadow-blue-gray-900/5 h-[auto] min-h-[90vh] flex-col border border-t-0 border-pink-50 bg-white bg-clip-border text-gray-700 transition-all duration-300 dark:border-slate-800 dark:bg-dark-bg dark:text-white`}
+        className={`relative flex shrink-0 ${
+          isCollapsed ? 'w-[80px]' : 'w-[160px] md:w-[200px] lg:w-[200px]'
+        } shadow-blue-gray-900/5 h-full flex-col border border-t-0 border-pink-50 bg-white bg-clip-border text-gray-700 transition-all duration-300 dark:border-slate-800 dark:bg-dark-bg dark:text-white`}
       >
         <div className='flex items-center justify-between p-4'>
           <button

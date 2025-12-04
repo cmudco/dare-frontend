@@ -26,7 +26,6 @@ import ImageDropOverlay from './ImageDropOverlay'
 import { useImageDragAndDrop } from '../../hooks/useImageDragAndDrop'
 import { ArtifactSidecar, ArtifactBanner } from '../Artifacts'
 import { features } from '@/config/environment'
-import { cn } from '@/lib/utils'
 
 const shouldShowAutoFeedback = (
   conversation: Conversation | null,
@@ -104,11 +103,6 @@ const ActiveConversation: React.FC = () => {
     useState(false)
   const hasCheckedAutoFeedback = useRef(false)
   const prevActiveConversationRef = useRef<typeof activeConversation>(null)
-
-  // Artifact state
-  const sidecarOpen = useSelector(
-    (state: RootState) => state.artifact.sidecarOpen
-  )
 
   // Use custom hook for drag and drop functionality
   const {
@@ -287,21 +281,16 @@ const ActiveConversation: React.FC = () => {
   return (
     <>
       <CreditErrorAlert />
-      <div className='flex h-full w-full'>
+      <div className='flex h-full min-h-0 min-w-0 flex-1'>
         <Card
-          className={cn(
-            'flex-2 dark:bg-dark-gradient relative flex h-[90vh] flex-col justify-end rounded-none border-none transition-all duration-300',
-            sidecarOpen && features.enableArtifacts
-              ? 'w-[calc(100%-600px)] min-w-[45vw]'
-              : 'w-full min-w-[65vw]'
-          )}
+          className='dark:bg-dark-gradient relative flex min-h-0 min-w-0 flex-1 flex-col justify-end rounded-none border-none'
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
           <ImageDropOverlay isVisible={isDragging} />
-          <div className={`flex h-full flex-col justify-between`}>
+          <div className='flex min-h-0 flex-1 flex-col justify-between'>
             {!activeConversation && <NewConversation />}
             {activeConversation && conversationHistory.length === 0 && (
               <EmptyConversation />
