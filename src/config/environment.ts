@@ -79,7 +79,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
     case 'dare-production':
       return {
         enableBYOK: false, // DARE Production: NO BYOK
-        enableImageGeneration: false, // DARE Production: NO Image Generation
+        enableImageGeneration: true, // DARE Production: has Image Generation
       }
 
     case 'gt-production':
