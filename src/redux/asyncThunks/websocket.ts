@@ -8,6 +8,7 @@ import {
 } from '../conversationSlice'
 import {
   initArtifact,
+  initModifyArtifact,
   appendContent,
   updateProgress,
   setCurrentSection,
@@ -131,6 +132,32 @@ export const connectWebSocket = createAsyncThunk<
           dispatch(openSidecar())
           break
 
+        case 'artifact_modify_init':
+          dispatch(
+            initModifyArtifact({
+              id: data.artifactId,
+              title: data.title,
+              outline: data.outline,
+              estimatedSections: data.estimatedSections,
+              newVersion: data.newVersion,
+            })
+          )
+          // Link artifact to the message and update title if messageId is provided
+          if (data.messageId) {
+            dispatch(
+              updateMessage({
+                id: data.messageId,
+                artifactId: data.artifactId,
+                message: `Updating artifact: ${data.title} (v${data.newVersion})`,
+                streaming: true, // Keep streaming true until complete
+              })
+            )
+          }
+          // Open the sidecar to show artifact modification
+          dispatch(setActiveArtifact(data.artifactId))
+          dispatch(openSidecar())
+          break
+
         case 'artifact_stream':
           dispatch(
             appendContent({
@@ -215,7 +242,7 @@ export const sendWebSocketMessage = createAsyncThunk<
   }
 
   const state = getState()
-  const { conversation } = state
+  const { conversation, artifact } = state
   const {
     activeConversation,
     selectedFiles,
@@ -232,6 +259,18 @@ export const sendWebSocketMessage = createAsyncThunk<
     imageGenerationSettings,
     artifactsEnabled,
   } = conversation
+
+  // Get active artifact info for potential modification
+  const { activeArtifactId, artifacts, sidecarOpen } = artifact
+  const activeArtifact = activeArtifactId ? artifacts[activeArtifactId] : null
+  // Send artifact context if sidecar is open with a completed or paused artifact
+  // (paused artifacts can also be modified - e.g., "make it shorter")
+  const shouldSendArtifactContext =
+    artifactsEnabled &&
+    sidecarOpen &&
+    activeArtifact &&
+    (activeArtifact.status === 'completed' ||
+      activeArtifact.status === 'paused')
 
   const payload = {
     message: message.message,
@@ -266,6 +305,12 @@ export const sendWebSocketMessage = createAsyncThunk<
       type,
     })),
     artifacts_enabled: artifactsEnabled,
+    // Artifact modification context - auto-detection mode
+    // Backend will use heuristics to determine if user wants to modify
+    artifact_action: shouldSendArtifactContext ? 'auto' : undefined,
+    active_artifact_id: shouldSendArtifactContext
+      ? activeArtifactId
+      : undefined,
   }
 
   socket.send(JSON.stringify(payload))

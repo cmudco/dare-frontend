@@ -27,6 +27,8 @@ export interface Artifact {
   wordCount?: number
   language?: string // For code artifacts
   error?: string
+  version: number // Version number, increments on modification
+  isModification?: boolean // True if this is a modification of existing artifact
   createdAt?: string
   updatedAt?: string
 }
@@ -47,6 +49,15 @@ export interface ArtifactInitMessage {
   title: string
   outline: string
   estimatedSections: number
+}
+
+export interface ArtifactModifyInitMessage {
+  type: 'artifact_modify_init'
+  artifactId: string
+  title: string
+  outline: string // Updated outline with new sections
+  estimatedSections: number // Number of NEW sections to add
+  newVersion: number // The new version number after modification
 }
 
 export interface ArtifactStreamMessage {
@@ -79,6 +90,7 @@ export interface ArtifactErrorMessage {
 
 export type ArtifactWebSocketMessage =
   | ArtifactInitMessage
+  | ArtifactModifyInitMessage
   | ArtifactStreamMessage
   | ArtifactPauseMessage
   | ArtifactCompleteMessage

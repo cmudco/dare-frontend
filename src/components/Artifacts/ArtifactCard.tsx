@@ -61,6 +61,7 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifactId }) => {
             progress: response.progress || 1,
             wordCount: response.wordCount,
             language: response.language,
+            version: response.version || 1,
           },
         ])
       )
