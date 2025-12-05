@@ -112,6 +112,11 @@ const ArtifactSidecar: React.FC = () => {
               <h2 className='text-base font-semibold text-gray-900 dark:text-white'>
                 {activeArtifact.title || 'Untitled Artifact'}
               </h2>
+              {activeArtifact.version > 1 && (
+                <span className='rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400'>
+                  v{activeArtifact.version}
+                </span>
+              )}
               {getStatusBadge()}
             </div>
             {activeArtifact.language && (

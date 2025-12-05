@@ -28,9 +28,44 @@ export const artifactSlice = createSlice({
         estimatedSections,
         currentSection: 0,
         progress: 0,
+        version: 1,
+        isModification: false,
       }
       state.activeArtifactId = id
       state.sidecarOpen = true
+    },
+
+    // Initialize modification of an existing artifact
+    initModifyArtifact(
+      state,
+      action: PayloadAction<{
+        id: string
+        title: string
+        outline: string
+        estimatedSections: number // Number of NEW sections to add
+        newVersion: number
+      }>
+    ) {
+      const { id, title, outline, estimatedSections, newVersion } =
+        action.payload
+      const existingArtifact = state.artifacts[id]
+      if (existingArtifact) {
+        // Update existing artifact for modification
+        state.artifacts[id] = {
+          ...existingArtifact,
+          title,
+          outline,
+          status: 'generating',
+          // Keep existing sections, add new sections to total
+          estimatedSections:
+            existingArtifact.currentSection + estimatedSections,
+          progress: 0,
+          version: newVersion,
+          isModification: true,
+        }
+        state.activeArtifactId = id
+        state.sidecarOpen = true
+      }
     },
 
     // Append content chunk to artifact
@@ -223,6 +258,7 @@ export const artifactSlice = createSlice({
 
 export const {
   initArtifact,
+  initModifyArtifact,
   appendContent,
   updateProgress,
   setCurrentSection,
