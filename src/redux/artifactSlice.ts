@@ -36,36 +36,57 @@ export const artifactSlice = createSlice({
     },
 
     // Initialize modification of an existing artifact
+    // Creates a NEW artifact entry with complete data from the event
+    // No longer depends on parent artifact being in Redux state
     initModifyArtifact(
       state,
       action: PayloadAction<{
-        id: string
+        id: string // NEW artifact ID
+        parentArtifactId: string // Original artifact ID
+        artifactGroupId: string
         title: string
-        outline: string
-        estimatedSections: number // Number of NEW sections to add
+        outline: string // New sections only
+        fullOutline: string // Complete outline
+        totalEstimatedSections: number // Total sections
+        currentSection: number // Inherited from parent
+        existingContent: string // Content from parent
         newVersion: number
       }>
     ) {
-      const { id, title, outline, estimatedSections, newVersion } =
-        action.payload
-      const existingArtifact = state.artifacts[id]
-      if (existingArtifact) {
-        // Update existing artifact for modification
-        state.artifacts[id] = {
-          ...existingArtifact,
-          title,
-          outline,
-          status: 'generating',
-          // Keep existing sections, add new sections to total
-          estimatedSections:
-            existingArtifact.currentSection + estimatedSections,
-          progress: 0,
-          version: newVersion,
-          isModification: true,
-        }
-        state.activeArtifactId = id
-        state.sidecarOpen = true
+      const {
+        id,
+        parentArtifactId,
+        artifactGroupId,
+        title,
+        fullOutline,
+        totalEstimatedSections,
+        currentSection,
+        existingContent,
+        newVersion,
+      } = action.payload
+      const parentArtifact = state.artifacts[parentArtifactId]
+
+      // Create NEW artifact entry with COMPLETE data from event
+      state.artifacts[id] = {
+        id,
+        title,
+        outline: fullOutline, // Use complete outline from event
+        content: existingContent, // Use content from event, not parent state
+        artifactType: parentArtifact?.artifactType || 'document',
+        status: 'generating',
+        estimatedSections: totalEstimatedSections, // Use total from event
+        currentSection: currentSection, // Use value from event
+        progress: 0,
+        version: newVersion,
+        isModification: true,
+        parentArtifactId,
+        artifactGroupId,
+        language: parentArtifact?.language,
       }
+
+      // Set the new artifact as active
+      state.activeArtifactId = id
+      state.sidecarOpen = true
     },
 
     // Append content chunk to artifact
