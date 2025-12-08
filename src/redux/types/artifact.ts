@@ -29,6 +29,10 @@ export interface Artifact {
   error?: string
   version: number // Version number, increments on modification
   isModification?: boolean // True if this is a modification of existing artifact
+  // Versioning fields
+  parentArtifactId?: string
+  artifactGroupId?: string
+  versionHistory?: Array<{ id: string; version: number; createdAt: string }>
   createdAt?: string
   updatedAt?: string
 }
@@ -53,10 +57,16 @@ export interface ArtifactInitMessage {
 
 export interface ArtifactModifyInitMessage {
   type: 'artifact_modify_init'
-  artifactId: string
+  artifactId: string // NEW artifact ID
+  parentArtifactId: string // Original artifact ID
+  artifactGroupId: string
   title: string
-  outline: string // Updated outline with new sections
-  estimatedSections: number // Number of NEW sections to add
+  outline: string // New sections outline only
+  fullOutline: string // Complete outline
+  estimatedSections: number // Number of NEW sections to add (legacy)
+  totalEstimatedSections: number // Total sections (parent + new)
+  currentSection: number // Inherited from parent
+  existingContent: string // Content from parent
   newVersion: number // The new version number after modification
 }
 

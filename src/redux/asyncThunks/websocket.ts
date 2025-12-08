@@ -136,9 +136,14 @@ export const connectWebSocket = createAsyncThunk<
           dispatch(
             initModifyArtifact({
               id: data.artifactId,
+              parentArtifactId: data.parentArtifactId,
+              artifactGroupId: data.artifactGroupId,
               title: data.title,
               outline: data.outline,
-              estimatedSections: data.estimatedSections,
+              fullOutline: data.fullOutline,
+              totalEstimatedSections: data.totalEstimatedSections,
+              currentSection: data.currentSection,
+              existingContent: data.existingContent,
               newVersion: data.newVersion,
             })
           )
@@ -148,7 +153,7 @@ export const connectWebSocket = createAsyncThunk<
               updateMessage({
                 id: data.messageId,
                 artifactId: data.artifactId,
-                message: `Updating artifact: ${data.title} (v${data.newVersion})`,
+                message: `Generated artifact v${data.newVersion}: ${data.title}`,
                 streaming: true, // Keep streaming true until complete
               })
             )
