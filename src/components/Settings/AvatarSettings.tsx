@@ -135,7 +135,7 @@ const AvatarSettings: React.FC = () => {
       await dispatch(
         updateUserProfile({
           avatarType: AvatarType.CUSTOM,
-          avatarUrl: result.avatar_url,
+          avatarUrl: result.avatarUrl,
         })
       ).unwrap()
 

@@ -27,7 +27,7 @@ export interface Setup2FAResponse {
 }
 
 export interface UploadProfilePictureResponse {
-  avatar_url: string
-  avatar_type: string
+  avatarUrl: string
+  avatarType: string
   message: string
 }
