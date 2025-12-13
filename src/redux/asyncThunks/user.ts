@@ -14,6 +14,7 @@ import {
   resendVerificationEmail,
   getUserStatsFromAPI,
   changePasswordUser,
+  updateUserData,
 } from '../../api/auth'
 import {
   getChunkSettingsAPI,
@@ -282,3 +283,24 @@ export const updateChunkSettings = createAsyncThunk(
     }
   }
 )
+
+export const updateUserProfile = createAsyncThunk<
+  User,
+  {
+    avatarType?: string
+    avatarPreset?: string | null
+    avatarUrl?: string | null
+    role?: string
+    industry?: string
+    purpose?: string
+    referralSource?: string
+  },
+  { rejectValue: string }
+>('user/updateUserProfile', async (formData, thunkAPI) => {
+  try {
+    const data = await updateUserData(formData)
+    return data
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})

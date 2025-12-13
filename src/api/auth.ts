@@ -131,8 +131,8 @@ export const uploadProfilePicture = async (
   formData: FormData
 ): Promise<UploadProfilePictureResponse> => {
   return await baseRequest<UploadProfilePictureResponse>({
-    url: 'users/api/update-profile-picture/',
-    method: METHOD.PUT,
+    url: 'users/api/avatar/upload/',
+    method: METHOD.POST,
     data: formData,
     headers: {
       'Content-Type': 'multipart/form-data',
@@ -148,6 +148,22 @@ export const changePasswordUser = async (data: {
   return await baseRequest<{ detail: string }>({
     url: 'users/api/dj-rest-auth/password/change/',
     method: METHOD.POST,
+    data,
+  })
+}
+
+export const updateUserData = async (data: {
+  avatarType?: string
+  avatarPreset?: string | null
+  avatarUrl?: string | null
+  role?: string
+  industry?: string
+  purpose?: string
+  referralSource?: string
+}): Promise<User> => {
+  return await baseRequest<User>({
+    url: 'users/api/dj-rest-auth/user/',
+    method: METHOD.PATCH,
     data,
   })
 }

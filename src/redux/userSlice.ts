@@ -11,13 +11,13 @@ import {
   getUserData,
   userLogout,
   verifyEmailRegistration,
-  updateProfilePicture,
   getUserStats,
   changePassword,
   updateVectorDBSetting,
   fetchVectorDBSetting,
   fetchChunkSettings,
   updateChunkSettings,
+  updateUserProfile,
 } from './asyncThunks/user'
 
 const userSlice = createSlice({
@@ -194,22 +194,7 @@ const userSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
-      .addCase(updateProfilePicture.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(updateProfilePicture.fulfilled, (state, action) => {
-        state.loading = false
-        state.user = {
-          ...state.user!,
-          profile_picture: action.payload.profile_picture,
-        }
-        state.error = null
-      })
-      .addCase(updateProfilePicture.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload as string
-      })
+
       .addCase(changePassword.pending, (state) => {
         state.loading = true
         state.error = null
@@ -282,6 +267,20 @@ const userSlice = createSlice({
         state.successMessage = 'Chunk settings updated successfully'
       })
       .addCase(updateChunkSettings.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      // Update user profile (avatar, profile fields)
+      .addCase(updateUserProfile.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        state.loading = false
+        state.user = action.payload
+        state.error = null
+      })
+      .addCase(updateUserProfile.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })
