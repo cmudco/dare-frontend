@@ -8,6 +8,7 @@ import { getWallet } from '../../redux/asyncThunks/billing'
 import { Sun, Moon } from 'lucide-react'
 import { toggleDarkMode } from '../../redux/themeSlice'
 import NotificationPopover from './NotificationPopover'
+import { Avatar } from './Avatar'
 
 import {
   DropdownMenu,
@@ -73,11 +74,7 @@ const Header: React.FC = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='ghost' className='flex items-center gap-x-2 p-0'>
-              <img
-                src={`/avatar-image.svg`}
-                alt='User'
-                className='h-8 w-8 rounded-full'
-              />
+              <Avatar user={user} size='sm' />
               <div className='flex flex-col items-start normal-case'>
                 <span className='text-sm font-medium text-foreground'>
                   {user?.name || 'John Doe'}

@@ -13,3 +13,9 @@ export const getVectorDBName = (value: number): string => {
       return 'Unknown'
   }
 }
+
+export enum AvatarType {
+  INITIALS = 'initials',
+  PRESET = 'preset',
+  CUSTOM = 'custom',
+}
