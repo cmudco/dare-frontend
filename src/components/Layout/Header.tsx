@@ -74,7 +74,7 @@ const Header: React.FC = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='ghost' className='flex items-center gap-x-2 p-0'>
-              <Avatar user={user} size='sm' />
+              <Avatar user={user} size='md' />
               <div className='flex flex-col items-start normal-case'>
                 <span className='text-sm font-medium text-foreground'>
                   {user?.name || 'John Doe'}
