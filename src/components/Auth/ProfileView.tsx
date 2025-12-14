@@ -1,6 +1,6 @@
 import React from 'react'
 import { ChangePasswordForm } from './ChangePasswordForm'
-// import { VectorDBConfigForm } from './VectorDBConfigForm'
+import AvatarSettings from '@/components/Settings/AvatarSettings'
 
 const ProfileView: React.FC = () => {
   return (
@@ -11,8 +11,9 @@ const ProfileView: React.FC = () => {
           View and manage your account settings
         </p>
       </div>
+
+      <AvatarSettings />
       <ChangePasswordForm />
-      {/* <VectorDBConfigForm /> */}
     </div>
   )
 }

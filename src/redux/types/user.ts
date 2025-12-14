@@ -1,4 +1,4 @@
-import { VectorDbSource } from '@/utils/constants/user'
+import { VectorDbSource, AvatarType } from '@/utils/constants/user'
 import { Prompt } from './prompt'
 
 export interface UserStats {
@@ -42,6 +42,10 @@ export interface User {
   }
   billingMode?: string
   billingModeDisplay?: string
+  // Avatar settings
+  avatarType?: AvatarType
+  avatarPreset?: string
+  avatarUrl?: string
 }
 
 export interface ChunkSettings {
