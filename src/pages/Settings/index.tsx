@@ -1,6 +1,7 @@
 import { ChangePasswordForm } from '@/components/Auth/ChangePasswordForm'
 import ConversationSettingsForm from '@/components/Auth/ConversationSettingsForm'
 import ApiKeysManagement from '@/components/Settings/ApiKeysManagement'
+import AvatarSettings from '@/components/Settings/AvatarSettings'
 import { features } from '@/config/environment'
 
 const Settings = () => {
@@ -12,6 +13,7 @@ const Settings = () => {
           Manage your settings and preferences.
         </p>
       </div>
+      <AvatarSettings />
       {/* Only show BYOK (Bring Your Own Key) in Georgia Tech and Development */}
       {features.enableBYOK && <ApiKeysManagement />}
       <ConversationSettingsForm />
