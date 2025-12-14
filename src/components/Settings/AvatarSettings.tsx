@@ -13,19 +13,18 @@ import { AvatarType } from '@/utils/constants/user'
 import { cn } from '@/lib/utils'
 
 // Available preset avatars - these should match files in /public/avatars/
+// Balanced set: Alternating Male/Female (m1 f1 m2 f2...)
 const PRESET_AVATARS = [
-  { id: 'avatar-1', label: 'Professional' },
-  { id: 'avatar-2', label: 'Glasses' },
-  { id: 'avatar-3', label: 'Wavy Hair' },
-  { id: 'avatar-4', label: 'Beard' },
-  { id: 'avatar-5', label: 'Curly' },
-  { id: 'avatar-6', label: 'Hoodie' },
-  { id: 'avatar-7', label: 'Friendly' },
-  { id: 'avatar-8', label: 'Headphones' },
-  { id: 'avatar-9', label: 'Bob Cut' },
-  { id: 'avatar-10', label: 'Mohawk' },
-  { id: 'avatar-11', label: 'Braids' },
-  { id: 'avatar-12', label: 'Cap' },
+  { id: 'm1', label: 'Classic' },
+  { id: 'f1', label: 'Professional' },
+  { id: 'm2', label: 'Glasses' },
+  { id: 'f2', label: 'Elegant' },
+  { id: 'm3', label: 'Casual' },
+  { id: 'f3', label: 'Creative' },
+  { id: 'm4', label: 'Modern' },
+  { id: 'f4', label: 'Friendly' },
+  { id: 'm5', label: 'Confident' },
+  { id: 'f5', label: 'Stylish' },
 ]
 
 const AvatarSettings: React.FC = () => {
