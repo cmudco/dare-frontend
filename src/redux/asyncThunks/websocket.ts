@@ -225,10 +225,25 @@ export const connectWebSocket = createAsyncThunk<
           break
 
         case 'artifact_complete':
+          // Set status to completed
           dispatch(
             setStatus({
               artifactId: data.artifactId,
               status: 'completed',
+            })
+          )
+          // Set currentSection to final value so all section tabs are clickable
+          dispatch(
+            setCurrentSection({
+              artifactId: data.artifactId,
+              section: data.estimatedSections || 0,
+            })
+          )
+          // Set progress to 100%
+          dispatch(
+            updateProgress({
+              artifactId: data.artifactId,
+              progress: 1.0,
             })
           )
           dispatch(
