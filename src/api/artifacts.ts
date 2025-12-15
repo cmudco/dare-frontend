@@ -84,3 +84,18 @@ export const updateArtifactStatusAPI = async (
     data: { status },
   })
 }
+
+/**
+ * Update artifact content via REST API (manual edit)
+ * Creates a new version with the updated content to preserve history
+ */
+export const updateArtifactContentAPI = async (
+  artifactId: number | string,
+  content: string
+): Promise<ArtifactDetailResponse> => {
+  return await baseRequest<ArtifactDetailResponse>({
+    url: `api/artifacts/${artifactId}/content/`,
+    method: METHOD.PATCH,
+    data: { content },
+  })
+}
