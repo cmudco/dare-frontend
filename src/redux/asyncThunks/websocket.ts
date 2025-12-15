@@ -16,6 +16,7 @@ import {
   setSectionsRemaining,
   setWordCount,
   setArtifactError,
+  loadArtifact,
   loadArtifacts,
   setActiveArtifact,
   openSidecar,
@@ -262,6 +263,49 @@ export const connectWebSocket = createAsyncThunk<
               error: data.errorMessage,
             })
           )
+          break
+
+        // Section rewrite events
+        case 'artifact_rewrite_init':
+          // Rewrite started - set generating status
+          dispatch(
+            setStatus({
+              artifactId: data.artifactId,
+              status: 'generating',
+            })
+          )
+          // Open sidecar to show progress
+          dispatch(setActiveArtifact(data.artifactId))
+          dispatch(openSidecar())
+          break
+
+        case 'artifact_rewrite_stream':
+          // We don't update content during rewrite streaming
+          // The full content comes with artifact_rewrite_complete
+          break
+
+        case 'artifact_rewrite_complete':
+          // Load the new artifact version with rewritten content
+          dispatch(
+            loadArtifact({
+              id: data.artifactId,
+              title: data.title || 'Rewritten Artifact',
+              outline: data.outline || '',
+              content: data.content,
+              artifactType: data.artifactType || 'document',
+              status: 'completed',
+              estimatedSections: data.estimatedSections || 0,
+              currentSection: data.currentSection || 0,
+              progress: 1.0,
+              version: data.version,
+              parentArtifactId: data.parentArtifactId,
+              artifactGroupId: data.artifactGroupId,
+            })
+          )
+          // Switch to the new version
+          dispatch(setActiveArtifact(data.artifactId))
+          dispatch(openSidecar())
+          dispatch(getWallet())
           break
 
         default:
