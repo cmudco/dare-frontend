@@ -12,7 +12,7 @@ import { FileText, Play, Trash2, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ArtifactBannerProps {
-  artifactId?: string // Optional: show specific artifact, otherwise show active paused artifact
+  artifactId?: number // Optional: show specific artifact, otherwise show active paused artifact
 }
 
 const ArtifactBanner: React.FC<ArtifactBannerProps> = ({ artifactId }) => {
@@ -21,9 +21,10 @@ const ArtifactBanner: React.FC<ArtifactBannerProps> = ({ artifactId }) => {
     (state: RootState) => state.artifact
   )
 
-  // Find artifact to display
-  const targetArtifactId = artifactId || activeArtifactId
-  const artifact = targetArtifactId ? artifacts[targetArtifactId] : null
+  // Find artifact to display - use String for Redux lookup
+  const targetArtifactId = artifactId ?? activeArtifactId
+  const artifact =
+    targetArtifactId != null ? artifacts[String(targetArtifactId)] : null
 
   // Only show banner for paused artifacts (or generating if sidecar is closed)
   const shouldShow =
@@ -36,14 +37,14 @@ const ArtifactBanner: React.FC<ArtifactBannerProps> = ({ artifactId }) => {
   }
 
   const handleContinue = () => {
-    if (targetArtifactId) {
+    if (targetArtifactId != null) {
       dispatch(continueArtifact({ artifactId: targetArtifactId }))
       dispatch(openSidecar())
     }
   }
 
   const handleOpen = () => {
-    if (targetArtifactId) {
+    if (targetArtifactId != null) {
       dispatch(setActiveArtifact(targetArtifactId))
       dispatch(openSidecar())
     }
@@ -51,7 +52,7 @@ const ArtifactBanner: React.FC<ArtifactBannerProps> = ({ artifactId }) => {
 
   const handleDiscard = () => {
     if (
-      targetArtifactId &&
+      targetArtifactId != null &&
       window.confirm('Are you sure you want to discard this artifact?')
     ) {
       dispatch(clearArtifact(targetArtifactId))

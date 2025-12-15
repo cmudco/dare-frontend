@@ -57,7 +57,7 @@ export interface Message {
   // Image generation fields
   generatedImage?: GeneratedImage
   // Artifact reference (when message has associated artifact)
-  artifactId?: string
+  artifactId?: number
 }
 
 export interface GeneratedImage {

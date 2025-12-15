@@ -1,22 +1,29 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState, AppDispatch } from '@/redux/store'
 import { closeSidecar } from '@/redux/artifactSlice'
 import { continueArtifact } from '@/redux/asyncThunks/websocket'
 import { pauseArtifact } from '@/redux/asyncThunks/artifact'
 import ArtifactProgress from './ArtifactProgress'
-import ArtifactContent from './ArtifactContent'
+import ArtifactContent, { ArtifactContentRef } from './ArtifactContent'
 import ArtifactActions from './ArtifactActions'
+import ArtifactHistoryDropdown from './ArtifactHistoryDropdown'
 import { X, FileText, Code, GitBranch, Minimize2 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { cn } from '@/lib/utils'
 
 const ArtifactSidecar: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
+  const contentRef = useRef<ArtifactContentRef>(null)
   const { artifacts, activeArtifactId, sidecarOpen, pausingArtifactId } =
     useSelector((state: RootState) => state.artifact)
 
   const activeArtifact = activeArtifactId ? artifacts[activeArtifactId] : null
+
+  // Handle section navigation click from progress indicators
+  const handleSectionClick = (sectionIndex: number) => {
+    contentRef.current?.scrollToSection(sectionIndex)
+  }
 
   const handleClose = () => {
     dispatch(closeSidecar())
@@ -109,14 +116,7 @@ const ArtifactSidecar: React.FC = () => {
           </div>
           <div className='flex flex-col'>
             <div className='flex items-center gap-2'>
-              <h2 className='text-base font-semibold text-gray-900 dark:text-white'>
-                {activeArtifact.title || 'Untitled Artifact'}
-              </h2>
-              {activeArtifact.version > 1 && (
-                <span className='rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400'>
-                  v{activeArtifact.version}
-                </span>
-              )}
+              <ArtifactHistoryDropdown currentArtifact={activeArtifact} />
               {getStatusBadge()}
             </div>
             {activeArtifact.language && (
@@ -154,11 +154,14 @@ const ArtifactSidecar: React.FC = () => {
         currentSection={activeArtifact.currentSection}
         totalSections={activeArtifact.estimatedSections}
         status={activeArtifact.status}
+        outline={activeArtifact.outline}
+        onSectionClick={handleSectionClick}
       />
 
       {/* Content Area */}
       <div className='flex-1 overflow-y-auto'>
         <ArtifactContent
+          ref={contentRef}
           content={activeArtifact.content}
           outline={activeArtifact.outline}
           artifactType={activeArtifact.artifactType}
