@@ -1,12 +1,15 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import type { ArtifactStatus } from '@/redux/types/artifact'
+import { parseOutlineToSections } from './utils/sectionParser'
 
 interface ArtifactProgressProps {
   progress: number // 0.0 - 1.0
   currentSection: number
   totalSections: number
   status: ArtifactStatus
+  outline?: string // Outline for section titles
+  onSectionClick?: (sectionIndex: number) => void
 }
 
 const ArtifactProgress: React.FC<ArtifactProgressProps> = ({
@@ -14,8 +17,22 @@ const ArtifactProgress: React.FC<ArtifactProgressProps> = ({
   currentSection,
   totalSections,
   status,
+  outline,
+  onSectionClick,
 }) => {
   const percentage = Math.round(progress * 100)
+
+  // Parse outline to get section titles
+  const sectionTitles = useMemo(() => {
+    if (outline) {
+      return parseOutlineToSections(outline)
+    }
+    return []
+  }, [outline])
+
+  // Use outline sections count if available, otherwise fall back to totalSections
+  const sectionCount =
+    sectionTitles.length > 0 ? sectionTitles.length : totalSections
 
   const getProgressBarColor = () => {
     switch (status) {
@@ -35,9 +52,9 @@ const ArtifactProgress: React.FC<ArtifactProgressProps> = ({
       case 'planning':
         return 'Creating outline...'
       case 'generating':
-        return `Section ${currentSection} of ${totalSections}`
+        return `Section ${currentSection} of ${sectionCount}`
       case 'paused':
-        return `Paused at section ${currentSection} of ${totalSections}`
+        return `Paused at section ${currentSection} of ${sectionCount}`
       case 'completed':
         return 'Complete'
       case 'error':
@@ -45,6 +62,20 @@ const ArtifactProgress: React.FC<ArtifactProgressProps> = ({
       default:
         return ''
     }
+  }
+
+  const handleSectionClick = (index: number) => {
+    // Only allow clicking on completed sections
+    if (onSectionClick && index < currentSection) {
+      onSectionClick(index)
+    }
+  }
+
+  const getSectionTitle = (index: number) => {
+    if (sectionTitles[index]) {
+      return sectionTitles[index]
+    }
+    return `Section ${index + 1}`
   }
 
   return (
@@ -66,22 +97,44 @@ const ArtifactProgress: React.FC<ArtifactProgressProps> = ({
         />
       </div>
       {/* Section indicators */}
-      {totalSections > 1 && (
+      {sectionCount > 1 && (
         <div className='mt-2 flex gap-1'>
-          {Array.from({ length: totalSections }).map((_, index) => (
-            <div
-              key={index}
-              className={cn(
-                'h-1.5 flex-1 rounded-full transition-colors',
-                index < currentSection
-                  ? 'bg-emerald-500'
-                  : index === currentSection && status === 'generating'
-                    ? 'animate-pulse bg-blue-500'
-                    : 'bg-gray-300 dark:bg-gray-600'
-              )}
-              title={`Section ${index + 1}`}
-            />
-          ))}
+          {Array.from({ length: sectionCount }).map((_, index) => {
+            const isCompleted = index < currentSection
+            const isCurrent =
+              index === currentSection && status === 'generating'
+            const isClickable = isCompleted && onSectionClick
+
+            return (
+              <button
+                key={index}
+                type='button'
+                onClick={() => handleSectionClick(index)}
+                disabled={!isClickable}
+                className={cn(
+                  'h-1.5 flex-1 rounded-full transition-all',
+                  isCompleted
+                    ? 'bg-emerald-500'
+                    : isCurrent
+                      ? 'animate-pulse bg-blue-500'
+                      : 'bg-gray-300 dark:bg-gray-600',
+                  // Interactive states for clickable sections
+                  isClickable && [
+                    'cursor-pointer',
+                    'hover:bg-emerald-400 hover:ring-2 hover:ring-emerald-300 hover:ring-offset-1',
+                    'dark:hover:ring-emerald-600 dark:hover:ring-offset-gray-800',
+                  ],
+                  !isClickable && 'cursor-default'
+                )}
+                title={
+                  isClickable
+                    ? `Go to: ${getSectionTitle(index)}`
+                    : getSectionTitle(index)
+                }
+                aria-label={`${getSectionTitle(index)}${isCompleted ? ' (completed)' : isCurrent ? ' (in progress)' : ''}`}
+              />
+            )
+          })}
         </div>
       )}
     </div>

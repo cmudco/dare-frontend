@@ -11,14 +11,15 @@ export const artifactSlice = createSlice({
     initArtifact(
       state,
       action: PayloadAction<{
-        id: string
+        id: number
         title: string
         outline: string
         estimatedSections: number
       }>
     ) {
       const { id, title, outline, estimatedSections } = action.payload
-      state.artifacts[id] = {
+      const key = String(id)
+      state.artifacts[key] = {
         id,
         title,
         outline,
@@ -41,9 +42,9 @@ export const artifactSlice = createSlice({
     initModifyArtifact(
       state,
       action: PayloadAction<{
-        id: string // NEW artifact ID
-        parentArtifactId: string // Original artifact ID
-        artifactGroupId: string
+        id: number // NEW artifact ID
+        parentArtifactId: number // Original artifact ID
+        artifactGroupId: number
         title: string
         outline: string // New sections only
         fullOutline: string // Complete outline
@@ -64,10 +65,12 @@ export const artifactSlice = createSlice({
         existingContent,
         newVersion,
       } = action.payload
-      const parentArtifact = state.artifacts[parentArtifactId]
+      const key = String(id)
+      const parentKey = String(parentArtifactId)
+      const parentArtifact = state.artifacts[parentKey]
 
       // Create NEW artifact entry with COMPLETE data from event
-      state.artifacts[id] = {
+      state.artifacts[key] = {
         id,
         title,
         outline: fullOutline, // Use complete outline from event
@@ -92,10 +95,10 @@ export const artifactSlice = createSlice({
     // Append content chunk to artifact
     appendContent(
       state,
-      action: PayloadAction<{ artifactId: string; chunk: string }>
+      action: PayloadAction<{ artifactId: number; chunk: string }>
     ) {
       const { artifactId, chunk } = action.payload
-      const artifact = state.artifacts[artifactId]
+      const artifact = state.artifacts[String(artifactId)]
       if (artifact) {
         artifact.content += chunk
       }
@@ -104,10 +107,10 @@ export const artifactSlice = createSlice({
     // Update artifact progress
     updateProgress(
       state,
-      action: PayloadAction<{ artifactId: string; progress: number }>
+      action: PayloadAction<{ artifactId: number; progress: number }>
     ) {
       const { artifactId, progress } = action.payload
-      const artifact = state.artifacts[artifactId]
+      const artifact = state.artifacts[String(artifactId)]
       if (artifact) {
         artifact.progress = progress
       }
@@ -116,10 +119,10 @@ export const artifactSlice = createSlice({
     // Update current section
     setCurrentSection(
       state,
-      action: PayloadAction<{ artifactId: string; section: number }>
+      action: PayloadAction<{ artifactId: number; section: number }>
     ) {
       const { artifactId, section } = action.payload
-      const artifact = state.artifacts[artifactId]
+      const artifact = state.artifacts[String(artifactId)]
       if (artifact) {
         artifact.currentSection = section
       }
@@ -128,10 +131,10 @@ export const artifactSlice = createSlice({
     // Update artifact status
     setStatus(
       state,
-      action: PayloadAction<{ artifactId: string; status: ArtifactStatus }>
+      action: PayloadAction<{ artifactId: number; status: ArtifactStatus }>
     ) {
       const { artifactId, status } = action.payload
-      const artifact = state.artifacts[artifactId]
+      const artifact = state.artifacts[String(artifactId)]
       if (artifact) {
         artifact.status = status
       }
@@ -141,12 +144,12 @@ export const artifactSlice = createSlice({
     setSectionsRemaining(
       state,
       action: PayloadAction<{
-        artifactId: string
+        artifactId: number
         sectionsRemaining: number
       }>
     ) {
       const { artifactId, sectionsRemaining } = action.payload
-      const artifact = state.artifacts[artifactId]
+      const artifact = state.artifacts[String(artifactId)]
       if (artifact) {
         // Calculate current section from remaining
         artifact.currentSection = artifact.estimatedSections - sectionsRemaining
@@ -156,10 +159,10 @@ export const artifactSlice = createSlice({
     // Set word count
     setWordCount(
       state,
-      action: PayloadAction<{ artifactId: string; wordCount: number }>
+      action: PayloadAction<{ artifactId: number; wordCount: number }>
     ) {
       const { artifactId, wordCount } = action.payload
-      const artifact = state.artifacts[artifactId]
+      const artifact = state.artifacts[String(artifactId)]
       if (artifact) {
         artifact.wordCount = wordCount
       }
@@ -168,12 +171,13 @@ export const artifactSlice = createSlice({
     // Set artifact error
     setArtifactError(
       state,
-      action: PayloadAction<{ artifactId?: string; error: string }>
+      action: PayloadAction<{ artifactId?: number; error: string }>
     ) {
       const { artifactId, error } = action.payload
-      if (artifactId && state.artifacts[artifactId]) {
-        state.artifacts[artifactId].status = 'error'
-        state.artifacts[artifactId].error = error
+      const key = artifactId !== undefined ? String(artifactId) : undefined
+      if (key && state.artifacts[key]) {
+        state.artifacts[key].status = 'error'
+        state.artifacts[key].error = error
       }
     },
 
@@ -191,7 +195,7 @@ export const artifactSlice = createSlice({
     },
 
     // Set active artifact
-    setActiveArtifact(state, action: PayloadAction<string | null>) {
+    setActiveArtifact(state, action: PayloadAction<number | null>) {
       state.activeArtifactId = action.payload
       if (action.payload) {
         state.sidecarOpen = true
@@ -209,19 +213,20 @@ export const artifactSlice = createSlice({
 
     // Load artifact from API response
     loadArtifact(state, action: PayloadAction<Artifact>) {
-      state.artifacts[action.payload.id] = action.payload
+      state.artifacts[String(action.payload.id)] = action.payload
     },
 
     // Load multiple artifacts
     loadArtifacts(state, action: PayloadAction<Artifact[]>) {
       action.payload.forEach((artifact) => {
-        state.artifacts[artifact.id] = artifact
+        state.artifacts[String(artifact.id)] = artifact
       })
     },
 
     // Clear artifact
-    clearArtifact(state, action: PayloadAction<string>) {
-      delete state.artifacts[action.payload]
+    clearArtifact(state, action: PayloadAction<number>) {
+      const key = String(action.payload)
+      delete state.artifacts[key]
       if (state.activeArtifactId === action.payload) {
         state.activeArtifactId = null
         state.sidecarOpen = false

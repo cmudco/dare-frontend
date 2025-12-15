@@ -70,8 +70,33 @@ export const connectWebSocket = createAsyncThunk<
           if (data.conversationHistory) {
             dispatch(updateConversationHistory(data.conversationHistory))
             // Load any artifacts from conversation history
+            // These are lightweight (no content/outline) - full data fetched on click
             if (data.artifacts && Array.isArray(data.artifacts)) {
-              dispatch(loadArtifacts(data.artifacts as Artifact[]))
+              const mappedArtifacts: Artifact[] = data.artifacts.map(
+                (a: Record<string, unknown>) => ({
+                  id: String(a.id),
+                  title: String(a.title || ''),
+                  outline: String(a.outline || ''), // May be empty from list serializer
+                  content: String(a.content || ''), // May be empty from list serializer
+                  artifactType:
+                    (a.artifactType as Artifact['artifactType']) || 'document',
+                  status: (a.status as Artifact['status']) || 'completed',
+                  estimatedSections: Number(a.estimatedSections) || 1,
+                  currentSection: Number(a.currentSection) || 1,
+                  progress: Number(a.progress) || 1,
+                  wordCount: a.wordCount ? Number(a.wordCount) : undefined,
+                  language: a.language ? String(a.language) : undefined,
+                  version: Number(a.version) || 1,
+                  parentArtifactId: a.parentArtifactId
+                    ? String(a.parentArtifactId)
+                    : undefined,
+                  artifactGroupId: a.artifactGroupId
+                    ? String(a.artifactGroupId)
+                    : undefined,
+                  createdAt: a.createdAt ? String(a.createdAt) : undefined,
+                })
+              )
+              dispatch(loadArtifacts(mappedArtifacts))
             }
           }
           break
@@ -443,7 +468,7 @@ export const disconnectWebSocket = createAsyncThunk<
 // Continue a paused artifact
 export const continueArtifact = createAsyncThunk<
   void,
-  { artifactId: string },
+  { artifactId: number },
   { dispatch: AppDispatch; state: RootState }
 >(
   'websocket/continueArtifact',
