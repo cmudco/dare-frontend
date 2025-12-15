@@ -47,43 +47,48 @@ const ArtifactContent = forwardRef<ArtifactContentRef, ArtifactContentProps>(
     }, [outline])
 
     // Expose scrollToSection method to parent
-    useImperativeHandle(ref, () => ({
-      scrollToSection: (sectionIndex: number) => {
-        // Try to find heading by matching outline section title
-        const sectionTitle = sectionTitles[sectionIndex]
+    // Dependencies ensure the handler updates when sectionTitles change
+    useImperativeHandle(
+      ref,
+      () => ({
+        scrollToSection: (sectionIndex: number) => {
+          // Try to find heading by matching outline section title
+          const sectionTitle = sectionTitles[sectionIndex]
 
-        if (sectionTitle && contentRef.current) {
-          // Find all headings in the rendered content
-          const headings = contentRef.current.querySelectorAll('h1, h2, h3')
-          const normalizedTitle = sectionTitle.toLowerCase()
+          if (sectionTitle && contentRef.current) {
+            // Find all headings in the rendered content
+            const headings = contentRef.current.querySelectorAll('h1, h2, h3')
+            const normalizedTitle = sectionTitle.toLowerCase()
 
-          // Find best matching heading
-          let bestMatch: Element | null = null
-          for (const heading of headings) {
-            const headingText = heading.textContent?.toLowerCase() || ''
-            if (
-              headingText.includes(normalizedTitle) ||
-              normalizedTitle.includes(headingText.replace(/^\d+[.:]\s*/, ''))
-            ) {
-              bestMatch = heading
-              break
+            // Find best matching heading
+            let bestMatch: Element | null = null
+            for (const heading of headings) {
+              const headingText = heading.textContent?.toLowerCase() || ''
+              if (
+                headingText.includes(normalizedTitle) ||
+                normalizedTitle.includes(headingText.replace(/^\d+[.:]\s*/, ''))
+              ) {
+                bestMatch = heading
+                break
+              }
+            }
+
+            if (bestMatch) {
+              bestMatch.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              return
             }
           }
 
-          if (bestMatch) {
-            bestMatch.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            return
+          // Fallback to index-based ID
+          const sectionId = `artifact-section-${sectionIndex}`
+          const element = document.getElementById(sectionId)
+          if (element && contentRef.current) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' })
           }
-        }
-
-        // Fallback to index-based ID
-        const sectionId = `artifact-section-${sectionIndex}`
-        const element = document.getElementById(sectionId)
-        if (element && contentRef.current) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }
-      },
-    }))
+        },
+      }),
+      [sectionTitles] // Re-create handler when sectionTitles change
+    )
 
     // Auto-scroll to bottom when new content is added during generation
     useEffect(() => {
