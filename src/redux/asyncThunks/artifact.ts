@@ -3,8 +3,14 @@ import {
   getArtifactsAPI,
   getArtifactAPI,
   updateArtifactStatusAPI,
+  updateArtifactContentAPI,
 } from '@/api/artifacts'
-import { setStatus, loadArtifacts } from '../artifactSlice'
+import {
+  setStatus,
+  loadArtifacts,
+  loadArtifact,
+  setActiveArtifact,
+} from '../artifactSlice'
 import type { AppDispatch, RootState } from '../store'
 import type { ArtifactStatus, Artifact } from '../types/artifact'
 
@@ -121,6 +127,41 @@ export const updateArtifactStatus = createAsyncThunk<
         error instanceof Error
           ? error.message
           : 'Failed to update artifact status'
+      )
+    }
+  }
+)
+
+/**
+ * Update artifact content via REST API (manual edit)
+ *
+ * Creates a new version with the updated content to preserve history.
+ * Sets the new version as the active artifact.
+ */
+export const updateArtifactContent = createAsyncThunk<
+  Artifact,
+  { artifactId: number; content: string },
+  { dispatch: AppDispatch; state: RootState }
+>(
+  'artifact/updateContent',
+  async ({ artifactId, content }, { rejectWithValue, dispatch }) => {
+    try {
+      // API returns the new artifact version
+      const newArtifact = await updateArtifactContentAPI(artifactId, content)
+
+      // Load new artifact into Redux state
+      dispatch(loadArtifact(newArtifact))
+
+      // Set as active artifact to show the new version
+      dispatch(setActiveArtifact(newArtifact.id))
+
+      return newArtifact
+    } catch (error) {
+      console.error('Failed to update artifact content:', error)
+      return rejectWithValue(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update artifact content'
       )
     }
   }
