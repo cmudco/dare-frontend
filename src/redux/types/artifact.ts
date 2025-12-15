@@ -3,6 +3,9 @@
  *
  * TypeScript types for the Artifacts feature - long-form AI-generated
  * content (documents, code, analysis) displayed in a dedicated sidecar panel.
+ *
+ * NOTE: All IDs match database types (integers). Redux store uses string keys
+ * for object indexing, but the actual Artifact.id is a number.
  */
 
 export type ArtifactType = 'document' | 'code' | 'diagram'
@@ -15,7 +18,7 @@ export type ArtifactStatus =
   | 'error'
 
 export interface Artifact {
-  id: string
+  id: number // Primary key from database (integer)
   title: string
   outline: string
   content: string
@@ -30,16 +33,16 @@ export interface Artifact {
   version: number // Version number, increments on modification
   isModification?: boolean // True if this is a modification of existing artifact
   // Versioning fields
-  parentArtifactId?: string
-  artifactGroupId?: string
-  versionHistory?: Array<{ id: string; version: number; createdAt: string }>
+  parentArtifactId?: number | null
+  artifactGroupId?: number | null
+  versionHistory?: Array<{ id: number; version: number; createdAt: string }>
   createdAt?: string
   updatedAt?: string
 }
 
 export interface ArtifactCheckpoint {
   id: number
-  artifactId: string
+  artifactId: number
   contentSnapshot: string
   currentSection: number
   iterationCount: number
@@ -47,9 +50,10 @@ export interface ArtifactCheckpoint {
 }
 
 // WebSocket message types (Server → Client)
+// Note: WebSocket messages often send IDs as strings, convert at boundary
 export interface ArtifactInitMessage {
   type: 'artifact_init'
-  artifactId: string
+  artifactId: number
   title: string
   outline: string
   estimatedSections: number
@@ -57,9 +61,9 @@ export interface ArtifactInitMessage {
 
 export interface ArtifactModifyInitMessage {
   type: 'artifact_modify_init'
-  artifactId: string // NEW artifact ID
-  parentArtifactId: string // Original artifact ID
-  artifactGroupId: string
+  artifactId: number // NEW artifact ID
+  parentArtifactId: number // Original artifact ID
+  artifactGroupId: number
   title: string
   outline: string // New sections outline only
   fullOutline: string // Complete outline
@@ -72,7 +76,7 @@ export interface ArtifactModifyInitMessage {
 
 export interface ArtifactStreamMessage {
   type: 'artifact_stream'
-  artifactId: string
+  artifactId: number
   chunk: string
   section: number
   progress: number // 0.0 - 1.0
@@ -80,20 +84,20 @@ export interface ArtifactStreamMessage {
 
 export interface ArtifactPauseMessage {
   type: 'artifact_pause'
-  artifactId: string
+  artifactId: number
   currentSection: number
   sectionsRemaining: number
 }
 
 export interface ArtifactCompleteMessage {
   type: 'artifact_complete'
-  artifactId: string
+  artifactId: number
   totalWords: number
 }
 
 export interface ArtifactErrorMessage {
   type: 'artifact_error'
-  artifactId?: string
+  artifactId?: number
   errorCode: string
   errorMessage: string
 }
@@ -107,13 +111,14 @@ export type ArtifactWebSocketMessage =
   | ArtifactErrorMessage
 
 // State for artifact management
+// NOTE: Record keys are strings (String(id)) for object indexing
 export interface ArtifactState {
-  artifacts: Record<string, Artifact> // Map of artifactId -> Artifact
-  activeArtifactId: string | null
+  artifacts: Record<string, Artifact> // Map of String(artifactId) -> Artifact
+  activeArtifactId: number | null
   sidecarOpen: boolean
   artifactsEnabled: boolean // Toggle in chat input
   // Async operation state
-  pausingArtifactId: string | null // Currently pausing artifact
+  pausingArtifactId: number | null // Currently pausing artifact
   statusUpdateError: string | null
 }
 
@@ -128,9 +133,8 @@ export const initialArtifactState: ArtifactState = {
 }
 
 // API Response types
-export interface ArtifactListResponse {
-  results: Artifact[]
-}
+// Backend returns array directly from list_artifacts endpoint
+export type ArtifactListResponse = Artifact[]
 
 export interface ArtifactDetailResponse extends Artifact {
   checkpoints?: ArtifactCheckpoint[]

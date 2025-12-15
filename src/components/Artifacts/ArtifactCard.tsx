@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { getArtifactAPI } from '@/api/artifacts'
 
 interface ArtifactCardProps {
-  artifactId: string
+  artifactId: number
 }
 
 const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifactId }) => {
@@ -19,16 +19,18 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifactId }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Use String(artifactId) for Redux store lookup since keys are strings
   const artifact = useSelector(
-    (state: RootState) => state.artifact.artifacts[artifactId]
+    (state: RootState) => state.artifact.artifacts[String(artifactId)]
   )
   const conversationId = useSelector(
     (state: RootState) => state.conversation.activeConversation?.conversationId
   )
 
   const handleClick = async () => {
-    // If artifact is already loaded, just open sidecar
-    if (artifact) {
+    // If artifact is already loaded WITH content, just open sidecar
+    // (artifacts from list have empty content, need to fetch full data)
+    if (artifact && artifact.content) {
       dispatch(setActiveArtifact(artifactId))
       dispatch(openSidecar())
       return
@@ -50,7 +52,7 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifactId }) => {
       dispatch(
         loadArtifacts([
           {
-            id: artifactId,
+            id: response.id, // Use response.id (number from backend)
             title: response.title,
             outline: response.outline || '',
             content: response.content,

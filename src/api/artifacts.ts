@@ -30,7 +30,7 @@ export const getArtifactsAPI = async (
  */
 export const getArtifactAPI = async (
   conversationId: string,
-  artifactId: string
+  artifactId: number | string
 ): Promise<ArtifactDetailResponse> => {
   return await baseRequest<ArtifactDetailResponse>({
     url: `api/conversations/${conversationId}/artifacts/${artifactId}/`,
@@ -42,7 +42,7 @@ export const getArtifactAPI = async (
  * Get checkpoints for an artifact
  */
 export const getArtifactCheckpointsAPI = async (
-  artifactId: string
+  artifactId: number | string
 ): Promise<{
   results: Array<{
     id: number
@@ -62,7 +62,7 @@ export const getArtifactCheckpointsAPI = async (
  */
 export const deleteArtifactAPI = async (
   conversationId: string,
-  artifactId: string
+  artifactId: number | string
 ): Promise<void> => {
   await baseRequest<void>({
     url: `api/conversations/${conversationId}/artifacts/${artifactId}/`,
@@ -75,7 +75,7 @@ export const deleteArtifactAPI = async (
  * Used for pause/resume when WebSocket is blocked by streaming
  */
 export const updateArtifactStatusAPI = async (
-  artifactId: string,
+  artifactId: number | string,
   status: ArtifactStatus
 ): Promise<ArtifactStatusResponse> => {
   return await baseRequest<ArtifactStatusResponse>({
