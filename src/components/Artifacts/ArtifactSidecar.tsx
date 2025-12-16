@@ -257,6 +257,8 @@ const ArtifactSidecar: React.FC = () => {
         <ArtifactEditor
           artifactId={activeArtifact.id}
           initialContent={activeArtifact.content}
+          artifactType={activeArtifact.artifactType}
+          language={activeArtifact.language}
           onClose={handleEditorClose}
           onSaved={handleEditorSaved}
         />
