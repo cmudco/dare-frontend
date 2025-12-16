@@ -13,7 +13,7 @@ import { AvatarType } from '@/utils/constants/user'
 import { cn } from '@/lib/utils'
 
 // Available preset avatars - these should match files in /public/avatars/
-// Balanced set: Alternating Male/Female (m1 f1 m2 f2...)
+// Balanced set: Alternating Male/Female (m1 f1 m2 f2...) + Thumbs
 const PRESET_AVATARS = [
   { id: 'm1', label: 'Classic' },
   { id: 'f1', label: 'Professional' },
@@ -25,6 +25,16 @@ const PRESET_AVATARS = [
   { id: 'f4', label: 'Friendly' },
   { id: 'm5', label: 'Confident' },
   { id: 'f5', label: 'Stylish' },
+  { id: 'thumbs1', label: 'Thumbs 1' },
+  { id: 'thumbs2', label: 'Thumbs 2' },
+  { id: 'thumbs3', label: 'Thumbs 3' },
+  { id: 'thumbs4', label: 'Thumbs 4' },
+  { id: 'thumbs5', label: 'Thumbs 5' },
+  { id: 'thumbs6', label: 'Thumbs 6' },
+  { id: 'thumbs7', label: 'Thumbs 7' },
+  { id: 'thumbs8', label: 'Thumbs 8' },
+  { id: 'thumbs9', label: 'Thumbs 9' },
+  { id: 'thumbs10', label: 'Thumbs 10' },
 ]
 
 const AvatarSettings: React.FC = () => {
