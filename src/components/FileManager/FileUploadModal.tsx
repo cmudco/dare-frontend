@@ -101,7 +101,7 @@ const FileUploadModal: React.FC = () => {
         }
         if (!isAllowedFileType(file)) {
           errors.push(
-            `File "${file.name}" type not allowed and has been discarded. Allowed types are: docx, doc, pdf, txt, md, json, csv, xls, xlsx`
+            `File "${file.name}" type not allowed and has been discarded. Allowed types are: docx, doc, pdf, txt, md, json, csv, xls, xlsx, images, videos, audio (mp3, wav, m4a, flac, aac, wma, opus)`
           )
           continue
         }
@@ -314,7 +314,7 @@ const FileUploadModal: React.FC = () => {
               id='fileInput'
               type='file'
               multiple
-              accept='.pdf,.doc,.docx,.txt,.md,.json,.csv,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff,.svg,.mp4,.webm,.mov,.avi,.mpeg,.ogg'
+              accept='.pdf,.doc,.docx,.txt,.md,.json,.csv,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff,.svg,.mp4,.webm,.mov,.avi,.mpeg,.ogg,.mp3,.wav,.m4a,.flac,.aac,.wma,.opus'
               onChange={handleFileChange}
               className='hidden'
             />

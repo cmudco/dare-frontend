@@ -346,6 +346,8 @@ export const sendWebSocketMessage = createAsyncThunk<
     webSearchEnabled,
     imageGenerationEnabled,
     imageGenerationSettings,
+    audioTranscriptionEnabled,
+    audioTranscriptionSettings,
     artifactsEnabled,
   } = conversation
 
@@ -387,6 +389,10 @@ export const sendWebSocketMessage = createAsyncThunk<
       size: imageGenerationSettings.size,
       quality: imageGenerationSettings.quality,
       style: imageGenerationSettings.style,
+    },
+    audio_transcription_enabled: audioTranscriptionEnabled,
+    audio_transcription_settings: {
+      language: audioTranscriptionSettings.language,
     },
     images: attachedImages.map(({ preview, name, type }) => ({
       preview,
@@ -462,6 +468,10 @@ export const regenerateResponse = createAsyncThunk<
     const webSearchEnabled = state.conversation.webSearchEnabled
     const imageGenerationEnabled = state.conversation.imageGenerationEnabled
     const imageGenerationSettings = state.conversation.imageGenerationSettings
+    const audioTranscriptionEnabled =
+      state.conversation.audioTranscriptionEnabled
+    const audioTranscriptionSettings =
+      state.conversation.audioTranscriptionSettings
 
     dispatch(
       updateMessage({
@@ -496,6 +506,10 @@ export const regenerateResponse = createAsyncThunk<
             size: imageGenerationSettings.size,
             quality: imageGenerationSettings.quality,
             style: imageGenerationSettings.style,
+          },
+          audio_transcription_enabled: audioTranscriptionEnabled,
+          audio_transcription_settings: {
+            language: audioTranscriptionSettings.language,
           },
         })
       )

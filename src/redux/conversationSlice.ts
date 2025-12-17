@@ -20,11 +20,15 @@ import {
   Conversation,
   LLMModel,
   ImageGenerationSettings,
+  AudioTranscriptionSettings,
 } from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
-import { syncModelsWithImageGenerationState } from './utils/modelSyncHelpers'
+import {
+  syncModelsWithImageGenerationState,
+  syncModelsWithAudioTranscriptionState,
+} from './utils/modelSyncHelpers'
 
 export const conversationSlice = createSlice({
   name: 'conversation',
@@ -45,14 +49,28 @@ export const conversationSlice = createSlice({
         state.webSearchEnabled = action.payload.webSearchEnabled ?? false
         state.imageGenerationEnabled =
           action.payload.imageGenerationEnabled ?? false
+        state.audioTranscriptionEnabled =
+          action.payload.audioTranscriptionEnabled ?? false
         state.artifactsEnabled = action.payload.artifactsEnabled ?? false
 
-        // Sync available models and selected model with image generation state
-        syncModelsWithImageGenerationState(
-          state,
-          action.payload.imageGenerationEnabled ?? false,
-          action.payload.selectedModel
-        )
+        // Sync available models based on enabled mode
+        // Priority: audio transcription > image generation > regular
+        if (action.payload.audioTranscriptionEnabled) {
+          syncModelsWithAudioTranscriptionState(
+            state,
+            true,
+            action.payload.selectedModel
+          )
+        } else if (action.payload.imageGenerationEnabled) {
+          syncModelsWithImageGenerationState(
+            state,
+            true,
+            action.payload.selectedModel
+          )
+        } else {
+          // Regular mode - filter out both image and audio models
+          syncModelsWithImageGenerationState(state, false)
+        }
       }
     },
     loadSelectedFilesFromIds(
@@ -175,6 +193,22 @@ export const conversationSlice = createSlice({
     ) {
       state.imageGenerationSettings = action.payload
     },
+    updateAudioTranscriptionEnabled(state, action: PayloadAction<boolean>) {
+      // Update global and conversation-level state
+      state.audioTranscriptionEnabled = action.payload
+      if (state.activeConversation) {
+        state.activeConversation.audioTranscriptionEnabled = action.payload
+      }
+
+      // Sync available models and auto-select appropriate model
+      syncModelsWithAudioTranscriptionState(state, action.payload)
+    },
+    updateAudioTranscriptionSettings(
+      state,
+      action: PayloadAction<AudioTranscriptionSettings>
+    ) {
+      state.audioTranscriptionSettings = action.payload
+    },
     addMessage(state, action: PayloadAction<Message>) {
       const index = state.activeConversationMessages.findIndex(
         (msg) => msg?.id === action.payload.id
@@ -239,6 +273,7 @@ export const conversationSlice = createSlice({
 
       // Reset feature toggles
       state.imageGenerationEnabled = false
+      state.audioTranscriptionEnabled = false
       state.webSearchEnabled = false
       state.artifactsEnabled = false
 
@@ -372,12 +407,12 @@ export const conversationSlice = createSlice({
         getAvailableModels.fulfilled,
         (state, action: PayloadAction<LLMModel[]>) => {
           state.loading = false
-          // Filter out image generation models by default (they'll be shown when image mode is enabled)
-          const nonImageModels = action.payload.filter(
-            (model) => !model.isImageGenerator
+          // Filter out image generation and audio transcription models by default
+          const regularModels = action.payload.filter(
+            (model) => !model.isImageGenerator && !model.isAudioTranscriber
           )
-          state.availableModels = nonImageModels
-          state.selectedModel = nonImageModels[0]?.id
+          state.availableModels = regularModels
+          state.selectedModel = regularModels[0]?.id
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
@@ -602,8 +637,10 @@ export const {
   updateHistoryLimit,
   updateWebSearchEnabled,
   updateImageGenerationEnabled,
+  updateAudioTranscriptionEnabled,
   updateArtifactsEnabled,
   updateImageGenerationSettings,
+  updateAudioTranscriptionSettings,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,

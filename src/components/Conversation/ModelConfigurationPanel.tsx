@@ -9,6 +9,7 @@ import {
   updateHistoryLimit,
   updateWebSearchEnabled,
   updateImageGenerationEnabled,
+  updateAudioTranscriptionEnabled,
   updateArtifactsEnabled,
   updateSelectedModel,
 } from '../../redux/conversationSlice'
@@ -46,6 +47,11 @@ const ModelConfigurationPanel: React.FC = () => {
     (state: RootState) =>
       activeConversation?.imageGenerationEnabled ??
       state.conversation.imageGenerationEnabled
+  )
+  const audioTranscriptionEnabled = useSelector(
+    (state: RootState) =>
+      activeConversation?.audioTranscriptionEnabled ??
+      state.conversation.audioTranscriptionEnabled
   )
   const artifactsEnabled = useSelector(
     (state: RootState) =>
@@ -136,6 +142,33 @@ const ModelConfigurationPanel: React.FC = () => {
     }
   }
 
+  const handleAudioTranscriptionToggle = (checked: boolean) => {
+    dispatch(updateAudioTranscriptionEnabled(checked))
+
+    // Auto-select Whisper or Gemini model when enabled
+    if (checked) {
+      const transcriberModel =
+        allModels.find(
+          (model) =>
+            model.identifier === 'whisper-1' ||
+            model.name.toLowerCase().includes('whisper')
+        ) || allModels.find((model) => model.isAudioTranscriber)
+
+      if (transcriberModel) {
+        dispatch(updateSelectedModel(transcriberModel.id))
+      }
+    }
+
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { audioTranscriptionEnabled: checked },
+        })
+      )
+    }
+  }
+
   const handleArtifactsToggle = (checked: boolean) => {
     dispatch(updateArtifactsEnabled(checked))
     if (activeConversation) {
@@ -155,6 +188,7 @@ const ModelConfigurationPanel: React.FC = () => {
       dispatch(updateHistoryLimit(MODEL_CONFIG.historyLimit))
       dispatch(updateWebSearchEnabled(false))
       dispatch(updateImageGenerationEnabled(false))
+      dispatch(updateAudioTranscriptionEnabled(false))
       dispatch(updateArtifactsEnabled(false))
 
       dispatch(
@@ -166,6 +200,7 @@ const ModelConfigurationPanel: React.FC = () => {
             historyLimit: MODEL_CONFIG.historyLimit,
             webSearchEnabled: false,
             imageGenerationEnabled: false,
+            audioTranscriptionEnabled: false,
             artifactsEnabled: false,
           },
         })
@@ -278,6 +313,47 @@ const ModelConfigurationPanel: React.FC = () => {
                   />
                 </div>
               )}
+
+              {/* Audio Transcription Toggle */}
+              <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                <div className='flex flex-col gap-1'>
+                  <div className='flex items-center gap-2'>
+                    <h4
+                      className={
+                        audioTranscriptionEnabled
+                          ? 'bg-gradient-to-r from-purple-600 via-violet-500 to-indigo-600 bg-clip-text font-medium text-transparent'
+                          : 'font-medium dark:text-white'
+                      }
+                    >
+                      Audio Transcription
+                    </h4>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                      </TooltipTrigger>
+                      <TooltipContent className='max-w-xs'>
+                        <div className='space-y-2'>
+                          <p className='font-semibold'>Audio Transcription</p>
+                          <p className='text-sm'>
+                            Convert audio files to text using Whisper or Gemini
+                            models.
+                          </p>
+                          <p className='text-xs text-muted-foreground'>
+                            💡 Upload audio files in Media tab when enabled
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <p className='text-xs text-gray-500 dark:text-gray-400'>
+                    Enable audio-to-text transcription with Whisper/Gemini
+                  </p>
+                </div>
+                <Switch
+                  checked={audioTranscriptionEnabled}
+                  onCheckedChange={handleAudioTranscriptionToggle}
+                />
+              </div>
 
               {/* Artifacts Toggle */}
               <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
