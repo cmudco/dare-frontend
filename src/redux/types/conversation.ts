@@ -4,6 +4,10 @@ import type {
   ImageQualityType,
   ImageStyleType,
 } from '@/utils/constants/imageGeneration'
+import type {
+  LanguageCode,
+  TranscriptionModel,
+} from '@/utils/constants/audioTranscription'
 import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
@@ -20,6 +24,7 @@ export interface Conversation {
   historyLimit: number
   webSearchEnabled?: boolean
   imageGenerationEnabled?: boolean
+  audioTranscriptionEnabled?: boolean
   artifactsEnabled?: boolean
   selectedModel?: number | null
   selectedMediaIds?: number[]
@@ -56,6 +61,8 @@ export interface Message {
   outputTokens?: number | null
   // Image generation fields
   generatedImage?: GeneratedImage
+  // Audio transcription fields
+  generatedTranscription?: GeneratedTranscription
   // Artifact reference (when message has associated artifact)
   artifactId?: number
 }
@@ -73,6 +80,17 @@ export interface GeneratedImage {
   style: string
 }
 
+export interface GeneratedTranscription {
+  fileId: number
+  fileName: string
+  text: string
+  language: string
+  model: string
+  cost?: string
+  duration?: number
+  transcribedAt: string
+}
+
 export interface MessageProps {
   message: Message
   onEditMessage?: (id: string, content: string) => void
@@ -88,6 +106,7 @@ export interface LLMModel {
   description: string | null
   isReasoning: boolean
   isImageGenerator?: boolean
+  isAudioTranscriber?: boolean
   inputTokenRatePerMillion: number
   outputTokenRatePerMillion: number
 }
@@ -121,6 +140,11 @@ export interface ImageGenerationSettings {
   style: ImageStyleType
 }
 
+export interface AudioTranscriptionSettings {
+  model: TranscriptionModel
+  language: LanguageCode
+}
+
 export interface ConversationState {
   conversations: Conversation[]
   activeConversation: Conversation | null
@@ -147,10 +171,13 @@ export interface ConversationState {
   attachedImages: AttachedImage[]
   webSearchEnabled: boolean
   imageGenerationEnabled: boolean
+  audioTranscriptionEnabled: boolean
   artifactsEnabled: boolean
   isGeneratingImage: boolean
   imageGenerationPrompt: string | null
   imageGenerationSettings: ImageGenerationSettings
+  isTranscribingAudio: boolean
+  audioTranscriptionSettings: AudioTranscriptionSettings
 }
 
 export interface ConversationResponse {
