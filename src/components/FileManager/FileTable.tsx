@@ -51,8 +51,14 @@ import TagsDisplay from './TagsDisplay'
 
 const FileTable = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { files, loading, searchQuery, selectedTags, selectedItems } =
-    useSelector((state: RootState) => state.files)
+  const {
+    files,
+    loading,
+    searchQuery,
+    selectedTags,
+    selectedItems,
+    mediaTypeFilter,
+  } = useSelector((state: RootState) => state.files)
   const { tags: allTags } = useSelector((state: RootState) => state.tags)
   const user = useSelector((state: RootState) => state.user.user)
 
@@ -78,10 +84,11 @@ const FileTable = () => {
     const filterOptions = createFilterConfig(
       searchQuery,
       selectedTags,
-      user.vectorDb
+      user.vectorDb,
+      mediaTypeFilter
     )
     return filterFiles(files, filterOptions)
-  }, [files, searchQuery, selectedTags, user])
+  }, [files, searchQuery, selectedTags, user, mediaTypeFilter])
 
   const sortedFiles = useMemo(() => {
     return sortFiles(filteredFiles, sortColumn, sortDirection, allTags)
@@ -93,7 +100,7 @@ const FileTable = () => {
 
   useEffect(() => {
     resetPaginationOnFilter(setCurrentPage)
-  }, [searchQuery, selectedTags])
+  }, [searchQuery, selectedTags, mediaTypeFilter])
 
   const handleSelectAll = (isSelected: boolean) => {
     const shouldSelectAll = !isIndeterminate && isSelected
