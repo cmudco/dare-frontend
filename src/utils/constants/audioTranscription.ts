@@ -35,6 +35,11 @@ export const WHISPER_PRICING = {
   pricePerMinute: 0.006, // $0.006 per minute
 }
 
+// GPT-4o Transcribe Diarize pricing (same as Whisper)
+export const GPT4O_DIARIZE_PRICING = {
+  pricePerMinute: 0.006, // $0.006 per minute
+}
+
 /**
  * Calculate transcription cost based on audio duration
  * @param durationSeconds - Audio duration in seconds
