@@ -4,11 +4,6 @@
  * Defines configuration, languages, and pricing for audio transcription services.
  */
 
-// Transcription models
-export enum TranscriptionModel {
-  WHISPER = 'whisper-1',
-}
-
 // Common languages supported by Whisper
 export const TRANSCRIPTION_LANGUAGES = [
   { code: 'auto', name: 'Auto-detect' },
@@ -67,6 +62,5 @@ export function formatDuration(seconds: number): string {
 
 // Default transcription settings
 export const DEFAULT_TRANSCRIPTION_SETTINGS = {
-  model: TranscriptionModel.WHISPER,
   language: 'auto' as LanguageCode,
 }

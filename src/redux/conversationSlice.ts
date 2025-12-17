@@ -53,12 +53,24 @@ export const conversationSlice = createSlice({
           action.payload.audioTranscriptionEnabled ?? false
         state.artifactsEnabled = action.payload.artifactsEnabled ?? false
 
-        // Sync available models and selected model with image generation state
-        syncModelsWithImageGenerationState(
-          state,
-          action.payload.imageGenerationEnabled ?? false,
-          action.payload.selectedModel
-        )
+        // Sync available models based on enabled mode
+        // Priority: audio transcription > image generation > regular
+        if (action.payload.audioTranscriptionEnabled) {
+          syncModelsWithAudioTranscriptionState(
+            state,
+            true,
+            action.payload.selectedModel
+          )
+        } else if (action.payload.imageGenerationEnabled) {
+          syncModelsWithImageGenerationState(
+            state,
+            true,
+            action.payload.selectedModel
+          )
+        } else {
+          // Regular mode - filter out both image and audio models
+          syncModelsWithImageGenerationState(state, false)
+        }
       }
     },
     loadSelectedFilesFromIds(
@@ -395,12 +407,12 @@ export const conversationSlice = createSlice({
         getAvailableModels.fulfilled,
         (state, action: PayloadAction<LLMModel[]>) => {
           state.loading = false
-          // Filter out image generation models by default (they'll be shown when image mode is enabled)
-          const nonImageModels = action.payload.filter(
-            (model) => !model.isImageGenerator
+          // Filter out image generation and audio transcription models by default
+          const regularModels = action.payload.filter(
+            (model) => !model.isImageGenerator && !model.isAudioTranscriber
           )
-          state.availableModels = nonImageModels
-          state.selectedModel = nonImageModels[0]?.id
+          state.availableModels = regularModels
+          state.selectedModel = regularModels[0]?.id
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
@@ -625,8 +637,10 @@ export const {
   updateHistoryLimit,
   updateWebSearchEnabled,
   updateImageGenerationEnabled,
+  updateAudioTranscriptionEnabled,
   updateArtifactsEnabled,
   updateImageGenerationSettings,
+  updateAudioTranscriptionSettings,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,
