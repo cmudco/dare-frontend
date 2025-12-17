@@ -23,6 +23,7 @@ import ModelConfigurationPanel from './ModelConfigurationPanel'
 import ExportButton from './ExportButton'
 import ImagePreview from './ImagePreview'
 import ImageGenerationPanel from './ImageGenerationPanel'
+import AudioTranscriptionPanel from './AudioTranscriptionPanel'
 import { ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
@@ -61,12 +62,16 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       activeConversation?.imageGenerationEnabled ??
       state.conversation.imageGenerationEnabled
   )
+  const audioTranscriptionEnabled = useSelector(
+    (state: RootState) =>
+      activeConversation?.audioTranscriptionEnabled ??
+      state.conversation.audioTranscriptionEnabled
+  )
   const artifactsEnabled = useSelector(
     (state: RootState) =>
       activeConversation?.artifactsEnabled ??
       state.conversation.artifactsEnabled
   )
-
   const clearPendingDraftSave = useCallback(() => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current)
@@ -291,6 +296,9 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
           <div className='flex items-center gap-3'>
             <div className={clsx(!imageGenerationEnabled && 'hidden')}>
               <ImageGenerationPanel />
+            </div>
+            <div className={clsx(!audioTranscriptionEnabled && 'hidden')}>
+              <AudioTranscriptionPanel />
             </div>
             <ExportButton />
             <ModelConfigurationPanel />

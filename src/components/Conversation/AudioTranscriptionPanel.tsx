@@ -14,7 +14,6 @@ import {
 } from '../ui/select'
 import {
   TRANSCRIPTION_LANGUAGES,
-  TranscriptionModel,
   type LanguageCode,
   WHISPER_PRICING,
 } from '@/utils/constants/audioTranscription'
@@ -38,13 +37,6 @@ const AudioTranscriptionPanel: React.FC = () => {
     setSettings((prev) => ({
       ...prev,
       language: value as LanguageCode,
-    }))
-  }
-
-  const handleModelChange = (value: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      model: value as TranscriptionModel,
     }))
   }
 
@@ -73,34 +65,12 @@ const AudioTranscriptionPanel: React.FC = () => {
             <h3 className='flex items-center gap-2 text-lg font-semibold'>
               <Mic className='h-5 w-5 text-gray-700 dark:text-white' />
               <span className='bg-dare-gradient bg-clip-text text-transparent dark:bg-none dark:text-white'>
-                Whisper Transcription
+                Transcription Settings
               </span>
             </h3>
             <p className='mt-1 text-sm text-muted-foreground'>
-              Configure audio transcription parameters
+              Select language for audio transcription
             </p>
-          </div>
-
-          {/* Transcription Model */}
-          <div className='space-y-2'>
-            <label className='text-sm font-medium text-foreground'>
-              Transcription Model
-            </label>
-            <Select value={settings.model} onValueChange={handleModelChange}>
-              <SelectTrigger className='w-full'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={TranscriptionModel.WHISPER}>
-                  <div className='flex flex-col items-start'>
-                    <span className='font-medium'>Whisper-1</span>
-                    <span className='text-xs text-muted-foreground'>
-                      OpenAI's high-accuracy transcription model
-                    </span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           {/* Language Selection */}

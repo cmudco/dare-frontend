@@ -4,10 +4,7 @@ import type {
   ImageQualityType,
   ImageStyleType,
 } from '@/utils/constants/imageGeneration'
-import type {
-  LanguageCode,
-  TranscriptionModel,
-} from '@/utils/constants/audioTranscription'
+import type { LanguageCode } from '@/utils/constants/audioTranscription'
 import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
@@ -141,7 +138,6 @@ export interface ImageGenerationSettings {
 }
 
 export interface AudioTranscriptionSettings {
-  model: TranscriptionModel
   language: LanguageCode
 }
 
