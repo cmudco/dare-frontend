@@ -35,6 +35,14 @@ export interface MyFolder {
   updatedAt: string
 }
 
+export type MediaTypeFilter =
+  | 'all'
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'document'
+  | 'generated_image'
+
 export interface FileState {
   files: MyFile[]
   folders: MyFolder[]
@@ -51,10 +59,11 @@ export interface FileState {
   }
   searchQuery: string
   selectedItems: number[]
-  currentView: 'files' | 'folders'
+  currentView: 'files' | 'folders' | 'media'
   isMoveModalOpen: boolean
+  mediaTypeFilter: MediaTypeFilter
 }
 
 export interface FolderHeaderProps {
-  onToggleView: (view: 'files' | 'folders') => void
+  onToggleView: (view: 'files' | 'folders' | 'media') => void
 }

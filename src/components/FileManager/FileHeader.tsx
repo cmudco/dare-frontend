@@ -9,7 +9,9 @@ import {
   setSelectedTags,
   openMoveModal,
   clearSelectedItems,
+  setMediaTypeFilter,
 } from '../../redux/fileSlice'
+import { MediaTypeFilter } from '../../redux/types/files'
 import { deleteMultipleFiles, getFolders } from '../../redux/asyncThunks/file'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -19,20 +21,59 @@ import { Tag } from '../../redux/types/tags'
 import { Badge } from '../ui/badge'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getTagColor } from '@/utils/files'
-import { Upload, FolderInput, Trash2 } from 'lucide-react'
+import {
+  Upload,
+  FolderInput,
+  Trash2,
+  FileText,
+  Image,
+  Video,
+  Music,
+  Sparkles,
+  LayoutGrid,
+} from 'lucide-react'
 
 interface FileHeaderProps {
-  onToggleView?: (view: 'files' | 'folders') => void
+  onToggleView?: (view: 'files' | 'folders' | 'media') => void
 }
+
+const MEDIA_TYPE_TABS: {
+  value: MediaTypeFilter
+  label: string
+  icon: React.ReactNode
+}[] = [
+  { value: 'all', label: 'All', icon: <LayoutGrid className='h-4 w-4' /> },
+  {
+    value: 'document',
+    label: 'Documents',
+    icon: <FileText className='h-4 w-4' />,
+  },
+  { value: 'image', label: 'Images', icon: <Image className='h-4 w-4' /> },
+  { value: 'video', label: 'Videos', icon: <Video className='h-4 w-4' /> },
+  { value: 'audio', label: 'Audio', icon: <Music className='h-4 w-4' /> },
+  {
+    value: 'generated_image',
+    label: 'Generated',
+    icon: <Sparkles className='h-4 w-4' />,
+  },
+]
 
 const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
   const dispatch = useDispatch<AppDispatch>()
   const { tags } = useSelector((state: RootState) => state.tags)
-  const { searchQuery, selectedTags, selectedItems, currentView } = useSelector(
-    (state: RootState) => state.files
-  )
+  const {
+    searchQuery,
+    selectedTags,
+    selectedItems,
+    currentView,
+    mediaTypeFilter,
+  } = useSelector((state: RootState) => state.files)
   const [showTagFilter, setShowTagFilter] = useState(false)
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+
+  const handleMediaTypeChange = (mediaType: MediaTypeFilter) => {
+    dispatch(setMediaTypeFilter(mediaType))
+  }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -82,6 +123,13 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
                 onClick={() => onToggleView('folders')}
               >
                 Folders
+              </Button>
+              <Button
+                variant={currentView === 'media' ? 'default' : 'outline'}
+                size='sm'
+                onClick={() => onToggleView('media')}
+              >
+                Media
               </Button>
             </div>
           )}
@@ -162,6 +210,27 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
           {tags.length === 0 && (
             <div className='text-sm text-gray-500'>No tags available</div>
           )}
+        </div>
+      )}
+
+      {currentView === 'media' && (
+        <div className='flex flex-wrap gap-2 border-b border-gray-200 pb-2 dark:border-gray-700'>
+          {MEDIA_TYPE_TABS.map((tab) => (
+            <Button
+              key={tab.value}
+              variant={mediaTypeFilter === tab.value ? 'default' : 'ghost'}
+              size='sm'
+              className={`flex items-center gap-1.5 ${
+                mediaTypeFilter === tab.value
+                  ? ''
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+              }`}
+              onClick={() => handleMediaTypeChange(tab.value)}
+            >
+              {tab.icon}
+              {tab.label}
+            </Button>
+          ))}
         </div>
       )}
 
