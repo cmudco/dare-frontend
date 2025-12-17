@@ -14,7 +14,7 @@ export interface MyFile {
   vectorDbSource: VectorDbSource
   errorMessage?: string
   isMedia?: boolean
-  mediaType?: 'image' | 'video' | 'document' | 'generated_image'
+  mediaType?: 'image' | 'video' | 'audio' | 'document' | 'generated_image'
   isGenerated?: boolean
   generationPrompt?: string
   revisedPrompt?: string

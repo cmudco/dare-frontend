@@ -51,6 +51,14 @@ export const ALLOWED_FILE_EXTENSIONS = [
   '.avi',
   '.mpeg',
   '.ogg',
+  // Audio
+  '.mp3',
+  '.wav',
+  '.m4a',
+  '.flac',
+  '.aac',
+  '.wma',
+  '.opus',
 ]
 
 export const ALLOWED_FILE_TYPES = [
@@ -82,9 +90,20 @@ export const ALLOWED_FILE_TYPES = [
   'video/x-msvideo',
   'video/mpeg',
   'video/ogg',
+  // Audio
+  'audio/mpeg',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/mp4',
+  'audio/x-m4a',
+  'audio/flac',
+  'audio/aac',
+  'audio/x-ms-wma',
+  'audio/opus',
+  'audio/ogg',
 ]
 
-export const MAX_FILE_SIZE_MB = 30
+export const MAX_FILE_SIZE_MB = 100
 
 export const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024
 
