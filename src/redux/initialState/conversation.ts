@@ -38,4 +38,5 @@ export const initialState: ConversationState = {
   imageGenerationSettings: DEFAULT_IMAGE_SETTINGS,
   isTranscribingAudio: false,
   audioTranscriptionSettings: DEFAULT_TRANSCRIPTION_SETTINGS,
+  historySidebarCollapsed: false,
 }
