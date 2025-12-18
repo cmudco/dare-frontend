@@ -102,10 +102,12 @@ const ActiveConversation: React.FC = () => {
   const [editMessageId, setEditMessageId] = useState<string | null>(null)
   const [shouldShowAutoFeedbackModal, setShouldShowAutoFeedbackModal] =
     useState(false)
+  const [userJustSentMessage, setUserJustSentMessage] = useState(false)
 
   // Refs
   const hasCheckedAutoFeedback = useRef(false)
   const prevActiveConversationRef = useRef<typeof activeConversation>(null)
+  const prevMessageCountRef = useRef(conversationHistory.length)
 
   // Hooks
   const {
@@ -254,6 +256,24 @@ const ActiveConversation: React.FC = () => {
     setShouldShowAutoFeedbackModal(false)
   }, [activeConversation?.conversationId])
 
+  // Detect when user sends a new message (for scroll-to-bottom)
+  useEffect(() => {
+    const currentCount = conversationHistory.length
+    const prevCount = prevMessageCountRef.current
+
+    if (currentCount > prevCount) {
+      const newMessage = conversationHistory[currentCount - 1]
+      // If the new message is from the user, trigger scroll
+      if (newMessage?.isSender) {
+        setUserJustSentMessage(true)
+        // Reset after a tick so the effect in MessageList can fire
+        requestAnimationFrame(() => setUserJustSentMessage(false))
+      }
+    }
+
+    prevMessageCountRef.current = currentCount
+  }, [conversationHistory.length, conversationHistory])
+
   // ──────────────────────────────────────────────────────────────────────────
   // HANDLERS
   // ──────────────────────────────────────────────────────────────────────────
@@ -295,6 +315,8 @@ const ActiveConversation: React.FC = () => {
                 <MessageList
                   onEditMessage={handleEditMessage}
                   shouldShowAutoFeedbackModal={shouldShowAutoFeedbackModal}
+                  conversationId={activeConversation?.conversationId}
+                  userJustSentMessage={userJustSentMessage}
                 />
               </>
             )}
