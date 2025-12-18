@@ -279,6 +279,186 @@ export const artifactSlice = createSlice({
       .addCase(updateArtifactStatus.rejected, (state, action) => {
         state.statusUpdateError = action.payload as string
       })
+      // ─────────────────────────────────────────────────────────────────────
+      // Socket.IO artifact message handlers (from socketMiddleware)
+      // ─────────────────────────────────────────────────────────────────────
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            artifactId: number
+            title: string
+            outline: string
+            estimatedSections: number
+          }
+        } => action.type === 'socket/artifact_init',
+        (state, action) => {
+          const { artifactId, title, outline, estimatedSections } =
+            action.payload
+          const key = String(artifactId)
+          state.artifacts[key] = {
+            id: artifactId,
+            title,
+            outline,
+            content: '',
+            artifactType: 'document',
+            status: 'generating',
+            estimatedSections,
+            currentSection: 0,
+            progress: 0,
+            version: 1,
+            isModification: false,
+          }
+          state.activeArtifactId = artifactId
+          state.sidecarOpen = true
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            artifactId: number
+            chunk: string
+            progress: number
+            section: number
+          }
+        } => action.type === 'socket/artifact_stream',
+        (state, action) => {
+          const { artifactId, chunk, progress, section } = action.payload
+          const artifact = state.artifacts[String(artifactId)]
+          if (artifact) {
+            artifact.content += chunk
+            artifact.progress = progress
+            artifact.currentSection = section
+          }
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: { artifactId: number; sectionsRemaining: number }
+        } => action.type === 'socket/artifact_pause',
+        (state, action) => {
+          const { artifactId, sectionsRemaining } = action.payload
+          const artifact = state.artifacts[String(artifactId)]
+          if (artifact) {
+            artifact.status = 'paused'
+            artifact.currentSection =
+              artifact.estimatedSections - sectionsRemaining
+          }
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            artifactId: number
+            estimatedSections?: number
+            totalWords?: number
+          }
+        } => action.type === 'socket/artifact_complete',
+        (state, action) => {
+          const { artifactId, estimatedSections, totalWords } = action.payload
+          const artifact = state.artifacts[String(artifactId)]
+          if (artifact) {
+            artifact.status = 'completed'
+            artifact.currentSection =
+              estimatedSections || artifact.estimatedSections
+            artifact.progress = 1.0
+            if (totalWords) {
+              artifact.wordCount = totalWords
+            }
+          }
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: { artifactId: number; errorMessage: string }
+        } => action.type === 'socket/artifact_error',
+        (state, action) => {
+          const { artifactId, errorMessage } = action.payload
+          const artifact = state.artifacts[String(artifactId)]
+          if (artifact) {
+            artifact.status = 'error'
+            artifact.error = errorMessage
+          }
+        }
+      )
+      .addMatcher(
+        (action): action is { type: string; payload: { artifactId: number } } =>
+          action.type === 'socket/artifact_rewrite_init',
+        (state, action) => {
+          const { artifactId } = action.payload
+          const artifact = state.artifacts[String(artifactId)]
+          if (artifact) {
+            artifact.status = 'generating'
+          }
+          state.activeArtifactId = artifactId
+          state.sidecarOpen = true
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            artifactId: number
+            content: string
+            title?: string
+            outline?: string
+            artifactType?: string
+            estimatedSections?: number
+            currentSection?: number
+            version?: number
+            parentArtifactId?: number
+            artifactGroupId?: number
+          }
+        } => action.type === 'socket/artifact_rewrite_complete',
+        (state, action) => {
+          const {
+            artifactId,
+            content,
+            title,
+            outline,
+            artifactType,
+            estimatedSections,
+            currentSection,
+            version,
+            parentArtifactId,
+            artifactGroupId,
+          } = action.payload
+          const key = String(artifactId)
+          state.artifacts[key] = {
+            id: artifactId,
+            title: title || 'Rewritten Artifact',
+            outline: outline || '',
+            content,
+            artifactType:
+              (artifactType as Artifact['artifactType']) || 'document',
+            status: 'completed',
+            estimatedSections: estimatedSections || 0,
+            currentSection: currentSection || 0,
+            progress: 1.0,
+            version: version || 1,
+            parentArtifactId: parentArtifactId ?? null,
+            artifactGroupId: artifactGroupId ?? null,
+          }
+          state.activeArtifactId = artifactId
+          state.sidecarOpen = true
+        }
+      )
   },
 })
 
