@@ -41,6 +41,8 @@ export interface FeatureFlags {
   enableArtifacts: boolean
   // Audio Transcription - convert audio to text with Whisper/Gemini
   enableAudioTranscription: boolean
+  // Socket.IO - new WebSocket implementation with single persistent connection
+  enableSocketIO: boolean
 }
 
 /**
@@ -74,6 +76,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableImageGeneration: true,
         enableArtifacts: true,
         enableAudioTranscription: true,
+        enableSocketIO: true, // Test Socket.IO in local
       }
 
     case 'dare-staging':
@@ -82,6 +85,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableImageGeneration: true, // DARE Staging: HAS Image Generation
         enableArtifacts: true, // DARE Staging: HAS Artifacts
         enableAudioTranscription: true, // DARE Staging: HAS Audio Transcription
+        enableSocketIO: true, // Test Socket.IO in staging
       }
 
     case 'dare-production':
@@ -90,6 +94,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableImageGeneration: true, // DARE Production: has Image Generation
         enableArtifacts: false, // DARE Production: NO Artifacts (beta)
         enableAudioTranscription: false, // DARE Production: NO Audio Transcription (beta)
+        enableSocketIO: false, // Disable Socket.IO in production until validated
       }
 
     case 'gt-production':
@@ -98,6 +103,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableImageGeneration: true, // Georgia Tech: HAS Image Generation
         enableArtifacts: true, // Georgia Tech: HAS Artifacts
         enableAudioTranscription: true, // Georgia Tech: HAS Audio Transcription
+        enableSocketIO: false, // Disable Socket.IO in production until validated
       }
 
     default:
@@ -106,6 +112,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableImageGeneration: true,
         enableArtifacts: true,
         enableAudioTranscription: true,
+        enableSocketIO: false, // Default off for safety
       }
   }
 }
