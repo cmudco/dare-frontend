@@ -39,6 +39,8 @@ export interface FeatureFlags {
   enableImageGeneration: boolean
   // Artifacts - long-form document generation with sidecar panel
   enableArtifacts: boolean
+  // Audio Transcription - convert audio to text with Whisper/Gemini
+  enableAudioTranscription: boolean
 }
 
 /**
@@ -71,6 +73,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableBYOK: true,
         enableImageGeneration: true,
         enableArtifacts: true,
+        enableAudioTranscription: true,
       }
 
     case 'dare-staging':
@@ -78,6 +81,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableBYOK: true, // DARE Staging: HAS BYOK
         enableImageGeneration: true, // DARE Staging: HAS Image Generation
         enableArtifacts: true, // DARE Staging: HAS Artifacts
+        enableAudioTranscription: true, // DARE Staging: HAS Audio Transcription
       }
 
     case 'dare-production':
@@ -85,6 +89,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableBYOK: false, // DARE Production: NO BYOK
         enableImageGeneration: true, // DARE Production: has Image Generation
         enableArtifacts: false, // DARE Production: NO Artifacts (beta)
+        enableAudioTranscription: false, // DARE Production: NO Audio Transcription (beta)
       }
 
     case 'gt-production':
@@ -92,6 +97,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableBYOK: true, // Georgia Tech: HAS BYOK
         enableImageGeneration: true, // Georgia Tech: HAS Image Generation
         enableArtifacts: true, // Georgia Tech: HAS Artifacts
+        enableAudioTranscription: true, // Georgia Tech: HAS Audio Transcription
       }
 
     default:
@@ -99,6 +105,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableBYOK: true,
         enableImageGeneration: true,
         enableArtifacts: true,
+        enableAudioTranscription: true,
       }
   }
 }

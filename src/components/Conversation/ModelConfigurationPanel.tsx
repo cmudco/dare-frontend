@@ -314,85 +314,92 @@ const ModelConfigurationPanel: React.FC = () => {
                 </div>
               )}
 
-              {/* Audio Transcription Toggle */}
-              <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
-                <div className='flex flex-col gap-1'>
-                  <div className='flex items-center gap-2'>
-                    <h4
-                      className={
-                        audioTranscriptionEnabled
-                          ? 'bg-gradient-to-r from-purple-600 via-violet-500 to-indigo-600 bg-clip-text font-medium text-transparent'
-                          : 'font-medium dark:text-white'
-                      }
-                    >
-                      Audio Transcription
-                    </h4>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                      </TooltipTrigger>
-                      <TooltipContent className='max-w-xs'>
-                        <div className='space-y-2'>
-                          <p className='font-semibold'>Audio Transcription</p>
-                          <p className='text-sm'>
-                            Convert audio files to text using Whisper or Gemini
-                            models.
-                          </p>
-                          <p className='text-xs text-muted-foreground'>
-                            💡 Upload audio files in Media tab when enabled
-                          </p>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
+              {/* Audio Transcription Toggle - Only show when feature enabled */}
+              {features.enableAudioTranscription && (
+                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                  <div className='flex flex-col gap-1'>
+                    <div className='flex items-center gap-2'>
+                      <h4
+                        className={
+                          audioTranscriptionEnabled
+                            ? 'bg-gradient-to-r from-purple-600 via-violet-500 to-indigo-600 bg-clip-text font-medium text-transparent'
+                            : 'font-medium dark:text-white'
+                        }
+                      >
+                        Audio Transcription
+                      </h4>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-xs'>
+                          <div className='space-y-2'>
+                            <p className='font-semibold'>Audio Transcription</p>
+                            <p className='text-sm'>
+                              Convert audio files to text using Whisper or
+                              Gemini models.
+                            </p>
+                            <p className='text-xs text-muted-foreground'>
+                              💡 Upload audio files in Media tab when enabled
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <p className='text-xs text-gray-500 dark:text-gray-400'>
+                      Enable audio-to-text transcription with Whisper/Gemini
+                    </p>
                   </div>
-                  <p className='text-xs text-gray-500 dark:text-gray-400'>
-                    Enable audio-to-text transcription with Whisper/Gemini
-                  </p>
+                  <Switch
+                    checked={audioTranscriptionEnabled}
+                    onCheckedChange={handleAudioTranscriptionToggle}
+                  />
                 </div>
-                <Switch
-                  checked={audioTranscriptionEnabled}
-                  onCheckedChange={handleAudioTranscriptionToggle}
-                />
-              </div>
+              )}
 
-              {/* Artifacts Toggle */}
-              <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
-                <div className='flex flex-col gap-1'>
-                  <div className='flex items-center gap-2'>
-                    <h4
-                      className={
-                        artifactsEnabled
-                          ? 'bg-gradient-to-r from-[#f7931e] via-[#8b5cf6] to-[#00c2ff] bg-clip-text font-medium text-transparent'
-                          : 'font-medium dark:text-white'
-                      }
-                    >
-                      Artifacts
-                    </h4>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                      </TooltipTrigger>
-                      <TooltipContent className='max-w-xs'>
-                        <div className='space-y-2'>
-                          <p className='font-semibold'>
-                            {TOOLTIP_CONTENT.modelConfig.artifacts.title}
-                          </p>
-                          <p className='text-sm'>
-                            {TOOLTIP_CONTENT.modelConfig.artifacts.description}
-                          </p>
-                          <p className='text-xs text-muted-foreground'>
-                            💡 {TOOLTIP_CONTENT.modelConfig.artifacts.tip}
-                          </p>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
+              {/* Artifacts Toggle - Only show when feature enabled */}
+              {features.enableArtifacts && (
+                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                  <div className='flex flex-col gap-1'>
+                    <div className='flex items-center gap-2'>
+                      <h4
+                        className={
+                          artifactsEnabled
+                            ? 'bg-gradient-to-r from-[#f7931e] via-[#8b5cf6] to-[#00c2ff] bg-clip-text font-medium text-transparent'
+                            : 'font-medium dark:text-white'
+                        }
+                      >
+                        Artifacts
+                      </h4>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-xs'>
+                          <div className='space-y-2'>
+                            <p className='font-semibold'>
+                              {TOOLTIP_CONTENT.modelConfig.artifacts.title}
+                            </p>
+                            <p className='text-sm'>
+                              {
+                                TOOLTIP_CONTENT.modelConfig.artifacts
+                                  .description
+                              }
+                            </p>
+                            <p className='text-xs text-muted-foreground'>
+                              💡 {TOOLTIP_CONTENT.modelConfig.artifacts.tip}
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </div>
+                  <Switch
+                    checked={artifactsEnabled}
+                    onCheckedChange={handleArtifactsToggle}
+                  />
                 </div>
-                <Switch
-                  checked={artifactsEnabled}
-                  onCheckedChange={handleArtifactsToggle}
-                />
-              </div>
+              )}
             </div>
 
             <div className='space-y-4'>
