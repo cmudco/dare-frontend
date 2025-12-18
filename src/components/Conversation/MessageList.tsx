@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react'
 import { RootState } from '../../redux/store'
 import Message from './Message'
 import { useAutoScroll } from '../../hooks/useAutoScroll'
+import { cn } from '@/lib/utils'
 
 interface MessageListProps {
   onEditMessage?: (id: string, content: string) => void
@@ -20,6 +21,9 @@ const MessageList = ({
 }: MessageListProps) => {
   const messages = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages
+  )
+  const historySidebarCollapsed = useSelector(
+    (state: RootState) => state.conversation.historySidebarCollapsed
   )
 
   const {
@@ -89,11 +93,14 @@ const MessageList = ({
       })}
       <div ref={anchorRef} />
 
-      {/* Scroll to bottom button - positioned relative to the Card parent which has 'relative' */}
+      {/* Scroll to bottom button */}
       {showScrollButton && (
         <button
           onClick={handleScrollToBottomClick}
-          className='fixed bottom-32 right-[300px] z-50 h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl'
+          className={cn(
+            'fixed bottom-32 z-50 h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl',
+            historySidebarCollapsed ? 'right-20' : 'right-[300px]'
+          )}
           aria-label='Scroll to bottom'
         >
           <ChevronDown className='mx-auto h-5 w-5' />

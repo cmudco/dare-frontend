@@ -378,6 +378,9 @@ export const conversationSlice = createSlice({
     clearAttachedImages(state) {
       state.attachedImages = []
     },
+    setHistorySidebarCollapsed(state, action: PayloadAction<boolean>) {
+      state.historySidebarCollapsed = action.payload
+    },
     setImageGenerating(
       state,
       action: PayloadAction<{ generating: boolean; prompt: string | null }>
@@ -766,5 +769,6 @@ export const {
   addAttachedImage,
   removeAttachedImage,
   clearAttachedImages,
+  setHistorySidebarCollapsed,
 } = conversationSlice.actions
 export default conversationSlice.reducer

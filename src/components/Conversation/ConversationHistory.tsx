@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
@@ -7,6 +7,7 @@ import {
   updateActiveConversation,
   updateSearchQuery,
   updateSelectedTags,
+  setHistorySidebarCollapsed,
 } from '../../redux/conversationSlice'
 import { createConversation } from '../../redux/asyncThunks/conversation'
 import { AppDispatch, RootState } from '../../redux/store'
@@ -18,7 +19,9 @@ import { features } from '@/config/environment'
 const ConversationHistory = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const isCollapsed = useSelector(
+    (state: RootState) => state.conversation.historySidebarCollapsed
+  )
   const searchQuery = useSelector(
     (state: RootState) => state.conversation?.searchQuery || ''
   )
@@ -26,12 +29,16 @@ const ConversationHistory = () => {
     (state: RootState) => state.artifact.sidecarOpen
   )
 
+  const setIsCollapsed = (collapsed: boolean) => {
+    dispatch(setHistorySidebarCollapsed(collapsed))
+  }
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
-        setIsCollapsed(true)
+        dispatch(setHistorySidebarCollapsed(true))
       } else {
-        setIsCollapsed(false)
+        dispatch(setHistorySidebarCollapsed(false))
       }
     }
 
@@ -39,7 +46,7 @@ const ConversationHistory = () => {
     handleResize()
 
     return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  }, [dispatch])
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(updateSearchQuery(e.target.value))

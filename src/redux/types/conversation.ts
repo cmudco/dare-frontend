@@ -174,6 +174,7 @@ export interface ConversationState {
   imageGenerationSettings: ImageGenerationSettings
   isTranscribingAudio: boolean
   audioTranscriptionSettings: AudioTranscriptionSettings
+  historySidebarCollapsed: boolean
 }
 
 export interface ConversationResponse {
