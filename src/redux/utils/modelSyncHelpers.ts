@@ -26,7 +26,7 @@ export const filterModelsByImageGeneration = (
   return allModels.filter((model) =>
     isImageGeneration
       ? model.isImageGenerator === true
-      : !model.isImageGenerator
+      : !model.isImageGenerator && !model.isAudioTranscriber
   )
 }
 
