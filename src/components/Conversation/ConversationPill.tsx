@@ -46,8 +46,8 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
-  const isConnected = useSelector(
-    (state: RootState) => state.websocket.isConnected
+  const isSocketConnected = useSelector(
+    (state: RootState) => state.socket.connected
   )
   const navigate = useNavigate()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -108,7 +108,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   }
 
   useEffect(() => {
-    if (pendingMessage && isConnected && activeConversation) {
+    if (pendingMessage && isSocketConnected && activeConversation) {
       const newMessage: Partial<Message> = {
         message: pendingMessage,
       }
@@ -121,7 +121,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     }
   }, [
     pendingMessage,
-    isConnected,
+    isSocketConnected,
     activeConversation,
     dispatch,
     clearPendingDraftSave,
