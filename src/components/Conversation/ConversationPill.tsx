@@ -315,11 +315,20 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
           </div>
         </div>
       </div>
-      <p className='mt-2 text-center text-sm text-gray-500'>
-        {disabled
-          ? 'Select a conversation to start chatting'
-          : 'DARE Chat can make mistakes. Check important information.'}
-      </p>
+      <div className='mt-2 flex items-center justify-center gap-2'>
+        <span
+          className={clsx(
+            'h-2 w-2 rounded-full',
+            isSocketConnected ? 'bg-green-500' : 'bg-red-500'
+          )}
+          title={isSocketConnected ? 'Socket connected' : 'Socket disconnected'}
+        />
+        <p className='text-center text-sm text-gray-500'>
+          {disabled
+            ? 'Select a conversation to start chatting'
+            : 'DARE Chat can make mistakes. Check important information.'}
+        </p>
+      </div>
     </>
   )
 }
