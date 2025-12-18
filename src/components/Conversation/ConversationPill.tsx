@@ -173,9 +173,19 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     const items = event.clipboardData?.items
     if (!items) return
 
+    // Check if there's plain text in the clipboard
+    // When copying from Word/rich text editors, clipboard contains both text and image
+    // We should prioritize text in that case and let the default paste behavior handle it
+    const hasText = Array.from(items).some((item) => item.type === 'text/plain')
+
     for (let i = 0; i < items.length; i++) {
       const item = items[i]
       if (item.type.indexOf('image') !== -1) {
+        // Only handle image paste if there's no text (i.e., user is pasting a pure image)
+        // This prevents Word/rich text clipboard images from being attached
+        if (hasText) {
+          continue
+        }
         event.preventDefault()
         const file = item.getAsFile()
         if (file) {
