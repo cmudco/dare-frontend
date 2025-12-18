@@ -211,11 +211,12 @@ export function createSocketMiddleware(): Middleware {
           socket.disconnect()
         }
 
-        // Build URL
+        // Build URL with /chat namespace
         const baseUrl = config.apiUrl.replace(/\/api\/?$/, '')
+        const socketUrl = `${baseUrl}/chat`
 
-        // Create socket
-        socket = io(baseUrl, {
+        // Create socket connecting to /chat namespace
+        socket = io(socketUrl, {
           path: '/socket.io/',
           auth: { token: jwtToken },
           transports: ['websocket', 'polling'],

@@ -624,6 +624,98 @@ export const conversationSlice = createSlice({
           console.error('Failed to update feedback tracking:', action.payload)
         }
       )
+      // ─────────────────────────────────────────────────────────────────────
+      // Socket.IO message handlers (from socketMiddleware)
+      // ─────────────────────────────────────────────────────────────────────
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: { conversationHistory: Message[] }
+        } => action.type === 'socket/conversation_history',
+        (state, action) => {
+          if (action.payload.conversationHistory) {
+            state.activeConversationMessages =
+              action.payload.conversationHistory
+          }
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: Message & { regenerate?: boolean }
+        } => action.type === 'socket/message',
+        (state, action) => {
+          const existingIndex = state.activeConversationMessages.findIndex(
+            (msg) => msg.id === action.payload.id
+          )
+
+          if (existingIndex !== -1) {
+            // Message exists - update it (handles regenerate and deduplication)
+            state.activeConversationMessages[existingIndex] = {
+              ...state.activeConversationMessages[existingIndex],
+              ...action.payload,
+              streaming: action.payload.regenerate
+                ? false
+                : action.payload.streaming,
+            }
+          } else {
+            // New message - add it
+            state.activeConversationMessages.push(action.payload)
+          }
+        }
+      )
+      .addMatcher(
+        (action): action is { type: string; payload: Partial<Message> } =>
+          action.type === 'socket/ai_stream',
+        (state, action) => {
+          const index = state.activeConversationMessages.findIndex(
+            (msg) => msg.id === action.payload.id
+          )
+          if (index !== -1) {
+            state.activeConversationMessages[index] = {
+              ...state.activeConversationMessages[index],
+              ...action.payload,
+            }
+          }
+        }
+      )
+      .addMatcher(
+        (action): action is { type: string; payload: { title: string } } =>
+          action.type === 'socket/conversation_title',
+        (state, action) => {
+          if (state.activeConversation) {
+            state.activeConversation.title = action.payload.title
+            // Also update in conversations list
+            const index = state.conversations.findIndex(
+              (conv) =>
+                conv.conversationId === state.activeConversation?.conversationId
+            )
+            if (index !== -1) {
+              state.conversations[index].title = action.payload.title
+            }
+          }
+        }
+      )
+      .addMatcher(
+        (action): action is { type: string; payload: Partial<Message> } =>
+          action.type === 'socket/edit_message' ||
+          action.type === 'socket/regenerate_response',
+        (state, action) => {
+          const index = state.activeConversationMessages.findIndex(
+            (msg) => msg.id === action.payload.id
+          )
+          if (index !== -1) {
+            state.activeConversationMessages[index] = {
+              ...state.activeConversationMessages[index],
+              ...action.payload,
+            }
+          }
+        }
+      )
   },
 })
 
