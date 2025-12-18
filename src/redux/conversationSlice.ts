@@ -69,7 +69,11 @@ export const conversationSlice = createSlice({
           )
         } else {
           // Regular mode - filter out both image and audio models
-          syncModelsWithImageGenerationState(state, false)
+          syncModelsWithImageGenerationState(
+            state,
+            false,
+            action.payload.selectedModel
+          )
         }
       }
     },
