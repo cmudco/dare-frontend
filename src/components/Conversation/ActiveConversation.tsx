@@ -1,41 +1,42 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch, RootState } from '../../redux/store'
-import ConversationPill from './ConversationPill'
-import NewConversation from './NewConversation'
 import { useNavigate, useParams } from 'react-router-dom'
+import { AppDispatch, RootState } from '../../redux/store'
 import {
   updateConversationInput,
   updateActiveConversation,
   loadSelectedFilesFromIds,
   loadDraftForConversation,
   saveDraftForConversation,
+  clearConversation,
 } from '../../redux/conversationSlice'
-import { FEEDBACK_AUTO_TRIGGER_CONFIG } from '@/config/feedback'
-import { Conversation } from '@/redux/types/conversation'
-import MessageList from './MessageList'
-import {
-  connectWebSocket,
-  disconnectWebSocket,
-} from '../../redux/asyncThunks/websocket'
 import { updateConversationFeedbackTracking } from '@/redux/asyncThunks/conversation'
+import { useSocketSubscription } from '@/hooks/useSocketSubscription'
+import { useImageDragAndDrop } from '../../hooks/useImageDragAndDrop'
+import { FEEDBACK_AUTO_TRIGGER_CONFIG } from '@/config/feedback'
+import { features } from '@/config/environment'
+import { Conversation } from '@/redux/types/conversation'
 import { Card } from '../ui/card'
+import ConversationPill from './ConversationPill'
+import NewConversation from './NewConversation'
 import EmptyConversation from './EmptyConversation'
 import CreditErrorAlert from './CreditErrorAlert'
 import ImageDropOverlay from './ImageDropOverlay'
-import { useImageDragAndDrop } from '../../hooks/useImageDragAndDrop'
+import MessageList from './MessageList'
 import { ArtifactSidecar, ArtifactBanner } from '../Artifacts'
-import { features } from '@/config/environment'
 
-const shouldShowAutoFeedback = (
+// ════════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+
+function shouldShowAutoFeedback(
   conversation: Conversation | null,
   messageCount: number
-): boolean => {
+): boolean {
   if (!FEEDBACK_AUTO_TRIGGER_CONFIG.ENABLE_AUTO_TRIGGER || !conversation) {
     return false
   }
 
-  // Check max prompts limit
   const promptCount = conversation.feedbackAutoPromptCount || 0
   if (
     promptCount >=
@@ -44,7 +45,6 @@ const shouldShowAutoFeedback = (
     return false
   }
 
-  // Check message interval
   const lastPromptMessageCount =
     conversation.feedbackLastPromptMessageCount || 0
   const messagesSinceLastPrompt = messageCount - lastPromptMessageCount
@@ -55,7 +55,6 @@ const shouldShowAutoFeedback = (
     return false
   }
 
-  // Check time interval
   if (conversation.feedbackLastPromptTimestamp) {
     const lastPromptTime = new Date(
       conversation.feedbackLastPromptTimestamp
@@ -72,14 +71,24 @@ const shouldShowAutoFeedback = (
   return true
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// COMPONENT
+// ════════════════════════════════════════════════════════════════════════════
+
 const ActiveConversation: React.FC = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>()
+  const { id } = useParams<{ id: string }>()
+
+  // Redux state
   const activeConversation = useSelector(
     (state: RootState) => state.conversation?.activeConversation
   )
   const conversationHistory = useSelector(
     (state: RootState) => state.conversation?.activeConversationMessages || []
+  )
+  const conversations = useSelector(
+    (state: RootState) => state.conversation?.conversations || []
   )
   const files = useSelector((state: RootState) => state.files.files)
   const conversationInput = useSelector(
@@ -89,22 +98,16 @@ const ActiveConversation: React.FC = () => {
     (state: RootState) => state.conversation.autoSaveEnabled
   )
 
-  const { id } = useParams<{ id: string }>()
-  const conversations = useSelector(
-    (state: RootState) => state.conversation?.conversations || []
-  )
-  const token = localStorage.getItem('token')
-  const isConnected = useSelector(
-    (state: RootState) => state.websocket.isConnected
-  )
-
+  // Local state
   const [editMessageId, setEditMessageId] = useState<string | null>(null)
   const [shouldShowAutoFeedbackModal, setShouldShowAutoFeedbackModal] =
     useState(false)
+
+  // Refs
   const hasCheckedAutoFeedback = useRef(false)
   const prevActiveConversationRef = useRef<typeof activeConversation>(null)
 
-  // Use custom hook for drag and drop functionality
+  // Hooks
   const {
     isDragging,
     handleDragEnter,
@@ -113,82 +116,60 @@ const ActiveConversation: React.FC = () => {
     handleDrop,
   } = useImageDragAndDrop()
 
-  const handleEditMessage = (id: string, content: string) => {
-    setEditMessageId(id)
-    dispatch(updateConversationInput(content))
-  }
-  const handleCancelEdit = () => {
-    setEditMessageId(null)
-    dispatch(updateConversationInput(''))
-  }
+  // Socket subscription
+  useSocketSubscription(activeConversation?.conversationId)
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // EFFECTS
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // Set active conversation from URL param
   useEffect(() => {
     if (id) {
-      const conversation = conversations.find(
-        (conversation) => conversation.conversationId === id
-      )
+      const conversation = conversations.find((c) => c.conversationId === id)
       if (!activeConversation && conversation) {
         dispatch(updateActiveConversation(conversation))
       }
     } else {
       dispatch(updateActiveConversation(null))
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, conversations, dispatch])
+  }, [id, conversations, activeConversation, dispatch])
 
+  // Clear conversation state when switching
+  useEffect(() => {
+    if (activeConversation) {
+      dispatch(clearConversation())
+      dispatch(updateConversationInput(''))
+    }
+  }, [activeConversation?.conversationId, dispatch])
+
+  // Load selected files for conversation
   useEffect(() => {
     if (activeConversation && files.length > 0) {
-      const selectedFileIds = activeConversation.selectedFileIds || []
-      const selectedEmbeddingIds = activeConversation.selectedEmbeddingIds || []
-      const selectedMediaIds = activeConversation.selectedMediaIds || []
-
       dispatch(
         loadSelectedFilesFromIds({
           files,
-          selectedFileIds,
-          selectedEmbeddingIds,
-          selectedMediaIds,
+          selectedFileIds: activeConversation.selectedFileIds || [],
+          selectedEmbeddingIds: activeConversation.selectedEmbeddingIds || [],
+          selectedMediaIds: activeConversation.selectedMediaIds || [],
         })
       )
     }
-  }, [activeConversation?.conversationId, files, dispatch]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeConversation?.conversationId, files, dispatch])
 
-  useEffect(() => {
-    const handleWebSocketConnection = async () => {
-      if (isConnected) {
-        dispatch(updateConversationInput(''))
-        await dispatch(disconnectWebSocket())
-      }
-
-      if (token && activeConversation) {
-        try {
-          await dispatch(
-            connectWebSocket({
-              conversationId: activeConversation.conversationId,
-              jwtKey: token || '',
-            })
-          )
-        } catch (error) {
-          console.error('WebSocket connection failed:', error)
-        }
-      }
-    }
-
-    handleWebSocketConnection()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeConversation?.conversationId, dispatch])
-
+  // Navigate to conversation URL
   useEffect(() => {
     if (activeConversation) {
       navigate(`/conversation/${activeConversation.conversationId}`)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeConversation, dispatch])
+  }, [activeConversation, navigate])
 
+  // Reset edit state on conversation change
   useEffect(() => {
     setEditMessageId(null)
   }, [activeConversation?.conversationId])
 
+  // Draft save/load on conversation switch
   useEffect(() => {
     const prevConversation = prevActiveConversationRef.current
     const currentConversation = activeConversation
@@ -196,6 +177,7 @@ const ActiveConversation: React.FC = () => {
     if (
       prevConversation?.conversationId !== currentConversation?.conversationId
     ) {
+      // Save draft for previous conversation
       if (prevConversation && autoSaveEnabled && conversationInput.trim()) {
         dispatch(
           saveDraftForConversation({
@@ -205,23 +187,26 @@ const ActiveConversation: React.FC = () => {
         )
       }
 
+      // Load draft for current conversation
       if (currentConversation) {
         dispatch(loadDraftForConversation(currentConversation.conversationId))
       }
 
       prevActiveConversationRef.current = currentConversation
     }
+  }, [
+    activeConversation?.conversationId,
+    autoSaveEnabled,
+    conversationInput,
+    dispatch,
+  ])
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeConversation?.conversationId, dispatch])
-
-  // Extract complex expression for linting
+  // Auto-trigger feedback modal
   const lastMessageStreaming = useMemo(
     () => conversationHistory[conversationHistory.length - 1]?.streaming,
     [conversationHistory]
   )
 
-  // Auto-trigger feedback modal
   useEffect(() => {
     if (
       !activeConversation ||
@@ -231,17 +216,12 @@ const ActiveConversation: React.FC = () => {
       return
     }
 
-    // Get last message
     const lastMessage = conversationHistory[conversationHistory.length - 1]
-
-    // Only trigger after AI message that's done streaming
     if (lastMessage.isSender || lastMessage.streaming) {
       return
     }
 
-    // Count only model response messages
     const nModelMessages = conversationHistory.filter((m) => !m.isSender).length
-
     const shouldTrigger = shouldShowAutoFeedback(
       activeConversation,
       nModelMessages
@@ -249,8 +229,6 @@ const ActiveConversation: React.FC = () => {
 
     if (shouldTrigger) {
       hasCheckedAutoFeedback.current = true
-
-      // Update conversation tracking
       dispatch(
         updateConversationFeedbackTracking({
           conversationId: activeConversation.conversationId,
@@ -260,23 +238,39 @@ const ActiveConversation: React.FC = () => {
           feedbackLastPromptTimestamp: new Date().toISOString(),
         })
       )
-
-      // Signal to show modal on the last message
       setShouldShowAutoFeedbackModal(true)
       setTimeout(() => setShouldShowAutoFeedbackModal(false), 0)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     conversationHistory.length,
-    activeConversation?.conversationId,
+    activeConversation,
     lastMessageStreaming,
+    dispatch,
   ])
 
-  // Reset auto-feedback check when switching conversations
+  // Reset auto-feedback check on conversation switch
   useEffect(() => {
     hasCheckedAutoFeedback.current = false
     setShouldShowAutoFeedbackModal(false)
   }, [activeConversation?.conversationId])
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // HANDLERS
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const handleEditMessage = (id: string, content: string) => {
+    setEditMessageId(id)
+    dispatch(updateConversationInput(content))
+  }
+
+  const handleCancelEdit = () => {
+    setEditMessageId(null)
+    dispatch(updateConversationInput(''))
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ──────────────────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -297,7 +291,6 @@ const ActiveConversation: React.FC = () => {
             )}
             {activeConversation && conversationHistory.length > 0 && (
               <>
-                {/* Artifact Banner for paused/generating artifacts */}
                 {features.enableArtifacts && <ArtifactBanner />}
                 <MessageList
                   onEditMessage={handleEditMessage}
@@ -314,7 +307,6 @@ const ActiveConversation: React.FC = () => {
             </div>
           </div>
         </Card>
-        {/* Artifact Sidecar Panel */}
         {features.enableArtifacts && <ArtifactSidecar />}
       </div>
     </>
