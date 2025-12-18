@@ -124,6 +124,31 @@ export const socketSlice = createSlice({
       .addCase(socketSubscribeError, (state, action) => {
         state.error = action.payload.error || 'Failed to subscribe'
       })
+      // Handle credit errors from socket messages
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            error: string
+            message: string
+            current_balance: string
+            required_amount: string
+          }
+        } =>
+          action.type === 'socket/error' &&
+          (action.payload?.error === 'insufficient_balance' ||
+            action.payload?.error === 'insufficient_credits'),
+        (state, action) => {
+          state.creditError = {
+            type: action.payload.error,
+            message: action.payload.message,
+            currentBalance: action.payload.current_balance,
+            requiredAmount: action.payload.required_amount,
+          }
+        }
+      )
   },
 })
 
