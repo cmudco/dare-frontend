@@ -32,7 +32,7 @@ import {
   deleteMessage,
 } from '@/redux/asyncThunks/conversation'
 import { AppDispatch } from '../../redux/store'
-import { regenerateResponse } from '@/redux/asyncThunks/websocket'
+import { regenerateSocketResponse } from '@/redux/asyncThunks/socketMessages'
 import FeedbackModal from './FeedbackModal'
 import MessageMetadata from './MessageMetadata'
 import { DeleteConfirmation } from '../DeleteConfirmation'
@@ -189,7 +189,7 @@ const Message: React.FC<MessageProps> = ({
 
   const handleRegenerate = () => {
     if (!message.isSender) {
-      dispatch(regenerateResponse({ messageId: message.id }))
+      dispatch(regenerateSocketResponse({ messageId: message.id }))
     }
   }
 

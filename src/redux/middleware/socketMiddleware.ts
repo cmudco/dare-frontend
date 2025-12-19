@@ -139,7 +139,7 @@ export const socketRegenerate = (
   options: Record<string, unknown>
 ) => ({
   type: SOCKET_REGENERATE as typeof SOCKET_REGENERATE,
-  payload: { conversationId, messageId, ...options },
+  payload: { conversationId, message_id: messageId, ...options },
 })
 
 export const socketContinueArtifact = (
