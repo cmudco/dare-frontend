@@ -24,6 +24,7 @@ import ExportButton from './ExportButton'
 import ImagePreview from './ImagePreview'
 import ImageGenerationPanel from './ImageGenerationPanel'
 import AudioTranscriptionPanel from './AudioTranscriptionPanel'
+import VoiceModeButton from './VoiceModeButton'
 import { ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
@@ -271,22 +272,27 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             rows={1}
             style={{ minHeight: '3.5rem', maxHeight: '10rem' }}
           />
-          <div
-            className={clsx(
-              'absolute right-[16px] top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full transition-colors',
-              disabled
-                ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-600'
-                : clsx(
-                    'cursor-pointer',
-                    isDarkMode
-                      ? 'bg-white/30 text-white hover:bg-white/50'
-                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                  )
-            )}
-            onClick={disabled ? undefined : handleSendMessage}
-            aria-label='Send message'
-          >
-            <ArrowUp className='h-4 w-4' />
+          <div className='absolute right-[16px] top-1/2 flex -translate-y-1/2 items-center gap-2'>
+            {/* Voice Mode Button */}
+            <VoiceModeButton disabled={disabled} />
+            {/* Send Button */}
+            <div
+              className={clsx(
+                'flex h-6 w-6 items-center justify-center rounded-full transition-colors',
+                disabled
+                  ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-600'
+                  : clsx(
+                      'cursor-pointer',
+                      isDarkMode
+                        ? 'bg-white/30 text-white hover:bg-white/50'
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    )
+              )}
+              onClick={disabled ? undefined : handleSendMessage}
+              aria-label='Send message'
+            >
+              <ArrowUp className='h-4 w-4' />
+            </div>
           </div>
         </div>
 

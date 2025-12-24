@@ -9,6 +9,15 @@ import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
 
+/**
+ * Voice recording state enum for push-to-talk voice input
+ */
+export enum VoiceRecordingState {
+  IDLE = 'idle',
+  RECORDING = 'recording',
+  PROCESSING = 'processing',
+}
+
 export interface Conversation {
   conversationId: string
   title?: string

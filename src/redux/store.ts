@@ -61,9 +61,13 @@ export const store = configureStore({
       return result
     }
 
-    const middlewares = getDefaultMiddleware().concat(
-      draftPersistenceMiddleware
-    )
+    const middlewares = getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore audioBlob in voice message actions (Blob is not serializable)
+        ignoredActions: ['socket/sendVoiceMessage'],
+        ignoredActionPaths: ['payload.audioBlob'],
+      },
+    }).concat(draftPersistenceMiddleware)
 
     // Add Socket.IO middleware if enabled
     if (config.features.enableSocketIO) {
