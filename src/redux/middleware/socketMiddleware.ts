@@ -50,6 +50,15 @@ export interface ClientToServerEvents {
     data: Record<string, unknown>,
     callback: (response: SocketResponse) => void
   ) => void
+  send_voice_message: (
+    data: {
+      conversationId: string
+      audio: string
+      audioFormat: string
+      language: string
+    },
+    callback: (response: SocketResponse) => void
+  ) => void
   edit_message: (
     data: { conversationId: string; messageId: string; message: string },
     callback: (response: SocketResponse) => void
@@ -88,6 +97,7 @@ export const SOCKET_DISCONNECT = 'socket/disconnect'
 export const SOCKET_SUBSCRIBE = 'socket/subscribe'
 export const SOCKET_UNSUBSCRIBE = 'socket/unsubscribe'
 export const SOCKET_SEND_MESSAGE = 'socket/sendMessage'
+export const SOCKET_SEND_VOICE_MESSAGE = 'socket/sendVoiceMessage'
 export const SOCKET_EDIT_MESSAGE = 'socket/editMessage'
 export const SOCKET_REGENERATE = 'socket/regenerate'
 export const SOCKET_CONTINUE_ARTIFACT = 'socket/continueArtifact'
@@ -158,6 +168,15 @@ export const socketPauseArtifact = (
   payload: { conversationId, artifactId },
 })
 
+export const socketSendVoiceMessage = (
+  conversationId: string,
+  audioBlob: Blob,
+  language?: string
+) => ({
+  type: SOCKET_SEND_VOICE_MESSAGE as typeof SOCKET_SEND_VOICE_MESSAGE,
+  payload: { conversationId, audioBlob, language },
+})
+
 // Action type union
 export type SocketAction =
   | ReturnType<typeof socketConnect>
@@ -165,6 +184,7 @@ export type SocketAction =
   | ReturnType<typeof socketSubscribe>
   | ReturnType<typeof socketUnsubscribe>
   | ReturnType<typeof socketSendMessage>
+  | ReturnType<typeof socketSendVoiceMessage>
   | ReturnType<typeof socketEditMessage>
   | ReturnType<typeof socketRegenerate>
   | ReturnType<typeof socketContinueArtifact>
@@ -426,6 +446,60 @@ export function createSocketMiddleware(): Middleware {
             }
           }
         )
+        break
+      }
+
+      // ─────────────────────────────────────────────────────────────────────
+      // Voice Input
+      // ─────────────────────────────────────────────────────────────────────
+
+      case SOCKET_SEND_VOICE_MESSAGE: {
+        if (!socket?.connected) {
+          console.warn('Cannot send voice message: not connected')
+          return next(typedAction)
+        }
+
+        const { conversationId, audioBlob, language } = typedAction.payload as {
+          conversationId: string
+          audioBlob: Blob
+          language?: string
+        }
+
+        // Convert Blob to base64
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const base64Data = reader.result as string
+          // Extract base64 content (remove data URL prefix)
+          const base64 = base64Data.split(',')[1]
+          // Get audio format from MIME type (e.g., 'audio/webm' -> 'webm')
+          const audioFormat =
+            audioBlob.type.split('/')[1]?.split(';')[0] || 'webm'
+
+          socket?.emit(
+            'send_voice_message',
+            {
+              conversationId,
+              audio: base64,
+              audioFormat,
+              language: language || 'auto',
+            },
+            (response: SocketResponse) => {
+              if (!response.success) {
+                dispatch({
+                  type: 'socket/voiceError',
+                  payload: { error: response.error },
+                })
+              }
+            }
+          )
+        }
+        reader.onerror = () => {
+          dispatch({
+            type: 'socket/voiceError',
+            payload: { error: 'Failed to read audio data' },
+          })
+        }
+        reader.readAsDataURL(audioBlob)
         break
       }
     }
