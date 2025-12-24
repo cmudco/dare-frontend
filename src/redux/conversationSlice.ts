@@ -719,6 +719,20 @@ export const conversationSlice = createSlice({
           }
         }
       )
+      // Voice transcription - put text in input for user review
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: { text: string; status: string }
+        } => action.type === 'socket/voice_transcription',
+        (state, action) => {
+          if (action.payload.status === 'complete' && action.payload.text) {
+            state.conversationInput = action.payload.text
+          }
+        }
+      )
   },
 })
 

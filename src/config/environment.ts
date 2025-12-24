@@ -43,6 +43,8 @@ export interface FeatureFlags {
   enableAudioTranscription: boolean
   // Socket.IO - new WebSocket implementation with single persistent connection
   enableSocketIO: boolean
+  // Voice Input - push-to-talk voice input mode (V1)
+  enableVoiceInput: boolean
 }
 
 /**
@@ -77,6 +79,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableArtifacts: true,
         enableAudioTranscription: true,
         enableSocketIO: true, // Test Socket.IO in local
+        enableVoiceInput: true, // Voice input enabled for local testing
       }
 
     case 'dare-staging':
@@ -86,6 +89,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableArtifacts: true, // DARE Staging: HAS Artifacts
         enableAudioTranscription: true, // DARE Staging: HAS Audio Transcription
         enableSocketIO: true, // Test Socket.IO in staging
+        enableVoiceInput: true, // Voice input enabled for staging testing
       }
 
     case 'dare-production':
@@ -95,6 +99,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableArtifacts: false, // DARE Production: NO Artifacts (beta)
         enableAudioTranscription: false, // DARE Production: NO Audio Transcription (beta)
         enableSocketIO: false, // Disable Socket.IO in production until validated
+        enableVoiceInput: false, // Voice input disabled in production (beta)
       }
 
     case 'gt-production':
@@ -104,6 +109,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableArtifacts: true, // Georgia Tech: HAS Artifacts
         enableAudioTranscription: true, // Georgia Tech: HAS Audio Transcription
         enableSocketIO: false, // Disable Socket.IO in production until validated
+        enableVoiceInput: false, // Voice input disabled in production (beta)
       }
 
     default:
@@ -113,6 +119,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableArtifacts: true,
         enableAudioTranscription: true,
         enableSocketIO: false, // Default off for safety
+        enableVoiceInput: false, // Default off for safety
       }
   }
 }
