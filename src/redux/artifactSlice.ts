@@ -315,6 +315,7 @@ export const artifactSlice = createSlice({
           state.sidecarOpen = true
         }
       )
+      // NEW: Handler for simplified artifact_start event
       .addMatcher(
         (
           action
@@ -322,18 +323,76 @@ export const artifactSlice = createSlice({
           type: string
           payload: {
             artifactId: number
-            chunk: string
-            progress: number
-            section: number
+            title: string
+            messageId?: number
+            version?: number
+            isNewVersion?: boolean
+            parentArtifactId?: number
+            artifactGroupId?: number
+          }
+        } => action.type === 'socket/artifact_start',
+        (state, action) => {
+          const {
+            artifactId,
+            title,
+            version,
+            isNewVersion,
+            parentArtifactId,
+            artifactGroupId,
+          } = action.payload
+          const key = String(artifactId)
+          state.artifacts[key] = {
+            id: artifactId,
+            title,
+            outline: '', // Simplified - no outline
+            content: '',
+            artifactType: 'document',
+            status: 'generating',
+            estimatedSections: 1, // Simplified - no sections
+            currentSection: 0,
+            progress: 0,
+            version: version || 1,
+            isModification: isNewVersion || false,
+            parentArtifactId: parentArtifactId ?? null,
+            artifactGroupId: artifactGroupId ?? null,
+          }
+          state.activeArtifactId = artifactId
+          state.sidecarOpen = true
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            artifactId: number
+            chunk?: string // Legacy format
+            content?: string // New simplified format (full content)
+            progress?: number
+            section?: number
+            streaming?: boolean
           }
         } => action.type === 'socket/artifact_stream',
         (state, action) => {
-          const { artifactId, chunk, progress, section } = action.payload
+          const { artifactId, chunk, content, progress, section } =
+            action.payload
           const artifact = state.artifacts[String(artifactId)]
           if (artifact) {
-            artifact.content += chunk
-            artifact.progress = progress
-            artifact.currentSection = section
+            // Support both legacy (chunk append) and new (full content) formats
+            if (content !== undefined) {
+              // New simplified format - content is the full accumulated content
+              artifact.content = content
+            } else if (chunk !== undefined) {
+              // Legacy format - append chunk
+              artifact.content += chunk
+            }
+            if (progress !== undefined) {
+              artifact.progress = progress
+            }
+            if (section !== undefined) {
+              artifact.currentSection = section
+            }
           }
         }
       )
@@ -363,18 +422,32 @@ export const artifactSlice = createSlice({
             artifactId: number
             estimatedSections?: number
             totalWords?: number
+            content?: string // New simplified format
+            wordCount?: number // New simplified format
           }
         } => action.type === 'socket/artifact_complete',
         (state, action) => {
-          const { artifactId, estimatedSections, totalWords } = action.payload
+          const {
+            artifactId,
+            estimatedSections,
+            totalWords,
+            content,
+            wordCount,
+          } = action.payload
           const artifact = state.artifacts[String(artifactId)]
           if (artifact) {
             artifact.status = 'completed'
             artifact.currentSection =
               estimatedSections || artifact.estimatedSections
             artifact.progress = 1.0
-            if (totalWords) {
-              artifact.wordCount = totalWords
+            // Support both legacy (totalWords) and new (wordCount) formats
+            const words = wordCount ?? totalWords
+            if (words) {
+              artifact.wordCount = words
+            }
+            // Update content if provided (new simplified format)
+            if (content !== undefined) {
+              artifact.content = content
             }
           }
         }
@@ -384,14 +457,22 @@ export const artifactSlice = createSlice({
           action
         ): action is {
           type: string
-          payload: { artifactId: number; errorMessage: string }
+          payload: {
+            artifactId?: number
+            errorMessage?: string // Legacy format
+            error?: string // New simplified format
+          }
         } => action.type === 'socket/artifact_error',
         (state, action) => {
-          const { artifactId, errorMessage } = action.payload
-          const artifact = state.artifacts[String(artifactId)]
-          if (artifact) {
-            artifact.status = 'error'
-            artifact.error = errorMessage
+          const { artifactId, errorMessage, error } = action.payload
+          // Support both legacy (errorMessage) and new (error) formats
+          const errorMsg = error ?? errorMessage ?? 'Unknown error'
+          if (artifactId) {
+            const artifact = state.artifacts[String(artifactId)]
+            if (artifact) {
+              artifact.status = 'error'
+              artifact.error = errorMsg
+            }
           }
         }
       )
