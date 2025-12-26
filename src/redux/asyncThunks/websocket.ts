@@ -7,13 +7,7 @@ import {
   updateConversationHistory,
 } from '../conversationSlice'
 import {
-  initArtifact,
-  initModifyArtifact,
-  appendContent,
-  updateProgress,
-  setCurrentSection,
   setStatus,
-  setSectionsRemaining,
   setWordCount,
   setArtifactError,
   loadArtifact,
@@ -29,6 +23,14 @@ import { WEBSOCKET_URL } from '../../api/config'
 import { getWallet } from './billing'
 
 let socket: WebSocket | null = null
+
+/**
+ * WebSocket Async Thunks
+ *
+ * NOTE: Artifact events (artifact_start, artifact_stream, artifact_complete, artifact_error)
+ * are now handled by socketMiddleware, not this file. This file only handles legacy
+ * WebSocket connection for non-Socket.IO fallback.
+ */
 
 export const connectWebSocket = createAsyncThunk<
   void,
@@ -71,14 +73,13 @@ export const connectWebSocket = createAsyncThunk<
           if (data.conversationHistory) {
             dispatch(updateConversationHistory(data.conversationHistory))
             // Load any artifacts from conversation history
-            // These are lightweight (no content/outline) - full data fetched on click
             if (data.artifacts && Array.isArray(data.artifacts)) {
               const mappedArtifacts: Artifact[] = data.artifacts.map(
                 (a: Record<string, unknown>) => ({
                   id: String(a.id),
                   title: String(a.title || ''),
-                  outline: String(a.outline || ''), // May be empty from list serializer
-                  content: String(a.content || ''), // May be empty from list serializer
+                  outline: String(a.outline || ''),
+                  content: String(a.content || ''),
                   artifactType:
                     (a.artifactType as Artifact['artifactType']) || 'document',
                   status: (a.status as Artifact['status']) || 'completed',
@@ -101,6 +102,7 @@ export const connectWebSocket = createAsyncThunk<
             }
           }
           break
+
         case 'message':
           if (data.regenerate) {
             dispatch(
@@ -116,6 +118,7 @@ export const connectWebSocket = createAsyncThunk<
             dispatch(getWallet())
           }
           break
+
         case 'ai_stream':
           dispatch(
             updateMessage({
@@ -124,135 +127,33 @@ export const connectWebSocket = createAsyncThunk<
             })
           )
           break
+
         case 'conversation_title':
           dispatch(updateConversationTitle(data.title))
           break
+
         case 'edit_message':
         case 'regenerate_response':
           dispatch(updateMessage(data as Partial<Message>))
           break
 
-        // Artifact message handlers
-        case 'artifact_init':
-          dispatch(
-            initArtifact({
-              id: data.artifactId,
-              title: data.title,
-              outline: data.outline,
-              estimatedSections: data.estimatedSections,
-            })
-          )
-          // Link artifact to the message and update title if messageId is provided
-          if (data.messageId) {
-            dispatch(
-              updateMessage({
-                id: data.messageId,
-                artifactId: data.artifactId,
-                message: `Generated artifact: ${data.title}`,
-                streaming: true, // Keep streaming true until complete
-              })
-            )
-          }
-          // Open the sidecar to show artifact generation
-          dispatch(setActiveArtifact(data.artifactId))
-          dispatch(openSidecar())
-          break
-
-        case 'artifact_modify_init':
-          dispatch(
-            initModifyArtifact({
-              id: data.artifactId,
-              parentArtifactId: data.parentArtifactId,
-              artifactGroupId: data.artifactGroupId,
-              title: data.title,
-              outline: data.outline,
-              fullOutline: data.fullOutline,
-              totalEstimatedSections: data.totalEstimatedSections,
-              currentSection: data.currentSection,
-              existingContent: data.existingContent,
-              newVersion: data.newVersion,
-            })
-          )
-          // Link artifact to the message and update title if messageId is provided
-          if (data.messageId) {
-            dispatch(
-              updateMessage({
-                id: data.messageId,
-                artifactId: data.artifactId,
-                message: `Generated artifact v${data.newVersion}: ${data.title}`,
-                streaming: true, // Keep streaming true until complete
-              })
-            )
-          }
-          // Open the sidecar to show artifact modification
-          dispatch(setActiveArtifact(data.artifactId))
-          dispatch(openSidecar())
-          break
-
-        case 'artifact_stream':
-          dispatch(
-            appendContent({
-              artifactId: data.artifactId,
-              chunk: data.chunk,
-            })
-          )
-          dispatch(
-            updateProgress({
-              artifactId: data.artifactId,
-              progress: data.progress,
-            })
-          )
-          dispatch(
-            setCurrentSection({
-              artifactId: data.artifactId,
-              section: data.section,
-            })
-          )
-          break
-
-        case 'artifact_pause':
-          dispatch(
-            setStatus({
-              artifactId: data.artifactId,
-              status: 'paused',
-            })
-          )
-          dispatch(
-            setSectionsRemaining({
-              artifactId: data.artifactId,
-              sectionsRemaining: data.sectionsRemaining,
-            })
-          )
-          break
-
+        // NOTE: Artifact events are now handled by socketMiddleware.ts extraReducers
+        // These cases are kept for backward compatibility with legacy WebSocket
         case 'artifact_complete':
-          // Set status to completed
           dispatch(
             setStatus({
               artifactId: data.artifactId,
               status: 'completed',
             })
           )
-          // Set currentSection to final value so all section tabs are clickable
-          dispatch(
-            setCurrentSection({
-              artifactId: data.artifactId,
-              section: data.estimatedSections || 0,
-            })
-          )
-          // Set progress to 100%
-          dispatch(
-            updateProgress({
-              artifactId: data.artifactId,
-              progress: 1.0,
-            })
-          )
-          dispatch(
-            setWordCount({
-              artifactId: data.artifactId,
-              wordCount: data.totalWords,
-            })
-          )
+          if (data.totalWords || data.wordCount) {
+            dispatch(
+              setWordCount({
+                artifactId: data.artifactId,
+                wordCount: data.totalWords || data.wordCount,
+              })
+            )
+          }
           dispatch(getWallet())
           break
 
@@ -260,32 +161,12 @@ export const connectWebSocket = createAsyncThunk<
           dispatch(
             setArtifactError({
               artifactId: data.artifactId,
-              error: data.errorMessage,
+              error: data.errorMessage || data.error || 'Unknown error',
             })
           )
-          break
-
-        // Section rewrite events
-        case 'artifact_rewrite_init':
-          // Rewrite started - set generating status
-          dispatch(
-            setStatus({
-              artifactId: data.artifactId,
-              status: 'generating',
-            })
-          )
-          // Open sidecar to show progress
-          dispatch(setActiveArtifact(data.artifactId))
-          dispatch(openSidecar())
-          break
-
-        case 'artifact_rewrite_stream':
-          // We don't update content during rewrite streaming
-          // The full content comes with artifact_rewrite_complete
           break
 
         case 'artifact_rewrite_complete':
-          // Load the new artifact version with rewritten content
           dispatch(
             loadArtifact({
               id: data.artifactId,
@@ -302,14 +183,14 @@ export const connectWebSocket = createAsyncThunk<
               artifactGroupId: data.artifactGroupId,
             })
           )
-          // Switch to the new version
           dispatch(setActiveArtifact(data.artifactId))
           dispatch(openSidecar())
           dispatch(getWallet())
           break
 
         default:
-          console.warn('Unknown WebSocket message type:', data.type)
+          // Ignore unknown types - they may be handled by socketMiddleware
+          break
       }
     }
 
@@ -354,8 +235,6 @@ export const sendWebSocketMessage = createAsyncThunk<
   // Get active artifact info for potential modification
   const { activeArtifactId, artifacts, sidecarOpen } = artifact
   const activeArtifact = activeArtifactId ? artifacts[activeArtifactId] : null
-  // Send artifact context if sidecar is open with a completed or paused artifact
-  // (paused artifacts can also be modified - e.g., "make it shorter")
   const shouldSendArtifactContext =
     artifactsEnabled &&
     sidecarOpen &&
@@ -368,7 +247,7 @@ export const sendWebSocketMessage = createAsyncThunk<
     sender_type: 1,
     file_ids: selectedFiles.map((file) => file.id),
     embedding_ids: selectedEmbeddings.map((file) => file.id),
-    media_ids: selectedMediaFiles.map((file) => file.id), // NEW: Media file IDs
+    media_ids: selectedMediaFiles.map((file) => file.id),
     tag_ids: selectedTags.map((tag) => tag.id),
     folder_ids: selectedFolders.map((folder) => folder.id),
     referenced_conversation_ids: referencedConversations.map(
@@ -400,8 +279,6 @@ export const sendWebSocketMessage = createAsyncThunk<
       type,
     })),
     artifacts_enabled: artifactsEnabled,
-    // Artifact modification context - auto-detection mode
-    // Backend will use heuristics to determine if user wants to modify
     artifact_action: shouldSendArtifactContext ? 'auto' : undefined,
     active_artifact_id: shouldSendArtifactContext
       ? activeArtifactId
@@ -446,7 +323,7 @@ export const regenerateResponse = createAsyncThunk<
     )
     const mediaIds = state.conversation.selectedMediaFiles.map(
       (file) => file.id
-    ) // NEW: Media file IDs
+    )
     const tagIds = state.conversation.selectedTags.map((tag) => tag.id)
     const folderIds = state.conversation.selectedFolders.map(
       (folder) => folder.id
@@ -488,7 +365,7 @@ export const regenerateResponse = createAsyncThunk<
           llm_id: state.conversation.selectedModel,
           file_ids: fileIds,
           embedding_ids: embeddingIds,
-          media_ids: mediaIds, // NEW: Media file IDs
+          media_ids: mediaIds,
           tag_ids: tagIds,
           folder_ids: folderIds,
           referenced_conversation_ids: referencedConversationIds,
@@ -538,7 +415,7 @@ export const disconnectWebSocket = createAsyncThunk<
   })
 })
 
-// Continue a paused artifact
+// Continue a paused artifact (simplified - just set status)
 export const continueArtifact = createAsyncThunk<
   void,
   { artifactId: number },
@@ -564,7 +441,3 @@ export const continueArtifact = createAsyncThunk<
     }
   }
 )
-
-// Note: pauseArtifact has been moved to @/redux/asyncThunks/artifact.ts
-// It uses REST API instead of WebSocket because the WebSocket receive handler
-// is blocked during artifact streaming (single-threaded message processing)

@@ -3,132 +3,22 @@ import type { Artifact, ArtifactStatus } from './types/artifact'
 import { initialArtifactState } from './types/artifact'
 import { pauseArtifact, updateArtifactStatus } from './asyncThunks/artifact'
 
+/**
+ * Simplified Artifact Redux Slice
+ *
+ * Handles artifact state for Claude-like artifact generation.
+ * No sections, no outlines, no checkpointing - just direct streaming.
+ */
+
 export const artifactSlice = createSlice({
   name: 'artifact',
   initialState: initialArtifactState,
   reducers: {
-    // Initialize a new artifact
-    initArtifact(
-      state,
-      action: PayloadAction<{
-        id: number
-        title: string
-        outline: string
-        estimatedSections: number
-      }>
-    ) {
-      const { id, title, outline, estimatedSections } = action.payload
-      const key = String(id)
-      state.artifacts[key] = {
-        id,
-        title,
-        outline,
-        content: '',
-        artifactType: 'document',
-        status: 'generating',
-        estimatedSections,
-        currentSection: 0,
-        progress: 0,
-        version: 1,
-        isModification: false,
-      }
-      state.activeArtifactId = id
-      state.sidecarOpen = true
-    },
+    // ─────────────────────────────────────────────────────────────────────
+    // Core State Management
+    // ─────────────────────────────────────────────────────────────────────
 
-    // Initialize modification of an existing artifact
-    // Creates a NEW artifact entry with complete data from the event
-    // No longer depends on parent artifact being in Redux state
-    initModifyArtifact(
-      state,
-      action: PayloadAction<{
-        id: number // NEW artifact ID
-        parentArtifactId: number // Original artifact ID
-        artifactGroupId: number
-        title: string
-        outline: string // New sections only
-        fullOutline: string // Complete outline
-        totalEstimatedSections: number // Total sections
-        currentSection: number // Inherited from parent
-        existingContent: string // Content from parent
-        newVersion: number
-      }>
-    ) {
-      const {
-        id,
-        parentArtifactId,
-        artifactGroupId,
-        title,
-        fullOutline,
-        totalEstimatedSections,
-        currentSection,
-        existingContent,
-        newVersion,
-      } = action.payload
-      const key = String(id)
-      const parentKey = String(parentArtifactId)
-      const parentArtifact = state.artifacts[parentKey]
-
-      // Create NEW artifact entry with COMPLETE data from event
-      state.artifacts[key] = {
-        id,
-        title,
-        outline: fullOutline, // Use complete outline from event
-        content: existingContent, // Use content from event, not parent state
-        artifactType: parentArtifact?.artifactType || 'document',
-        status: 'generating',
-        estimatedSections: totalEstimatedSections, // Use total from event
-        currentSection: currentSection, // Use value from event
-        progress: 0,
-        version: newVersion,
-        isModification: true,
-        parentArtifactId,
-        artifactGroupId,
-        language: parentArtifact?.language,
-      }
-
-      // Set the new artifact as active
-      state.activeArtifactId = id
-      state.sidecarOpen = true
-    },
-
-    // Append content chunk to artifact
-    appendContent(
-      state,
-      action: PayloadAction<{ artifactId: number; chunk: string }>
-    ) {
-      const { artifactId, chunk } = action.payload
-      const artifact = state.artifacts[String(artifactId)]
-      if (artifact) {
-        artifact.content += chunk
-      }
-    },
-
-    // Update artifact progress
-    updateProgress(
-      state,
-      action: PayloadAction<{ artifactId: number; progress: number }>
-    ) {
-      const { artifactId, progress } = action.payload
-      const artifact = state.artifacts[String(artifactId)]
-      if (artifact) {
-        artifact.progress = progress
-      }
-    },
-
-    // Update current section
-    setCurrentSection(
-      state,
-      action: PayloadAction<{ artifactId: number; section: number }>
-    ) {
-      const { artifactId, section } = action.payload
-      const artifact = state.artifacts[String(artifactId)]
-      if (artifact) {
-        artifact.currentSection = section
-      }
-    },
-
-    // Update artifact status
+    /** Update artifact status */
     setStatus(
       state,
       action: PayloadAction<{ artifactId: number; status: ArtifactStatus }>
@@ -140,23 +30,7 @@ export const artifactSlice = createSlice({
       }
     },
 
-    // Set sections remaining (for paused state)
-    setSectionsRemaining(
-      state,
-      action: PayloadAction<{
-        artifactId: number
-        sectionsRemaining: number
-      }>
-    ) {
-      const { artifactId, sectionsRemaining } = action.payload
-      const artifact = state.artifacts[String(artifactId)]
-      if (artifact) {
-        // Calculate current section from remaining
-        artifact.currentSection = artifact.estimatedSections - sectionsRemaining
-      }
-    },
-
-    // Set word count
+    /** Set word count */
     setWordCount(
       state,
       action: PayloadAction<{ artifactId: number; wordCount: number }>
@@ -168,20 +42,25 @@ export const artifactSlice = createSlice({
       }
     },
 
-    // Set artifact error
+    /** Set artifact error */
     setArtifactError(
       state,
       action: PayloadAction<{ artifactId?: number; error: string }>
     ) {
       const { artifactId, error } = action.payload
-      const key = artifactId !== undefined ? String(artifactId) : undefined
-      if (key && state.artifacts[key]) {
-        state.artifacts[key].status = 'error'
-        state.artifacts[key].error = error
+      if (artifactId) {
+        const artifact = state.artifacts[String(artifactId)]
+        if (artifact) {
+          artifact.status = 'error'
+          artifact.error = error
+        }
       }
     },
 
-    // Sidecar controls
+    // ─────────────────────────────────────────────────────────────────────
+    // UI Controls
+    // ─────────────────────────────────────────────────────────────────────
+
     openSidecar(state) {
       state.sidecarOpen = true
     },
@@ -194,7 +73,6 @@ export const artifactSlice = createSlice({
       state.sidecarOpen = !state.sidecarOpen
     },
 
-    // Set active artifact
     setActiveArtifact(state, action: PayloadAction<number | null>) {
       state.activeArtifactId = action.payload
       if (action.payload) {
@@ -202,7 +80,6 @@ export const artifactSlice = createSlice({
       }
     },
 
-    // Toggle artifacts mode enabled
     setArtifactsEnabled(state, action: PayloadAction<boolean>) {
       state.artifactsEnabled = action.payload
     },
@@ -211,19 +88,26 @@ export const artifactSlice = createSlice({
       state.artifactsEnabled = !state.artifactsEnabled
     },
 
-    // Load artifact from API response
+    // ─────────────────────────────────────────────────────────────────────
+    // Data Loading (from API)
+    // ─────────────────────────────────────────────────────────────────────
+
+    /** Load single artifact from API */
     loadArtifact(state, action: PayloadAction<Artifact>) {
       state.artifacts[String(action.payload.id)] = action.payload
     },
 
-    // Load multiple artifacts
+    /** Load multiple artifacts from API */
     loadArtifacts(state, action: PayloadAction<Artifact[]>) {
       action.payload.forEach((artifact) => {
         state.artifacts[String(artifact.id)] = artifact
       })
     },
 
-    // Clear artifact
+    // ─────────────────────────────────────────────────────────────────────
+    // Cleanup
+    // ─────────────────────────────────────────────────────────────────────
+
     clearArtifact(state, action: PayloadAction<number>) {
       const key = String(action.payload)
       delete state.artifacts[key]
@@ -233,14 +117,12 @@ export const artifactSlice = createSlice({
       }
     },
 
-    // Clear all artifacts for a conversation
     clearAllArtifacts(state) {
       state.artifacts = {}
       state.activeArtifactId = null
       state.sidecarOpen = false
     },
 
-    // Reset artifact state (on logout or conversation change)
     resetArtifactState(state) {
       state.artifacts = {}
       state.activeArtifactId = null
@@ -250,14 +132,16 @@ export const artifactSlice = createSlice({
       state.statusUpdateError = null
     },
 
-    // Clear status update error
     clearStatusUpdateError(state) {
       state.statusUpdateError = null
     },
   },
+
   extraReducers: (builder) => {
     builder
-      // pauseArtifact
+      // ─────────────────────────────────────────────────────────────────────
+      // Async Thunks (pause artifact, update status)
+      // ─────────────────────────────────────────────────────────────────────
       .addCase(pauseArtifact.pending, (state, action) => {
         state.pausingArtifactId = action.meta.arg.artifactId
         state.statusUpdateError = null
@@ -269,7 +153,6 @@ export const artifactSlice = createSlice({
         state.pausingArtifactId = null
         state.statusUpdateError = action.payload as string
       })
-      // updateArtifactStatus
       .addCase(updateArtifactStatus.pending, (state) => {
         state.statusUpdateError = null
       })
@@ -279,9 +162,15 @@ export const artifactSlice = createSlice({
       .addCase(updateArtifactStatus.rejected, (state, action) => {
         state.statusUpdateError = action.payload as string
       })
+
       // ─────────────────────────────────────────────────────────────────────
-      // Socket.IO artifact message handlers (from socketMiddleware)
+      // Socket.IO Handlers (Simplified System)
       // ─────────────────────────────────────────────────────────────────────
+
+      /**
+       * artifact_start: New artifact or version created
+       * Sent at the beginning of artifact generation
+       */
       .addMatcher(
         (
           action
@@ -290,124 +179,47 @@ export const artifactSlice = createSlice({
           payload: {
             artifactId: number
             title: string
-            outline: string
-            estimatedSections: number
+            messageId?: number
+            version?: number
+            isNewVersion?: boolean
+            parentArtifactId?: number
+            artifactGroupId?: number
           }
-        } => action.type === 'socket/artifact_init',
+        } => action.type === 'socket/artifact_start',
         (state, action) => {
-          const { artifactId, title, outline, estimatedSections } =
-            action.payload
-          const key = String(artifactId)
-          state.artifacts[key] = {
+          const {
+            artifactId,
+            title,
+            version,
+            isNewVersion,
+            parentArtifactId,
+            artifactGroupId,
+          } = action.payload
+
+          state.artifacts[String(artifactId)] = {
             id: artifactId,
             title,
-            outline,
+            outline: '',
             content: '',
             artifactType: 'document',
             status: 'generating',
-            estimatedSections,
+            estimatedSections: 1,
             currentSection: 0,
             progress: 0,
-            version: 1,
-            isModification: false,
+            version: version || 1,
+            isModification: isNewVersion || false,
+            parentArtifactId: parentArtifactId ?? null,
+            artifactGroupId: artifactGroupId ?? null,
           }
           state.activeArtifactId = artifactId
           state.sidecarOpen = true
         }
       )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: string
-          payload: {
-            artifactId: number
-            chunk: string
-            progress: number
-            section: number
-          }
-        } => action.type === 'socket/artifact_stream',
-        (state, action) => {
-          const { artifactId, chunk, progress, section } = action.payload
-          const artifact = state.artifacts[String(artifactId)]
-          if (artifact) {
-            artifact.content += chunk
-            artifact.progress = progress
-            artifact.currentSection = section
-          }
-        }
-      )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: string
-          payload: { artifactId: number; sectionsRemaining: number }
-        } => action.type === 'socket/artifact_pause',
-        (state, action) => {
-          const { artifactId, sectionsRemaining } = action.payload
-          const artifact = state.artifacts[String(artifactId)]
-          if (artifact) {
-            artifact.status = 'paused'
-            artifact.currentSection =
-              artifact.estimatedSections - sectionsRemaining
-          }
-        }
-      )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: string
-          payload: {
-            artifactId: number
-            estimatedSections?: number
-            totalWords?: number
-          }
-        } => action.type === 'socket/artifact_complete',
-        (state, action) => {
-          const { artifactId, estimatedSections, totalWords } = action.payload
-          const artifact = state.artifacts[String(artifactId)]
-          if (artifact) {
-            artifact.status = 'completed'
-            artifact.currentSection =
-              estimatedSections || artifact.estimatedSections
-            artifact.progress = 1.0
-            if (totalWords) {
-              artifact.wordCount = totalWords
-            }
-          }
-        }
-      )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: string
-          payload: { artifactId: number; errorMessage: string }
-        } => action.type === 'socket/artifact_error',
-        (state, action) => {
-          const { artifactId, errorMessage } = action.payload
-          const artifact = state.artifacts[String(artifactId)]
-          if (artifact) {
-            artifact.status = 'error'
-            artifact.error = errorMessage
-          }
-        }
-      )
-      .addMatcher(
-        (action): action is { type: string; payload: { artifactId: number } } =>
-          action.type === 'socket/artifact_rewrite_init',
-        (state, action) => {
-          const { artifactId } = action.payload
-          const artifact = state.artifacts[String(artifactId)]
-          if (artifact) {
-            artifact.status = 'generating'
-          }
-          state.activeArtifactId = artifactId
-          state.sidecarOpen = true
-        }
-      )
+
+      /**
+       * artifact_stream: Content streaming update
+       * Sends full accumulated content (not chunks)
+       */
       .addMatcher(
         (
           action
@@ -416,60 +228,81 @@ export const artifactSlice = createSlice({
           payload: {
             artifactId: number
             content: string
-            title?: string
-            outline?: string
-            artifactType?: string
-            estimatedSections?: number
-            currentSection?: number
-            version?: number
-            parentArtifactId?: number
-            artifactGroupId?: number
+            streaming?: boolean
           }
-        } => action.type === 'socket/artifact_rewrite_complete',
+        } => action.type === 'socket/artifact_stream',
         (state, action) => {
-          const {
-            artifactId,
-            content,
-            title,
-            outline,
-            artifactType,
-            estimatedSections,
-            currentSection,
-            version,
-            parentArtifactId,
-            artifactGroupId,
-          } = action.payload
-          const key = String(artifactId)
-          state.artifacts[key] = {
-            id: artifactId,
-            title: title || 'Rewritten Artifact',
-            outline: outline || '',
-            content,
-            artifactType:
-              (artifactType as Artifact['artifactType']) || 'document',
-            status: 'completed',
-            estimatedSections: estimatedSections || 0,
-            currentSection: currentSection || 0,
-            progress: 1.0,
-            version: version || 1,
-            parentArtifactId: parentArtifactId ?? null,
-            artifactGroupId: artifactGroupId ?? null,
+          const { artifactId, content } = action.payload
+          const artifact = state.artifacts[String(artifactId)]
+          if (artifact) {
+            artifact.content = content
           }
-          state.activeArtifactId = artifactId
-          state.sidecarOpen = true
+        }
+      )
+
+      /**
+       * artifact_complete: Generation finished
+       */
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            artifactId: number
+            content?: string
+            wordCount?: number
+            messageId?: number
+          }
+        } => action.type === 'socket/artifact_complete',
+        (state, action) => {
+          const { artifactId, content, wordCount } = action.payload
+          const artifact = state.artifacts[String(artifactId)]
+          if (artifact) {
+            artifact.status = 'completed'
+            artifact.progress = 1.0
+            artifact.currentSection = 1
+            artifact.estimatedSections = 1
+            if (content !== undefined) {
+              artifact.content = content
+            }
+            if (wordCount !== undefined) {
+              artifact.wordCount = wordCount
+            }
+          }
+        }
+      )
+
+      /**
+       * artifact_error: Generation failed
+       */
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            artifactId?: number
+            error?: string
+          }
+        } => action.type === 'socket/artifact_error',
+        (state, action) => {
+          const { artifactId, error } = action.payload
+          if (artifactId) {
+            const artifact = state.artifacts[String(artifactId)]
+            if (artifact) {
+              artifact.status = 'error'
+              artifact.error = error ?? 'Unknown error'
+            }
+          }
         }
       )
   },
 })
 
+// Export only the reducers that are actually used
 export const {
-  initArtifact,
-  initModifyArtifact,
-  appendContent,
-  updateProgress,
-  setCurrentSection,
   setStatus,
-  setSectionsRemaining,
   setWordCount,
   setArtifactError,
   openSidecar,
