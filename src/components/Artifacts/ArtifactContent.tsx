@@ -11,6 +11,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { cn } from '@/lib/utils'
 import type { ArtifactStatus, ArtifactType } from '@/redux/types/artifact'
+import { MermaidBlock } from '../Conversation/MermaidBlock'
+import { RechartsBlock } from './RechartsBlock'
 
 interface ArtifactContentProps {
   content: string
@@ -132,6 +134,24 @@ const ArtifactContent = forwardRef<ArtifactContentRef, ArtifactContentProps>(
               >
                 {children}
               </code>
+            )
+          }
+
+          // Handle mermaid code blocks specially
+          if (match && match[1] === 'mermaid') {
+            return (
+              <div className='my-4 overflow-x-auto rounded-lg bg-white p-4 dark:bg-gray-900'>
+                <MermaidBlock code={codeString} />
+              </div>
+            )
+          }
+
+          // Handle recharts code blocks for data visualizations
+          if (match && match[1] === 'recharts') {
+            return (
+              <div className='my-4 overflow-x-auto'>
+                <RechartsBlock config={codeString} />
+              </div>
             )
           }
 
