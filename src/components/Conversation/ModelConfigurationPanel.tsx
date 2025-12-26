@@ -477,7 +477,7 @@ const ModelConfigurationPanel: React.FC = () => {
               <Slider
                 value={[maxTokens]}
                 min={1}
-                max={8192}
+                max={16384}
                 step={256}
                 onValueChange={handleMaxTokensChange}
                 className='my-4 cursor-pointer'
