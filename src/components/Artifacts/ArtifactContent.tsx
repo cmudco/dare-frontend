@@ -257,39 +257,52 @@ const ArtifactContent = forwardRef<ArtifactContentRef, ArtifactContentProps>(
         {/* Code artifact */}
         {artifactType === 'code' && language ? (
           <div className='relative'>
-            <SyntaxHighlighter
-              language={language}
-              style={oneDark}
-              customStyle={{
-                margin: 0,
-                borderRadius: '0.5rem',
-                fontSize: '0.875rem',
-              }}
-              showLineNumbers
-            >
-              {content}
-            </SyntaxHighlighter>
-            {status === 'generating' && (
-              <span className='ml-1 inline-block h-5 w-0.5 animate-pulse bg-blue-500' />
+            {/* During streaming: show raw code for performance */}
+            {status === 'generating' ? (
+              <pre className='overflow-x-auto rounded-lg bg-[#282c34] p-4 text-sm text-gray-100'>
+                <code>{content}</code>
+                <span className='ml-1 inline-block h-5 w-0.5 animate-pulse bg-blue-500' />
+              </pre>
+            ) : (
+              /* After complete: apply syntax highlighting */
+              <SyntaxHighlighter
+                language={language}
+                style={oneDark}
+                customStyle={{
+                  margin: 0,
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                }}
+                showLineNumbers
+              >
+                {content}
+              </SyntaxHighlighter>
             )}
           </div>
         ) : (
           /* Document/Markdown artifact */
           <div className='prose prose-sm max-w-none dark:prose-invert'>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={markdownComponents}
-            >
-              {content}
-            </ReactMarkdown>
-            {/* Streaming cursor */}
-            {status === 'generating' && (
-              <span
-                className={cn(
-                  'ml-1 inline-block h-5 w-0.5 bg-blue-500',
-                  'animate-pulse'
-                )}
-              />
+            {/* During streaming: show raw text for performance */}
+            {status === 'generating' ? (
+              <>
+                <pre className='whitespace-pre-wrap font-sans text-base leading-relaxed text-gray-700 dark:text-gray-300'>
+                  {content}
+                </pre>
+                <span
+                  className={cn(
+                    'ml-1 inline-block h-5 w-0.5 bg-blue-500',
+                    'animate-pulse'
+                  )}
+                />
+              </>
+            ) : (
+              /* After complete: apply full markdown rendering */
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={markdownComponents}
+              >
+                {content}
+              </ReactMarkdown>
             )}
           </div>
         )}
