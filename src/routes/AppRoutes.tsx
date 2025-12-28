@@ -23,6 +23,7 @@ import BillingScreen from '@/pages/Billing/index.tsx'
 import OnboardingScreen from '@/pages/Onboarding/index.tsx'
 import WorkflowCreatePage from '@/pages/Workflows/WorkflowCreatePage.tsx'
 import Agents from '@/pages/Agents/index.tsx'
+import DiagramTestPage from '@/pages/DiagramTest/DiagramTestPage'
 
 const AppRoutes = () => {
   return (
@@ -75,6 +76,7 @@ const AppRoutes = () => {
             <Route path='/help' element={<Help />} />
             <Route path='/profile' element={<ProfileScreen />} />
             <Route path='/billing/' element={<BillingScreen />} />
+            <Route path='/diagram-test' element={<DiagramTestPage />} />
           </Route>
           <Route path='*' element={<div>404 - Page Not Found</div>} />
         </Routes>
