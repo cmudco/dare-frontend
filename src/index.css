@@ -323,7 +323,7 @@ input:-webkit-autofill + label {
 }
 
 .dark .gradient-border {
-  background-image: linear-gradient(transparent, transparent),
+  background-image: linear-gradient(#030a12, #030a12),
     linear-gradient(
       180deg,
       #ef3a47 0%,
