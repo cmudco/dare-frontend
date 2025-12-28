@@ -35,6 +35,7 @@ import { AppDispatch } from '../../redux/store'
 import { regenerateSocketResponse } from '@/redux/asyncThunks/socketMessages'
 import FeedbackModal from './FeedbackModal'
 import MessageMetadata from './MessageMetadata'
+import WebSearchSources from './WebSearchSources'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
 import { features } from '@/config/environment'
@@ -697,6 +698,14 @@ const Message: React.FC<MessageProps> = ({
               </div>
             )}
           </div>
+        )}
+
+      {/* Web Search Sources */}
+      {!message.isSender &&
+        !message.streaming &&
+        message.webSearchSources &&
+        message.webSearchSources.length > 0 && (
+          <WebSearchSources sources={message.webSearchSources} />
         )}
 
       <FeedbackModal
