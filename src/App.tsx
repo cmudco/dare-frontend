@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { tokenExpirationService } from '@/services/tokenExpirationService'
 import { clearOldDrafts } from './redux/conversationSlice'
 import { useSocketConnection } from './hooks/useSocketConnection'
+import { FeedbackWidget } from '@/components/Feedback'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -91,6 +92,7 @@ function App() {
       <BackgroundCircle />
       <AppRoutes />
       <Toaster />
+      <FeedbackWidget />
     </>
   )
 }

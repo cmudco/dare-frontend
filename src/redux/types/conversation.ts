@@ -56,6 +56,7 @@ export interface Message {
   llmId?: number
   streaming?: boolean
   snippets?: Snippet[]
+  webSearchSources?: WebSearchSource[]
   feedbackType?: FeedbackType | null
   feedbackText?: string
   feedbackSource?: string
@@ -124,6 +125,15 @@ export interface Snippet {
   similarityScore: number
   chunkIndex: number
   vectorDbSource: string
+}
+
+export interface WebSearchSource {
+  id: number
+  url: string
+  title: string
+  citedText?: string // Claude only - quoted text from source
+  pageAge?: string // Claude only - e.g., "3 weeks ago"
+  provider: 'openai' | 'claude' | 'gemini'
 }
 
 export interface ConversationDraft {
