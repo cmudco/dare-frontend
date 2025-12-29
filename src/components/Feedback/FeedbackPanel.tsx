@@ -167,9 +167,7 @@ export function FeedbackPanel({
                         onBack={onBack}
                       />
                     )}
-                    {currentStep === 'thankyou' && (
-                      <ThankYouStep onClose={onClose} />
-                    )}
+                    {currentStep === 'thankyou' && <ThankYouStep />}
                   </motion.div>
                 </AnimatePresence>
               </div>

@@ -5,11 +5,7 @@ import {
   thankYouTextVariants,
 } from '../animations'
 
-interface ThankYouStepProps {
-  onClose: () => void
-}
-
-export function ThankYouStep({ onClose }: ThankYouStepProps) {
+export function ThankYouStep() {
   return (
     <div className='flex flex-col items-center justify-center py-6'>
       {/* Animated checkmark */}
@@ -134,19 +130,6 @@ export function ThankYouStep({ onClose }: ThankYouStepProps) {
         </motion.div>
         <span className='text-xs text-muted-foreground/60'>Closing...</span>
       </motion.div>
-
-      {/* Manual close button */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onClose}
-        className='mt-4 text-sm text-muted-foreground transition-colors hover:text-foreground'
-      >
-        Close now
-      </motion.button>
     </div>
   )
 }
