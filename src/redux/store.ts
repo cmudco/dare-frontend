@@ -15,6 +15,7 @@ import notificationReducer from './notificationSlice'
 import apiKeysReducer from './apiKeysSlice'
 import artifactReducer from './artifactSlice'
 import socketReducer from './slices/socketSlice'
+import feedbackReducer from './feedbackSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
 import { config } from '@/config/environment'
@@ -38,6 +39,7 @@ export const store = configureStore({
     apiKeys: apiKeysReducer,
     artifact: artifactReducer,
     socket: socketReducer,
+    feedback: feedbackReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware
