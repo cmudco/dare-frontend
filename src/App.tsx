@@ -92,7 +92,7 @@ function App() {
       <BackgroundCircle />
       <AppRoutes />
       <Toaster />
-      <FeedbackWidget />
+      {isAuthenticated && <FeedbackWidget />}
     </>
   )
 }
