@@ -17,6 +17,15 @@ export interface WorkflowStepSnippet {
   vectorDbSource?: string
 }
 
+export interface WorkflowStepWebSearchSource {
+  id: number
+  url: string
+  title: string
+  citedText: string
+  pageAge: string
+  provider: string
+}
+
 /**
  * Route definition for structured output nodes
  */
@@ -58,6 +67,7 @@ export interface WorkflowRunStep {
   createdAt: string
   updatedAt: string
   snippets?: WorkflowStepSnippet[]
+  webSearchSources?: WorkflowStepWebSearchSource[]
 }
 
 // ==========================================
@@ -103,6 +113,8 @@ export interface NodeState {
   error: string | null
   validationContext: ValidationContext | null // Only present when status is PENDING_HUMAN_INPUT
   metadata: RoutingMetadata | null // Present for completed routing nodes with AI analysis
+  snippets?: WorkflowStepSnippet[] // RAG snippets retrieved for this step
+  webSearchSources?: WorkflowStepWebSearchSource[] // Web search citations for this step
 }
 
 /**

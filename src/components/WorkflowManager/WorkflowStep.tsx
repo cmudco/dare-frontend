@@ -15,6 +15,8 @@ import {
   ChevronUp,
   FileText,
   UserCheck,
+  Globe,
+  ExternalLink,
 } from 'lucide-react'
 import {
   Collapsible,
@@ -46,12 +48,22 @@ export const WorkflowStep: React.FC<{
   const [openSnippets, setOpenSnippets] = useState<{ [key: number]: boolean }>(
     {}
   )
+  const [openWebSources, setOpenWebSources] = useState<{
+    [key: number]: boolean
+  }>({})
   const [showValidationModal, setShowValidationModal] = useState(false)
   const [currentValidation, setCurrentValidation] =
     useState<PendingValidation | null>(null)
 
   const toggleSnippets = (stepId: number) => {
     setOpenSnippets((prev) => ({
+      ...prev,
+      [stepId]: !prev[stepId],
+    }))
+  }
+
+  const toggleWebSources = (stepId: number) => {
+    setOpenWebSources((prev) => ({
       ...prev,
       [stepId]: !prev[stepId],
     }))
@@ -305,6 +317,71 @@ export const WorkflowStep: React.FC<{
                       </Collapsible>
                     </div>
                   )}
+
+                  {/* Web Search Sources */}
+                  {step.webSearchSources &&
+                    step.webSearchSources.length > 0 && (
+                      <div className='mt-6'>
+                        <Collapsible open={openWebSources[step.id] || false}>
+                          <CollapsibleTrigger
+                            className='flex w-full items-center justify-between rounded-md border border-border bg-muted px-4 py-3 transition-colors hover:bg-accent'
+                            onClick={() => toggleWebSources(step.id)}
+                          >
+                            <h5 className='flex items-center text-sm font-medium text-foreground'>
+                              <Globe className='mr-2 h-4 w-4' />
+                              Web Sources ({step.webSearchSources.length})
+                            </h5>
+                            {openWebSources[step.id] ? (
+                              <ChevronUp className='h-4 w-4 text-muted-foreground' />
+                            ) : (
+                              <ChevronDown className='h-4 w-4 text-muted-foreground' />
+                            )}
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className='space-y-3 p-4'>
+                            {step.webSearchSources.map((source) => (
+                              <div
+                                key={source.id}
+                                className='rounded-r-lg border-l-4 border-blue-500 bg-background p-3 pl-4'
+                              >
+                                <div className='mb-1 flex items-center justify-between'>
+                                  <a
+                                    href={source.url}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className='flex items-center gap-1 text-sm font-medium text-foreground hover:text-blue-600'
+                                  >
+                                    {source.title ||
+                                      (() => {
+                                        try {
+                                          return new URL(source.url).hostname
+                                        } catch {
+                                          return source.url
+                                        }
+                                      })()}
+                                    <ExternalLink className='h-3 w-3' />
+                                  </a>
+                                  {source.provider && (
+                                    <span className='text-xs text-muted-foreground'>
+                                      via {source.provider}
+                                    </span>
+                                  )}
+                                </div>
+                                {source.citedText && (
+                                  <p className='text-sm italic text-muted-foreground'>
+                                    &ldquo;{source.citedText}&rdquo;
+                                  </p>
+                                )}
+                                {source.pageAge && (
+                                  <p className='mt-1 text-xs text-muted-foreground'>
+                                    {source.pageAge}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </div>
+                    )}
                 </div>
               )}
 
