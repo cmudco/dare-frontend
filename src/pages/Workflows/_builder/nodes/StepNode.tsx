@@ -28,7 +28,7 @@ import {
 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
   updateNodeDataById,
@@ -78,6 +78,14 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const [preAgentSnapshot, setPreAgentSnapshot] =
     useState<Partial<StepNodeData> | null>(null)
 
+  // Local state for text input to prevent cursor jumping on re-render
+  const [localTextInput, setLocalTextInput] = useState(stepData.textInput || '')
+
+  // Sync local state when external data changes (e.g., undo/redo, load workflow)
+  useEffect(() => {
+    setLocalTextInput(stepData.textInput || '')
+  }, [stepData.textInput])
+
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
@@ -108,9 +116,22 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   })
 
   // Update Redux when form changes
-  const updateNodeData = (updates: Partial<StepNodeData>) => {
-    dispatch(updateNodeDataById({ nodeId: nodeId, newData: updates }))
-  }
+  const updateNodeData = useCallback(
+    (updates: Partial<StepNodeData>) => {
+      dispatch(updateNodeDataById({ nodeId: nodeId, newData: updates }))
+    },
+    [dispatch, nodeId]
+  )
+
+  // Debounced sync to Redux for text input
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (localTextInput !== (stepData.textInput || '')) {
+        updateNodeData({ textInput: localTextInput })
+      }
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }, [localTextInput, stepData.textInput, updateNodeData])
 
   // Inject agent properties into step node
   const injectAgentProperties = (agent: Agent) => {
@@ -361,10 +382,8 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             <Textarea
               id='textInput'
               placeholder='Enter text to be included in this step...'
-              value={stepData.textInput || ''}
-              onChange={(e) => {
-                updateNodeData({ textInput: e.target.value })
-              }}
+              value={localTextInput}
+              onChange={(e) => setLocalTextInput(e.target.value)}
               className='min-h-[80px] resize-y text-sm'
             />
             <p className='text-xs text-muted-foreground'>

@@ -661,9 +661,6 @@ export const conversationSlice = createSlice({
             state.activeConversationMessages[existingIndex] = {
               ...state.activeConversationMessages[existingIndex],
               ...action.payload,
-              streaming: action.payload.regenerate
-                ? false
-                : action.payload.streaming,
             }
           } else {
             // New message - add it
