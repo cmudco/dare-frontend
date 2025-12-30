@@ -29,7 +29,7 @@ import {
   Loader2,
   CheckCircle2,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   updateNodeDataById,
@@ -114,10 +114,31 @@ export default function StructuredOutputNode({
     [nodeData.routes]
   )
 
+  // Local state for text input to prevent cursor jumping on re-render
+  const [localTextInput, setLocalTextInput] = useState(nodeData.textInput || '')
+
+  // Sync local state when external data changes (e.g., undo/redo, load workflow)
+  useEffect(() => {
+    setLocalTextInput(nodeData.textInput || '')
+  }, [nodeData.textInput])
+
   // Update Redux when form changes
-  const updateNodeData = (updates: Partial<StructuredOutputNodeDataType>) => {
-    dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
-  }
+  const updateNodeData = useCallback(
+    (updates: Partial<StructuredOutputNodeDataType>) => {
+      dispatch(updateNodeDataById({ nodeId: id, newData: updates }))
+    },
+    [dispatch, id]
+  )
+
+  // Debounced sync to Redux for text input
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (localTextInput !== (nodeData.textInput || '')) {
+        updateNodeData({ textInput: localTextInput })
+      }
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }, [localTextInput, nodeData.textInput, updateNodeData])
 
   // Clean up edges when routes change to remove invalid connections
   const pruneInvalidEdges = (newRoutes: StructuredOutputRoute[]) => {
@@ -327,8 +348,8 @@ export default function StructuredOutputNode({
             <Textarea
               id='textInput'
               placeholder='Enter input text to evaluate for routing decision...'
-              value={nodeData.textInput || ''}
-              onChange={(e) => updateNodeData({ textInput: e.target.value })}
+              value={localTextInput}
+              onChange={(e) => setLocalTextInput(e.target.value)}
               className='min-h-[80px] text-sm'
             />
             <p className='text-xs text-muted-foreground'>
