@@ -22,11 +22,15 @@ const VerifyEmailScreen = () => {
   useEffect(() => {
     if (successMessage) {
       const callbackUrl = searchParams.get('callbackurl')
+      const hasToken = localStorage.getItem('token')
       const timer = setTimeout(() => {
         if (callbackUrl) {
+          // Socratic Bots or external platform - always redirect to login
+          // (tokens in DARE localStorage won't be accessible on other domains)
           window.location.href = `${callbackUrl}/login`
         } else {
-          navigate('/login')
+          // DARE users - auto-login if we have a token
+          navigate(hasToken ? '/dashboard' : '/login')
         }
       }, 3000)
       return () => clearTimeout(timer)
@@ -67,7 +71,11 @@ const VerifyEmailScreen = () => {
       {successMessage && (
         <div className='flex flex-col items-center gap-2 text-sm text-green-500'>
           <p>{successMessage}</p>
-          <p className='text-muted-foreground'>Redirecting to login...</p>
+          <p className='text-muted-foreground'>
+            {!searchParams.get('callbackurl') && localStorage.getItem('token')
+              ? 'Redirecting to dashboard...'
+              : 'Redirecting to login...'}
+          </p>
         </div>
       )}
     </AuthCard>
