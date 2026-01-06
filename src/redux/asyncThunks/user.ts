@@ -50,6 +50,13 @@ export const verifyEmailRegistration = createAsyncThunk(
   async (formData: { key: string }, thunkAPI) => {
     try {
       const data = await verifyEmailKey(formData)
+      // Store tokens if returned (auto-login after verification)
+      if (data.access) {
+        localStorage.setItem('token', data.access)
+      }
+      if (data.refresh) {
+        localStorage.setItem('refresh_token', data.refresh)
+      }
       return data
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
