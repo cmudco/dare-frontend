@@ -6,6 +6,7 @@ import {
   deleteWorkflow,
   startWorkflowRun,
   getWorkflowRunById,
+  updateWorkflowDisplayOrder,
 } from './asyncThunks/workflow'
 import { initialState } from './initialState/workflow'
 import { WorkflowRun } from './types/workflow'
@@ -81,6 +82,20 @@ const workflowSlice = createSlice({
     },
     setTempEdges: (state, action: PayloadAction<Edge[]>) => {
       state.tempEdges = action.payload
+    },
+    updateWorkflowOrder: (state, action: PayloadAction<number[]>) => {
+      const orderedWorkflows: typeof state.workflows = []
+      action.payload.forEach((workflowId, index) => {
+        const workflow = state.workflows.find((w) => w.id === workflowId)
+        if (workflow) {
+          const updatedWorkflow = {
+            ...workflow,
+            displayOrder: (index + 1) * 10,
+          }
+          orderedWorkflows.push(updatedWorkflow)
+        }
+      })
+      state.workflows = orderedWorkflows
     },
   },
   extraReducers: (builder) => {
@@ -197,6 +212,13 @@ const workflowSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
+      .addCase(updateWorkflowDisplayOrder.fulfilled, (state) => {
+        state.loading = false
+      })
+      .addCase(updateWorkflowDisplayOrder.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
   },
 })
 
@@ -215,6 +237,7 @@ export const {
   setSavedNodeIds,
   setTempNodes,
   setTempEdges,
+  updateWorkflowOrder,
 } = workflowSlice.actions
 
 export default workflowSlice.reducer

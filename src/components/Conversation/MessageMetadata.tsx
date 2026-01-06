@@ -29,6 +29,8 @@ import {
   Edit,
   RotateCcw,
   Tag,
+  Globe,
+  ExternalLink,
 } from 'lucide-react'
 import { formatDistance } from 'date-fns'
 import { getTagColor } from '@/utils/files'
@@ -439,6 +441,89 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                   </CardContent>
                 </Card>
               )}
+
+              {/* Web Search Sources Information */}
+              {message.webSearchSources &&
+                message.webSearchSources.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className='flex items-center gap-2 text-lg'>
+                        <Globe className='h-5 w-5' />
+                        Web Search Sources ({message.webSearchSources.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className='space-y-3'>
+                        {message.webSearchSources.map((source) => {
+                          // Extract domain from URL for display
+                          let domain = source.url
+                          try {
+                            domain = new URL(source.url).hostname.replace(
+                              'www.',
+                              ''
+                            )
+                          } catch {
+                            // Keep original URL if parsing fails
+                          }
+
+                          const providerColors: Record<string, string> = {
+                            openai: 'bg-emerald-100 text-emerald-700',
+                            claude: 'bg-orange-100 text-orange-700',
+                            gemini: 'bg-blue-100 text-blue-700',
+                          }
+
+                          return (
+                            <div
+                              key={source.id}
+                              className='rounded-lg border bg-gray-50 p-3'
+                            >
+                              <div className='mb-2 flex items-start justify-between gap-2'>
+                                <div className='min-w-0 flex-1'>
+                                  <a
+                                    href={source.url}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className='group flex items-center gap-1.5 text-sm font-medium text-gray-900 hover:text-blue-600'
+                                  >
+                                    <span className='truncate'>
+                                      {source.title || domain}
+                                    </span>
+                                    <ExternalLink className='h-3 w-3 flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100' />
+                                  </a>
+                                  <p className='mt-0.5 truncate text-xs text-gray-500'>
+                                    {domain}
+                                  </p>
+                                </div>
+                                <div className='flex flex-shrink-0 items-center gap-2'>
+                                  {source.pageAge && (
+                                    <span className='text-xs text-gray-500'>
+                                      {source.pageAge}
+                                    </span>
+                                  )}
+                                  <Badge
+                                    className={`text-xs ${
+                                      providerColors[source.provider] ||
+                                      'bg-gray-100 text-gray-700'
+                                    }`}
+                                  >
+                                    {source.provider}
+                                  </Badge>
+                                </div>
+                              </div>
+                              {source.citedText && (
+                                <div className='mt-2 rounded border-l-2 border-gray-300 bg-white p-2'>
+                                  <p className='line-clamp-3 text-xs italic text-gray-600'>
+                                    "{source.citedText}"
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
             </div>
           </div>
         </ScrollArea>

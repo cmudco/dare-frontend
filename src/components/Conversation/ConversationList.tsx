@@ -7,6 +7,13 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip'
+import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
+import {
   DndContext,
   closestCenter,
   DragEndEvent,
@@ -200,129 +207,180 @@ const ConversationList: React.FC = () => {
   }
 
   return (
-    <nav className='text-blue-gray-700 flex h-full flex-col gap-1 font-sans text-base font-normal'>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className='flex h-[65vh] w-full flex-col gap-1 overflow-scroll'>
-          <SortableContext
-            items={filteredConversations.map((c) => c.conversationId)}
-            strategy={verticalListSortingStrategy}
-          >
-            {filteredConversations.map((conversation) => {
-              const conversationId = conversation.conversationId
-              const isActive = isConversationActive(
-                conversation,
-                location.pathname
-              )
-              const isSelected = selectedConversations.includes(conversationId)
-              return (
-                <SortableConversationItem
-                  key={conversationId}
-                  conversation={conversation}
-                  isActive={isActive}
-                  isSelected={isSelected}
-                  editingId={editingId}
-                  editValue={editValue}
-                  onConversationClick={handleConversationClick}
-                  onEditClick={handleEditClick}
-                  onCloneClick={handleCloneClick}
-                  onEditChange={handleEditChange}
-                  onEditBlur={handleEditBlur}
-                  onEditKeyDown={handleEditKeyDown}
-                />
-              )
-            })}
-          </SortableContext>
-        </div>
-
-        <DragOverlay>
-          {activeId ? (
-            <div className='dark:bg-dark-chat-history min-h-[48px] rounded-md border border-gray-200 bg-white px-3 py-3 opacity-95 shadow-lg dark:border-dark-icon-unselected'>
-              {(() => {
-                const draggedConversation = conversations.find(
-                  (c) => c.conversationId === activeId
+    <TooltipProvider>
+      <nav className='text-blue-gray-700 flex h-full flex-col gap-1 font-sans text-base font-normal'>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className='flex h-[65vh] w-full flex-col gap-1 overflow-scroll'>
+            <SortableContext
+              items={filteredConversations.map((c) => c.conversationId)}
+              strategy={verticalListSortingStrategy}
+            >
+              {filteredConversations.map((conversation) => {
+                const conversationId = conversation.conversationId
+                const isActive = isConversationActive(
+                  conversation,
+                  location.pathname
                 )
-                return draggedConversation ? (
-                  <div className='flex items-center'>
-                    <ChatBubbleLeftEllipsisIcon className='mr-3 h-6 w-6 text-gray-600 dark:text-white' />
-                    <span className='text-gray-900 dark:text-white'>
-                      {getConversationTitle(draggedConversation)}
+                const isSelected =
+                  selectedConversations.includes(conversationId)
+                return (
+                  <SortableConversationItem
+                    key={conversationId}
+                    conversation={conversation}
+                    isActive={isActive}
+                    isSelected={isSelected}
+                    editingId={editingId}
+                    editValue={editValue}
+                    onConversationClick={handleConversationClick}
+                    onEditClick={handleEditClick}
+                    onCloneClick={handleCloneClick}
+                    onEditChange={handleEditChange}
+                    onEditBlur={handleEditBlur}
+                    onEditKeyDown={handleEditKeyDown}
+                  />
+                )
+              })}
+            </SortableContext>
+          </div>
+
+          <DragOverlay>
+            {activeId ? (
+              <div className='dark:bg-dark-chat-history min-h-[48px] rounded-md border border-gray-200 bg-white px-3 py-3 opacity-95 shadow-lg dark:border-dark-icon-unselected'>
+                {(() => {
+                  const draggedConversation = conversations.find(
+                    (c) => c.conversationId === activeId
+                  )
+                  return draggedConversation ? (
+                    <div className='flex items-center'>
+                      <ChatBubbleLeftEllipsisIcon className='mr-3 h-6 w-6 text-gray-600 dark:text-white' />
+                      <span className='text-gray-900 dark:text-white'>
+                        {getConversationTitle(draggedConversation)}
+                      </span>
+                    </div>
+                  ) : null
+                })()}
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+        <hr className='mt-4 border-gray-200 dark:border-dark-icon-unselected' />
+        <div className='space-y-1'>
+          {bottomItems.map((item) => {
+            const hasSelectedConversations = selectedConversations.length > 0
+            const isDisabled =
+              item.action === 'clear' &&
+              !activeConversation &&
+              !hasSelectedConversations
+            const buttonText =
+              item.action === 'clear' && hasSelectedConversations
+                ? 'Clear Selected Conversations'
+                : item.name
+
+            return item.action === 'clear' ? (
+              <Tooltip key={item.name}>
+                <TooltipTrigger asChild>
+                  <div
+                    onClick={() =>
+                      !isDisabled && handleBottomItemClick(item.action)
+                    }
+                    className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight text-gray-700 outline-none transition-all dark:text-white ${
+                      location.pathname === item.name
+                        ? 'bg-pink-50 text-primary dark:bg-dark-button-primary dark:text-white'
+                        : 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-dark-icon-unselected/20 dark:hover:text-white'
+                    } ${
+                      isDisabled
+                        ? 'cursor-not-allowed text-gray-400 line-through opacity-50 dark:text-dark-icon-unselected'
+                        : 'cursor-pointer'
+                    }`}
+                  >
+                    <item.icon
+                      className={`mr-4 h-5 w-5 font-bold ${
+                        isDisabled
+                          ? 'text-gray-400 dark:text-dark-icon-unselected'
+                          : 'text-gray-700 dark:text-white'
+                      }`}
+                    />
+                    <span className='text-gray-700 dark:text-white'>
+                      {buttonText}
                     </span>
                   </div>
-                ) : null
-              })()}
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-      <hr className='mt-4 border-gray-200 dark:border-dark-icon-unselected' />
-      <div className='space-y-1'>
-        {bottomItems.map((item) => {
-          const hasSelectedConversations = selectedConversations.length > 0
-          const isDisabled =
-            item.action === 'clear' &&
-            !activeConversation &&
-            !hasSelectedConversations
-          const buttonText =
-            item.action === 'clear' && hasSelectedConversations
-              ? 'Clear Selected Conversations'
-              : item.name
-
-          return (
-            <div
-              key={item.name}
-              onClick={() => !isDisabled && handleBottomItemClick(item.action)}
-              className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight text-gray-700 outline-none transition-all dark:text-white ${
-                location.pathname === item.name
-                  ? 'bg-pink-50 text-primary dark:bg-dark-button-primary dark:text-white'
-                  : 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-dark-icon-unselected/20 dark:hover:text-white'
-              } ${
-                isDisabled
-                  ? 'cursor-not-allowed text-gray-400 line-through opacity-50 dark:text-dark-icon-unselected'
-                  : 'cursor-pointer'
-              }`}
-            >
-              <item.icon
-                className={`mr-4 h-5 w-5 font-bold ${
+                </TooltipTrigger>
+                <TooltipContent className='max-w-xs'>
+                  <div className='space-y-2'>
+                    <p className='font-semibold'>
+                      {TOOLTIP_CONTENT.conversations.clearConversation.title}
+                    </p>
+                    <p className='text-sm'>
+                      {
+                        TOOLTIP_CONTENT.conversations.clearConversation
+                          .description
+                      }
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      💡 {TOOLTIP_CONTENT.conversations.clearConversation.tip}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <div
+                key={item.name}
+                onClick={() =>
+                  !isDisabled && handleBottomItemClick(item.action)
+                }
+                className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight text-gray-700 outline-none transition-all dark:text-white ${
+                  location.pathname === item.name
+                    ? 'bg-pink-50 text-primary dark:bg-dark-button-primary dark:text-white'
+                    : 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-dark-icon-unselected/20 dark:hover:text-white'
+                } ${
                   isDisabled
-                    ? 'text-gray-400 dark:text-dark-icon-unselected'
-                    : 'text-gray-700 dark:text-white'
+                    ? 'cursor-not-allowed text-gray-400 line-through opacity-50 dark:text-dark-icon-unselected'
+                    : 'cursor-pointer'
                 }`}
-              />
-              <span className='text-gray-700 dark:text-white'>
-                {buttonText}
-              </span>
-            </div>
-          )
-        })}
-      </div>
+              >
+                <item.icon
+                  className={`mr-4 h-5 w-5 font-bold ${
+                    isDisabled
+                      ? 'text-gray-400 dark:text-dark-icon-unselected'
+                      : 'text-gray-700 dark:text-white'
+                  }`}
+                />
+                <span className='text-gray-700 dark:text-white'>
+                  {buttonText}
+                </span>
+              </div>
+            )
+          })}
+        </div>
 
-      <DeleteConfirmation
-        isOpen={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
-        onDelete={handleDeleteConfirm}
-        title={
-          selectedConversations.length > 0
-            ? 'Delete Conversations'
-            : 'Clear Conversation'
-        }
-        description={
-          selectedConversations.length > 0
-            ? `Are you sure you want to delete ${selectedConversations.length} selected conversation${selectedConversations.length > 1 ? 's' : ''}? This action cannot be undone.`
-            : 'Are you sure you want to delete this conversation? This action cannot be undone.'
-        }
-        itemName={
-          selectedConversations.length > 0
-            ? `${selectedConversations.length} conversation${selectedConversations.length > 1 ? 's' : ''}`
-            : activeConversation?.title || 'New Chat'
-        }
-        confirmText='Delete'
-      />
-    </nav>
+        <DeleteConfirmation
+          isOpen={isDeleteConfirmOpen}
+          onClose={() => setIsDeleteConfirmOpen(false)}
+          onDelete={handleDeleteConfirm}
+          title={
+            selectedConversations.length > 0
+              ? 'Delete Conversations'
+              : 'Clear Conversation'
+          }
+          description={
+            selectedConversations.length > 0
+              ? `Are you sure you want to delete ${selectedConversations.length} selected conversation${selectedConversations.length > 1 ? 's' : ''}? This action cannot be undone.`
+              : 'Are you sure you want to delete this conversation? This action cannot be undone.'
+          }
+          itemName={
+            selectedConversations.length > 0
+              ? `${selectedConversations.length} conversation${selectedConversations.length > 1 ? 's' : ''}`
+              : activeConversation?.title || 'New Chat'
+          }
+          confirmText='Delete'
+        />
+      </nav>
+    </TooltipProvider>
   )
 }
 

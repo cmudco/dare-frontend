@@ -1,10 +1,11 @@
-import { MyFile, MyFolder } from '@/redux/types/files'
+import { MyFile, MyFolder, MediaTypeFilter } from '@/redux/types/files'
 import { VectorDbSource } from '@/utils/constants/user'
 
 export interface FilterOptions {
   searchQuery: string
   selectedTags: number[]
   vectorDb?: VectorDbSource
+  mediaTypeFilter?: MediaTypeFilter
 }
 
 export interface PaginationState {
@@ -17,11 +18,20 @@ export interface SortState {
   sortDirection: 'asc' | 'desc'
 }
 
+const getMediaTypeFromFileType = (fileType: string): MyFile['mediaType'] => {
+  if (!fileType) return 'document'
+  const lower = fileType.toLowerCase()
+  if (lower.startsWith('image/')) return 'image'
+  if (lower.startsWith('video/')) return 'video'
+  if (lower.startsWith('audio/')) return 'audio'
+  return 'document'
+}
+
 export const filterFiles = (
   files: MyFile[],
   options: FilterOptions
 ): MyFile[] => {
-  const { searchQuery, selectedTags, vectorDb } = options
+  const { searchQuery, selectedTags, vectorDb, mediaTypeFilter } = options
 
   return files.filter((file) => {
     const fileName = file.name?.toLowerCase() || ''
@@ -39,7 +49,23 @@ export const filterFiles = (
       file.vectorDbSource === vectorDb ||
       file.isMedia === true
 
-    return matchesSearch && matchesTags && matchesVectorDb
+    // Filter by media type
+    let matchesMediaType = true
+    if (mediaTypeFilter && mediaTypeFilter !== 'all') {
+      // Use file.mediaType if available, otherwise infer from fileType
+      const fileMediaType =
+        file.mediaType || getMediaTypeFromFileType(file.fileType)
+
+      if (mediaTypeFilter === 'generated_image') {
+        // Generated images have isGenerated flag or mediaType of 'generated_image'
+        matchesMediaType =
+          file.isGenerated === true || file.mediaType === 'generated_image'
+      } else {
+        matchesMediaType = fileMediaType === mediaTypeFilter
+      }
+    }
+
+    return matchesSearch && matchesTags && matchesVectorDb && matchesMediaType
   })
 }
 
@@ -125,11 +151,13 @@ export const getSelectionState = (
 export const createFilterConfig = (
   searchQuery: string,
   selectedTags: number[] = [],
-  vectorDb?: VectorDbSource
+  vectorDb?: VectorDbSource,
+  mediaTypeFilter?: MediaTypeFilter
 ): FilterOptions => ({
   searchQuery,
   selectedTags,
   vectorDb,
+  mediaTypeFilter,
 })
 
 export const createPaginationConfig = (

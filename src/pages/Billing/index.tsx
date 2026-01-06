@@ -13,6 +13,13 @@ import { FileSpreadsheet } from 'lucide-react'
 import { useExportToCSV } from '@/utils/billingExportUtils'
 import { WalletBalanceCard, TransactionTabs } from './components'
 import { TransactionTab } from '@/utils/constants/billing'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
 
 const BillingScreen = () => {
   const dispatch = useAppDispatch()
@@ -44,69 +51,88 @@ const BillingScreen = () => {
   const exportToCSV = useExportToCSV()
 
   return (
-    <div className='container mx-auto space-y-6 p-6'>
-      <div className='flex flex-col space-y-2'>
-        <h1 className='text-3xl font-bold tracking-tight'>Cost Tracking</h1>
-        <p className='text-muted-foreground'>
-          View your wallet balance and transaction history.
-        </p>
-      </div>
+    <TooltipProvider>
+      <div className='container mx-auto space-y-6 p-6'>
+        <div className='flex flex-col space-y-2'>
+          <h1 className='text-3xl font-bold tracking-tight'>Cost Tracking</h1>
+          <p className='text-muted-foreground'>
+            View your wallet balance and transaction history.
+          </p>
+        </div>
 
-      <WalletBalanceCard wallet={wallet} loading={loading} />
+        <WalletBalanceCard wallet={wallet} loading={loading} />
 
-      <Card className='overflow-hidden'>
-        <CardHeader>
-          <div className='flex items-center justify-between'>
-            <div>
-              <CardTitle>Transaction History</CardTitle>
-              <CardDescription>Your recent transactions</CardDescription>
+        <Card className='overflow-hidden'>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <div>
+                <CardTitle>Transaction History</CardTitle>
+                <CardDescription>Your recent transactions</CardDescription>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={exportToCSV}
+                    variant='outline'
+                    size='sm'
+                    className='h-8 gap-1'
+                    disabled={transactions.length === 0 || loading}
+                  >
+                    <FileSpreadsheet size={16} />
+                    <span>Export Transaction History</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className='max-w-xs'>
+                  <div className='space-y-2'>
+                    <p className='font-semibold'>
+                      {TOOLTIP_CONTENT.billing2.exportCSV.title}
+                    </p>
+                    <p className='text-sm'>
+                      {TOOLTIP_CONTENT.billing2.exportCSV.description}
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      💡 {TOOLTIP_CONTENT.billing2.exportCSV.tip}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <Button
-              onClick={exportToCSV}
-              variant='outline'
-              size='sm'
-              className='h-8 gap-1'
-              disabled={transactions.length === 0 || loading}
-            >
-              <FileSpreadsheet size={16} />
-              <span>Export Transaction History</span>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <TransactionTabs
-            transactions={transactions}
-            loading={loading}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-        </CardContent>
-        {transactionCount > 0 && (
-          <div className='flex justify-between p-4'>
-            <Button
-              variant='outline'
-              disabled={!previousPage}
-              onClick={() => {
-                const page = getPageNumber(previousPage)
-                if (page) handlePageChange(page)
-              }}
-            >
-              Previous
-            </Button>
-            <Button
-              variant='outline'
-              disabled={!nextPage}
-              onClick={() => {
-                const page = getPageNumber(nextPage)
-                if (page) handlePageChange(page)
-              }}
-            >
-              Next
-            </Button>
-          </div>
-        )}
-      </Card>
-    </div>
+          </CardHeader>
+          <CardContent>
+            <TransactionTabs
+              transactions={transactions}
+              loading={loading}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+          </CardContent>
+          {transactionCount > 0 && (
+            <div className='flex justify-between p-4'>
+              <Button
+                variant='outline'
+                disabled={!previousPage}
+                onClick={() => {
+                  const page = getPageNumber(previousPage)
+                  if (page) handlePageChange(page)
+                }}
+              >
+                Previous
+              </Button>
+              <Button
+                variant='outline'
+                disabled={!nextPage}
+                onClick={() => {
+                  const page = getPageNumber(nextPage)
+                  if (page) handlePageChange(page)
+                }}
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </Card>
+      </div>
+    </TooltipProvider>
   )
 }
 

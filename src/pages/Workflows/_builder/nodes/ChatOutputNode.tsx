@@ -7,8 +7,16 @@ import {
   Send,
   Trash2,
   CheckCircle2,
+  FileText,
+  Globe,
+  ExternalLink,
 } from 'lucide-react'
 import { useState } from 'react'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { renderStatusPill } from '@/utils/workflowUtils'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
@@ -18,11 +26,7 @@ import {
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
 import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
-import {
-  getDisplayRun,
-  getStepFromRun,
-  extractStepOutputData,
-} from '@/utils/workflowRunHelpers'
+import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -65,6 +69,8 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const isCollapsed = outputData?.isCollapsed || false
   const isOutputExecuted = executedStepNodeIds.includes(id)
   const [expanded, setExpanded] = useState(false)
+  const [snippetsOpen, setSnippetsOpen] = useState(false)
+  const [webSourcesOpen, setWebSourcesOpen] = useState(false)
 
   // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
   const displayRun = getDisplayRun(
@@ -74,11 +80,15 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
     currentRun
   )
 
-  // STEP LOOKUP: Find this node's step in the display run
-  const stepRun = getStepFromRun(displayRun, outputData?.stepNumber)
+  // V2 API: Direct node state access (no edge traversal needed!)
+  const nodeState = getNodeState(displayRun, id)
 
-  // DATA EXTRACTION: Pull out display values
-  const { response, status, error } = extractStepOutputData(stepRun)
+  // DATA EXTRACTION: Direct access from nodeStates
+  const response = nodeState?.response || null
+  const status = nodeState?.status || null
+  const error = nodeState?.error || null
+  const snippets = nodeState?.snippets || []
+  const webSearchSources = nodeState?.webSearchSources || []
 
   // UI HANDLERS
   const copyToClipboard = async () => {
@@ -291,6 +301,124 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
                       </>
                     )}
                   </Button>
+                </div>
+              )}
+
+              {/* Context Snippets */}
+              {snippets.length > 0 && (
+                <div className='mt-4'>
+                  <Collapsible
+                    open={snippetsOpen}
+                    onOpenChange={setSnippetsOpen}
+                  >
+                    <CollapsibleTrigger className='flex w-full items-center justify-between rounded-md border border-border bg-muted px-3 py-2 text-xs transition-colors hover:bg-accent'>
+                      <span className='flex items-center font-medium text-foreground'>
+                        <FileText className='mr-2 h-3 w-3' />
+                        Context Snippets ({snippets.length})
+                      </span>
+                      {snippetsOpen ? (
+                        <ChevronUp className='h-3 w-3 text-muted-foreground' />
+                      ) : (
+                        <ChevronDown className='h-3 w-3 text-muted-foreground' />
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className='space-y-2 pt-2'>
+                      {[...snippets]
+                        .sort(
+                          (a, b) =>
+                            (b.similarityScore || 0) - (a.similarityScore || 0)
+                        )
+                        .map((snippet) => (
+                          <div
+                            key={snippet.id}
+                            className='rounded-r-md border-l-2 border-border bg-background p-2 pl-3 text-xs'
+                          >
+                            <div className='mb-1 flex items-center justify-between'>
+                              <span className='font-medium text-foreground'>
+                                {snippet.file?.name || 'Unknown file'} (
+                                {snippet.similarityScore?.toFixed(2) || 'N/A'})
+                              </span>
+                              <span className='text-muted-foreground'>
+                                {snippet.vectorDbSource && (
+                                  <span className='font-medium'>
+                                    {snippet.vectorDbSource} -{' '}
+                                  </span>
+                                )}
+                                Chunk {snippet.chunkIndex || 0}
+                              </span>
+                            </div>
+                            <p className='line-clamp-3 text-muted-foreground'>
+                              {snippet.text}
+                            </p>
+                          </div>
+                        ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              )}
+
+              {/* Web Search Sources */}
+              {webSearchSources.length > 0 && (
+                <div className='mt-4'>
+                  <Collapsible
+                    open={webSourcesOpen}
+                    onOpenChange={setWebSourcesOpen}
+                  >
+                    <CollapsibleTrigger className='flex w-full items-center justify-between rounded-md border border-border bg-muted px-3 py-2 text-xs transition-colors hover:bg-accent'>
+                      <span className='flex items-center font-medium text-foreground'>
+                        <Globe className='mr-2 h-3 w-3' />
+                        Web Sources ({webSearchSources.length})
+                      </span>
+                      {webSourcesOpen ? (
+                        <ChevronUp className='h-3 w-3 text-muted-foreground' />
+                      ) : (
+                        <ChevronDown className='h-3 w-3 text-muted-foreground' />
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className='space-y-2 pt-2'>
+                      {webSearchSources.map((source) => (
+                        <div
+                          key={source.id}
+                          className='rounded-r-md border-l-2 border-blue-500 bg-background p-2 pl-3 text-xs'
+                        >
+                          <div className='mb-1 flex items-center justify-between'>
+                            <a
+                              href={source.url}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='flex items-center gap-1 font-medium text-foreground hover:text-blue-600'
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {source.title ||
+                                (() => {
+                                  try {
+                                    return new URL(source.url).hostname
+                                  } catch {
+                                    return source.url
+                                  }
+                                })()}
+                              <ExternalLink className='h-2.5 w-2.5' />
+                            </a>
+                            {source.provider && (
+                              <span className='text-muted-foreground'>
+                                via {source.provider}
+                              </span>
+                            )}
+                          </div>
+                          {source.citedText && (
+                            <p className='line-clamp-2 italic text-muted-foreground'>
+                              &ldquo;{source.citedText}&rdquo;
+                            </p>
+                          )}
+                          {source.pageAge && (
+                            <p className='mt-1 text-muted-foreground'>
+                              {source.pageAge}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
               )}
             </div>

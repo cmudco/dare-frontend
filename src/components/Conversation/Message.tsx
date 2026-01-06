@@ -32,10 +32,13 @@ import {
   deleteMessage,
 } from '@/redux/asyncThunks/conversation'
 import { AppDispatch } from '../../redux/store'
-import { regenerateResponse } from '@/redux/asyncThunks/websocket'
+import { regenerateSocketResponse } from '@/redux/asyncThunks/socketMessages'
 import FeedbackModal from './FeedbackModal'
 import MessageMetadata from './MessageMetadata'
+import WebSearchSources from './WebSearchSources'
 import { DeleteConfirmation } from '../DeleteConfirmation'
+import { ArtifactCard } from '../Artifacts'
+import { features } from '@/config/environment'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -187,7 +190,7 @@ const Message: React.FC<MessageProps> = ({
 
   const handleRegenerate = () => {
     if (!message.isSender) {
-      dispatch(regenerateResponse({ messageId: message.id }))
+      dispatch(regenerateSocketResponse({ messageId: message.id }))
     }
   }
 
@@ -407,6 +410,33 @@ const Message: React.FC<MessageProps> = ({
                 {message.streaming ? `${displayMessage}\u258b` : displayMessage}
               </ReactMarkdown>
 
+              {/* User Uploaded Images Display */}
+              {(() => {
+                const uploadedImages = message.files?.filter(
+                  (file) => file.mediaType === 'image' && !file.isGenerated
+                )
+
+                if (uploadedImages?.length) {
+                  return (
+                    <div className='not-prose mb-3 flex flex-wrap gap-2'>
+                      {uploadedImages.map((file) => (
+                        <div
+                          key={file.id}
+                          className='relative rounded-lg border border-gray-200 dark:border-gray-700'
+                        >
+                          <img
+                            src={`${import.meta.env.VITE_DJANGO_BACKEND_URL}${file.file}`}
+                            alt={file.name}
+                            className='max-h-64 max-w-xs rounded-lg object-contain'
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )
+                }
+                return null
+              })()}
+
               {/* Generated Image Display */}
               {(() => {
                 // Check for generated image in generatedImage field (WebSocket)
@@ -481,6 +511,11 @@ const Message: React.FC<MessageProps> = ({
 
                 return null
               })()}
+
+              {/* Artifact Card - Show when message has associated artifact */}
+              {features.enableArtifacts && message.artifactId && (
+                <ArtifactCard artifactId={message.artifactId} />
+              )}
             </div>
           </div>
         </div>
@@ -663,6 +698,14 @@ const Message: React.FC<MessageProps> = ({
               </div>
             )}
           </div>
+        )}
+
+      {/* Web Search Sources */}
+      {!message.isSender &&
+        !message.streaming &&
+        message.webSearchSources &&
+        message.webSearchSources.length > 0 && (
+          <WebSearchSources sources={message.webSearchSources} />
         )}
 
       <FeedbackModal

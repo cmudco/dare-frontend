@@ -23,9 +23,9 @@ const FileManagerLayout = () => {
     dispatch(getTags())
   }, [dispatch])
 
-  const handleToggleView = (view: 'files' | 'folders') => {
+  const handleToggleView = (view: 'files' | 'folders' | 'media') => {
     dispatch(setCurrentView(view))
-    if (view === 'files') {
+    if (view === 'files' || view === 'media') {
       dispatch(getFiles())
     } else {
       dispatch(getFolders())
@@ -37,15 +37,22 @@ const FileManagerLayout = () => {
       <div className='relative flex-grow overflow-auto p-8'>
         <div className='h-full w-full bg-transparent shadow-none'>
           <div className='px-0'>
-            {currentView === 'files' ? (
+            {currentView === 'files' && (
               <>
                 <FileHeader onToggleView={handleToggleView} />
                 <FileTable />
               </>
-            ) : (
+            )}
+            {currentView === 'folders' && (
               <>
                 <FolderHeader onToggleView={handleToggleView} />
                 <FolderTable />
+              </>
+            )}
+            {currentView === 'media' && (
+              <>
+                <FileHeader onToggleView={handleToggleView} />
+                <FileTable />
               </>
             )}
           </div>

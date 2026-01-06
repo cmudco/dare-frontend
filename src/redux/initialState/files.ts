@@ -16,4 +16,5 @@ export const initialState: FileState = {
   selectedItems: [],
   currentView: 'files',
   isMoveModalOpen: false,
+  mediaTypeFilter: 'all',
 }

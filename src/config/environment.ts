@@ -37,6 +37,14 @@ export interface FeatureFlags {
   enableBYOK: boolean
   // Image Generation in chat configuration panel
   enableImageGeneration: boolean
+  // Artifacts - long-form document generation with sidecar panel
+  enableArtifacts: boolean
+  // Audio Transcription - convert audio to text with Whisper/Gemini
+  enableAudioTranscription: boolean
+  // Socket.IO - new WebSocket implementation with single persistent connection
+  enableSocketIO: boolean
+  // Voice Input - push-to-talk voice input mode (V1)
+  enableVoiceInput: boolean
 }
 
 /**
@@ -68,30 +76,50 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
       return {
         enableBYOK: true,
         enableImageGeneration: true,
+        enableArtifacts: true,
+        enableAudioTranscription: true,
+        enableSocketIO: true, // Test Socket.IO in local
+        enableVoiceInput: true, // Voice input enabled for local testing
       }
 
     case 'dare-staging':
       return {
         enableBYOK: true, // DARE Staging: HAS BYOK
         enableImageGeneration: true, // DARE Staging: HAS Image Generation
+        enableArtifacts: true, // DARE Staging: HAS Artifacts
+        enableAudioTranscription: true, // DARE Staging: HAS Audio Transcription
+        enableSocketIO: true, // Test Socket.IO in staging
+        enableVoiceInput: true, // Voice input enabled for staging testing
       }
 
     case 'dare-production':
       return {
         enableBYOK: false, // DARE Production: NO BYOK
         enableImageGeneration: true, // DARE Production: has Image Generation
+        enableArtifacts: false, // DARE Production: NO Artifacts (beta)
+        enableAudioTranscription: false, // DARE Production: NO Audio Transcription (beta)
+        enableSocketIO: false, // Disable Socket.IO in production until validated
+        enableVoiceInput: false, // Voice input disabled in production (beta)
       }
 
     case 'gt-production':
       return {
         enableBYOK: true, // Georgia Tech: HAS BYOK
         enableImageGeneration: true, // Georgia Tech: HAS Image Generation
+        enableArtifacts: true, // Georgia Tech: HAS Artifacts
+        enableAudioTranscription: true, // Georgia Tech: HAS Audio Transcription
+        enableSocketIO: false, // Disable Socket.IO in production until validated
+        enableVoiceInput: false, // Voice input disabled in production (beta)
       }
 
     default:
       return {
         enableBYOK: true,
         enableImageGeneration: true,
+        enableArtifacts: true,
+        enableAudioTranscription: true,
+        enableSocketIO: false, // Default off for safety
+        enableVoiceInput: false, // Default off for safety
       }
   }
 }

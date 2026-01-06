@@ -15,6 +15,7 @@ import {
   updateFileTags,
 } from './asyncThunks/file'
 import { initialState } from './initialState/files'
+import { MediaTypeFilter } from './types/files'
 
 const fileSlice = createSlice({
   name: 'files',
@@ -78,7 +79,10 @@ const fileSlice = createSlice({
     setSelectedItems: (state, action: PayloadAction<number[]>) => {
       state.selectedItems = action.payload
     },
-    setCurrentView: (state, action: PayloadAction<'files' | 'folders'>) => {
+    setCurrentView: (
+      state,
+      action: PayloadAction<'files' | 'folders' | 'media'>
+    ) => {
       state.currentView = action.payload
       state.selectedItems = []
     },
@@ -87,6 +91,9 @@ const fileSlice = createSlice({
     },
     closeMoveModal: (state) => {
       state.isMoveModalOpen = false
+    },
+    setMediaTypeFilter: (state, action: PayloadAction<MediaTypeFilter>) => {
+      state.mediaTypeFilter = action.payload
     },
   },
   extraReducers: (builder) => {
@@ -309,6 +316,7 @@ export const {
   setCurrentView,
   openMoveModal,
   closeMoveModal,
+  setMediaTypeFilter,
 } = fileSlice.actions
 
 export default fileSlice.reducer

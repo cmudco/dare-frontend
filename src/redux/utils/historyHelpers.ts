@@ -2,7 +2,6 @@ import { Draft } from '@reduxjs/toolkit'
 import type { Node, Edge, NodeChange, EdgeChange } from '@xyflow/react'
 import type {
   HistorySnapshot,
-  NodeErrors,
   WorkflowBuilderState,
 } from '../types/workflowBuilder'
 
@@ -15,12 +14,10 @@ export const MAX_HISTORY_SIZE = 50
  */
 export const createSnapshot = (
   nodes: Node[],
-  edges: Edge[],
-  errorsByNodeId: Record<string, NodeErrors>
+  edges: Edge[]
 ): HistorySnapshot => ({
   nodes: JSON.parse(JSON.stringify(nodes)),
   edges: JSON.parse(JSON.stringify(edges)),
-  errorsByNodeId: JSON.parse(JSON.stringify(errorsByNodeId)),
 })
 
 /**

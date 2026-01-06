@@ -3,6 +3,7 @@ import { MyFile, MyFolder } from '../types/files'
 import { Tag } from '../types/tags'
 import { loadDraftsFromLocalStorage } from '../../utils/draftStorage'
 import { DEFAULT_IMAGE_SETTINGS } from '../../utils/constants/imageGeneration'
+import { DEFAULT_TRANSCRIPTION_SETTINGS } from '../../utils/constants/audioTranscription'
 
 export const initialState: ConversationState = {
   conversations: [],
@@ -30,7 +31,12 @@ export const initialState: ConversationState = {
   attachedImages: [],
   webSearchEnabled: false,
   imageGenerationEnabled: false,
+  audioTranscriptionEnabled: false,
+  artifactsEnabled: false,
   isGeneratingImage: false,
   imageGenerationPrompt: null,
   imageGenerationSettings: DEFAULT_IMAGE_SETTINGS,
+  isTranscribingAudio: false,
+  audioTranscriptionSettings: DEFAULT_TRANSCRIPTION_SETTINGS,
+  historySidebarCollapsed: false,
 }

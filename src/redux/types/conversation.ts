@@ -4,9 +4,19 @@ import type {
   ImageQualityType,
   ImageStyleType,
 } from '@/utils/constants/imageGeneration'
+import type { LanguageCode } from '@/utils/constants/audioTranscription'
 import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
+
+/**
+ * Voice recording state enum for push-to-talk voice input
+ */
+export enum VoiceRecordingState {
+  IDLE = 'idle',
+  RECORDING = 'recording',
+  PROCESSING = 'processing',
+}
 
 export interface Conversation {
   conversationId: string
@@ -20,6 +30,8 @@ export interface Conversation {
   historyLimit: number
   webSearchEnabled?: boolean
   imageGenerationEnabled?: boolean
+  audioTranscriptionEnabled?: boolean
+  artifactsEnabled?: boolean
   selectedModel?: number | null
   selectedMediaIds?: number[]
   prompt?: Prompt | null
@@ -44,6 +56,7 @@ export interface Message {
   llmId?: number
   streaming?: boolean
   snippets?: Snippet[]
+  webSearchSources?: WebSearchSource[]
   feedbackType?: FeedbackType | null
   feedbackText?: string
   feedbackSource?: string
@@ -55,6 +68,10 @@ export interface Message {
   outputTokens?: number | null
   // Image generation fields
   generatedImage?: GeneratedImage
+  // Audio transcription fields
+  generatedTranscription?: GeneratedTranscription
+  // Artifact reference (when message has associated artifact)
+  artifactId?: number
 }
 
 export interface GeneratedImage {
@@ -68,6 +85,17 @@ export interface GeneratedImage {
   size: string
   quality: string
   style: string
+}
+
+export interface GeneratedTranscription {
+  fileId: number
+  fileName: string
+  text: string
+  language: string
+  model: string
+  cost?: string
+  duration?: number
+  transcribedAt: string
 }
 
 export interface MessageProps {
@@ -85,6 +113,7 @@ export interface LLMModel {
   description: string | null
   isReasoning: boolean
   isImageGenerator?: boolean
+  isAudioTranscriber?: boolean
   inputTokenRatePerMillion: number
   outputTokenRatePerMillion: number
 }
@@ -96,6 +125,15 @@ export interface Snippet {
   similarityScore: number
   chunkIndex: number
   vectorDbSource: string
+}
+
+export interface WebSearchSource {
+  id: number
+  url: string
+  title: string
+  citedText?: string // Claude only - quoted text from source
+  pageAge?: string // Claude only - e.g., "3 weeks ago"
+  provider: 'openai' | 'claude' | 'gemini'
 }
 
 export interface ConversationDraft {
@@ -116,6 +154,10 @@ export interface ImageGenerationSettings {
   size: ImageSizeType
   quality: ImageQualityType
   style: ImageStyleType
+}
+
+export interface AudioTranscriptionSettings {
+  language: LanguageCode
 }
 
 export interface ConversationState {
@@ -144,9 +186,14 @@ export interface ConversationState {
   attachedImages: AttachedImage[]
   webSearchEnabled: boolean
   imageGenerationEnabled: boolean
+  audioTranscriptionEnabled: boolean
+  artifactsEnabled: boolean
   isGeneratingImage: boolean
   imageGenerationPrompt: string | null
   imageGenerationSettings: ImageGenerationSettings
+  isTranscribingAudio: boolean
+  audioTranscriptionSettings: AudioTranscriptionSettings
+  historySidebarCollapsed: boolean
 }
 
 export interface ConversationResponse {

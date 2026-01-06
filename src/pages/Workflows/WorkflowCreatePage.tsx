@@ -10,9 +10,7 @@ import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { setErrorsByNodeId } from '@/redux/workflowBuilderSlice'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
-import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { createOrUpdateWorkflow } from '@/redux/asyncThunks/workflow'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
@@ -28,21 +26,9 @@ const WorkflowCreatePage = () => {
   const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
 
   const handleSave = () => {
-    const validation = validateWorkflow(nodes, edges)
-    dispatch(setErrorsByNodeId(validation.nodeErrors))
-
-    if (!validation.isValid) {
-      const message =
-        validation.errorMessages[0] || 'Please fix the highlighted nodes'
-      toast.error(message)
-      return
-    }
-
     const serializedWorkflow = serializeWorkflow(nodes, edges, savedViewport)
     if (!serializedWorkflow) {
-      toast.error(
-        'Unable to serialize workflow. Please fix the highlighted nodes.'
-      )
+      toast.error('Unable to serialize workflow.')
       return
     }
 
