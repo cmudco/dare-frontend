@@ -8,6 +8,8 @@ import { initializeTheme } from './redux/themeSlice'
 import { Toaster } from '@/components/ui/toaster'
 import { tokenExpirationService } from '@/services/tokenExpirationService'
 import { clearOldDrafts } from './redux/conversationSlice'
+import { useSocketConnection } from './hooks/useSocketConnection'
+import { FeedbackWidget } from '@/components/Feedback'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -16,10 +18,12 @@ function App() {
   )
   const { isDarkMode } = useSelector((state: RootState) => state.theme)
 
+  // Socket.IO connection management
+  useSocketConnection()
+
   useEffect(() => {
     dispatch(initializeTheme())
-
-    dispatch(clearOldDrafts(1 * 24 * 60 * 60 * 1000)) // Clear drafts older than 1 day
+    dispatch(clearOldDrafts(1 * 24 * 60 * 60 * 1000))
 
     if (!user) {
       dispatch(getUserData())
@@ -88,6 +92,7 @@ function App() {
       <BackgroundCircle />
       <AppRoutes />
       <Toaster />
+      {isAuthenticated && <FeedbackWidget />}
     </>
   )
 }

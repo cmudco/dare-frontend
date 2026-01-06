@@ -253,11 +253,9 @@ export function sortWorkflows(
 ): Workflow[] {
   const sortedWorkflows = [...workflows]
   if (!sortColumn) {
-    return sortedWorkflows.sort((a, b) => {
-      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0
-      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0
-      return bDate - aDate
-    })
+    // No column sorting active - return workflows in their current order
+    // (which respects the backend's display_order + fallback to -created_at)
+    return sortedWorkflows
   }
 
   const prop = getWorkflowProp(sortColumn)

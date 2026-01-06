@@ -20,11 +20,15 @@ import {
   Conversation,
   LLMModel,
   ImageGenerationSettings,
+  AudioTranscriptionSettings,
 } from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
-import { syncModelsWithImageGenerationState } from './utils/modelSyncHelpers'
+import {
+  syncModelsWithImageGenerationState,
+  syncModelsWithAudioTranscriptionState,
+} from './utils/modelSyncHelpers'
 
 export const conversationSlice = createSlice({
   name: 'conversation',
@@ -45,13 +49,32 @@ export const conversationSlice = createSlice({
         state.webSearchEnabled = action.payload.webSearchEnabled ?? false
         state.imageGenerationEnabled =
           action.payload.imageGenerationEnabled ?? false
+        state.audioTranscriptionEnabled =
+          action.payload.audioTranscriptionEnabled ?? false
+        state.artifactsEnabled = action.payload.artifactsEnabled ?? false
 
-        // Sync available models and selected model with image generation state
-        syncModelsWithImageGenerationState(
-          state,
-          action.payload.imageGenerationEnabled ?? false,
-          action.payload.selectedModel
-        )
+        // Sync available models based on enabled mode
+        // Priority: audio transcription > image generation > regular
+        if (action.payload.audioTranscriptionEnabled) {
+          syncModelsWithAudioTranscriptionState(
+            state,
+            true,
+            action.payload.selectedModel
+          )
+        } else if (action.payload.imageGenerationEnabled) {
+          syncModelsWithImageGenerationState(
+            state,
+            true,
+            action.payload.selectedModel
+          )
+        } else {
+          // Regular mode - filter out both image and audio models
+          syncModelsWithImageGenerationState(
+            state,
+            false,
+            action.payload.selectedModel
+          )
+        }
       }
     },
     loadSelectedFilesFromIds(
@@ -161,11 +184,34 @@ export const conversationSlice = createSlice({
       // Sync available models and auto-select appropriate model
       syncModelsWithImageGenerationState(state, action.payload)
     },
+    updateArtifactsEnabled(state, action: PayloadAction<boolean>) {
+      // Update global and conversation-level state
+      state.artifactsEnabled = action.payload
+      if (state.activeConversation) {
+        state.activeConversation.artifactsEnabled = action.payload
+      }
+    },
     updateImageGenerationSettings(
       state,
       action: PayloadAction<ImageGenerationSettings>
     ) {
       state.imageGenerationSettings = action.payload
+    },
+    updateAudioTranscriptionEnabled(state, action: PayloadAction<boolean>) {
+      // Update global and conversation-level state
+      state.audioTranscriptionEnabled = action.payload
+      if (state.activeConversation) {
+        state.activeConversation.audioTranscriptionEnabled = action.payload
+      }
+
+      // Sync available models and auto-select appropriate model
+      syncModelsWithAudioTranscriptionState(state, action.payload)
+    },
+    updateAudioTranscriptionSettings(
+      state,
+      action: PayloadAction<AudioTranscriptionSettings>
+    ) {
+      state.audioTranscriptionSettings = action.payload
     },
     addMessage(state, action: PayloadAction<Message>) {
       const index = state.activeConversationMessages.findIndex(
@@ -231,7 +277,9 @@ export const conversationSlice = createSlice({
 
       // Reset feature toggles
       state.imageGenerationEnabled = false
+      state.audioTranscriptionEnabled = false
       state.webSearchEnabled = false
+      state.artifactsEnabled = false
 
       // Reset to text models with appropriate selection
       syncModelsWithImageGenerationState(state, false)
@@ -330,6 +378,9 @@ export const conversationSlice = createSlice({
     clearAttachedImages(state) {
       state.attachedImages = []
     },
+    setHistorySidebarCollapsed(state, action: PayloadAction<boolean>) {
+      state.historySidebarCollapsed = action.payload
+    },
     setImageGenerating(
       state,
       action: PayloadAction<{ generating: boolean; prompt: string | null }>
@@ -363,12 +414,12 @@ export const conversationSlice = createSlice({
         getAvailableModels.fulfilled,
         (state, action: PayloadAction<LLMModel[]>) => {
           state.loading = false
-          // Filter out image generation models by default (they'll be shown when image mode is enabled)
-          const nonImageModels = action.payload.filter(
-            (model) => !model.isImageGenerator
+          // Filter out image generation and audio transcription models by default
+          const regularModels = action.payload.filter(
+            (model) => !model.isImageGenerator && !model.isAudioTranscriber
           )
-          state.availableModels = nonImageModels
-          state.selectedModel = nonImageModels[0]?.id
+          state.availableModels = regularModels
+          state.selectedModel = regularModels[0]?.id
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
@@ -576,6 +627,109 @@ export const conversationSlice = createSlice({
           console.error('Failed to update feedback tracking:', action.payload)
         }
       )
+      // ─────────────────────────────────────────────────────────────────────
+      // Socket.IO message handlers (from socketMiddleware)
+      // ─────────────────────────────────────────────────────────────────────
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: { conversationHistory: Message[] }
+        } => action.type === 'socket/conversation_history',
+        (state, action) => {
+          if (action.payload.conversationHistory) {
+            state.activeConversationMessages =
+              action.payload.conversationHistory
+          }
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: Message & { regenerate?: boolean }
+        } => action.type === 'socket/message',
+        (state, action) => {
+          const existingIndex = state.activeConversationMessages.findIndex(
+            (msg) => msg.id === action.payload.id
+          )
+
+          if (existingIndex !== -1) {
+            // Message exists - update it (handles regenerate and deduplication)
+            state.activeConversationMessages[existingIndex] = {
+              ...state.activeConversationMessages[existingIndex],
+              ...action.payload,
+            }
+          } else {
+            // New message - add it
+            state.activeConversationMessages.push(action.payload)
+          }
+        }
+      )
+      .addMatcher(
+        (action): action is { type: string; payload: Partial<Message> } =>
+          action.type === 'socket/ai_stream',
+        (state, action) => {
+          const index = state.activeConversationMessages.findIndex(
+            (msg) => msg.id === action.payload.id
+          )
+          if (index !== -1) {
+            state.activeConversationMessages[index] = {
+              ...state.activeConversationMessages[index],
+              ...action.payload,
+            }
+          }
+        }
+      )
+      .addMatcher(
+        (action): action is { type: string; payload: { title: string } } =>
+          action.type === 'socket/conversation_title',
+        (state, action) => {
+          if (state.activeConversation) {
+            state.activeConversation.title = action.payload.title
+            // Also update in conversations list
+            const index = state.conversations.findIndex(
+              (conv) =>
+                conv.conversationId === state.activeConversation?.conversationId
+            )
+            if (index !== -1) {
+              state.conversations[index].title = action.payload.title
+            }
+          }
+        }
+      )
+      .addMatcher(
+        (action): action is { type: string; payload: Partial<Message> } =>
+          action.type === 'socket/edit_message' ||
+          action.type === 'socket/regenerate_response',
+        (state, action) => {
+          const index = state.activeConversationMessages.findIndex(
+            (msg) => msg.id === action.payload.id
+          )
+          if (index !== -1) {
+            state.activeConversationMessages[index] = {
+              ...state.activeConversationMessages[index],
+              ...action.payload,
+            }
+          }
+        }
+      )
+      // Voice transcription - put text in input for user review
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: { text: string; status: string }
+        } => action.type === 'socket/voice_transcription',
+        (state, action) => {
+          if (action.payload.status === 'complete' && action.payload.text) {
+            state.conversationInput = action.payload.text
+          }
+        }
+      )
   },
 })
 
@@ -593,7 +747,10 @@ export const {
   updateHistoryLimit,
   updateWebSearchEnabled,
   updateImageGenerationEnabled,
+  updateAudioTranscriptionEnabled,
+  updateArtifactsEnabled,
   updateImageGenerationSettings,
+  updateAudioTranscriptionSettings,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,
@@ -623,5 +780,6 @@ export const {
   addAttachedImage,
   removeAttachedImage,
   clearAttachedImages,
+  setHistorySidebarCollapsed,
 } = conversationSlice.actions
 export default conversationSlice.reducer

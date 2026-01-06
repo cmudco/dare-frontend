@@ -14,14 +14,12 @@ import WorkflowBuilder from './_builder/WorkflowBuilder'
 import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
-  setErrorsByNodeId,
   setManualMode,
   resetPartialRun,
   setSavingStatus,
 } from '@/redux/workflowBuilderSlice'
 import { SavingStatus } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
-import { validateWorkflow } from '@/utils/workflowBuilder/validateWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
@@ -36,7 +34,11 @@ import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
 import { toast } from '@/utils/toast'
 import type { GetActivePartialRunResponse } from '@/redux/types/workflow'
 import { useDebounce } from '@/hooks/useDebounce'
-import { Loader2, Check, AlertCircle } from 'lucide-react'
+import { Loader2, Check, AlertCircle, Copy } from 'lucide-react'
+import {
+  exportWorkflow,
+  exportWorkflowToString,
+} from '@/utils/workflowBuilder/exportWorkflow'
 
 const WorkflowEditPage = () => {
   const navigate = useNavigate()
@@ -106,10 +108,6 @@ const WorkflowEditPage = () => {
   const handleSave = async () => {
     dispatch(setSavingStatus(SavingStatus.Saving))
 
-    const validation = validateWorkflow(nodes, edges)
-    // We don't block saving on validation errors, but we update the error state
-    dispatch(setErrorsByNodeId(validation.nodeErrors))
-
     const serializedWorkflow = serializeWorkflow(nodes, edges, savedViewport)
     if (!serializedWorkflow) {
       dispatch(setSavingStatus(SavingStatus.Error))
@@ -132,6 +130,21 @@ const WorkflowEditPage = () => {
     } catch (error) {
       console.error('Save failed:', error)
       dispatch(setSavingStatus(SavingStatus.Error))
+    }
+  }
+
+  const handleRunWorkflow = async () => {
+    if (!id) return
+
+    // First save the workflow
+    await handleSave()
+
+    // Then run it
+    const result = await dispatch(startWorkflowRun(id))
+
+    // Handle errors from backend (formatted by errorHandler)
+    if (result.meta.requestStatus === 'rejected' && result.payload) {
+      toast.error(result.payload as string, 10000)
     }
   }
 
@@ -191,6 +204,32 @@ const WorkflowEditPage = () => {
     restorePartialRunOnLoad()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedWorkflow?.id])
+
+  /**
+   * Copies the current workflow configuration to clipboard.
+   * The exported workflow is sanitized (user-specific FKs cleared) and can be
+   * shared with others or pasted into another workflow canvas.
+   */
+  const handleCopyWorkflow = async () => {
+    if (nodes.length === 0) {
+      toast.error('No nodes to copy. Add some nodes first.')
+      return
+    }
+
+    try {
+      const exportedWorkflow = exportWorkflow(nodes, edges, savedViewport)
+      const jsonString = exportWorkflowToString(exportedWorkflow)
+
+      await navigator.clipboard.writeText(jsonString)
+
+      toast.success(
+        `Workflow copied to clipboard (${nodes.length} nodes, ${edges.length} connections)`
+      )
+    } catch (error) {
+      console.error('Failed to copy workflow:', error)
+      toast.error('Failed to copy workflow to clipboard')
+    }
+  }
 
   return (
     <div className='flex h-screen flex-col'>
@@ -257,6 +296,30 @@ const WorkflowEditPage = () => {
             </div>
           )}
 
+          {/* Copy Workflow Button */}
+          <TooltipProvider>
+            <Tooltip delayDuration={150}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='outline'
+                  size='icon'
+                  onClick={handleCopyWorkflow}
+                  disabled={isRunning || nodes.length === 0}
+                  className='h-9 w-9'
+                  aria-label='Copy workflow configuration'
+                >
+                  <Copy className='h-4 w-4' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Copy workflow to clipboard</p>
+                <p className='text-xs text-muted-foreground'>
+                  Share or paste into another workflow
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           <TooltipProvider>
             <Tooltip delayDuration={150}>
               <TooltipTrigger asChild>
@@ -282,7 +345,7 @@ const WorkflowEditPage = () => {
           {id && !manualModeEnabled && (
             <Button
               variant='outline'
-              onClick={() => dispatch(startWorkflowRun(id!))}
+              onClick={handleRunWorkflow}
               disabled={isRunning || manualModeEnabled}
               className='normal-case'
             >

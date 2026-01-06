@@ -2,6 +2,7 @@ import {
   WorkflowRun,
   WorkflowRunStep,
   PendingValidation,
+  NodeState,
 } from '@/redux/types/workflow'
 
 /**
@@ -72,34 +73,34 @@ export function getDisplayRun(
  *
  * STEP MATCHING STRATEGY:
  * - Standard nodes: Match by stepNumber (order field)
- * - Conditional nodes: Match by stepNumber AND verify metadata.availableRoutes exists
+ * - Routing nodes: Match by stepNumber AND verify metadata.availableRoutes exists
  *
  * @param run - The workflow run containing steps
  * @param stepNumber - The step number to find
  * @param options - Optional configuration
- * @param options.isConditional - Whether this is a conditional node (requires route metadata)
+ * @param options.isRoutingNode - Whether this is a routing node (requires route metadata)
  * @returns The matching step, or null if not found
  *
  * @example
  * ```tsx
- * // For chat output or structured output nodes
+ * // For chat output nodes
  * const stepRun = getStepFromRun(displayRun, stepNumber)
  *
- * // For conditional nodes
- * const stepRun = getStepFromRun(displayRun, stepNumber, { isConditional: true })
+ * // For structured output nodes
+ * const stepRun = getStepFromRun(displayRun, stepNumber, { isRoutingNode: true })
  * ```
  */
 export function getStepFromRun(
   run: WorkflowRun | null,
   stepNumber: number | undefined,
-  options: { isConditional?: boolean } = {}
+  options: { isRoutingNode?: boolean } = {}
 ): WorkflowRunStep | null {
   if (!run || !run.steps || stepNumber === undefined) return null
 
-  const { isConditional = false } = options
+  const { isRoutingNode = false } = options
 
-  if (isConditional) {
-    // Conditional nodes need availableRoutes metadata
+  if (isRoutingNode) {
+    // Routing nodes need availableRoutes metadata
     return (
       run.steps.find(
         (s) =>
@@ -162,7 +163,7 @@ export function extractStepOutputData(
 }
 
 /**
- * Extract routing decision data from conditional/structured output nodes.
+ * Extract routing decision data from structured output nodes.
  *
  * This handles the complex logic of retrieving routing information from
  * either pending validations (during human approval) or step metadata
@@ -174,7 +175,7 @@ export function extractStepOutputData(
  *
  * @example
  * ```tsx
- * const stepRun = getStepFromRun(displayRun, stepNumber, { isConditional: true })
+ * const stepRun = getStepFromRun(displayRun, stepNumber, { isRoutingNode: true })
  * const routingData = extractRoutingDecision(stepRun, pendingValidation)
  *
  * return (
@@ -218,4 +219,78 @@ export function extractRoutingDecision(
     isHumanValidated: metadata?.isHumanValidated || false,
     userChoice: metadata?.userChoice || null,
   }
+}
+
+// ==========================================
+// V2 API HELPERS (GRAPH-BASED NODE STATES)
+// ==========================================
+
+/**
+ * Get node execution state from V2 API workflow run.
+ *
+ * This is the V2 equivalent of getStepFromRun - provides direct O(1) access
+ * to node state without edge traversal or step lookup.
+ *
+ * @param run - Workflow run with nodeStates map (V2 API)
+ * @param nodeId - The node ID to get state for
+ * @returns Node execution state, or null if not found
+ *
+ * @example
+ * ```tsx
+ * // Simple direct access - no edge traversal needed!
+ * const nodeState = getNodeState(workflowRun, nodeId)
+ *
+ * if (nodeState) {
+ *   return (
+ *     <div>
+ *       <Response content={nodeState.response} />
+ *       <StatusBadge status={nodeState.status} />
+ *       {nodeState.validationContext && (
+ *         <ValidationModal context={nodeState.validationContext} />
+ *       )}
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
+export function getNodeState(
+  run: WorkflowRun | null,
+  nodeId: string
+): NodeState | null {
+  if (!run?.nodeStates) return null
+
+  // First try direct key lookup (works when keys aren't mangled)
+  if (run.nodeStates[nodeId]) {
+    return run.nodeStates[nodeId]
+  }
+
+  // Fallback: search by nodeId field inside state objects
+  // This handles cases where DRF CamelCase renderer mangles dictionary keys
+  // (e.g., keys containing underscore+lowercase like "abc_xyz" become "abcXyz")
+  for (const state of Object.values(run.nodeStates)) {
+    if (state.nodeId === nodeId) {
+      return state
+    }
+  }
+
+  return null
+}
+
+/**
+ * Check if workflow run uses V2 API (has nodeStates).
+ *
+ * Use this to determine which data access pattern to use.
+ *
+ * @param run - Workflow run to check
+ * @returns True if run has V2 nodeStates
+ *
+ * @example
+ * ```tsx
+ * const data = isV2Run(run)
+ *   ? getNodeState(run, nodeId)
+ *   : getStepFromRun(run, stepNumber)
+ * ```
+ */
+export function isV2Run(run: WorkflowRun | null): boolean {
+  return !!(run?.nodeStates && Object.keys(run.nodeStates).length > 0)
 }

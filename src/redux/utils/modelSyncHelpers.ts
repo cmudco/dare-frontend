@@ -2,10 +2,10 @@
  * Model Sync Helpers
  *
  * Utilities for synchronizing available models and selected model
- * with the image generation toggle state.
+ * with the image generation and audio transcription toggle states.
  *
  * These helpers ensure that:
- * - Only appropriate models are shown in the picker (text or image)
+ * - Only appropriate models are shown in the picker (text, image, or audio)
  * - The selected model matches the current mode
  * - State stays consistent across conversation switches and page refreshes
  */
@@ -26,7 +26,7 @@ export const filterModelsByImageGeneration = (
   return allModels.filter((model) =>
     isImageGeneration
       ? model.isImageGenerator === true
-      : !model.isImageGenerator
+      : !model.isImageGenerator && !model.isAudioTranscriber
   )
 }
 
@@ -50,6 +50,24 @@ export const selectAppropriateModel = (
   return isModelAvailable && conversationModel
     ? conversationModel
     : (availableModels[0]?.id ?? null)
+}
+
+/**
+ * Filter models by audio transcription capability
+ *
+ * @param allModels - Complete list of available models
+ * @param isAudioTranscription - Whether audio transcription mode is active
+ * @returns Filtered list of models matching the current mode
+ */
+export const filterModelsByAudioTranscription = (
+  allModels: LLMModel[],
+  isAudioTranscription: boolean
+): LLMModel[] => {
+  return allModels.filter((model) =>
+    isAudioTranscription
+      ? model.isAudioTranscriber === true
+      : !model.isAudioTranscriber
+  )
 }
 
 /**
@@ -78,6 +96,42 @@ export const syncModelsWithImageGenerationState = <
   const filteredModels = filterModelsByImageGeneration(
     state.allModels,
     imageGenerationEnabled
+  )
+  state.availableModels = filteredModels
+
+  // Select appropriate model
+  state.selectedModel = selectAppropriateModel(
+    conversationModel,
+    filteredModels
+  )
+}
+
+/**
+ * Update model list and selection based on audio transcription state
+ *
+ * This is the main synchronization function that:
+ * 1. Filters available models to match the current mode (text/audio)
+ * 2. Selects an appropriate model (conversation's saved model or first available)
+ *
+ * @param state - Redux conversation state
+ * @param audioTranscriptionEnabled - Whether audio transcription is currently enabled
+ * @param conversationModel - Optional model ID from conversation
+ */
+export const syncModelsWithAudioTranscriptionState = <
+  T extends {
+    allModels: LLMModel[]
+    availableModels: LLMModel[]
+    selectedModel: number | null
+  },
+>(
+  state: T,
+  audioTranscriptionEnabled: boolean,
+  conversationModel?: number | null
+): void => {
+  // Filter models based on audio transcription state
+  const filteredModels = filterModelsByAudioTranscription(
+    state.allModels,
+    audioTranscriptionEnabled
   )
   state.availableModels = filteredModels
 

@@ -18,8 +18,10 @@ import {
   cloneConversationAPI,
   deleteMessageAPI,
 } from '../../api/conversation'
-import { AppDispatch } from '../store'
+import { AppDispatch, RootState } from '../store'
 import { sendWebSocketMessage } from './websocket'
+import { sendSocketMessage } from './socketMessages'
+import { config } from '@/config/environment'
 import { LLMModel } from '../types/conversation'
 
 export const getAvailableModels = createAsyncThunk<
@@ -148,14 +150,21 @@ export const updateConversationSelectedIds = createAsyncThunk<
   }
 )
 
-export const sendMessage = createAsyncThunk(
+export const sendMessage = createAsyncThunk<
+  void,
+  Partial<Message> & { filePath?: string },
+  { dispatch: AppDispatch; state: RootState }
+>(
   'conversation/sendMessage',
-  async (message: Partial<Message> & { filePath?: string }, thunkAPI) => {
-    const dispatch = thunkAPI.dispatch as AppDispatch
+  async (message, { dispatch, rejectWithValue }) => {
     try {
-      dispatch(sendWebSocketMessage(message))
+      if (config.features.enableSocketIO) {
+        dispatch(sendSocketMessage(message))
+      } else {
+        dispatch(sendWebSocketMessage(message))
+      }
     } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message)
+      return rejectWithValue((error as Error).message)
     }
   }
 )

@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { clearCreditError } from '@/redux/websocketSlice'
+import { clearCreditError } from '@/redux/slices/socketSlice'
 import { getWallet } from '@/redux/asyncThunks/billing'
 import { XCircle } from 'lucide-react'
 
 const CreditErrorAlert: React.FC = () => {
   const dispatch = useAppDispatch()
-  const creditError = useAppSelector((state) => state.websocket.creditError)
+  const creditError = useAppSelector((state) => state.socket.creditError)
 
   useEffect(() => {
     if (creditError) {

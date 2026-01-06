@@ -11,9 +11,16 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DeleteConfirmation } from '@/components/DeleteConfirmation'
-import { Eye, EyeOff, Key, Trash2, Save } from 'lucide-react'
+import { Eye, EyeOff, Key, Trash2, Save, Info } from 'lucide-react'
 import { ProviderType, Provider } from '@/redux/types/apiKeys'
 import { toast } from '@/utils/toast'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
 
 interface ApiKeyInputProps {
   provider: ProviderType
@@ -38,6 +45,24 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
   const hasKey = providerInfo?.hasKey || false
   const maskedKey = providerInfo?.maskedKey
   const isLlama = provider === Provider.LLAMA
+
+  // Get provider-specific tooltip content
+  const getProviderTooltip = () => {
+    switch (provider) {
+      case Provider.OPENAI:
+        return TOOLTIP_CONTENT.apiKeys.openai
+      case Provider.CLAUDE:
+        return TOOLTIP_CONTENT.apiKeys.anthropic
+      case Provider.GEMINI:
+        return TOOLTIP_CONTENT.apiKeys.google
+      case Provider.LLAMA:
+        return TOOLTIP_CONTENT.apiKeys.llama
+      default:
+        return null
+    }
+  }
+
+  const providerTooltip = getProviderTooltip()
 
   const handleSave = async () => {
     if (!apiKey.trim()) return
@@ -79,7 +104,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
   }
 
   return (
-    <>
+    <TooltipProvider>
       <div
         className={`space-y-3 rounded-lg border border-border p-4 ${isLlama ? 'bg-muted/50 opacity-75' : 'bg-muted/30'}`}
       >
@@ -89,15 +114,45 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
             <Label className='text-sm font-medium text-foreground'>
               {label}
             </Label>
+            {providerTooltip && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                </TooltipTrigger>
+                <TooltipContent className='max-w-xs'>
+                  <div className='space-y-2'>
+                    <p className='font-semibold'>{providerTooltip.title}</p>
+                    <p className='text-sm'>{providerTooltip.description}</p>
+                    <p className='text-xs text-muted-foreground'>
+                      💡 {providerTooltip.tip}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            )}
             {isLlama && (
               <span className='rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300'>
                 No API Key Required
               </span>
             )}
             {!isLlama && hasKey && (
-              <span className='rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300'>
-                Active
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className='cursor-help rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300'>
+                    Active
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className='max-w-xs'>
+                  <div className='space-y-2'>
+                    <p className='font-semibold'>
+                      {TOOLTIP_CONTENT.apiKeys.activeStatus.title}
+                    </p>
+                    <p className='text-sm'>
+                      {TOOLTIP_CONTENT.apiKeys.activeStatus.description}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
           {hasKey && maskedKey && !isLlama && (
@@ -179,6 +234,6 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
         confirmText='Delete'
         cancelText='Cancel'
       />
-    </>
+    </TooltipProvider>
   )
 }
