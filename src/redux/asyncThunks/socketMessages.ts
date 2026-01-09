@@ -165,8 +165,11 @@ export const regenerateSocketResponse = createAsyncThunk<
       activeConversation,
       selectedFiles,
       selectedEmbeddings,
+      selectedMediaFiles,
       selectedModel,
       webSearchEnabled,
+      audioTranscriptionEnabled,
+      audioTranscriptionSettings,
     } = conversation
 
     if (!activeConversation) {
@@ -176,6 +179,7 @@ export const regenerateSocketResponse = createAsyncThunk<
     const options = {
       file_ids: selectedFiles.map((file) => file.id),
       embedding_ids: selectedEmbeddings.map((file) => file.id),
+      media_ids: selectedMediaFiles.map((file) => file.id),
       llm_id: selectedModel,
       prompt_id: activeConversation.prompt?.id,
       temperature: activeConversation.temperature,
@@ -185,6 +189,10 @@ export const regenerateSocketResponse = createAsyncThunk<
         activeConversation.documentSimilarityThreshold,
       history_limit: activeConversation.historyLimit,
       web_search_enabled: webSearchEnabled,
+      audio_transcription_enabled: audioTranscriptionEnabled,
+      audio_transcription_settings: {
+        language: audioTranscriptionSettings.language,
+      },
     }
 
     dispatch(

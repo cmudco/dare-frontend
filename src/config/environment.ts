@@ -98,7 +98,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableImageGeneration: true, // DARE Production: has Image Generation
         enableArtifacts: false, // DARE Production: NO Artifacts (beta)
         enableAudioTranscription: false, // DARE Production: NO Audio Transcription (beta)
-        enableSocketIO: false, // Disable Socket.IO in production until validated
+        enableSocketIO: true, // Socket.IO enabled for production
         enableVoiceInput: false, // Voice input disabled in production (beta)
       }
 
