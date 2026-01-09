@@ -1,4 +1,20 @@
-// Model Card data utilities
+export interface ModelCardListItem {
+  id: number
+  name: string
+  slug: string
+  provider_name: string
+  llm: number | null
+  has_public_feedback: boolean
+  updated_at: string
+}
+
+export interface PaginatedResponse<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
 export interface Source {
   id: number
   title: string
@@ -59,38 +75,4 @@ export interface ModelCardData {
     analysisDate: string
     analysisMethod: string
   }
-}
-
-// Slug generation utility
-export const toModelSlug = (name: string): string => {
-  return name
-    .toLowerCase()
-    .replace(/\./g, '-')
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-}
-
-// Get slug from model name (for linking from Help page)
-export const getSlugFromModelName = (name: string): string | null => {
-  return toModelSlug(name)
-}
-
-// Check if we have card data for a model
-// TODO: Implement proper check - requires name variant matching
-// See: name variant/robustness TODO item (BW)
-// In the meantime, all models link; 404 handles missing pages gracefully enough
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const hasModelCardData = (_name: string): boolean => {
-  return true
-}
-
-// Build cluster lookup map
-export const buildClusterMap = (
-  clusters: SourceCluster[]
-): Map<number, SourceCluster> => {
-  const map = new Map<number, SourceCluster>()
-  clusters.forEach((cluster) => {
-    map.set(cluster.clusterIndex, cluster)
-  })
-  return map
 }

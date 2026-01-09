@@ -17,150 +17,20 @@ import {
   MessageSquareQuote,
   GitCompare,
 } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 
-import {
-  getModelCardBySlug,
-  getModelCardsAPI,
-  ModelCardListItem,
-} from '@/api/modelCards'
+import { getModelCardBySlug, getModelCardsAPI } from '@/api/modelCard'
 import {
   ModelCardData,
+  ModelCardListItem,
   SourceCluster,
+} from '@/types/modelCard'
+import {
   buildClusterMap,
-} from '@/utils/modelCardData'
-
-// Sentiment score color helper
-const getSentimentColor = (score: number): string => {
-  if (score >= 8) return 'bg-green-100 text-green-800 border-green-300'
-  if (score >= 6) return 'bg-yellow-100 text-yellow-800 border-yellow-300'
-  return 'bg-red-100 text-red-800 border-red-300'
-}
-
-const getConfidenceBadgeVariant = (
-  confidence: string
-): 'default' | 'secondary' | 'outline' => {
-  switch (confidence) {
-    case 'high':
-      return 'default'
-    case 'medium':
-      return 'secondary'
-    default:
-      return 'outline'
-  }
-}
-
-interface CitationProps {
-  refs: number[]
-  clusterMap: Map<number, SourceCluster>
-}
-
-const Citation = ({ refs, clusterMap }: CitationProps) => {
-  if (!refs || refs.length === 0) return null
-
-  return (
-    <TooltipProvider>
-      <span className='ml-1 inline-flex flex-wrap gap-0.5'>
-        {refs.slice(0, 3).map((ref) => {
-          const cluster = clusterMap.get(ref)
-          return (
-            <Tooltip key={ref}>
-              <TooltipTrigger asChild>
-                <a
-                  href={cluster?.canonicalUrl}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='cursor-pointer text-xs text-muted-foreground hover:text-blue-600 hover:underline'
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  [{ref}]
-                </a>
-              </TooltipTrigger>
-              <TooltipContent side='top' className='max-w-sm'>
-                {cluster ? (
-                  <div className='text-xs'>
-                    <p className='line-clamp-2 font-medium'>
-                      {cluster.canonicalTitle}
-                    </p>
-                    <p className='mt-1 text-muted-foreground'>
-                      {cluster.sources.length} source
-                      {cluster.sources.length !== 1 && 's'}
-                    </p>
-                  </div>
-                ) : (
-                  <p className='text-xs'>Source not found</p>
-                )}
-              </TooltipContent>
-            </Tooltip>
-          )
-        })}
-        {refs.length > 3 && (
-          <span className='ml-0.5 text-xs text-muted-foreground'>
-            +{refs.length - 3}
-          </span>
-        )}
-      </span>
-    </TooltipProvider>
-  )
-}
-
-interface ReferencesListProps {
-  clusters: SourceCluster[]
-  citedRefs: Set<number>
-}
-
-const ReferencesList = ({ clusters, citedRefs }: ReferencesListProps) => {
-  // Only show clusters that were actually cited
-  const citedClusters = clusters
-    .filter((c) => citedRefs.has(c.clusterIndex))
-    .sort((a, b) => a.clusterIndex - b.clusterIndex)
-
-  if (citedClusters.length === 0) return null
-
-  return (
-    <Card>
-      <CardHeader className='pb-3'>
-        <CardTitle className='text-lg'>References</CardTitle>
-        <CardDescription>Sources cited in this analysis</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ol className='space-y-1 text-sm'>
-          {citedClusters.map((cluster) => (
-            <li
-              key={cluster.clusterIndex}
-              id={`ref-${cluster.clusterIndex}`}
-              className='flex gap-2'
-            >
-              <span className='shrink-0 text-muted-foreground'>
-                [{cluster.clusterIndex}]
-              </span>
-              <div className='min-w-0'>
-                <a
-                  href={cluster.canonicalUrl}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='break-words text-blue-600 hover:text-blue-800 hover:underline'
-                >
-                  {cluster.canonicalTitle}
-                </a>
-                {cluster.sources.length > 1 && (
-                  <span className='ml-2 text-muted-foreground'>
-                    (+{cluster.sources.length - 1} related)
-                  </span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </CardContent>
-    </Card>
-  )
-}
+  getSentimentColor,
+  getConfidenceBadgeVariant,
+} from '@/utils/modelCard'
+import { Citation } from '@/components/ModelCard/Citation'
+import { ReferenceList } from '@/components/ModelCard/ReferenceList'
 
 const ModelCards = () => {
   const { slug } = useParams<{ slug: string }>()
@@ -546,7 +416,7 @@ const ModelCards = () => {
           )}
 
           {/* References */}
-          <ReferencesList
+          <ReferenceList
             clusters={modelCard.sourceClusters || []}
             citedRefs={citedRefs}
           />

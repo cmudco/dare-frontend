@@ -26,7 +26,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ReasoningStatus, ReasoningStatusColors } from '@/utils/constants/model'
 import { CheckCircle, XCircle, FileText, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { getSlugFromModelName, hasModelCardData } from '@/utils/modelCardData'
+import { getSlugFromModelName, hasModelCardData } from '@/utils/modelCard'
 
 const Help = () => {
   const dispatch = useDispatch<AppDispatch>()

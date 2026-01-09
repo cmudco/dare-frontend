@@ -1,23 +1,10 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
-import { ModelCardData } from '@/utils/modelCardData'
-
-export interface ModelCardListItem {
-  id: number
-  name: string
-  slug: string
-  provider_name: string
-  llm: number | null
-  has_public_feedback: boolean
-  updated_at: string
-}
-
-export interface PaginatedResponse<T> {
-  count: number
-  next: string | null
-  previous: string | null
-  results: T[]
-}
+import {
+  ModelCardData,
+  ModelCardListItem,
+  PaginatedResponse,
+} from '@/types/modelCard'
 
 export const getModelCardsAPI = async (): Promise<
   PaginatedResponse<ModelCardListItem>
