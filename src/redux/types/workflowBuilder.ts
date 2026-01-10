@@ -13,6 +13,19 @@ export enum SavingStatus {
   Error = 'error',
 }
 
+export type WebSocketConnectionStatus =
+  | 'disconnected'
+  | 'connecting'
+  | 'connected'
+
+// Pending validation state for human-in-the-loop
+export interface PendingValidation {
+  nodeId: string
+  routes: Array<{ name: string; description?: string }>
+  context?: Record<string, unknown>
+  aiRecommendation?: string
+}
+
 export interface WorkflowBuilderState {
   nodes: Node[]
   edges: Edge[]
@@ -34,4 +47,11 @@ export interface WorkflowBuilderState {
   viewMode: boolean // True when viewing completed runs, false when editing/running
   savingStatus: SavingStatus
   selectedNodeId: string | null // Currently selected node for config panel
+  // WebSocket streaming state
+  wsConnectionStatus: WebSocketConnectionStatus
+  streamingResponses: Record<string, string> // nodeId -> accumulated streaming text
+  activeStreamingNodeId: string | null // Currently streaming node
+  rightPanelTab: 'config' | 'execution' // Active tab in right panel
+  showExecutionPanel: boolean // Whether to show the execution panel overlay
+  pendingValidation: PendingValidation | null // Human validation required state
 }

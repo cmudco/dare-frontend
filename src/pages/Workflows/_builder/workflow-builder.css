@@ -377,3 +377,55 @@
 .workflow-builder-canvas .react-flow__controls-button:hover svg {
     fill: #EE183C;
 }
+
+/* ============================================
+   STREAMING & RUNNING STATE
+   ============================================ */
+.workflow-node.running {
+    animation: nodePulse 2s ease-in-out infinite;
+}
+
+.workflow-node.streaming::before {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(147, 51, 234, 0.5) 100%);
+    animation: borderGlow 1.5s ease-in-out infinite;
+}
+
+.workflow-node.streaming {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(147, 51, 234, 0.2);
+}
+
+@keyframes nodePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+}
+
+@keyframes borderGlow {
+    0%, 100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Completed state */
+.workflow-node.completed::before {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.4) 0%, rgba(22, 163, 74, 0.4) 100%);
+}
+
+.workflow-node.completed {
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+}
+
+/* Error state */
+.workflow-node.error::before {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.4) 0%, rgba(220, 38, 38, 0.4) 100%);
+}
+
+.workflow-node.error {
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+}

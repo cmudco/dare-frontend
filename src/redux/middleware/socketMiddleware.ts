@@ -222,14 +222,10 @@ export function createSocketMiddleware(): Middleware {
       case SOCKET_CONNECT: {
         const { jwtToken } = typedAction.payload as { jwtToken: string }
 
-        // Already connected
-        if (socket?.connected) {
-          return next(typedAction)
-        }
-
-        // Disconnect existing
+        // Already connected or connecting - don't create another socket
         if (socket) {
-          socket.disconnect()
+          console.log('🔌 Socket already exists, skipping connection')
+          return next(typedAction)
         }
 
         // Build URL with /chat namespace
