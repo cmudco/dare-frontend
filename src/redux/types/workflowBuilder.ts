@@ -1,5 +1,9 @@
 import { type Node, type Edge } from '@xyflow/react'
 import type { WorkflowRun, Workflow } from './workflow'
+import type {
+  StepSnippet,
+  StepWebSearchSource,
+} from '../middleware/workflowSocketMiddleware'
 
 export interface HistorySnapshot {
   nodes: Node[]
@@ -26,6 +30,13 @@ export interface PendingValidation {
   aiRecommendation?: string
 }
 
+// Rich streaming response with content and citation metadata
+export interface StreamingResponse {
+  content: string
+  snippets?: StepSnippet[]
+  webSearchSources?: StepWebSearchSource[]
+}
+
 export interface WorkflowBuilderState {
   nodes: Node[]
   edges: Edge[]
@@ -49,7 +60,7 @@ export interface WorkflowBuilderState {
   selectedNodeId: string | null // Currently selected node for config panel
   // WebSocket streaming state
   wsConnectionStatus: WebSocketConnectionStatus
-  streamingResponses: Record<string, string> // nodeId -> accumulated streaming text
+  streamingResponses: Record<string, StreamingResponse> // nodeId -> accumulated streaming content with metadata
   activeStreamingNodeId: string | null // Currently streaming node
   rightPanelTab: 'config' | 'execution' // Active tab in right panel
   showExecutionPanel: boolean // Whether to show the execution panel overlay
