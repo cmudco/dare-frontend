@@ -213,6 +213,9 @@ export const conversationSlice = createSlice({
     ) {
       state.audioTranscriptionSettings = action.payload
     },
+    setIsTranscribingAudio(state, action: PayloadAction<boolean>) {
+      state.isTranscribingAudio = action.payload
+    },
     addMessage(state, action: PayloadAction<Message>) {
       const index = state.activeConversationMessages.findIndex(
         (msg) => msg?.id === action.payload.id
@@ -722,11 +725,17 @@ export const conversationSlice = createSlice({
           action
         ): action is {
           type: string
-          payload: { text: string; status: string }
+          payload: { text: string; status: string; error?: string }
         } => action.type === 'socket/voice_transcription',
         (state, action) => {
-          if (action.payload.status === 'complete' && action.payload.text) {
-            state.conversationInput = action.payload.text
+          const { status, text } = action.payload
+          // Stop transcribing on complete or error
+          if (status === 'complete' || status === 'error') {
+            state.isTranscribingAudio = false
+          }
+          // Only set input text on successful completion
+          if (status === 'complete' && text) {
+            state.conversationInput = text
           }
         }
       )
@@ -751,6 +760,7 @@ export const {
   updateArtifactsEnabled,
   updateImageGenerationSettings,
   updateAudioTranscriptionSettings,
+  setIsTranscribingAudio,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   toggleDropdown,

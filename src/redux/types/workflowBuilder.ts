@@ -33,4 +33,5 @@ export interface WorkflowBuilderState {
   selectedRunIds: Record<string, number> // nodeId -> runId mapping
   viewMode: boolean // True when viewing completed runs, false when editing/running
   savingStatus: SavingStatus
+  selectedNodeId: string | null // Currently selected node for config panel
 }
