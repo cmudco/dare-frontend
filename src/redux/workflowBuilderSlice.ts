@@ -324,6 +324,27 @@ const workflowBuilderSlice = createSlice({
       state.nodes = [...state.nodes, ...importedNodes]
       state.edges = [...state.edges, ...importedEdges]
     },
+
+    // WebSocket streaming actions
+    setWsConnectionStatus: (
+      state,
+      action: PayloadAction<'disconnected' | 'connecting' | 'connected'>
+    ) => {
+      state.wsConnectionStatus = action.payload
+    },
+    setRightPanelTab: (
+      state,
+      action: PayloadAction<'config' | 'execution'>
+    ) => {
+      state.rightPanelTab = action.payload
+    },
+    clearStreamingResponses: (state) => {
+      state.streamingResponses = {}
+      state.activeStreamingNodeId = null
+    },
+    setShowExecutionPanel: (state, action: PayloadAction<boolean>) => {
+      state.showExecutionPanel = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -346,11 +367,16 @@ const workflowBuilderSlice = createSlice({
         state.history.future = []
       })
       .addCase(startWorkflowRun.fulfilled, (state, action) => {
-        // When a new run starts, update the current run and start polling
+        // When a new run starts, update the current run (WebSocket handles real-time updates)
         state.currentRun = action.payload
         state.isRunning =
           action.payload.status === WorkflowRunStepStatus.Running ||
           action.payload.status === WorkflowRunStepStatus.PendingHumanInput
+
+        // Show execution panel when run starts
+        state.showExecutionPanel = true
+        state.streamingResponses = {}
+        state.activeStreamingNodeId = null
 
         // Auto-switch nodes to the new run (latest version)
         // For FULL runs: clear all selections so all nodes default to currentRun
@@ -384,6 +410,308 @@ const workflowBuilderSlice = createSlice({
         // Store all available runs for the workflow
         state.availableRuns = action.payload
       })
+      // WebSocket connection events
+      .addMatcher(
+        (action): action is { type: 'workflowWebsocket/connecting' } =>
+          action.type === 'workflowWebsocket/connecting',
+        (state) => {
+          state.wsConnectionStatus = 'connecting'
+        }
+      )
+      .addMatcher(
+        (action): action is { type: 'workflowWebsocket/connected' } =>
+          action.type === 'workflowWebsocket/connected',
+        (state) => {
+          state.wsConnectionStatus = 'connected'
+        }
+      )
+      .addMatcher(
+        (action): action is { type: 'workflowWebsocket/disconnected' } =>
+          action.type === 'workflowWebsocket/disconnected',
+        (state) => {
+          state.wsConnectionStatus = 'disconnected'
+        }
+      )
+      // Handle workflow subscription response with execution state
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: 'workflowSocket/workflowSubscribed'
+          payload: { workflowId: number; latestRun: WorkflowRun | null }
+        } => action.type === 'workflowSocket/workflowSubscribed',
+        (state, action) => {
+          const { latestRun } = action.payload
+          if (latestRun) {
+            state.currentRun = latestRun
+            state.isRunning =
+              latestRun.status === 'running' ||
+              latestRun.status === 'pending_human_input'
+
+            // Extract pending validation from nodeStates if status is pending_human_input
+            if (
+              latestRun.status === 'pending_human_input' &&
+              latestRun.nodeStates
+            ) {
+              state.showExecutionPanel = true
+
+              // Find node with pending_human_input status in nodeStates
+              const nodeStatesObj = latestRun.nodeStates as Record<
+                string,
+                {
+                  nodeId: string
+                  status: string
+                  validationContext?: {
+                    availableRoutes?: Array<{
+                      name: string
+                      description?: string
+                    }>
+                    aiRecommendation?: string
+                    aiAnalysis?: string
+                  }
+                  metadata?: {
+                    aiRecommendation?: string
+                    aiAnalysis?: string
+                  }
+                }
+              >
+
+              for (const nodeState of Object.values(nodeStatesObj)) {
+                if (
+                  nodeState.status === 'pending_human_input' &&
+                  nodeState.validationContext
+                ) {
+                  const { availableRoutes, aiRecommendation, aiAnalysis } =
+                    nodeState.validationContext
+                  if (availableRoutes && availableRoutes.length > 0) {
+                    state.pendingValidation = {
+                      nodeId: nodeState.nodeId,
+                      routes: availableRoutes,
+                      aiRecommendation:
+                        nodeState.metadata?.aiRecommendation ||
+                        aiRecommendation,
+                      context: {
+                        aiAnalysis:
+                          nodeState.metadata?.aiAnalysis || aiAnalysis,
+                      },
+                    }
+                    break // Only handle first pending validation
+                  }
+                }
+              }
+            } else if (latestRun.hasPendingValidation) {
+              // Fallback to legacy flag
+              state.showExecutionPanel = true
+            }
+          } else {
+            state.currentRun = null
+            state.isRunning = false
+          }
+        }
+      )
+      // WebSocket workflow execution events
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: 'workflowSocket/executionStarted'
+          payload: { workflowRunId: number }
+        } => action.type === 'workflowSocket/executionStarted',
+        (state, action) => {
+          const { workflowRunId } = action.payload
+          // Update currentRun with the new run ID so validation uses correct run
+          if (state.currentRun) {
+            state.currentRun = {
+              ...state.currentRun,
+              id: workflowRunId,
+              status: WorkflowRunStepStatus.Running,
+            }
+          } else {
+            // Create minimal run object if none exists
+            state.currentRun = {
+              id: workflowRunId,
+              status: WorkflowRunStepStatus.Running,
+            } as WorkflowRun
+          }
+          state.isRunning = true
+          state.streamingResponses = {}
+          state.activeStreamingNodeId = null
+          state.showExecutionPanel = true
+          state.pendingValidation = null // Clear any previous validation
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: 'workflowSocket/step_started'
+          payload: { nodeId: string }
+        } => action.type === 'workflowSocket/step_started',
+        (state, action) => {
+          const { nodeId } = action.payload
+          state.activeStreamingNodeId = nodeId
+          state.streamingResponses[nodeId] = ''
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: 'workflowSocket/step_streaming'
+          payload: { nodeId: string; chunk: string }
+        } => action.type === 'workflowSocket/step_streaming',
+        (state, action) => {
+          const { nodeId, chunk } = action.payload
+          if (state.streamingResponses[nodeId] !== undefined) {
+            state.streamingResponses[nodeId] += chunk
+          } else {
+            state.streamingResponses[nodeId] = chunk
+          }
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: 'workflowSocket/step_completed'
+          payload: { nodeId: string }
+        } => action.type === 'workflowSocket/step_completed',
+        (state, action) => {
+          const { nodeId } = action.payload
+          // Clear streaming response for this node (final response comes from currentRun)
+          if (state.activeStreamingNodeId === nodeId) {
+            state.activeStreamingNodeId = null
+          }
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: 'workflowSocket/execution_complete'
+          payload: { status: string; workflowRunId: number; endedAt?: string }
+        } => action.type === 'workflowSocket/execution_complete',
+        (state, action) => {
+          const { status, endedAt } = action.payload
+          state.isRunning = status === 'pending_human_input'
+          state.activeStreamingNodeId = null
+
+          // Update currentRun status to reflect completion
+          if (state.currentRun) {
+            state.currentRun = {
+              ...state.currentRun,
+              status: status as typeof state.currentRun.status,
+              endedAt: endedAt || state.currentRun.endedAt,
+            }
+          }
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: 'workflowSocket/step_error'
+          payload: { nodeId?: string }
+        } => action.type === 'workflowSocket/step_error',
+        (state, action) => {
+          const { nodeId } = action.payload
+          if (nodeId && state.activeStreamingNodeId === nodeId) {
+            state.activeStreamingNodeId = null
+          }
+        }
+      )
+      // Handle workflow status updates (including pending validations)
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: 'workflowSocket/workflow_status'
+          payload: WorkflowRun & {
+            type: 'workflow_status'
+            has_pending_validation?: boolean
+            pending_validations?: Array<{
+              node_id: string
+              available_routes: Array<{ name: string; description?: string }>
+              ai_recommendation?: string
+              ai_analysis?: string
+            }>
+          }
+        } => action.type === 'workflowSocket/workflow_status',
+        (state, action) => {
+          const {
+            status,
+            has_pending_validation,
+            pending_validations,
+            ...runData
+          } = action.payload
+
+          // Set current run from the full workflow status data
+          // Remove the 'type' field which is only for socket event identification
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { type: _eventType, ...workflowRunData } =
+            runData as WorkflowRun & { type: string }
+          state.currentRun = { ...workflowRunData, status } as WorkflowRun
+
+          // Show execution panel when we receive workflow status
+          state.showExecutionPanel = true
+
+          // Update running state based on status
+          state.isRunning =
+            status === 'running' || status === 'pending_human_input'
+
+          // Handle pending validations from status update
+          if (
+            has_pending_validation &&
+            pending_validations &&
+            pending_validations.length > 0
+          ) {
+            const firstValidation = pending_validations[0]
+            state.pendingValidation = {
+              nodeId: firstValidation.node_id,
+              routes: firstValidation.available_routes,
+              aiRecommendation: firstValidation.ai_recommendation,
+              context: {
+                aiAnalysis: firstValidation.ai_analysis,
+              },
+            }
+          } else if (status !== 'pending_human_input') {
+            // Clear pending validation if status is no longer waiting
+            state.pendingValidation = null
+          }
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: 'workflowSocket/validation_required'
+          payload: {
+            nodeId: string
+            routes: Array<{ name: string; description?: string }>
+            context?: Record<string, unknown>
+            aiRecommendation?: string
+          }
+        } => action.type === 'workflowSocket/validation_required',
+        (state, action) => {
+          // Workflow is paused waiting for human input
+          state.isRunning = true // Still considered "running" but waiting
+          state.activeStreamingNodeId = null
+          state.pendingValidation = {
+            nodeId: action.payload.nodeId,
+            routes: action.payload.routes,
+            context: action.payload.context,
+            aiRecommendation: action.payload.aiRecommendation,
+          }
+        }
+      )
+      // Clear validation when submitted
+      .addMatcher(
+        (action): action is { type: 'workflowSocket/validationSubmitted' } =>
+          action.type === 'workflowSocket/validationSubmitted',
+        (state) => {
+          state.pendingValidation = null
+        }
+      )
   },
 })
 
@@ -421,6 +749,10 @@ export const {
   setSavingStatus,
   importNodes,
   setSelectedNodeId,
+  setWsConnectionStatus,
+  setRightPanelTab,
+  clearStreamingResponses,
+  setShowExecutionPanel,
 } = workflowBuilderSlice.actions
 
 export default workflowBuilderSlice.reducer

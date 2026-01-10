@@ -26,13 +26,13 @@ import {
 } from '@/utils/constants/workflowBuilder'
 import { loadWorkflowIntoBuilder } from '@/redux/asyncThunks/workflowBuilder'
 import { getWorkflowRuns } from '@/redux/asyncThunks/workflow'
-import { startWorkflowRunPolling } from '@/services/workflowRunPolling'
+import { useWorkflowSocket } from '@/hooks/useWorkflowSocket'
 import { useEffect, useCallback } from 'react'
 import type { Workflow } from '@/redux/types/workflow'
 import Sidebar from './components/Sidebar'
 import NodeConfigPanel from './components/NodeConfigPanel'
+import WorkflowExecutionPanel from './components/WorkflowExecutionPanel'
 import { getAgents } from '@/redux/asyncThunks/agent'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useWorkflowPaste } from '@/hooks/useWorkflowPaste'
 import { getNodeColor } from '@/utils/workflowBuilder/getNodeColor'
 
@@ -56,6 +56,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     savedViewport,
     history,
     selectedNodeId,
+    showExecutionPanel,
   } = useAppSelector((state) => state.workflowBuilder)
 
   // Check if undo/redo is available (used by keyboard shortcuts)
@@ -103,27 +104,17 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     }
   }, [props.workflowId, props.initialWorkflow, dispatch])
 
-  // Start polling when a run is active and running
-  useEffect(() => {
-    if (currentRun?.id && isWorkflowRunning) {
-      const cleanup = startWorkflowRunPolling(currentRun.id, dispatch)
-      return cleanup
-    }
-  }, [currentRun?.id, isWorkflowRunning, dispatch])
-
-  // Refresh runs list when workflow run completes or status changes
-  useEffect(() => {
-    // Only refresh if we have a workflow ID and the run just completed
-    if (
-      props.workflowId &&
-      currentRun &&
-      !isWorkflowRunning &&
-      (currentRun.status === WorkflowRunStepStatus.Completed ||
-        currentRun.status === WorkflowRunStepStatus.Failed)
-    ) {
-      dispatch(getWorkflowRuns(props.workflowId))
-    }
-  }, [props.workflowId, currentRun, isWorkflowRunning, dispatch])
+  // Use WebSocket for real-time updates (WebSocket-only, no polling fallback)
+  useWorkflowSocket({
+    workflowRunId: currentRun?.id,
+    isRunning: isWorkflowRunning,
+    onExecutionComplete: useCallback(() => {
+      // Refresh runs list when workflow completes
+      if (props.workflowId) {
+        dispatch(getWorkflowRuns(props.workflowId))
+      }
+    }, [props.workflowId, dispatch]),
+  })
 
   useEffect(() => {
     if (savedViewport && nodes.length > 0) {
@@ -232,8 +223,11 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
         />
       </ReactFlow>
 
-      {/* Config Panel - shows when a node is selected */}
+      {/* Config Panel - shown when a node is selected */}
       {selectedNode && <NodeConfigPanel selectedNode={selectedNode} />}
+
+      {/* Execution Panel - shown when running or explicitly opened */}
+      {(isWorkflowRunning || showExecutionPanel) && <WorkflowExecutionPanel />}
     </div>
   )
 }

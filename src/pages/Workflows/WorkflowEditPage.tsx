@@ -24,7 +24,6 @@ import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
 import {
-  startWorkflowRun,
   createOrUpdateWorkflow,
   getActivePartialRun,
   toggleManualMode,
@@ -34,6 +33,7 @@ import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
 import { toast } from '@/utils/toast'
 import type { GetActivePartialRunResponse } from '@/redux/types/workflow'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useWorkflowSocket } from '@/hooks/useWorkflowSocket'
 import {
   Loader2,
   Check,
@@ -77,6 +77,13 @@ const WorkflowEditPage = () => {
   const history = useAppSelector((s) => s.workflowBuilder.history)
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
+
+  // Socket-based workflow execution
+  // This auto-subscribes to get execution state when connected
+  const workflowId = idParam ? parseInt(idParam, 10) : undefined
+  const { isConnected, startExecution } = useWorkflowSocket({
+    workflowId,
+  })
 
   // Undo/Redo handlers that call the exposed window functions
   const handleUndo = useCallback(() => {
@@ -158,16 +165,17 @@ const WorkflowEditPage = () => {
   const handleRunWorkflow = async () => {
     if (!id) return
 
+    // Check socket connection
+    if (!isConnected) {
+      toast.error('WebSocket not connected. Please wait and try again.')
+      return
+    }
+
     // First save the workflow
     await handleSave()
 
-    // Then run it
-    const result = await dispatch(startWorkflowRun(id))
-
-    // Handle errors from backend (formatted by errorHandler)
-    if (result.meta.requestStatus === 'rejected' && result.payload) {
-      toast.error(result.payload as string, 10000)
-    }
+    // Then start execution via socket (handles creation, subscription, and execution atomically)
+    startExecution({ workflowId: id })
   }
 
   // Auto-save logic
