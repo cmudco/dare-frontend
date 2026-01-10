@@ -24,4 +24,5 @@ export const initialState: WorkflowBuilderState = {
   selectedRunIds: {},
   viewMode: false,
   savingStatus: SavingStatus.Idle,
+  selectedNodeId: null,
 }

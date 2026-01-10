@@ -301,6 +301,9 @@ const workflowBuilderSlice = createSlice({
     ) => {
       state.savingStatus = action.payload
     },
+    setSelectedNodeId: (state, action: PayloadAction<string | null>) => {
+      state.selectedNodeId = action.payload
+    },
     /**
      * Import nodes and edges from an external source (e.g., clipboard paste).
      * This action:
@@ -417,6 +420,7 @@ export const {
   resetBuilder,
   setSavingStatus,
   importNodes,
+  setSelectedNodeId,
 } = workflowBuilderSlice.actions
 
 export default workflowBuilderSlice.reducer

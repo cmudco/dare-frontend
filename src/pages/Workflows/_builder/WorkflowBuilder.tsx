@@ -9,6 +9,7 @@ import {
   BackgroundVariant,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import './workflow-builder.css'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   onNodesChange,
@@ -19,6 +20,7 @@ import {
   expandAllNodes,
   undo,
   redo,
+  setSelectedNodeId,
 } from '@/redux/workflowBuilderSlice'
 import { isValidConnection } from '@/utils/workflowBuilder/isValidConnection'
 import {
@@ -28,9 +30,10 @@ import {
 import { loadWorkflowIntoBuilder } from '@/redux/asyncThunks/workflowBuilder'
 import { getWorkflowRuns } from '@/redux/asyncThunks/workflow'
 import { startWorkflowRunPolling } from '@/services/workflowRunPolling'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import type { Workflow } from '@/redux/types/workflow'
 import Sidebar from './components/Sidebar'
+import NodeConfigPanel from './components/NodeConfigPanel'
 import { Button } from '@/components/ui/button'
 import { Minimize2, Maximize2, Undo2, Redo2 } from 'lucide-react'
 import { getAgents } from '@/redux/asyncThunks/agent'
@@ -57,6 +60,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     isRunning: isWorkflowRunning,
     savedViewport,
     history,
+    selectedNodeId,
   } = useAppSelector((state) => state.workflowBuilder)
 
   // Check if undo/redo is available
@@ -147,11 +151,29 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   // Respects disableEditing prop and workflow running state
   useWorkflowPaste({ disabled: props.disableEditing })
 
+  // Handle node double click to open config panel
+  const handleNodeDoubleClick = useCallback(
+    (_: React.MouseEvent, node: { id: string }) => {
+      dispatch(setSelectedNodeId(node.id))
+    },
+    [dispatch]
+  )
+
+  // Handle pane click to close config panel
+  const handlePaneClick = useCallback(() => {
+    dispatch(setSelectedNodeId(null))
+  }, [dispatch])
+
+  // Get the selected node data for config panel
+  const selectedNode = selectedNodeId
+    ? nodes.find((n) => n.id === selectedNodeId)
+    : null
+
   return (
     <div className='flex h-full w-full'>
       <Sidebar />
       <ReactFlow
-        className='flex-1'
+        className='workflow-builder-canvas flex-1'
         nodes={nodes}
         edges={edges}
         onNodesChange={(changes) => dispatch(onNodesChange(changes))}
@@ -168,6 +190,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
         zoomOnScroll={true}
         zoomOnPinch={true}
         minZoom={0.1}
+        onNodeDoubleClick={handleNodeDoubleClick}
+        onPaneClick={handlePaneClick}
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -254,6 +278,9 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           </div>
         </Panel>
       </ReactFlow>
+
+      {/* Config Panel - shows when a node is selected */}
+      {selectedNode && <NodeConfigPanel selectedNode={selectedNode} />}
     </div>
   )
 }
