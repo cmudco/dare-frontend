@@ -11,7 +11,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   setManualMode,
@@ -34,7 +34,15 @@ import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
 import { toast } from '@/utils/toast'
 import type { GetActivePartialRunResponse } from '@/redux/types/workflow'
 import { useDebounce } from '@/hooks/useDebounce'
-import { Loader2, Check, AlertCircle, Copy } from 'lucide-react'
+import {
+  Loader2,
+  Check,
+  AlertCircle,
+  Copy,
+  ArrowLeft,
+  Undo2,
+  Redo2,
+} from 'lucide-react'
 import {
   exportWorkflow,
   exportWorkflowToString,
@@ -66,6 +74,20 @@ const WorkflowEditPage = () => {
     executedStepNodeIds.includes(n.id)
   ).length
   const loadedWorkflow = useAppSelector((s) => s.workflowBuilder.loadedWorkflow)
+  const history = useAppSelector((s) => s.workflowBuilder.history)
+  const canUndo = history.past.length > 0
+  const canRedo = history.future.length > 0
+
+  // Undo/Redo handlers that call the exposed window functions
+  const handleUndo = useCallback(() => {
+    // @ts-expect-error - exposed by WorkflowBuilder
+    if (window.__workflowUndo) window.__workflowUndo()
+  }, [])
+
+  const handleRedo = useCallback(() => {
+    // @ts-expect-error - exposed by WorkflowBuilder
+    if (window.__workflowRedo) window.__workflowRedo()
+  }, [])
 
   const handleManualModeToggle = async (checked: boolean) => {
     if (!loadedWorkflow?.id) return
@@ -232,17 +254,32 @@ const WorkflowEditPage = () => {
   }
 
   return (
-    <div className='flex h-screen flex-col'>
-      <div className='flex items-center justify-between border-b px-8 py-4'>
-        <div>
-          <h1 className='text-2xl font-semibold'>Edit Workflow</h1>
-          <p className='text-muted-foreground'>
-            Modify your workflow and save changes.
-          </p>
-        </div>
-        <div className='flex items-center gap-3'>
-          {/* Auto-save Status Indicator */}
-          <div className='flex items-center gap-2 px-2'>
+    <div className='relative h-screen w-screen overflow-hidden bg-gray-50'>
+      {/* Full canvas workflow builder */}
+      <ReactFlowProvider key={id}>
+        <WorkflowBuilder key={id} workflowId={id} disableEditing={isRunning} />
+      </ReactFlowProvider>
+
+      {/* Floating top toolbar */}
+      <div className='pointer-events-none absolute left-0 right-0 top-0 z-10 flex items-start justify-between p-4'>
+        {/* Back button */}
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => {
+            dispatch(setSelectedWorkflowRun(null))
+            navigate('/workflows')
+          }}
+          className='pointer-events-auto h-9 gap-2 bg-white/90 shadow-md backdrop-blur-sm'
+        >
+          <ArrowLeft className='h-4 w-4' />
+          Back to Workflows
+        </Button>
+
+        {/* Controls toolbar */}
+        <div className='pointer-events-auto flex items-center gap-2 rounded-lg border border-border bg-white/90 px-3 py-2 shadow-md backdrop-blur-sm'>
+          {/* Auto-save Status Indicator - leftmost to avoid jitter */}
+          <div className='flex min-w-[90px] items-center gap-2 border-r border-border pr-3'>
             {savingStatus === SavingStatus.Saving && (
               <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
                 <Loader2 className='h-3 w-3 animate-spin' />
@@ -261,10 +298,56 @@ const WorkflowEditPage = () => {
                 Error saving
               </div>
             )}
+            {savingStatus === SavingStatus.Idle && (
+              <div className='text-xs text-muted-foreground'>Auto-save on</div>
+            )}
+          </div>
+
+          {/* Node/Edge count */}
+          <div className='flex items-center gap-2 border-r border-border pr-3 text-xs text-muted-foreground'>
+            <span>{nodes.length} nodes</span>
+            <span className='text-border'>|</span>
+            <span>{edges.length} edges</span>
+          </div>
+
+          {/* Undo/Redo */}
+          <div className='flex items-center gap-1 border-r border-border pr-3'>
+            <TooltipProvider>
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={handleUndo}
+                    disabled={!canUndo || isRunning}
+                    className='h-8 w-8'
+                  >
+                    <Undo2 className='h-4 w-4' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Undo (Cmd/Ctrl+Z)</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={handleRedo}
+                    disabled={!canRedo || isRunning}
+                    className='h-8 w-8'
+                  >
+                    <Redo2 className='h-4 w-4' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Redo (Cmd/Ctrl+Shift+Z)</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
 
           {/* Manual Mode Toggle */}
-          <div className='flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2'>
+          <div className='flex items-center gap-2 border-r border-border pr-3'>
             <Switch
               id='manual-mode'
               checked={manualModeEnabled}
@@ -275,21 +358,21 @@ const WorkflowEditPage = () => {
               htmlFor='manual-mode'
               className='cursor-pointer text-xs font-medium'
             >
-              Manual Mode
+              Manual
             </Label>
           </div>
 
           {/* Partial Run Status */}
           {manualModeEnabled && currentPartialRunId && (
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-2 border-r border-border pr-3'>
               <Badge variant='secondary' className='text-xs'>
-                {executedStepsCount}/{stepNodes.length} steps executed
+                {executedStepsCount}/{stepNodes.length} steps
               </Badge>
               <Button
                 size='sm'
                 variant='ghost'
                 onClick={() => dispatch(resetPartialRun())}
-                className='h-7 text-xs'
+                className='h-6 px-2 text-xs'
               >
                 Reset
               </Button>
@@ -301,11 +384,11 @@ const WorkflowEditPage = () => {
             <Tooltip delayDuration={150}>
               <TooltipTrigger asChild>
                 <Button
-                  variant='outline'
+                  variant='ghost'
                   size='icon'
                   onClick={handleCopyWorkflow}
                   disabled={isRunning || nodes.length === 0}
-                  className='h-9 w-9'
+                  className='h-8 w-8'
                   aria-label='Copy workflow configuration'
                 >
                   <Copy className='h-4 w-4' />
@@ -313,9 +396,6 @@ const WorkflowEditPage = () => {
               </TooltipTrigger>
               <TooltipContent>
                 <p>Copy workflow to clipboard</p>
-                <p className='text-xs text-muted-foreground'>
-                  Share or paste into another workflow
-                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -325,11 +405,12 @@ const WorkflowEditPage = () => {
               <TooltipTrigger asChild>
                 <span>
                   <Button
+                    size='sm'
                     onClick={handleSave}
                     className='normal-case'
                     disabled={isRunning || !hasAtLeastOneStep}
                   >
-                    Save changes
+                    Save
                   </Button>
                 </span>
               </TooltipTrigger>
@@ -342,36 +423,19 @@ const WorkflowEditPage = () => {
               )}
             </Tooltip>
           </TooltipProvider>
+
           {id && !manualModeEnabled && (
             <Button
+              size='sm'
               variant='outline'
               onClick={handleRunWorkflow}
               disabled={isRunning || manualModeEnabled}
               className='normal-case'
             >
-              Run All Steps
+              Run All
             </Button>
           )}
-          <Button
-            variant='secondary'
-            onClick={() => {
-              dispatch(setSelectedWorkflowRun(null))
-              navigate('/workflows')
-            }}
-            className='normal-case'
-          >
-            Back
-          </Button>
         </div>
-      </div>
-      <div className='flex-1 overflow-hidden'>
-        <ReactFlowProvider key={id}>
-          <WorkflowBuilder
-            key={id}
-            workflowId={id}
-            disableEditing={isRunning}
-          />
-        </ReactFlowProvider>
       </div>
     </div>
   )

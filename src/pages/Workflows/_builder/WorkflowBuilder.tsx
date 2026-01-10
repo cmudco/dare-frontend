@@ -3,7 +3,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  Panel,
   MiniMap,
   useReactFlow,
   BackgroundVariant,
@@ -16,8 +15,6 @@ import {
   onEdgesChange,
   onConnect,
   setSavedViewport,
-  collapseAllNodes,
-  expandAllNodes,
   undo,
   redo,
   setSelectedNodeId,
@@ -34,8 +31,6 @@ import { useEffect, useCallback } from 'react'
 import type { Workflow } from '@/redux/types/workflow'
 import Sidebar from './components/Sidebar'
 import NodeConfigPanel from './components/NodeConfigPanel'
-import { Button } from '@/components/ui/button'
-import { Minimize2, Maximize2, Undo2, Redo2 } from 'lucide-react'
 import { getAgents } from '@/redux/asyncThunks/agent'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useWorkflowPaste } from '@/hooks/useWorkflowPaste'
@@ -63,9 +58,31 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     selectedNodeId,
   } = useAppSelector((state) => state.workflowBuilder)
 
-  // Check if undo/redo is available
+  // Check if undo/redo is available (used by keyboard shortcuts)
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
+
+  // Expose undo/redo via window for parent components to call
+  React.useEffect(() => {
+    // @ts-expect-error - exposing for parent component access
+    window.__workflowUndo = () => canUndo && dispatch(undo())
+    // @ts-expect-error - exposing for parent component access
+    window.__workflowRedo = () => canRedo && dispatch(redo())
+    // @ts-expect-error - exposing for parent component access
+    window.__workflowCanUndo = () => canUndo
+    // @ts-expect-error - exposing for parent component access
+    window.__workflowCanRedo = () => canRedo
+    return () => {
+      // @ts-expect-error - cleanup
+      delete window.__workflowUndo
+      // @ts-expect-error - cleanup
+      delete window.__workflowRedo
+      // @ts-expect-error - cleanup
+      delete window.__workflowCanUndo
+      // @ts-expect-error - cleanup
+      delete window.__workflowCanRedo
+    }
+  }, [canUndo, canRedo, dispatch])
 
   // Load agents on mount
   useEffect(() => {
@@ -170,10 +187,10 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     : null
 
   return (
-    <div className='flex h-full w-full'>
+    <div className='relative h-full w-full'>
       <Sidebar />
       <ReactFlow
-        className='workflow-builder-canvas flex-1'
+        className='workflow-builder-canvas'
         nodes={nodes}
         edges={edges}
         onNodesChange={(changes) => dispatch(onNodesChange(changes))}
@@ -207,76 +224,12 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           pannable
           position='bottom-right'
           style={{
-            backgroundColor: '#f9fafb',
-            border: '1px solid #e5e7eb',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(229, 231, 235, 0.5)',
             borderRadius: '8px',
           }}
         />
-        <Panel
-          position='top-right'
-          className='rounded-lg border border-gray-200 bg-white p-3 shadow-md'
-        >
-          <div className='space-y-2 text-sm'>
-            <div className='font-semibold text-gray-700'>Workflow Info</div>
-            <div className='text-gray-600'>
-              Nodes: <span className='font-medium'>{nodes.length}</span>
-            </div>
-            <div className='text-gray-600'>
-              Connections: <span className='font-medium'>{edges.length}</span>
-            </div>
-            {isWorkflowRunning && (
-              <div className='font-medium text-green-600'>▶ Running...</div>
-            )}
-            <div className='space-y-1 border-t border-gray-200 pt-2'>
-              <div className='flex gap-1'>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => dispatch(undo())}
-                  disabled={!canUndo}
-                  className='h-6 flex-1 px-2 text-xs'
-                  title='Undo (Cmd/Ctrl+Z)'
-                >
-                  <Undo2 className='mr-1 h-3 w-3' />
-                  Undo
-                </Button>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => dispatch(redo())}
-                  disabled={!canRedo}
-                  className='h-6 flex-1 px-2 text-xs'
-                  title='Redo (Cmd/Ctrl+Shift+Z)'
-                >
-                  <Redo2 className='mr-1 h-3 w-3' />
-                  Redo
-                </Button>
-              </div>
-              <div className='flex gap-1'>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => dispatch(collapseAllNodes())}
-                  className='h-6 flex-1 px-2 text-xs'
-                  title='Collapse all nodes'
-                >
-                  <Minimize2 className='mr-1 h-3 w-3' />
-                  Collapse
-                </Button>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => dispatch(expandAllNodes())}
-                  className='h-6 flex-1 px-2 text-xs'
-                  title='Expand all nodes'
-                >
-                  <Maximize2 className='mr-1 h-3 w-3' />
-                  Expand
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Panel>
       </ReactFlow>
 
       {/* Config Panel - shows when a node is selected */}

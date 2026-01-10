@@ -2,12 +2,17 @@ import { type Node, type Edge, type Connection } from '@xyflow/react'
 
 export type Mode = 'sequential' | 'parallel'
 
+// Helper to check if a node is a start-type node
+export const isStartNode = (type: string | undefined): boolean => {
+  return type === 'start'
+}
+
 export const getStartNode = (nodes: Node[]): Node | undefined => {
-  return nodes.find((n) => n.type === 'start')
+  return nodes.find((n) => isStartNode(n.type))
 }
 
 export const getStartNodes = (nodes: Node[]): Node[] => {
-  return nodes.filter((n) => n.type === 'start')
+  return nodes.filter((n) => isStartNode(n.type))
 }
 
 export const getMode = (startNode?: Node): Mode => {
@@ -45,7 +50,7 @@ export const isValidConnection = (
   // Allow connections TO structured output node FROM start, step, or chatOutput nodes
   if (tType === 'structuredOutput') {
     const isAllowed =
-      sType === 'start' || sType === 'step' || sType === 'chatOutput'
+      isStartNode(sType) || sType === 'step' || sType === 'chatOutput'
     if (!isAllowed) return false
 
     // Structured output nodes accept only one input connection
@@ -58,8 +63,8 @@ export const isValidConnection = (
   // Allow Start <-> Step regardless of drag direction
   // Backend uses edge-based execution, so no frontend restrictions needed
   if (
-    (sType === 'start' && tType === 'step') ||
-    (sType === 'step' && tType === 'start')
+    (isStartNode(sType) && tType === 'step') ||
+    (sType === 'step' && isStartNode(tType))
   ) {
     return true
   }
@@ -85,7 +90,7 @@ export const isValidConnection = (
     // Allow chatOutput -> start connections for workflow chaining
     // This enables sequential workflow chains where output from Chain 1
     // becomes input to Chain 2
-    if (tType === 'start') return true
+    if (isStartNode(tType)) return true
 
     return false
   }

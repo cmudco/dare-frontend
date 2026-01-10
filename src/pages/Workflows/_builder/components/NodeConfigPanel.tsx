@@ -34,9 +34,6 @@ export default function NodeConfigPanel({
   const nodeData = selectedNode.data as Record<string, unknown>
   const nodeId = selectedNode.id
 
-  // Debug: Check actual node type
-  console.log('NodeConfigPanel nodeType:', nodeType, 'nodeId:', nodeId)
-
   // Update node data helper
   const updateNodeData = useCallback(
     (updates: Record<string, unknown>) => {
@@ -83,7 +80,7 @@ export default function NodeConfigPanel({
   }
 
   return (
-    <div className='flex h-full w-80 flex-col border-l border-border bg-card'>
+    <div className='absolute right-0 top-0 z-20 flex h-full w-80 flex-col border-l border-border/50 bg-white/95 shadow-lg backdrop-blur-sm'>
       {/* Header */}
       <div className='flex items-center justify-between border-b border-border p-4'>
         <div>
