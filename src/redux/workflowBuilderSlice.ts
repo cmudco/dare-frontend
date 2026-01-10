@@ -550,7 +550,7 @@ const workflowBuilderSlice = createSlice({
         (state, action) => {
           const { nodeId } = action.payload
           state.activeStreamingNodeId = nodeId
-          state.streamingResponses[nodeId] = ''
+          state.streamingResponses[nodeId] = { content: '' }
         }
       )
       .addMatcher(
@@ -563,9 +563,9 @@ const workflowBuilderSlice = createSlice({
         (state, action) => {
           const { nodeId, chunk } = action.payload
           if (state.streamingResponses[nodeId] !== undefined) {
-            state.streamingResponses[nodeId] += chunk
+            state.streamingResponses[nodeId].content += chunk
           } else {
-            state.streamingResponses[nodeId] = chunk
+            state.streamingResponses[nodeId] = { content: chunk }
           }
         }
       )
@@ -574,11 +574,38 @@ const workflowBuilderSlice = createSlice({
           action
         ): action is {
           type: 'workflowSocket/step_completed'
-          payload: { nodeId: string }
+          payload: {
+            nodeId: string
+            response: string
+            metadata?: {
+              snippets?: Array<{
+                id: number
+                file: { id: number; name: string } | null
+                text: string
+                similarity_score: number
+                chunk_index: number
+                vector_db_source: string
+              }>
+              webSearchSources?: Array<{
+                id: number
+                url: string
+                title: string
+                cited_text: string
+                page_age?: string
+                provider: string
+              }>
+            }
+          }
         } => action.type === 'workflowSocket/step_completed',
         (state, action) => {
-          const { nodeId } = action.payload
-          // Clear streaming response for this node (final response comes from currentRun)
+          const { nodeId, response, metadata } = action.payload
+          // Update streaming response with final content and metadata
+          state.streamingResponses[nodeId] = {
+            content: response,
+            snippets: metadata?.snippets,
+            webSearchSources: metadata?.webSearchSources,
+          }
+          // Clear active streaming node
           if (state.activeStreamingNodeId === nodeId) {
             state.activeStreamingNodeId = null
           }

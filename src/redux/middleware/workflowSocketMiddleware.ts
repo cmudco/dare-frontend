@@ -38,13 +38,37 @@ export interface WorkflowStepStreaming {
   accumulatedTokens?: number
 }
 
+// Rich metadata types for step completion
+export interface StepSnippet {
+  id: number
+  file: { id: number; name: string } | null
+  text: string
+  similarity_score: number
+  chunk_index: number
+  vector_db_source: string
+}
+
+export interface StepWebSearchSource {
+  id: number
+  url: string
+  title: string
+  cited_text: string
+  page_age?: string
+  provider: string
+}
+
+export interface StepCompletedMetadata {
+  snippets?: StepSnippet[]
+  webSearchSources?: StepWebSearchSource[]
+}
+
 export interface WorkflowStepCompleted {
   type: 'step_completed'
   nodeId: string
   response: string
   status: 'completed' | 'failed' | 'skipped'
   tokens?: { input: number; output: number }
-  metadata?: Record<string, unknown>
+  metadata?: StepCompletedMetadata
 }
 
 export interface WorkflowExecutionComplete {
