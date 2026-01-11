@@ -4,6 +4,7 @@
  * Handles:
  * - Subscribing to workflow updates (for execution state)
  * - Starting workflow execution via socket
+ * - Properly unsubscribing when switching workflows
  *
  * NOTE: Socket CONNECTION is managed at App root level by useSocketConnection.
  * This hook only handles subscription and execution operations.
@@ -12,12 +13,14 @@
  * When workflowId is provided, automatically subscribes to get current execution state.
  */
 
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   workflowSocketStartExecution,
   workflowSocketSubscribeWorkflow,
+  workflowSocketUnsubscribeWorkflow,
 } from '@/redux/middleware/workflowSocketMiddleware'
+import { clearExecutionState } from '@/redux/workflowBuilderSlice'
 
 interface UseWorkflowSocketOptions {
   /** Workflow ID to subscribe to for execution state */
@@ -42,14 +45,10 @@ export function useWorkflowSocket(
 ): UseWorkflowSocketReturn {
   const { workflowId } = options
   const dispatch = useAppDispatch()
-  const subscribedWorkflowRef = useRef<number | null>(null)
 
   const wsConnectionStatus = useAppSelector(
     (state) => state.workflowBuilder.wsConnectionStatus
   )
-
-  // NOTE: Connection is now handled at App root level by useSocketConnection
-  // No need to connect here - just wait for connection to be established
 
   // Subscribe to workflow when connected and workflowId is provided
   useEffect(() => {
@@ -57,18 +56,16 @@ export function useWorkflowSocket(
       return
     }
 
-    // Avoid re-subscribing to the same workflow
-    if (subscribedWorkflowRef.current === workflowId) {
-      return
-    }
-
-    console.log('🔌 Subscribing to workflow:', workflowId)
     dispatch(workflowSocketSubscribeWorkflow(workflowId))
-    subscribedWorkflowRef.current = workflowId
+
+    // Cleanup: unsubscribe when workflowId changes or component unmounts
+    return () => {
+      dispatch(workflowSocketUnsubscribeWorkflow(workflowId))
+      dispatch(clearExecutionState())
+    }
   }, [wsConnectionStatus, workflowId, dispatch])
 
   // Start execution via socket
-  // NOTE: Backend's on_start_execution automatically subscribes to the run
   const startExecution = useCallback(
     (params: {
       workflowRunId?: number
