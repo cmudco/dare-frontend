@@ -220,51 +220,6 @@ export interface UpdateWorkflowDTO {
   viewport_zoom?: number
 }
 
-export interface SingleStepResult {
-  stepId: number
-  nodeId: string
-  status: WorkflowRunStepStatus
-  response: string | null
-  error: string | null
-  metadata: {
-    routingDecision?: string
-    analysis?: string
-    aiRecommendation?: string
-    availableRoutes?: RouteDef[]
-    isHumanValidated?: boolean
-    fullResponse?: string
-    pendingHumanDecision?: boolean
-    userChoice?: string
-    selectedRoute?: string
-    rawResponse?: string
-  } | null
-}
-
-export interface SingleStepExecutionResponse {
-  success: boolean
-  workflowRunId: number
-  stepResult: SingleStepResult | null
-  missingDependencies: string[]
-  error: string | null
-}
-
-/**
- * V2 API response for execute-single-step endpoint.
- * Returns full WorkflowRun with nodeStates instead of custom stepResult.
- */
-export interface SingleStepExecutionResponseV2 {
-  success: boolean
-  workflowRun: WorkflowRun // Full run with nodeStates
-  missingDependencies: string[]
-  error: string | null
-}
-
-export interface ExecuteSingleStepRequest {
-  workflowId: number
-  stepNodeId: string
-  workflowRunId?: number | null
-}
-
 export interface PartialRunStep {
   id: number
   stepNode: number

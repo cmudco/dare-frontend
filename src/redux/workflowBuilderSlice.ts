@@ -15,11 +15,7 @@ import { createNode } from '@/utils/workflowBuilder/createNode'
 import { removeNodeById as removeNodeByIdHelper } from '@/utils/workflowBuilder/removeNodeById'
 import { updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/updateNodeData'
 import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
-import {
-  startWorkflowRun,
-  getActivePartialRun,
-  getWorkflowRuns,
-} from './asyncThunks/workflow'
+import { getActivePartialRun, getWorkflowRuns } from './asyncThunks/workflow'
 import type { WorkflowRun } from './types/workflow'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import {
@@ -393,33 +389,6 @@ const workflowBuilderSlice = createSlice({
         state.showExecutionPanel = false
         state.availableRuns = []
         state.selectedRunIds = {}
-      })
-      .addCase(startWorkflowRun.fulfilled, (state, action) => {
-        // When a new run starts, update the current run (WebSocket handles real-time updates)
-        state.currentRun = action.payload
-        state.isRunning =
-          action.payload.status === WorkflowRunStepStatus.Running ||
-          action.payload.status === WorkflowRunStepStatus.PendingHumanInput
-
-        // Show execution panel when run starts
-        state.showExecutionPanel = true
-        state.streamingResponses = {}
-        state.activeStreamingNodeId = null
-
-        // Auto-switch nodes to the new run (latest version)
-        // For FULL runs: clear all selections so all nodes default to currentRun
-        // For PARTIAL runs: keep existing selections so unexecuted nodes stay on previous version
-        if (!action.payload.isPartial) {
-          state.selectedRunIds = {}
-        }
-
-        // Add the new run to availableRuns if not already there
-        const runExists = state.availableRuns.some(
-          (run) => run.id === action.payload.id
-        )
-        if (!runExists) {
-          state.availableRuns = [action.payload, ...state.availableRuns]
-        }
       })
       .addCase(getActivePartialRun.fulfilled, (state, action) => {
         const { partialRun, executedStepNodeIds } = action.payload
