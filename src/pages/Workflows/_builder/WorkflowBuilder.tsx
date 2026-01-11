@@ -26,7 +26,6 @@ import {
 } from '@/utils/constants/workflowBuilder'
 import { loadWorkflowIntoBuilder } from '@/redux/asyncThunks/workflowBuilder'
 import { getWorkflowRuns } from '@/redux/asyncThunks/workflow'
-import { useWorkflowSocket } from '@/hooks/useWorkflowSocket'
 import { useEffect, useCallback } from 'react'
 import type { Workflow } from '@/redux/types/workflow'
 import Sidebar from './components/Sidebar'
@@ -104,11 +103,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     }
   }, [props.workflowId, props.initialWorkflow, dispatch])
 
-  // Use WebSocket for real-time updates (WebSocket-only, no polling fallback)
-  // Subscribe to workflow to receive execution state updates
-  useWorkflowSocket({
-    workflowId: props.workflowId,
-  })
+  // NOTE: WebSocket subscription is handled by parent WorkflowEditPage.tsx
+  // Do NOT subscribe here to avoid duplicate subscriptions causing state race conditions
 
   useEffect(() => {
     if (savedViewport && nodes.length > 0) {
