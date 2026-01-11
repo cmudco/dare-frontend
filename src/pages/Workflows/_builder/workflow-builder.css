@@ -163,6 +163,18 @@
     color: #ef4444;
 }
 
+/* Run button styling - DARE branded */
+.quick-action-btn.run {
+    background: linear-gradient(135deg, rgba(238, 24, 60, 0.1) 0%, rgba(2, 53, 114, 0.1) 100%);
+    color: #EE183C;
+}
+
+.quick-action-btn.run:hover {
+    background: var(--dare-gradient);
+    color: white;
+    transform: scale(1.1);
+}
+
 /* ============================================
    NODE HEADER
    ============================================ */
@@ -236,6 +248,16 @@
 .workflow-node.selected .node-subtitle,
 .workflow-node.selected .node-icon {
     color: white;
+}
+
+/* When selected, hide any execution state ::after indicators since selected state takes over */
+.workflow-node.selected.completed::after,
+.workflow-node.selected.error::after,
+.workflow-node.selected.running::after,
+.workflow-node.selected.streaming::after,
+.workflow-node.selected.pending-validation::after {
+    display: none;
+    color: #000;
 }
 
 /* ============================================
@@ -379,53 +401,203 @@
 }
 
 /* ============================================
-   STREAMING & RUNNING STATE
+   EXECUTION STATE STYLING - DARE BRANDED
+   Using DARE brand colors: Red (#EE183C) & Blue (#023572)
    ============================================ */
+
+/* Base execution state */
+.workflow-node.running,
+.workflow-node.streaming,
+.workflow-node.completed,
+.workflow-node.error,
+.workflow-node.pending {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- PENDING STATE ---- */
+.workflow-node.pending {
+    border-color: rgba(2, 53, 114, 0.3);
+}
+
+.workflow-node.pending::before {
+    background: linear-gradient(135deg, rgba(2, 53, 114, 0.08) 0%, rgba(2, 53, 114, 0.04) 100%);
+}
+
+/* ---- RUNNING STATE (DARE Red) ---- */
 .workflow-node.running {
-    animation: nodePulse 2s ease-in-out infinite;
+    border-color: rgba(238, 24, 60, 0.5);
+}
+
+.workflow-node.running::before {
+    background: linear-gradient(135deg, rgba(238, 24, 60, 0.1) 0%, rgba(238, 24, 60, 0.05) 100%);
+    animation: executionPulse 2s ease-in-out infinite;
+}
+
+.workflow-node.running::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 20px;
+    border: 2px solid rgba(238, 24, 60, 0.4);
+    animation: executionRing 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* ---- STREAMING STATE (DARE Blue) ---- */
+.workflow-node.streaming {
+    border-color: rgba(2, 53, 114, 0.6);
 }
 
 .workflow-node.streaming::before {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(147, 51, 234, 0.5) 100%);
-    animation: borderGlow 1.5s ease-in-out infinite;
+    background: linear-gradient(135deg, rgba(2, 53, 114, 0.1) 0%, rgba(2, 53, 114, 0.05) 100%);
 }
 
-.workflow-node.streaming {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(147, 51, 234, 0.2);
+.workflow-node.streaming::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 20px;
+    border: 2px solid rgba(2, 53, 114, 0.5);
+    animation: streamingPulse 1s ease-in-out infinite;
+    pointer-events: none;
 }
 
-@keyframes nodePulse {
+/* ---- COMPLETED STATE (DARE Gradient) ---- */
+.workflow-node.completed {
+    border-color: rgba(2, 53, 114, 0.4);
+}
+
+.workflow-node.completed::before {
+    background: linear-gradient(135deg, rgba(2, 53, 114, 0.08) 0%, rgba(238, 24, 60, 0.04) 100%);
+}
+
+/* Success indicator bar at top using DARE gradient */
+.workflow-node.completed::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 16px;
+    right: 16px;
+    height: 3px;
+    background: var(--dare-gradient);
+    border-radius: 0 0 4px 4px;
+    pointer-events: none;
+}
+
+/* ---- ERROR STATE (DARE Red - stronger) ---- */
+.workflow-node.error {
+    border-color: rgba(238, 24, 60, 0.6);
+}
+
+.workflow-node.error::before {
+    background: linear-gradient(135deg, rgba(238, 24, 60, 0.12) 0%, rgba(238, 24, 60, 0.06) 100%);
+}
+
+/* Error indicator line at top */
+.workflow-node.error::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 16px;
+    right: 16px;
+    height: 3px;
+    background: #EE183C;
+    border-radius: 0 0 4px 4px;
+    pointer-events: none;
+}
+
+/* ============================================
+   EXECUTION STATE ANIMATIONS
+   ============================================ */
+
+@keyframes executionPulse {
     0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.02);
-    }
-}
-
-@keyframes borderGlow {
-    0%, 100% {
-        opacity: 0.6;
+        opacity: 0.8;
     }
     50% {
         opacity: 1;
     }
 }
 
-/* Completed state */
-.workflow-node.completed::before {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.4) 0%, rgba(22, 163, 74, 0.4) 100%);
+@keyframes executionRing {
+    0%, 100% {
+        opacity: 0.3;
+        border-color: rgba(238, 24, 60, 0.3);
+    }
+    50% {
+        opacity: 0.7;
+        border-color: rgba(238, 24, 60, 0.6);
+    }
 }
 
-.workflow-node.completed {
-    box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+@keyframes streamingPulse {
+    0%, 100% {
+        opacity: 0.4;
+        border-color: rgba(2, 53, 114, 0.3);
+    }
+    50% {
+        opacity: 0.8;
+        border-color: rgba(2, 53, 114, 0.6);
+    }
 }
 
-/* Error state */
-.workflow-node.error::before {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.4) 0%, rgba(220, 38, 38, 0.4) 100%);
+/* ============================================
+   STATUS DOT - DARE BRANDED
+   ============================================ */
+.node-status-dot.pending {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
 }
 
-.workflow-node.error {
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+.node-status-dot.streaming {
+    background: linear-gradient(135deg, #023572 0%, #034694 100%);
+    animation: statusPulse 1s ease-in-out infinite;
+}
+
+.node-status-dot.running {
+    background: linear-gradient(135deg, #EE183C 0%, #c41230 100%);
+    animation: statusPulse 1.2s ease-in-out infinite;
+}
+
+.node-status-dot.success {
+    background: var(--dare-gradient);
+}
+
+.node-status-dot.error {
+    background: linear-gradient(135deg, #EE183C 0%, #b91c1c 100%);
+    animation: statusPulse 0.6s ease-in-out infinite;
+}
+
+/* ---- PENDING VALIDATION STATE ---- */
+.workflow-node.pending-validation {
+    border-color: rgba(238, 24, 60, 0.5);
+}
+
+.workflow-node.pending-validation::before {
+    background: linear-gradient(135deg, rgba(238, 24, 60, 0.08) 0%, rgba(2, 53, 114, 0.05) 100%);
+}
+
+.workflow-node.pending-validation::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 20px;
+    border: 2px dashed rgba(238, 24, 60, 0.5);
+    animation: validationPulse 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes validationPulse {
+    0%, 100% {
+        opacity: 0.5;
+        border-color: rgba(238, 24, 60, 0.3);
+    }
+    50% {
+        opacity: 1;
+        border-color: rgba(238, 24, 60, 0.7);
+    }
+}
+
+.node-status-dot.pending-validation {
+    background: linear-gradient(135deg, #EE183C 0%, #023572 100%);
+    animation: statusPulse 1.2s ease-in-out infinite;
 }

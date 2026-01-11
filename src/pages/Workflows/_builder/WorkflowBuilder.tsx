@@ -105,15 +105,9 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   }, [props.workflowId, props.initialWorkflow, dispatch])
 
   // Use WebSocket for real-time updates (WebSocket-only, no polling fallback)
+  // Subscribe to workflow to receive execution state updates
   useWorkflowSocket({
-    workflowRunId: currentRun?.id,
-    isRunning: isWorkflowRunning,
-    onExecutionComplete: useCallback(() => {
-      // Refresh runs list when workflow completes
-      if (props.workflowId) {
-        dispatch(getWorkflowRuns(props.workflowId))
-      }
-    }, [props.workflowId, dispatch]),
+    workflowId: props.workflowId,
   })
 
   useEffect(() => {
@@ -207,13 +201,24 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           size={1}
           color='#e5e7eb'
         />
-        <Controls showZoom={true} showFitView={true} showInteractive={true} />
+        <Controls
+          showZoom={true}
+          showFitView={true}
+          showInteractive={true}
+          position='bottom-right'
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(229, 231, 235, 0.5)',
+            borderRadius: '8px',
+          }}
+        />
         <MiniMap
           nodeColor={(node) => getNodeColor(node, currentRun?.nodeStates)}
           nodeStrokeWidth={3}
           zoomable
           pannable
-          position='bottom-right'
+          position='bottom-left'
           style={{
             backgroundColor: 'rgba(255, 255, 255, 0.8)',
             backdropFilter: 'blur(8px)',

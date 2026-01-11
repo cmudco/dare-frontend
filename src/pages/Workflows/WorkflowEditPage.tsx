@@ -17,6 +17,7 @@ import {
   setManualMode,
   resetPartialRun,
   setSavingStatus,
+  setShowExecutionPanel,
 } from '@/redux/workflowBuilderSlice'
 import { SavingStatus } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
@@ -42,6 +43,7 @@ import {
   ArrowLeft,
   Undo2,
   Redo2,
+  Eye,
 } from 'lucide-react'
 import {
   exportWorkflow,
@@ -75,6 +77,8 @@ const WorkflowEditPage = () => {
   ).length
   const loadedWorkflow = useAppSelector((s) => s.workflowBuilder.loadedWorkflow)
   const history = useAppSelector((s) => s.workflowBuilder.history)
+  const currentRun = useAppSelector((s) => s.workflowBuilder.currentRun)
+  const hasExecutionData = currentRun !== null
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
 
@@ -431,6 +435,28 @@ const WorkflowEditPage = () => {
               )}
             </Tooltip>
           </TooltipProvider>
+
+          {/* Peek Execution Button - shows latest run */}
+          {id && hasExecutionData && !isRunning && (
+            <TooltipProvider>
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={() => dispatch(setShowExecutionPanel(true))}
+                    className='h-8 w-8'
+                    aria-label='View latest execution'
+                  >
+                    <Eye className='h-4 w-4' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>View latest run</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
 
           {id && !manualModeEnabled && (
             <Button

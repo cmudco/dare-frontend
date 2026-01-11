@@ -4,14 +4,18 @@ import {
   type NodeProps,
   useUpdateNodeInternals,
 } from '@xyflow/react'
-import { GitBranch, Settings, Copy, Trash2 } from 'lucide-react'
+import { GitBranch, Settings, Copy, Trash2, Play } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
-import { useAppDispatch } from '@/redux/hooks'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
   setSelectedNodeId,
+  setShowExecutionPanel,
 } from '@/redux/workflowBuilderSlice'
 import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
+import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
+import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { workflowSocketExecuteSingleStep } from '@/redux/middleware/workflowSocketMiddleware'
 
 export interface StructuredOutputRoute {
   name: string
@@ -35,6 +39,63 @@ export default function StructuredOutputNode({
   const nodeData = (data as Partial<StructuredOutputNodeData>) || {}
   const dispatch = useAppDispatch()
   const updateNodeInternals = useUpdateNodeInternals()
+
+  // Get workflow execution data
+  const {
+    executedStepNodeIds,
+    availableRuns,
+    selectedRunIds,
+    currentRun,
+    activeStreamingNodeId,
+    pendingValidation,
+    manualModeEnabled,
+    currentPartialRunId,
+    lastWorkflowId,
+    isRunning,
+  } = useAppSelector((s) => s.workflowBuilder)
+
+  // Get the run to display
+  const displayRun = getDisplayRun(
+    id,
+    selectedRunIds,
+    availableRuns,
+    currentRun
+  )
+
+  // Get node state from the display run
+  const nodeState = getNodeState(displayRun, id)
+  const status = nodeState?.status || null
+  const isExecuted = executedStepNodeIds.includes(id)
+  const isStreaming = activeStreamingNodeId === id
+  const isPendingHumanInput = pendingValidation?.nodeId === id
+
+  // Get status indicator class for execution visualization
+  const getStatusClass = () => {
+    if (isPendingHumanInput) {
+      return 'pending-validation'
+    }
+    if (isStreaming) {
+      return 'streaming'
+    }
+    if (isExecuted || status === WorkflowRunStepStatus.Completed) {
+      return 'completed'
+    }
+    if (status === WorkflowRunStepStatus.Running) {
+      return 'running'
+    }
+    if (status === WorkflowRunStepStatus.Failed) {
+      return 'error'
+    }
+    if (status === WorkflowRunStepStatus.Pending) {
+      return 'pending'
+    }
+    if (status === WorkflowRunStepStatus.PendingHumanInput) {
+      return 'pending-validation'
+    }
+    return ''
+  }
+
+  const statusClass = getStatusClass()
 
   // Memoize routes
   const routes = useMemo(
@@ -71,11 +132,50 @@ export default function StructuredOutputNode({
     dispatch(removeNodeWithEdges({ nodeId: id }))
   }
 
+  // Handle manual step execution
+  const handleRunStep = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!lastWorkflowId || isRunning) return
+
+    // Open execution panel and trigger single step execution
+    dispatch(setShowExecutionPanel(true))
+    dispatch(
+      workflowSocketExecuteSingleStep({
+        workflowId: lastWorkflowId,
+        stepNodeId: id,
+        workflowRunId: currentPartialRunId || undefined,
+      })
+    )
+  }
+
+  // Check if this step can be run (has dependencies met)
+  const canRunStep =
+    manualModeEnabled && !isRunning && !isExecuted && lastWorkflowId
+
   return (
-    <div className={`workflow-node conditional ${selected ? 'selected' : ''}`}>
+    <div
+      className={`workflow-node conditional ${selected ? 'selected' : ''} ${statusClass}`}
+    >
+      {/* Status indicator dot */}
+      {statusClass && (
+        <div
+          className={`node-status-dot ${statusClass === 'completed' ? 'success' : statusClass === 'pending-validation' ? 'running' : statusClass}`}
+        />
+      )}
+
       {/* Quick Actions Bar - appears on selection */}
       {selected && (
         <div className='node-quick-actions'>
+          {/* Run button - only in manual mode */}
+          {canRunStep && (
+            <button
+              className='quick-action-btn run'
+              title='Run this step'
+              onClick={handleRunStep}
+            >
+              <Play size={14} />
+            </button>
+          )}
           <button
             className='quick-action-btn'
             title='Configure'

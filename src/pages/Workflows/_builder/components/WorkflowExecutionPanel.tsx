@@ -8,7 +8,7 @@
  * - Connection status indicator
  */
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
   Loader2,
@@ -22,6 +22,7 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  History,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -30,10 +31,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import {
-  setShowExecutionPanel,
-  clearStreamingResponses,
-} from '@/redux/workflowBuilderSlice'
+import { setShowExecutionPanel } from '@/redux/workflowBuilderSlice'
 import { workflowSocketSubmitValidation } from '@/redux/middleware/workflowSocketMiddleware'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -46,6 +44,7 @@ import 'highlight.js/styles/atom-one-light.css'
 import { CodeBlock } from '@/components/Conversation/CodeBlock'
 import { MermaidBlock } from '@/components/Conversation/MermaidBlock'
 import type { StreamingResponse } from '@/redux/types/workflowBuilder'
+import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 
 export default function WorkflowExecutionPanel() {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -62,10 +61,10 @@ export default function WorkflowExecutionPanel() {
     nodes,
   } = useAppSelector((state) => state.workflowBuilder)
 
-  // Close panel handler
+  // Close panel handler - don't clear streaming responses so we can reopen
   const handleClose = () => {
     dispatch(setShowExecutionPanel(false))
-    dispatch(clearStreamingResponses())
+    // Note: We no longer clear streaming responses here so peek can show them
   }
 
   // Auto-scroll to bottom when streaming
@@ -84,23 +83,88 @@ export default function WorkflowExecutionPanel() {
   // Check if we have any streaming data to show
   const hasStreamingData = Object.keys(streamingResponses).length > 0
 
-  // Sort streaming responses by step order (based on node position in workflow)
-  const sortedResponses = Object.entries(streamingResponses).sort(
-    ([idA], [idB]) => {
+  // Node types that are execution nodes (have their own response data)
+  // Display nodes (chatOutput, start) mirror data from execution nodes - skip to avoid duplication
+  const EXECUTION_NODE_TYPES = ['step', 'structuredOutput']
+
+  // Build display data from currentRun.nodeStates when no streaming data
+  // This allows viewing completed runs via the "peek" button
+  const completedRunResponses = useMemo(() => {
+    if (hasStreamingData || !currentRun?.nodeStates) return []
+
+    const responses: [string, StreamingResponse][] = []
+
+    for (const [nodeId, nodeState] of Object.entries(currentRun.nodeStates)) {
+      // Only show execution nodes (step, structuredOutput) - skip display nodes (chatOutput, start)
+      // Display nodes mirror data from execution nodes, so including them causes duplication
+      if (!EXECUTION_NODE_TYPES.includes(nodeState.nodeType)) {
+        continue
+      }
+
+      // Only show nodes that have completed with a response
+      if (
+        nodeState.response &&
+        (nodeState.status === WorkflowRunStepStatus.Completed ||
+          nodeState.status === WorkflowRunStepStatus.Failed)
+      ) {
+        responses.push([
+          nodeId,
+          {
+            content: nodeState.response,
+            snippets: nodeState.snippets?.map((s) => ({
+              id: s.id,
+              file: s.file ? { id: s.file.id, name: s.file.name } : null,
+              text: s.text,
+              similarity_score: s.similarityScore,
+              chunk_index: s.chunkIndex,
+              vector_db_source: s.vectorDbSource || '',
+            })),
+            webSearchSources: nodeState.webSearchSources?.map((w) => ({
+              id: w.id,
+              url: w.url,
+              title: w.title,
+              cited_text: w.citedText,
+              page_age: w.pageAge,
+              provider: w.provider,
+            })),
+          },
+        ])
+      }
+    }
+
+    // Sort by step number
+    return responses.sort(([idA], [idB]) => {
       const nodeA = nodes.find((n) => n.id === idA)
       const nodeB = nodes.find((n) => n.id === idB)
       const stepA = (nodeA?.data?.stepNumber as number) || 0
       const stepB = (nodeB?.data?.stepNumber as number) || 0
       return stepA - stepB
-    }
-  ) as [string, StreamingResponse][]
+    })
+  }, [hasStreamingData, currentRun?.nodeStates, nodes])
+
+  // Use streaming data if available, otherwise use completed run data
+  const displayResponses = hasStreamingData
+    ? (Object.entries(streamingResponses).sort(([idA], [idB]) => {
+        const nodeA = nodes.find((n) => n.id === idA)
+        const nodeB = nodes.find((n) => n.id === idB)
+        const stepA = (nodeA?.data?.stepNumber as number) || 0
+        const stepB = (nodeB?.data?.stepNumber as number) || 0
+        return stepA - stepB
+      }) as [string, StreamingResponse][])
+    : completedRunResponses
+
+  const hasDisplayData = displayResponses.length > 0
+  const isViewingCompletedRun =
+    !hasStreamingData && completedRunResponses.length > 0
 
   return (
-    <div className='absolute right-0 top-0 z-20 flex h-full min-w-96 max-w-[50vw] flex-col border-l border-border/50 bg-white/95 shadow-lg backdrop-blur-sm'>
+    <div className='absolute inset-x-0 bottom-4 top-10 z-20 ml-auto flex w-[90%] max-w-[35vw] flex-col rounded-2xl border border-border/30 bg-white/95 shadow-2xl backdrop-blur-sm'>
       {/* Header with connection status and close button */}
-      <div className='flex items-center justify-between border-b border-border p-4'>
+      <div className='flex items-center justify-between rounded-t-2xl border-b border-border/50 bg-gradient-to-r from-slate-50 to-white p-4'>
         <div>
-          <h3 className='font-semibold text-foreground'>Execution Preview</h3>
+          <h3 className='font-semibold text-foreground'>
+            {isViewingCompletedRun ? 'Run Results' : 'Execution Preview'}
+          </h3>
           <p className='text-xs text-muted-foreground'>
             {isRunning
               ? activeStreamingNodeId
@@ -108,7 +172,9 @@ export default function WorkflowExecutionPanel() {
                 : 'Workflow running...'
               : pendingValidation
                 ? 'Awaiting validation'
-                : 'Ready'}
+                : isViewingCompletedRun
+                  ? `Viewing run #${currentRun?.id}`
+                  : 'Ready'}
           </p>
         </div>
         <div className='flex items-center gap-2'>
@@ -145,8 +211,8 @@ export default function WorkflowExecutionPanel() {
           />
         )}
 
-        {/* Empty state */}
-        {!hasStreamingData && !pendingValidation && !isRunning && (
+        {/* Empty state - only show when no data and not running */}
+        {!hasDisplayData && !pendingValidation && !isRunning && (
           <div className='flex h-full flex-col items-center justify-center text-center text-muted-foreground'>
             <div className='mb-2'>
               <Play className='h-12 w-12 opacity-30' />
@@ -158,7 +224,7 @@ export default function WorkflowExecutionPanel() {
 
         {/* Running but no data yet */}
         {isRunning &&
-          !hasStreamingData &&
+          !hasDisplayData &&
           !activeStreamingNodeId &&
           !pendingValidation && (
             <div className='flex h-full flex-col items-center justify-center text-center text-muted-foreground'>
@@ -167,21 +233,37 @@ export default function WorkflowExecutionPanel() {
             </div>
           )}
 
-        {/* Streaming responses */}
-        {hasStreamingData && (
+        {/* Viewing completed run indicator */}
+        {isViewingCompletedRun && (
+          <div className='mb-4 flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 px-3 py-2'>
+            <History className='h-4 w-4 text-muted-foreground' />
+            <span className='text-xs text-muted-foreground'>
+              Showing results from previous run
+            </span>
+          </div>
+        )}
+
+        {/* Response cards - streaming or completed run data */}
+        {hasDisplayData && (
           <div className='space-y-4'>
-            {sortedResponses.map(([nodeId, streamingData]) => {
+            {displayResponses.map(([nodeId, responseData]) => {
               const isActive = activeStreamingNodeId === nodeId
-              const nodeName = getNodeName(nodeId)
-              const content = streamingData.content
-              const snippets = streamingData.snippets
-              const webSearchSources = streamingData.webSearchSources
+              const node = nodes.find((n) => n.id === nodeId)
+              const nodeName =
+                (node?.data?.label as string) || node?.type || 'Step'
+              const stepNumber = node?.data?.stepNumber as number | undefined
+              const nodeType = node?.type
+              const content = responseData.content
+              const snippets = responseData.snippets
+              const webSearchSources = responseData.webSearchSources
 
               return (
                 <StepResponseCard
                   key={nodeId}
                   nodeId={nodeId}
                   nodeName={nodeName}
+                  stepNumber={stepNumber}
+                  nodeType={nodeType}
                   content={content}
                   isActive={isActive}
                   snippets={snippets}
@@ -195,18 +277,19 @@ export default function WorkflowExecutionPanel() {
 
       {/* Footer with run info */}
       {currentRun && (
-        <div className='border-t border-border p-3'>
+        <div className='rounded-b-2xl border-t border-border/50 bg-gradient-to-r from-slate-50 to-white p-3'>
           <div className='flex items-center justify-between text-xs text-muted-foreground'>
             <span>Run #{currentRun.id}</span>
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-xs font-medium',
                 currentRun.status === 'completed' &&
-                  'bg-green-100 text-green-700',
-                currentRun.status === 'running' && 'bg-blue-100 text-blue-700',
+                  'bg-[#023572]/10 text-[#023572]',
+                currentRun.status === 'running' &&
+                  'bg-[#EE183C]/10 text-[#EE183C]',
                 currentRun.status === 'failed' && 'bg-red-100 text-red-700',
                 currentRun.status === 'pending_human_input' &&
-                  'bg-yellow-100 text-yellow-700'
+                  'bg-[#EE183C]/10 text-[#EE183C]'
               )}
             >
               {currentRun.status}
@@ -256,24 +339,26 @@ function ValidationPanel({
   }
 
   return (
-    <div className='mb-4 rounded-lg border-2 border-yellow-300 bg-yellow-50 p-4'>
+    <div className='mb-4 rounded-lg border border-[#EE183C]/30 bg-gradient-to-br from-[#EE183C]/5 to-[#023572]/5 p-4'>
       <div className='mb-3 flex items-center gap-2'>
-        <div className='flex h-6 w-6 items-center justify-center rounded-full bg-yellow-400'>
-          <span className='text-xs font-bold text-yellow-900'>?</span>
+        <div className='flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#EE183C] to-[#023572]'>
+          <span className='text-xs font-bold text-white'>?</span>
         </div>
-        <span className='font-medium text-yellow-900'>
+        <span className='font-medium text-foreground'>
           Human Validation Required
         </span>
       </div>
 
-      <p className='mb-3 text-sm text-yellow-800'>
-        The workflow is waiting for your decision at <strong>{nodeName}</strong>
-        . Please select a route to continue.
+      <p className='mb-3 text-sm text-muted-foreground'>
+        The workflow is waiting for your decision at{' '}
+        <strong className='text-foreground'>{nodeName}</strong>. Please select a
+        route to continue.
       </p>
 
       {validation.aiRecommendation && (
-        <div className='mb-3 rounded bg-yellow-100 p-2 text-xs text-yellow-800'>
-          <strong>AI Recommendation:</strong> {validation.aiRecommendation}
+        <div className='mb-3 rounded-md border border-[#023572]/20 bg-[#023572]/5 p-2 text-xs text-muted-foreground'>
+          <strong className='text-[#023572]'>AI Recommendation:</strong>{' '}
+          {validation.aiRecommendation}
         </div>
       )}
 
@@ -285,13 +370,15 @@ function ValidationPanel({
             className={cn(
               'w-full rounded-lg border p-3 text-left transition-all',
               selectedRoute === route.name
-                ? 'border-yellow-500 bg-yellow-100'
-                : 'border-yellow-200 bg-white hover:border-yellow-400'
+                ? 'border-[#EE183C]/50 bg-gradient-to-r from-[#EE183C]/10 to-[#023572]/10'
+                : 'border-border bg-white hover:border-[#023572]/30 hover:bg-[#023572]/5'
             )}
           >
-            <div className='font-medium text-gray-900'>{route.name}</div>
+            <div className='font-medium text-foreground'>{route.name}</div>
             {route.description && (
-              <div className='text-xs text-gray-600'>{route.description}</div>
+              <div className='text-xs text-muted-foreground'>
+                {route.description}
+              </div>
             )}
           </button>
         ))}
@@ -300,7 +387,7 @@ function ValidationPanel({
       <Button
         onClick={handleSubmit}
         disabled={!selectedRoute || isSubmitting}
-        className='w-full'
+        className='w-full bg-gradient-to-r from-[#EE183C] to-[#023572] text-white hover:from-[#c41230] hover:to-[#012a5c]'
       >
         {isSubmitting ? (
           <>
@@ -321,6 +408,8 @@ function ValidationPanel({
 interface StepResponseCardProps {
   nodeId: string
   nodeName: string
+  stepNumber?: number
+  nodeType?: string
   content: string
   isActive: boolean
   snippets?: Array<{
@@ -342,7 +431,10 @@ interface StepResponseCardProps {
 }
 
 function StepResponseCard({
+  nodeId,
   nodeName,
+  stepNumber,
+  nodeType,
   content,
   isActive,
   snippets,
@@ -358,21 +450,41 @@ function StepResponseCard({
     <div
       className={cn(
         'rounded-lg border p-3 transition-all',
-        isActive && 'border-blue-200 bg-blue-50/50',
-        !isActive && content && 'border-green-200 bg-green-50/50'
+        isActive && 'border-[#023572]/30 bg-[#023572]/5',
+        !isActive &&
+          content &&
+          'border-[#023572]/20 bg-gradient-to-br from-[#023572]/5 to-[#EE183C]/5'
       )}
     >
-      {/* Step header */}
+      {/* Step header with number badge */}
       <div className='mb-2 flex items-center gap-2'>
+        {/* Step number badge */}
+        {stepNumber !== undefined && (
+          <div className='flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#023572] to-[#EE183C] text-[10px] font-bold text-white'>
+            {stepNumber}
+          </div>
+        )}
         {isActive ? (
-          <Loader2 className='h-4 w-4 animate-spin text-blue-500' />
+          <Loader2 className='h-4 w-4 animate-spin text-[#023572]' />
         ) : (
-          <CheckCircle className='h-4 w-4 text-green-500' />
+          <CheckCircle className='h-4 w-4 text-[#023572]' />
         )}
         <span className='text-sm font-medium'>{nodeName}</span>
         {isActive && (
-          <span className='text-xs text-blue-600'>Streaming...</span>
+          <span className='text-xs text-[#023572]'>Streaming...</span>
         )}
+      </div>
+
+      {/* Node metadata line */}
+      <div className='mb-2 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground'>
+        {nodeType && (
+          <span className='rounded bg-muted px-1.5 py-0.5 font-mono'>
+            {nodeType}
+          </span>
+        )}
+        <span className='rounded bg-muted/50 px-1.5 py-0.5 font-mono text-muted-foreground/70'>
+          {nodeId}
+        </span>
       </div>
 
       {/* Response content with markdown */}
@@ -432,7 +544,9 @@ function StepResponseCard({
             >
               {content}
             </ReactMarkdown>
-            {isActive && <span className='animate-pulse text-blue-500'>|</span>}
+            {isActive && (
+              <span className='animate-pulse text-[#EE183C]'>|</span>
+            )}
           </div>
         </div>
       )}

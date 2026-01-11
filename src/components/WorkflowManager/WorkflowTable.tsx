@@ -8,12 +8,7 @@ import {
   updateWorkflowDisplayOrder,
 } from '../../redux/asyncThunks/workflow'
 import { WORKFLOWS_TABLE_HEAD } from '../../utils/constants/workflows'
-// LEGACY: Commenting out legacy modal import
-// import { openEditModal, selectWorkflowForView } from '../../redux/workflowSlice'
-import {
-  selectWorkflowForView,
-  updateWorkflowOrder,
-} from '../../redux/workflowSlice'
+import { updateWorkflowOrder } from '../../redux/workflowSlice'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../ui/button'
 import {
@@ -55,19 +50,14 @@ import {
 } from '../ui/Table'
 import { ChevronUpDownIcon } from '@heroicons/react/24/outline'
 import { DeleteConfirmation } from '../DeleteConfirmation'
-// LEGACY: Commenting out SelectModeDialog since only "New" mode is available
-// import SelectModeDialog from './SelectModeDialog'
 import {
   SortDirection,
   updateSortState,
   sortWorkflows,
 } from '@/utils/sortUtils'
-import WorkflowViewer from './WorkflowViewer'
 import { WorkflowTableProps } from '@/redux/types/workflow'
 import { SortDirectionEnum } from '@/utils/constants/sort'
 import { Workflow } from '@/redux/types/workflow'
-import { useWorkflowSocket } from '@/hooks/useWorkflowSocket'
-import { toast } from '@/utils/toast'
 
 const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -90,9 +80,6 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   const [deleteWorkflowTitle, setDeleteWorkflowTitle] = useState<string>('')
   const [activeId, setActiveId] = useState<number | null>(null)
   const sensors = useDragSensors()
-
-  // Socket-based workflow execution
-  const { isConnected, startExecution } = useWorkflowSocket({})
 
   const filteredWorkflows = useMemo(() => {
     return workflows.filter((workflow) => {
@@ -125,22 +112,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   }
 
   const handleEdit = (id: number) => {
-    // Directly navigate to edit mode since legacy modal is disabled
     navigate(`/workflows/${id}/edit`)
-  }
-
-  const handleRun = (id: number) => {
-    if (!isConnected) {
-      toast.error('WebSocket not connected. Please wait and try again.')
-      return
-    }
-    // Start execution via socket (handles creation, subscription, and execution atomically)
-    startExecution({ workflowId: id })
-    dispatch(selectWorkflowForView({ workflowId: id, mode: 'run' }))
-  }
-
-  const handleView = (workflowId: number) => {
-    dispatch(selectWorkflowForView({ workflowId, mode: 'view' }))
   }
 
   const handleDelete = (id: number, title: string) => {
@@ -278,8 +250,6 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                   <SortableWorkflowRow
                     key={workflow.id}
                     workflow={workflow}
-                    onRun={handleRun}
-                    onView={handleView}
                     onEdit={handleEdit}
                     onClone={handleClone}
                     onDelete={handleDelete}
@@ -372,11 +342,6 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
         itemName={deleteWorkflowTitle}
         confirmText='Delete'
       />
-
-      <WorkflowViewer />
-
-      {/* LEGACY: SelectModeDialog removed since only "New" mode is available */}
-      {/* Users now directly navigate to /workflows/[id]/edit */}
     </div>
   )
 }

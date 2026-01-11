@@ -292,8 +292,11 @@ const workflowBuilderSlice = createSlice({
       state.selectedRunIds[nodeId] = runId
       // Don't mutate node.data - nodes will read from the selected run directly
     },
-    resetBuilder: () => {
-      return initialState
+    resetBuilder: (state) => {
+      // Preserve wsConnectionStatus since socket connection is managed separately
+      // and persists across route changes
+      const wsConnectionStatus = state.wsConnectionStatus
+      return { ...initialState, wsConnectionStatus }
     },
     setSavingStatus: (
       state,
@@ -345,6 +348,22 @@ const workflowBuilderSlice = createSlice({
     setShowExecutionPanel: (state, action: PayloadAction<boolean>) => {
       state.showExecutionPanel = action.payload
     },
+    /**
+     * Clear all execution-related state.
+     * Used when switching between workflows to prevent stale data.
+     */
+    clearExecutionState: (state) => {
+      state.currentRun = null
+      state.isRunning = false
+      state.currentPartialRunId = null
+      state.executedStepNodeIds = []
+      state.streamingResponses = {}
+      state.activeStreamingNodeId = null
+      state.pendingValidation = null
+      state.showExecutionPanel = false
+      state.availableRuns = []
+      state.selectedRunIds = {}
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -365,6 +384,15 @@ const workflowBuilderSlice = createSlice({
         // Clear history when loading a workflow
         state.history.past = []
         state.history.future = []
+        // Reset execution-related state when switching workflows
+        state.currentPartialRunId = null
+        state.executedStepNodeIds = []
+        state.streamingResponses = {}
+        state.activeStreamingNodeId = null
+        state.pendingValidation = null
+        state.showExecutionPanel = false
+        state.availableRuns = []
+        state.selectedRunIds = {}
       })
       .addCase(startWorkflowRun.fulfilled, (state, action) => {
         // When a new run starts, update the current run (WebSocket handles real-time updates)
@@ -544,6 +572,41 @@ const workflowBuilderSlice = createSlice({
         (
           action
         ): action is {
+          type: 'workflowSocket/singleStepStarted'
+          payload: { workflowRunId: number; stepNodeId: string }
+        } => action.type === 'workflowSocket/singleStepStarted',
+        (state, action) => {
+          const { workflowRunId, stepNodeId } = action.payload
+          // Update currentRun with the new/existing partial run ID
+          if (state.currentRun) {
+            state.currentRun = {
+              ...state.currentRun,
+              id: workflowRunId,
+              status: WorkflowRunStepStatus.Running,
+              isPartial: true,
+            }
+          } else {
+            state.currentRun = {
+              id: workflowRunId,
+              status: WorkflowRunStepStatus.Running,
+              isPartial: true,
+            } as WorkflowRun
+          }
+          state.currentPartialRunId = workflowRunId
+          state.isRunning = true
+          state.activeStreamingNodeId = stepNodeId
+          state.showExecutionPanel = true
+          state.pendingValidation = null
+          // Don't clear streaming responses - keep previous step results
+          if (!state.streamingResponses[stepNodeId]) {
+            state.streamingResponses[stepNodeId] = { content: '' }
+          }
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
           type: 'workflowSocket/step_started'
           payload: { nodeId: string }
         } => action.type === 'workflowSocket/step_started',
@@ -608,6 +671,13 @@ const workflowBuilderSlice = createSlice({
           // Clear active streaming node
           if (state.activeStreamingNodeId === nodeId) {
             state.activeStreamingNodeId = null
+          }
+          // Add to executed steps for manual mode tracking
+          if (
+            state.manualModeEnabled &&
+            !state.executedStepNodeIds.includes(nodeId)
+          ) {
+            state.executedStepNodeIds.push(nodeId)
           }
         }
       )
@@ -780,6 +850,7 @@ export const {
   setRightPanelTab,
   clearStreamingResponses,
   setShowExecutionPanel,
+  clearExecutionState,
 } = workflowBuilderSlice.actions
 
 export default workflowBuilderSlice.reducer

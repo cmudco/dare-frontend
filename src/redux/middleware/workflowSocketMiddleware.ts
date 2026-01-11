@@ -169,8 +169,12 @@ export const WORKFLOW_SOCKET_DISCONNECT = 'workflowSocket/disconnect'
 export const WORKFLOW_SOCKET_SUBSCRIBE = 'workflowSocket/subscribe'
 export const WORKFLOW_SOCKET_SUBSCRIBE_WORKFLOW =
   'workflowSocket/subscribeWorkflow'
+export const WORKFLOW_SOCKET_UNSUBSCRIBE_WORKFLOW =
+  'workflowSocket/unsubscribeWorkflow'
 export const WORKFLOW_SOCKET_UNSUBSCRIBE = 'workflowSocket/unsubscribe'
 export const WORKFLOW_SOCKET_START_EXECUTION = 'workflowSocket/startExecution'
+export const WORKFLOW_SOCKET_EXECUTE_SINGLE_STEP =
+  'workflowSocket/executeSingleStep'
 export const WORKFLOW_SOCKET_SUBMIT_VALIDATION =
   'workflowSocket/submitValidation'
 
@@ -202,12 +206,26 @@ export const workflowSocketUnsubscribe = (workflowRunId: number) => ({
   payload: { workflowRunId },
 })
 
+export const workflowSocketUnsubscribeWorkflow = (workflowId: number) => ({
+  type: WORKFLOW_SOCKET_UNSUBSCRIBE_WORKFLOW as typeof WORKFLOW_SOCKET_UNSUBSCRIBE_WORKFLOW,
+  payload: { workflowId },
+})
+
 export const workflowSocketStartExecution = (params: {
   workflowRunId?: number
   workflowId?: number
   userInput?: string
 }) => ({
   type: WORKFLOW_SOCKET_START_EXECUTION as typeof WORKFLOW_SOCKET_START_EXECUTION,
+  payload: params,
+})
+
+export const workflowSocketExecuteSingleStep = (params: {
+  workflowId: number
+  stepNodeId: string
+  workflowRunId?: number
+}) => ({
+  type: WORKFLOW_SOCKET_EXECUTE_SINGLE_STEP as typeof WORKFLOW_SOCKET_EXECUTE_SINGLE_STEP,
   payload: params,
 })
 
@@ -227,7 +245,9 @@ export type WorkflowSocketAction =
   | ReturnType<typeof workflowSocketDisconnect>
   | ReturnType<typeof workflowSocketSubscribe>
   | ReturnType<typeof workflowSocketUnsubscribe>
+  | ReturnType<typeof workflowSocketUnsubscribeWorkflow>
   | ReturnType<typeof workflowSocketStartExecution>
+  | ReturnType<typeof workflowSocketExecuteSingleStep>
   | ReturnType<typeof workflowSocketSubmitValidation>
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -451,6 +471,32 @@ export function createWorkflowSocketMiddleware(): Middleware {
         break
       }
 
+      case WORKFLOW_SOCKET_UNSUBSCRIBE_WORKFLOW: {
+        const { workflowId } = typedAction.payload as { workflowId: number }
+
+        console.log('🔌 Unsubscribing from workflow:', workflowId)
+
+        // Backend uses run-based subscriptions, so we need to leave all run rooms
+        // associated with this workflow. Since we don't track workflow->run mapping,
+        // we just clear all subscriptions to ensure clean state when switching workflows.
+        if (socket?.connected) {
+          subscriptions.forEach((runId) => {
+            socket?.emit(
+              'unsubscribe_workflow_run',
+              { workflowRunId: runId },
+              () => {}
+            )
+          })
+        }
+        subscriptions.clear()
+
+        dispatch({
+          type: 'workflowSocket/workflowUnsubscribed',
+          payload: { workflowId },
+        })
+        break
+      }
+
       // ─────────────────────────────────────────────────────────────────────
       // Execution
       // ─────────────────────────────────────────────────────────────────────
@@ -482,6 +528,44 @@ export function createWorkflowSocketMiddleware(): Middleware {
             })
           }
         })
+        break
+      }
+
+      case WORKFLOW_SOCKET_EXECUTE_SINGLE_STEP: {
+        if (!socket?.connected) {
+          console.warn('Cannot execute single step: not connected')
+          return next(typedAction)
+        }
+
+        const singleStepParams = typedAction.payload as {
+          workflowId: number
+          stepNodeId: string
+          workflowRunId?: number
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(socket as any).emit(
+          'execute_single_step',
+          singleStepParams,
+          (response: WorkflowSocketResponse) => {
+            if (response.success && response.workflowRunId) {
+              // Auto-subscribe to the run
+              subscriptions.add(response.workflowRunId)
+              dispatch({
+                type: 'workflowSocket/singleStepStarted',
+                payload: {
+                  workflowRunId: response.workflowRunId,
+                  stepNodeId: singleStepParams.stepNodeId,
+                },
+              })
+            } else {
+              dispatch({
+                type: 'workflowSocket/executionError',
+                payload: { error: response.error },
+              })
+            }
+          }
+        )
         break
       }
 

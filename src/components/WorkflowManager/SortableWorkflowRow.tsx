@@ -10,9 +10,7 @@ import {
 import {
   DocumentDuplicateIcon,
   EllipsisVerticalIcon,
-  EyeIcon,
   PencilIcon,
-  PlayIcon,
   TrashIcon,
 } from '@heroicons/react/20/solid'
 import { GripVertical } from 'lucide-react'
@@ -26,8 +24,6 @@ import {
 
 interface SortableWorkflowRowProps {
   workflow: Workflow
-  onRun: (id: number) => void
-  onView: (id: number) => void
   onEdit: (id: number) => void
   onClone: (id: number) => void
   onDelete: (id: number, title: string) => void
@@ -35,8 +31,6 @@ interface SortableWorkflowRowProps {
 
 const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
   workflow,
-  onRun,
-  onView,
   onEdit,
   onClone,
   onDelete,
@@ -90,22 +84,6 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
             <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem
-              onClick={() => onRun(workflow.id)}
-              className='cursor-pointer'
-            >
-              <PlayIcon className='mr-2 h-4 w-4' />
-              <span>Run</span>
-            </DropdownMenuItem>
-            {workflow.latestRun && (
-              <DropdownMenuItem
-                onClick={() => onView(workflow.id)}
-                className='cursor-pointer'
-              >
-                <EyeIcon className='mr-2 h-4 w-4' />
-                <span>View Last Run</span>
-              </DropdownMenuItem>
-            )}
             <DropdownMenuItem
               onClick={() => onEdit(workflow.id)}
               className='cursor-pointer'
