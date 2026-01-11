@@ -4,7 +4,6 @@ import {
   getWorkflowById,
   createOrUpdateWorkflow,
   deleteWorkflow,
-  startWorkflowRun,
   getWorkflowRunById,
   updateWorkflowDisplayOrder,
 } from './asyncThunks/workflow'
@@ -117,31 +116,6 @@ const workflowSlice = createSlice({
         }
       })
       .addCase(deleteWorkflow.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload as string
-      })
-      .addCase(startWorkflowRun.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(startWorkflowRun.fulfilled, (state, action) => {
-        state.loading = false
-        const newRun = action.payload
-        const existingRunIndex = state.workflowRuns.findIndex(
-          (run) => run.id === newRun.id
-        )
-        if (existingRunIndex !== -1) {
-          state.workflowRuns[existingRunIndex] = newRun
-        } else {
-          state.workflowRuns.push(newRun)
-        }
-        const workflow = state.workflows.find((w) => w.id === newRun.workflow)
-        if (workflow) {
-          workflow.latestRun = newRun
-          workflow.lastRunId = newRun.id
-        }
-      })
-      .addCase(startWorkflowRun.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })
