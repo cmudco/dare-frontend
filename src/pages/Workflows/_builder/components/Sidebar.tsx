@@ -2,7 +2,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Play, Brain, GitBranch, Trash2 } from 'lucide-react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useReactFlow } from '@xyflow/react'
 import {
   createNodeAtPosition,
@@ -42,10 +41,9 @@ const nodeComponents = [
 export default function Sidebar({ disabled }: SidebarProps) {
   const dispatch = useAppDispatch()
   const reactFlowInstance = useReactFlow()
-  const { selectedWorkflowRun } = useAppSelector((state) => state.workflow)
-  const nodes = useAppSelector((state) => state.workflowBuilder.nodes)
-  const isWorkflowRunning =
-    selectedWorkflowRun?.status === WorkflowRunStepStatus.Running
+  const { nodes, isRunning: isWorkflowRunning } = useAppSelector(
+    (state) => state.workflowBuilder
+  )
 
   const [isClearConfirmationOpen, setIsClearConfirmationOpen] = useState(false)
 

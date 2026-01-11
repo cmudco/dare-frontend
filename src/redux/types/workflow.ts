@@ -163,11 +163,8 @@ export interface WorkflowState {
   workflows: Workflow[]
   selectedWorkflow: Workflow | null
   workflowRuns: WorkflowRun[]
-  selectedWorkflowRun: WorkflowRun | null
   loading: boolean
   error: string | null
-  // LEGACY: Commenting out modal state
-  // isModalOpen: boolean
   savedNodeIds: string[]
   tempNodes: Node[]
   tempEdges: Edge[]

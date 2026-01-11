@@ -9,7 +9,6 @@ import {
   updateWorkflowDisplayOrder,
 } from './asyncThunks/workflow'
 import { initialState } from './initialState/workflow'
-import { WorkflowRun } from './types/workflow'
 import { type Node, type Edge } from '@xyflow/react'
 
 const workflowSlice = createSlice({
@@ -19,36 +18,9 @@ const workflowSlice = createSlice({
     clearSelectedWorkflow: (state) => {
       state.selectedWorkflow = null
     },
-    clearSelectedWorkflowRun: (state) => {
-      state.selectedWorkflowRun = null
-    },
-    setSelectedWorkflowRun: (
-      state,
-      action: PayloadAction<WorkflowRun | null>
-    ) => {
-      state.selectedWorkflowRun = action.payload
-    },
     clearWorkflowError: (state) => {
       state.error = null
     },
-    // LEGACY MODAL ACTIONS - COMMENTED OUT
-    /*
-    openModal: (state) => {
-      state.selectedWorkflow = null
-      state.tempSteps = []
-      state.isModalOpen = true
-    },
-    openEditModal: (state, action: PayloadAction<number>) => {
-      state.isModalOpen = true
-      state.selectedWorkflow =
-        state.workflows.find((workflow) => workflow.id === action.payload) ||
-        null
-    },
-    closeModal: (state) => {
-      state.isModalOpen = false
-      state.selectedWorkflow = null
-    },
-    */
     setNodes: (state, action: PayloadAction<Node[]>) => {
       if (state.selectedWorkflow) {
         state.selectedWorkflow.nodes = action.payload
@@ -57,21 +29,6 @@ const workflowSlice = createSlice({
     setEdges: (state, action: PayloadAction<Edge[]>) => {
       if (state.selectedWorkflow) {
         state.selectedWorkflow.edges = action.payload
-      }
-    },
-    selectWorkflowForView: (
-      state,
-      action: PayloadAction<{ workflowId: number; mode: 'run' | 'view' }>
-    ) => {
-      const { workflowId, mode } = action.payload
-      const workflow = state.workflows.find((w) => w.id === workflowId)
-      if (workflow) {
-        state.selectedWorkflow = workflow
-        if (mode === 'view' && workflow.latestRun) {
-          state.selectedWorkflowRun = workflow.latestRun
-        } else if (mode === 'view' && !workflow.latestRun) {
-          state.selectedWorkflowRun = null
-        }
       }
     },
     setSavedNodeIds: (state, action: PayloadAction<string[]>) => {
@@ -140,8 +97,6 @@ const workflowSlice = createSlice({
           state.workflows.push(updatedWorkflow)
         }
         state.selectedWorkflow = updatedWorkflow
-        // Clear any selected run after save so unrelated polling stops
-        state.selectedWorkflowRun = null
       })
       .addCase(createOrUpdateWorkflow.rejected, (state, action) => {
         state.loading = false
@@ -180,7 +135,6 @@ const workflowSlice = createSlice({
         } else {
           state.workflowRuns.push(newRun)
         }
-        state.selectedWorkflowRun = newRun
         const workflow = state.workflows.find((w) => w.id === newRun.workflow)
         if (workflow) {
           workflow.latestRun = newRun
@@ -206,7 +160,6 @@ const workflowSlice = createSlice({
         } else {
           state.workflowRuns.push(updatedRun)
         }
-        state.selectedWorkflowRun = updatedRun
       })
       .addCase(getWorkflowRunById.rejected, (state, action) => {
         state.loading = false
@@ -224,16 +177,9 @@ const workflowSlice = createSlice({
 
 export const {
   clearSelectedWorkflow,
-  clearSelectedWorkflowRun,
-  setSelectedWorkflowRun,
   clearWorkflowError,
-  // LEGACY MODAL ACTIONS - COMMENTED OUT
-  // openModal,
-  // openEditModal,
-  // closeModal,
   setNodes,
   setEdges,
-  selectWorkflowForView,
   setSavedNodeIds,
   setTempNodes,
   setTempEdges,

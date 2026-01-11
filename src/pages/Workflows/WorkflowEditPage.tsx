@@ -30,7 +30,6 @@ import {
   toggleManualMode,
 } from '@/redux/asyncThunks/workflow'
 import { clearSelectedWorkflow } from '@/redux/workflowSlice'
-import { setSelectedWorkflowRun } from '@/redux/workflowSlice'
 import { toast } from '@/utils/toast'
 import type { GetActivePartialRunResponse } from '@/redux/types/workflow'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -209,11 +208,10 @@ const WorkflowEditPage = () => {
     dispatch(getAvailableModels())
   }, [dispatch])
 
-  // Clear any previous workflow/run state when component mounts
+  // Clear any previous workflow state when component mounts
   useEffect(() => {
     if (id) {
       dispatch(clearSelectedWorkflow())
-      dispatch(setSelectedWorkflowRun(null))
     }
   }, [dispatch, id])
 
@@ -278,10 +276,7 @@ const WorkflowEditPage = () => {
         <Button
           variant='outline'
           size='sm'
-          onClick={() => {
-            dispatch(setSelectedWorkflowRun(null))
-            navigate('/workflows')
-          }}
+          onClick={() => navigate('/workflows')}
           className='pointer-events-auto h-9 gap-2 bg-white/90 shadow-md backdrop-blur-sm'
         >
           <ArrowLeft className='h-4 w-4' />
