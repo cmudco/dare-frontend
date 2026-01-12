@@ -15,6 +15,7 @@
 
 import { useEffect, useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { debugLog } from '@/utils/debugLogger'
 import {
   workflowSocketStartExecution,
   workflowSocketSubscribeWorkflow,
@@ -73,7 +74,7 @@ export function useWorkflowSocket(
       userInput?: string
     }) => {
       if (wsConnectionStatus === 'connected') {
-        console.log('🚀 Starting workflow execution via socket:', params)
+        debugLog('🚀 Starting workflow execution via socket:', params)
         dispatch(workflowSocketStartExecution(params))
       } else {
         console.error('❌ WebSocket not connected, cannot start execution')
