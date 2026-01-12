@@ -1,5 +1,6 @@
 import { type Node, type Edge } from '@xyflow/react'
 import { nanoid } from 'nanoid'
+import { WorkflowNodeType } from '@/utils/constants/workflows'
 
 interface NodeCreationResult {
   nodes: Node[]
@@ -13,9 +14,9 @@ export const createNode = (
   nodes: Node[],
   edges: Edge[]
 ): NodeCreationResult => {
-  const hasStart = nodes.some((n) => n.type === 'start')
+  const hasStart = nodes.some((n) => n.type === WorkflowNodeType.Start)
 
-  if (!hasStart && type !== 'start') {
+  if (!hasStart && type !== WorkflowNodeType.Start) {
     return {
       nodes,
       edges,
@@ -23,9 +24,10 @@ export const createNode = (
     }
   }
 
-  if (type === 'step') {
+  if (type === WorkflowNodeType.Step) {
     // Auto-create step + output node pair
-    const stepNumber = nodes.filter((n) => n.type === 'step').length + 1
+    const stepNumber =
+      nodes.filter((n) => n.type === WorkflowNodeType.Step).length + 1
     const stepId = nanoid() // UUID for React Flow (guaranteed unique)
     const outputId = nanoid() // UUID for output node (guaranteed unique)
 
@@ -62,12 +64,14 @@ export const createNode = (
     const nextEdges = [...edges, stepToOutputEdge]
 
     return { nodes: nextNodes, edges: nextEdges }
-  } else if (type === 'structuredOutput') {
+  } else if (type === WorkflowNodeType.StructuredOutput) {
     const structuredOutputId = nanoid() // UUID for React Flow (guaranteed unique)
 
-    const stepCount = nodes.filter((n) => n.type === 'step').length
+    const stepCount = nodes.filter(
+      (n) => n.type === WorkflowNodeType.Step
+    ).length
     const existingStructuredOutputCount = nodes.filter(
-      (n) => n.type === 'structuredOutput'
+      (n) => n.type === WorkflowNodeType.StructuredOutput
     ).length
     const structuredOutputStepNumber =
       stepCount + existingStructuredOutputCount + 1
@@ -95,7 +99,7 @@ export const createNode = (
       type,
       position,
       data:
-        type === 'start'
+        type === WorkflowNodeType.Start
           ? {
               title: '',
               description: '',

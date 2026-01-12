@@ -20,8 +20,13 @@ import type {
   WorkflowRun,
   RouteOption,
   PendingValidationContext,
+  WorkflowStepSnippet,
+  WorkflowStepWebSearchSource,
 } from './types/workflow'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import {
+  WorkflowRunStepStatus,
+  WorkflowNodeType,
+} from '@/utils/constants/workflows'
 import {
   createSnapshot,
   pushToHistory,
@@ -207,7 +212,7 @@ const workflowBuilderSlice = createSlice({
       const { stepApiIds } = action.payload
 
       state.nodes = state.nodes.map((node) => {
-        if (node.type === 'step' && stepApiIds[node.id]) {
+        if (node.type === WorkflowNodeType.Step && stepApiIds[node.id]) {
           return {
             ...node,
             data: {
@@ -599,28 +604,15 @@ const workflowBuilderSlice = createSlice({
             nodeId: string
             response: string
             metadata?: {
-              snippets?: Array<{
-                id: number
-                file: { id: number; name: string } | null
-                text: string
-                similarity_score: number
-                chunk_index: number
-                vector_db_source: string
-              }>
-              webSearchSources?: Array<{
-                id: number
-                url: string
-                title: string
-                cited_text: string
-                page_age?: string
-                provider: string
-              }>
+              snippets?: WorkflowStepSnippet[]
+              webSearchSources?: WorkflowStepWebSearchSource[]
             }
           }
         } => action.type === 'workflowSocket/step_completed',
         (state, action) => {
           const { nodeId, response, metadata } = action.payload
           // Update streaming response with final content and metadata
+          // Backend sends camelCase via djangorestframework-camel-case
           state.streamingResponses[nodeId] = {
             content: response,
             snippets: metadata?.snippets,

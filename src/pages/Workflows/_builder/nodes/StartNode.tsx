@@ -15,6 +15,7 @@ import {
   HANDLE_NUMBERS,
   HANDLE_COLORS,
 } from '@/utils/constants/workflowBuilder'
+import { WorkflowNodeType } from '@/utils/constants/workflows'
 
 type Mode = 'sequential' | 'parallel'
 type StartData = {
@@ -44,14 +45,15 @@ export default function StartNode({ id, data, selected }: NodeProps) {
     const sourceNode = nodes.find((n) => n.id === edge.source)
     return (
       edge.target === nodeId &&
-      (sourceNode?.type === 'chatOutput' || sourceNode?.type === 'start')
+      (sourceNode?.type === WorkflowNodeType.ChatOutput ||
+        sourceNode?.type === WorkflowNodeType.Start)
     )
   })
 
   // Calculate output connections to step nodes
   const connectedOutputEdges = edges.filter((edge) => {
     const targetNode = nodes.find((n) => n.id === edge.target)
-    return edge.source === nodeId && targetNode?.type === 'step'
+    return edge.source === nodeId && targetNode?.type === WorkflowNodeType.Step
   })
 
   const isChainedStartNode = connectedInputEdges.length > 0

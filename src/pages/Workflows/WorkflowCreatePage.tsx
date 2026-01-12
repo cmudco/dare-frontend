@@ -17,6 +17,7 @@ import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
 import { toast } from '@/utils/toast'
 import { ArrowLeft, Undo2, Redo2 } from 'lucide-react'
+import { WorkflowNodeType } from '@/utils/constants/workflows'
 
 const WorkflowCreatePage = () => {
   const navigate = useNavigate()
@@ -24,7 +25,7 @@ const WorkflowCreatePage = () => {
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
-  const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
+  const hasAtLeastOneStep = nodes.some((n) => n.type === WorkflowNodeType.Step)
   const history = useAppSelector((s) => s.workflowBuilder.history)
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
