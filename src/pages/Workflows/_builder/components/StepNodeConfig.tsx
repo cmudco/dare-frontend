@@ -211,7 +211,7 @@ export default function StepNodeConfig({
               }
             }}
           >
-            <SelectTrigger className='w-24 bg-background text-sm'>
+            <SelectTrigger className='w-full bg-background text-sm'>
               <SelectValue placeholder='+ Add' />
             </SelectTrigger>
             <SelectContent>
@@ -265,7 +265,7 @@ export default function StepNodeConfig({
               }
             }}
           >
-            <SelectTrigger className='w-24 bg-background text-sm'>
+            <SelectTrigger className='w-full bg-background text-sm'>
               <SelectValue placeholder='+ Add' />
             </SelectTrigger>
             <SelectContent>
@@ -338,10 +338,10 @@ export default function StepNodeConfig({
 
           <div className='space-y-2'>
             <Label className='text-xs font-medium'>
-              Temperature: {nodeData?.temperature || 0.7}
+              Temperature: {nodeData?.temperature ?? 0.7}
             </Label>
             <Slider
-              value={[nodeData?.temperature || 0.7]}
+              value={[nodeData?.temperature ?? 0.7]}
               onValueChange={(value) => {
                 updateNodeData({ temperature: value[0] })
               }}
@@ -371,10 +371,10 @@ export default function StepNodeConfig({
           <div className='space-y-2'>
             <Label className='text-xs font-medium'>
               Document Similarity Threshold:{' '}
-              {nodeData?.documentSimilarityThreshold || 0.2}
+              {nodeData?.documentSimilarityThreshold ?? 0.2}
             </Label>
             <Slider
-              value={[nodeData?.documentSimilarityThreshold || 0.2]}
+              value={[nodeData?.documentSimilarityThreshold ?? 0.2]}
               onValueChange={(value) => {
                 updateNodeData({ documentSimilarityThreshold: value[0] })
               }}
