@@ -1,4 +1,4 @@
-import { X, FileText, Database, Settings, Globe, Type } from 'lucide-react'
+import { X, FileText, Database, Settings, Globe, Type, Bot } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -13,9 +13,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useState, useEffect } from 'react'
+import type { Agent } from '@/redux/types/agent'
 
 // Step Node Data Type
 export type StepNodeData = {
+  agent?: number | null
   prompt: number | null
   contentFiles: number[]
   embeddingFiles: number[]
@@ -34,6 +36,7 @@ interface StepNodeConfigProps {
   prompts: Array<{ id: number; title: string }>
   files: Array<{ id: number; name: string }>
   availableModels: Array<{ id: number; name: string }>
+  agents?: Agent[]
 }
 
 export default function StepNodeConfig({
@@ -42,6 +45,7 @@ export default function StepNodeConfig({
   prompts,
   files,
   availableModels,
+  agents = [],
 }: StepNodeConfigProps) {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [localTextInput, setLocalTextInput] = useState(
@@ -63,8 +67,66 @@ export default function StepNodeConfig({
     return () => clearTimeout(timeoutId)
   }, [localTextInput, nodeData?.textInput, updateNodeData])
 
+  // Handle agent selection - prefill all configuration from the agent template
+  const handleAgentSelect = (agentId: string) => {
+    if (agentId === 'none') {
+      // Clear agent selection
+      updateNodeData({ agent: null })
+      return
+    }
+
+    const selectedAgent = agents.find((a) => a.id === Number(agentId))
+    if (selectedAgent) {
+      // Prefill all fields from the agent template
+      updateNodeData({
+        agent: selectedAgent.id,
+        prompt: selectedAgent.prompt,
+        llm: selectedAgent.llm,
+        contentFiles: selectedAgent.contentFiles || [],
+        embeddingFiles: selectedAgent.embeddingFiles || [],
+        maxTokens: selectedAgent.maxTokens,
+        temperature: selectedAgent.temperature,
+        maxContextSnippets: selectedAgent.maxContextSnippets,
+        documentSimilarityThreshold: selectedAgent.documentSimilarityThreshold,
+        enableWebSearch: selectedAgent.enableWebSearch,
+      })
+    }
+  }
+
   return (
     <div className='space-y-4'>
+      {/* Agent Template Selector */}
+      {agents.length > 0 && (
+        <div className='space-y-2'>
+          <Label
+            htmlFor='agent'
+            className='flex items-center gap-2 text-xs font-medium'
+          >
+            <Bot className='h-3 w-3' />
+            Agent Template
+          </Label>
+          <Select
+            value={nodeData?.agent ? nodeData.agent.toString() : 'none'}
+            onValueChange={handleAgentSelect}
+          >
+            <SelectTrigger className='bg-background text-sm'>
+              <SelectValue placeholder='Select an agent to prefill...' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='none'>None (Manual Configuration)</SelectItem>
+              {agents.map((agent) => (
+                <SelectItem key={agent.id} value={agent.id.toString()}>
+                  {agent.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className='text-xs text-muted-foreground'>
+            Selecting an agent will prefill all settings below
+          </p>
+        </div>
+      )}
+
       {/* Prompt */}
       <div className='space-y-2'>
         <Label htmlFor='prompt' className='text-xs font-medium'>
