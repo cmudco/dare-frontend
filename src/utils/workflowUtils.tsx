@@ -30,19 +30,6 @@ export const getStepCount = (workflow: Workflow): number => {
   return workflow.nodes?.filter((node) => node.type === 'step').length || 0
 }
 
-export const getStepStatus = (
-  currentRun: {
-    steps?: Array<{ order?: number; stepNode?: number; status?: string }>
-  } | null,
-  stepNumber: number
-) => {
-  if (!currentRun || !currentRun.steps) return null
-  const runStep = currentRun.steps.find(
-    (rs) => (rs.order || rs.stepNode) === stepNumber
-  )
-  return runStep?.status || null
-}
-
 export const getStatusIcon = (status: string) => {
   switch (status) {
     case WorkflowRunStepStatus.Pending:

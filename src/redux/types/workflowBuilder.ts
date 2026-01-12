@@ -1,9 +1,11 @@
 import { type Node, type Edge } from '@xyflow/react'
-import type { WorkflowRun, Workflow, PendingValidation } from './workflow'
 import type {
-  StepSnippet,
-  StepWebSearchSource,
-} from '../middleware/workflowSocketMiddleware'
+  WorkflowRun,
+  Workflow,
+  PendingValidation,
+  WorkflowStepSnippet,
+  WorkflowStepWebSearchSource,
+} from './workflow'
 
 export type { PendingValidation }
 
@@ -25,10 +27,11 @@ export type WebSocketConnectionStatus =
   | 'connected'
 
 // Rich streaming response with content and citation metadata
+// Uses camelCase interfaces from workflow.ts (backend sends camelCase via camelize())
 export interface StreamingResponse {
   content: string
-  snippets?: StepSnippet[]
-  webSearchSources?: StepWebSearchSource[]
+  snippets?: WorkflowStepSnippet[]
+  webSearchSources?: WorkflowStepWebSearchSource[]
 }
 
 export interface WorkflowBuilderState {
