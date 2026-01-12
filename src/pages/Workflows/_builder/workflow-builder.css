@@ -244,21 +244,14 @@
 }
 
 /* Force white text when node is selected (gradient background is dark) */
-.workflow-node.selected .node-title,
-.workflow-node.selected .node-subtitle,
-.workflow-node.selected .node-icon {
+/* BUT not when node is in an executed state (completed, error, etc.) - those have light backgrounds */
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .node-title,
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .node-subtitle,
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .node-icon {
     color: white;
 }
 
-/* When selected, hide any execution state ::after indicators since selected state takes over */
-.workflow-node.selected.completed::after,
-.workflow-node.selected.error::after,
-.workflow-node.selected.running::after,
-.workflow-node.selected.streaming::after,
-.workflow-node.selected.pending-validation::after {
-    display: none;
-    color: #000;
-}
+
 
 /* ============================================
    ROUTE PILLS (Classify Node)

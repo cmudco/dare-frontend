@@ -30,6 +30,7 @@ export default function NodeConfigPanel({
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
+  const agents = useAppSelector((s) => s.agent.agents)
 
   const nodeType = selectedNode.type
   const nodeData = selectedNode.data as Record<string, unknown>
@@ -110,6 +111,7 @@ export default function NodeConfigPanel({
             prompts={prompts}
             files={files}
             availableModels={availableModels}
+            agents={agents}
           />
         )}
         {nodeType === WorkflowNodeType.StructuredOutput && (
