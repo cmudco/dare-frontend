@@ -16,7 +16,11 @@ import { removeNodeById as removeNodeByIdHelper } from '@/utils/workflowBuilder/
 import { updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/updateNodeData'
 import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
 import { getActivePartialRun, getWorkflowRuns } from './asyncThunks/workflow'
-import type { WorkflowRun } from './types/workflow'
+import type {
+  WorkflowRun,
+  RouteOption,
+  PendingValidationContext,
+} from './types/workflow'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import {
   createSnapshot,
@@ -349,6 +353,7 @@ const workflowBuilderSlice = createSlice({
      * Used when switching between workflows to prevent stale data.
      */
     clearExecutionState: (state) => {
+      console.log('🧹 clearExecutionState called - clearing pendingValidation')
       state.currentRun = null
       state.isRunning = false
       state.currentPartialRunId = null
@@ -364,29 +369,33 @@ const workflowBuilderSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(loadWorkflowIntoBuilder.fulfilled, (state, action) => {
+        // REST API: Only sets static workflow data (nodes, edges, config)
+        // Execution state (currentRun, pendingValidation, isRunning) comes from socket
+        console.log('📂 loadWorkflowIntoBuilder.fulfilled:', {
+          workflowId: action.payload.workflow.id,
+        })
+
+        // Static workflow data from REST
         state.nodes = action.payload.nodes
         state.edges = action.payload.edges
         state.loadedWorkflow = action.payload.workflow
-        state.currentRun = action.payload.currentRun
-        state.isRunning =
-          action.payload.currentRun?.status === WorkflowRunStepStatus.Running ||
-          action.payload.currentRun?.status ===
-            WorkflowRunStepStatus.PendingHumanInput
         state.lastWorkflowId = action.payload.workflow.id
         state.savedViewport = action.payload.viewport ?? null
-        // Load manual mode state from workflow
         state.manualModeEnabled =
           action.payload.workflow.manualModeEnabled ?? false
+
         // Clear history when loading a workflow
         state.history.past = []
         state.history.future = []
-        // Reset execution-related state when switching workflows
-        state.currentPartialRunId = null
-        state.executedStepNodeIds = []
+
+        // Reset streaming state when switching workflows
         state.streamingResponses = {}
         state.activeStreamingNodeId = null
-        state.pendingValidation = null
-        state.showExecutionPanel = false
+
+        // DO NOT set execution state here - socket is single source of truth
+        // currentRun, isRunning, pendingValidation, showExecutionPanel
+        // are set by workflowSocket/workflowSubscribed handler
+
         state.availableRuns = []
         state.selectedRunIds = {}
       })
@@ -430,6 +439,7 @@ const workflowBuilderSlice = createSlice({
         }
       )
       // Handle workflow subscription response with execution state
+      // V2 API: pendingValidation comes flat from backend - no extraction needed
       .addMatcher(
         (
           action
@@ -438,71 +448,46 @@ const workflowBuilderSlice = createSlice({
           payload: { workflowId: number; latestRun: WorkflowRun | null }
         } => action.type === 'workflowSocket/workflowSubscribed',
         (state, action) => {
-          const { latestRun } = action.payload
+          const { latestRun, workflowId } = action.payload
+          console.log('🔔 workflowSocket/workflowSubscribed:', {
+            workflowId,
+            runId: latestRun?.id,
+            runStatus: latestRun?.status,
+            hasPendingValidation: !!latestRun?.pendingValidation,
+          })
+
           if (latestRun) {
             state.currentRun = latestRun
             state.isRunning =
               latestRun.status === 'running' ||
               latestRun.status === 'pending_human_input'
 
-            // Extract pending validation from nodeStates if status is pending_human_input
-            if (
-              latestRun.status === 'pending_human_input' &&
-              latestRun.nodeStates
-            ) {
-              state.showExecutionPanel = true
-
-              // Find node with pending_human_input status in nodeStates
-              const nodeStatesObj = latestRun.nodeStates as Record<
-                string,
-                {
-                  nodeId: string
-                  status: string
-                  validationContext?: {
-                    availableRoutes?: Array<{
-                      name: string
-                      description?: string
-                    }>
-                    aiRecommendation?: string
-                    aiAnalysis?: string
-                  }
-                  metadata?: {
-                    aiRecommendation?: string
-                    aiAnalysis?: string
-                  }
-                }
-              >
-
-              for (const nodeState of Object.values(nodeStatesObj)) {
-                if (
-                  nodeState.status === 'pending_human_input' &&
-                  nodeState.validationContext
-                ) {
-                  const { availableRoutes, aiRecommendation, aiAnalysis } =
-                    nodeState.validationContext
-                  if (availableRoutes && availableRoutes.length > 0) {
-                    state.pendingValidation = {
-                      nodeId: nodeState.nodeId,
-                      routes: availableRoutes,
-                      aiRecommendation:
-                        nodeState.metadata?.aiRecommendation ||
-                        aiRecommendation,
-                      context: {
-                        aiAnalysis:
-                          nodeState.metadata?.aiAnalysis || aiAnalysis,
-                      },
-                    }
-                    break // Only handle first pending validation
-                  }
-                }
+            // V2 API: Use flat pendingValidation directly from backend
+            if (latestRun.pendingValidation) {
+              console.log('✅ Setting pendingValidation from socket:', {
+                nodeId: latestRun.pendingValidation.nodeId,
+                routes: latestRun.pendingValidation.routes,
+                aiRecommendation: latestRun.pendingValidation.aiRecommendation,
+              })
+              state.pendingValidation = {
+                nodeId: latestRun.pendingValidation.nodeId,
+                routes: latestRun.pendingValidation.routes,
+                aiRecommendation:
+                  latestRun.pendingValidation.aiRecommendation ?? undefined,
+                context: {
+                  aiAnalysis:
+                    latestRun.pendingValidation.context?.aiAnalysis ??
+                    undefined,
+                },
               }
-            } else if (latestRun.hasPendingValidation) {
-              // Fallback to legacy flag
               state.showExecutionPanel = true
+            } else {
+              state.pendingValidation = null
             }
           } else {
             state.currentRun = null
             state.isRunning = false
+            state.pendingValidation = null
           }
         }
       )
@@ -516,6 +501,10 @@ const workflowBuilderSlice = createSlice({
         } => action.type === 'workflowSocket/executionStarted',
         (state, action) => {
           const { workflowRunId } = action.payload
+          console.log(
+            '🚀 executionStarted - clearing pendingValidation, runId:',
+            workflowRunId
+          )
           // Update currentRun with the new run ID so validation uses correct run
           if (state.currentRun) {
             state.currentRun = {
@@ -686,7 +675,7 @@ const workflowBuilderSlice = createSlice({
           }
         }
       )
-      // Handle workflow status updates (including pending validations)
+      // Handle workflow status updates (V2 API with flat pendingValidation)
       .addMatcher(
         (
           action
@@ -694,22 +683,10 @@ const workflowBuilderSlice = createSlice({
           type: 'workflowSocket/workflow_status'
           payload: WorkflowRun & {
             type: 'workflow_status'
-            has_pending_validation?: boolean
-            pending_validations?: Array<{
-              node_id: string
-              available_routes: Array<{ name: string; description?: string }>
-              ai_recommendation?: string
-              ai_analysis?: string
-            }>
           }
         } => action.type === 'workflowSocket/workflow_status',
         (state, action) => {
-          const {
-            status,
-            has_pending_validation,
-            pending_validations,
-            ...runData
-          } = action.payload
+          const { status, pendingValidation, ...runData } = action.payload
 
           // Set current run from the full workflow status data
           // Remove the 'type' field which is only for socket event identification
@@ -725,19 +702,14 @@ const workflowBuilderSlice = createSlice({
           state.isRunning =
             status === 'running' || status === 'pending_human_input'
 
-          // Handle pending validations from status update
-          if (
-            has_pending_validation &&
-            pending_validations &&
-            pending_validations.length > 0
-          ) {
-            const firstValidation = pending_validations[0]
+          // V2 API: Use flat pendingValidation directly from backend
+          if (pendingValidation) {
             state.pendingValidation = {
-              nodeId: firstValidation.node_id,
-              routes: firstValidation.available_routes,
-              aiRecommendation: firstValidation.ai_recommendation,
+              nodeId: pendingValidation.nodeId,
+              routes: pendingValidation.routes,
+              aiRecommendation: pendingValidation.aiRecommendation ?? undefined,
               context: {
-                aiAnalysis: firstValidation.ai_analysis,
+                aiAnalysis: pendingValidation.context?.aiAnalysis ?? undefined,
               },
             }
           } else if (status !== 'pending_human_input') {
@@ -753,8 +725,8 @@ const workflowBuilderSlice = createSlice({
           type: 'workflowSocket/validation_required'
           payload: {
             nodeId: string
-            routes: Array<{ name: string; description?: string }>
-            context?: Record<string, unknown>
+            routes: RouteOption[]
+            context?: PendingValidationContext
             aiRecommendation?: string
           }
         } => action.type === 'workflowSocket/validation_required',

@@ -44,6 +44,7 @@ import 'highlight.js/styles/atom-one-light.css'
 import { CodeBlock } from '@/components/Conversation/CodeBlock'
 import { MermaidBlock } from '@/components/Conversation/MermaidBlock'
 import type { StreamingResponse } from '@/redux/types/workflowBuilder'
+import type { PendingValidation } from '@/redux/types/workflow'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 
 export default function WorkflowExecutionPanel() {
@@ -60,6 +61,21 @@ export default function WorkflowExecutionPanel() {
     pendingValidation,
     nodes,
   } = useAppSelector((state) => state.workflowBuilder)
+
+  // Debug logging for execution panel state
+  console.log('📋 ExecutionPanel state:', {
+    pendingValidation: pendingValidation
+      ? {
+          nodeId: pendingValidation.nodeId,
+          routesCount: pendingValidation.routes?.length,
+          hasAiRecommendation: !!pendingValidation.aiRecommendation,
+        }
+      : null,
+    currentRunStatus: currentRun?.status,
+    currentRunId: currentRun?.id,
+    isRunning,
+    wsConnectionStatus,
+  })
 
   // Close panel handler - don't clear streaming responses so we can reopen
   const handleClose = () => {
@@ -305,12 +321,7 @@ export default function WorkflowExecutionPanel() {
  * ValidationPanel - Human-in-the-loop validation UI
  */
 interface ValidationPanelProps {
-  validation: {
-    nodeId: string
-    routes: Array<{ name: string; description?: string }>
-    context?: Record<string, unknown>
-    aiRecommendation?: string
-  }
+  validation: PendingValidation
   workflowRunId?: number
   nodeName: string
 }
@@ -355,10 +366,18 @@ function ValidationPanel({
         route to continue.
       </p>
 
+      {(validation.context?.aiAnalysis as string) && (
+        <div className='mb-3 rounded-md border border-muted bg-muted/30 p-3 text-sm text-muted-foreground'>
+          <strong className='text-foreground'>AI Analysis:</strong>
+          <p className='mt-1'>{validation.context?.aiAnalysis as string}</p>
+        </div>
+      )}
+
+      {/* AI Recommendation - show which route AI suggests */}
       {validation.aiRecommendation && (
-        <div className='mb-3 rounded-md border border-[#023572]/20 bg-[#023572]/5 p-2 text-xs text-muted-foreground'>
-          <strong className='text-[#023572]'>AI Recommendation:</strong>{' '}
-          {validation.aiRecommendation}
+        <div className='mb-3 rounded-md border border-[#023572]/20 bg-[#023572]/5 p-2 text-sm'>
+          <strong className='text-[#023572]'>Recommended Route:</strong>{' '}
+          <span className='font-medium'>{validation.aiRecommendation}</span>
         </div>
       )}
 

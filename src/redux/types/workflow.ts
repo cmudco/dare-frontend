@@ -27,22 +27,47 @@ export interface WorkflowStepWebSearchSource {
 }
 
 /**
- * Route definition for structured output nodes
+ * Route definition for structured output nodes.
+ * Used in node configuration where description is required.
  */
 export interface RouteDef {
   name: string
   description: string
 }
 
+/**
+ * Route option for socket events and validation.
+ * Description is optional since socket events may omit it.
+ */
+export interface RouteOption {
+  name: string
+  description?: string
+}
+
+/**
+ * Context data for pending human validation.
+ * Contains AI analysis and reasoning.
+ */
+export interface PendingValidationContext {
+  aiAnalysis?: string
+}
+
+/**
+ * Unified pending validation structure.
+ * Single source of truth for human-in-the-loop validation state.
+ */
 export interface PendingValidation {
   nodeId: string
-  stepNumber: number
-  customPrompt: string
-  availableRoutes: RouteDef[]
-  currentResponse: string
-  stepId: number
+  routes: RouteOption[]
   aiRecommendation?: string
-  aiAnalysis?: string
+  aiAnalysis?: string // Convenience field (also in context.aiAnalysis)
+  context?: PendingValidationContext
+  // V1 compatibility fields (used by HumanValidationModal)
+  stepNumber?: number
+  customPrompt?: string
+  currentResponse?: string
+  stepId?: number
+  availableRoutes?: RouteDef[] // Legacy field for V1 API compatibility
 }
 
 export interface WorkflowRunStep {
@@ -137,6 +162,7 @@ export interface WorkflowRun {
   pendingValidations?: PendingValidation[]
   isPartial?: boolean
   nodeStates?: NodeStatesMap // V2 API (graph-based) - Direct O(1) access by node_id
+  pendingValidation?: PendingValidation | null // V2 API - flat pending validation from backend
 }
 
 export interface Workflow {
@@ -247,17 +273,6 @@ export interface PartialRunStep {
 export interface GetActivePartialRunResponse {
   partialRun: WorkflowRun | null
   executedStepNodeIds: string[]
-}
-
-export interface RestorePartialRunPayload {
-  partialRunId: number
-  executedStepNodeIds: string[]
-  steps: Array<{
-    stepNode: string
-    response: string | null
-    status: WorkflowRunStepStatus
-    error: string | null
-  }>
 }
 
 export interface WorkflowDisplayOrder {

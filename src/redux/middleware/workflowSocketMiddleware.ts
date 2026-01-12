@@ -18,6 +18,10 @@
 import type { Middleware } from '@reduxjs/toolkit'
 import { io, Socket } from 'socket.io-client'
 import { config } from '@/config/environment'
+import type {
+  RouteOption,
+  PendingValidationContext,
+} from '@/redux/types/workflow'
 
 // ════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -90,8 +94,8 @@ export interface WorkflowStepError {
 export interface WorkflowValidationRequired {
   type: 'validation_required'
   nodeId: string
-  routes: Array<{ name: string; description?: string }>
-  context?: Record<string, unknown>
+  routes: RouteOption[]
+  context?: PendingValidationContext
   aiRecommendation?: string
 }
 
