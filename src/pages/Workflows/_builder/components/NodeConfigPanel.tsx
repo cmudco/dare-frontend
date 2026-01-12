@@ -15,6 +15,7 @@ import StructuredOutputNodeConfig, {
   type StructuredOutputNodeData,
 } from './StructuredOutputNodeConfig'
 import ChatOutputNodeConfig from './ChatOutputNodeConfig'
+import { WorkflowNodeType } from '@/utils/constants/workflows'
 
 interface NodeConfigPanelProps {
   selectedNode: Node
@@ -96,13 +97,13 @@ export default function NodeConfigPanel({
 
       {/* Content - Scrollable */}
       <div className='flex-1 overflow-y-auto p-4'>
-        {nodeType === 'start' && (
+        {nodeType === WorkflowNodeType.Start && (
           <StartNodeConfig
             nodeData={nodeData as StartNodeData}
             updateNodeData={updateNodeData}
           />
         )}
-        {nodeType === 'step' && (
+        {nodeType === WorkflowNodeType.Step && (
           <StepNodeConfig
             nodeData={nodeData as StepNodeData}
             updateNodeData={updateNodeData}
@@ -111,7 +112,7 @@ export default function NodeConfigPanel({
             availableModels={availableModels}
           />
         )}
-        {nodeType === 'structuredOutput' && (
+        {nodeType === WorkflowNodeType.StructuredOutput && (
           <StructuredOutputNodeConfig
             nodeData={nodeData as StructuredOutputNodeData}
             updateNodeData={updateNodeData}
@@ -119,7 +120,9 @@ export default function NodeConfigPanel({
             availableModels={availableModels}
           />
         )}
-        {nodeType === 'chatOutput' && <ChatOutputNodeConfig nodeId={nodeId} />}
+        {nodeType === WorkflowNodeType.ChatOutput && (
+          <ChatOutputNodeConfig nodeId={nodeId} />
+        )}
       </div>
     </div>
   )

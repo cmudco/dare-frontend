@@ -11,7 +11,10 @@ import {
   HANDLE_COLORS,
 } from '@/utils/constants/workflowBuilder'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import {
+  WorkflowRunStepStatus,
+  WorkflowNodeType,
+} from '@/utils/constants/workflows'
 import { workflowSocketExecuteSingleStep } from '@/redux/middleware/workflowSocketMiddleware'
 
 export type StepNodeData = {
@@ -96,10 +99,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     const sourceNode = nodes.find((n) => n.id === edge.source)
     return (
       edge.target === nodeId &&
-      (sourceNode?.type === 'start' ||
-        sourceNode?.type === 'step' ||
-        sourceNode?.type === 'chatOutput' ||
-        sourceNode?.type === 'structuredOutput')
+      (sourceNode?.type === WorkflowNodeType.Start ||
+        sourceNode?.type === WorkflowNodeType.Step ||
+        sourceNode?.type === WorkflowNodeType.ChatOutput ||
+        sourceNode?.type === WorkflowNodeType.StructuredOutput)
     )
   })
 

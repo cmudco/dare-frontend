@@ -6,26 +6,31 @@
  * - Rich content display: snippets, web search sources, code blocks
  * - Human validation UI when required
  * - Connection status indicator
+ *
+ * Pattern: Follows MessageList.tsx auto-scroll implementation
  */
 
-import { useRef, useEffect, useMemo } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
-import { Loader2, Wifi, WifiOff, X, Play, History } from 'lucide-react'
+import { Loader2, X, Play, History, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { setShowExecutionPanel } from '@/redux/workflowBuilderSlice'
+import { useAutoScroll } from '@/hooks/useAutoScroll'
 import 'katex/dist/katex.min.css'
 import 'highlight.js/styles/atom-one-light.css'
-import type { StreamingResponse } from '@/redux/types/workflowBuilder'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { ValidationPanel } from './ValidationPanel'
 import { StepResponseCard } from './StepResponseCard'
+import { ConnectionIndicator } from './ConnectionIndicator'
+import {
+  WorkflowRunStepStatus,
+  WorkflowNodeType,
+} from '@/utils/constants/workflows'
 
 export default function WorkflowExecutionPanel() {
-  const scrollRef = useRef<HTMLDivElement>(null)
   const dispatch = useAppDispatch()
 
-  // Get execution state from Redux
+  // Direct state access - backend provides clean, ordered data
   const {
     currentRun,
     isRunning,
@@ -36,149 +41,91 @@ export default function WorkflowExecutionPanel() {
     nodes,
   } = useAppSelector((state) => state.workflowBuilder)
 
-  // Debug logging for execution panel state
-  console.log('📋 ExecutionPanel state:', {
-    pendingValidation: pendingValidation
-      ? {
-          nodeId: pendingValidation.nodeId,
-          routesCount: pendingValidation.routes?.length,
-          hasAiRecommendation: !!pendingValidation.aiRecommendation,
-        }
-      : null,
-    currentRunStatus: currentRun?.status,
-    currentRunId: currentRun?.id,
-    isRunning,
-    wsConnectionStatus,
-  })
+  // Use the shared auto-scroll hook (same pattern as MessageList)
+  const {
+    containerRef,
+    anchorRef,
+    showScrollButton,
+    forceScrollToBottom,
+    scrollToBottom,
+    handleScrollToBottomClick,
+  } = useAutoScroll()
 
-  // Close panel handler - don't clear streaming responses so we can reopen
-  const handleClose = () => {
-    dispatch(setShowExecutionPanel(false))
-    // Note: We no longer clear streaming responses here so peek can show them
-  }
+  const prevRunIdRef = useRef<number | undefined>(currentRun?.id)
 
-  // Auto-scroll to bottom when streaming
+  // Force scroll on new run start
   useEffect(() => {
-    if (scrollRef.current && activeStreamingNodeId) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (currentRun?.id !== prevRunIdRef.current) {
+      prevRunIdRef.current = currentRun?.id
+      forceScrollToBottom('auto')
     }
-  }, [streamingResponses, activeStreamingNodeId])
+  }, [currentRun?.id, forceScrollToBottom])
 
-  // Get node name by id
-  const getNodeName = (nodeId: string) => {
-    const node = nodes.find((n) => n.id === nodeId)
-    return (node?.data?.label as string) || node?.type || 'Step'
-  }
+  // Auto-scroll during streaming (respects user scroll state)
+  useEffect(() => {
+    if (activeStreamingNodeId) {
+      scrollToBottom('auto')
+    }
+  }, [streamingResponses, activeStreamingNodeId, scrollToBottom])
 
-  // Check if we have any streaming data to show
+  // Force scroll when validation appears
+  useEffect(() => {
+    if (pendingValidation) {
+      forceScrollToBottom('smooth')
+    }
+  }, [pendingValidation, forceScrollToBottom])
+
+  const handleClose = useCallback(() => {
+    dispatch(setShowExecutionPanel(false))
+  }, [dispatch])
+
+  const getNodeName = useCallback(
+    (nodeId: string) => {
+      const node = nodes.find((n) => n.id === nodeId)
+      return (node?.data?.label as string) || node?.type || 'Step'
+    },
+    [nodes]
+  )
+
+  // Simple derived state
   const hasStreamingData = Object.keys(streamingResponses).length > 0
-
-  // Node types that are execution nodes (have their own response data)
-  // Display nodes (chatOutput, start) mirror data from execution nodes - skip to avoid duplication
-  const EXECUTION_NODE_TYPES = ['step', 'structuredOutput']
-
-  // Build display data from currentRun.nodeStates when no streaming data
-  // This allows viewing completed runs via the "peek" button
-  const completedRunResponses = useMemo(() => {
-    if (hasStreamingData || !currentRun?.nodeStates) return []
-
-    const responses: [string, StreamingResponse][] = []
-
-    for (const [nodeId, nodeState] of Object.entries(currentRun.nodeStates)) {
-      // Only show execution nodes (step, structuredOutput) - skip display nodes (chatOutput, start)
-      // Display nodes mirror data from execution nodes, so including them causes duplication
-      if (!EXECUTION_NODE_TYPES.includes(nodeState.nodeType)) {
-        continue
-      }
-
-      // Only show nodes that have completed with a response
-      if (
-        nodeState.response &&
-        (nodeState.status === WorkflowRunStepStatus.Completed ||
-          nodeState.status === WorkflowRunStepStatus.Failed)
-      ) {
-        responses.push([
-          nodeId,
-          {
-            content: nodeState.response,
-            // nodeState.snippets and webSearchSources are already camelCase from backend
-            snippets: nodeState.snippets,
-            webSearchSources: nodeState.webSearchSources,
-          },
-        ])
-      }
-    }
-
-    // Sort by step number
-    return responses.sort(([idA], [idB]) => {
-      const nodeA = nodes.find((n) => n.id === idA)
-      const nodeB = nodes.find((n) => n.id === idB)
-      const stepA = (nodeA?.data?.stepNumber as number) || 0
-      const stepB = (nodeB?.data?.stepNumber as number) || 0
-      return stepA - stepB
-    })
-  }, [hasStreamingData, currentRun?.nodeStates, nodes])
-
-  // Use streaming data if available, otherwise use completed run data
-  const displayResponses = hasStreamingData
-    ? (Object.entries(streamingResponses).sort(([idA], [idB]) => {
-        const nodeA = nodes.find((n) => n.id === idA)
-        const nodeB = nodes.find((n) => n.id === idB)
-        const stepA = (nodeA?.data?.stepNumber as number) || 0
-        const stepB = (nodeB?.data?.stepNumber as number) || 0
-        return stepA - stepB
-      }) as [string, StreamingResponse][])
-    : completedRunResponses
-
-  const hasDisplayData = displayResponses.length > 0
   const isViewingCompletedRun =
-    !hasStreamingData && completedRunResponses.length > 0
+    !isRunning && !hasStreamingData && !!currentRun?.nodeStates
+  const hasDisplayData = hasStreamingData || isViewingCompletedRun
+  const isWaiting =
+    isRunning && !hasDisplayData && !activeStreamingNodeId && !pendingValidation
+
+  // Status text
+  const statusText = isRunning
+    ? activeStreamingNodeId
+      ? 'Streaming response...'
+      : 'Workflow running...'
+    : pendingValidation
+      ? 'Awaiting validation'
+      : isViewingCompletedRun
+        ? `Viewing run #${currentRun?.id}`
+        : 'Ready'
 
   return (
     <div className='absolute inset-x-0 bottom-4 top-10 z-20 ml-auto flex w-[90%] max-w-[35vw] flex-col rounded-2xl border border-border/30 bg-white/95 shadow-2xl backdrop-blur-sm'>
-      {/* Header with connection status and close button */}
+      {/* Header */}
       <div className='flex items-center justify-between rounded-t-2xl border-b border-border/50 bg-gradient-to-r from-slate-50 to-white p-4'>
         <div>
           <h3 className='font-semibold text-foreground'>
             {isViewingCompletedRun ? 'Run Results' : 'Execution Preview'}
           </h3>
-          <p className='text-xs text-muted-foreground'>
-            {isRunning
-              ? activeStreamingNodeId
-                ? 'Streaming response...'
-                : 'Workflow running...'
-              : pendingValidation
-                ? 'Awaiting validation'
-                : isViewingCompletedRun
-                  ? `Viewing run #${currentRun?.id}`
-                  : 'Ready'}
-          </p>
+          <p className='text-xs text-muted-foreground'>{statusText}</p>
         </div>
         <div className='flex items-center gap-2'>
-          <div className='flex items-center gap-1'>
-            {wsConnectionStatus === 'connected' ? (
-              <Wifi className='h-4 w-4 text-green-500' />
-            ) : wsConnectionStatus === 'connecting' ? (
-              <Loader2 className='h-4 w-4 animate-spin text-yellow-500' />
-            ) : (
-              <WifiOff className='h-4 w-4 text-gray-400' />
-            )}
-            <span className='text-xs text-muted-foreground'>
-              {wsConnectionStatus === 'connected'
-                ? 'Live'
-                : wsConnectionStatus === 'connecting'
-                  ? 'Connecting...'
-                  : 'Offline'}
-            </span>
-          </div>
+          <ConnectionIndicator status={wsConnectionStatus} />
           <Button variant='ghost' size='sm' onClick={handleClose}>
             <X size={16} />
           </Button>
         </div>
       </div>
 
-      {/* Execution log - scrollable */}
-      <div ref={scrollRef} className='flex-1 overflow-y-auto p-4'>
+      {/* Scrollable content */}
+      <div ref={containerRef} className='flex-1 overflow-y-auto p-4'>
         {/* Human Validation UI */}
         {pendingValidation && (
           <ValidationPanel
@@ -188,29 +135,24 @@ export default function WorkflowExecutionPanel() {
           />
         )}
 
-        {/* Empty state - only show when no data and not running */}
+        {/* Empty state */}
         {!hasDisplayData && !pendingValidation && !isRunning && (
           <div className='flex h-full flex-col items-center justify-center text-center text-muted-foreground'>
-            <div className='mb-2'>
-              <Play className='h-12 w-12 opacity-30' />
-            </div>
+            <Play className='mb-2 h-12 w-12 opacity-30' />
             <p className='text-sm'>Preview your workflow</p>
             <p className='text-xs'>Click Run to see execution in real-time</p>
           </div>
         )}
 
-        {/* Running but no data yet */}
-        {isRunning &&
-          !hasDisplayData &&
-          !activeStreamingNodeId &&
-          !pendingValidation && (
-            <div className='flex h-full flex-col items-center justify-center text-center text-muted-foreground'>
-              <Loader2 className='mb-2 h-8 w-8 animate-spin text-blue-500' />
-              <p className='text-sm'>Starting workflow...</p>
-            </div>
-          )}
+        {/* Loading state */}
+        {isWaiting && (
+          <div className='flex h-full flex-col items-center justify-center text-center text-muted-foreground'>
+            <Loader2 className='mb-2 h-8 w-8 animate-spin text-blue-500' />
+            <p className='text-sm'>Starting workflow...</p>
+          </div>
+        )}
 
-        {/* Viewing completed run indicator */}
+        {/* Completed run indicator */}
         {isViewingCompletedRun && (
           <div className='mb-4 flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 px-3 py-2'>
             <History className='h-4 w-4 text-muted-foreground' />
@@ -220,39 +162,76 @@ export default function WorkflowExecutionPanel() {
           </div>
         )}
 
-        {/* Response cards - streaming or completed run data */}
-        {hasDisplayData && (
+        {/* Streaming responses - data comes in correct order from backend */}
+        {hasStreamingData && (
           <div className='space-y-4'>
-            {displayResponses.map(([nodeId, responseData]) => {
-              const isActive = activeStreamingNodeId === nodeId
-              const node = nodes.find((n) => n.id === nodeId)
-              const nodeName =
-                (node?.data?.label as string) || node?.type || 'Step'
-              const stepNumber = node?.data?.stepNumber as number | undefined
-              const nodeType = node?.type
-              const content = responseData.content
-              const snippets = responseData.snippets
-              const webSearchSources = responseData.webSearchSources
+            {Object.entries(streamingResponses).map(([nodeId, data]) => (
+              <StepResponseCard
+                key={nodeId}
+                nodeId={nodeId}
+                nodeName={getNodeName(nodeId)}
+                stepNumber={
+                  nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
+                    | number
+                    | undefined
+                }
+                nodeType={nodes.find((n) => n.id === nodeId)?.type}
+                content={data.content}
+                isActive={activeStreamingNodeId === nodeId}
+                snippets={data.snippets}
+                webSearchSources={data.webSearchSources}
+              />
+            ))}
+          </div>
+        )}
 
-              return (
+        {/* Completed run responses - filter to execution nodes only */}
+        {/* chatOutput nodes have their own UI for viewing responses/versions */}
+        {isViewingCompletedRun && currentRun?.nodeStates && (
+          <div className='space-y-4'>
+            {Object.entries(currentRun.nodeStates)
+              .filter(
+                ([, state]) =>
+                  state.response &&
+                  (state.nodeType === WorkflowNodeType.Step ||
+                    state.nodeType === WorkflowNodeType.StructuredOutput)
+              )
+              .map(([nodeId, state]) => (
                 <StepResponseCard
                   key={nodeId}
                   nodeId={nodeId}
-                  nodeName={nodeName}
-                  stepNumber={stepNumber}
-                  nodeType={nodeType}
-                  content={content}
-                  isActive={isActive}
-                  snippets={snippets}
-                  webSearchSources={webSearchSources}
+                  nodeName={getNodeName(nodeId)}
+                  stepNumber={
+                    nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
+                      | number
+                      | undefined
+                  }
+                  nodeType={nodes.find((n) => n.id === nodeId)?.type}
+                  content={state.response || ''}
+                  isActive={false}
+                  snippets={state.snippets}
+                  webSearchSources={state.webSearchSources}
                 />
-              )
-            })}
+              ))}
           </div>
         )}
+
+        {/* Scroll anchor */}
+        <div ref={anchorRef} />
       </div>
 
-      {/* Footer with run info */}
+      {/* Scroll to bottom button */}
+      {showScrollButton && (
+        <button
+          onClick={handleScrollToBottomClick}
+          className='absolute bottom-20 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90'
+          aria-label='Scroll to bottom'
+        >
+          <ChevronDown className='h-4 w-4' />
+        </button>
+      )}
+
+      {/* Footer */}
       {currentRun && (
         <div className='rounded-b-2xl border-t border-border/50 bg-gradient-to-r from-slate-50 to-white p-3'>
           <div className='flex items-center justify-between text-xs text-muted-foreground'>
@@ -260,12 +239,13 @@ export default function WorkflowExecutionPanel() {
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-xs font-medium',
-                currentRun.status === 'completed' &&
+                currentRun.status === WorkflowRunStepStatus.Completed &&
                   'bg-[#023572]/10 text-[#023572]',
-                currentRun.status === 'running' &&
+                currentRun.status === WorkflowRunStepStatus.Running &&
                   'bg-[#EE183C]/10 text-[#EE183C]',
-                currentRun.status === 'failed' && 'bg-red-100 text-red-700',
-                currentRun.status === 'pending_human_input' &&
+                currentRun.status === WorkflowRunStepStatus.Failed &&
+                  'bg-red-100 text-red-700',
+                currentRun.status === WorkflowRunStepStatus.PendingHumanInput &&
                   'bg-[#EE183C]/10 text-[#EE183C]'
               )}
             >

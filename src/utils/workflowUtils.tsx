@@ -5,7 +5,7 @@ import {
 } from '../redux/types/workflow'
 import { Badge } from '../components/ui/badge'
 import { Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react'
-import { WorkflowRunStepStatus } from './constants/workflows'
+import { WorkflowRunStepStatus, WorkflowNodeType } from './constants/workflows'
 import {
   KeyboardSensor,
   PointerSensor,
@@ -27,7 +27,10 @@ export const getModeBadge = (mode: WorkflowMode) => {
 }
 
 export const getStepCount = (workflow: Workflow): number => {
-  return workflow.nodes?.filter((node) => node.type === 'step').length || 0
+  return (
+    workflow.nodes?.filter((node) => node.type === WorkflowNodeType.Step)
+      .length || 0
+  )
 }
 
 export const getStatusIcon = (status: string) => {

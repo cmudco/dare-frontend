@@ -48,6 +48,7 @@ import {
   exportWorkflow,
   exportWorkflowToString,
 } from '@/utils/workflowBuilder/exportWorkflow'
+import { WorkflowNodeType } from '@/utils/constants/workflows'
 
 const WorkflowEditPage = () => {
   const navigate = useNavigate()
@@ -57,7 +58,7 @@ const WorkflowEditPage = () => {
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
-  const hasAtLeastOneStep = nodes.some((n) => n.type === 'step')
+  const hasAtLeastOneStep = nodes.some((n) => n.type === WorkflowNodeType.Step)
   const isRunning = useAppSelector((s) => s.workflowBuilder.isRunning)
   const manualModeEnabled = useAppSelector(
     (s) => s.workflowBuilder.manualModeEnabled
@@ -70,7 +71,7 @@ const WorkflowEditPage = () => {
   )
   const savingStatus = useAppSelector((s) => s.workflowBuilder.savingStatus)
 
-  const stepNodes = nodes.filter((n) => n.type === 'step')
+  const stepNodes = nodes.filter((n) => n.type === WorkflowNodeType.Step)
   const executedStepsCount = stepNodes.filter((n) =>
     executedStepNodeIds.includes(n.id)
   ).length

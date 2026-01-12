@@ -9,6 +9,7 @@ import {
 } from '@/redux/workflowBuilderSlice'
 import { DeleteConfirmation } from '@/components/DeleteConfirmation'
 import { useState } from 'react'
+import { WorkflowNodeType } from '@/utils/constants/workflows'
 
 interface SidebarProps {
   disabled?: { start: boolean; step: boolean; output: boolean }
@@ -52,7 +53,7 @@ export default function Sidebar({ disabled }: SidebarProps) {
     setIsClearConfirmationOpen(false)
   }
 
-  const hasStartNode = nodes.some((n) => n.type === 'start')
+  const hasStartNode = nodes.some((n) => n.type === WorkflowNodeType.Start)
 
   const getViewportCenterPosition = () => {
     try {
@@ -93,7 +94,7 @@ export default function Sidebar({ disabled }: SidebarProps) {
               onClick={() => {
                 if (
                   !isWorkflowRunning &&
-                  !(component.type === 'start'
+                  !(component.type === WorkflowNodeType.Start
                     ? Boolean(disabled?.start)
                     : Boolean(disabled?.step) || !hasStartNode)
                 ) {

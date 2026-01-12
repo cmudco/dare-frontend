@@ -77,6 +77,13 @@ export enum WorkflowRunStepStatus {
   Unknown = 'unknown', // Unknown node type
 }
 
+export enum WorkflowNodeType {
+  Start = 'start',
+  Step = 'step',
+  ChatOutput = 'chatOutput',
+  StructuredOutput = 'structuredOutput',
+}
+
 export enum WorkflowViewMode {
   Run = 'run',
   View = 'view',
