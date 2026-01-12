@@ -1,9 +1,11 @@
 import { type Node, type Edge } from '@xyflow/react'
-import type { WorkflowRun, Workflow } from './workflow'
+import type { WorkflowRun, Workflow, PendingValidation } from './workflow'
 import type {
   StepSnippet,
   StepWebSearchSource,
 } from '../middleware/workflowSocketMiddleware'
+
+export type { PendingValidation }
 
 export interface HistorySnapshot {
   nodes: Node[]
@@ -21,14 +23,6 @@ export type WebSocketConnectionStatus =
   | 'disconnected'
   | 'connecting'
   | 'connected'
-
-// Pending validation state for human-in-the-loop
-export interface PendingValidation {
-  nodeId: string
-  routes: Array<{ name: string; description?: string }>
-  context?: Record<string, unknown>
-  aiRecommendation?: string
-}
 
 // Rich streaming response with content and citation metadata
 export interface StreamingResponse {
