@@ -27,6 +27,7 @@ import {
   WorkflowRunStepStatus,
   WorkflowNodeType,
 } from '@/utils/constants/workflows'
+import { debugLog } from '@/utils/debugLogger'
 import {
   createSnapshot,
   pushToHistory,
@@ -358,7 +359,7 @@ const workflowBuilderSlice = createSlice({
      * Used when switching between workflows to prevent stale data.
      */
     clearExecutionState: (state) => {
-      console.log('🧹 clearExecutionState called - clearing pendingValidation')
+      debugLog('🧹 clearExecutionState called - clearing pendingValidation')
       state.currentRun = null
       state.isRunning = false
       state.currentPartialRunId = null
@@ -376,7 +377,7 @@ const workflowBuilderSlice = createSlice({
       .addCase(loadWorkflowIntoBuilder.fulfilled, (state, action) => {
         // REST API: Only sets static workflow data (nodes, edges, config)
         // Execution state (currentRun, pendingValidation, isRunning) comes from socket
-        console.log('📂 loadWorkflowIntoBuilder.fulfilled:', {
+        debugLog('📂 loadWorkflowIntoBuilder.fulfilled:', {
           workflowId: action.payload.workflow.id,
         })
 
@@ -454,7 +455,7 @@ const workflowBuilderSlice = createSlice({
         } => action.type === 'workflowSocket/workflowSubscribed',
         (state, action) => {
           const { latestRun, workflowId } = action.payload
-          console.log('🔔 workflowSocket/workflowSubscribed:', {
+          debugLog('🔔 workflowSocket/workflowSubscribed:', {
             workflowId,
             runId: latestRun?.id,
             runStatus: latestRun?.status,
@@ -469,7 +470,7 @@ const workflowBuilderSlice = createSlice({
 
             // V2 API: Use flat pendingValidation directly from backend
             if (latestRun.pendingValidation) {
-              console.log('✅ Setting pendingValidation from socket:', {
+              debugLog('✅ Setting pendingValidation from socket:', {
                 nodeId: latestRun.pendingValidation.nodeId,
                 routes: latestRun.pendingValidation.routes,
                 aiRecommendation: latestRun.pendingValidation.aiRecommendation,
@@ -506,7 +507,7 @@ const workflowBuilderSlice = createSlice({
         } => action.type === 'workflowSocket/executionStarted',
         (state, action) => {
           const { workflowRunId } = action.payload
-          console.log(
+          debugLog(
             '🚀 executionStarted - clearing pendingValidation, runId:',
             workflowRunId
           )

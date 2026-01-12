@@ -18,6 +18,7 @@
 import type { Middleware } from '@reduxjs/toolkit'
 import { io, Socket } from 'socket.io-client'
 import { config } from '@/config/environment'
+import { debugLog } from '@/utils/debugLogger'
 import type {
   RouteOption,
   PendingValidationContext,
@@ -278,11 +279,11 @@ export function createWorkflowSocketMiddleware(): Middleware {
 
         // Already connected or connecting - don't create another socket
         if (socket) {
-          console.log('🔧 Workflow socket already exists, skipping connection')
+          debugLog('🔧 Workflow socket already exists, skipping connection')
           return next(typedAction)
         }
 
-        console.log('🔧 Workflow socket CONNECT action received')
+        debugLog('🔧 Workflow socket CONNECT action received')
 
         // Dispatch connecting state immediately
         dispatch({ type: 'workflowWebsocket/connecting' })
@@ -291,7 +292,7 @@ export function createWorkflowSocketMiddleware(): Middleware {
         const baseUrl = config.apiUrl.replace(/\/api\/?$/, '')
         const socketUrl = `${baseUrl}/workflow`
 
-        console.log('🔧 Workflow Socket.IO connecting to:', socketUrl)
+        debugLog('🔧 Workflow Socket.IO connecting to:', socketUrl)
 
         // Create socket connecting to /workflow namespace
         // Use websocket first, with polling fallback for compatibility
@@ -307,7 +308,7 @@ export function createWorkflowSocketMiddleware(): Middleware {
 
         // Connection events
         socket.on('connect', () => {
-          console.log('🔧 Workflow Socket.IO connected')
+          debugLog('🔧 Workflow Socket.IO connected')
           dispatch({ type: 'workflowWebsocket/connected' })
 
           // Re-subscribe after reconnect
@@ -321,7 +322,7 @@ export function createWorkflowSocketMiddleware(): Middleware {
         })
 
         socket.on('disconnect', (reason) => {
-          console.log('🔧 Workflow Socket.IO disconnected:', reason)
+          debugLog('🔧 Workflow Socket.IO disconnected:', reason)
           dispatch({
             type: 'workflowWebsocket/disconnected',
             payload: { reason },
@@ -338,13 +339,13 @@ export function createWorkflowSocketMiddleware(): Middleware {
 
         // Incoming workflow events → dispatch as Redux actions
         socket.on('workflow_event', (data) => {
-          console.log('📡 [WorkflowSocket] workflow_event:', data.type, data)
+          debugLog('📡 [WorkflowSocket] workflow_event:', data.type, data)
           dispatch({ type: `workflowSocket/${data.type}`, payload: data })
         })
 
         // Workflow status updates
         socket.on('workflow_status', (data) => {
-          console.log('📡 [WorkflowSocket] workflow_status:', data)
+          debugLog('📡 [WorkflowSocket] workflow_status:', data)
           dispatch({ type: 'workflowSocket/workflow_status', payload: data })
         })
 
@@ -461,7 +462,7 @@ export function createWorkflowSocketMiddleware(): Middleware {
       case WORKFLOW_SOCKET_UNSUBSCRIBE_WORKFLOW: {
         const { workflowId } = typedAction.payload as { workflowId: number }
 
-        console.log('🔌 Unsubscribing from workflow:', workflowId)
+        debugLog('🔌 Unsubscribing from workflow:', workflowId)
 
         // Backend uses run-based subscriptions, so we need to leave all run rooms
         // associated with this workflow. Since we don't track workflow->run mapping,
