@@ -21,6 +21,8 @@ import { config } from '@/config/environment'
 import type {
   RouteOption,
   PendingValidationContext,
+  WorkflowStepSnippet,
+  WorkflowStepWebSearchSource,
 } from '@/redux/types/workflow'
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -42,28 +44,9 @@ export interface WorkflowStepStreaming {
   accumulatedTokens?: number
 }
 
-// Rich metadata types for step completion
-export interface StepSnippet {
-  id: number
-  file: { id: number; name: string } | null
-  text: string
-  similarity_score: number
-  chunk_index: number
-  vector_db_source: string
-}
-
-export interface StepWebSearchSource {
-  id: number
-  url: string
-  title: string
-  cited_text: string
-  page_age?: string
-  provider: string
-}
-
 export interface StepCompletedMetadata {
-  snippets?: StepSnippet[]
-  webSearchSources?: StepWebSearchSource[]
+  snippets?: WorkflowStepSnippet[]
+  webSearchSources?: WorkflowStepWebSearchSource[]
 }
 
 export interface WorkflowStepCompleted {

@@ -1,5 +1,4 @@
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
-import { MyFile } from './files'
 import { FormikErrors, FormikTouched } from 'formik'
 import { type Node, type Edge } from '@xyflow/react'
 
@@ -10,7 +9,7 @@ export enum WorkflowMode {
 
 export interface WorkflowStepSnippet {
   id: number
-  file: MyFile
+  file: { id: number; name: string } | null
   text: string
   similarityScore: number
   chunkIndex: number
@@ -22,7 +21,7 @@ export interface WorkflowStepWebSearchSource {
   url: string
   title: string
   citedText: string
-  pageAge: string
+  pageAge?: string
   provider: string
 }
 
@@ -53,50 +52,19 @@ export interface PendingValidationContext {
 }
 
 /**
- * Unified pending validation structure.
- * Single source of truth for human-in-the-loop validation state.
+ * Pending validation structure for human-in-the-loop validation.
+ * Used when a routing node requires human decision.
  */
 export interface PendingValidation {
   nodeId: string
   routes: RouteOption[]
   aiRecommendation?: string
-  aiAnalysis?: string // Convenience field (also in context.aiAnalysis)
+  aiAnalysis?: string
   context?: PendingValidationContext
-  // V1 compatibility fields (used by HumanValidationModal)
-  stepNumber?: number
-  customPrompt?: string
-  currentResponse?: string
-  stepId?: number
-  availableRoutes?: RouteDef[] // Legacy field for V1 API compatibility
-}
-
-export interface WorkflowRunStep {
-  id: number
-  stepNode: number
-  order: number
-  status: WorkflowRunStepStatus
-  response: string | null
-  error: string | null
-  metadata?: {
-    routingDecision?: string
-    analysis?: string
-    aiRecommendation?: string
-    availableRoutes?: RouteDef[] // Route objects for StructuredOutput nodes
-    isHumanValidated?: boolean
-    fullResponse?: string
-    pendingHumanDecision?: boolean
-    userChoice?: string
-    selectedRoute?: string // For structured output nodes
-    rawResponse?: string // For structured output nodes
-  } | null
-  createdAt: string
-  updatedAt: string
-  snippets?: WorkflowStepSnippet[]
-  webSearchSources?: WorkflowStepWebSearchSource[]
 }
 
 // ==========================================
-// V2 API TYPES (GRAPH-BASED NODE STATES)
+// NODE EXECUTION STATE TYPES
 // ==========================================
 
 /**
@@ -130,8 +98,8 @@ export interface RoutingMetadata {
 }
 
 export interface NodeState {
-  nodeId: string // Node ID from the workflow graph (included to survive DRF CamelCase key mangling)
-  stepId: number | null // WorkflowRunStep ID (null for display nodes)
+  nodeId: string // Node ID from workflow graph (survives DRF CamelCase key mangling)
+  stepId: number | null // Backend step ID (null for display nodes)
   nodeType: string // 'step' | 'structuredOutput' | 'chatOutput' | 'start'
   status: WorkflowRunStepStatus
   response: string | null
@@ -155,14 +123,11 @@ export interface WorkflowRun {
   status: WorkflowRunStepStatus
   startedAt: string
   endedAt: string | null
-  steps: WorkflowRunStep[] // V1 API (legacy)
   workflowTitle: string
   workflowDescription: string
-  hasPendingValidation?: boolean
-  pendingValidations?: PendingValidation[]
   isPartial?: boolean
-  nodeStates?: NodeStatesMap // V2 API (graph-based) - Direct O(1) access by node_id
-  pendingValidation?: PendingValidation | null // V2 API - flat pending validation from backend
+  nodeStates?: NodeStatesMap // Graph-based execution state - O(1) access by node_id
+  pendingValidation?: PendingValidation | null // Flat pending validation from backend
 }
 
 export interface Workflow {
