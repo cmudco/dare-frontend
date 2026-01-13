@@ -24,6 +24,7 @@ interface SocketActionWithPayload {
 }
 import { io, Socket } from 'socket.io-client'
 import { config } from '@/config/environment'
+import { debugLog } from '@/utils/debugLogger'
 
 // ════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -222,14 +223,10 @@ export function createSocketMiddleware(): Middleware {
       case SOCKET_CONNECT: {
         const { jwtToken } = typedAction.payload as { jwtToken: string }
 
-        // Already connected
-        if (socket?.connected) {
-          return next(typedAction)
-        }
-
-        // Disconnect existing
+        // Already connected or connecting - don't create another socket
         if (socket) {
-          socket.disconnect()
+          debugLog('🔌 Socket already exists, skipping connection')
+          return next(typedAction)
         }
 
         // Build URL with /chat namespace
@@ -249,7 +246,7 @@ export function createSocketMiddleware(): Middleware {
 
         // Connection events
         socket.on('connect', () => {
-          console.log('🔌 Socket.IO connected')
+          debugLog('🔌 Socket.IO connected')
           dispatch({ type: 'websocket/connected' })
 
           // Re-subscribe after reconnect
@@ -263,7 +260,7 @@ export function createSocketMiddleware(): Middleware {
         })
 
         socket.on('disconnect', (reason) => {
-          console.log('🔌 Socket.IO disconnected:', reason)
+          debugLog('🔌 Socket.IO disconnected:', reason)
           dispatch({ type: 'websocket/disconnected', payload: { reason } })
         })
 

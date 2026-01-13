@@ -1,78 +1,23 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import {
-  ChevronDown,
-  ChevronUp,
-  Send,
-  Trash2,
-  CheckCircle2,
-  FileText,
-  Globe,
-  ExternalLink,
-} from 'lucide-react'
-import { useState } from 'react'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import { renderStatusPill } from '@/utils/workflowUtils'
+import { Send, Settings, Copy, Trash2, CheckCircle2 } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
-  toggleNodeCollapse,
   removeNodeWithEdges,
+  setSelectedNodeId,
 } from '@/redux/workflowBuilderSlice'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
-import { useWorkflowRunVersion } from '@/hooks/useWorkflowRunVersion'
-import { VersionDropdown } from '@/components/WorkflowBuilder/VersionDropdown'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
-import rehypeRaw from 'rehype-raw'
-import rehypeKatex from 'rehype-katex'
-import rehypeHighlight from 'rehype-highlight'
-import 'katex/dist/katex.min.css'
-import 'highlight.js/styles/atom-one-light.css'
-import { CodeBlock } from '@/components/Conversation/CodeBlock'
-import { MermaidBlock } from '@/components/Conversation/MermaidBlock'
-import mermaid from 'mermaid'
-import type { ChatOutputNodeData } from '@/types/workflowNodes'
+import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'default',
-  securityLevel: 'loose',
-})
-
-/**
- * ChatOutputNode - Displays AI chat responses from workflow execution.
- *
- * DATA FLOW:
- * - Default mode: Shows data from selected version (via version dropdown)
- * - Manual mode: Shows data from partial run (live execution)
- * - Running mode: Shows data from current run (polling updates)
- */
-export default function ChatOutputNode({ id, selected, data }: NodeProps) {
+export default function ChatOutputNode({ id, selected }: NodeProps) {
   const dispatch = useAppDispatch()
 
-  // VERSION SELECTION: Hook handles all version dropdown logic
-  const versionState = useWorkflowRunVersion(id)
-
-  // REDUX STATE: Get workflow execution data
+  // Get workflow execution data
   const { executedStepNodeIds, availableRuns, selectedRunIds, currentRun } =
     useAppSelector((s) => s.workflowBuilder)
 
-  // NODE STATE
-  const outputData = (data as Partial<ChatOutputNodeData>) || {}
-  const isCollapsed = outputData?.isCollapsed || false
   const isOutputExecuted = executedStepNodeIds.includes(id)
-  const [expanded, setExpanded] = useState(false)
-  const [snippetsOpen, setSnippetsOpen] = useState(false)
-  const [webSourcesOpen, setWebSourcesOpen] = useState(false)
 
-  // DATA RETRIEVAL: Get the run to display (handles all modes automatically)
+  // Get the run to display
   const displayRun = getDisplayRun(
     id,
     selectedRunIds,
@@ -80,369 +25,118 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
     currentRun
   )
 
-  // V2 API: Direct node state access (no edge traversal needed!)
+  // Get node state from the display run
   const nodeState = getNodeState(displayRun, id)
-
-  // DATA EXTRACTION: Direct access from nodeStates
-  const response = nodeState?.response || null
   const status = nodeState?.status || null
-  const error = nodeState?.error || null
-  const snippets = nodeState?.snippets || []
-  const webSearchSources = nodeState?.webSearchSources || []
+  const hasResponse = Boolean(nodeState?.response?.trim())
 
-  // UI HANDLERS
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(response || '')
-    } catch {
-      // no-op
-    }
+  // Quick action handlers
+  const handleConfigure = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    dispatch(setSelectedNodeId(id))
   }
 
-  const hasResponse = Boolean((response || '').trim())
-  const hasError = Boolean((error || '').trim())
-  const widthClass = hasResponse || hasError ? 'w-[40rem]' : 'w-80'
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    // TODO: Implement duplicate
+  }
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    dispatch(removeNodeWithEdges({ nodeId: id }))
+  }
+
+  // Get subtitle based on status
+  const getSubtitle = () => {
+    if (status === WorkflowRunStepStatus.Completed && hasResponse) {
+      return 'Response ready'
+    }
+    if (status === WorkflowRunStepStatus.Running) {
+      return 'Generating...'
+    }
+    if (status === WorkflowRunStepStatus.Pending) {
+      return 'Pending...'
+    }
+    if (status === WorkflowRunStepStatus.Failed) {
+      return 'Error occurred'
+    }
+    return 'No output yet'
+  }
+
+  // Get status indicator class
+  const getStatusClass = () => {
+    if (isOutputExecuted || status === WorkflowRunStepStatus.Completed) {
+      return 'completed'
+    }
+    if (status === WorkflowRunStepStatus.Running) {
+      return 'running'
+    }
+    if (status === WorkflowRunStepStatus.Failed) {
+      return 'error'
+    }
+    return ''
+  }
+
   return (
-    <Card
-      className={`${widthClass} ${
-        isOutputExecuted
-          ? 'border-green-500/50 bg-green-50/30 dark:bg-green-950/20'
-          : 'border-border'
-      } ${selected ? 'ring-2 ring-primary/60' : ''}`}
+    <div
+      className={`workflow-node output ${selected ? 'selected' : ''} ${getStatusClass()}`}
     >
-      <CardHeader className='pb-2'>
-        <div className='space-y-2'>
-          <CardTitle className='flex items-center justify-between text-sm text-card-foreground'>
-            <div className='flex items-center gap-2'>
-              <div className='rounded bg-primary/90 p-1'>
-                <Send className='h-4 w-4 text-white' />
-              </div>
-              <span>Chat Output</span>
-            </div>
-            <div className='flex items-center gap-1'>
-              {isOutputExecuted && (
-                <CheckCircle2 className='h-4 w-4 text-green-500' />
-              )}
-              {renderStatusPill(status || null)}
-              <Button
-                size='sm'
-                variant='ghost'
-                onClick={() => dispatch(toggleNodeCollapse(id))}
-                className='h-6 w-6 p-0'
-                title={isCollapsed ? 'Expand' : 'Collapse'}
-              >
-                {isCollapsed ? (
-                  <ChevronDown className='h-4 w-4' />
-                ) : (
-                  <ChevronUp className='h-4 w-4' />
-                )}
-              </Button>
-              <Button
-                size='sm'
-                variant='ghost'
-                onClick={() => dispatch(removeNodeWithEdges({ nodeId: id }))}
-                className='h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive'
-                title='Delete node'
-              >
-                <Trash2 className='h-4 w-4' />
-              </Button>
-            </div>
-          </CardTitle>
-          <VersionDropdown
-            versionRuns={versionState.versionRuns}
-            selectedRunId={versionState.selectedRunId}
-            onRunChange={versionState.handleRunChange}
-            show={versionState.showVersionDropdown}
-          />
+      {/* Quick Actions Bar - appears on selection */}
+      {selected && (
+        <div className='node-quick-actions'>
+          <button
+            className='quick-action-btn'
+            title='View Output'
+            onClick={handleConfigure}
+          >
+            <Settings size={14} />
+          </button>
+          <button
+            className='quick-action-btn'
+            title='Duplicate'
+            onClick={handleDuplicate}
+          >
+            <Copy size={14} />
+          </button>
+          <button
+            className='quick-action-btn danger'
+            title='Delete'
+            onClick={handleDelete}
+          >
+            <Trash2 size={14} />
+          </button>
         </div>
-      </CardHeader>
-      {!isCollapsed && (
-        <CardContent className='space-y-2'>
-          {error ? (
-            <div className='text-xs text-destructive'>
-              <div className='rounded-md border border-destructive/20 bg-destructive/10 p-3'>
-                <p className='font-medium'>Error:</p>
-                <p className='mt-1 whitespace-pre-wrap'>{error}</p>
-              </div>
-            </div>
-          ) : response ? (
-            <div className='text-xs text-foreground'>
-              <div
-                className={`${
-                  expanded ? 'max-h-[48rem]' : 'max-h-40'
-                } overflow-y-auto pr-2 leading-relaxed`}
-                onWheel={(e) => e.stopPropagation()}
-                onWheelCapture={(e) => e.stopPropagation()}
-                onTouchMove={(e) => e.stopPropagation()}
-                style={{ overscrollBehavior: 'contain' }}
-              >
-                <div
-                  className='prose prose-sm max-w-full text-foreground dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none'
-                  style={{
-                    wordBreak: 'break-word',
-                    overflowWrap: 'break-word',
-                  }}
-                >
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm, remarkMath]}
-                    rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
-                    components={{
-                      table({ children, ...props }) {
-                        return (
-                          <div className='max-w-full overflow-x-auto'>
-                            <table className='min-w-full' {...props}>
-                              {children}
-                            </table>
-                          </div>
-                        )
-                      },
-                      pre({ children, ...props }) {
-                        return (
-                          <pre
-                            className='max-w-full overflow-x-auto whitespace-pre-wrap break-words'
-                            {...props}
-                          >
-                            {children}
-                          </pre>
-                        )
-                      },
-                      p({ children, ...props }) {
-                        return (
-                          <p
-                            className='break-words'
-                            style={{
-                              wordBreak: 'break-word',
-                              overflowWrap: 'break-word',
-                            }}
-                            {...props}
-                          >
-                            {children}
-                          </p>
-                        )
-                      },
-                      a({ children, href, ...props }) {
-                        return (
-                          <a
-                            href={href}
-                            className='break-all'
-                            style={{
-                              wordBreak: 'break-all',
-                              overflowWrap: 'break-word',
-                            }}
-                            {...props}
-                          >
-                            {children}
-                          </a>
-                        )
-                      },
-                      code({ className, children, ...props }) {
-                        const match = /language-(\w+)/.exec(className || '')
-                        if (match && match[1] === 'mermaid') {
-                          return (
-                            <MermaidBlock
-                              code={String(children).trim()}
-                              streaming={false}
-                            />
-                          )
-                        }
-                        if (match) {
-                          return (
-                            <CodeBlock className={className} props={props}>
-                              {children}
-                            </CodeBlock>
-                          )
-                        }
-                        return (
-                          <code
-                            className='not-prose break-all rounded border border-border bg-muted px-1 text-foreground transition-colors hover:bg-muted/80'
-                            style={{
-                              wordBreak: 'break-all',
-                              overflowWrap: 'break-word',
-                            }}
-                            {...props}
-                          >
-                            {children}
-                          </code>
-                        )
-                      },
-                    }}
-                  >
-                    {response}
-                  </ReactMarkdown>
-                </div>
-              </div>
-              {status !== WorkflowRunStepStatus.Skipped && (
-                <div className='mt-2 flex items-center justify-end gap-2'>
-                  <Button
-                    size='sm'
-                    variant='ghost'
-                    className='h-7 px-2 text-xs'
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={copyToClipboard}
-                  >
-                    Copy
-                  </Button>
-                  <Button
-                    size='sm'
-                    variant='ghost'
-                    className='h-7 px-2 text-xs'
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={() => setExpanded((v) => !v)}
-                  >
-                    {expanded ? (
-                      <>
-                        <ChevronUp className='mr-1 h-3 w-3' />
-                        Collapse
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className='mr-1 h-3 w-3' />
-                        Expand
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-
-              {/* Context Snippets */}
-              {snippets.length > 0 && (
-                <div className='mt-4'>
-                  <Collapsible
-                    open={snippetsOpen}
-                    onOpenChange={setSnippetsOpen}
-                  >
-                    <CollapsibleTrigger className='flex w-full items-center justify-between rounded-md border border-border bg-muted px-3 py-2 text-xs transition-colors hover:bg-accent'>
-                      <span className='flex items-center font-medium text-foreground'>
-                        <FileText className='mr-2 h-3 w-3' />
-                        Context Snippets ({snippets.length})
-                      </span>
-                      {snippetsOpen ? (
-                        <ChevronUp className='h-3 w-3 text-muted-foreground' />
-                      ) : (
-                        <ChevronDown className='h-3 w-3 text-muted-foreground' />
-                      )}
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className='space-y-2 pt-2'>
-                      {[...snippets]
-                        .sort(
-                          (a, b) =>
-                            (b.similarityScore || 0) - (a.similarityScore || 0)
-                        )
-                        .map((snippet) => (
-                          <div
-                            key={snippet.id}
-                            className='rounded-r-md border-l-2 border-border bg-background p-2 pl-3 text-xs'
-                          >
-                            <div className='mb-1 flex items-center justify-between'>
-                              <span className='font-medium text-foreground'>
-                                {snippet.file?.name || 'Unknown file'} (
-                                {snippet.similarityScore?.toFixed(2) || 'N/A'})
-                              </span>
-                              <span className='text-muted-foreground'>
-                                {snippet.vectorDbSource && (
-                                  <span className='font-medium'>
-                                    {snippet.vectorDbSource} -{' '}
-                                  </span>
-                                )}
-                                Chunk {snippet.chunkIndex || 0}
-                              </span>
-                            </div>
-                            <p className='line-clamp-3 text-muted-foreground'>
-                              {snippet.text}
-                            </p>
-                          </div>
-                        ))}
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              )}
-
-              {/* Web Search Sources */}
-              {webSearchSources.length > 0 && (
-                <div className='mt-4'>
-                  <Collapsible
-                    open={webSourcesOpen}
-                    onOpenChange={setWebSourcesOpen}
-                  >
-                    <CollapsibleTrigger className='flex w-full items-center justify-between rounded-md border border-border bg-muted px-3 py-2 text-xs transition-colors hover:bg-accent'>
-                      <span className='flex items-center font-medium text-foreground'>
-                        <Globe className='mr-2 h-3 w-3' />
-                        Web Sources ({webSearchSources.length})
-                      </span>
-                      {webSourcesOpen ? (
-                        <ChevronUp className='h-3 w-3 text-muted-foreground' />
-                      ) : (
-                        <ChevronDown className='h-3 w-3 text-muted-foreground' />
-                      )}
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className='space-y-2 pt-2'>
-                      {webSearchSources.map((source) => (
-                        <div
-                          key={source.id}
-                          className='rounded-r-md border-l-2 border-blue-500 bg-background p-2 pl-3 text-xs'
-                        >
-                          <div className='mb-1 flex items-center justify-between'>
-                            <a
-                              href={source.url}
-                              target='_blank'
-                              rel='noopener noreferrer'
-                              className='flex items-center gap-1 font-medium text-foreground hover:text-blue-600'
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {source.title ||
-                                (() => {
-                                  try {
-                                    return new URL(source.url).hostname
-                                  } catch {
-                                    return source.url
-                                  }
-                                })()}
-                              <ExternalLink className='h-2.5 w-2.5' />
-                            </a>
-                            {source.provider && (
-                              <span className='text-muted-foreground'>
-                                via {source.provider}
-                              </span>
-                            )}
-                          </div>
-                          {source.citedText && (
-                            <p className='line-clamp-2 italic text-muted-foreground'>
-                              &ldquo;{source.citedText}&rdquo;
-                            </p>
-                          )}
-                          {source.pageAge && (
-                            <p className='mt-1 text-muted-foreground'>
-                              {source.pageAge}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className='text-xs text-muted-foreground'>
-              {status === WorkflowRunStepStatus.Running
-                ? 'Generating...'
-                : status === WorkflowRunStepStatus.Pending
-                  ? 'Pending...'
-                  : 'No output yet'}
-            </p>
-          )}
-        </CardContent>
       )}
+
+      {/* Node Header */}
+      <div className='node-header'>
+        <div className='node-icon output'>
+          <Send size={16} />
+        </div>
+        <div className='flex-1'>
+          <div className='node-title'>
+            Output
+            {isOutputExecuted && (
+              <CheckCircle2 className='ml-1 inline h-3 w-3 text-green-500' />
+            )}
+          </div>
+          <div className='node-subtitle'>{getSubtitle()}</div>
+        </div>
+      </div>
+
+      {/* Input handle */}
       <Handle
         type='target'
         position={Position.Left}
-        className='h-4 w-4 bg-secondary'
+        className='h-3 w-3 bg-secondary'
       />
+
+      {/* Output handle for chaining */}
       <Handle
         type='source'
         position={Position.Right}
-        className='h-4 w-4 border-2 border-white bg-primary'
+        className='h-3 w-3 border-2 border-white bg-primary'
       />
-    </Card>
+    </div>
   )
 }

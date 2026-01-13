@@ -1,13 +1,19 @@
 import { type Node, type Edge, type Connection } from '@xyflow/react'
+import { WorkflowNodeType } from '@/utils/constants/workflows'
 
 export type Mode = 'sequential' | 'parallel'
 
+// Helper to check if a node is a start-type node
+export const isStartNode = (type: string | undefined): boolean => {
+  return type === WorkflowNodeType.Start
+}
+
 export const getStartNode = (nodes: Node[]): Node | undefined => {
-  return nodes.find((n) => n.type === 'start')
+  return nodes.find((n) => isStartNode(n.type))
 }
 
 export const getStartNodes = (nodes: Node[]): Node[] => {
-  return nodes.filter((n) => n.type === 'start')
+  return nodes.filter((n) => isStartNode(n.type))
 }
 
 export const getMode = (startNode?: Node): Mode => {
@@ -37,15 +43,19 @@ export const isValidConnection = (
   const tType = targetNode.type
 
   // Structured Output node is now independent - can connect TO any node (step, chatOutput, etc.)
-  if (sType === 'structuredOutput') {
+  if (sType === WorkflowNodeType.StructuredOutput) {
     // Allow structured output to connect to step nodes, chatOutput, or other nodes
-    return tType === 'step' || tType === 'chatOutput'
+    return (
+      tType === WorkflowNodeType.Step || tType === WorkflowNodeType.ChatOutput
+    )
   }
 
   // Allow connections TO structured output node FROM start, step, or chatOutput nodes
-  if (tType === 'structuredOutput') {
+  if (tType === WorkflowNodeType.StructuredOutput) {
     const isAllowed =
-      sType === 'start' || sType === 'step' || sType === 'chatOutput'
+      isStartNode(sType) ||
+      sType === WorkflowNodeType.Step ||
+      sType === WorkflowNodeType.ChatOutput
     if (!isAllowed) return false
 
     // Structured output nodes accept only one input connection
@@ -58,34 +68,34 @@ export const isValidConnection = (
   // Allow Start <-> Step regardless of drag direction
   // Backend uses edge-based execution, so no frontend restrictions needed
   if (
-    (sType === 'start' && tType === 'step') ||
-    (sType === 'step' && tType === 'start')
+    (isStartNode(sType) && tType === WorkflowNodeType.Step) ||
+    (sType === WorkflowNodeType.Step && isStartNode(tType))
   ) {
     return true
   }
 
-  if (sType === 'step') {
+  if (sType === WorkflowNodeType.Step) {
     // Allow step -> chatOutput connections
-    if (tType === 'chatOutput') {
+    if (tType === WorkflowNodeType.ChatOutput) {
       return true
     }
 
     // Allow step -> step connections (backend handles execution order via edges)
-    if (tType === 'step') {
+    if (tType === WorkflowNodeType.Step) {
       return true
     }
 
     return false
   }
 
-  if (sType === 'chatOutput') {
+  if (sType === WorkflowNodeType.ChatOutput) {
     // Allow chatOutput -> step connections
-    if (tType === 'step') return true
+    if (tType === WorkflowNodeType.Step) return true
 
     // Allow chatOutput -> start connections for workflow chaining
     // This enables sequential workflow chains where output from Chain 1
     // becomes input to Chain 2
-    if (tType === 'start') return true
+    if (isStartNode(tType)) return true
 
     return false
   }

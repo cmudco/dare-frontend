@@ -9,7 +9,11 @@ import {
 } from 'lucide-react'
 import { Workflow, WorkflowMode } from '@/redux/types/workflow'
 import { Badge } from '@/components/ui/badge'
-import { WORKFLOW_MODES, WorkflowRunStepStatus } from './workflows'
+import {
+  WORKFLOW_MODES,
+  WorkflowRunStepStatus,
+  WorkflowNodeType,
+} from './workflows'
 
 /**
  * Returns a badge component based on the workflow mode.
@@ -117,7 +121,8 @@ export const getRunStatusBadge = (status: WorkflowRunStepStatus) => {
  */
 export const getStepCount = (workflow: Workflow) => {
   if (workflow.nodes) {
-    return workflow.nodes.filter((node) => node.type === 'step').length
+    return workflow.nodes.filter((node) => node.type === WorkflowNodeType.Step)
+      .length
   } else {
     return 0
   }

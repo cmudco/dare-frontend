@@ -39,6 +39,7 @@ import WebSearchSources from './WebSearchSources'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
 import { features } from '@/config/environment'
+import { debugLog } from '@/utils/debugLogger'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -155,7 +156,7 @@ const Message: React.FC<MessageProps> = ({
           ? FeedbackType.LIKE
           : FeedbackType.DISLIKE
       }
-      console.log('Sending reaction:', reaction)
+      debugLog('Sending reaction:', reaction)
 
       dispatch(updateMessageThunk({ messageId: message.id, reaction }))
 

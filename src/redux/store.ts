@@ -17,8 +17,10 @@ import artifactReducer from './artifactSlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
+import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
 import { config } from '@/config/environment'
+import { debugLog } from '@/utils/debugLogger'
 
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({})
 
@@ -73,8 +75,10 @@ export const store = configureStore({
 
     // Add Socket.IO middleware if enabled
     if (config.features.enableSocketIO) {
-      console.log('🔌 Socket.IO middleware enabled')
-      return middlewares.concat(socketMiddleware)
+      debugLog('🔌 Socket.IO middleware enabled')
+      return middlewares
+        .concat(socketMiddleware)
+        .concat(workflowSocketMiddleware)
     }
 
     return middlewares

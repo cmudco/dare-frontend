@@ -1,8 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Cog, Trash2, Split } from 'lucide-react'
+import { Play, Brain, GitBranch, Trash2 } from 'lucide-react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useReactFlow } from '@xyflow/react'
 import {
   createNodeAtPosition,
@@ -10,6 +9,7 @@ import {
 } from '@/redux/workflowBuilderSlice'
 import { DeleteConfirmation } from '@/components/DeleteConfirmation'
 import { useState } from 'react'
+import { WorkflowNodeType } from '@/utils/constants/workflows'
 
 interface SidebarProps {
   disabled?: { start: boolean; step: boolean; output: boolean }
@@ -19,37 +19,32 @@ const nodeComponents = [
   {
     type: 'start',
     label: 'Start',
-    description:
-      'Define workflow configuration (multiple starts for comparison)',
+    description: 'Entry point',
     icon: Play,
-    color: 'bg-primary',
+    color: 'bg-green-500',
   },
   {
     type: 'step',
     label: 'Step',
-    description:
-      'Configure prompt, files, embeddings and LLM (includes output)',
-    icon: Cog,
+    description: 'LLM processing',
+    icon: Brain,
     color: 'bg-primary',
   },
   {
     type: 'structuredOutput',
     label: 'Conditional',
-    description:
-      'AI-powered decision node that routes to different paths based on input',
-    icon: Split,
+    description: 'Route decision',
+    icon: GitBranch,
     color: 'bg-purple-500',
   },
-  // { type: 'chatOutput', label: 'Output', description: 'Configure how results are displayed', icon: Cog, color: 'bg-primary' },
 ]
 
 export default function Sidebar({ disabled }: SidebarProps) {
   const dispatch = useAppDispatch()
   const reactFlowInstance = useReactFlow()
-  const { selectedWorkflowRun } = useAppSelector((state) => state.workflow)
-  const nodes = useAppSelector((state) => state.workflowBuilder.nodes)
-  const isWorkflowRunning =
-    selectedWorkflowRun?.status === WorkflowRunStepStatus.Running
+  const { nodes, isRunning: isWorkflowRunning } = useAppSelector(
+    (state) => state.workflowBuilder
+  )
 
   const [isClearConfirmationOpen, setIsClearConfirmationOpen] = useState(false)
 
@@ -58,125 +53,90 @@ export default function Sidebar({ disabled }: SidebarProps) {
     setIsClearConfirmationOpen(false)
   }
 
-  const hasStartNode = nodes.some((n) => n.type === 'start')
-  const startNodeCount = nodes.filter((n) => n.type === 'start').length
+  const hasStartNode = nodes.some((n) => n.type === WorkflowNodeType.Start)
 
   const getViewportCenterPosition = () => {
     try {
-      // Get the React Flow wrapper element
       const reactFlowElement = document.querySelector('.react-flow')
-
       if (!reactFlowElement) {
-        // Fallback to default position if React Flow element not available
         return { x: 400, y: 300 }
       }
-
       const bounds = reactFlowElement.getBoundingClientRect()
-
-      // Calculate the center point, but account for sidebar by moving more to the right
-      // The sidebar is 320px (w-80 = 320px), so we adjust the center accordingly
-      const centerX = bounds.width * 0.8 // Move more toward right side of canvas
+      const centerX = bounds.width * 0.8
       const centerY = bounds.height / 2
-
-      // Convert the center point from screen coordinates to flow coordinates
-      // screenToFlowPosition expects coordinates relative to the React Flow element
       const graphPosition = reactFlowInstance.screenToFlowPosition({
         x: centerX,
         y: centerY,
       })
-
       return graphPosition
-    } catch (error) {
-      console.warn(
-        'Failed to get viewport center, using fallback position:',
-        error
-      )
-      // Fallback position if anything goes wrong
+    } catch {
       return { x: 400, y: 300 }
     }
   }
 
   const handleAddNode = (type: string) => {
     if (isWorkflowRunning) return
-
-    // Get the center position of the current viewport
     const position = getViewportCenterPosition()
-
     dispatch(createNodeAtPosition({ type, position }))
   }
 
   return (
-    <div className='flex h-full w-64 flex-col overflow-hidden border-r border-border bg-muted/30 backdrop-blur supports-[backdrop-filter]:bg-muted/20'>
-      <div className='flex-shrink-0 p-3'>
-        <h2 className='text-base font-semibold text-foreground'>Components</h2>
+    <div className='absolute left-4 top-20 z-10 flex w-48 flex-col rounded-lg border border-border/50 bg-white/80 shadow-lg backdrop-blur-sm'>
+      <div className='border-b border-border/50 px-3 py-2'>
+        <h2 className='text-xs font-semibold text-foreground'>Components</h2>
       </div>
-      <div className='flex-1 overflow-y-auto px-3 pb-3'>
-        <div className='space-y-3'>
-          <Card className='border-dashed'>
-            <CardContent className='py-2 text-xs text-muted-foreground'>
-              {disabled?.start
-                ? 'Add steps to build your workflow. Each step includes an output automatically.'
-                : startNodeCount > 0
-                  ? `${startNodeCount} start node${startNodeCount > 1 ? 's' : ''} added. Add more start nodes to compare different approaches.`
-                  : 'Start creating your workflow by adding a Start node first.'}
-            </CardContent>
-          </Card>
+      <div className='overflow-y-auto p-2'>
+        <div className='space-y-1.5'>
           {nodeComponents.map((component) => (
             <Card
               key={component.type}
-              className='cursor-pointer transition-shadow hover:shadow-md'
+              className='cursor-pointer border-border/50 bg-white/60 transition-all hover:border-primary/30 hover:bg-white hover:shadow-md'
+              onClick={() => {
+                if (
+                  !isWorkflowRunning &&
+                  !(component.type === WorkflowNodeType.Start
+                    ? Boolean(disabled?.start)
+                    : Boolean(disabled?.step) || !hasStartNode)
+                ) {
+                  handleAddNode(component.type)
+                }
+              }}
             >
-              <CardHeader className='pb-1 pt-3'>
-                <CardTitle className='flex items-center gap-2 text-sm'>
-                  <div className={`rounded p-1 ${component.color}`}>
-                    <component.icon className='h-3.5 w-3.5 text-card' />
+              <CardContent className='p-2.5'>
+                <div className='flex items-center gap-2.5'>
+                  <div className={`rounded-md p-1.5 ${component.color}`}>
+                    <component.icon className='h-3.5 w-3.5 text-white' />
                   </div>
-                  {component.label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='pb-3 pt-0'>
-                <p className='mb-2 text-xs text-muted-foreground'>
-                  {component.description}
-                </p>
-                <Button
-                  size='sm'
-                  variant='secondary'
-                  onClick={() => handleAddNode(component.type)}
-                  className={`h-7 w-full text-xs ${isWorkflowRunning ? 'cursor-not-allowed bg-muted text-muted-foreground opacity-50' : ''}`}
-                  disabled={
-                    isWorkflowRunning ||
-                    (component.type === 'start'
-                      ? Boolean(disabled?.start)
-                      : component.type === 'chatOutput'
-                        ? Boolean(disabled?.output) || !hasStartNode
-                        : Boolean(disabled?.step) || !hasStartNode)
-                  }
-                >
-                  Add to Canvas
-                </Button>
+                  <div className='min-w-0 flex-1'>
+                    <div className='text-xs font-medium text-foreground'>
+                      {component.label}
+                    </div>
+                    <div className='truncate text-[10px] text-muted-foreground'>
+                      {component.description}
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ))}
-
-          {/* Clear All Button */}
-          {nodes.length > 0 && (
-            <Card className='border-destructive/20'>
-              <CardContent className='py-2'>
-                <Button
-                  size='sm'
-                  variant='destructive'
-                  onClick={() => setIsClearConfirmationOpen(true)}
-                  disabled={isWorkflowRunning}
-                  className={`h-7 w-full text-xs ${isWorkflowRunning ? 'cursor-not-allowed opacity-50' : ''}`}
-                >
-                  <Trash2 className='mr-2 h-3.5 w-3.5' />
-                  Clear All Nodes
-                </Button>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
+
+      {/* Clear button at bottom */}
+      {nodes.length > 0 && (
+        <div className='border-t border-border/50 p-2'>
+          <Button
+            size='sm'
+            variant='ghost'
+            onClick={() => setIsClearConfirmationOpen(true)}
+            disabled={isWorkflowRunning}
+            className='h-7 w-full text-[10px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
+          >
+            <Trash2 className='mr-1.5 h-3 w-3' />
+            Clear All
+          </Button>
+        </div>
+      )}
 
       <DeleteConfirmation
         isOpen={isClearConfirmationOpen}

@@ -24,4 +24,12 @@ export const initialState: WorkflowBuilderState = {
   selectedRunIds: {},
   viewMode: false,
   savingStatus: SavingStatus.Idle,
+  selectedNodeId: null,
+  // WebSocket streaming state
+  wsConnectionStatus: 'disconnected',
+  streamingResponses: {},
+  activeStreamingNodeId: null,
+  rightPanelTab: 'config',
+  showExecutionPanel: false,
+  pendingValidation: null,
 }
