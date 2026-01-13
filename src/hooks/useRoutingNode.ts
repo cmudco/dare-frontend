@@ -1,27 +1,16 @@
 import { useAppSelector } from '@/redux/hooks'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
-import type { NodeRoute } from '@/types/workflowNodes'
+import type { ValidationContext } from '@/redux/types/workflow'
 
 /**
- * Validation context from backend for routing nodes.
- * Used when human validation is required.
+ * Pending validation data for HumanValidationModal (hook-specific shape).
+ * Maps from V2 API ValidationContext to modal-compatible format.
  */
-export interface ValidationContext {
-  availableRoutes: NodeRoute[]
-  customPrompt: string
-  aiRecommendation: string | null
-  aiAnalysis: string | null
-  stepNumber: number | null
-}
-
-/**
- * Pending validation data structure for HumanValidationModal.
- */
-export interface PendingValidation {
+export interface HookPendingValidation {
   nodeId: string
   stepNumber: number
   customPrompt: string
-  availableRoutes: NodeRoute[]
+  availableRoutes: { name: string; description: string }[]
   currentResponse: string
   stepId: number
   aiRecommendation: string | undefined
@@ -43,7 +32,7 @@ export interface RoutingNodeState {
   /** Whether there's a pending human validation */
   hasPendingValidation: boolean
   /** Formatted pending validation data for HumanValidationModal */
-  pendingValidation: PendingValidation | null
+  pendingValidation: HookPendingValidation | null
   /** AI analysis/explanation text */
   aiAnalysis: string | null
   /** AI recommended route */
@@ -116,7 +105,7 @@ export function useRoutingNode(nodeId: string): RoutingNodeState {
 
   // Build validation object from nodeState for HumanValidationModal compatibility
   // Backend guarantees availableRoutes is always [{name, description}] objects
-  const pendingValidation: PendingValidation | null = hasPendingValidation
+  const pendingValidation: HookPendingValidation | null = hasPendingValidation
     ? {
         nodeId,
         stepNumber: validationContext?.stepNumber ?? 0,

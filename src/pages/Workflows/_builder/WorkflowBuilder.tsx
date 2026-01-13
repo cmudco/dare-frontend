@@ -3,22 +3,21 @@ import {
   ReactFlow,
   Background,
   Controls,
-  Panel,
   MiniMap,
   useReactFlow,
   BackgroundVariant,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import './workflow-builder.css'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   onNodesChange,
   onEdgesChange,
   onConnect,
   setSavedViewport,
-  collapseAllNodes,
-  expandAllNodes,
   undo,
   redo,
+  setSelectedNodeId,
 } from '@/redux/workflowBuilderSlice'
 import { isValidConnection } from '@/utils/workflowBuilder/isValidConnection'
 import {
@@ -27,14 +26,12 @@ import {
 } from '@/utils/constants/workflowBuilder'
 import { loadWorkflowIntoBuilder } from '@/redux/asyncThunks/workflowBuilder'
 import { getWorkflowRuns } from '@/redux/asyncThunks/workflow'
-import { startWorkflowRunPolling } from '@/services/workflowRunPolling'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import type { Workflow } from '@/redux/types/workflow'
 import Sidebar from './components/Sidebar'
-import { Button } from '@/components/ui/button'
-import { Minimize2, Maximize2, Undo2, Redo2 } from 'lucide-react'
+import NodeConfigPanel from './components/NodeConfigPanel'
+import WorkflowExecutionPanel from './components/WorkflowExecutionPanel'
 import { getAgents } from '@/redux/asyncThunks/agent'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useWorkflowPaste } from '@/hooks/useWorkflowPaste'
 import { getNodeColor } from '@/utils/workflowBuilder/getNodeColor'
 
@@ -57,11 +54,35 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     isRunning: isWorkflowRunning,
     savedViewport,
     history,
+    selectedNodeId,
+    showExecutionPanel,
   } = useAppSelector((state) => state.workflowBuilder)
 
-  // Check if undo/redo is available
+  // Check if undo/redo is available (used by keyboard shortcuts)
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
+
+  // Expose undo/redo via window for parent components to call
+  React.useEffect(() => {
+    // @ts-expect-error - exposing for parent component access
+    window.__workflowUndo = () => canUndo && dispatch(undo())
+    // @ts-expect-error - exposing for parent component access
+    window.__workflowRedo = () => canRedo && dispatch(redo())
+    // @ts-expect-error - exposing for parent component access
+    window.__workflowCanUndo = () => canUndo
+    // @ts-expect-error - exposing for parent component access
+    window.__workflowCanRedo = () => canRedo
+    return () => {
+      // @ts-expect-error - cleanup
+      delete window.__workflowUndo
+      // @ts-expect-error - cleanup
+      delete window.__workflowRedo
+      // @ts-expect-error - cleanup
+      delete window.__workflowCanUndo
+      // @ts-expect-error - cleanup
+      delete window.__workflowCanRedo
+    }
+  }, [canUndo, canRedo, dispatch])
 
   // Load agents on mount
   useEffect(() => {
@@ -82,27 +103,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     }
   }, [props.workflowId, props.initialWorkflow, dispatch])
 
-  // Start polling when a run is active and running
-  useEffect(() => {
-    if (currentRun?.id && isWorkflowRunning) {
-      const cleanup = startWorkflowRunPolling(currentRun.id, dispatch)
-      return cleanup
-    }
-  }, [currentRun?.id, isWorkflowRunning, dispatch])
-
-  // Refresh runs list when workflow run completes or status changes
-  useEffect(() => {
-    // Only refresh if we have a workflow ID and the run just completed
-    if (
-      props.workflowId &&
-      currentRun &&
-      !isWorkflowRunning &&
-      (currentRun.status === WorkflowRunStepStatus.Completed ||
-        currentRun.status === WorkflowRunStepStatus.Failed)
-    ) {
-      dispatch(getWorkflowRuns(props.workflowId))
-    }
-  }, [props.workflowId, currentRun, isWorkflowRunning, dispatch])
+  // NOTE: WebSocket subscription is handled by parent WorkflowEditPage.tsx
+  // Do NOT subscribe here to avoid duplicate subscriptions causing state race conditions
 
   useEffect(() => {
     if (savedViewport && nodes.length > 0) {
@@ -147,11 +149,29 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   // Respects disableEditing prop and workflow running state
   useWorkflowPaste({ disabled: props.disableEditing })
 
+  // Handle node double click to open config panel
+  const handleNodeDoubleClick = useCallback(
+    (_: React.MouseEvent, node: { id: string }) => {
+      dispatch(setSelectedNodeId(node.id))
+    },
+    [dispatch]
+  )
+
+  // Handle pane click to close config panel
+  const handlePaneClick = useCallback(() => {
+    dispatch(setSelectedNodeId(null))
+  }, [dispatch])
+
+  // Get the selected node data for config panel
+  const selectedNode = selectedNodeId
+    ? nodes.find((n) => n.id === selectedNodeId)
+    : null
+
   return (
-    <div className='flex h-full w-full'>
+    <div className='relative h-full w-full'>
       <Sidebar />
       <ReactFlow
-        className='flex-1'
+        className='workflow-builder-canvas'
         nodes={nodes}
         edges={edges}
         onNodesChange={(changes) => dispatch(onNodesChange(changes))}
@@ -168,6 +188,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
         zoomOnScroll={true}
         zoomOnPinch={true}
         minZoom={0.1}
+        onNodeDoubleClick={handleNodeDoubleClick}
+        onPaneClick={handlePaneClick}
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -175,85 +197,38 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           size={1}
           color='#e5e7eb'
         />
-        <Controls showZoom={true} showFitView={true} showInteractive={true} />
+        <Controls
+          showZoom={true}
+          showFitView={true}
+          showInteractive={true}
+          position='bottom-right'
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(229, 231, 235, 0.5)',
+            borderRadius: '8px',
+          }}
+        />
         <MiniMap
           nodeColor={(node) => getNodeColor(node, currentRun?.nodeStates)}
           nodeStrokeWidth={3}
           zoomable
           pannable
-          position='bottom-right'
+          position='bottom-left'
           style={{
-            backgroundColor: '#f9fafb',
-            border: '1px solid #e5e7eb',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(229, 231, 235, 0.5)',
             borderRadius: '8px',
           }}
         />
-        <Panel
-          position='top-right'
-          className='rounded-lg border border-gray-200 bg-white p-3 shadow-md'
-        >
-          <div className='space-y-2 text-sm'>
-            <div className='font-semibold text-gray-700'>Workflow Info</div>
-            <div className='text-gray-600'>
-              Nodes: <span className='font-medium'>{nodes.length}</span>
-            </div>
-            <div className='text-gray-600'>
-              Connections: <span className='font-medium'>{edges.length}</span>
-            </div>
-            {isWorkflowRunning && (
-              <div className='font-medium text-green-600'>▶ Running...</div>
-            )}
-            <div className='space-y-1 border-t border-gray-200 pt-2'>
-              <div className='flex gap-1'>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => dispatch(undo())}
-                  disabled={!canUndo}
-                  className='h-6 flex-1 px-2 text-xs'
-                  title='Undo (Cmd/Ctrl+Z)'
-                >
-                  <Undo2 className='mr-1 h-3 w-3' />
-                  Undo
-                </Button>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => dispatch(redo())}
-                  disabled={!canRedo}
-                  className='h-6 flex-1 px-2 text-xs'
-                  title='Redo (Cmd/Ctrl+Shift+Z)'
-                >
-                  <Redo2 className='mr-1 h-3 w-3' />
-                  Redo
-                </Button>
-              </div>
-              <div className='flex gap-1'>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => dispatch(collapseAllNodes())}
-                  className='h-6 flex-1 px-2 text-xs'
-                  title='Collapse all nodes'
-                >
-                  <Minimize2 className='mr-1 h-3 w-3' />
-                  Collapse
-                </Button>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => dispatch(expandAllNodes())}
-                  className='h-6 flex-1 px-2 text-xs'
-                  title='Expand all nodes'
-                >
-                  <Maximize2 className='mr-1 h-3 w-3' />
-                  Expand
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Panel>
       </ReactFlow>
+
+      {/* Config Panel - shown when a node is selected */}
+      {selectedNode && <NodeConfigPanel selectedNode={selectedNode} />}
+
+      {/* Execution Panel - shown when running or explicitly opened */}
+      {(isWorkflowRunning || showExecutionPanel) && <WorkflowExecutionPanel />}
     </div>
   )
 }
