@@ -125,7 +125,53 @@ const MCPToolExecute = () => {
         Back to {server.name}
       </Button>
 
-      {/* Tool Header */}
+      {/* Result Section - Shown at top for visibility */}
+      {(result !== null || error) && (
+        <div
+          className={`rounded-lg border p-6 ${
+            error
+              ? 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/50'
+              : 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/50'
+          }`}
+        >
+          <div className='mb-4 flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              {error ? (
+                <>
+                  <XCircle className='h-5 w-5 text-red-600' />
+                  <h3 className='font-medium text-red-700 dark:text-red-300'>
+                    Execution Failed
+                  </h3>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className='h-5 w-5 text-green-600' />
+                  <h3 className='font-medium text-green-700 dark:text-green-300'>
+                    Execution Successful
+                  </h3>
+                </>
+              )}
+            </div>
+            {executionTime !== null && (
+              <span className='text-sm text-muted-foreground'>
+                {executionTime}ms
+              </span>
+            )}
+          </div>
+
+          {error ? (
+            <div className='rounded-md bg-white/50 p-4 text-red-700 dark:bg-black/20 dark:text-red-300'>
+              {error}
+            </div>
+          ) : (
+            <div className='rounded-md bg-white/50 dark:bg-black/20'>
+              <MCPJsonViewer data={result} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tool Header + Form */}
       <div className='rounded-lg border bg-card p-6'>
         <div className='mb-4'>
           <div className='flex items-center gap-2 text-sm text-muted-foreground'>
@@ -253,39 +299,6 @@ const MCPToolExecute = () => {
           </Button>
         </div>
       </div>
-
-      {/* Result Section */}
-      {(result !== null || error) && (
-        <div className='rounded-lg border bg-card p-6'>
-          <div className='mb-4 flex items-center justify-between'>
-            <h3 className='font-medium'>Result</h3>
-            <div className='flex items-center gap-4 text-sm'>
-              {executionTime !== null && (
-                <span className='text-muted-foreground'>{executionTime}ms</span>
-              )}
-              {error ? (
-                <span className='flex items-center gap-1 text-red-600'>
-                  <XCircle className='h-4 w-4' />
-                  Failed
-                </span>
-              ) : (
-                <span className='flex items-center gap-1 text-green-600'>
-                  <CheckCircle2 className='h-4 w-4' />
-                  Success
-                </span>
-              )}
-            </div>
-          </div>
-
-          {error ? (
-            <div className='rounded-md bg-red-50 p-4 text-red-700 dark:bg-red-950 dark:text-red-300'>
-              {error}
-            </div>
-          ) : (
-            <MCPJsonViewer data={result} />
-          )}
-        </div>
-      )}
     </div>
   )
 }
