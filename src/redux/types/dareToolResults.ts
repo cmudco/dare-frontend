@@ -1,9 +1,15 @@
 /**
  * DARE Tool Results Types
  *
- * TypeScript types for DARE tool execution results,
- * used for rendering charts, diagrams, and other visual outputs.
+ * TypeScript types for DARE tool execution results.
+ * Clean, separate interfaces for maximum readability.
  */
+
+import { ChartType } from '@/utils/constants/dareTools'
+
+// ─────────────────────────────────────────────────────────────
+// Chart Types
+// ─────────────────────────────────────────────────────────────
 
 /**
  * Data point for chart data series
@@ -28,14 +34,21 @@ export interface ChartOptions {
  * Chart configuration returned by create_chart tool
  */
 export interface ChartConfig {
-  type: 'bar' | 'line' | 'pie' | 'doughnut' | 'area'
+  type: ChartType
   title: string
   data: ChartDataPoint[]
   options?: ChartOptions
 }
 
+// ─────────────────────────────────────────────────────────────
+// DARE Tool Result
+// ─────────────────────────────────────────────────────────────
+
 /**
- * Result structure from DARE tool execution
+ * Result from DARE tool execution (create_chart, create_diagram)
+ *
+ * BE sends this as a properly camelCased object.
+ * Used when serverSlug === 'dare'
  */
 export interface DareToolResult {
   success: boolean
@@ -44,25 +57,25 @@ export interface DareToolResult {
   error?: string
 }
 
-/**
- * Parse raw JSON result string into typed DareToolResult
- */
-export function parseDareToolResult(result: string): DareToolResult | null {
-  if (!result) return null
+// ─────────────────────────────────────────────────────────────
+// MCP Tool Result
+// ─────────────────────────────────────────────────────────────
 
-  try {
-    const parsed = JSON.parse(result)
-    if (typeof parsed === 'object' && parsed !== null) {
-      return {
-        success: parsed.success ?? false,
-        // Handle both snake_case and camelCase from backend
-        chartConfig: parsed.chartConfig || parsed.chart_config,
-        mermaidCode: parsed.mermaidCode || parsed.mermaid_code,
-        error: parsed.error,
-      }
-    }
-  } catch {
-    // Not valid JSON
-  }
-  return null
+/**
+ * Content item from MCP tool response
+ */
+export interface McpToolContent {
+  type: string
+  text?: string
+}
+
+/**
+ * Result from MCP tool execution (external tools like Slack, GitHub)
+ *
+ * MCP tools return content arrays with text/image responses.
+ * Used when serverSlug !== 'dare'
+ */
+export interface McpToolResult {
+  content?: McpToolContent[]
+  isError?: boolean
 }

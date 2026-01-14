@@ -70,12 +70,18 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
   }
 
   // Derive display label
-  const displayLabel =
-    selectedCount === 0
-      ? 'Tools'
-      : selectedCount === 1
-        ? tools.find((t) => t.slug === selectedSlugs[0])?.name || 'Tool'
-        : `${selectedCount} Tools`
+  /**
+   * Get display label for the tool selector button
+   */
+  const getDisplayLabel = (): string => {
+    if (selectedCount === 0) return 'Tools'
+    if (selectedCount === 1) {
+      return tools.find((t) => t.slug === selectedSlugs[0])?.name || 'Tool'
+    }
+    return `${selectedCount} Tools`
+  }
+
+  const displayLabel = getDisplayLabel()
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

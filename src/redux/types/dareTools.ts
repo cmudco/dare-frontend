@@ -2,10 +2,14 @@
  * DARE Tools types for Redux state management
  */
 
-/**
- * Tool category for UI grouping
- */
-export type DareToolCategory = 'visualization' | 'data' | 'utility'
+import {
+  DareToolCategory,
+  MessageContentType,
+  ChartType,
+} from '@/utils/constants/dareTools'
+
+// Re-export for backwards compatibility
+export { DareToolCategory, MessageContentType }
 
 /**
  * DARE Tool - Internal tool definition
@@ -49,16 +53,6 @@ export interface DareToolsState {
 }
 
 /**
- * Message content types for specialized rendering
- */
-export type MessageContentType =
-  | 'text'
-  | 'mermaid_diagram'
-  | 'chart'
-  | 'image'
-  | 'audio'
-
-/**
  * Content metadata for specialized rendering
  */
 export interface ContentMetadata {
@@ -68,7 +62,7 @@ export interface ContentMetadata {
 
   // For charts
   chartConfig?: Record<string, unknown>
-  chartType?: 'bar' | 'line' | 'pie' | 'doughnut' | 'scatter'
+  chartType?: ChartType
 
   // For images
   imageUrl?: string

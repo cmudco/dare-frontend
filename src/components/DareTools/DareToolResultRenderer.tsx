@@ -6,12 +6,13 @@
  */
 
 import React from 'react'
-import { parseDareToolResult } from '@/redux/types/dareToolResults'
+import { DareToolName } from '@/utils/constants/dareTools'
+import { DareToolResult, ChartConfig } from '@/redux/types/dareToolResults'
 import { DareChartResult } from './DareChartResult'
 
 interface DareToolResultRendererProps {
   toolName: string
-  result: string // Raw JSON string from tool call
+  result: DareToolResult | null // Now receives parsed object from BE
   className?: string
 }
 
@@ -29,27 +30,41 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
   result,
   className = '',
 }) => {
-  const parsedResult = parseDareToolResult(result)
+  // DEBUG: Log incoming data
+  console.log('[DareToolResultRenderer] Received:', {
+    toolName,
+    result,
+    resultType: typeof result,
+    hasChartConfig: !!(result as DareToolResult)?.chartConfig,
+  })
 
-  // If parsing failed or not successful, don't render
-  if (!parsedResult || !parsedResult.success) {
+  // If no result or not successful, don't render
+  if (!result || !result.success) {
+    console.log(
+      '[DareToolResultRenderer] Skipping render: no result or not successful'
+    )
     return null
   }
 
   // Route to appropriate renderer based on tool name
+  console.log('[DareToolResultRenderer] Routing to renderer for:', toolName)
   switch (toolName) {
-    case 'create_chart':
-      if (parsedResult.chartConfig) {
+    case DareToolName.CREATE_CHART:
+      if (result.chartConfig) {
+        console.log(
+          '[DareToolResultRenderer] Rendering chart with config:',
+          result.chartConfig
+        )
         return (
           <DareChartResult
-            chartConfig={parsedResult.chartConfig}
+            chartConfig={result.chartConfig as ChartConfig}
             className={className}
           />
         )
       }
       break
 
-    case 'create_diagram':
+    case DareToolName.CREATE_DIAGRAM:
       // TODO: Mermaid diagram support
       // For now, mermaid code is included in the message text itself
       // so it will be rendered by the existing MermaidBlock component
@@ -57,6 +72,7 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
 
     default:
       // Unknown tool type - no inline rendering
+      console.log('[DareToolResultRenderer] Unknown tool type:', toolName)
       break
   }
 
