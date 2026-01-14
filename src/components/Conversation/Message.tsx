@@ -39,6 +39,7 @@ import WebSearchSources from './WebSearchSources'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
 import { ToolCallIndicator } from '../MCP/ToolCallIndicator'
+import { DareToolResultRenderer } from '../DareTools/DareToolResultRenderer'
 import { features } from '@/config/environment'
 import { debugLog } from '@/utils/debugLogger'
 
@@ -518,6 +519,21 @@ const Message: React.FC<MessageProps> = ({
               {features.enableArtifacts && message.artifactId && (
                 <ArtifactCard artifactId={message.artifactId} />
               )}
+
+              {/* DARE Tool Results - Render charts/diagrams inline in message bubble */}
+              {!message.isSender &&
+                message.toolCalls
+                  ?.filter(
+                    (tc) =>
+                      tc.serverSlug === 'dare' && tc.status === 'completed'
+                  )
+                  .map((tc) => (
+                    <DareToolResultRenderer
+                      key={tc.id}
+                      toolName={tc.toolName}
+                      result={tc.result || ''}
+                    />
+                  ))}
             </div>
           </div>
         </div>

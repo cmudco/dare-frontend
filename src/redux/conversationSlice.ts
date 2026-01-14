@@ -197,6 +197,11 @@ export const conversationSlice = createSlice({
         state.activeConversation.selectedMcpServerIds = action.payload
       }
     },
+    updateSelectedDareTools(state, action: PayloadAction<string[]>) {
+      if (state.activeConversation) {
+        state.activeConversation.selectedDareToolSlugs = action.payload
+      }
+    },
     updateImageGenerationSettings(
       state,
       action: PayloadAction<ImageGenerationSettings>
@@ -828,6 +833,96 @@ export const conversationSlice = createSlice({
           }
         }
       )
+      // DARE Tool Call - tool starts executing
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            messageId: number
+            toolCall: {
+              id: string
+              toolName: string
+              toolSlug: string
+              serverSlug: string
+              status: ToolCallStatus
+              arguments?: Record<string, unknown>
+            }
+          }
+        } => action.type === 'socket/dareToolCall',
+        (state, action) => {
+          const { messageId, toolCall } = action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (msg) {
+            // Initialize toolCalls array if not present
+            if (!msg.toolCalls) {
+              msg.toolCalls = []
+            }
+            // Add new tool call entry
+            msg.toolCalls.push({
+              id: toolCall.id,
+              toolName: toolCall.toolName,
+              serverSlug: toolCall.serverSlug || 'dare',
+              status: toolCall.status,
+            })
+          }
+        }
+      )
+      // DARE Tool Result - tool completes (success or error)
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            messageId: number
+            toolCall: {
+              id: string
+              toolName: string
+              toolSlug: string
+              serverSlug: string
+              status: 'completed' | 'failed'
+              result?: Record<string, unknown>
+              arguments?: Record<string, unknown>
+            }
+          }
+        } => action.type === 'socket/dareToolResult',
+        (state, action) => {
+          const { messageId, toolCall } = action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (msg && msg.toolCalls) {
+            // Find the matching tool call by id or toolName
+            const existingToolCall = msg.toolCalls.find(
+              (tc) =>
+                tc.id === toolCall.id ||
+                (tc.toolName === toolCall.toolName &&
+                  tc.serverSlug === (toolCall.serverSlug || 'dare'))
+            )
+            if (existingToolCall) {
+              existingToolCall.status =
+                toolCall.status === 'completed' ? 'completed' : 'failed'
+              if (toolCall.result) {
+                // Format result for display
+                if (toolCall.result.success) {
+                  existingToolCall.result = JSON.stringify(
+                    toolCall.result,
+                    null,
+                    2
+                  )
+                } else {
+                  existingToolCall.error =
+                    (toolCall.result.error as string) || 'Unknown error'
+                }
+              }
+            }
+          }
+        }
+      )
   },
 })
 
@@ -881,5 +976,6 @@ export const {
   clearAttachedImages,
   setHistorySidebarCollapsed,
   updateSelectedMcpServers,
+  updateSelectedDareTools,
 } = conversationSlice.actions
 export default conversationSlice.reducer

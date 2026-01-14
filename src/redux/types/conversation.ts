@@ -40,6 +40,7 @@ export interface Conversation {
   selectedEmbeddingIds?: number[]
   selectedFileIds?: number[]
   selectedMcpServerIds?: number[] // MCP servers enabled for this conversation
+  selectedDareToolSlugs?: string[] // DARE tools enabled for this conversation
   feedbackAutoPromptCount?: number // How many auto-prompts have been shown
   feedbackLastPromptMessageCount?: number // Message # when last shown
   feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
@@ -75,12 +76,20 @@ export interface Message {
   artifactId?: number
   // MCP tool calls made by this message
   toolCalls?: ToolCall[]
+  // Content type for specialized rendering
+  contentType?: 'text' | 'mermaid_diagram' | 'chart' | 'image' | 'audio'
+  contentMetadata?: Record<string, unknown>
 }
 
 /**
  * MCP Tool Call Status
  */
-export type ToolCallStatus = 'pending' | 'executing' | 'completed' | 'failed'
+export type ToolCallStatus =
+  | 'pending'
+  | 'executing'
+  | 'running'
+  | 'completed'
+  | 'failed'
 
 /**
  * MCP Tool Call - tracks tool execution within a message
