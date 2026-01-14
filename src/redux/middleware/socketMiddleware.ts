@@ -273,19 +273,14 @@ export function createSocketMiddleware(): Middleware {
         })
 
         // Incoming messages → dispatch as actions
+        // All socket messages should be objects (not JSON strings)
         socket.on('message', (data) => {
-          // Handle both object and JSON string payloads
-          // (DARE tool calls come as JSON strings via send_callback)
-          let parsed = data
           if (typeof data === 'string') {
-            try {
-              parsed = JSON.parse(data)
-            } catch {
-              debugLog('🔌 Failed to parse socket message:', data)
-              return
-            }
+            // This shouldn't happen after BE fix - log for debugging
+            console.error('🔌 Received string message, expected object:', data)
+            return
           }
-          dispatch({ type: `socket/${parsed.type}`, payload: parsed })
+          dispatch({ type: `socket/${data.type}`, payload: data })
         })
 
         break

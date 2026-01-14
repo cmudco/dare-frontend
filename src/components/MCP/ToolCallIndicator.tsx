@@ -7,7 +7,8 @@ import {
   XCircle,
   Wrench,
 } from 'lucide-react'
-import type { ToolCall, ToolCallStatus } from '@/redux/types/conversation'
+import { ToolCallStatus } from '@/utils/constants/dareTools'
+import type { ToolCall } from '@/redux/types/conversation'
 
 interface ToolCallIndicatorProps {
   toolCalls: ToolCall[]
@@ -31,22 +32,24 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
 
   const hasExecuting = toolCalls.some(
     (tc) =>
-      tc.status === 'executing' ||
-      tc.status === 'pending' ||
-      tc.status === 'running'
+      tc.status === ToolCallStatus.EXECUTING ||
+      tc.status === ToolCallStatus.PENDING ||
+      tc.status === ToolCallStatus.RUNNING
   )
-  const hasError = toolCalls.some((tc) => tc.status === 'failed')
-  const allCompleted = toolCalls.every((tc) => tc.status === 'completed')
+  const hasError = toolCalls.some((tc) => tc.status === ToolCallStatus.FAILED)
+  const allCompleted = toolCalls.every(
+    (tc) => tc.status === ToolCallStatus.COMPLETED
+  )
 
   const getStatusIcon = (status: ToolCallStatus) => {
     switch (status) {
-      case 'pending':
-      case 'executing':
-      case 'running':
+      case ToolCallStatus.PENDING:
+      case ToolCallStatus.EXECUTING:
+      case ToolCallStatus.RUNNING:
         return <Loader2 className='h-3.5 w-3.5 animate-spin text-gray-400' />
-      case 'completed':
+      case ToolCallStatus.COMPLETED:
         return <CheckCircle className='h-3.5 w-3.5 text-green-500' />
-      case 'failed':
+      case ToolCallStatus.FAILED:
         return <XCircle className='h-3.5 w-3.5 text-red-500' />
       default:
         return <Wrench className='h-3.5 w-3.5 text-gray-400' />
@@ -106,16 +109,24 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
               </div>
 
               {/* Raw result JSON */}
-              {tc.status === 'completed' && tc.result && (
-                <div className='mt-2 overflow-x-auto rounded bg-gray-50 p-2 dark:bg-gray-800'>
-                  <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-500 dark:text-gray-400'>
-                    {tc.result.substring(0, 500)}
-                    {tc.result.length > 500 ? '...' : ''}
-                  </pre>
-                </div>
-              )}
+              {tc.status === ToolCallStatus.COMPLETED &&
+                (tc.dareResult || tc.mcpResult) &&
+                (() => {
+                  // Get the appropriate result based on server type
+                  const result =
+                    tc.serverSlug === 'dare' ? tc.dareResult : tc.mcpResult
+                  const resultStr = JSON.stringify(result, null, 2)
+                  return (
+                    <div className='mt-2 overflow-x-auto rounded bg-gray-50 p-2 dark:bg-gray-800'>
+                      <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-500 dark:text-gray-400'>
+                        {resultStr.substring(0, 500)}
+                        {resultStr.length > 500 ? '...' : ''}
+                      </pre>
+                    </div>
+                  )
+                })()}
 
-              {tc.status === 'failed' && tc.error && (
+              {tc.status === ToolCallStatus.FAILED && tc.error && (
                 <div className='mt-2 rounded bg-red-50 p-2 text-xs text-red-500 dark:bg-red-900/20'>
                   {tc.error}
                 </div>

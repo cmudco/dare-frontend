@@ -23,6 +23,7 @@ import {
   AudioTranscriptionSettings,
   ToolCallStatus,
 } from './types/conversation'
+import { ServerSlug } from '@/utils/constants/dareTools'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
@@ -811,20 +812,13 @@ export const conversationSlice = createSlice({
               (tc) => tc.toolName === toolName && tc.serverSlug === serverSlug
             )
             if (toolCall) {
-              toolCall.status = status === 'success' ? 'completed' : 'failed'
+              toolCall.status =
+                status === 'success'
+                  ? ToolCallStatus.COMPLETED
+                  : ToolCallStatus.FAILED
               if (result) {
-                // Extract text from result if it's an object with content array
-                if (
-                  typeof result === 'object' &&
-                  result !== null &&
-                  'content' in result
-                ) {
-                  const content = (result as { content: { text?: string }[] })
-                    .content
-                  toolCall.result = content?.[0]?.text || JSON.stringify(result)
-                } else {
-                  toolCall.result = String(result)
-                }
+                // Store as mcpResult (MCP tools use this field)
+                toolCall.mcpResult = result
               }
               if (error) {
                 toolCall.error = error
@@ -865,7 +859,7 @@ export const conversationSlice = createSlice({
             msg.toolCalls.push({
               id: toolCall.id,
               toolName: toolCall.toolName,
-              serverSlug: toolCall.serverSlug || 'dare',
+              serverSlug: toolCall.serverSlug || ServerSlug.DARE,
               status: toolCall.status,
             })
           }
@@ -901,22 +895,22 @@ export const conversationSlice = createSlice({
               (tc) =>
                 tc.id === toolCall.id ||
                 (tc.toolName === toolCall.toolName &&
-                  tc.serverSlug === (toolCall.serverSlug || 'dare'))
+                  tc.serverSlug === (toolCall.serverSlug || ServerSlug.DARE))
             )
             if (existingToolCall) {
               existingToolCall.status =
-                toolCall.status === 'completed' ? 'completed' : 'failed'
+                toolCall.status === 'completed'
+                  ? ToolCallStatus.COMPLETED
+                  : ToolCallStatus.FAILED
               if (toolCall.result) {
-                // Format result for display
-                if (toolCall.result.success) {
-                  existingToolCall.result = JSON.stringify(
-                    toolCall.result,
-                    null,
-                    2
-                  )
-                } else {
-                  existingToolCall.error =
-                    (toolCall.result.error as string) || 'Unknown error'
+                // Store as dareResult (DARE tools use this field)
+                // Result is already parsed and camelCased from BE
+                existingToolCall.dareResult =
+                  toolCall.result as unknown as import('@/redux/types/dareToolResults').DareToolResult
+
+                // If result indicates failure, also set error
+                if (!toolCall.result.success && toolCall.result.error) {
+                  existingToolCall.error = toolCall.result.error as string
                 }
               }
             }

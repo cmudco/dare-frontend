@@ -40,6 +40,7 @@ import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
 import { ToolCallIndicator } from '../MCP/ToolCallIndicator'
 import { DareToolResultRenderer } from '../DareTools/DareToolResultRenderer'
+import { ToolCallStatus, ServerSlug } from '@/utils/constants/dareTools'
 import { features } from '@/config/environment'
 import { debugLog } from '@/utils/debugLogger'
 
@@ -522,18 +523,47 @@ const Message: React.FC<MessageProps> = ({
 
               {/* DARE Tool Results - Render charts/diagrams inline in message bubble */}
               {!message.isSender &&
-                message.toolCalls
-                  ?.filter(
-                    (tc) =>
-                      tc.serverSlug === 'dare' && tc.status === 'completed'
-                  )
-                  .map((tc) => (
-                    <DareToolResultRenderer
-                      key={tc.id}
-                      toolName={tc.toolName}
-                      result={tc.result || ''}
-                    />
-                  ))}
+                (() => {
+                  // DEBUG: Log tool calls for this message
+                  if (message.toolCalls && message.toolCalls.length > 0) {
+                    debugLog('[Message] Tool calls for message:', {
+                      messageId: message.id,
+                      toolCalls: message.toolCalls,
+                      dareToolCalls: message.toolCalls.filter(
+                        (tc) => tc.serverSlug === ServerSlug.DARE
+                      ),
+                      completedDareTools: message.toolCalls.filter(
+                        (tc) =>
+                          tc.serverSlug === ServerSlug.DARE &&
+                          tc.status === ToolCallStatus.COMPLETED
+                      ),
+                    })
+                  }
+
+                  return message.toolCalls
+                    ?.filter(
+                      (tc) =>
+                        tc.serverSlug === ServerSlug.DARE &&
+                        tc.status === ToolCallStatus.COMPLETED
+                    )
+                    .map((tc) => {
+                      debugLog(
+                        '[Message] Rendering DareToolResultRenderer for:',
+                        {
+                          toolName: tc.toolName,
+                          dareResult: tc.dareResult,
+                        }
+                      )
+                      // BE now sends dareResult as parsed, camelCased object
+                      return (
+                        <DareToolResultRenderer
+                          key={tc.id}
+                          toolName={tc.toolName}
+                          result={tc.dareResult ?? null}
+                        />
+                      )
+                    })
+                })()}
             </div>
           </div>
         </div>
