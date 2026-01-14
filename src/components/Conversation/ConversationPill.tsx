@@ -7,6 +7,7 @@ import {
   clearDraftForConversation,
   addAttachedImage,
   clearAttachedImages,
+  updateSelectedMcpServers,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker'
@@ -28,6 +29,9 @@ import VoiceModeButton from './VoiceModeButton'
 import { ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
+import { features } from '@/config/environment'
+import { MCPServerSelector } from '@/components/MCP/MCPServerSelector'
+import { updateConversation } from '@/redux/asyncThunks/conversation'
 
 interface ConversationPillProps {
   editMessageId?: string | null
@@ -308,6 +312,23 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <div className='h-8 w-[2px] rounded-lg bg-gray-300'></div>
             <ConversationReferenceSelect />
             <ModelPicker />
+            {features.enableMcp && (
+              <MCPServerSelector
+                selectedIds={activeConversation?.selectedMcpServerIds || []}
+                onChange={(serverIds) => {
+                  dispatch(updateSelectedMcpServers(serverIds))
+                  if (activeConversation) {
+                    dispatch(
+                      updateConversation({
+                        conversationId: activeConversation.conversationId,
+                        updates: { selectedMcpServerIds: serverIds },
+                      })
+                    )
+                  }
+                }}
+                disabled={!activeConversation}
+              />
+            )}
           </div>
           <div className='flex items-center gap-3'>
             <div className={clsx(!imageGenerationEnabled && 'hidden')}>

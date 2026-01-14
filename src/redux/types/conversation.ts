@@ -39,6 +39,7 @@ export interface Conversation {
   sortOrder?: number
   selectedEmbeddingIds?: number[]
   selectedFileIds?: number[]
+  selectedMcpServerIds?: number[] // MCP servers enabled for this conversation
   feedbackAutoPromptCount?: number // How many auto-prompts have been shown
   feedbackLastPromptMessageCount?: number // Message # when last shown
   feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
@@ -72,6 +73,25 @@ export interface Message {
   generatedTranscription?: GeneratedTranscription
   // Artifact reference (when message has associated artifact)
   artifactId?: number
+  // MCP tool calls made by this message
+  toolCalls?: ToolCall[]
+}
+
+/**
+ * MCP Tool Call Status
+ */
+export type ToolCallStatus = 'pending' | 'executing' | 'completed' | 'failed'
+
+/**
+ * MCP Tool Call - tracks tool execution within a message
+ */
+export interface ToolCall {
+  id: string
+  toolName: string
+  serverSlug: string
+  status: ToolCallStatus
+  result?: string
+  error?: string
 }
 
 export interface GeneratedImage {

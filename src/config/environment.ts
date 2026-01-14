@@ -47,6 +47,8 @@ export interface FeatureFlags {
   enableVoiceInput: boolean
   // Debug Logs - show console.log debug statements (local/staging only)
   enableDebugLogs: boolean
+  // MCP - Model Context Protocol server integration for external tools
+  enableMcp: boolean
 }
 
 /**
@@ -83,6 +85,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableSocketIO: true, // Test Socket.IO in local
         enableVoiceInput: true, // Voice input enabled for local testing
         enableDebugLogs: true, // Debug logs enabled for local
+        enableMcp: true, // MCP enabled for local development
       }
 
     case 'dare-staging':
@@ -94,6 +97,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableSocketIO: true, // Test Socket.IO in staging
         enableVoiceInput: true, // Voice input enabled for staging testing
         enableDebugLogs: true, // Debug logs enabled for staging
+        enableMcp: true, // MCP enabled for staging testing
       }
 
     case 'dare-production':
@@ -105,6 +109,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableSocketIO: true, // Socket.IO enabled for production
         enableVoiceInput: false, // Voice input disabled in production (beta)
         enableDebugLogs: false, // Debug logs disabled in production
+        enableMcp: false, // MCP disabled in production (beta)
       }
 
     case 'gt-production':
@@ -116,6 +121,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableSocketIO: false, // Disable Socket.IO in production until validated
         enableVoiceInput: false, // Voice input disabled in production (beta)
         enableDebugLogs: false, // Debug logs disabled in production
+        enableMcp: true, // MCP enabled for Georgia Tech
       }
 
     default:
@@ -127,6 +133,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableSocketIO: false, // Default off for safety
         enableVoiceInput: false, // Default off for safety
         enableDebugLogs: false, // Default off for safety
+        enableMcp: false, // Default off for safety
       }
   }
 }

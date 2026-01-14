@@ -38,6 +38,7 @@ import MessageMetadata from './MessageMetadata'
 import WebSearchSources from './WebSearchSources'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
+import { ToolCallIndicator } from '../MCP/ToolCallIndicator'
 import { features } from '@/config/environment'
 import { debugLog } from '@/utils/debugLogger'
 
@@ -707,6 +708,16 @@ const Message: React.FC<MessageProps> = ({
         message.webSearchSources &&
         message.webSearchSources.length > 0 && (
           <WebSearchSources sources={message.webSearchSources} />
+        )}
+
+      {/* MCP Tool Calls - Show tool usage indicator for AI messages */}
+      {!message.isSender &&
+        !message.streaming &&
+        message.toolCalls &&
+        message.toolCalls.length > 0 && (
+          <div className='mt-2 max-w-[95%] pl-10'>
+            <ToolCallIndicator toolCalls={message.toolCalls} />
+          </div>
         )}
 
       <FeedbackModal
