@@ -14,6 +14,7 @@ import themeReducer from './themeSlice'
 import notificationReducer from './notificationSlice'
 import apiKeysReducer from './apiKeysSlice'
 import artifactReducer from './artifactSlice'
+import mcpReducer from './mcpSlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
@@ -42,6 +43,7 @@ export const store = configureStore({
     artifact: artifactReducer,
     socket: socketReducer,
     feedback: feedbackReducer,
+    mcp: mcpReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware

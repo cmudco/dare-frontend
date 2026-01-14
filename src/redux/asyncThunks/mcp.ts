@@ -1,0 +1,146 @@
+import { createAsyncThunk } from '@reduxjs/toolkit'
+import {
+  getMcpServersAPI,
+  getMcpConnectionsAPI,
+  createMcpConnectionAPI,
+  deleteMcpConnectionAPI,
+  testMcpConnectionAPI,
+  getMcpToolsAPI,
+  executeMcpToolAPI,
+  getMcpExecutionsAPI,
+} from '../../api/mcp'
+import { CreateMcpConnectionRequest } from '../types/mcp'
+
+/**
+ * Fetch all available MCP servers
+ */
+export const getMcpServers = createAsyncThunk(
+  'mcp/getMcpServers',
+  async (_, thunkAPI) => {
+    try {
+      const response = await getMcpServersAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Fetch user's MCP connections
+ */
+export const getMcpConnections = createAsyncThunk(
+  'mcp/getMcpConnections',
+  async (_, thunkAPI) => {
+    try {
+      const response = await getMcpConnectionsAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Create or update an MCP connection with credentials
+ */
+export const createMcpConnection = createAsyncThunk(
+  'mcp/createMcpConnection',
+  async (data: CreateMcpConnectionRequest, thunkAPI) => {
+    try {
+      const response = await createMcpConnectionAPI(data)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Disconnect from an MCP server
+ */
+export const deleteMcpConnection = createAsyncThunk(
+  'mcp/deleteMcpConnection',
+  async (serverSlug: string, thunkAPI) => {
+    try {
+      await deleteMcpConnectionAPI(serverSlug)
+      return serverSlug
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Test an MCP connection
+ */
+export const testMcpConnection = createAsyncThunk(
+  'mcp/testMcpConnection',
+  async (serverSlug: string, thunkAPI) => {
+    try {
+      const response = await testMcpConnectionAPI(serverSlug)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Get available tools for an MCP server
+ */
+export const getMcpTools = createAsyncThunk(
+  'mcp/getMcpTools',
+  async (serverSlug: string, thunkAPI) => {
+    try {
+      const response = await getMcpToolsAPI(serverSlug)
+      return { serverSlug, tools: response.tools }
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Execute an MCP tool
+ */
+export const executeMcpTool = createAsyncThunk(
+  'mcp/executeMcpTool',
+  async (
+    {
+      serverSlug,
+      toolName,
+      args,
+    }: {
+      serverSlug: string
+      toolName: string
+      args: Record<string, unknown>
+    },
+    thunkAPI
+  ) => {
+    try {
+      const response = await executeMcpToolAPI(serverSlug, toolName, args)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Get tool execution history
+ */
+export const getMcpExecutions = createAsyncThunk(
+  'mcp/getMcpExecutions',
+  async (
+    params: { server?: string; status?: string } | undefined,
+    thunkAPI
+  ) => {
+    try {
+      const response = await getMcpExecutionsAPI(params)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
