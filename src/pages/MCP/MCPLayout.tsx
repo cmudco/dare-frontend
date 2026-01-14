@@ -3,7 +3,7 @@ import { Plug, History, ChevronRight, Home } from 'lucide-react'
 
 /**
  * MCPLayout - Shared layout for all MCP pages
- * Provides header with navigation tabs and breadcrumbs
+ * Provides compact header with navigation tabs in breadcrumb row
  */
 const MCPLayout = () => {
   const location = useLocation()
@@ -47,14 +47,16 @@ const MCPLayout = () => {
 
   const breadcrumbs = getBreadcrumbs()
   const isHistoryPage = location.pathname === '/mcp/history'
-  const isServersPage = location.pathname === '/mcp'
+  const isServersPage =
+    location.pathname === '/mcp' ||
+    (!isHistoryPage && location.pathname.startsWith('/mcp'))
 
   return (
     <div className='flex h-full flex-col'>
-      {/* Header */}
-      <div className='border-b bg-background px-6 py-4'>
+      {/* Compact Header - Breadcrumbs + Tabs in single row */}
+      <div className='flex items-center justify-between border-b bg-background px-6 py-3'>
         {/* Breadcrumbs */}
-        <div className='mb-4 flex items-center gap-2 text-sm text-muted-foreground'>
+        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
           <NavLink
             to='/mcp'
             className='flex items-center gap-1 hover:text-foreground'
@@ -77,45 +79,31 @@ const MCPLayout = () => {
           ))}
         </div>
 
-        {/* Page Title + Navigation Tabs */}
-        <div className='flex items-center justify-between'>
-          <div>
-            <h1 className='text-2xl font-semibold'>Integrations</h1>
-            <p className='text-sm text-muted-foreground'>
-              Connect and manage external services via MCP
-            </p>
-          </div>
-
-          {/* Navigation Tabs */}
-          <div className='flex gap-2'>
-            <NavLink
-              to='/mcp'
-              end
-              className={({ isActive }) =>
-                `flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  isActive || (isServersPage && !isHistoryPage)
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted hover:bg-muted/80'
-                }`
-              }
-            >
-              <Plug className='h-4 w-4' />
-              Servers
-            </NavLink>
-            <NavLink
-              to='/mcp/history'
-              className={({ isActive }) =>
-                `flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted hover:bg-muted/80'
-                }`
-              }
-            >
-              <History className='h-4 w-4' />
-              History
-            </NavLink>
-          </div>
+        {/* Navigation Tabs */}
+        <div className='flex items-center gap-1'>
+          <NavLink
+            to='/mcp'
+            end
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              isServersPage && !isHistoryPage
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            <Plug className='h-3.5 w-3.5' />
+            Servers
+          </NavLink>
+          <NavLink
+            to='/mcp/history'
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              isHistoryPage
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            <History className='h-3.5 w-3.5' />
+            History
+          </NavLink>
         </div>
       </div>
 
