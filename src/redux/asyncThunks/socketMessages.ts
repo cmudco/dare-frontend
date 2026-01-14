@@ -109,6 +109,7 @@ export const sendSocketMessage = createAsyncThunk<
         ? activeArtifactId
         : undefined,
       mcp_server_ids: activeConversation.selectedMcpServerIds || [],
+      dare_tool_slugs: activeConversation.selectedDareToolSlugs || [],
     }
 
     dispatch(socketSendMessage(activeConversation.conversationId, payload))

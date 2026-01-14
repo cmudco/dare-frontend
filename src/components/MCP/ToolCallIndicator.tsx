@@ -15,8 +15,11 @@ interface ToolCallIndicatorProps {
 }
 
 /**
- * Displays MCP tool call status and results in chat messages.
+ * Displays tool call status and raw results in chat messages.
  * Shows a compact indicator during execution, expandable for details.
+ *
+ * Note: Visual results (charts, diagrams) are now rendered inline
+ * in the message bubble via DareToolResultRenderer.
  */
 export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
   toolCalls,
@@ -27,7 +30,10 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
   if (!toolCalls || toolCalls.length === 0) return null
 
   const hasExecuting = toolCalls.some(
-    (tc) => tc.status === 'executing' || tc.status === 'pending'
+    (tc) =>
+      tc.status === 'executing' ||
+      tc.status === 'pending' ||
+      tc.status === 'running'
   )
   const hasError = toolCalls.some((tc) => tc.status === 'failed')
   const allCompleted = toolCalls.every((tc) => tc.status === 'completed')
@@ -36,6 +42,7 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
     switch (status) {
       case 'pending':
       case 'executing':
+      case 'running':
         return <Loader2 className='h-3.5 w-3.5 animate-spin text-gray-400' />
       case 'completed':
         return <CheckCircle className='h-3.5 w-3.5 text-green-500' />
@@ -77,7 +84,7 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
         {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
       </button>
 
-      {/* Expanded details */}
+      {/* Expanded details - raw JSON results only */}
       {isExpanded && (
         <div className='space-y-1.5 border-t border-gray-200 p-2 dark:border-gray-700'>
           {toolCalls.map((tc) => (
@@ -98,6 +105,7 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
                 </span>
               </div>
 
+              {/* Raw result JSON */}
               {tc.status === 'completed' && tc.result && (
                 <div className='mt-2 overflow-x-auto rounded bg-gray-50 p-2 dark:bg-gray-800'>
                   <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-500 dark:text-gray-400'>

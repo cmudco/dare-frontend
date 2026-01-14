@@ -8,6 +8,7 @@ import {
   addAttachedImage,
   clearAttachedImages,
   updateSelectedMcpServers,
+  updateSelectedDareTools,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker'
@@ -31,6 +32,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
 import { features } from '@/config/environment'
 import { MCPServerSelector } from '@/components/MCP/MCPServerSelector'
+import { DareToolSelector } from '@/components/DareTools/DareToolSelector'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
 
 interface ConversationPillProps {
@@ -329,6 +331,21 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
                 disabled={!activeConversation}
               />
             )}
+            <DareToolSelector
+              selectedSlugs={activeConversation?.selectedDareToolSlugs || []}
+              onChange={(slugs) => {
+                dispatch(updateSelectedDareTools(slugs))
+                if (activeConversation) {
+                  dispatch(
+                    updateConversation({
+                      conversationId: activeConversation.conversationId,
+                      updates: { selectedDareToolSlugs: slugs },
+                    })
+                  )
+                }
+              }}
+              disabled={!activeConversation}
+            />
           </div>
           <div className='flex items-center gap-3'>
             <div className={clsx(!imageGenerationEnabled && 'hidden')}>
