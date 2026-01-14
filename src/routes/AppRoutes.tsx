@@ -24,7 +24,11 @@ import OnboardingScreen from '@/pages/Onboarding/index.tsx'
 import WorkflowCreatePage from '@/pages/Workflows/WorkflowCreatePage.tsx'
 import Agents from '@/pages/Agents/index.tsx'
 import ModelCards from '@/pages/ModelCards'
-import MCPPlayground from '@/pages/MCP/index.tsx'
+import MCPLayout from '@/pages/MCP/MCPLayout.tsx'
+import MCPServerList from '@/pages/MCP/MCPServerList.tsx'
+import MCPServerDetail from '@/pages/MCP/MCPServerDetail.tsx'
+import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
+import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
 
 const AppRoutes = () => {
   return (
@@ -91,7 +95,15 @@ const AppRoutes = () => {
             <Route path='/workflows' element={<Workflows />} />
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
-            <Route path='/mcp' element={<MCPPlayground />} />
+            <Route path='/mcp' element={<MCPLayout />}>
+              <Route index element={<MCPServerList />} />
+              <Route path=':serverSlug' element={<MCPServerDetail />} />
+              <Route
+                path=':serverSlug/tools/:toolName'
+                element={<MCPToolExecute />}
+              />
+              <Route path='history' element={<MCPExecutionHistory />} />
+            </Route>
             <Route path='/profile' element={<ProfileScreen />} />
             <Route path='/billing/' element={<BillingScreen />} />
           </Route>
