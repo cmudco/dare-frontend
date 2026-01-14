@@ -136,17 +136,36 @@ export const MCPExecutionInline = ({
   serverName,
   status,
 }: MCPExecutionInlineProps) => {
-  const StatusIcon = {
-    [ExecutionStatus.PENDING]: Clock,
-    [ExecutionStatus.SUCCESS]: CheckCircle2,
-    [ExecutionStatus.ERROR]: XCircle,
-  }[status]
+  const getStatusIcon = () => {
+    switch (status) {
+      case ExecutionStatus.SUCCESS:
+        return CheckCircle2
+      case ExecutionStatus.ERROR:
+      case ExecutionStatus.FAILED:
+        return XCircle
+      case ExecutionStatus.RUNNING:
+      case ExecutionStatus.PENDING:
+      default:
+        return Clock
+    }
+  }
 
-  const statusColor = {
-    [ExecutionStatus.PENDING]: 'text-yellow-500',
-    [ExecutionStatus.SUCCESS]: 'text-green-500',
-    [ExecutionStatus.ERROR]: 'text-red-500',
-  }[status]
+  const getStatusColor = () => {
+    switch (status) {
+      case ExecutionStatus.SUCCESS:
+        return 'text-green-500'
+      case ExecutionStatus.ERROR:
+      case ExecutionStatus.FAILED:
+        return 'text-red-500'
+      case ExecutionStatus.RUNNING:
+      case ExecutionStatus.PENDING:
+      default:
+        return 'text-yellow-500'
+    }
+  }
+
+  const StatusIcon = getStatusIcon()
+  const statusColor = getStatusColor()
 
   return (
     <div className='inline-flex items-center gap-1 rounded bg-muted px-2 py-1 text-sm'>
