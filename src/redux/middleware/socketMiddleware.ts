@@ -273,13 +273,7 @@ export function createSocketMiddleware(): Middleware {
         })
 
         // Incoming messages → dispatch as actions
-        // All socket messages should be objects (not JSON strings)
         socket.on('message', (data) => {
-          if (typeof data === 'string') {
-            // This shouldn't happen after BE fix - log for debugging
-            console.error('🔌 Received string message, expected object:', data)
-            return
-          }
           dispatch({ type: `socket/${data.type}`, payload: data })
         })
 
