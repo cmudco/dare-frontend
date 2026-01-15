@@ -9,6 +9,7 @@ import React from 'react'
 import { DareToolName } from '@/utils/constants/dareTools'
 import { DareToolResult, ChartConfig } from '@/redux/types/dareToolResults'
 import { DareChartResult } from './DareChartResult'
+import { DareMermaidResult } from './DareMermaidResult'
 
 interface DareToolResultRendererProps {
   toolName: string
@@ -21,7 +22,7 @@ interface DareToolResultRendererProps {
  *
  * Currently supports:
  * - create_chart → DareChartResult (Recharts)
- * - create_diagram → TODO: DareMermaidResult
+ * - create_diagram → DareMermaidResult (Mermaid)
  *
  * Returns null for unsupported tools (rendering handled elsewhere).
  */
@@ -36,6 +37,7 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
     result,
     resultType: typeof result,
     hasChartConfig: !!(result as DareToolResult)?.chartConfig,
+    hasMermaidCode: !!(result as DareToolResult)?.mermaidCode,
   })
 
   // If no result or not successful, don't render
@@ -65,9 +67,18 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
       break
 
     case DareToolName.CREATE_DIAGRAM:
-      // TODO: Mermaid diagram support
-      // For now, mermaid code is included in the message text itself
-      // so it will be rendered by the existing MermaidBlock component
+      if (result.mermaidCode) {
+        console.log(
+          '[DareToolResultRenderer] Rendering mermaid diagram:',
+          result.mermaidCode.substring(0, 100)
+        )
+        return (
+          <DareMermaidResult
+            mermaidCode={result.mermaidCode}
+            className={className}
+          />
+        )
+      }
       break
 
     default:
