@@ -31,32 +31,13 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
   result,
   className = '',
 }) => {
-  // DEBUG: Log incoming data
-  console.log('[DareToolResultRenderer] Received:', {
-    toolName,
-    result,
-    resultType: typeof result,
-    hasChartConfig: !!(result as DareToolResult)?.chartConfig,
-    hasMermaidCode: !!(result as DareToolResult)?.mermaidCode,
-  })
-
   // If no result or not successful, don't render
   if (!result || !result.success) {
-    console.log(
-      '[DareToolResultRenderer] Skipping render: no result or not successful'
-    )
     return null
   }
-
-  // Route to appropriate renderer based on tool name
-  console.log('[DareToolResultRenderer] Routing to renderer for:', toolName)
   switch (toolName) {
     case DareToolName.CREATE_CHART:
       if (result.chartConfig) {
-        console.log(
-          '[DareToolResultRenderer] Rendering chart with config:',
-          result.chartConfig
-        )
         return (
           <DareChartResult
             chartConfig={result.chartConfig as ChartConfig}
@@ -68,10 +49,6 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
 
     case DareToolName.CREATE_DIAGRAM:
       if (result.mermaidCode) {
-        console.log(
-          '[DareToolResultRenderer] Rendering mermaid diagram:',
-          result.mermaidCode.substring(0, 100)
-        )
         return (
           <DareMermaidResult
             mermaidCode={result.mermaidCode}
@@ -82,8 +59,6 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
       break
 
     default:
-      // Unknown tool type - no inline rendering
-      console.log('[DareToolResultRenderer] Unknown tool type:', toolName)
       break
   }
 
