@@ -1,5 +1,47 @@
 import mermaid from 'mermaid'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
+import {
+  MagnifyingGlassPlusIcon,
+  MagnifyingGlassMinusIcon,
+  ArrowsPointingOutIcon,
+} from '@heroicons/react/24/outline'
+
+interface ZoomControlsProps {
+  onZoomIn: () => void
+  onZoomOut: () => void
+  onReset: () => void
+}
+
+const ZoomControls: React.FC<ZoomControlsProps> = ({
+  onZoomIn,
+  onZoomOut,
+  onReset,
+}) => (
+  <div className='absolute right-2 top-2 z-10 flex gap-1 rounded-lg bg-white/90 p-1 shadow-md backdrop-blur-sm dark:bg-gray-800/90'>
+    <button
+      onClick={onZoomIn}
+      className='rounded p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+      title='Zoom in'
+    >
+      <MagnifyingGlassPlusIcon className='h-4 w-4' />
+    </button>
+    <button
+      onClick={onZoomOut}
+      className='rounded p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+      title='Zoom out'
+    >
+      <MagnifyingGlassMinusIcon className='h-4 w-4' />
+    </button>
+    <button
+      onClick={onReset}
+      className='rounded p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+      title='Reset view'
+    >
+      <ArrowsPointingOutIcon className='h-4 w-4' />
+    </button>
+  </div>
+)
 
 export const MermaidBlock: React.FC<{
   code: string
@@ -9,6 +51,7 @@ export const MermaidBlock: React.FC<{
   const [svg, setSvg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showRaw, setShowRaw] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -69,6 +112,7 @@ export const MermaidBlock: React.FC<{
       </div>
     )
   }
+
   if (!svg) {
     return (
       <div className='not-prose my-4 flex items-center gap-2 text-gray-500'>
@@ -77,7 +121,56 @@ export const MermaidBlock: React.FC<{
       </div>
     )
   }
+
   return (
-    <div className='not-prose my-4' dangerouslySetInnerHTML={{ __html: svg }} />
+    <div
+      ref={containerRef}
+      className='not-prose group relative my-4 h-[500px] overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'
+    >
+      <TransformWrapper
+        initialScale={1.5}
+        minScale={0.1}
+        maxScale={8}
+        centerOnInit
+        wheel={{ step: 0.15 }}
+        doubleClick={{ mode: 'reset' }}
+      >
+        {({ zoomIn, zoomOut, resetTransform }) => (
+          <>
+            {/* Controls - visible on hover */}
+            <div className='opacity-0 transition-opacity duration-200 group-hover:opacity-100'>
+              <ZoomControls
+                onZoomIn={() => zoomIn()}
+                onZoomOut={() => zoomOut()}
+                onReset={() => resetTransform()}
+              />
+            </div>
+
+            {/* Zoomable/pannable diagram */}
+            <TransformComponent
+              wrapperStyle={{
+                width: '100%',
+                height: '100%',
+                cursor: 'grab',
+              }}
+              contentStyle={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '1rem',
+              }}
+            >
+              <div dangerouslySetInnerHTML={{ __html: svg }} />
+            </TransformComponent>
+
+            {/* Hint text */}
+            <div className='absolute bottom-2 left-2 rounded bg-gray-900/60 px-2 py-1 text-xs text-gray-300 opacity-0 transition-opacity group-hover:opacity-100'>
+              Scroll to zoom • Drag to pan • Double-click to reset
+            </div>
+          </>
+        )}
+      </TransformWrapper>
+    </div>
   )
 }
