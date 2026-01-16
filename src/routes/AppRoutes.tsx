@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/redux/store'
+import { FeedbackWidget } from '@/components/Feedback'
 import Dashboard from '../pages/Dashboard'
 import Files from '../pages/Files'
 import VerifyCodeScreen from '../pages/VerifyCode'
@@ -31,9 +34,12 @@ import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
 import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
 
 const AppRoutes = () => {
+  const { isAuthenticated } = useSelector((state: RootState) => state.user)
+
   return (
     <BrowserRouter>
       <RouteListener>
+        {isAuthenticated && <FeedbackWidget />}
         <Routes>
           <Route path='/login' element={<LoginScreen />} />
           <Route path='/register' element={<RegistrationScreen />} />

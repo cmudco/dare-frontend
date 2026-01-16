@@ -18,6 +18,7 @@ import { getAvailableModels } from '@/redux/asyncThunks/conversation'
 import { toast } from '@/utils/toast'
 import { ArrowLeft, Undo2, Redo2 } from 'lucide-react'
 import { WorkflowNodeType } from '@/utils/constants/workflows'
+import ToastContainer from '@/components/ui/ToastContainer'
 
 const WorkflowCreatePage = () => {
   const navigate = useNavigate()
@@ -69,6 +70,7 @@ const WorkflowCreatePage = () => {
 
   return (
     <div className='relative h-screen w-screen overflow-hidden bg-gray-50'>
+      <ToastContainer />
       {/* Full canvas workflow builder */}
       <ReactFlowProvider>
         <WorkflowBuilder />
