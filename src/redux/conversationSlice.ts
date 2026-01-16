@@ -759,13 +759,15 @@ export const conversationSlice = createSlice({
           type: string
           payload: {
             messageId: number
+            toolCallId: string
             toolName: string
             serverSlug: string
             status: ToolCallStatus
           }
         } => action.type === 'socket/mcp_tool_call',
         (state, action) => {
-          const { messageId, toolName, serverSlug, status } = action.payload
+          const { messageId, toolCallId, toolName, serverSlug, status } =
+            action.payload
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
@@ -774,8 +776,7 @@ export const conversationSlice = createSlice({
             if (!msg.toolCalls) {
               msg.toolCalls = []
             }
-            // Add new tool call entry
-            const toolCallId = `${serverSlug}__${toolName}__${Date.now()}`
+            // Add new tool call entry using the ID from backend
             msg.toolCalls.push({
               id: toolCallId,
               toolName,
@@ -793,6 +794,7 @@ export const conversationSlice = createSlice({
           type: string
           payload: {
             messageId: number
+            toolCallId: string
             toolName: string
             serverSlug: string
             status: 'success' | 'error'
@@ -801,16 +803,15 @@ export const conversationSlice = createSlice({
           }
         } => action.type === 'socket/mcp_tool_result',
         (state, action) => {
-          const { messageId, toolName, serverSlug, status, result, error } =
+          const { messageId, toolCallId, status, result, error } =
             action.payload
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
           if (msg && msg.toolCalls) {
-            // Find the matching tool call (by toolName and serverSlug)
-            const toolCall = msg.toolCalls.find(
-              (tc) => tc.toolName === toolName && tc.serverSlug === serverSlug
-            )
+            // Find the matching tool call by unique id only
+            // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
+            const toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId)
             if (toolCall) {
               toolCall.status =
                 status === 'success'
@@ -890,12 +891,10 @@ export const conversationSlice = createSlice({
             (m) => m.id.toString() === messageId.toString()
           )
           if (msg && msg.toolCalls) {
-            // Find the matching tool call by id or toolName
+            // Find the matching tool call by unique id only
+            // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
             const existingToolCall = msg.toolCalls.find(
-              (tc) =>
-                tc.id === toolCall.id ||
-                (tc.toolName === toolCall.toolName &&
-                  tc.serverSlug === (toolCall.serverSlug || ServerSlug.DARE))
+              (tc) => tc.id === toolCall.id
             )
             if (existingToolCall) {
               existingToolCall.status =
