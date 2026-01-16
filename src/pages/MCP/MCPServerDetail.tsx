@@ -12,7 +12,7 @@ import {
 } from '@/redux/asyncThunks/mcp'
 import { clearTestResult } from '@/redux/mcpSlice'
 import { CredentialSchema } from '@/redux/types/mcp'
-import { MCPToolCard } from '@/components/MCP'
+import { MCPToolCard, MCPServerLogo } from '@/components/MCP'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -135,8 +135,8 @@ const MCPServerDetail = () => {
 
       {/* Server Header */}
       <div className='flex items-start gap-4'>
-        <div className='flex h-16 w-16 items-center justify-center rounded-xl bg-muted text-2xl'>
-          {server.icon || '🔌'}
+        <div className='flex h-16 w-16 items-center justify-center rounded-xl bg-muted'>
+          <MCPServerLogo slug={server.slug} size={40} />
         </div>
         <div className='flex-1'>
           <h2 className='text-2xl font-semibold'>{server.name}</h2>
