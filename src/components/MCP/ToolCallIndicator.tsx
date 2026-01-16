@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { ToolCallStatus } from '@/utils/constants/dareTools'
 import type { ToolCall } from '@/redux/types/conversation'
+import { MCPServerLogo } from './MCPServerLogo'
 
 interface ToolCallIndicatorProps {
   toolCalls: ToolCall[]
@@ -97,7 +98,8 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
             >
               <div className='flex items-center gap-2'>
                 {getStatusIcon(tc.status)}
-                <span className='flex items-center gap-1'>
+                <span className='flex items-center gap-1.5'>
+                  <MCPServerLogo slug={tc.serverSlug} size={16} />
                   <span className='font-medium text-blue-500'>
                     {tc.serverSlug}
                   </span>

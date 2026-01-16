@@ -32,8 +32,8 @@ interface DareToolSelectorProps {
 }
 
 const TOOL_ICONS: Record<string, React.ReactNode> = {
-  diagram: <GitBranch className='h-4 w-4 text-indigo-400' />,
-  chart: <BarChart3 className='h-4 w-4 text-indigo-400' />,
+  diagram: <GitBranch className='h-4 w-4 text-primary' />,
+  chart: <BarChart3 className='h-4 w-4 text-primary' />,
 }
 
 export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
@@ -64,12 +64,9 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
   const selectedCount = selectedSlugs.length
 
   const getToolIcon = (tool: DareTool) => {
-    return (
-      TOOL_ICONS[tool.icon] || <Wrench className='h-4 w-4 text-indigo-400' />
-    )
+    return TOOL_ICONS[tool.icon] || <Wrench className='h-4 w-4 text-primary' />
   }
 
-  // Derive display label
   /**
    * Get display label for the tool selector button
    */
@@ -92,7 +89,7 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
           disabled={disabled}
           className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm transition-all ${
             selectedCount > 0
-              ? 'bg-indigo-500/15 text-indigo-400'
+              ? 'bg-primary/15 text-primary'
               : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10'
           } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
           title='DARE Tools'
@@ -107,7 +104,7 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
         align='start'
       >
         <div className='mb-1.5 flex items-center gap-2'>
-          <Wrench className='h-[18px] w-[18px] text-indigo-400' />
+          <Wrench className='h-[18px] w-[18px] text-primary' />
           <span className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
             DARE Tools
           </span>
@@ -134,7 +131,7 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
                   key={tool.slug}
                   className={`flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all ${
                     isSelected
-                      ? 'border-indigo-500 bg-indigo-500/10'
+                      ? 'border-primary bg-primary/10'
                       : 'border-transparent bg-transparent hover:border-gray-200 hover:bg-gray-100 dark:hover:border-white/10 dark:hover:bg-white/5'
                   }`}
                   onClick={() => handleToggleTool(tool.slug)}
@@ -151,9 +148,7 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
                     </div>
                   </div>
                   <div className='flex h-5 w-5 shrink-0 items-center justify-center'>
-                    {isSelected && (
-                      <Check className='h-4 w-4 text-indigo-400' />
-                    )}
+                    {isSelected && <Check className='h-4 w-4 text-primary' />}
                   </div>
                 </button>
               )

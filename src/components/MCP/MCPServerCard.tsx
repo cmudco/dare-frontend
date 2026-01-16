@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '@/redux/hooks'
 import { McpServer } from '@/redux/types/mcp'
+import { MCPServerLogo } from './MCPServerLogo'
 
 interface MCPServerCardProps {
   server: McpServer
@@ -24,9 +25,9 @@ const MCPServerCard = ({ server }: MCPServerCardProps) => {
       {/* Header */}
       <div className='mb-3 flex items-start justify-between'>
         <div className='flex items-center gap-3'>
-          {/* Server Icon */}
+          {/* Server Logo */}
           <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-muted'>
-            <span className='text-lg'>{server.icon || '🔌'}</span>
+            <MCPServerLogo slug={server.slug} size={28} />
           </div>
           <div>
             <h3 className='font-semibold group-hover:text-primary'>
