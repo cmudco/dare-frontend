@@ -17,11 +17,8 @@ interface ToolCallIndicatorProps {
 }
 
 /**
- * Displays tool call status and raw results in chat messages.
+ * Displays tool call status and results in chat messages.
  * Shows a compact indicator during execution, expandable for details.
- *
- * Note: Visual results (charts, diagrams) are now rendered inline
- * in the message bubble via DareToolResultRenderer.
  */
 export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
   toolCalls,
@@ -88,53 +85,50 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
         {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
       </button>
 
-      {/* Expanded details - raw JSON results only */}
+      {/* Expanded details */}
       {isExpanded && (
         <div className='space-y-1.5 border-t border-gray-200 p-2 dark:border-gray-700'>
-          {toolCalls.map((tc) => (
-            <div
-              key={tc.id}
-              className='rounded-md bg-white p-2 dark:bg-gray-900'
-            >
-              <div className='flex items-center gap-2'>
-                {getStatusIcon(tc.status)}
-                <span className='flex items-center gap-1.5'>
-                  <MCPServerLogo slug={tc.serverSlug} size={16} />
-                  <span className='font-medium text-blue-500'>
-                    {tc.serverSlug}
-                  </span>
-                  <span className='text-gray-400'>→</span>
-                  <span className='font-mono text-gray-700 dark:text-gray-200'>
-                    {tc.toolName}
-                  </span>
-                </span>
-              </div>
+          {toolCalls.map((tc) => {
+            const result =
+              tc.serverSlug === 'dare' ? tc.dareResult : tc.mcpResult
 
-              {/* Raw result JSON */}
-              {tc.status === ToolCallStatus.COMPLETED &&
-                (tc.dareResult || tc.mcpResult) &&
-                (() => {
-                  // Get the appropriate result based on server type
-                  const result =
-                    tc.serverSlug === 'dare' ? tc.dareResult : tc.mcpResult
-                  const resultStr = JSON.stringify(result, null, 2)
-                  return (
-                    <div className='mt-2 overflow-x-auto rounded bg-gray-50 p-2 dark:bg-gray-800'>
-                      <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-500 dark:text-gray-400'>
-                        {resultStr.substring(0, 500)}
-                        {resultStr.length > 500 ? '...' : ''}
-                      </pre>
-                    </div>
-                  )
-                })()}
-
-              {tc.status === ToolCallStatus.FAILED && tc.error && (
-                <div className='mt-2 rounded bg-red-50 p-2 text-xs text-red-500 dark:bg-red-900/20'>
-                  {tc.error}
+            return (
+              <div
+                key={tc.id}
+                className='rounded-md bg-white p-2 dark:bg-gray-900'
+              >
+                <div className='flex items-center gap-2'>
+                  {getStatusIcon(tc.status)}
+                  <span className='flex items-center gap-1.5'>
+                    <MCPServerLogo slug={tc.serverSlug} size={16} />
+                    <span className='font-medium text-primary'>
+                      {tc.serverSlug}
+                    </span>
+                    <span className='text-gray-400'>→</span>
+                    <span className='font-mono text-gray-700 dark:text-gray-200'>
+                      {tc.toolName}
+                    </span>
+                  </span>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* Result JSON - no truncation, with scroll */}
+                {tc.status === ToolCallStatus.COMPLETED && result && (
+                  <div className='mt-2 max-h-80 overflow-auto rounded bg-gray-50 p-2 dark:bg-gray-800'>
+                    <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-600 dark:text-gray-300'>
+                      {JSON.stringify(result, null, 2)}
+                    </pre>
+                  </div>
+                )}
+
+                {/* Error display */}
+                {tc.status === ToolCallStatus.FAILED && tc.error && (
+                  <div className='mt-2 rounded bg-red-50 p-2 text-xs text-red-500 dark:bg-red-900/20'>
+                    {tc.error}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
