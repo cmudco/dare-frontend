@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Check,
   RefreshCw,
   ThumbsUp,
   ThumbsDown,
@@ -82,6 +83,8 @@ const Message: React.FC<MessageProps> = ({
     source: 'auto', // Just an arbitrary default
   })
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [copiedUserMessage, setCopiedUserMessage] = useState(false)
+  const [copiedAiResponse, setCopiedAiResponse] = useState(false)
 
   // Open modal when parent signals auto-feedback should show
   useEffect(() => {
@@ -238,11 +241,23 @@ const Message: React.FC<MessageProps> = ({
         {message.isSender && !message.streaming && (
           <div className='mr-2 mt-2 flex flex-shrink-0 items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
             <button
-              className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
-              onClick={() => navigator.clipboard.writeText(message.message)}
-              aria-label='Copy message'
+              className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
+                copiedUserMessage
+                  ? 'text-green-500'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => {
+                navigator.clipboard.writeText(message.message)
+                setCopiedUserMessage(true)
+                setTimeout(() => setCopiedUserMessage(false), 2000)
+              }}
+              aria-label={copiedUserMessage ? 'Copied!' : 'Copy message'}
             >
-              <Copy className='h-4 w-4' />
+              {copiedUserMessage ? (
+                <Check className='h-4 w-4' />
+              ) : (
+                <Copy className='h-4 w-4' />
+              )}
             </button>
             <button
               className={`mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
@@ -634,11 +649,23 @@ const Message: React.FC<MessageProps> = ({
           </button>
 
           <button
-            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
-            onClick={() => navigator.clipboard.writeText(message.message)}
-            aria-label='Copy AI response'
+            className={`mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
+              copiedAiResponse
+                ? 'text-green-500'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            onClick={() => {
+              navigator.clipboard.writeText(message.message)
+              setCopiedAiResponse(true)
+              setTimeout(() => setCopiedAiResponse(false), 2000)
+            }}
+            aria-label={copiedAiResponse ? 'Copied!' : 'Copy AI response'}
           >
-            <Copy className='h-4 w-4' />
+            {copiedAiResponse ? (
+              <Check className='h-4 w-4' />
+            ) : (
+              <Copy className='h-4 w-4' />
+            )}
           </button>
           <button
             className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'

@@ -1,7 +1,14 @@
 import { useState, useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Copy, ChevronDown, ChevronRight, FileText, Code } from 'lucide-react'
+import {
+  Copy,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  Code,
+} from 'lucide-react'
 
 interface MCPJsonViewerProps {
   data: unknown
@@ -28,6 +35,7 @@ interface McpResponseData {
 const MCPJsonViewer = ({ data }: MCPJsonViewerProps) => {
   const [collapsed, setCollapsed] = useState(false)
   const [viewMode, setViewMode] = useState<'auto' | 'json'>('auto')
+  const [copied, setCopied] = useState(false)
 
   // Extract text content from MCP response structure
   const textContent = useMemo(() => {
@@ -65,6 +73,8 @@ const MCPJsonViewer = ({ data }: MCPJsonViewerProps) => {
     const copyText =
       viewMode === 'auto' && textContent ? textContent : formattedJson
     navigator.clipboard.writeText(copyText)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const hasTextContent = textContent !== null
@@ -114,10 +124,23 @@ const MCPJsonViewer = ({ data }: MCPJsonViewerProps) => {
           )}
           <button
             onClick={handleCopy}
-            className='flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground'
+            className={`flex items-center gap-1 text-xs transition-colors ${
+              copied
+                ? 'text-green-500'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <Copy className='h-3 w-3' />
-            Copy
+            {copied ? (
+              <>
+                <Check className='h-3 w-3' />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className='h-3 w-3' />
+                Copy
+              </>
+            )}
           </button>
         </div>
       </div>
