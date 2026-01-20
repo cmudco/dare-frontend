@@ -5,7 +5,6 @@ import {
   Italic,
   List,
   ListOrdered,
-  Code,
   Quote,
   Undo,
   Redo,
@@ -78,20 +77,6 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
         aria-label='Ordered List'
       >
         <ListOrdered className='h-4 w-4' />
-      </Button>
-      <Button
-        type='button'
-        variant='ghost'
-        size='sm'
-        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        className={
-          editor.isActive('codeBlock')
-            ? 'bg-accent'
-            : 'text-foreground hover:bg-accent'
-        }
-        aria-label='Code Block'
-      >
-        <Code className='h-4 w-4' />
       </Button>
       <Button
         type='button'
