@@ -2,7 +2,6 @@ import React from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Markdown } from 'tiptap-markdown'
 import Toolbar from './Toolbar'
 
 interface TiptapProps {
@@ -13,15 +12,13 @@ interface TiptapProps {
 const Tiptap: React.FC<TiptapProps> = ({ content, onChange }) => {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        // Keep code blocks disabled to prevent auto-detection
+        codeBlock: false,
+        code: false,
+      }),
       Placeholder.configure({
         placeholder: 'Enter prompt content...',
-      }),
-      // Enable Markdown parsing for pasted content
-      Markdown.configure({
-        html: true,
-        transformPastedText: true,
-        transformCopiedText: true,
       }),
     ],
     content,
@@ -29,6 +26,28 @@ const Tiptap: React.FC<TiptapProps> = ({ content, onChange }) => {
       attributes: {
         class:
           'prose dark:prose-invert prose-sm focus:outline-none w-full max-w-full',
+      },
+      // Smart paste handling:
+      // - If content has code blocks or ASCII art → paste as plain text
+      // - Otherwise, allow normal paste for simple markdown (headers, lists, etc.)
+      handlePaste: (view, event) => {
+        const text = event.clipboardData?.getData('text/plain')
+        if (text) {
+          // Check if content has code blocks (```) or ASCII box characters
+          const hasCodeBlocks = /```/.test(text)
+          const hasAsciiArt = /[┌┐└┘│─┬┴├┤┼▼▲◄►]/.test(text)
+
+          // If it has code blocks or ASCII art, paste as plain text
+          if (hasCodeBlocks || hasAsciiArt) {
+            event.preventDefault()
+            const { tr } = view.state
+            const transaction = tr.insertText(text)
+            view.dispatch(transaction)
+            return true
+          }
+        }
+        // Otherwise, let default paste behavior handle simple markdown
+        return false
       },
     },
     onUpdate: ({ editor }) => {
