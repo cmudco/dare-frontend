@@ -10,12 +10,11 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
   setSelectedNodeId,
-  setShowExecutionPanel,
 } from '@/redux/workflowBuilderSlice'
 import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
-import { workflowSocketExecuteSingleStep } from '@/redux/middleware/workflowSocketMiddleware'
+import { saveAndExecuteStep } from '@/redux/asyncThunks/workflowBuilder'
 
 export interface StructuredOutputRoute {
   name: string
@@ -132,15 +131,14 @@ export default function StructuredOutputNode({
     dispatch(removeNodeWithEdges({ nodeId: id }))
   }
 
-  // Handle manual step execution
+  // Handle manual step execution - saves workflow first, then executes
   const handleRunStep = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!lastWorkflowId || isRunning) return
 
-    // Open execution panel and trigger single step execution
-    dispatch(setShowExecutionPanel(true))
+    // Save workflow first, then execute the step
     dispatch(
-      workflowSocketExecuteSingleStep({
+      saveAndExecuteStep({
         workflowId: lastWorkflowId,
         stepNodeId: id,
         workflowRunId: currentPartialRunId || undefined,
