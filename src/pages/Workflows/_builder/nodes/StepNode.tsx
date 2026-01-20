@@ -4,7 +4,6 @@ import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
   setSelectedNodeId,
-  setShowExecutionPanel,
 } from '@/redux/workflowBuilderSlice'
 import {
   HANDLE_NUMBERS,
@@ -15,7 +14,7 @@ import {
   WorkflowRunStepStatus,
   WorkflowNodeType,
 } from '@/utils/constants/workflows'
-import { workflowSocketExecuteSingleStep } from '@/redux/middleware/workflowSocketMiddleware'
+import { saveAndExecuteStep } from '@/redux/asyncThunks/workflowBuilder'
 
 export type StepNodeData = {
   agent: number | null
@@ -130,15 +129,14 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     dispatch(removeNodeWithEdges({ nodeId }))
   }
 
-  // Handle manual step execution
+  // Handle manual step execution - saves workflow first, then executes
   const handleRunStep = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!lastWorkflowId || isRunning) return
 
-    // Open execution panel and trigger single step execution
-    dispatch(setShowExecutionPanel(true))
+    // Save workflow first, then execute the step
     dispatch(
-      workflowSocketExecuteSingleStep({
+      saveAndExecuteStep({
         workflowId: lastWorkflowId,
         stepNodeId: nodeId,
         workflowRunId: currentPartialRunId || undefined,
