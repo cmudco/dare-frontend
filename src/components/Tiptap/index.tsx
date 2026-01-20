@@ -2,6 +2,7 @@ import React from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
+import { Markdown } from 'tiptap-markdown'
 import Toolbar from './Toolbar'
 
 interface TiptapProps {
@@ -15,6 +16,12 @@ const Tiptap: React.FC<TiptapProps> = ({ content, onChange }) => {
       StarterKit,
       Placeholder.configure({
         placeholder: 'Enter prompt content...',
+      }),
+      // Enable Markdown parsing for pasted content
+      Markdown.configure({
+        html: true,
+        transformPastedText: true,
+        transformCopiedText: true,
       }),
     ],
     content,
@@ -33,7 +40,7 @@ const Tiptap: React.FC<TiptapProps> = ({ content, onChange }) => {
   return (
     <div className='overflow-hidden rounded-md border border-border'>
       <Toolbar editor={editor} />
-      <div className='bg-background p-4'>
+      <div className='bg-transparent p-4'>
         <EditorContent
           editor={editor}
           className='min-h-[150px] break-all text-sm text-foreground'
