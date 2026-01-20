@@ -16,6 +16,7 @@ import apiKeysReducer from './apiKeysSlice'
 import artifactReducer from './artifactSlice'
 import mcpReducer from './mcpSlice'
 import dareToolsReducer from './dareToolsSlice'
+import memoryReducer from './memorySlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
@@ -46,6 +47,7 @@ export const store = configureStore({
     feedback: feedbackReducer,
     mcp: mcpReducer,
     dareTools: dareToolsReducer,
+    memory: memoryReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware

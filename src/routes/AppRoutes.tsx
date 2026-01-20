@@ -32,6 +32,7 @@ import MCPServerList from '@/pages/MCP/MCPServerList.tsx'
 import MCPServerDetail from '@/pages/MCP/MCPServerDetail.tsx'
 import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
 import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
+import MemoryScreen from '@/pages/Memory'
 
 const AppRoutes = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.user)
@@ -111,6 +112,7 @@ const AppRoutes = () => {
               <Route path='history' element={<MCPExecutionHistory />} />
             </Route>
             <Route path='/profile' element={<ProfileScreen />} />
+            <Route path='/memory' element={<MemoryScreen />} />
             <Route path='/billing/' element={<BillingScreen />} />
           </Route>
           <Route path='/models/:slug' element={<ModelCards />} />
