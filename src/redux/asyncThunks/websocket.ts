@@ -6,15 +6,7 @@ import {
   updateConversationTitle,
   updateConversationHistory,
 } from '../conversationSlice'
-import {
-  setStatus,
-  setWordCount,
-  setArtifactError,
-  loadArtifact,
-  loadArtifacts,
-  setActiveArtifact,
-  openSidecar,
-} from '../artifactSlice'
+import { loadArtifacts } from '../artifactSlice'
 import type { Artifact } from '../types/artifact'
 import { Message } from '../types/conversation'
 import { AppDispatch, RootState } from '../store'
@@ -76,25 +68,17 @@ export const connectWebSocket = createAsyncThunk<
             if (data.artifacts && Array.isArray(data.artifacts)) {
               const mappedArtifacts: Artifact[] = data.artifacts.map(
                 (a: Record<string, unknown>) => ({
-                  id: String(a.id),
+                  id: Number(a.id),
+                  messageId: a.messageId ? Number(a.messageId) : undefined,
                   title: String(a.title || ''),
-                  outline: String(a.outline || ''),
                   content: String(a.content || ''),
                   artifactType:
                     (a.artifactType as Artifact['artifactType']) || 'document',
                   status: (a.status as Artifact['status']) || 'completed',
-                  estimatedSections: Number(a.estimatedSections) || 1,
-                  currentSection: Number(a.currentSection) || 1,
-                  progress: Number(a.progress) || 1,
-                  wordCount: a.wordCount ? Number(a.wordCount) : undefined,
-                  language: a.language ? String(a.language) : undefined,
-                  version: Number(a.version) || 1,
-                  parentArtifactId: a.parentArtifactId
-                    ? String(a.parentArtifactId)
-                    : undefined,
-                  artifactGroupId: a.artifactGroupId
-                    ? String(a.artifactGroupId)
-                    : undefined,
+                  filename: String(a.filename || ''),
+                  contentType: String(a.contentType || ''),
+                  sourceTool: a.sourceTool ? String(a.sourceTool) : undefined,
+                  metadata: a.metadata as Record<string, unknown> | undefined,
                   createdAt: a.createdAt ? String(a.createdAt) : undefined,
                 })
               )
@@ -137,59 +121,8 @@ export const connectWebSocket = createAsyncThunk<
           dispatch(updateMessage(data as Partial<Message>))
           break
 
-        // NOTE: Artifact events are now handled by socketMiddleware.ts extraReducers
-        // These cases are kept for backward compatibility with legacy WebSocket
-        case 'artifact_complete':
-          dispatch(
-            setStatus({
-              artifactId: data.artifactId,
-              status: 'completed',
-            })
-          )
-          if (data.totalWords || data.wordCount) {
-            dispatch(
-              setWordCount({
-                artifactId: data.artifactId,
-                wordCount: data.totalWords || data.wordCount,
-              })
-            )
-          }
-          dispatch(getWallet())
-          break
-
-        case 'artifact_error':
-          dispatch(
-            setArtifactError({
-              artifactId: data.artifactId,
-              error: data.errorMessage || data.error || 'Unknown error',
-            })
-          )
-          break
-
-        case 'artifact_rewrite_complete':
-          dispatch(
-            loadArtifact({
-              id: data.artifactId,
-              title: data.title || 'Rewritten Artifact',
-              outline: data.outline || '',
-              content: data.content,
-              artifactType: data.artifactType || 'document',
-              status: 'completed',
-              estimatedSections: data.estimatedSections || 0,
-              currentSection: data.currentSection || 0,
-              progress: 1.0,
-              version: data.version,
-              parentArtifactId: data.parentArtifactId,
-              artifactGroupId: data.artifactGroupId,
-            })
-          )
-          dispatch(setActiveArtifact(data.artifactId))
-          dispatch(openSidecar())
-          dispatch(getWallet())
-          break
-
         default:
-          // Ignore unknown types - they may be handled by socketMiddleware
+          // Ignore unknown types - artifact events handled by socketMiddleware
           break
       }
     }
@@ -239,8 +172,7 @@ export const sendWebSocketMessage = createAsyncThunk<
     artifactsEnabled &&
     sidecarOpen &&
     activeArtifact &&
-    (activeArtifact.status === 'completed' ||
-      activeArtifact.status === 'paused')
+    activeArtifact.status === 'completed'
 
   const payload = {
     message: message.message,
@@ -414,30 +346,3 @@ export const disconnectWebSocket = createAsyncThunk<
     }
   })
 })
-
-// Continue a paused artifact (simplified - just set status)
-export const continueArtifact = createAsyncThunk<
-  void,
-  { artifactId: number },
-  { dispatch: AppDispatch; state: RootState }
->(
-  'websocket/continueArtifact',
-  async ({ artifactId }, { rejectWithValue, dispatch }) => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      dispatch(
-        setStatus({
-          artifactId,
-          status: 'generating',
-        })
-      )
-      socket.send(
-        JSON.stringify({
-          action: 'continue_artifact',
-          artifact_id: artifactId,
-        })
-      )
-    } else {
-      return rejectWithValue('WebSocket is not connected')
-    }
-  }
-)

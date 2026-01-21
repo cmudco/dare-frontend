@@ -1,6 +1,6 @@
 export { default as ArtifactSidecar } from './ArtifactSidecar'
-export { default as ArtifactProgress } from './ArtifactProgress'
-export { default as ArtifactContent } from './ArtifactContent'
+export { default as ArtifactRenderer } from './ArtifactRenderer'
+export { default as ArtifactReferenceCard } from './ArtifactReferenceCard'
 export { default as ArtifactActions } from './ArtifactActions'
 export { default as ArtifactToggle } from './ArtifactToggle'
 export { default as ArtifactBanner } from './ArtifactBanner'
