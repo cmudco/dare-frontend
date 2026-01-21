@@ -374,13 +374,15 @@ input:-webkit-autofill + label {
 }
 
 .dark .ProseMirror code {
-  background-color: #374151 !important;
+  background-color: transparent !important;
   color: #f9fafb !important;
 }
 
 .dark .ProseMirror pre {
-  background-color: #1f2937 !important;
+  background-color: transparent !important;
   color: #f9fafb !important;
+  border-left: 2px solid #6b7280;
+  padding-left: 1rem;
 }
 
 .dark .ProseMirror h1,
