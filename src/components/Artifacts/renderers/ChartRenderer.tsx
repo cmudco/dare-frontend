@@ -18,11 +18,12 @@ import {
 } from 'recharts'
 
 /**
- * Chart configuration interface matching the backend chart_tool.py output
+ * Chart configuration interface matching the backend create_chart tool output
  */
 interface ChartConfig {
-  chart_type: 'bar' | 'line' | 'pie' | 'area'
-  title: string
+  chart_type?: 'bar' | 'line' | 'pie' | 'area'
+  type?: 'bar' | 'line' | 'pie' | 'area' // Alternative key name
+  title?: string
   data: Record<string, unknown>[]
   dataKeys: string[]
   xAxisKey: string
@@ -31,11 +32,9 @@ interface ChartConfig {
   yAxisLabel?: string
 }
 
-interface RechartsBlockProps {
-  /** JSON string of chart configuration */
-  config: string
-  /** Callback when chart is rendered */
-  onRendered?: () => void
+interface ChartRendererProps {
+  /** Parsed chart configuration object */
+  config: ChartConfig
 }
 
 const DEFAULT_COLORS = [
@@ -50,55 +49,39 @@ const DEFAULT_COLORS = [
 ]
 
 /**
- * RechartsBlock - Renders a recharts visualization from JSON config
- *
- * Used by ArtifactContent to render ```recharts code blocks
+ * ChartRenderer - Renders Recharts visualizations for artifact panel
+ * Adapted from RechartsBlock for use in unified artifact system
  */
-export const RechartsBlock: React.FC<RechartsBlockProps> = ({
-  config,
-  onRendered,
-}) => {
+export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
   const chartConfig = useMemo<ChartConfig | null>(() => {
     try {
-      const parsed = JSON.parse(config)
       // Validate required fields
-      if (
-        !parsed.chart_type ||
-        !parsed.data ||
-        !parsed.dataKeys ||
-        !parsed.xAxisKey
-      ) {
-        console.error('Invalid chart config: missing required fields')
+      if (!config.data || !config.dataKeys || !config.xAxisKey) {
+        console.error('Invalid chart config: missing required fields', config)
         return null
       }
-      return parsed as ChartConfig
+      return config
     } catch (error) {
-      console.error('Failed to parse chart config:', error)
+      console.error('Failed to process chart config:', error)
       return null
     }
   }, [config])
 
-  React.useEffect(() => {
-    if (chartConfig) {
-      onRendered?.()
-    }
-  }, [chartConfig, onRendered])
-
   if (!chartConfig) {
     return (
-      <div className='my-4 rounded-lg bg-red-50 p-4 dark:bg-red-900/20'>
-        <p className='text-red-600 dark:text-red-400'>
-          Failed to render chart: Invalid configuration
-        </p>
-        <pre className='mt-2 overflow-auto text-xs text-gray-600 dark:text-gray-400'>
-          {config}
-        </pre>
+      <div className='flex h-full items-center justify-center p-8'>
+        <div className='rounded-lg bg-red-50 p-4 dark:bg-red-900/20'>
+          <p className='text-red-600 dark:text-red-400'>
+            Failed to render chart: Invalid configuration
+          </p>
+        </div>
       </div>
     )
   }
 
   const {
     chart_type,
+    type,
     title,
     data,
     dataKeys,
@@ -107,10 +90,12 @@ export const RechartsBlock: React.FC<RechartsBlockProps> = ({
     xAxisLabel,
     yAxisLabel,
   } = chartConfig
+
+  const chartType = chart_type || type || 'bar'
   const chartColors = colors || DEFAULT_COLORS
 
   const renderChart = () => {
-    switch (chart_type) {
+    switch (chartType) {
       case 'bar':
         return (
           <BarChart data={data}>
@@ -178,7 +163,6 @@ export const RechartsBlock: React.FC<RechartsBlockProps> = ({
         )
 
       case 'pie': {
-        // For pie charts, use the first dataKey as the value
         const pieDataKey = dataKeys[0]
         return (
           <PieChart>
@@ -190,7 +174,7 @@ export const RechartsBlock: React.FC<RechartsBlockProps> = ({
               label={({ name, percent }) =>
                 `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
               }
-              outerRadius={100}
+              outerRadius={120}
               dataKey={pieDataKey}
               nameKey={xAxisKey}
             >
@@ -244,23 +228,27 @@ export const RechartsBlock: React.FC<RechartsBlockProps> = ({
 
       default:
         return (
-          <div className='text-gray-500'>Unknown chart type: {chart_type}</div>
+          <div className='flex h-full items-center justify-center text-gray-500'>
+            Unknown chart type: {chartType}
+          </div>
         )
     }
   }
 
   return (
-    <div className='my-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
+    <div className='flex h-full flex-col p-4'>
       {title && (
-        <h3 className='mb-3 text-center text-lg font-semibold text-gray-900 dark:text-white'>
+        <h3 className='mb-4 text-center text-lg font-semibold text-gray-900 dark:text-white'>
           {title}
         </h3>
       )}
-      <ResponsiveContainer width='100%' height={300}>
-        {renderChart()}
-      </ResponsiveContainer>
+      <div className='flex-1'>
+        <ResponsiveContainer width='100%' height='100%'>
+          {renderChart()}
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }
 
-export default RechartsBlock
+export default ChartRenderer

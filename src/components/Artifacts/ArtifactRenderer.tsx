@@ -1,0 +1,104 @@
+import React from 'react'
+import type { Artifact } from '@/redux/types/artifact'
+import { ChartRenderer, MermaidRenderer } from './renderers'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+
+interface ArtifactRendererProps {
+  artifact: Artifact
+}
+
+/**
+ * ArtifactRenderer - Type-based artifact rendering
+ *
+ * Routes artifacts to appropriate renderer based on artifactType.
+ * Clean implementation inspired by Claude Artifacts / LibreChat pattern.
+ */
+export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
+  artifact,
+}) => {
+  switch (artifact.artifactType) {
+    case 'chart':
+      try {
+        const config = JSON.parse(artifact.content)
+        return <ChartRenderer config={config} />
+      } catch (e) {
+        console.error('Failed to parse chart config:', e)
+        return <ErrorDisplay message='Failed to render chart' />
+      }
+
+    case 'diagram':
+      return <MermaidRenderer code={artifact.content} />
+
+    case 'code':
+      return (
+        <div className='h-full overflow-auto p-4'>
+          <SyntaxHighlighter
+            language={(artifact.metadata?.language as string) || 'text'}
+            style={oneDark}
+            customStyle={{
+              margin: 0,
+              borderRadius: '0.5rem',
+              fontSize: '0.875rem',
+              height: '100%',
+            }}
+            showLineNumbers
+          >
+            {artifact.content}
+          </SyntaxHighlighter>
+        </div>
+      )
+
+    case 'document':
+      return (
+        <div className='h-full overflow-auto p-6'>
+          <div className='prose prose-sm max-w-none dark:prose-invert'>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {artifact.content}
+            </ReactMarkdown>
+          </div>
+        </div>
+      )
+
+    case 'image':
+      return (
+        <div className='flex h-full items-center justify-center p-4'>
+          <img
+            src={artifact.content}
+            alt={artifact.title}
+            className='max-h-full max-w-full rounded-lg object-contain'
+          />
+        </div>
+      )
+
+    case 'file':
+      return (
+        <div className='flex h-full items-center justify-center p-8'>
+          <div className='text-center'>
+            <div className='mb-4 text-6xl'>📄</div>
+            <h3 className='mb-2 text-lg font-medium'>{artifact.filename}</h3>
+            <p className='text-sm text-gray-500'>{artifact.contentType}</p>
+          </div>
+        </div>
+      )
+
+    default:
+      return (
+        <ErrorDisplay
+          message={`Unknown artifact type: ${artifact.artifactType}`}
+        />
+      )
+  }
+}
+
+const ErrorDisplay: React.FC<{ message: string }> = ({ message }) => (
+  <div className='flex h-full items-center justify-center p-8'>
+    <div className='rounded-lg bg-red-50 p-4 dark:bg-red-900/20'>
+      <p className='text-red-600 dark:text-red-400'>{message}</p>
+    </div>
+  </div>
+)
+
+export default ArtifactRenderer
