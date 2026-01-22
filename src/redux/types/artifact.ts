@@ -13,6 +13,7 @@ export type ArtifactType =
   | 'document'
   | 'image'
   | 'file'
+  | 'react'
 
 export type ArtifactStatus = 'completed' | 'error'
 
