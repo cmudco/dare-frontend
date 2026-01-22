@@ -4,6 +4,7 @@ import { RootState, AppDispatch } from '@/redux/store'
 import { closeSidecar } from '@/redux/artifactSlice'
 import ArtifactRenderer from './ArtifactRenderer'
 import ArtifactActions from './ArtifactActions'
+import ArtifactVersionDropdown from './ArtifactVersionDropdown'
 import {
   X,
   FileText,
@@ -73,9 +74,12 @@ const ArtifactSidecar: React.FC = () => {
             {getArtifactIcon(activeArtifact.artifactType)}
           </div>
           <div className='flex flex-col'>
-            <h2 className='font-medium text-gray-900 dark:text-white'>
-              {activeArtifact.title}
-            </h2>
+            <div className='flex items-center gap-2'>
+              <h2 className='font-medium text-gray-900 dark:text-white'>
+                {activeArtifact.title}
+              </h2>
+              <ArtifactVersionDropdown artifact={activeArtifact} />
+            </div>
             <span className='text-xs text-gray-500 dark:text-gray-400'>
               {activeArtifact.filename}
             </span>

@@ -3,3 +3,4 @@
  */
 
 export { DareToolSelector } from './DareToolSelector'
+export { DareToolResultRenderer } from './DareToolResultRenderer'

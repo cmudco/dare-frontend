@@ -163,18 +163,14 @@ export function mapRawArtifact(raw: RawArtifact): Artifact {
   return {
     id: Number(raw.id),
     title: raw.title ?? '',
-    outline: raw.outline ?? '',
     content: raw.content ?? '',
     artifactType: raw.artifactType ?? 'document',
     status: raw.status ?? 'completed',
-    estimatedSections: raw.estimatedSections ?? 1,
-    currentSection: raw.currentSection ?? 1,
-    progress: raw.progress ?? 1,
-    wordCount: raw.wordCount,
-    language: raw.language,
+    filename: '',
+    contentType: '',
     version: raw.version ?? 1,
-    parentArtifactId: raw.parentArtifactId ?? null,
-    artifactGroupId: raw.artifactGroupId ?? null,
+    parentArtifactId: raw.parentArtifactId,
+    artifactGroupId: raw.artifactGroupId,
     createdAt: raw.createdAt,
   }
 }

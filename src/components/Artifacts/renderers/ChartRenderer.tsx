@@ -50,14 +50,21 @@ const DEFAULT_COLORS = [
 
 /**
  * ChartRenderer - Renders Recharts visualizations for artifact panel
- * Adapted from RechartsBlock for use in unified artifact system
+ *
+ * Expects complete chart config from backend with:
+ * - data: Array of data points
+ * - dataKeys: String[] of numeric fields to chart
+ * - xAxisKey: String field for x-axis labels
  */
 export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
   const chartConfig = useMemo<ChartConfig | null>(() => {
     try {
-      // Validate required fields
+      // Validate required fields - backend must provide these
       if (!config.data || !config.dataKeys || !config.xAxisKey) {
-        console.error('Invalid chart config: missing required fields', config)
+        console.error(
+          'Invalid chart config: missing required fields (data, dataKeys, xAxisKey)',
+          config
+        )
         return null
       }
       return config
