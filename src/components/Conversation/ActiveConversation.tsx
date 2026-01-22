@@ -23,7 +23,7 @@ import EmptyConversation from './EmptyConversation'
 import CreditErrorAlert from './CreditErrorAlert'
 import ImageDropOverlay from './ImageDropOverlay'
 import MessageList from './MessageList'
-import { ArtifactSidecar, ArtifactBanner } from '../Artifacts'
+import { ArtifactSidecar } from '../Artifacts'
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -310,15 +310,12 @@ const ActiveConversation: React.FC = () => {
               <EmptyConversation />
             )}
             {activeConversation && conversationHistory.length > 0 && (
-              <>
-                {features.enableArtifacts && <ArtifactBanner />}
-                <MessageList
-                  onEditMessage={handleEditMessage}
-                  shouldShowAutoFeedbackModal={shouldShowAutoFeedbackModal}
-                  conversationId={activeConversation?.conversationId}
-                  userJustSentMessage={userJustSentMessage}
-                />
-              </>
+              <MessageList
+                onEditMessage={handleEditMessage}
+                shouldShowAutoFeedbackModal={shouldShowAutoFeedbackModal}
+                conversationId={activeConversation?.conversationId}
+                userJustSentMessage={userJustSentMessage}
+              />
             )}
             <div className='flex flex-col items-center justify-center'>
               <ConversationPill
