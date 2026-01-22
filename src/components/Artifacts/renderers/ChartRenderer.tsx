@@ -124,14 +124,25 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
             />
             <Tooltip />
             <Legend />
-            {dataKeys.map((key, index) => (
-              <Bar
-                key={key}
-                dataKey={key}
-                fill={chartColors[index % chartColors.length]}
-                name={key}
-              />
-            ))}
+            {dataKeys.map((key, index) => {
+              // Check if any data points have individual colors
+              const hasIndividualColors = data.some(
+                (item) => typeof item.color === 'string'
+              )
+              const defaultColor = chartColors[index % chartColors.length]
+
+              return (
+                <Bar key={key} dataKey={key} fill={defaultColor} name={key}>
+                  {hasIndividualColors &&
+                    data.map((entry, idx) => (
+                      <Cell
+                        key={`cell-${idx}`}
+                        fill={(entry.color as string) || defaultColor}
+                      />
+                    ))}
+                </Bar>
+              )
+            })}
           </BarChart>
         )
 
@@ -156,16 +167,22 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
             />
             <Tooltip />
             <Legend />
-            {dataKeys.map((key, index) => (
-              <Line
-                key={key}
-                type='monotone'
-                dataKey={key}
-                stroke={chartColors[index % chartColors.length]}
-                strokeWidth={2}
-                name={key}
-              />
-            ))}
+            {dataKeys.map((key, index) => {
+              // For line charts, use first data point's color if available, else default
+              const lineColor =
+                (data[0]?.color as string) ||
+                chartColors[index % chartColors.length]
+              return (
+                <Line
+                  key={key}
+                  type='monotone'
+                  dataKey={key}
+                  stroke={lineColor}
+                  strokeWidth={2}
+                  name={key}
+                />
+              )
+            })}
           </LineChart>
         )
 
@@ -185,10 +202,13 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
               dataKey={pieDataKey}
               nameKey={xAxisKey}
             >
-              {data.map((_, index) => (
+              {data.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={chartColors[index % chartColors.length]}
+                  fill={
+                    (entry.color as string) ||
+                    chartColors[index % chartColors.length]
+                  }
                 />
               ))}
             </Pie>
@@ -219,17 +239,23 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
             />
             <Tooltip />
             <Legend />
-            {dataKeys.map((key, index) => (
-              <Area
-                key={key}
-                type='monotone'
-                dataKey={key}
-                stroke={chartColors[index % chartColors.length]}
-                fill={chartColors[index % chartColors.length]}
-                fillOpacity={0.6}
-                name={key}
-              />
-            ))}
+            {dataKeys.map((key, index) => {
+              // For area charts, use first data point's color if available, else default
+              const areaColor =
+                (data[0]?.color as string) ||
+                chartColors[index % chartColors.length]
+              return (
+                <Area
+                  key={key}
+                  type='monotone'
+                  dataKey={key}
+                  stroke={areaColor}
+                  fill={areaColor}
+                  fillOpacity={0.6}
+                  name={key}
+                />
+              )
+            })}
           </AreaChart>
         )
 
