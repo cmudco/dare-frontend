@@ -110,11 +110,13 @@ export const artifactSlice = createSlice({
           payload: {
             artifactId: number
             messageId?: number
+            artifactGroupId?: number
             filename: string
             title: string
             contentType: string
             content: string
             artifactType: ArtifactType
+            version?: number
             metadata?: Record<string, unknown>
           }
         } => action.type === 'socket/artifact_created',
@@ -122,11 +124,13 @@ export const artifactSlice = createSlice({
           const {
             artifactId,
             messageId,
+            artifactGroupId,
             filename,
             title,
             contentType,
             content,
             artifactType,
+            version,
             metadata,
           } = action.payload
 
@@ -139,11 +143,72 @@ export const artifactSlice = createSlice({
             status: 'completed',
             filename,
             contentType,
+            version: version ?? 1,
+            artifactGroupId,
             sourceTool: metadata?.sourceTool as string | undefined,
             metadata,
           }
 
           // Auto-open sidecar
+          state.activeArtifactId = artifactId
+          state.sidecarOpen = true
+        }
+      )
+      // ─────────────────────────────────────────────────────────────────────
+      // Socket.IO: artifact_updated
+      // ─────────────────────────────────────────────────────────────────────
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            artifactId: number
+            parentArtifactId: number
+            artifactGroupId: number
+            messageId?: number
+            filename: string
+            title: string
+            contentType: string
+            content: string
+            artifactType: ArtifactType
+            version: number
+            metadata?: Record<string, unknown>
+          }
+        } => action.type === 'socket/artifact_updated',
+        (state, action) => {
+          const {
+            artifactId,
+            parentArtifactId,
+            artifactGroupId,
+            messageId,
+            filename,
+            title,
+            contentType,
+            content,
+            artifactType,
+            version,
+            metadata,
+          } = action.payload
+
+          // Store the new version
+          state.artifacts[String(artifactId)] = {
+            id: artifactId,
+            messageId,
+            title,
+            content,
+            artifactType,
+            status: 'completed',
+            filename,
+            contentType,
+            version,
+            parentArtifactId,
+            artifactGroupId,
+            sourceTool: metadata?.sourceTool as string | undefined,
+            metadata,
+          }
+
+          // Auto-switch to the new version
           state.activeArtifactId = artifactId
           state.sidecarOpen = true
         }

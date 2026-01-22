@@ -37,6 +37,11 @@ export interface Artifact {
   // Additional metadata for the specific artifact type
   metadata?: Record<string, unknown>
 
+  // Versioning fields
+  version?: number
+  parentArtifactId?: number
+  artifactGroupId?: number
+
   // Error info
   error?: string
 
@@ -53,11 +58,32 @@ export interface ArtifactCreatedEvent {
   type: 'artifact_created'
   artifactId: number
   messageId?: number
+  artifactGroupId?: number
   filename: string
   title: string
   contentType: string
   content: string
   artifactType: ArtifactType
+  version?: number
+  metadata?: Record<string, unknown>
+}
+
+/**
+ * WebSocket event: artifact_updated
+ * Sent when an artifact is updated (new version created)
+ */
+export interface ArtifactUpdatedEvent {
+  type: 'artifact_updated'
+  artifactId: number
+  parentArtifactId: number
+  artifactGroupId: number
+  messageId?: number
+  filename: string
+  title: string
+  contentType: string
+  content: string
+  artifactType: ArtifactType
+  version: number
   metadata?: Record<string, unknown>
 }
 
@@ -80,3 +106,4 @@ export const initialArtifactState: ArtifactState = {
 
 // API Response types
 export type ArtifactListResponse = Artifact[]
+export type ArtifactDetailResponse = Artifact

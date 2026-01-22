@@ -63,8 +63,7 @@ export const sendSocketMessage = createAsyncThunk<
       artifactsEnabled &&
       sidecarOpen &&
       activeArtifact &&
-      (activeArtifact.status === 'completed' ||
-        activeArtifact.status === 'paused')
+      activeArtifact.status === 'completed'
 
     // Build payload
     const payload = {
