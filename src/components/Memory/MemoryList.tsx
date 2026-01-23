@@ -20,13 +20,13 @@ const MemoryList = ({ items, onDelete, isLoading }: MemoryListProps) => {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className='animate-pulse rounded-lg border border-dark-blue/30 bg-dark-primary/30 p-4'
+            className='animate-pulse rounded-lg border border-border bg-muted/30 p-4'
           >
-            <div className='mb-2 h-5 w-20 rounded bg-dark-blue/50' />
-            <div className='h-4 w-3/4 rounded bg-dark-blue/30' />
+            <div className='mb-2 h-5 w-20 rounded bg-muted' />
+            <div className='h-4 w-3/4 rounded bg-muted/70' />
             <div className='mt-2 flex gap-2'>
-              <div className='h-4 w-16 rounded-full bg-dark-blue/30' />
-              <div className='h-4 w-20 rounded-full bg-dark-blue/30' />
+              <div className='h-4 w-16 rounded-full bg-muted/70' />
+              <div className='h-4 w-20 rounded-full bg-muted/70' />
             </div>
           </div>
         ))}
@@ -39,10 +39,10 @@ const MemoryList = ({ items, onDelete, isLoading }: MemoryListProps) => {
 
   if (validItems.length === 0) {
     return (
-      <div className='flex flex-col items-center justify-center rounded-lg border border-dashed border-dark-blue/50 py-12 text-center'>
-        <Brain className='mb-3 h-10 w-10 text-gray-500' />
-        <h3 className='text-lg font-medium text-gray-300'>No memories yet</h3>
-        <p className='mt-1 max-w-sm text-sm text-gray-500'>
+      <div className='flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-12 text-center'>
+        <Brain className='mb-3 h-10 w-10 text-muted-foreground' />
+        <h3 className='text-lg font-medium text-foreground'>No memories yet</h3>
+        <p className='mt-1 max-w-sm text-sm text-muted-foreground'>
           Memories are extracted from your conversations and stored here. You
           can also seed demo data for testing.
         </p>
