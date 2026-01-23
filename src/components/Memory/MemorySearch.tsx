@@ -36,13 +36,13 @@ const MemorySearch = ({
     <div className='space-y-4'>
       <form onSubmit={handleSubmit} className='flex gap-2'>
         <div className='relative flex-1'>
-          <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500' />
+          <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
             type='text'
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder='Ask something about your memories...'
-            className='border-dark-blue/50 bg-dark-primary pl-10 focus:border-dare'
+            className='border-border bg-background pl-10 focus:border-dare'
           />
         </div>
         <Button
@@ -57,10 +57,10 @@ const MemorySearch = ({
       {searchResults && (
         <div className='space-y-3'>
           <div className='flex items-center justify-between'>
-            <h3 className='text-sm font-medium text-gray-400'>
+            <h3 className='text-sm font-medium text-muted-foreground'>
               Results for "{searchResults.query}"
             </h3>
-            <span className='text-xs text-gray-500'>
+            <span className='text-xs text-muted-foreground'>
               {searchResults.items.length} matches
             </span>
           </div>
@@ -72,7 +72,7 @@ const MemorySearch = ({
               ))}
             </div>
           ) : (
-            <p className='py-4 text-center text-sm text-gray-500'>
+            <p className='py-4 text-center text-sm text-muted-foreground'>
               No memories found matching your query.
             </p>
           )}
