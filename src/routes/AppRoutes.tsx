@@ -32,7 +32,6 @@ import MCPServerList from '@/pages/MCP/MCPServerList.tsx'
 import MCPServerDetail from '@/pages/MCP/MCPServerDetail.tsx'
 import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
 import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
-import SandboxTest from '@/pages/SandboxTest'
 
 const AppRoutes = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.user)
@@ -56,9 +55,6 @@ const AppRoutes = () => {
             element={<ResetPasswordScreen />}
           />
           <Route path='/confirmation' element={<EmailConfirmationScreen />} />
-
-          {/* Sandbox Test Route - for debugging React component rendering */}
-          <Route path='/sandbox-test' element={<SandboxTest />} />
 
           <Route
             path='/onboarding'
