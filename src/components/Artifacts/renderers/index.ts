@@ -7,4 +7,4 @@
 
 export { ChartRenderer } from './ChartRenderer'
 export { MermaidRenderer } from './MermaidRenderer'
-export { ReactComponentRenderer } from './ReactComponentRenderer'
+export { SandpackRenderer } from './SandpackRenderer'
