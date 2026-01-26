@@ -108,6 +108,7 @@ export const sendSocketMessage = createAsyncThunk<
       active_artifact_id: shouldSendArtifactContext
         ? activeArtifactId
         : undefined,
+      mcp_server_ids: activeConversation.selectedMcpServerIds || [],
     }
 
     dispatch(socketSendMessage(activeConversation.conversationId, payload))
