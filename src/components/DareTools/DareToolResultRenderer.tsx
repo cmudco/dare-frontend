@@ -1,67 +1,68 @@
-/**
- * DareToolResultRenderer Component
- *
- * Strategy-based component that renders DARE tool results based on tool type.
- * Maps tool names to appropriate visualizers (charts, diagrams, etc.)
- */
-
 import React from 'react'
-import { DareToolName } from '@/utils/constants/dareTools'
-import { DareToolResult, ChartConfig } from '@/redux/types/dareToolResults'
-import { DareChartResult } from './DareChartResult'
-import { DareMermaidResult } from './DareMermaidResult'
+import { ChartRenderer, MermaidRenderer } from '../Artifacts/renderers'
+import { debugLog } from '@/utils/debugLogger'
+import type { DareToolResult } from '@/redux/types/dareToolResults'
 
 interface DareToolResultRendererProps {
   toolName: string
-  result: DareToolResult | null // Now receives parsed object from BE
-  className?: string
+  result: DareToolResult | null
 }
 
 /**
- * Routes DARE tool results to the appropriate renderer based on tool name.
+ * DareToolResultRenderer - Renders DARE tool results inline in messages
  *
- * Currently supports:
- * - create_chart → DareChartResult (Recharts)
- * - create_diagram → DareMermaidResult (Mermaid)
- *
- * Returns null for unsupported tools (rendering handled elsewhere).
+ * Handles:
+ * - create_chart: Renders chart using ChartRenderer
+ * - create_diagram: Renders Mermaid diagram using MermaidRenderer
  */
 export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
   toolName,
   result,
-  className = '',
 }) => {
-  // If no result or not successful, don't render
-  if (!result || !result.success) {
+  debugLog('[DareToolResultRenderer] Rendering:', { toolName, result })
+
+  if (!result) {
     return null
   }
-  switch (toolName) {
-    case DareToolName.CREATE_CHART:
-      if (result.chartConfig) {
-        return (
-          <DareChartResult
-            chartConfig={result.chartConfig as ChartConfig}
-            className={className}
-          />
-        )
-      }
-      break
 
-    case DareToolName.CREATE_DIAGRAM:
-      if (result.mermaidCode) {
-        return (
-          <DareMermaidResult
-            mermaidCode={result.mermaidCode}
-            className={className}
-          />
-        )
-      }
-      break
-
-    default:
-      break
+  if (!result.success) {
+    return (
+      <div className='my-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400'>
+        Error: {result.error || 'Unknown error'}
+      </div>
+    )
   }
 
+  // Handle chart results
+  if (toolName === 'create_chart' && result.chartConfig) {
+    // Transform to ChartConfig format expected by ChartRenderer
+    const chartData = result.chartConfig.data || []
+    const config = {
+      type: result.chartConfig.type as 'bar' | 'line' | 'pie' | 'area',
+      title: result.chartConfig.title,
+      data: chartData.map((d) => ({ label: d.label, value: d.value })),
+      dataKeys: ['value'],
+      xAxisKey: 'label',
+      ...result.chartConfig.options,
+    }
+    return (
+      <div className='not-prose my-4 h-80'>
+        <ChartRenderer config={config} />
+      </div>
+    )
+  }
+
+  // Handle diagram results
+  if (toolName === 'create_diagram' && result.mermaidCode) {
+    return (
+      <div className='not-prose my-4 h-80'>
+        <MermaidRenderer code={result.mermaidCode} />
+      </div>
+    )
+  }
+
+  // Fallback - just log and return null
+  debugLog('[DareToolResultRenderer] No renderer for:', toolName)
   return null
 }
 
