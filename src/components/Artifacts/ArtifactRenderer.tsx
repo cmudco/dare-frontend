@@ -1,6 +1,6 @@
 import React from 'react'
 import type { Artifact } from '@/redux/types/artifact'
-import { ChartRenderer, MermaidRenderer } from './renderers'
+import { ChartRenderer, MermaidRenderer, SandpackRenderer } from './renderers'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import ReactMarkdown from 'react-markdown'
@@ -31,6 +31,9 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
 
     case 'diagram':
       return <MermaidRenderer code={artifact.content} />
+
+    case 'react':
+      return <SandpackRenderer code={artifact.content} title={artifact.title} />
 
     case 'code':
       return (

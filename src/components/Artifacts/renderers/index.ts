@@ -7,3 +7,4 @@
 
 export { ChartRenderer } from './ChartRenderer'
 export { MermaidRenderer } from './MermaidRenderer'
+export { SandpackRenderer } from './SandpackRenderer'
