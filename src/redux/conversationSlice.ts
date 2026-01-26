@@ -23,6 +23,7 @@ import {
   AudioTranscriptionSettings,
   ToolCallStatus,
 } from './types/conversation'
+import { ServerSlug } from '@/utils/constants/dareTools'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
@@ -195,6 +196,11 @@ export const conversationSlice = createSlice({
     updateSelectedMcpServers(state, action: PayloadAction<number[]>) {
       if (state.activeConversation) {
         state.activeConversation.selectedMcpServerIds = action.payload
+      }
+    },
+    updateSelectedDareTools(state, action: PayloadAction<string[]>) {
+      if (state.activeConversation) {
+        state.activeConversation.selectedDareToolSlugs = action.payload
       }
     },
     updateImageGenerationSettings(
@@ -753,13 +759,15 @@ export const conversationSlice = createSlice({
           type: string
           payload: {
             messageId: number
+            toolCallId: string
             toolName: string
             serverSlug: string
             status: ToolCallStatus
           }
         } => action.type === 'socket/mcp_tool_call',
         (state, action) => {
-          const { messageId, toolName, serverSlug, status } = action.payload
+          const { messageId, toolCallId, toolName, serverSlug, status } =
+            action.payload
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
@@ -768,8 +776,7 @@ export const conversationSlice = createSlice({
             if (!msg.toolCalls) {
               msg.toolCalls = []
             }
-            // Add new tool call entry
-            const toolCallId = `${serverSlug}__${toolName}__${Date.now()}`
+            // Add new tool call entry using the ID from backend
             msg.toolCalls.push({
               id: toolCallId,
               toolName,
@@ -787,6 +794,7 @@ export const conversationSlice = createSlice({
           type: string
           payload: {
             messageId: number
+            toolCallId: string
             toolName: string
             serverSlug: string
             status: 'success' | 'error'
@@ -795,34 +803,114 @@ export const conversationSlice = createSlice({
           }
         } => action.type === 'socket/mcp_tool_result',
         (state, action) => {
-          const { messageId, toolName, serverSlug, status, result, error } =
+          const { messageId, toolCallId, status, result, error } =
             action.payload
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
           if (msg && msg.toolCalls) {
-            // Find the matching tool call (by toolName and serverSlug)
-            const toolCall = msg.toolCalls.find(
-              (tc) => tc.toolName === toolName && tc.serverSlug === serverSlug
-            )
+            // Find the matching tool call by unique id only
+            // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
+            const toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId)
             if (toolCall) {
-              toolCall.status = status === 'success' ? 'completed' : 'failed'
+              toolCall.status =
+                status === 'success'
+                  ? ToolCallStatus.COMPLETED
+                  : ToolCallStatus.FAILED
               if (result) {
-                // Extract text from result if it's an object with content array
-                if (
-                  typeof result === 'object' &&
-                  result !== null &&
-                  'content' in result
-                ) {
-                  const content = (result as { content: { text?: string }[] })
-                    .content
-                  toolCall.result = content?.[0]?.text || JSON.stringify(result)
-                } else {
-                  toolCall.result = String(result)
-                }
+                // Store as mcpResult (MCP tools use this field)
+                toolCall.mcpResult = result
               }
               if (error) {
                 toolCall.error = error
+              }
+            }
+          }
+        }
+      )
+      // DARE Tool Call - tool starts executing
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            messageId: number
+            toolCall: {
+              id: string
+              toolName: string
+              toolSlug: string
+              serverSlug: string
+              status: ToolCallStatus
+              arguments?: Record<string, unknown>
+            }
+          }
+        } => action.type === 'socket/dareToolCall',
+        (state, action) => {
+          const { messageId, toolCall } = action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (msg) {
+            // Initialize toolCalls array if not present
+            if (!msg.toolCalls) {
+              msg.toolCalls = []
+            }
+            // Add new tool call entry
+            msg.toolCalls.push({
+              id: toolCall.id,
+              toolName: toolCall.toolName,
+              serverSlug: toolCall.serverSlug || ServerSlug.DARE,
+              status: toolCall.status,
+            })
+          }
+        }
+      )
+      // DARE Tool Result - tool completes (success or error)
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            messageId: number
+            toolCall: {
+              id: string
+              toolName: string
+              toolSlug: string
+              serverSlug: string
+              status: 'completed' | 'failed'
+              result?: Record<string, unknown>
+              arguments?: Record<string, unknown>
+            }
+          }
+        } => action.type === 'socket/dareToolResult',
+        (state, action) => {
+          const { messageId, toolCall } = action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (msg && msg.toolCalls) {
+            // Find the matching tool call by unique id only
+            // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
+            const existingToolCall = msg.toolCalls.find(
+              (tc) => tc.id === toolCall.id
+            )
+            if (existingToolCall) {
+              existingToolCall.status =
+                toolCall.status === 'completed'
+                  ? ToolCallStatus.COMPLETED
+                  : ToolCallStatus.FAILED
+              if (toolCall.result) {
+                // Store as dareResult (DARE tools use this field)
+                // Result is already parsed and camelCased from BE
+                existingToolCall.dareResult =
+                  toolCall.result as unknown as import('@/redux/types/dareToolResults').DareToolResult
+
+                // If result indicates failure, also set error
+                if (!toolCall.result.success && toolCall.result.error) {
+                  existingToolCall.error = toolCall.result.error as string
+                }
               }
             }
           }
@@ -881,5 +969,6 @@ export const {
   clearAttachedImages,
   setHistorySidebarCollapsed,
   updateSelectedMcpServers,
+  updateSelectedDareTools,
 } = conversationSlice.actions
 export default conversationSlice.reducer

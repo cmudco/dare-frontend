@@ -15,6 +15,7 @@ import notificationReducer from './notificationSlice'
 import apiKeysReducer from './apiKeysSlice'
 import artifactReducer from './artifactSlice'
 import mcpReducer from './mcpSlice'
+import dareToolsReducer from './dareToolsSlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
@@ -44,6 +45,7 @@ export const store = configureStore({
     socket: socketReducer,
     feedback: feedbackReducer,
     mcp: mcpReducer,
+    dareTools: dareToolsReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware

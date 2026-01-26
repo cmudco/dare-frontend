@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X } from 'lucide-react'
 import type { AppDispatch, RootState } from '@/redux/store'
@@ -25,6 +26,13 @@ import {
 export function FeedbackWidget() {
   const feedbackRef = useRef<HTMLDivElement>(null)
   const dispatch = useDispatch<AppDispatch>()
+  const location = useLocation()
+
+  // Hide feedback widget on workflow builder pages (create/edit)
+  const isWorkflowBuilderPage =
+    location.pathname.includes('/workflows/') &&
+    (location.pathname.includes('/edit') ||
+      location.pathname.includes('/create'))
 
   const {
     isOpen,
@@ -87,6 +95,11 @@ export function FeedbackWidget() {
   const handleSubmit = () => dispatch(submitFeedback())
   const handleBack = () => dispatch(prevStep())
   const handleSkipCategory = () => dispatch(skipCategory())
+
+  // Don't render on workflow builder pages
+  if (isWorkflowBuilderPage) {
+    return null
+  }
 
   return (
     <div
