@@ -25,10 +25,12 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ReasoningStatus, ReasoningStatusColors } from '@/utils/constants/model'
 import { CheckCircle, XCircle, FileText, ExternalLink } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { getSlugFromModelName, hasModelCardData } from '@/utils/modelCard'
 
 const Help = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { availableModels, loading, error } = useSelector(
+  const { allModels, loading, error } = useSelector(
     (state: RootState) => state.conversation
   )
 
@@ -150,7 +152,7 @@ const Help = () => {
             Available AI Models
           </h2>
         </div>
-        {availableModels.length === 0 ? (
+        {allModels.length === 0 ? (
           <div className='rounded-lg border border-gray-200 bg-gray-50 p-8 text-center'>
             <p className='text-gray-500'>
               No AI models available at the moment.
@@ -196,7 +198,7 @@ const Help = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {availableModels.map((model: LLMModel) => {
+                  {allModels.map((model: LLMModel) => {
                     const reasoningStatus = model.isReasoning
                       ? ReasoningStatus.Yes
                       : ReasoningStatus.No
@@ -208,7 +210,16 @@ const Help = () => {
                         className='hover:bg-gray-50 dark:hover:bg-gray-800/50'
                       >
                         <TableCell className='font-medium'>
-                          {model.name}
+                          {hasModelCardData(model.name) ? (
+                            <Link
+                              to={`/models/${getSlugFromModelName(model.name)}`}
+                              className='text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300'
+                            >
+                              {model.name}
+                            </Link>
+                          ) : (
+                            model.name
+                          )}
                         </TableCell>
                         <TableCell className='font-mono text-sm'>
                           {model.identifier || 'N/A'}

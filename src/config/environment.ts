@@ -45,6 +45,8 @@ export interface FeatureFlags {
   enableSocketIO: boolean
   // Voice Input - push-to-talk voice input mode (V1)
   enableVoiceInput: boolean
+  // Debug Logs - show console.log debug statements (local/staging only)
+  enableDebugLogs: boolean
 }
 
 /**
@@ -80,6 +82,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableAudioTranscription: true,
         enableSocketIO: true, // Test Socket.IO in local
         enableVoiceInput: true, // Voice input enabled for local testing
+        enableDebugLogs: true, // Debug logs enabled for local
       }
 
     case 'dare-staging':
@@ -90,6 +93,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableAudioTranscription: true, // DARE Staging: HAS Audio Transcription
         enableSocketIO: true, // Test Socket.IO in staging
         enableVoiceInput: true, // Voice input enabled for staging testing
+        enableDebugLogs: true, // Debug logs enabled for staging
       }
 
     case 'dare-production':
@@ -100,6 +104,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableAudioTranscription: false, // DARE Production: NO Audio Transcription (beta)
         enableSocketIO: true, // Socket.IO enabled for production
         enableVoiceInput: false, // Voice input disabled in production (beta)
+        enableDebugLogs: false, // Debug logs disabled in production
       }
 
     case 'gt-production':
@@ -110,6 +115,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableAudioTranscription: true, // Georgia Tech: HAS Audio Transcription
         enableSocketIO: false, // Disable Socket.IO in production until validated
         enableVoiceInput: false, // Voice input disabled in production (beta)
+        enableDebugLogs: false, // Debug logs disabled in production
       }
 
     default:
@@ -120,6 +126,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableAudioTranscription: true,
         enableSocketIO: false, // Default off for safety
         enableVoiceInput: false, // Default off for safety
+        enableDebugLogs: false, // Default off for safety
       }
   }
 }
