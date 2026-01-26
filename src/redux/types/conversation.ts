@@ -1,4 +1,5 @@
 import { SenderType, FeedbackType } from '@/utils/constants/conversation'
+import { ToolCallStatus, MessageContentType } from '@/utils/constants/dareTools'
 import type {
   ImageSizeType,
   ImageQualityType,
@@ -40,6 +41,7 @@ export interface Conversation {
   selectedEmbeddingIds?: number[]
   selectedFileIds?: number[]
   selectedMcpServerIds?: number[] // MCP servers enabled for this conversation
+  selectedDareToolSlugs?: string[] // DARE tools enabled for this conversation
   feedbackAutoPromptCount?: number // How many auto-prompts have been shown
   feedbackLastPromptMessageCount?: number // Message # when last shown
   feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
@@ -75,22 +77,48 @@ export interface Message {
   artifactId?: number
   // MCP tool calls made by this message
   toolCalls?: ToolCall[]
+  // Content type for specialized rendering
+  contentType?: MessageContentType
+  contentMetadata?: Record<string, unknown>
 }
 
-/**
- * MCP Tool Call Status
- */
-export type ToolCallStatus = 'pending' | 'executing' | 'completed' | 'failed'
+// ToolCallStatus is now imported from @/utils/constants/dareTools
+// Re-export for backwards compatibility
+export { ToolCallStatus }
+
+// ─────────────────────────────────────────────────────────────
+// Tool Call Interface
+// ─────────────────────────────────────────────────────────────
 
 /**
- * MCP Tool Call - tracks tool execution within a message
+ * Tool Call - tracks tool execution within a message
+ *
+ * Supports both MCP external tools and DARE internal tools.
+ * Use serverSlug to determine which result field to read:
+ *
+ *   - serverSlug === 'dare'  → read `dareResult`
+ *   - serverSlug !== 'dare'  → read `mcpResult`
  */
 export interface ToolCall {
+  /** Unique ID from the LLM */
   id: string
+
+  /** Name of the tool executed */
   toolName: string
+
+  /** Server identifier ('dare' for internal, or MCP server slug) */
   serverSlug: string
+
+  /** Current execution status */
   status: ToolCallStatus
-  result?: string
+
+  /** Result from DARE internal tools (when serverSlug === 'dare') */
+  dareResult?: import('@/redux/types/dareToolResults').DareToolResult
+
+  /** Result from MCP external tools (when serverSlug !== 'dare') */
+  mcpResult?: import('@/redux/types/dareToolResults').McpToolResult
+
+  /** Error message if execution failed */
   error?: string
 }
 

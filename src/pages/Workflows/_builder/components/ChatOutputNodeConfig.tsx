@@ -5,6 +5,8 @@ import {
   FileText,
   Globe,
   ExternalLink,
+  Copy,
+  Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -22,7 +24,7 @@ import {
 } from '@/components/ui/collapsible'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { setNodeSelectedRun } from '@/redux/workflowBuilderSlice'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import ReactMarkdown from 'react-markdown'
@@ -46,6 +48,7 @@ export default function ChatOutputNodeConfig({
   const dispatch = useAppDispatch()
   const [snippetsOpen, setSnippetsOpen] = useState(false)
   const [webSourcesOpen, setWebSourcesOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   // Get workflow execution data
   const { availableRuns, selectedRunIds, currentRun } = useAppSelector(
@@ -86,14 +89,16 @@ export default function ChatOutputNodeConfig({
     dispatch(setNodeSelectedRun({ nodeId, runId: Number(runId) }))
   }
 
-  // Copy to clipboard
-  const copyToClipboard = async () => {
+  // Copy to clipboard with feedback
+  const copyToClipboard = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(response || '')
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     } catch {
       // no-op
     }
-  }
+  }, [response])
 
   return (
     <div className='space-y-4'>
@@ -162,14 +167,24 @@ export default function ChatOutputNodeConfig({
             <Button
               size='sm'
               variant='ghost'
-              className='h-6 px-2 text-xs'
+              className={`h-6 px-2 text-xs ${copied ? 'text-green-600' : ''}`}
               onClick={copyToClipboard}
             >
-              Copy
+              {copied ? (
+                <>
+                  <Check className='mr-1 h-3 w-3' />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className='mr-1 h-3 w-3' />
+                  Copy
+                </>
+              )}
             </Button>
           </div>
           <div
-            className='max-h-80 overflow-y-auto rounded-md border border-border bg-background p-3'
+            className='max-h-[60vh] min-h-[50vh] overflow-y-auto rounded-md border border-border bg-background p-3'
             onWheel={(e) => e.stopPropagation()}
           >
             <div className='prose prose-sm max-w-full text-foreground dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-pre:bg-transparent prose-pre:p-0'>

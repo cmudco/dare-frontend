@@ -49,6 +49,7 @@ import {
   exportWorkflowToString,
 } from '@/utils/workflowBuilder/exportWorkflow'
 import { WorkflowNodeType } from '@/utils/constants/workflows'
+import ToastContainer from '@/components/ui/ToastContainer'
 
 const WorkflowEditPage = () => {
   const navigate = useNavigate()
@@ -266,6 +267,7 @@ const WorkflowEditPage = () => {
 
   return (
     <div className='relative h-screen w-screen overflow-hidden bg-gray-50'>
+      <ToastContainer />
       {/* Full canvas workflow builder */}
       <ReactFlowProvider key={id}>
         <WorkflowBuilder key={id} workflowId={id} disableEditing={isRunning} />
