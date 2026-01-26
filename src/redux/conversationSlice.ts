@@ -21,6 +21,7 @@ import {
   LLMModel,
   ImageGenerationSettings,
   AudioTranscriptionSettings,
+  ToolCallStatus,
 } from './types/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
@@ -189,6 +190,11 @@ export const conversationSlice = createSlice({
       state.artifactsEnabled = action.payload
       if (state.activeConversation) {
         state.activeConversation.artifactsEnabled = action.payload
+      }
+    },
+    updateSelectedMcpServers(state, action: PayloadAction<number[]>) {
+      if (state.activeConversation) {
+        state.activeConversation.selectedMcpServerIds = action.payload
       }
     },
     updateImageGenerationSettings(
@@ -739,6 +745,89 @@ export const conversationSlice = createSlice({
           }
         }
       )
+      // MCP Tool Call - tool starts executing
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            messageId: number
+            toolName: string
+            serverSlug: string
+            status: ToolCallStatus
+          }
+        } => action.type === 'socket/mcp_tool_call',
+        (state, action) => {
+          const { messageId, toolName, serverSlug, status } = action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (msg) {
+            // Initialize toolCalls array if not present
+            if (!msg.toolCalls) {
+              msg.toolCalls = []
+            }
+            // Add new tool call entry
+            const toolCallId = `${serverSlug}__${toolName}__${Date.now()}`
+            msg.toolCalls.push({
+              id: toolCallId,
+              toolName,
+              serverSlug,
+              status,
+            })
+          }
+        }
+      )
+      // MCP Tool Result - tool completes (success or error)
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            messageId: number
+            toolName: string
+            serverSlug: string
+            status: 'success' | 'error'
+            result?: unknown
+            error?: string
+          }
+        } => action.type === 'socket/mcp_tool_result',
+        (state, action) => {
+          const { messageId, toolName, serverSlug, status, result, error } =
+            action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (msg && msg.toolCalls) {
+            // Find the matching tool call (by toolName and serverSlug)
+            const toolCall = msg.toolCalls.find(
+              (tc) => tc.toolName === toolName && tc.serverSlug === serverSlug
+            )
+            if (toolCall) {
+              toolCall.status = status === 'success' ? 'completed' : 'failed'
+              if (result) {
+                // Extract text from result if it's an object with content array
+                if (
+                  typeof result === 'object' &&
+                  result !== null &&
+                  'content' in result
+                ) {
+                  const content = (result as { content: { text?: string }[] })
+                    .content
+                  toolCall.result = content?.[0]?.text || JSON.stringify(result)
+                } else {
+                  toolCall.result = String(result)
+                }
+              }
+              if (error) {
+                toolCall.error = error
+              }
+            }
+          }
+        }
+      )
   },
 })
 
@@ -791,5 +880,6 @@ export const {
   removeAttachedImage,
   clearAttachedImages,
   setHistorySidebarCollapsed,
+  updateSelectedMcpServers,
 } = conversationSlice.actions
 export default conversationSlice.reducer
