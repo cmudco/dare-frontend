@@ -1,7 +1,7 @@
 /**
  * useSocketConnection - Socket.IO connection management hook
  *
- * Handles socket connection lifecycle based on authentication state.
+ * Manages BOTH chat and workflow socket connections at the app root level.
  * Should be used once at the app root level.
  */
 
@@ -12,6 +12,10 @@ import {
   socketConnect,
   socketDisconnect,
 } from '@/redux/middleware/socketMiddleware'
+import {
+  workflowSocketConnect,
+  workflowSocketDisconnect,
+} from '@/redux/middleware/workflowSocketMiddleware'
 import { config } from '@/config/environment'
 
 export function useSocketConnection() {
@@ -19,21 +23,28 @@ export function useSocketConnection() {
   const { isAuthenticated, user } = useSelector(
     (state: RootState) => state.user
   )
-  const isConnected = useSelector((state: RootState) => state.socket.connected)
+  const chatConnected = useSelector(
+    (state: RootState) => state.socket.connected
+  )
+  const workflowStatus = useSelector(
+    (state: RootState) => state.workflowBuilder.wsConnectionStatus
+  )
 
   useEffect(() => {
     if (!config.features.enableSocketIO) return
 
     const token = localStorage.getItem('token')
 
-    // Connect when authenticated and not already connected
-    if (isAuthenticated && user && token && !isConnected) {
-      dispatch(socketConnect(token))
+    if (isAuthenticated && user && token) {
+      if (!chatConnected) dispatch(socketConnect(token))
+      if (workflowStatus === 'disconnected')
+        dispatch(workflowSocketConnect(token))
     }
 
-    // Disconnect when logged out
-    if (!isAuthenticated && isConnected) {
-      dispatch(socketDisconnect())
+    if (!isAuthenticated) {
+      if (chatConnected) dispatch(socketDisconnect())
+      if (workflowStatus !== 'disconnected')
+        dispatch(workflowSocketDisconnect())
     }
-  }, [isAuthenticated, user, isConnected, dispatch])
+  }, [isAuthenticated, user, chatConnected, workflowStatus, dispatch])
 }

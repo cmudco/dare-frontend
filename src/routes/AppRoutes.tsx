@@ -23,6 +23,7 @@ import BillingScreen from '@/pages/Billing/index.tsx'
 import OnboardingScreen from '@/pages/Onboarding/index.tsx'
 import WorkflowCreatePage from '@/pages/Workflows/WorkflowCreatePage.tsx'
 import Agents from '@/pages/Agents/index.tsx'
+import ModelCards from '@/pages/ModelCards'
 
 const AppRoutes = () => {
   return (
@@ -53,6 +54,24 @@ const AppRoutes = () => {
             }
           />
 
+          {/* Workflow builder pages - full canvas without header/sidebar */}
+          <Route
+            path='/workflows/create'
+            element={
+              <ProtectedRoute>
+                <WorkflowCreatePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/workflows/:id/edit'
+            element={
+              <ProtectedRoute>
+                <WorkflowEditPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path='/'
             element={
@@ -69,13 +88,12 @@ const AppRoutes = () => {
             <Route path='/prompts' element={<Prompt />} />
             <Route path='/agents' element={<Agents />} />
             <Route path='/workflows' element={<Workflows />} />
-            <Route path='/workflows/create' element={<WorkflowCreatePage />} />
-            <Route path='/workflows/:id/edit' element={<WorkflowEditPage />} />
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
             <Route path='/profile' element={<ProfileScreen />} />
             <Route path='/billing/' element={<BillingScreen />} />
           </Route>
+          <Route path='/models/:slug' element={<ModelCards />} />
           <Route path='*' element={<div>404 - Page Not Found</div>} />
         </Routes>
       </RouteListener>

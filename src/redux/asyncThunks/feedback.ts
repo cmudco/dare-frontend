@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import confetti from 'canvas-confetti'
 import { submitFeedbackAPI } from '../../api/feedback'
+import { debugLog } from '@/utils/debugLogger'
 import {
   FeedbackContext,
   FeedbackPayload,
@@ -130,7 +131,7 @@ export const captureScreenshot = createAsyncThunk(
 
       // User cancelled the screen share dialog
       if (error instanceof Error && error.name === 'NotAllowedError') {
-        console.log('User cancelled screen capture')
+        debugLog('User cancelled screen capture')
         return rejectWithValue('cancelled')
       }
 
