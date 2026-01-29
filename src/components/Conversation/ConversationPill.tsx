@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   sendMessage,
   createConversation,
+  updateConversation,
 } from '../../redux/asyncThunks/conversation'
 import ConversationFileSelect from './ConversationFileSelect'
 import ConversationReferenceSelect from './ConversationReferenceSelect'
@@ -33,7 +34,7 @@ import clsx from 'clsx'
 import { features } from '@/config/environment'
 import { MCPServerSelector } from '@/components/MCP/MCPServerSelector'
 import { DareToolSelector } from '@/components/DareTools/DareToolSelector'
-import { updateConversation } from '@/redux/asyncThunks/conversation'
+import { AgentSelector } from './AgentSelector'
 
 interface ConversationPillProps {
   editMessageId?: string | null
@@ -313,6 +314,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <PromptSet />
             <div className='h-8 w-[2px] rounded-lg bg-gray-300'></div>
             <ConversationReferenceSelect />
+            <AgentSelector />
             <ModelPicker />
             {features.enableMcp && (
               <MCPServerSelector

@@ -42,6 +42,8 @@ export interface Conversation {
   selectedFileIds?: number[]
   selectedMcpServerIds?: number[] // MCP servers enabled for this conversation
   selectedDareToolSlugs?: string[] // DARE tools enabled for this conversation
+  selectedAgent?: number | null // Agent template selected for this conversation
+  selectedAgentName?: string | null // Name of the selected agent (read-only)
   feedbackAutoPromptCount?: number // How many auto-prompts have been shown
   feedbackLastPromptMessageCount?: number // Message # when last shown
   feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
