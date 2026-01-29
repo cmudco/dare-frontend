@@ -203,6 +203,64 @@ export const conversationSlice = createSlice({
         state.activeConversation.selectedDareToolSlugs = action.payload
       }
     },
+    updateSelectedAgent(
+      state,
+      action: PayloadAction<{
+        agentId: number | null
+        agentName: string | null
+      }>
+    ) {
+      if (state.activeConversation) {
+        state.activeConversation.selectedAgent = action.payload.agentId
+        state.activeConversation.selectedAgentName = action.payload.agentName
+      }
+    },
+    /**
+     * Apply all agent settings to the active conversation in a single action.
+     * This consolidates multiple individual updates for better performance and cleaner code.
+     */
+    applyAgentSettings(
+      state,
+      action: PayloadAction<{
+        agentId: number
+        agentName: string
+        llm?: number
+        temperature: number
+        maxTokens: number
+        maxContextSnippets: number
+        documentSimilarityThreshold: number
+        enableWebSearch: boolean
+      }>
+    ) {
+      if (!state.activeConversation) return
+
+      const {
+        agentId,
+        agentName,
+        llm,
+        temperature,
+        maxTokens,
+        maxContextSnippets,
+        documentSimilarityThreshold,
+        enableWebSearch,
+      } = action.payload
+
+      // Update agent selection
+      state.activeConversation.selectedAgent = agentId
+      state.activeConversation.selectedAgentName = agentName
+
+      // Apply all settings atomically
+      if (llm) {
+        state.selectedModel = llm
+      }
+      state.activeConversation.temperature = temperature
+      state.activeConversation.maxTokens = maxTokens
+      state.activeConversation.maxContextSnippets = maxContextSnippets
+      state.activeConversation.documentSimilarityThreshold =
+        documentSimilarityThreshold
+      state.webSearchEnabled = enableWebSearch
+      state.activeConversation.webSearchEnabled = enableWebSearch
+    },
     updateImageGenerationSettings(
       state,
       action: PayloadAction<ImageGenerationSettings>
@@ -968,7 +1026,10 @@ export const {
   removeAttachedImage,
   clearAttachedImages,
   setHistorySidebarCollapsed,
+  setImageGenerating,
   updateSelectedMcpServers,
   updateSelectedDareTools,
+  updateSelectedAgent,
+  applyAgentSettings,
 } = conversationSlice.actions
 export default conversationSlice.reducer
