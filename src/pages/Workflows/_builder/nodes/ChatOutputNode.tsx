@@ -13,6 +13,7 @@ import {
   setSelectedNodeId,
   updateNodeDataById,
 } from '@/redux/workflowBuilderSlice'
+import { OutputDisplayMode } from '@/redux/types/workflowBuilder'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useCallback } from 'react'
@@ -27,7 +28,10 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
     currentRun,
     isRunning,
     streamingResponses,
+    outputDisplayMode,
   } = useAppSelector((s) => s.workflowBuilder)
+
+  const isNodesMode = outputDisplayMode === OutputDisplayMode.Nodes
 
   const displayRun = getDisplayRun(
     id,
@@ -37,16 +41,18 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   )
   const nodeState = getNodeState(displayRun, id)
 
-  // Single source of truth: streamingResponses for live data, nodeState for completed runs
+  // Get response data
   const streamingData = streamingResponses[id]
   const response = streamingData?.content || nodeState?.response || null
   const hasResponse = Boolean(response?.trim())
 
-  // Simple status derivation based on data availability
-  const isStreaming = isRunning && streamingData !== undefined
+  // In nodes mode: streaming means we have streaming data and workflow is running
+  // In panel mode: no streaming behavior for output nodes
+  const isStreaming = isNodesMode && isRunning && streamingData !== undefined
+
+  // Status derivation
   const status = (() => {
-    if (isStreaming && !hasResponse) return WorkflowRunStepStatus.Running
-    if (isStreaming && hasResponse) return WorkflowRunStepStatus.Running
+    if (isStreaming) return WorkflowRunStepStatus.Running
     if (hasResponse) return WorkflowRunStepStatus.Completed
     if (isRunning) return WorkflowRunStepStatus.Pending
     if (nodeState?.status) return nodeState.status
@@ -54,6 +60,11 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   })()
 
   const isExpanded = (data?.isExpanded as boolean) ?? false
+
+  // In nodes mode: auto-show when streaming
+  // In panel mode: only show when manually expanded
+  const shouldShowContent =
+    hasResponse && response && (isExpanded || isStreaming)
 
   const handleConfigure = useCallback(
     (e: React.MouseEvent) => {
@@ -155,11 +166,11 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
         )}
       </div>
 
-      {/* Show content when expanded OR when actively streaming (auto-show during stream) */}
-      {hasResponse && response && (isExpanded || isStreaming) && (
+      {shouldShowContent && (
         <OutputNodeContent
           response={response}
           onOpenFullView={handleConfigure}
+          isStreaming={isStreaming}
         />
       )}
 
