@@ -157,10 +157,20 @@ const WorkflowEditPage = () => {
     }
   }
 
-  const handleSave = async () => {
+  const handleOutputDisplayModeToggle = (checked: boolean) => {
+    const newMode = checked ? OutputDisplayMode.Nodes : OutputDisplayMode.Panel
+    dispatch(setOutputDisplayMode(newMode))
+  }
+
+  const handleSave = useCallback(async () => {
     dispatch(setSavingStatus(SavingStatus.Saving))
 
-    const serializedWorkflow = serializeWorkflow(nodes, edges, savedViewport)
+    const serializedWorkflow = serializeWorkflow(
+      nodes,
+      edges,
+      savedViewport,
+      outputDisplayMode
+    )
     if (!serializedWorkflow) {
       dispatch(setSavingStatus(SavingStatus.Error))
       return
@@ -183,7 +193,7 @@ const WorkflowEditPage = () => {
       console.error('Save failed:', error)
       dispatch(setSavingStatus(SavingStatus.Error))
     }
-  }
+  }, [dispatch, nodes, edges, savedViewport, outputDisplayMode, id])
 
   const handleRunWorkflow = async () => {
     if (!id) return
@@ -490,15 +500,7 @@ const WorkflowEditPage = () => {
               <Switch
                 id='output-mode'
                 checked={outputDisplayMode === OutputDisplayMode.Nodes}
-                onCheckedChange={(checked) =>
-                  dispatch(
-                    setOutputDisplayMode(
-                      checked
-                        ? OutputDisplayMode.Nodes
-                        : OutputDisplayMode.Panel
-                    )
-                  )
-                }
+                onCheckedChange={handleOutputDisplayModeToggle}
               />
               <Label
                 htmlFor='output-mode'

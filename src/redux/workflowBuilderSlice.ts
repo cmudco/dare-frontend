@@ -415,6 +415,8 @@ const workflowBuilderSlice = createSlice({
         state.savedViewport = action.payload.viewport ?? null
         state.manualModeEnabled =
           action.payload.workflow.manualModeEnabled ?? false
+        state.outputDisplayMode =
+          action.payload.workflow.outputDisplayMode ?? OutputDisplayMode.Panel
 
         // Clear history when loading a workflow
         state.history.past = []

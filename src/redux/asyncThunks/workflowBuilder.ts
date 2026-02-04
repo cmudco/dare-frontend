@@ -51,11 +51,17 @@ export const saveAndExecuteStep = createAsyncThunk<
   'workflowBuilder/saveAndExecuteStep',
   async ({ workflowId, stepNodeId, workflowRunId }, { dispatch, getState }) => {
     const state = getState()
-    const { nodes, edges, savedViewport } = state.workflowBuilder
+    const { nodes, edges, savedViewport, outputDisplayMode } =
+      state.workflowBuilder
 
     // 1. Save the workflow first
     dispatch(setSavingStatus(SavingStatus.Saving))
-    const serializedWorkflow = serializeWorkflow(nodes, edges, savedViewport)
+    const serializedWorkflow = serializeWorkflow(
+      nodes,
+      edges,
+      savedViewport,
+      outputDisplayMode
+    )
 
     if (serializedWorkflow) {
       try {
