@@ -264,6 +264,20 @@ const workflowBuilderSlice = createSlice({
         }
       }
     },
+    expandAllOutputNodes: (state) => {
+      state.nodes = state.nodes.map((node) =>
+        node.type === WorkflowNodeType.ChatOutput
+          ? { ...node, data: { ...node.data, isExpanded: true } }
+          : node
+      )
+    },
+    collapseAllOutputNodes: (state) => {
+      state.nodes = state.nodes.map((node) =>
+        node.type === WorkflowNodeType.ChatOutput
+          ? { ...node, data: { ...node.data, isExpanded: false } }
+          : node
+      )
+    },
     // Manual execution mode actions
     setManualMode: (state, action: PayloadAction<boolean>) => {
       state.manualModeEnabled = action.payload
@@ -771,6 +785,8 @@ export const {
   collapseAllNodes,
   expandAllNodes,
   toggleNodeCollapse,
+  expandAllOutputNodes,
+  collapseAllOutputNodes,
   setManualMode,
   setCurrentPartialRunId,
   markStepExecuted,

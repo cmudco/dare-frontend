@@ -1,79 +1,86 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { Send, Settings, Copy, Trash2, CheckCircle2 } from 'lucide-react'
+import {
+  Send,
+  Settings,
+  Copy,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
   setSelectedNodeId,
+  updateNodeDataById,
 } from '@/redux/workflowBuilderSlice'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { useCallback } from 'react'
+import { OutputNodeContent } from '../components/OutputNodeContent'
 
-export default function ChatOutputNode({ id, selected }: NodeProps) {
+export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const dispatch = useAppDispatch()
 
-  // Get workflow execution data
-  const { executedStepNodeIds, availableRuns, selectedRunIds, currentRun } =
-    useAppSelector((s) => s.workflowBuilder)
+  const { availableRuns, selectedRunIds, currentRun } = useAppSelector(
+    (s) => s.workflowBuilder
+  )
 
-  const isOutputExecuted = executedStepNodeIds.includes(id)
-
-  // Get the run to display
   const displayRun = getDisplayRun(
     id,
     selectedRunIds,
     availableRuns,
     currentRun
   )
-
-  // Get node state from the display run
   const nodeState = getNodeState(displayRun, id)
+
   const status = nodeState?.status || null
-  const hasResponse = Boolean(nodeState?.response?.trim())
+  const response = nodeState?.response || null
+  const hasResponse = Boolean(response?.trim())
+  const isExpanded = (data?.isExpanded as boolean) ?? false
 
-  // Quick action handlers
-  const handleConfigure = (e: React.MouseEvent) => {
+  const handleConfigure = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      dispatch(setSelectedNodeId(id))
+    },
+    [dispatch, id]
+  )
+
+  const handleDuplicate = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    dispatch(setSelectedNodeId(id))
-  }
+  }, [])
 
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    // TODO: Implement duplicate
-  }
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      dispatch(removeNodeWithEdges({ nodeId: id }))
+    },
+    [dispatch, id]
+  )
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    dispatch(removeNodeWithEdges({ nodeId: id }))
-  }
+  const handleToggleExpand = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      dispatch(
+        updateNodeDataById({ nodeId: id, newData: { isExpanded: !isExpanded } })
+      )
+    },
+    [dispatch, id, isExpanded]
+  )
 
-  // Get subtitle based on status
   const getSubtitle = () => {
-    if (status === WorkflowRunStepStatus.Completed && hasResponse) {
+    if (status === WorkflowRunStepStatus.Completed && hasResponse)
       return 'Response ready'
-    }
-    if (status === WorkflowRunStepStatus.Running) {
-      return 'Generating...'
-    }
-    if (status === WorkflowRunStepStatus.Pending) {
-      return 'Pending...'
-    }
-    if (status === WorkflowRunStepStatus.Failed) {
-      return 'Error occurred'
-    }
+    if (status === WorkflowRunStepStatus.Running) return 'Generating...'
+    if (status === WorkflowRunStepStatus.Pending) return 'Pending...'
+    if (status === WorkflowRunStepStatus.Failed) return 'Error occurred'
     return 'No output yet'
   }
 
-  // Get status indicator class
   const getStatusClass = () => {
-    if (isOutputExecuted || status === WorkflowRunStepStatus.Completed) {
-      return 'completed'
-    }
-    if (status === WorkflowRunStepStatus.Running) {
-      return 'running'
-    }
-    if (status === WorkflowRunStepStatus.Failed) {
-      return 'error'
-    }
+    if (status === WorkflowRunStepStatus.Completed) return 'completed'
+    if (status === WorkflowRunStepStatus.Running) return 'running'
+    if (status === WorkflowRunStepStatus.Failed) return 'error'
     return ''
   }
 
@@ -81,7 +88,6 @@ export default function ChatOutputNode({ id, selected }: NodeProps) {
     <div
       className={`workflow-node output ${selected ? 'selected' : ''} ${getStatusClass()}`}
     >
-      {/* Quick Actions Bar - appears on selection */}
       {selected && (
         <div className='node-quick-actions'>
           <button
@@ -108,30 +114,41 @@ export default function ChatOutputNode({ id, selected }: NodeProps) {
         </div>
       )}
 
-      {/* Node Header */}
       <div className='node-header'>
         <div className='node-icon output'>
           <Send size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>
-            Output
-            {isOutputExecuted && (
-              <CheckCircle2 className='ml-1 inline h-3 w-3 text-green-500' />
-            )}
-          </div>
+          <div className='node-title'>Output</div>
           <div className='node-subtitle'>{getSubtitle()}</div>
         </div>
+        {hasResponse && (
+          <button
+            className='flex h-6 w-6 items-center justify-center rounded hover:bg-muted/50'
+            onClick={handleToggleExpand}
+            title={isExpanded ? 'Collapse' : 'Expand'}
+          >
+            {isExpanded ? (
+              <ChevronUp size={14} className='text-muted-foreground' />
+            ) : (
+              <ChevronDown size={14} className='text-muted-foreground' />
+            )}
+          </button>
+        )}
       </div>
 
-      {/* Input handle */}
+      {hasResponse && response && isExpanded && (
+        <OutputNodeContent
+          response={response}
+          onOpenFullView={handleConfigure}
+        />
+      )}
+
       <Handle
         type='target'
         position={Position.Left}
         className='h-3 w-3 bg-secondary'
       />
-
-      {/* Output handle for chaining */}
       <Handle
         type='source'
         position={Position.Right}
