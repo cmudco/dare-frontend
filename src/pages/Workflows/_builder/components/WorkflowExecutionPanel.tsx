@@ -162,26 +162,35 @@ export default function WorkflowExecutionPanel() {
           </div>
         )}
 
-        {/* Streaming responses - data comes in correct order from backend */}
+        {/* Streaming responses - filter to step/structuredOutput only */}
+        {/* chatOutput nodes display their content directly in the canvas */}
         {hasStreamingData && (
           <div className='space-y-4'>
-            {Object.entries(streamingResponses).map(([nodeId, data]) => (
-              <StepResponseCard
-                key={nodeId}
-                nodeId={nodeId}
-                nodeName={getNodeName(nodeId)}
-                stepNumber={
-                  nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
-                    | number
-                    | undefined
-                }
-                nodeType={nodes.find((n) => n.id === nodeId)?.type}
-                content={data.content}
-                isActive={activeStreamingNodeId === nodeId}
-                snippets={data.snippets}
-                webSearchSources={data.webSearchSources}
-              />
-            ))}
+            {Object.entries(streamingResponses)
+              .filter(([nodeId]) => {
+                const node = nodes.find((n) => n.id === nodeId)
+                return (
+                  node?.type === WorkflowNodeType.Step ||
+                  node?.type === WorkflowNodeType.StructuredOutput
+                )
+              })
+              .map(([nodeId, data]) => (
+                <StepResponseCard
+                  key={nodeId}
+                  nodeId={nodeId}
+                  nodeName={getNodeName(nodeId)}
+                  stepNumber={
+                    nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
+                      | number
+                      | undefined
+                  }
+                  nodeType={nodes.find((n) => n.id === nodeId)?.type}
+                  content={data.content}
+                  isActive={activeStreamingNodeId === nodeId}
+                  snippets={data.snippets}
+                  webSearchSources={data.webSearchSources}
+                />
+              ))}
           </div>
         )}
 

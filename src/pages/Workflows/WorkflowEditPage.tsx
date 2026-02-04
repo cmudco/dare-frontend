@@ -18,10 +18,11 @@ import {
   resetPartialRun,
   setSavingStatus,
   setShowExecutionPanel,
+  setOutputDisplayMode,
   expandAllOutputNodes,
   collapseAllOutputNodes,
 } from '@/redux/workflowBuilderSlice'
-import { SavingStatus } from '@/redux/types/workflowBuilder'
+import { SavingStatus, OutputDisplayMode } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
@@ -83,6 +84,9 @@ const WorkflowEditPage = () => {
   const loadedWorkflow = useAppSelector((s) => s.workflowBuilder.loadedWorkflow)
   const history = useAppSelector((s) => s.workflowBuilder.history)
   const currentRun = useAppSelector((s) => s.workflowBuilder.currentRun)
+  const outputDisplayMode = useAppSelector(
+    (s) => s.workflowBuilder.outputDisplayMode
+  )
   const hasExecutionData = currentRun !== null
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
@@ -479,6 +483,31 @@ const WorkflowEditPage = () => {
               )}
             </Tooltip>
           </TooltipProvider>
+
+          {/* Output Display Mode Toggle */}
+          {id && (
+            <div className='flex items-center gap-2 border-r border-border pr-3'>
+              <Switch
+                id='output-mode'
+                checked={outputDisplayMode === OutputDisplayMode.Nodes}
+                onCheckedChange={(checked) =>
+                  dispatch(
+                    setOutputDisplayMode(
+                      checked
+                        ? OutputDisplayMode.Nodes
+                        : OutputDisplayMode.Panel
+                    )
+                  )
+                }
+              />
+              <Label
+                htmlFor='output-mode'
+                className='cursor-pointer text-xs font-medium'
+              >
+                Node Output
+              </Label>
+            </div>
+          )}
 
           {/* Peek Execution Button - shows latest run */}
           {id && hasExecutionData && !isRunning && (

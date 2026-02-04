@@ -9,7 +9,10 @@ import {
   applyEdgeChanges,
 } from '@xyflow/react'
 import { initialState } from './initialState/workflowBuilder'
-import { WorkflowBuilderState } from './types/workflowBuilder'
+import {
+  WorkflowBuilderState,
+  OutputDisplayMode,
+} from './types/workflowBuilder'
 import { handleConnection } from '@/utils/workflowBuilder/handleConnection'
 import { createNode } from '@/utils/workflowBuilder/createNode'
 import { removeNodeById as removeNodeByIdHelper } from '@/utils/workflowBuilder/removeNodeById'
@@ -368,6 +371,15 @@ const workflowBuilderSlice = createSlice({
     setShowExecutionPanel: (state, action: PayloadAction<boolean>) => {
       state.showExecutionPanel = action.payload
     },
+    setOutputDisplayMode: (state, action: PayloadAction<OutputDisplayMode>) => {
+      state.outputDisplayMode = action.payload
+    },
+    toggleOutputDisplayMode: (state) => {
+      state.outputDisplayMode =
+        state.outputDisplayMode === OutputDisplayMode.Panel
+          ? OutputDisplayMode.Nodes
+          : OutputDisplayMode.Panel
+    },
     /**
      * Clear all execution-related state.
      * Used when switching between workflows to prevent stale data.
@@ -525,24 +537,29 @@ const workflowBuilderSlice = createSlice({
             '🚀 executionStarted - clearing pendingValidation, runId:',
             workflowRunId
           )
-          // Update currentRun with the new run ID so validation uses correct run
+          // Update currentRun with the new run ID, clearing old nodeStates
           if (state.currentRun) {
             state.currentRun = {
               ...state.currentRun,
               id: workflowRunId,
               status: WorkflowRunStepStatus.Running,
+              nodeStates: {}, // Clear old node states for fresh run
             }
           } else {
             // Create minimal run object if none exists
             state.currentRun = {
               id: workflowRunId,
               status: WorkflowRunStepStatus.Running,
+              nodeStates: {},
             } as WorkflowRun
           }
           state.isRunning = true
           state.streamingResponses = {}
           state.activeStreamingNodeId = null
-          state.showExecutionPanel = true
+          // Only auto-show execution panel in 'panel' mode
+          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
+            state.showExecutionPanel = true
+          }
           state.pendingValidation = null // Clear any previous validation
         }
       )
@@ -573,7 +590,10 @@ const workflowBuilderSlice = createSlice({
           state.currentPartialRunId = workflowRunId
           state.isRunning = true
           state.activeStreamingNodeId = stepNodeId
-          state.showExecutionPanel = true
+          // Only auto-show execution panel in 'panel' mode
+          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
+            state.showExecutionPanel = true
+          }
           state.pendingValidation = null
           // Don't clear streaming responses - keep previous step results
           if (!state.streamingResponses[stepNodeId]) {
@@ -702,8 +722,10 @@ const workflowBuilderSlice = createSlice({
             runData as WorkflowRun & { type: string }
           state.currentRun = { ...workflowRunData, status } as WorkflowRun
 
-          // Show execution panel when we receive workflow status
-          state.showExecutionPanel = true
+          // Only auto-show execution panel in 'panel' mode
+          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
+            state.showExecutionPanel = true
+          }
 
           // Update running state based on status
           state.isRunning =
@@ -800,6 +822,8 @@ export const {
   setRightPanelTab,
   clearStreamingResponses,
   setShowExecutionPanel,
+  setOutputDisplayMode,
+  toggleOutputDisplayMode,
   clearExecutionState,
 } = workflowBuilderSlice.actions
 

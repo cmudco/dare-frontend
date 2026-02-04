@@ -1,6 +1,7 @@
 import {
   type WorkflowBuilderState,
   SavingStatus,
+  OutputDisplayMode,
 } from '../types/workflowBuilder'
 import { INITIAL_NODES, INITIAL_EDGES } from '@/utils/constants/workflowBuilder'
 
@@ -32,4 +33,5 @@ export const initialState: WorkflowBuilderState = {
   rightPanelTab: 'config',
   showExecutionPanel: false,
   pendingValidation: null,
+  outputDisplayMode: OutputDisplayMode.Panel,
 }
