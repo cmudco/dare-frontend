@@ -26,7 +26,6 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
     selectedRunIds,
     currentRun,
     isRunning,
-    activeStreamingNodeId,
     streamingResponses,
   } = useAppSelector((s) => s.workflowBuilder)
 
@@ -38,24 +37,22 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   )
   const nodeState = getNodeState(displayRun, id)
 
-  // Check streamingResponses for real-time updates (step_completed populates this)
+  // Single source of truth: streamingResponses for live data, nodeState for completed runs
   const streamingData = streamingResponses[id]
+  const response = streamingData?.content || nodeState?.response || null
+  const hasResponse = Boolean(response?.trim())
 
-  // Derive output node status
-  const derivedStatus = (() => {
-    if (activeStreamingNodeId === id) return WorkflowRunStepStatus.Running
-    // If we have streaming data with content, it's completed
-    if (streamingData?.content) return WorkflowRunStepStatus.Completed
-    // If workflow is running and no data yet, show pending
+  // Simple status derivation based on data availability
+  const isStreaming = isRunning && streamingData !== undefined
+  const status = (() => {
+    if (isStreaming && !hasResponse) return WorkflowRunStepStatus.Running
+    if (isStreaming && hasResponse) return WorkflowRunStepStatus.Running
+    if (hasResponse) return WorkflowRunStepStatus.Completed
     if (isRunning) return WorkflowRunStepStatus.Pending
     if (nodeState?.status) return nodeState.status
     return null
   })()
 
-  const status = derivedStatus
-  // Use streaming response first (real-time), fall back to nodeState
-  const response = streamingData?.content || nodeState?.response || null
-  const hasResponse = Boolean(response?.trim())
   const isExpanded = (data?.isExpanded as boolean) ?? false
 
   const handleConfigure = useCallback(
@@ -158,7 +155,8 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
         )}
       </div>
 
-      {hasResponse && response && isExpanded && (
+      {/* Show content when expanded OR when actively streaming (auto-show during stream) */}
+      {hasResponse && response && (isExpanded || isStreaming) && (
         <OutputNodeContent
           response={response}
           onOpenFullView={handleConfigure}
