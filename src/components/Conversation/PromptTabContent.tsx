@@ -6,20 +6,23 @@
  * Uses Redux directly for state management.
  */
 
-import React, { useState, useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch, RootState } from '../../redux/store'
-import { MagnifyingGlassIcon } from '@heroicons/react/24/solid'
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid'
-import { Plus } from 'lucide-react'
-import { formatDate, groupPrompts } from '../../utils/constants/prompts'
-import { openModal, clearSelectedPrompt } from '@/redux/promptSlice'
+import { useState, useEffect, useMemo } from 'react'
+import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import {
+  MagnifyingGlassIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from '@heroicons/react/24/solid'
+import { Plus } from 'lucide-react'
+import { AppDispatch } from '@/redux/store'
+import { formatDate, groupPrompts } from '@/utils/constants/prompts'
+import { openModal, clearSelectedPrompt } from '@/redux/promptSlice'
 import { setPrompt } from '@/redux/conversationSlice'
 import { Prompt } from '@/redux/types/prompt'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { stripHtml } from '../../utils/textUtils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { stripHtml } from '@/utils/textUtils'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
 import { useAppSelector } from '@/redux/hooks'
 
@@ -44,9 +47,9 @@ const RichTextPreview = ({ content }: { content: string }) => {
   )
 }
 
-const PromptTabContent: React.FC = () => {
+const PromptTabContent = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const prompts = useSelector((state: RootState) => state.prompt.prompts)
+  const prompts = useAppSelector((state) => state.prompt.prompts)
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
 
@@ -106,19 +109,34 @@ const PromptTabContent: React.FC = () => {
     dispatch(openModal())
   }
 
-  const groupedPrompts = React.useMemo(() => groupPrompts(prompts), [prompts])
+  const groupedPrompts = useMemo(() => groupPrompts(prompts), [prompts])
 
-  const filteredPrompts = groupedPrompts.filter((group) => {
-    const rootTitle = group.rootPrompt.title?.toLowerCase() || ''
-    const latestContent = stripHtml(
-      group.versions[0].content?.toLowerCase() || ''
-    )
-    return (
-      searchQuery === '' ||
-      rootTitle.includes(searchQuery.toLowerCase()) ||
-      latestContent.includes(searchQuery.toLowerCase())
-    )
-  })
+  const filteredPrompts = useMemo(() => {
+    const filtered = groupedPrompts.filter((group) => {
+      const rootTitle = group.rootPrompt.title?.toLowerCase() || ''
+      const latestContent = stripHtml(
+        group.versions[0].content?.toLowerCase() || ''
+      )
+      return (
+        searchQuery === '' ||
+        rootTitle.includes(searchQuery.toLowerCase()) ||
+        latestContent.includes(searchQuery.toLowerCase())
+      )
+    })
+
+    // Sort to show selected prompt's group at the top
+    if (selectedPrompt) {
+      return filtered.sort((a, b) => {
+        const aHasSelected = a.versions.some((v) => v.id === selectedPrompt.id)
+        const bHasSelected = b.versions.some((v) => v.id === selectedPrompt.id)
+        if (aHasSelected && !bHasSelected) return -1
+        if (!aHasSelected && bHasSelected) return 1
+        return 0
+      })
+    }
+
+    return filtered
+  }, [groupedPrompts, searchQuery, selectedPrompt])
 
   const toggleExpand = (rootId: number) => {
     setExpandedGroups((prev) => {
