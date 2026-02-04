@@ -27,6 +27,7 @@ import { setNodeSelectedRun } from '@/redux/workflowBuilderSlice'
 import { useState, useCallback } from 'react'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import { formatWorkflowRunLabel } from '@/utils/workflowUtils'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -116,7 +117,8 @@ export default function ChatOutputNodeConfig({
             <SelectContent>
               {nodeVersionRuns.map((run, index) => (
                 <SelectItem key={run.id} value={run.id.toString()}>
-                  Run #{run.id} {index === 0 ? '(Latest)' : ''}
+                  {formatWorkflowRunLabel(run, nodeVersionRuns.length - index)}
+                  {index === 0 ? ' (Latest)' : ''}
                 </SelectItem>
               ))}
             </SelectContent>
