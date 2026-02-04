@@ -21,9 +21,14 @@ import { OutputNodeContent } from '../components/OutputNodeContent'
 export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const dispatch = useAppDispatch()
 
-  const { availableRuns, selectedRunIds, currentRun } = useAppSelector(
-    (s) => s.workflowBuilder
-  )
+  const {
+    availableRuns,
+    selectedRunIds,
+    currentRun,
+    isRunning,
+    activeStreamingNodeId,
+    streamingResponses,
+  } = useAppSelector((s) => s.workflowBuilder)
 
   const displayRun = getDisplayRun(
     id,
@@ -33,8 +38,23 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   )
   const nodeState = getNodeState(displayRun, id)
 
-  const status = nodeState?.status || null
-  const response = nodeState?.response || null
+  // Check streamingResponses for real-time updates (step_completed populates this)
+  const streamingData = streamingResponses[id]
+
+  // Derive output node status
+  const derivedStatus = (() => {
+    if (activeStreamingNodeId === id) return WorkflowRunStepStatus.Running
+    // If we have streaming data with content, it's completed
+    if (streamingData?.content) return WorkflowRunStepStatus.Completed
+    // If workflow is running and no data yet, show pending
+    if (isRunning) return WorkflowRunStepStatus.Pending
+    if (nodeState?.status) return nodeState.status
+    return null
+  })()
+
+  const status = derivedStatus
+  // Use streaming response first (real-time), fall back to nodeState
+  const response = streamingData?.content || nodeState?.response || null
   const hasResponse = Boolean(response?.trim())
   const isExpanded = (data?.isExpanded as boolean) ?? false
 
@@ -80,6 +100,7 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const getStatusClass = () => {
     if (status === WorkflowRunStepStatus.Completed) return 'completed'
     if (status === WorkflowRunStepStatus.Running) return 'running'
+    if (status === WorkflowRunStepStatus.Pending) return 'pending'
     if (status === WorkflowRunStepStatus.Failed) return 'error'
     return ''
   }
