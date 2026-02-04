@@ -144,9 +144,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     )
   }
 
-  // Check if this step can be run (has dependencies met)
-  const canRunStep =
-    manualModeEnabled && !isRunning && !isExecuted && lastWorkflowId
+  // Check if this step can be run in manual mode
+  // Allow re-running already executed steps (backend will replace the response)
+  const canRunStep = manualModeEnabled && !isRunning && lastWorkflowId
 
   // Get subtitle text
   const getSubtitle = () => {
