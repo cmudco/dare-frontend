@@ -6,11 +6,10 @@
  * Uses Redux directly for state management.
  */
 
-import { useEffect } from 'react'
+import { useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Bot, Check, Loader2 } from 'lucide-react'
 import { RootState, AppDispatch } from '@/redux/store'
-import { getAgents } from '@/redux/asyncThunks/agent'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
 import {
   updateSelectedAgent,
@@ -32,12 +31,15 @@ const AgentTabContent: React.FC = () => {
 
   const selectedAgentId = activeConversation?.selectedAgent
 
-  // Fetch agents on mount if not already loaded
-  useEffect(() => {
-    if (agents.length === 0 && !loading) {
-      dispatch(getAgents())
-    }
-  }, [dispatch, agents.length, loading])
+  // Sort agents to show selected agent at the top
+  const sortedAgents = useMemo(() => {
+    if (!selectedAgentId) return agents
+    return [...agents].sort((a, b) => {
+      if (a.id === selectedAgentId) return -1
+      if (b.id === selectedAgentId) return 1
+      return 0
+    })
+  }, [agents, selectedAgentId])
 
   /**
    * Handle agent template selection.
@@ -144,13 +146,13 @@ const AgentTabContent: React.FC = () => {
           <Loader2 className='h-4 w-4 animate-spin' />
           <span>Loading agents...</span>
         </div>
-      ) : agents.length === 0 ? (
+      ) : sortedAgents.length === 0 ? (
         <div className='py-6 text-center text-sm text-muted-foreground'>
           No agents available. Create agents in the Agents page.
         </div>
       ) : (
         <div className='flex flex-col gap-2'>
-          {agents.map((agent) => {
+          {sortedAgents.map((agent) => {
             const isAgentSelected = selectedAgentId === agent.id
             return (
               <button
