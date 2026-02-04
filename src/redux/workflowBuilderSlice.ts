@@ -692,6 +692,20 @@ const workflowBuilderSlice = createSlice({
             snippets: metadata?.snippets,
             webSearchSources: metadata?.webSearchSources,
           }
+
+          // In 'nodes' display mode, propagate final response to connected output nodes
+          if (state.outputDisplayMode === OutputDisplayMode.Nodes) {
+            getConnectedOutputNodeIds(nodeId, state.edges, state.nodes).forEach(
+              (outputNodeId) => {
+                state.streamingResponses[outputNodeId] = {
+                  content: response,
+                  snippets: metadata?.snippets,
+                  webSearchSources: metadata?.webSearchSources,
+                }
+              }
+            )
+          }
+
           // Clear active streaming node
           if (state.activeStreamingNodeId === nodeId) {
             state.activeStreamingNodeId = null
