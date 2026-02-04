@@ -511,8 +511,8 @@ const WorkflowEditPage = () => {
             </div>
           )}
 
-          {/* Peek Execution Button - shows latest run */}
-          {id && hasExecutionData && !isRunning && (
+          {/* Peek Execution Button - shows latest run or current execution */}
+          {id && (hasExecutionData || isRunning) && (
             <TooltipProvider>
               <Tooltip delayDuration={150}>
                 <TooltipTrigger asChild>
@@ -521,13 +521,15 @@ const WorkflowEditPage = () => {
                     size='icon'
                     onClick={() => dispatch(setShowExecutionPanel(true))}
                     className='h-8 w-8'
-                    aria-label='View latest execution'
+                    aria-label={
+                      isRunning ? 'View execution' : 'View latest execution'
+                    }
                   >
                     <Eye className='h-4 w-4' />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>View latest run</p>
+                  <p>{isRunning ? 'View execution' : 'View latest run'}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
