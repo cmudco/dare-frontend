@@ -103,7 +103,7 @@ export default function WorkflowExecutionPanel() {
     : pendingValidation
       ? 'Awaiting validation'
       : isViewingCompletedRun
-        ? `Viewing run #${currentRun?.id}`
+        ? 'Viewing results'
         : 'Ready'
 
   return (
@@ -234,8 +234,7 @@ export default function WorkflowExecutionPanel() {
       {/* Footer */}
       {currentRun && (
         <div className='rounded-b-2xl border-t border-border/50 bg-gradient-to-r from-slate-50 to-white p-3'>
-          <div className='flex items-center justify-between text-xs text-muted-foreground'>
-            <span>Run #{currentRun.id}</span>
+          <div className='flex items-center justify-end text-xs text-muted-foreground'>
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-xs font-medium',
