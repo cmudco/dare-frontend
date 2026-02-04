@@ -17,6 +17,7 @@ import { handleConnection } from '@/utils/workflowBuilder/handleConnection'
 import { createNode } from '@/utils/workflowBuilder/createNode'
 import { removeNodeById as removeNodeByIdHelper } from '@/utils/workflowBuilder/removeNodeById'
 import { updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/updateNodeData'
+import { getConnectedOutputNodeIds } from '@/utils/workflowBuilder/getConnectedOutputNodeIds'
 import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
 import { getActivePartialRun, getWorkflowRuns } from './asyncThunks/workflow'
 import type {
@@ -612,21 +613,30 @@ const workflowBuilderSlice = createSlice({
         } => action.type === 'workflowSocket/step_started',
         (state, action) => {
           const { nodeId } = action.payload
+          const node = state.nodes.find((n) => n.id === nodeId)
+          const isOutputNode = node?.type === WorkflowNodeType.ChatOutput
+
           state.activeStreamingNodeId = nodeId
+
+          // In panel mode, don't initialize streamingResponses for output nodes
+          // (they display in the execution panel, not in the node itself)
+          if (
+            isOutputNode &&
+            state.outputDisplayMode === OutputDisplayMode.Panel
+          ) {
+            return
+          }
+
           state.streamingResponses[nodeId] = { content: '' }
 
-          // Also initialize connected output nodes for streaming
-          const connectedOutputNodes = state.edges
-            .filter((edge) => edge.source === nodeId)
-            .map((edge) => edge.target)
-            .filter((targetId) => {
-              const node = state.nodes.find((n) => n.id === targetId)
-              return node?.type === WorkflowNodeType.ChatOutput
-            })
-
-          connectedOutputNodes.forEach((outputNodeId) => {
-            state.streamingResponses[outputNodeId] = { content: '' }
-          })
+          // Only propagate to connected output nodes when in 'nodes' display mode
+          if (state.outputDisplayMode === OutputDisplayMode.Nodes) {
+            getConnectedOutputNodeIds(nodeId, state.edges, state.nodes).forEach(
+              (outputNodeId) => {
+                state.streamingResponses[outputNodeId] = { content: '' }
+              }
+            )
+          }
         }
       )
       .addMatcher(
@@ -645,23 +655,18 @@ const workflowBuilderSlice = createSlice({
             state.streamingResponses[nodeId] = { content: chunk }
           }
 
-          // Also propagate to any connected output nodes (for real-time display)
-          // This ensures output nodes show streaming content even during parallel execution
-          const connectedOutputNodes = state.edges
-            .filter((edge) => edge.source === nodeId)
-            .map((edge) => edge.target)
-            .filter((targetId) => {
-              const node = state.nodes.find((n) => n.id === targetId)
-              return node?.type === WorkflowNodeType.ChatOutput
-            })
-
-          connectedOutputNodes.forEach((outputNodeId) => {
-            if (state.streamingResponses[outputNodeId] !== undefined) {
-              state.streamingResponses[outputNodeId].content += chunk
-            } else {
-              state.streamingResponses[outputNodeId] = { content: chunk }
-            }
-          })
+          // Only propagate to output nodes when in 'nodes' display mode
+          if (state.outputDisplayMode === OutputDisplayMode.Nodes) {
+            getConnectedOutputNodeIds(nodeId, state.edges, state.nodes).forEach(
+              (outputNodeId) => {
+                if (state.streamingResponses[outputNodeId] !== undefined) {
+                  state.streamingResponses[outputNodeId].content += chunk
+                } else {
+                  state.streamingResponses[outputNodeId] = { content: chunk }
+                }
+              }
+            )
+          }
         }
       )
       .addMatcher(
