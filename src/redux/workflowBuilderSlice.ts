@@ -614,6 +614,19 @@ const workflowBuilderSlice = createSlice({
           const { nodeId } = action.payload
           state.activeStreamingNodeId = nodeId
           state.streamingResponses[nodeId] = { content: '' }
+
+          // Also initialize connected output nodes for streaming
+          const connectedOutputNodes = state.edges
+            .filter((edge) => edge.source === nodeId)
+            .map((edge) => edge.target)
+            .filter((targetId) => {
+              const node = state.nodes.find((n) => n.id === targetId)
+              return node?.type === WorkflowNodeType.ChatOutput
+            })
+
+          connectedOutputNodes.forEach((outputNodeId) => {
+            state.streamingResponses[outputNodeId] = { content: '' }
+          })
         }
       )
       .addMatcher(
@@ -625,11 +638,30 @@ const workflowBuilderSlice = createSlice({
         } => action.type === 'workflowSocket/step_streaming',
         (state, action) => {
           const { nodeId, chunk } = action.payload
+          // Update the step node's streaming response
           if (state.streamingResponses[nodeId] !== undefined) {
             state.streamingResponses[nodeId].content += chunk
           } else {
             state.streamingResponses[nodeId] = { content: chunk }
           }
+
+          // Also propagate to any connected output nodes (for real-time display)
+          // This ensures output nodes show streaming content even during parallel execution
+          const connectedOutputNodes = state.edges
+            .filter((edge) => edge.source === nodeId)
+            .map((edge) => edge.target)
+            .filter((targetId) => {
+              const node = state.nodes.find((n) => n.id === targetId)
+              return node?.type === WorkflowNodeType.ChatOutput
+            })
+
+          connectedOutputNodes.forEach((outputNodeId) => {
+            if (state.streamingResponses[outputNodeId] !== undefined) {
+              state.streamingResponses[outputNodeId].content += chunk
+            } else {
+              state.streamingResponses[outputNodeId] = { content: chunk }
+            }
+          })
         }
       )
       .addMatcher(
