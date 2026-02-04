@@ -33,7 +33,7 @@ export type StepNodeData = {
 interface StepNodeConfigProps {
   nodeData: StepNodeData
   updateNodeData: (updates: Record<string, unknown>) => void
-  prompts: Array<{ id: number; title: string }>
+  prompts: Array<{ id: number; title: string; version?: number }>
   files: Array<{ id: number; name: string }>
   availableModels: Array<{ id: number; name: string }>
   agents?: Agent[]
@@ -142,8 +142,12 @@ export default function StepNodeConfig({
           </SelectTrigger>
           <SelectContent>
             {prompts.map((p) => (
-              <SelectItem key={p.id} value={p.id.toString()}>
-                {p.title}
+              <SelectItem
+                key={p.id}
+                value={p.id.toString()}
+                textValue={p.title}
+              >
+                {p.title} {p.version ? `(v${p.version})` : ''}
               </SelectItem>
             ))}
           </SelectContent>
