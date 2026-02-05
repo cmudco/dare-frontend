@@ -83,6 +83,18 @@ export enum WorkflowNodeType {
   ChatOutput = 'chatOutput',
   StructuredOutput = 'structuredOutput',
   Notes = 'notes',
+  File = 'file',
+}
+
+export enum RetrievalMode {
+  Embeddings = 'embeddings',
+  Content = 'content',
+  Both = 'both',
+}
+
+export enum QuerySource {
+  PreviousStep = 'previous_step',
+  TextInput = 'text_input',
 }
 
 export enum WorkflowViewMode {

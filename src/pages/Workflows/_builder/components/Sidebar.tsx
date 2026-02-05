@@ -1,6 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Brain, GitBranch, Trash2, StickyNote } from 'lucide-react'
+import {
+  Play,
+  Brain,
+  GitBranch,
+  Trash2,
+  StickyNote,
+  FileText,
+} from 'lucide-react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { useReactFlow } from '@xyflow/react'
 import {
@@ -43,6 +50,13 @@ const nodeComponents = [
     description: 'Documentation',
     icon: StickyNote,
     color: 'bg-yellow-500',
+  },
+  {
+    type: 'file',
+    label: 'File',
+    description: 'File retrieval',
+    icon: FileText,
+    color: 'bg-cyan-500',
   },
 ]
 
