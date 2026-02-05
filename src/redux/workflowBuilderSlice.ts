@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, createAction, PayloadAction } from '@reduxjs/toolkit'
 import {
   type Node,
   type Edge,
@@ -22,6 +22,7 @@ import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
 import { getActivePartialRun, getWorkflowRuns } from './asyncThunks/workflow'
 import type {
   WorkflowRun,
+  NodeStatesMap,
   RouteOption,
   PendingValidationContext,
   WorkflowStepSnippet,
@@ -39,19 +40,184 @@ import {
   hasSignificantEdgeChange,
 } from './utils/historyHelpers'
 
+// ════════════════════════════════════════════════════════════════════════════
+// SOCKET ACTIONS (dispatched by workflowSocketMiddleware)
+// ════════════════════════════════════════════════════════════════════════════
+
+const wsConnecting = createAction('workflowWebsocket/connecting')
+const wsConnected = createAction('workflowWebsocket/connected')
+const wsDisconnected = createAction('workflowWebsocket/disconnected')
+
+const workflowSubscribed = createAction<{
+  workflowId: number
+  latestRun: WorkflowRun | null
+}>('workflowSocket/workflowSubscribed')
+
+const executionStarted = createAction<{ workflowRunId: number }>(
+  'workflowSocket/executionStarted'
+)
+
+const singleStepStarted = createAction<{
+  workflowRunId: number
+  stepNodeId: string
+}>('workflowSocket/singleStepStarted')
+
+const stepStarted = createAction<{ nodeId: string; nodeType?: string }>(
+  'workflowSocket/step_started'
+)
+
+const stepStreaming = createAction<{ nodeId: string; chunk: string }>(
+  'workflowSocket/step_streaming'
+)
+
+const stepCompleted = createAction<{
+  nodeId: string
+  response: string
+  status?: string
+  metadata?: {
+    snippets?: WorkflowStepSnippet[]
+    webSearchSources?: WorkflowStepWebSearchSource[]
+  }
+}>('workflowSocket/step_completed')
+
+const executionComplete = createAction<{
+  status: string
+  workflowRunId: number
+  endedAt?: string
+}>('workflowSocket/execution_complete')
+
+const stepError = createAction<{ nodeId?: string; error?: string }>(
+  'workflowSocket/step_error'
+)
+
+const workflowStatus = createAction<WorkflowRun & { type: 'workflow_status' }>(
+  'workflowSocket/workflow_status'
+)
+
+const validationRequired = createAction<{
+  nodeId: string
+  routes: RouteOption[]
+  context?: PendingValidationContext
+  aiRecommendation?: string
+}>('workflowSocket/validation_required')
+
+const validationSubmitted = createAction('workflowSocket/validationSubmitted')
+
+// ════════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Initialize nodeStates for all workflow nodes with pending status.
+ * Called when execution starts so every node has an entry to write to.
+ */
+function initializeNodeStates(nodes: Node[]): NodeStatesMap {
+  const states: NodeStatesMap = {}
+  for (const node of nodes) {
+    states[node.id] = {
+      nodeId: node.id,
+      stepId: null,
+      nodeType: node.type || 'unknown',
+      status: WorkflowRunStepStatus.Pending,
+      response: '',
+      error: null,
+      validationContext: null,
+      metadata: null,
+      snippets: [],
+      webSearchSources: [],
+    }
+  }
+  return states
+}
+
+/**
+ * Ensure a nodeState entry exists for a given nodeId.
+ * Creates a minimal entry if missing (defensive for late-arriving events).
+ */
+function ensureNodeState(
+  nodeStates: NodeStatesMap,
+  nodeId: string,
+  nodeType = 'unknown'
+): void {
+  if (!nodeStates[nodeId]) {
+    nodeStates[nodeId] = {
+      nodeId,
+      stepId: null,
+      nodeType,
+      status: WorkflowRunStepStatus.Pending,
+      response: '',
+      error: null,
+      validationContext: null,
+      metadata: null,
+      snippets: [],
+      webSearchSources: [],
+    }
+  }
+}
+
+/**
+ * Propagate execution state to connected output nodes (nodes display mode only).
+ * Output nodes mirror their source step's response.
+ */
+function propagateToOutputNodes(
+  state: WorkflowBuilderState,
+  sourceNodeId: string,
+  update: {
+    response?: string
+    append?: string
+    status?: WorkflowRunStepStatus
+    snippets?: WorkflowStepSnippet[]
+    webSearchSources?: WorkflowStepWebSearchSource[]
+  }
+): void {
+  if (state.outputDisplayMode !== OutputDisplayMode.Nodes) return
+  if (!state.currentRun?.nodeStates) return
+
+  const outputNodeIds = getConnectedOutputNodeIds(
+    sourceNodeId,
+    state.edges,
+    state.nodes
+  )
+  for (const outputNodeId of outputNodeIds) {
+    ensureNodeState(
+      state.currentRun.nodeStates,
+      outputNodeId,
+      WorkflowNodeType.ChatOutput
+    )
+    const outputState = state.currentRun.nodeStates[outputNodeId]
+
+    if (update.response !== undefined) {
+      outputState.response = update.response
+    }
+    if (update.append !== undefined) {
+      outputState.response = (outputState.response || '') + update.append
+    }
+    if (update.status !== undefined) {
+      outputState.status = update.status
+    }
+    if (update.snippets !== undefined) {
+      outputState.snippets = update.snippets
+    }
+    if (update.webSearchSources !== undefined) {
+      outputState.webSearchSources = update.webSearchSources
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SLICE
+// ════════════════════════════════════════════════════════════════════════════
+
 const workflowBuilderSlice = createSlice({
   name: 'workflowBuilder',
   initialState,
   reducers: {
-    // Undo/Redo actions
+    // ── History ───────────────────────────────────────────────────────────
     undo: (state) => {
       const previous = state.history.past.pop()
       if (previous) {
-        // Save current state to future
         const currentSnapshot = createSnapshot(state.nodes, state.edges)
         state.history.future.push(currentSnapshot)
-
-        // Restore previous state
         state.nodes = previous.nodes
         state.edges = previous.edges
       }
@@ -59,11 +225,8 @@ const workflowBuilderSlice = createSlice({
     redo: (state) => {
       const next = state.history.future.pop()
       if (next) {
-        // Save current state to past
         const currentSnapshot = createSnapshot(state.nodes, state.edges)
         state.history.past.push(currentSnapshot)
-
-        // Restore next state
         state.nodes = next.nodes
         state.edges = next.edges
       }
@@ -72,6 +235,8 @@ const workflowBuilderSlice = createSlice({
       state.history.past = []
       state.history.future = []
     },
+
+    // ── Canvas Operations ────────────────────────────────────────────────
     setNodes: (state, action: PayloadAction<Node[]>) => {
       state.nodes = action.payload
     },
@@ -79,27 +244,21 @@ const workflowBuilderSlice = createSlice({
       state.edges = action.payload
     },
     addNode: (state, action: PayloadAction<Node>) => {
-      // Save state before change
       const snapshot = createSnapshot(state.nodes, state.edges)
       pushToHistory(state, snapshot)
-
       state.nodes.push(action.payload)
     },
     addEdge: (state, action: PayloadAction<Edge>) => {
-      // Save state before change
       const snapshot = createSnapshot(state.nodes, state.edges)
       pushToHistory(state, snapshot)
-
       state.edges.push(action.payload)
     },
     updateNode: (
       state,
       action: PayloadAction<{ id: string; updates: Partial<Node> }>
     ) => {
-      // Save state before change
       const snapshot = createSnapshot(state.nodes, state.edges)
       pushToHistory(state, snapshot)
-
       const { id, updates } = action.payload
       const nodeIndex = state.nodes.findIndex((node) => node.id === id)
       if (nodeIndex !== -1) {
@@ -107,64 +266,36 @@ const workflowBuilderSlice = createSlice({
       }
     },
     removeNode: (state, action: PayloadAction<string>) => {
-      // Save state before change
       const snapshot = createSnapshot(state.nodes, state.edges)
       pushToHistory(state, snapshot)
-
       const nodeId = action.payload
       state.nodes = state.nodes.filter((node) => node.id !== nodeId)
-      // Also remove any edges connected to this node
       state.edges = state.edges.filter(
         (edge) => edge.source !== nodeId && edge.target !== nodeId
       )
     },
     removeEdge: (state, action: PayloadAction<string>) => {
-      // Save state before change
       const snapshot = createSnapshot(state.nodes, state.edges)
       pushToHistory(state, snapshot)
-
-      const edgeId = action.payload
-      state.edges = state.edges.filter((edge) => edge.id !== edgeId)
-    },
-    setCurrentMode: (
-      state,
-      action: PayloadAction<'sequential' | 'parallel'>
-    ) => {
-      state.currentMode = action.payload
-    },
-    setLastWorkflowId: (state, action: PayloadAction<number | undefined>) => {
-      state.lastWorkflowId = action.payload
-    },
-    setSavedViewport: (
-      state,
-      action: PayloadAction<{ x: number; y: number; zoom: number } | null>
-    ) => {
-      state.savedViewport = action.payload
+      state.edges = state.edges.filter((edge) => edge.id !== action.payload)
     },
     onNodesChange: (state, action: PayloadAction<NodeChange[]>) => {
-      // Check if this is a significant change (not just selection or dragging)
       if (hasSignificantNodeChange(action.payload)) {
         const snapshot = createSnapshot(state.nodes, state.edges)
         pushToHistory(state, snapshot)
       }
-
-      // Apply changes using ReactFlow's utility
       state.nodes = applyNodeChanges(action.payload, state.nodes)
     },
     onEdgesChange: (state, action: PayloadAction<EdgeChange[]>) => {
-      // Check if this is a significant change (not just selection)
       if (hasSignificantEdgeChange(action.payload)) {
         const snapshot = createSnapshot(state.nodes, state.edges)
         pushToHistory(state, snapshot)
       }
-
       state.edges = applyEdgeChanges(action.payload, state.edges)
     },
     onConnect: (state, action: PayloadAction<Connection>) => {
-      // Save state before change
       const snapshot = createSnapshot(state.nodes, state.edges)
       pushToHistory(state, snapshot)
-
       const result = handleConnection(action.payload, state.nodes, state.edges)
       state.nodes = result.nodes
       state.edges = result.edges
@@ -176,23 +307,21 @@ const workflowBuilderSlice = createSlice({
         position: { x: number; y: number }
       }>
     ) => {
-      // Save state before change
       const snapshot = createSnapshot(state.nodes, state.edges)
       pushToHistory(state, snapshot)
-
       const { type, position } = action.payload
       const result = createNode(type, position, state.nodes, state.edges)
       state.nodes = result.nodes
       state.edges = result.edges
-      // Note: Toast handling will be done in the component via the shouldShowToast return value
     },
     removeNodeWithEdges: (state, action: PayloadAction<{ nodeId: string }>) => {
-      // Save state before change
       const snapshot = createSnapshot(state.nodes, state.edges)
       pushToHistory(state, snapshot)
-
-      const { nodeId } = action.payload
-      const result = removeNodeByIdHelper(nodeId, state.nodes, state.edges)
+      const result = removeNodeByIdHelper(
+        action.payload.nodeId,
+        state.nodes,
+        state.edges
+      )
       state.nodes = result.nodes
       state.edges = result.edges
     },
@@ -203,10 +332,8 @@ const workflowBuilderSlice = createSlice({
         newData: Record<string, unknown>
       }>
     ) => {
-      // Save state before change
       const snapshot = createSnapshot(state.nodes, state.edges)
       pushToHistory(state, snapshot)
-
       const { nodeId, newData } = action.payload
       state.nodes = updateNodeDataHelper(nodeId, newData, state.nodes)
     },
@@ -215,49 +342,40 @@ const workflowBuilderSlice = createSlice({
       action: PayloadAction<{ stepApiIds: Record<string, number> }>
     ) => {
       const { stepApiIds } = action.payload
-
       state.nodes = state.nodes.map((node) => {
         if (node.type === WorkflowNodeType.Step && stepApiIds[node.id]) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              apiId: stepApiIds[node.id],
-            },
-          }
+          return { ...node, data: { ...node.data, apiId: stepApiIds[node.id] } }
         }
         return node
       })
     },
-    updateWorkflowRunStatus: (state, action: PayloadAction<WorkflowRun>) => {
-      const runData = action.payload
-      state.currentRun = runData
-      state.isRunning =
-        runData.status === WorkflowRunStepStatus.Running ||
-        runData.status === WorkflowRunStepStatus.PendingHumanInput
-      // Nodes read directly from currentRun, no need to mutate node.data
+    importNodes: (
+      state,
+      action: PayloadAction<{ nodes: Node[]; edges: Edge[] }>
+    ) => {
+      const snapshot = createSnapshot(state.nodes, state.edges)
+      pushToHistory(state, snapshot)
+      state.nodes = [...state.nodes, ...action.payload.nodes]
+      state.edges = [...state.edges, ...action.payload.edges]
     },
+
+    // ── Node Collapse/Expand ─────────────────────────────────────────────
     collapseAllNodes: (state) => {
       state.nodes = state.nodes.map((node) => ({
         ...node,
-        data: {
-          ...node.data,
-          isCollapsed: true,
-        },
+        data: { ...node.data, isCollapsed: true },
       }))
     },
     expandAllNodes: (state) => {
       state.nodes = state.nodes.map((node) => ({
         ...node,
-        data: {
-          ...node.data,
-          isCollapsed: false,
-        },
+        data: { ...node.data, isCollapsed: false },
       }))
     },
     toggleNodeCollapse: (state, action: PayloadAction<string>) => {
-      const nodeId = action.payload
-      const nodeIndex = state.nodes.findIndex((node) => node.id === nodeId)
+      const nodeIndex = state.nodes.findIndex(
+        (node) => node.id === action.payload
+      )
       if (nodeIndex !== -1) {
         state.nodes[nodeIndex] = {
           ...state.nodes[nodeIndex],
@@ -282,15 +400,32 @@ const workflowBuilderSlice = createSlice({
           : node
       )
     },
-    // Manual execution mode actions
+
+    // ── Execution State ──────────────────────────────────────────────────
+    updateWorkflowRunStatus: (state, action: PayloadAction<WorkflowRun>) => {
+      state.currentRun = action.payload
+      state.isRunning =
+        action.payload.status === WorkflowRunStepStatus.Running ||
+        action.payload.status === WorkflowRunStepStatus.PendingHumanInput
+    },
+    clearExecutionState: (state) => {
+      state.currentRun = null
+      state.isRunning = false
+      state.currentPartialRunId = null
+      state.executedStepNodeIds = []
+      state.activeNodeId = null
+      state.pendingValidation = null
+      state.showExecutionPanel = false
+      state.availableRuns = []
+      state.selectedRunIds = {}
+    },
+
+    // ── Manual Mode ──────────────────────────────────────────────────────
     setManualMode: (state, action: PayloadAction<boolean>) => {
       state.manualModeEnabled = action.payload
-      // If enabling manual mode, clear version selections
       if (action.payload) {
         state.selectedRunIds = {}
-      }
-      // If disabling manual mode, reset partial run state
-      if (!action.payload) {
+      } else {
         state.currentPartialRunId = null
         state.executedStepNodeIds = []
       }
@@ -307,20 +442,30 @@ const workflowBuilderSlice = createSlice({
       state.currentPartialRunId = null
       state.executedStepNodeIds = []
     },
-    // Run version management - just track selection, don't mutate node data
+
+    // ── Run Version Selection ────────────────────────────────────────────
     setNodeSelectedRun: (
       state,
       action: PayloadAction<{ nodeId: string; runId: number }>
     ) => {
-      const { nodeId, runId } = action.payload
-      state.selectedRunIds[nodeId] = runId
-      // Don't mutate node.data - nodes will read from the selected run directly
+      state.selectedRunIds[action.payload.nodeId] = action.payload.runId
     },
-    resetBuilder: (state) => {
-      // Preserve wsConnectionStatus since socket connection is managed separately
-      // and persists across route changes
-      const wsConnectionStatus = state.wsConnectionStatus
-      return { ...initialState, wsConnectionStatus }
+
+    // ── UI State ─────────────────────────────────────────────────────────
+    setCurrentMode: (
+      state,
+      action: PayloadAction<'sequential' | 'parallel'>
+    ) => {
+      state.currentMode = action.payload
+    },
+    setLastWorkflowId: (state, action: PayloadAction<number | undefined>) => {
+      state.lastWorkflowId = action.payload
+    },
+    setSavedViewport: (
+      state,
+      action: PayloadAction<{ x: number; y: number; zoom: number } | null>
+    ) => {
+      state.savedViewport = action.payload
     },
     setSavingStatus: (
       state,
@@ -331,28 +476,6 @@ const workflowBuilderSlice = createSlice({
     setSelectedNodeId: (state, action: PayloadAction<string | null>) => {
       state.selectedNodeId = action.payload
     },
-    /**
-     * Import nodes and edges from an external source (e.g., clipboard paste).
-     * This action:
-     * - Saves current state to history for undo support
-     * - Adds imported nodes/edges to existing canvas (does not replace)
-     * - Clears future history (new branch from current state)
-     */
-    importNodes: (
-      state,
-      action: PayloadAction<{ nodes: Node[]; edges: Edge[] }>
-    ) => {
-      // Save state before import for undo support
-      const snapshot = createSnapshot(state.nodes, state.edges)
-      pushToHistory(state, snapshot)
-
-      // Add imported nodes and edges to existing ones
-      const { nodes: importedNodes, edges: importedEdges } = action.payload
-      state.nodes = [...state.nodes, ...importedNodes]
-      state.edges = [...state.edges, ...importedEdges]
-    },
-
-    // WebSocket streaming actions
     setWsConnectionStatus: (
       state,
       action: PayloadAction<'disconnected' | 'connecting' | 'connected'>
@@ -364,10 +487,6 @@ const workflowBuilderSlice = createSlice({
       action: PayloadAction<'config' | 'execution'>
     ) => {
       state.rightPanelTab = action.payload
-    },
-    clearStreamingResponses: (state) => {
-      state.streamingResponses = {}
-      state.activeStreamingNodeId = null
     },
     setShowExecutionPanel: (state, action: PayloadAction<boolean>) => {
       state.showExecutionPanel = action.payload
@@ -381,29 +500,15 @@ const workflowBuilderSlice = createSlice({
           ? OutputDisplayMode.Nodes
           : OutputDisplayMode.Panel
     },
-    /**
-     * Clear all execution-related state.
-     * Used when switching between workflows to prevent stale data.
-     */
-    clearExecutionState: (state) => {
-      debugLog('🧹 clearExecutionState called - clearing pendingValidation')
-      state.currentRun = null
-      state.isRunning = false
-      state.currentPartialRunId = null
-      state.executedStepNodeIds = []
-      state.streamingResponses = {}
-      state.activeStreamingNodeId = null
-      state.pendingValidation = null
-      state.showExecutionPanel = false
-      state.availableRuns = []
-      state.selectedRunIds = {}
+    resetBuilder: (state) => {
+      const wsConnectionStatus = state.wsConnectionStatus
+      return { ...initialState, wsConnectionStatus }
     },
   },
   extraReducers: (builder) => {
     builder
+      // ── Async Thunks ─────────────────────────────────────────────────
       .addCase(loadWorkflowIntoBuilder.fulfilled, (state, action) => {
-        // REST API: Only sets static workflow data (nodes, edges, config)
-        // Execution state (currentRun, pendingValidation, isRunning) comes from socket
         debugLog('📂 loadWorkflowIntoBuilder.fulfilled:', {
           workflowId: action.payload.workflow.id,
         })
@@ -423,415 +528,237 @@ const workflowBuilderSlice = createSlice({
         state.history.past = []
         state.history.future = []
 
-        // Reset streaming state when switching workflows
-        state.streamingResponses = {}
-        state.activeStreamingNodeId = null
-
-        // DO NOT set execution state here - socket is single source of truth
-        // currentRun, isRunning, pendingValidation, showExecutionPanel
-        // are set by workflowSocket/workflowSubscribed handler
-
+        // Reset execution state — socket is the source of truth for execution
+        state.activeNodeId = null
         state.availableRuns = []
         state.selectedRunIds = {}
       })
       .addCase(getActivePartialRun.fulfilled, (state, action) => {
         const { partialRun, executedStepNodeIds } = action.payload
+        if (!partialRun) return
 
-        if (!partialRun) {
-          return
-        }
-
-        // Set currentRun to the partial run for consistency with normal runs
         state.currentRun = partialRun
         state.currentPartialRunId = partialRun.id
         state.executedStepNodeIds = executedStepNodeIds
-        // Nodes read directly from currentRun, no need to mutate node.data
       })
       .addCase(getWorkflowRuns.fulfilled, (state, action) => {
-        // Store all available runs for the workflow
         state.availableRuns = action.payload
       })
-      // WebSocket connection events
-      .addMatcher(
-        (action): action is { type: 'workflowWebsocket/connecting' } =>
-          action.type === 'workflowWebsocket/connecting',
-        (state) => {
-          state.wsConnectionStatus = 'connecting'
-        }
-      )
-      .addMatcher(
-        (action): action is { type: 'workflowWebsocket/connected' } =>
-          action.type === 'workflowWebsocket/connected',
-        (state) => {
-          state.wsConnectionStatus = 'connected'
-        }
-      )
-      .addMatcher(
-        (action): action is { type: 'workflowWebsocket/disconnected' } =>
-          action.type === 'workflowWebsocket/disconnected',
-        (state) => {
-          state.wsConnectionStatus = 'disconnected'
-        }
-      )
-      // Handle workflow subscription response with execution state
-      // V2 API: pendingValidation comes flat from backend - no extraction needed
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: 'workflowSocket/workflowSubscribed'
-          payload: { workflowId: number; latestRun: WorkflowRun | null }
-        } => action.type === 'workflowSocket/workflowSubscribed',
-        (state, action) => {
-          const { latestRun, workflowId } = action.payload
-          debugLog('🔔 workflowSocket/workflowSubscribed:', {
-            workflowId,
-            runId: latestRun?.id,
-            runStatus: latestRun?.status,
-            hasPendingValidation: !!latestRun?.pendingValidation,
-          })
 
-          if (latestRun) {
-            state.currentRun = latestRun
-            state.isRunning =
-              latestRun.status === 'running' ||
-              latestRun.status === 'pending_human_input'
+      // ── WebSocket Connection ─────────────────────────────────────────
+      .addCase(wsConnecting, (state) => {
+        state.wsConnectionStatus = 'connecting'
+      })
+      .addCase(wsConnected, (state) => {
+        state.wsConnectionStatus = 'connected'
+      })
+      .addCase(wsDisconnected, (state) => {
+        state.wsConnectionStatus = 'disconnected'
+      })
 
-            // V2 API: Use flat pendingValidation directly from backend
-            if (latestRun.pendingValidation) {
-              debugLog('✅ Setting pendingValidation from socket:', {
-                nodeId: latestRun.pendingValidation.nodeId,
-                routes: latestRun.pendingValidation.routes,
-                aiRecommendation: latestRun.pendingValidation.aiRecommendation,
-              })
-              state.pendingValidation = {
-                nodeId: latestRun.pendingValidation.nodeId,
-                routes: latestRun.pendingValidation.routes,
-                aiRecommendation:
-                  latestRun.pendingValidation.aiRecommendation ?? undefined,
-                context: {
-                  aiAnalysis:
-                    latestRun.pendingValidation.context?.aiAnalysis ??
-                    undefined,
-                },
-              }
-              state.showExecutionPanel = true
-            } else {
-              state.pendingValidation = null
-            }
-          } else {
-            state.currentRun = null
-            state.isRunning = false
-            state.pendingValidation = null
-          }
-        }
-      )
-      // WebSocket workflow execution events
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: 'workflowSocket/executionStarted'
-          payload: { workflowRunId: number }
-        } => action.type === 'workflowSocket/executionStarted',
-        (state, action) => {
-          const { workflowRunId } = action.payload
-          debugLog(
-            '🚀 executionStarted - clearing pendingValidation, runId:',
-            workflowRunId
-          )
-          // Update currentRun with the new run ID, clearing old nodeStates
-          if (state.currentRun) {
-            state.currentRun = {
-              ...state.currentRun,
-              id: workflowRunId,
-              status: WorkflowRunStepStatus.Running,
-              nodeStates: {}, // Clear old node states for fresh run
-            }
-          } else {
-            // Create minimal run object if none exists
-            state.currentRun = {
-              id: workflowRunId,
-              status: WorkflowRunStepStatus.Running,
-              nodeStates: {},
-            } as WorkflowRun
-          }
-          state.isRunning = true
-          state.streamingResponses = {}
-          state.activeStreamingNodeId = null
-          // Only auto-show execution panel in 'panel' mode
-          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
-            state.showExecutionPanel = true
-          }
-          state.pendingValidation = null // Clear any previous validation
-        }
-      )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: 'workflowSocket/singleStepStarted'
-          payload: { workflowRunId: number; stepNodeId: string }
-        } => action.type === 'workflowSocket/singleStepStarted',
-        (state, action) => {
-          const { workflowRunId, stepNodeId } = action.payload
-          // Update currentRun with the new/existing partial run ID
-          if (state.currentRun) {
-            state.currentRun = {
-              ...state.currentRun,
-              id: workflowRunId,
-              status: WorkflowRunStepStatus.Running,
-              isPartial: true,
-            }
-          } else {
-            state.currentRun = {
-              id: workflowRunId,
-              status: WorkflowRunStepStatus.Running,
-              isPartial: true,
-            } as WorkflowRun
-          }
-          state.currentPartialRunId = workflowRunId
-          state.isRunning = true
-          state.activeStreamingNodeId = stepNodeId
-          // Only auto-show execution panel in 'panel' mode
-          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
-            state.showExecutionPanel = true
-          }
-          state.pendingValidation = null
-          // Don't clear streaming responses - keep previous step results
-          if (!state.streamingResponses[stepNodeId]) {
-            state.streamingResponses[stepNodeId] = { content: '' }
-          }
-        }
-      )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: 'workflowSocket/step_started'
-          payload: { nodeId: string }
-        } => action.type === 'workflowSocket/step_started',
-        (state, action) => {
-          const { nodeId } = action.payload
-          const node = state.nodes.find((n) => n.id === nodeId)
-          const isOutputNode = node?.type === WorkflowNodeType.ChatOutput
+      // ── Workflow Subscription ────────────────────────────────────────
+      .addCase(workflowSubscribed, (state, action) => {
+        const { latestRun, workflowId } = action.payload
+        debugLog('🔔 workflowSocket/workflowSubscribed:', {
+          workflowId,
+          runId: latestRun?.id,
+          runStatus: latestRun?.status,
+        })
 
-          state.activeStreamingNodeId = nodeId
-
-          // In panel mode, don't initialize streamingResponses for output nodes
-          // (they display in the execution panel, not in the node itself)
-          if (
-            isOutputNode &&
-            state.outputDisplayMode === OutputDisplayMode.Panel
-          ) {
-            return
-          }
-
-          state.streamingResponses[nodeId] = { content: '' }
-
-          // Only propagate to connected output nodes when in 'nodes' display mode
-          if (state.outputDisplayMode === OutputDisplayMode.Nodes) {
-            getConnectedOutputNodeIds(nodeId, state.edges, state.nodes).forEach(
-              (outputNodeId) => {
-                state.streamingResponses[outputNodeId] = { content: '' }
-              }
-            )
-          }
-        }
-      )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: 'workflowSocket/step_streaming'
-          payload: { nodeId: string; chunk: string }
-        } => action.type === 'workflowSocket/step_streaming',
-        (state, action) => {
-          const { nodeId, chunk } = action.payload
-          // Update the step node's streaming response
-          if (state.streamingResponses[nodeId] !== undefined) {
-            state.streamingResponses[nodeId].content += chunk
-          } else {
-            state.streamingResponses[nodeId] = { content: chunk }
-          }
-
-          // Only propagate to output nodes when in 'nodes' display mode
-          if (state.outputDisplayMode === OutputDisplayMode.Nodes) {
-            getConnectedOutputNodeIds(nodeId, state.edges, state.nodes).forEach(
-              (outputNodeId) => {
-                if (state.streamingResponses[outputNodeId] !== undefined) {
-                  state.streamingResponses[outputNodeId].content += chunk
-                } else {
-                  state.streamingResponses[outputNodeId] = { content: chunk }
-                }
-              }
-            )
-          }
-        }
-      )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: 'workflowSocket/step_completed'
-          payload: {
-            nodeId: string
-            response: string
-            metadata?: {
-              snippets?: WorkflowStepSnippet[]
-              webSearchSources?: WorkflowStepWebSearchSource[]
-            }
-          }
-        } => action.type === 'workflowSocket/step_completed',
-        (state, action) => {
-          const { nodeId, response, metadata } = action.payload
-          // Update streaming response with final content and metadata
-          // Backend sends camelCase via djangorestframework-camel-case
-          state.streamingResponses[nodeId] = {
-            content: response,
-            snippets: metadata?.snippets,
-            webSearchSources: metadata?.webSearchSources,
-          }
-
-          // In 'nodes' display mode, propagate final response to connected output nodes
-          if (state.outputDisplayMode === OutputDisplayMode.Nodes) {
-            getConnectedOutputNodeIds(nodeId, state.edges, state.nodes).forEach(
-              (outputNodeId) => {
-                state.streamingResponses[outputNodeId] = {
-                  content: response,
-                  snippets: metadata?.snippets,
-                  webSearchSources: metadata?.webSearchSources,
-                }
-              }
-            )
-          }
-
-          // Clear active streaming node
-          if (state.activeStreamingNodeId === nodeId) {
-            state.activeStreamingNodeId = null
-          }
-          // Add to executed steps for manual mode tracking
-          if (
-            state.manualModeEnabled &&
-            !state.executedStepNodeIds.includes(nodeId)
-          ) {
-            state.executedStepNodeIds.push(nodeId)
-          }
-        }
-      )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: 'workflowSocket/execution_complete'
-          payload: { status: string; workflowRunId: number; endedAt?: string }
-        } => action.type === 'workflowSocket/execution_complete',
-        (state, action) => {
-          const { status, endedAt } = action.payload
-          state.isRunning = status === 'pending_human_input'
-          state.activeStreamingNodeId = null
-
-          // Update currentRun status to reflect completion
-          if (state.currentRun) {
-            state.currentRun = {
-              ...state.currentRun,
-              status: status as typeof state.currentRun.status,
-              endedAt: endedAt || state.currentRun.endedAt,
-            }
-          }
-        }
-      )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: 'workflowSocket/step_error'
-          payload: { nodeId?: string }
-        } => action.type === 'workflowSocket/step_error',
-        (state, action) => {
-          const { nodeId } = action.payload
-          if (nodeId && state.activeStreamingNodeId === nodeId) {
-            state.activeStreamingNodeId = null
-          }
-        }
-      )
-      // Handle workflow status updates (V2 API with flat pendingValidation)
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: 'workflowSocket/workflow_status'
-          payload: WorkflowRun & {
-            type: 'workflow_status'
-          }
-        } => action.type === 'workflowSocket/workflow_status',
-        (state, action) => {
-          const { status, pendingValidation, ...runData } = action.payload
-
-          // Set current run from the full workflow status data
-          // Remove the 'type' field which is only for socket event identification
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { type: _eventType, ...workflowRunData } =
-            runData as WorkflowRun & { type: string }
-          state.currentRun = { ...workflowRunData, status } as WorkflowRun
-
-          // Only auto-show execution panel in 'panel' mode
-          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
-            state.showExecutionPanel = true
-          }
-
-          // Update running state based on status
+        if (latestRun) {
+          state.currentRun = latestRun
           state.isRunning =
-            status === 'running' || status === 'pending_human_input'
+            latestRun.status === 'running' ||
+            latestRun.status === 'pending_human_input'
 
-          // V2 API: Use flat pendingValidation directly from backend
-          if (pendingValidation) {
-            state.pendingValidation = {
-              nodeId: pendingValidation.nodeId,
-              routes: pendingValidation.routes,
-              aiRecommendation: pendingValidation.aiRecommendation ?? undefined,
-              context: {
-                aiAnalysis: pendingValidation.context?.aiAnalysis ?? undefined,
-              },
-            }
-          } else if (status !== 'pending_human_input') {
-            // Clear pending validation if status is no longer waiting
-            state.pendingValidation = null
+          state.pendingValidation = latestRun.pendingValidation ?? null
+          if (state.pendingValidation) {
+            state.showExecutionPanel = true
           }
-        }
-      )
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: 'workflowSocket/validation_required'
-          payload: {
-            nodeId: string
-            routes: RouteOption[]
-            context?: PendingValidationContext
-            aiRecommendation?: string
-          }
-        } => action.type === 'workflowSocket/validation_required',
-        (state, action) => {
-          // Workflow is paused waiting for human input
-          state.isRunning = true // Still considered "running" but waiting
-          state.activeStreamingNodeId = null
-          state.pendingValidation = {
-            nodeId: action.payload.nodeId,
-            routes: action.payload.routes,
-            context: action.payload.context,
-            aiRecommendation: action.payload.aiRecommendation,
-          }
-        }
-      )
-      // Clear validation when submitted
-      .addMatcher(
-        (action): action is { type: 'workflowSocket/validationSubmitted' } =>
-          action.type === 'workflowSocket/validationSubmitted',
-        (state) => {
+        } else {
+          state.currentRun = null
+          state.isRunning = false
           state.pendingValidation = null
         }
-      )
+      })
+
+      // ── Execution Lifecycle ──────────────────────────────────────────
+      .addCase(executionStarted, (state, action) => {
+        const { workflowRunId } = action.payload
+        debugLog('🚀 executionStarted, runId:', workflowRunId)
+
+        const baseRun = state.currentRun || ({} as WorkflowRun)
+        state.currentRun = {
+          ...baseRun,
+          id: workflowRunId,
+          status: WorkflowRunStepStatus.Running,
+          nodeStates: initializeNodeStates(state.nodes),
+        }
+        state.isRunning = true
+        state.activeNodeId = null
+        state.pendingValidation = null
+
+        if (state.outputDisplayMode === OutputDisplayMode.Panel) {
+          state.showExecutionPanel = true
+        }
+      })
+      .addCase(singleStepStarted, (state, action) => {
+        const { workflowRunId, stepNodeId } = action.payload
+
+        if (state.currentRun) {
+          state.currentRun = {
+            ...state.currentRun,
+            id: workflowRunId,
+            status: WorkflowRunStepStatus.Running,
+            isPartial: true,
+          }
+        } else {
+          state.currentRun = {
+            id: workflowRunId,
+            status: WorkflowRunStepStatus.Running,
+            isPartial: true,
+            nodeStates: initializeNodeStates(state.nodes),
+          } as WorkflowRun
+        }
+
+        if (state.currentRun.nodeStates) {
+          ensureNodeState(state.currentRun.nodeStates, stepNodeId)
+          state.currentRun.nodeStates[stepNodeId].response = ''
+          state.currentRun.nodeStates[stepNodeId].status =
+            WorkflowRunStepStatus.Pending
+        }
+
+        state.currentPartialRunId = workflowRunId
+        state.isRunning = true
+        state.activeNodeId = stepNodeId
+        state.pendingValidation = null
+
+        if (state.outputDisplayMode === OutputDisplayMode.Panel) {
+          state.showExecutionPanel = true
+        }
+      })
+
+      // ── Step Execution Events ────────────────────────────────────────
+      .addCase(stepStarted, (state, action) => {
+        const { nodeId, nodeType } = action.payload
+        state.activeNodeId = nodeId
+
+        if (!state.currentRun?.nodeStates) return
+
+        ensureNodeState(state.currentRun.nodeStates, nodeId, nodeType)
+        state.currentRun.nodeStates[nodeId].status =
+          WorkflowRunStepStatus.Running
+        state.currentRun.nodeStates[nodeId].response = ''
+
+        propagateToOutputNodes(state, nodeId, {
+          status: WorkflowRunStepStatus.Running,
+          response: '',
+        })
+      })
+      .addCase(stepStreaming, (state, action) => {
+        const { nodeId, chunk } = action.payload
+        if (!state.currentRun?.nodeStates) return
+
+        ensureNodeState(state.currentRun.nodeStates, nodeId)
+        state.currentRun.nodeStates[nodeId].response =
+          (state.currentRun.nodeStates[nodeId].response || '') + chunk
+
+        propagateToOutputNodes(state, nodeId, { append: chunk })
+      })
+      .addCase(stepCompleted, (state, action) => {
+        const { nodeId, response, metadata } = action.payload
+        if (!state.currentRun?.nodeStates) return
+
+        ensureNodeState(state.currentRun.nodeStates, nodeId)
+        const nodeState = state.currentRun.nodeStates[nodeId]
+        nodeState.response = response
+        nodeState.status = WorkflowRunStepStatus.Completed
+        nodeState.snippets = metadata?.snippets || []
+        nodeState.webSearchSources = metadata?.webSearchSources || []
+
+        propagateToOutputNodes(state, nodeId, {
+          response,
+          status: WorkflowRunStepStatus.Completed,
+          snippets: metadata?.snippets,
+          webSearchSources: metadata?.webSearchSources,
+        })
+
+        if (state.activeNodeId === nodeId) {
+          state.activeNodeId = null
+        }
+
+        if (
+          state.manualModeEnabled &&
+          !state.executedStepNodeIds.includes(nodeId)
+        ) {
+          state.executedStepNodeIds.push(nodeId)
+        }
+      })
+      .addCase(executionComplete, (state, action) => {
+        const { status, endedAt } = action.payload
+        state.isRunning = status === 'pending_human_input'
+        state.activeNodeId = null
+
+        if (state.currentRun) {
+          state.currentRun = {
+            ...state.currentRun,
+            status: status as typeof state.currentRun.status,
+            endedAt: endedAt || state.currentRun.endedAt,
+          }
+        }
+      })
+      .addCase(stepError, (state, action) => {
+        const { nodeId } = action.payload
+        if (nodeId) {
+          if (state.activeNodeId === nodeId) {
+            state.activeNodeId = null
+          }
+          if (state.currentRun?.nodeStates?.[nodeId]) {
+            state.currentRun.nodeStates[nodeId].status =
+              WorkflowRunStepStatus.Failed
+            state.currentRun.nodeStates[nodeId].error =
+              action.payload.error || null
+          }
+        }
+      })
+
+      // ── Full Status Update ───────────────────────────────────────────
+      .addCase(workflowStatus, (state, action) => {
+        const { status, pendingValidation, ...runData } = action.payload
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { type: _eventType, ...workflowRunData } =
+          runData as WorkflowRun & { type: string }
+        state.currentRun = { ...workflowRunData, status } as WorkflowRun
+
+        if (state.outputDisplayMode === OutputDisplayMode.Panel) {
+          state.showExecutionPanel = true
+        }
+
+        state.isRunning =
+          status === 'running' || status === 'pending_human_input'
+
+        if (pendingValidation) {
+          state.pendingValidation = pendingValidation
+        } else if (status !== 'pending_human_input') {
+          state.pendingValidation = null
+        }
+      })
+
+      // ── Human Validation ─────────────────────────────────────────────
+      .addCase(validationRequired, (state, action) => {
+        state.isRunning = true
+        state.activeNodeId = null
+        state.pendingValidation = {
+          nodeId: action.payload.nodeId,
+          routes: action.payload.routes,
+          context: action.payload.context,
+          aiRecommendation: action.payload.aiRecommendation,
+        }
+      })
+      .addCase(validationSubmitted, (state) => {
+        state.pendingValidation = null
+      })
   },
 })
 
@@ -873,7 +800,6 @@ export const {
   setSelectedNodeId,
   setWsConnectionStatus,
   setRightPanelTab,
-  clearStreamingResponses,
   setShowExecutionPanel,
   setOutputDisplayMode,
   toggleOutputDisplayMode,
