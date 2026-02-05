@@ -23,13 +23,11 @@ export const initialState: WorkflowBuilderState = {
   executedStepNodeIds: [],
   availableRuns: [],
   selectedRunIds: {},
-  viewMode: false,
   savingStatus: SavingStatus.Idle,
   selectedNodeId: null,
-  // WebSocket streaming state
+  // WebSocket state
   wsConnectionStatus: 'disconnected',
-  streamingResponses: {},
-  activeStreamingNodeId: null,
+  activeNodeId: null,
   rightPanelTab: 'config',
   showExecutionPanel: false,
   pendingValidation: null,

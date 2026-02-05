@@ -6,15 +6,13 @@ import {
 } from '@xyflow/react'
 import { GitBranch, Settings, Copy, Trash2, Play } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
-import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { useAppDispatch } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
   setSelectedNodeId,
 } from '@/redux/workflowBuilderSlice'
 import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
-import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
-import { saveAndExecuteStep } from '@/redux/asyncThunks/workflowBuilder'
+import { useNodeExecutionState } from '@/hooks/useNodeExecutionState'
 
 export interface StructuredOutputRoute {
   name: string
@@ -39,62 +37,7 @@ export default function StructuredOutputNode({
   const dispatch = useAppDispatch()
   const updateNodeInternals = useUpdateNodeInternals()
 
-  // Get workflow execution data
-  const {
-    executedStepNodeIds,
-    availableRuns,
-    selectedRunIds,
-    currentRun,
-    activeStreamingNodeId,
-    pendingValidation,
-    manualModeEnabled,
-    currentPartialRunId,
-    lastWorkflowId,
-    isRunning,
-  } = useAppSelector((s) => s.workflowBuilder)
-
-  // Get the run to display
-  const displayRun = getDisplayRun(
-    id,
-    selectedRunIds,
-    availableRuns,
-    currentRun
-  )
-
-  // Get node state from the display run
-  const nodeState = getNodeState(displayRun, id)
-  const status = nodeState?.status || null
-  const isExecuted = executedStepNodeIds.includes(id)
-  const isStreaming = activeStreamingNodeId === id
-  const isPendingHumanInput = pendingValidation?.nodeId === id
-
-  // Get status indicator class for execution visualization
-  const getStatusClass = () => {
-    if (isPendingHumanInput) {
-      return 'pending-validation'
-    }
-    if (isStreaming) {
-      return 'streaming'
-    }
-    if (isExecuted || status === WorkflowRunStepStatus.Completed) {
-      return 'completed'
-    }
-    if (status === WorkflowRunStepStatus.Running) {
-      return 'running'
-    }
-    if (status === WorkflowRunStepStatus.Failed) {
-      return 'error'
-    }
-    if (status === WorkflowRunStepStatus.Pending) {
-      return 'pending'
-    }
-    if (status === WorkflowRunStepStatus.PendingHumanInput) {
-      return 'pending-validation'
-    }
-    return ''
-  }
-
-  const statusClass = getStatusClass()
+  const { statusClass, canRunStep, handleRunStep } = useNodeExecutionState(id)
 
   // Memoize routes
   const routes = useMemo(
@@ -130,25 +73,6 @@ export default function StructuredOutputNode({
     e.stopPropagation()
     dispatch(removeNodeWithEdges({ nodeId: id }))
   }
-
-  // Handle manual step execution - saves workflow first, then executes
-  const handleRunStep = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!lastWorkflowId || isRunning) return
-
-    // Save workflow first, then execute the step
-    dispatch(
-      saveAndExecuteStep({
-        workflowId: lastWorkflowId,
-        stepNodeId: id,
-        workflowRunId: currentPartialRunId || undefined,
-      })
-    )
-  }
-
-  // Check if this step can be run (has dependencies met)
-  const canRunStep =
-    manualModeEnabled && !isRunning && !isExecuted && lastWorkflowId
 
   return (
     <div
