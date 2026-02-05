@@ -4,6 +4,7 @@ import StepNode from '@/pages/Workflows/_builder/nodes/StepNode'
 import ChatOutputNode from '@/pages/Workflows/_builder/nodes/ChatOutputNode'
 import StructuredOutputNode from '@/pages/Workflows/_builder/nodes/StructuredOutputNode'
 import NotesNode from '@/pages/Workflows/_builder/nodes/NotesNode'
+import FileNode from '@/pages/Workflows/_builder/nodes/FileNode'
 
 export const WORKFLOW_NODE_TYPES: NodeTypes = {
   start: StartNode,
@@ -11,6 +12,7 @@ export const WORKFLOW_NODE_TYPES: NodeTypes = {
   chatOutput: ChatOutputNode,
   structuredOutput: StructuredOutputNode,
   notes: NotesNode,
+  file: FileNode,
 }
 
 // Theme-aware default edge styling

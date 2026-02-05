@@ -82,7 +82,11 @@ export default function WorkflowExecutionPanel() {
   const getNodeName = useCallback(
     (nodeId: string) => {
       const node = nodes.find((n) => n.id === nodeId)
-      return (node?.data?.label as string) || node?.type || 'Step'
+      if (node?.data?.label && node.data.label !== node.type) {
+        return node.data.label as string
+      }
+      if (node?.type === WorkflowNodeType.File) return 'file'
+      return node?.type || 'step'
     },
     [nodes]
   )
@@ -162,7 +166,7 @@ export default function WorkflowExecutionPanel() {
           </div>
         )}
 
-        {/* Streaming responses - filter to step/structuredOutput only */}
+        {/* Streaming responses - filter to execution nodes only */}
         {/* chatOutput nodes display their content directly in the canvas */}
         {hasStreamingData && (
           <div className='space-y-4'>
@@ -171,7 +175,8 @@ export default function WorkflowExecutionPanel() {
                 const node = nodes.find((n) => n.id === nodeId)
                 return (
                   node?.type === WorkflowNodeType.Step ||
-                  node?.type === WorkflowNodeType.StructuredOutput
+                  node?.type === WorkflowNodeType.StructuredOutput ||
+                  node?.type === WorkflowNodeType.File
                 )
               })
               .map(([nodeId, data]) => (
@@ -203,7 +208,8 @@ export default function WorkflowExecutionPanel() {
                 ([, state]) =>
                   state.response &&
                   (state.nodeType === WorkflowNodeType.Step ||
-                    state.nodeType === WorkflowNodeType.StructuredOutput)
+                    state.nodeType === WorkflowNodeType.StructuredOutput ||
+                    state.nodeType === WorkflowNodeType.File)
               )
               .map(([nodeId, state]) => (
                 <StepResponseCard

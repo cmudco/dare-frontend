@@ -94,6 +94,32 @@ export const createNode = (
     }
 
     return { nodes: [...nodes, structuredOutputNode], edges }
+  } else if (type === WorkflowNodeType.File) {
+    const stepNumber =
+      nodes.filter(
+        (n) =>
+          n.type === WorkflowNodeType.Step || n.type === WorkflowNodeType.File
+      ).length + 1
+    const fileNodeId = nanoid()
+
+    const fileNode: Node = {
+      id: fileNodeId,
+      type: 'file',
+      position,
+      data: {
+        label: 'file',
+        files: [],
+        retrievalMode: 'embeddings',
+        similarityThreshold: 0.5,
+        maxResults: 10,
+        querySource: 'previous_step',
+        textInput: '',
+        includeMetadata: true,
+        stepNumber,
+      },
+    }
+
+    return { nodes: [...nodes, fileNode], edges }
   } else if (type === WorkflowNodeType.Notes) {
     const notesId = nanoid()
 
