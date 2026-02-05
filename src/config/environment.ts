@@ -118,7 +118,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableImageGeneration: true, // Georgia Tech: HAS Image Generation
         enableArtifacts: true, // Georgia Tech: HAS Artifacts
         enableAudioTranscription: true, // Georgia Tech: HAS Audio Transcription
-        enableSocketIO: false, // Disable Socket.IO in production until validated
+        enableSocketIO: true, // Disable Socket.IO in production until validated
         enableVoiceInput: false, // Voice input disabled in production (beta)
         enableDebugLogs: false, // Debug logs disabled in production
         enableMcp: true, // MCP enabled for Georgia Tech
@@ -130,7 +130,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableImageGeneration: true,
         enableArtifacts: true,
         enableAudioTranscription: true,
-        enableSocketIO: false, // Default off for safety
+        enableSocketIO: true, // Default off for safety
         enableVoiceInput: false, // Default off for safety
         enableDebugLogs: false, // Default off for safety
         enableMcp: false, // Default off for safety
