@@ -15,6 +15,7 @@ import StructuredOutputNodeConfig, {
   type StructuredOutputNodeData,
 } from './StructuredOutputNodeConfig'
 import ChatOutputNodeConfig from './ChatOutputNodeConfig'
+import NotesNodeConfig from './NotesNodeConfig'
 import { WorkflowNodeType } from '@/utils/constants/workflows'
 
 interface NodeConfigPanelProps {
@@ -60,6 +61,8 @@ export default function NodeConfigPanel({
         return 'Conditional Configuration'
       case 'chatOutput':
         return 'Output'
+      case 'notes':
+        return 'Note'
       default:
         return 'Node Configuration'
     }
@@ -76,6 +79,8 @@ export default function NodeConfigPanel({
         return 'Configure routing decision logic'
       case 'chatOutput':
         return 'View response and select version'
+      case 'notes':
+        return 'Add documentation or comments'
       default:
         return "Configure this node's settings"
     }
@@ -124,6 +129,12 @@ export default function NodeConfigPanel({
         )}
         {nodeType === WorkflowNodeType.ChatOutput && (
           <ChatOutputNodeConfig nodeId={nodeId} />
+        )}
+        {nodeType === WorkflowNodeType.Notes && (
+          <NotesNodeConfig
+            nodeData={nodeData as { content?: string }}
+            updateNodeData={updateNodeData}
+          />
         )}
       </div>
     </div>

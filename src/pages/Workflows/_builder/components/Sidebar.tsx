@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Brain, GitBranch, Trash2 } from 'lucide-react'
+import { Play, Brain, GitBranch, Trash2, StickyNote } from 'lucide-react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { useReactFlow } from '@xyflow/react'
 import {
@@ -37,6 +37,13 @@ const nodeComponents = [
     icon: GitBranch,
     color: 'bg-purple-500',
   },
+  {
+    type: 'notes',
+    label: 'Note',
+    description: 'Documentation',
+    icon: StickyNote,
+    color: 'bg-yellow-500',
+  },
 ]
 
 export default function Sidebar({ disabled }: SidebarProps) {
@@ -62,8 +69,9 @@ export default function Sidebar({ disabled }: SidebarProps) {
         return { x: 400, y: 300 }
       }
       const bounds = reactFlowElement.getBoundingClientRect()
-      const centerX = bounds.width * 0.8
-      const centerY = bounds.height / 2
+      // Place at true center of viewport
+      const centerX = bounds.left + bounds.width / 2
+      const centerY = bounds.top + bounds.height / 2
       const graphPosition = reactFlowInstance.screenToFlowPosition({
         x: centerX,
         y: centerY,
@@ -92,13 +100,17 @@ export default function Sidebar({ disabled }: SidebarProps) {
               key={component.type}
               className='cursor-pointer border-border/50 bg-white/60 transition-all hover:border-primary/30 hover:bg-white hover:shadow-md'
               onClick={() => {
-                if (
-                  !isWorkflowRunning &&
-                  !(component.type === WorkflowNodeType.Start
-                    ? Boolean(disabled?.start)
-                    : Boolean(disabled?.step) || !hasStartNode)
-                ) {
-                  handleAddNode(component.type)
+                if (!isWorkflowRunning) {
+                  // Notes can be added anytime (no Start node required)
+                  if (component.type === WorkflowNodeType.Notes) {
+                    handleAddNode(component.type)
+                  } else if (
+                    !(component.type === WorkflowNodeType.Start
+                      ? Boolean(disabled?.start)
+                      : Boolean(disabled?.step) || !hasStartNode)
+                  ) {
+                    handleAddNode(component.type)
+                  }
                 }
               }}
             >

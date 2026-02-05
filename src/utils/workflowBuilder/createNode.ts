@@ -16,7 +16,11 @@ export const createNode = (
 ): NodeCreationResult => {
   const hasStart = nodes.some((n) => n.type === WorkflowNodeType.Start)
 
-  if (!hasStart && type !== WorkflowNodeType.Start) {
+  if (
+    !hasStart &&
+    type !== WorkflowNodeType.Start &&
+    type !== WorkflowNodeType.Notes
+  ) {
     return {
       nodes,
       edges,
@@ -90,6 +94,21 @@ export const createNode = (
     }
 
     return { nodes: [...nodes, structuredOutputNode], edges }
+  } else if (type === WorkflowNodeType.Notes) {
+    const notesId = nanoid()
+
+    const notesNode: Node = {
+      id: notesId,
+      type: 'notes',
+      position,
+      data: {
+        content: '',
+      },
+      connectable: false,
+      deletable: true,
+    }
+
+    return { nodes: [...nodes, notesNode], edges }
   } else {
     // Handle start node and other node types with UUID
     const nodeId = nanoid() // UUID for React Flow (guaranteed unique)
