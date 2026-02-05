@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import WorkflowHeader from './WorkflowHeader'
 import WorkflowTable from './WorkflowTable'
-// LEGACY: Commenting out WorkflowModal import
-// import WorkflowModal from './WorkflowModal'
 import { useAppDispatch } from '@/redux/hooks'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
@@ -35,8 +33,6 @@ const WorkflowManagerLayout = () => {
             <WorkflowTable searchQuery={searchQuery} />
           </div>
         </div>
-        {/* LEGACY: Commenting out WorkflowModal component */}
-        {/* <WorkflowModal /> */}
       </div>
     </div>
   )
