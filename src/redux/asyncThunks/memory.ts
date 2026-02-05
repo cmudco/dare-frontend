@@ -1,0 +1,88 @@
+/**
+ * Memory Async Thunks
+ *
+ * Thunks for cross-conversation memory API operations.
+ */
+import { createAsyncThunk } from '@reduxjs/toolkit'
+import {
+  getMemoryItemsAPI,
+  deleteMemoryItemAPI,
+  searchMemoryAPI,
+  clearAllMemoryAPI,
+  seedMemoryAPI,
+} from '../../api/memory'
+
+/**
+ * Fetch all memory items for the authenticated user
+ */
+export const getMemoryItems = createAsyncThunk(
+  'memory/getMemoryItems',
+  async (_, thunkAPI) => {
+    try {
+      const response = await getMemoryItemsAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Delete a memory item by ID
+ */
+export const deleteMemoryItem = createAsyncThunk(
+  'memory/deleteMemoryItem',
+  async (itemId: string, thunkAPI) => {
+    try {
+      await deleteMemoryItemAPI(itemId)
+      return itemId
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Search memories using vector similarity
+ */
+export const searchMemory = createAsyncThunk(
+  'memory/searchMemory',
+  async (query: string, thunkAPI) => {
+    try {
+      const response = await searchMemoryAPI(query)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Clear all memory items for the authenticated user
+ */
+export const clearAllMemory = createAsyncThunk(
+  'memory/clearAllMemory',
+  async (_, thunkAPI) => {
+    try {
+      const response = await clearAllMemoryAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Seed demo memory data (development only)
+ */
+export const seedMemory = createAsyncThunk(
+  'memory/seedMemory',
+  async (_, thunkAPI) => {
+    try {
+      const response = await seedMemoryAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
