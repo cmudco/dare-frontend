@@ -1,13 +1,15 @@
 /**
  * WorkflowExecutionPanel - Real-time workflow execution preview
  *
+ * Single source of truth: all execution data read from currentRun.nodeStates.
+ * During streaming, nodeStates[nodeId].response accumulates token-by-token.
+ * After completion, the same field holds the final response.
+ *
  * Features:
- * - Live streaming LLM responses during execution with markdown rendering
- * - Rich content display: snippets, web search sources, code blocks
+ * - Live streaming LLM responses with markdown rendering
+ * - Rich content: snippets, web search sources, code blocks
  * - Human validation UI when required
  * - Connection status indicator
- *
- * Pattern: Follows MessageList.tsx auto-scroll implementation
  */
 
 import { useEffect, useRef, useCallback } from 'react'
@@ -30,18 +32,15 @@ import {
 export default function WorkflowExecutionPanel() {
   const dispatch = useAppDispatch()
 
-  // Direct state access - backend provides clean, ordered data
   const {
     currentRun,
     isRunning,
-    streamingResponses,
-    activeStreamingNodeId,
+    activeNodeId,
     wsConnectionStatus,
     pendingValidation,
     nodes,
   } = useAppSelector((state) => state.workflowBuilder)
 
-  // Use the shared auto-scroll hook (same pattern as MessageList)
   const {
     containerRef,
     anchorRef,
@@ -61,12 +60,12 @@ export default function WorkflowExecutionPanel() {
     }
   }, [currentRun?.id, forceScrollToBottom])
 
-  // Auto-scroll during streaming (respects user scroll state)
+  // Auto-scroll during streaming
   useEffect(() => {
-    if (activeStreamingNodeId) {
+    if (activeNodeId) {
       scrollToBottom('auto')
     }
-  }, [streamingResponses, activeStreamingNodeId, scrollToBottom])
+  }, [currentRun?.nodeStates, activeNodeId, scrollToBottom])
 
   // Force scroll when validation appears
   useEffect(() => {
@@ -91,17 +90,25 @@ export default function WorkflowExecutionPanel() {
     [nodes]
   )
 
-  // Simple derived state
-  const hasStreamingData = Object.keys(streamingResponses).length > 0
-  const isViewingCompletedRun =
-    !isRunning && !hasStreamingData && !!currentRun?.nodeStates
-  const hasDisplayData = hasStreamingData || isViewingCompletedRun
-  const isWaiting =
-    isRunning && !hasDisplayData && !activeStreamingNodeId && !pendingValidation
+  // Derive execution node entries from the single source: currentRun.nodeStates
+  const executionNodeEntries = currentRun?.nodeStates
+    ? Object.entries(currentRun.nodeStates).filter(
+        ([, state]) =>
+          state.response &&
+          (state.nodeType === WorkflowNodeType.Step ||
+            state.nodeType === WorkflowNodeType.StructuredOutput ||
+            state.nodeType === WorkflowNodeType.File)
+      )
+    : []
 
-  // Status text
+  const hasDisplayData = executionNodeEntries.length > 0
+  const isViewingCompletedRun =
+    !isRunning && currentRun?.status === WorkflowRunStepStatus.Completed
+  const isWaiting =
+    isRunning && !hasDisplayData && !activeNodeId && !pendingValidation
+
   const statusText = isRunning
-    ? activeStreamingNodeId
+    ? activeNodeId
       ? 'Streaming response...'
       : 'Workflow running...'
     : pendingValidation
@@ -166,68 +173,26 @@ export default function WorkflowExecutionPanel() {
           </div>
         )}
 
-        {/* Streaming responses - filter to execution nodes only */}
-        {/* chatOutput nodes display their content directly in the canvas */}
-        {hasStreamingData && (
+        {/* Execution node responses — single render block from nodeStates */}
+        {hasDisplayData && (
           <div className='space-y-4'>
-            {Object.entries(streamingResponses)
-              .filter(([nodeId]) => {
-                const node = nodes.find((n) => n.id === nodeId)
-                return (
-                  node?.type === WorkflowNodeType.Step ||
-                  node?.type === WorkflowNodeType.StructuredOutput ||
-                  node?.type === WorkflowNodeType.File
-                )
-              })
-              .map(([nodeId, data]) => (
-                <StepResponseCard
-                  key={nodeId}
-                  nodeId={nodeId}
-                  nodeName={getNodeName(nodeId)}
-                  stepNumber={
-                    nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
-                      | number
-                      | undefined
-                  }
-                  nodeType={nodes.find((n) => n.id === nodeId)?.type}
-                  content={data.content}
-                  isActive={activeStreamingNodeId === nodeId}
-                  snippets={data.snippets}
-                  webSearchSources={data.webSearchSources}
-                />
-              ))}
-          </div>
-        )}
-
-        {/* Completed run responses - filter to execution nodes only */}
-        {/* chatOutput nodes have their own UI for viewing responses/versions */}
-        {isViewingCompletedRun && currentRun?.nodeStates && (
-          <div className='space-y-4'>
-            {Object.entries(currentRun.nodeStates)
-              .filter(
-                ([, state]) =>
-                  state.response &&
-                  (state.nodeType === WorkflowNodeType.Step ||
-                    state.nodeType === WorkflowNodeType.StructuredOutput ||
-                    state.nodeType === WorkflowNodeType.File)
-              )
-              .map(([nodeId, state]) => (
-                <StepResponseCard
-                  key={nodeId}
-                  nodeId={nodeId}
-                  nodeName={getNodeName(nodeId)}
-                  stepNumber={
-                    nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
-                      | number
-                      | undefined
-                  }
-                  nodeType={nodes.find((n) => n.id === nodeId)?.type}
-                  content={state.response || ''}
-                  isActive={false}
-                  snippets={state.snippets}
-                  webSearchSources={state.webSearchSources}
-                />
-              ))}
+            {executionNodeEntries.map(([nodeId, state]) => (
+              <StepResponseCard
+                key={nodeId}
+                nodeId={nodeId}
+                nodeName={getNodeName(nodeId)}
+                stepNumber={
+                  nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
+                    | number
+                    | undefined
+                }
+                nodeType={nodes.find((n) => n.id === nodeId)?.type}
+                content={state.response || ''}
+                isActive={activeNodeId === nodeId}
+                snippets={state.snippets}
+                webSearchSources={state.webSearchSources}
+              />
+            ))}
           </div>
         )}
 

@@ -27,10 +27,7 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
     selectedRunIds,
     currentRun,
     isRunning,
-    streamingResponses,
     outputDisplayMode,
-    activeStreamingNodeId,
-    edges,
   } = useAppSelector((s) => s.workflowBuilder)
 
   const isNodesMode = outputDisplayMode === OutputDisplayMode.Nodes
@@ -43,22 +40,15 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   )
   const nodeState = getNodeState(displayRun, id)
 
-  // Get response data
-  const streamingData = streamingResponses[id]
-  const response = streamingData?.content || nodeState?.response || null
+  // Single source: response from nodeStates
+  const response = nodeState?.response || null
   const hasResponse = Boolean(response?.trim())
 
-  // Check if this output node is connected to the currently streaming step
-  const isConnectedToActiveStep = Boolean(
-    activeStreamingNodeId &&
-      edges.some(
-        (edge) => edge.source === activeStreamingNodeId && edge.target === id
-      )
-  )
-
-  // In nodes mode: streaming only if connected to the active streaming step
-  // In panel mode: no streaming behavior for output nodes
-  const isStreaming = isNodesMode && isRunning && isConnectedToActiveStep
+  // Streaming when this output node's status is running (propagated from source step)
+  const isStreaming =
+    isNodesMode &&
+    isRunning &&
+    nodeState?.status === WorkflowRunStepStatus.Running
 
   // Status derivation
   const status = (() => {

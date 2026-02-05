@@ -4,8 +4,8 @@ import { type Node, type Edge } from '@xyflow/react'
 import { OutputDisplayMode } from './workflowBuilder'
 
 export enum WorkflowMode {
-  Serial = 1,
-  Parallel = 2,
+  Sequential = 'sequential',
+  Parallel = 'parallel',
 }
 
 export interface WorkflowStepSnippet {
@@ -158,9 +158,6 @@ export interface WorkflowState {
   workflowRuns: WorkflowRun[]
   loading: boolean
   error: string | null
-  savedNodeIds: string[]
-  tempNodes: Node[]
-  tempEdges: Edge[]
 }
 
 export interface FormValues {
@@ -198,45 +195,21 @@ export interface WorkflowFooterProps {
 }
 
 export interface CreateWorkflowDTO {
-  nodes: Node[] // Direct React Flow nodes
-  edges: Edge[] // Direct React Flow edges
-  viewport_x?: number
-  viewport_y?: number
-  viewport_zoom?: number
-  output_display_mode?: OutputDisplayMode
+  nodes: Node[]
+  edges: Edge[]
+  viewportX?: number
+  viewportY?: number
+  viewportZoom?: number
+  outputDisplayMode?: OutputDisplayMode
 }
 
 export interface UpdateWorkflowDTO {
-  nodes?: Node[] // Direct React Flow nodes
-  edges?: Edge[] // Direct React Flow edges
-  viewport_x?: number
-  viewport_y?: number
-  viewport_zoom?: number
-  output_display_mode?: OutputDisplayMode
-}
-
-export interface PartialRunStep {
-  id: number
-  stepNode: number
-  order: number
-  status: WorkflowRunStepStatus
-  response: string | null
-  error: string | null
-  metadata: {
-    routingDecision?: string
-    analysis?: string
-    aiRecommendation?: string
-    availableRoutes?: RouteDef[]
-    isHumanValidated?: boolean
-    fullResponse?: string
-    pendingHumanDecision?: boolean
-    userChoice?: string
-    selectedRoute?: string
-    rawResponse?: string
-  } | null
-  createdAt: string
-  updatedAt: string
-  nodeId: string // Enriched field from backend containing the workflow node ID
+  nodes?: Node[]
+  edges?: Edge[]
+  viewportX?: number
+  viewportY?: number
+  viewportZoom?: number
+  outputDisplayMode?: OutputDisplayMode
 }
 
 export interface GetActivePartialRunResponse {

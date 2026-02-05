@@ -6,7 +6,4 @@ export const initialState: WorkflowState = {
   workflowRuns: [],
   loading: false,
   error: null,
-  savedNodeIds: [],
-  tempNodes: [],
-  tempEdges: [],
 }

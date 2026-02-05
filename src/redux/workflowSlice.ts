@@ -8,7 +8,6 @@ import {
   updateWorkflowDisplayOrder,
 } from './asyncThunks/workflow'
 import { initialState } from './initialState/workflow'
-import { type Node, type Edge } from '@xyflow/react'
 
 const workflowSlice = createSlice({
   name: 'workflows',
@@ -19,25 +18,6 @@ const workflowSlice = createSlice({
     },
     clearWorkflowError: (state) => {
       state.error = null
-    },
-    setNodes: (state, action: PayloadAction<Node[]>) => {
-      if (state.selectedWorkflow) {
-        state.selectedWorkflow.nodes = action.payload
-      }
-    },
-    setEdges: (state, action: PayloadAction<Edge[]>) => {
-      if (state.selectedWorkflow) {
-        state.selectedWorkflow.edges = action.payload
-      }
-    },
-    setSavedNodeIds: (state, action: PayloadAction<string[]>) => {
-      state.savedNodeIds = action.payload
-    },
-    setTempNodes: (state, action: PayloadAction<Node[]>) => {
-      state.tempNodes = action.payload
-    },
-    setTempEdges: (state, action: PayloadAction<Edge[]>) => {
-      state.tempEdges = action.payload
     },
     updateWorkflowOrder: (state, action: PayloadAction<number[]>) => {
       const orderedWorkflows: typeof state.workflows = []
@@ -152,11 +132,6 @@ const workflowSlice = createSlice({
 export const {
   clearSelectedWorkflow,
   clearWorkflowError,
-  setNodes,
-  setEdges,
-  setSavedNodeIds,
-  setTempNodes,
-  setTempEdges,
   updateWorkflowOrder,
 } = workflowSlice.actions
 

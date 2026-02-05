@@ -1,11 +1,5 @@
 import { type Node, type Edge } from '@xyflow/react'
-import type {
-  WorkflowRun,
-  Workflow,
-  PendingValidation,
-  WorkflowStepSnippet,
-  WorkflowStepWebSearchSource,
-} from './workflow'
+import type { WorkflowRun, Workflow, PendingValidation } from './workflow'
 
 export type { PendingValidation }
 
@@ -32,14 +26,6 @@ export enum OutputDisplayMode {
   Nodes = 'nodes', // Show output in output nodes (auto-expand), execution panel stays closed
 }
 
-// Rich streaming response with content and citation metadata
-// Uses camelCase interfaces from workflow.ts (backend sends camelCase via camelize())
-export interface StreamingResponse {
-  content: string
-  snippets?: WorkflowStepSnippet[]
-  webSearchSources?: WorkflowStepWebSearchSource[]
-}
-
 export interface WorkflowBuilderState {
   nodes: Node[]
   edges: Edge[]
@@ -58,13 +44,11 @@ export interface WorkflowBuilderState {
   executedStepNodeIds: string[]
   availableRuns: WorkflowRun[]
   selectedRunIds: Record<string, number> // nodeId -> runId mapping
-  viewMode: boolean // True when viewing completed runs, false when editing/running
   savingStatus: SavingStatus
   selectedNodeId: string | null // Currently selected node for config panel
-  // WebSocket streaming state
+  // WebSocket state
   wsConnectionStatus: WebSocketConnectionStatus
-  streamingResponses: Record<string, StreamingResponse> // nodeId -> accumulated streaming content with metadata
-  activeStreamingNodeId: string | null // Currently streaming node
+  activeNodeId: string | null // Currently executing node (streaming or processing)
   rightPanelTab: 'config' | 'execution' // Active tab in right panel
   showExecutionPanel: boolean // Whether to show the execution panel overlay
   pendingValidation: PendingValidation | null // Human validation required state
