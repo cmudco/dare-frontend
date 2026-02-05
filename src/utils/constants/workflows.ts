@@ -82,6 +82,7 @@ export enum WorkflowNodeType {
   Step = 'step',
   ChatOutput = 'chatOutput',
   StructuredOutput = 'structuredOutput',
+  Notes = 'notes',
 }
 
 export enum WorkflowViewMode {
