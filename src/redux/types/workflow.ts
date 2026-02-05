@@ -1,5 +1,4 @@
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
-import { FormikErrors, FormikTouched } from 'formik'
 import { type Node, type Edge } from '@xyflow/react'
 import { OutputDisplayMode } from './workflowBuilder'
 
@@ -160,38 +159,8 @@ export interface WorkflowState {
   error: string | null
 }
 
-export interface FormValues {
-  title: string
-  description: string
-  mode: number
-  nodes: Node[]
-  edges: Edge[]
-}
-
 export interface WorkflowTableProps {
   searchQuery: string
-}
-
-export interface WorkflowFieldsProps {
-  values: FormValues
-  errors: FormikErrors<FormValues>
-  touched: FormikTouched<FormValues>
-  handleChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => void
-  setFieldValue: <K extends keyof FormValues>(
-    field: K,
-    value: FormValues[K]
-  ) => void
-  isEditMode: boolean
-}
-
-export interface WorkflowFooterProps {
-  loading: boolean
-  isValid: boolean
-  dirty: boolean
-  unsavedNodes: number
-  nodesCount: number
 }
 
 export interface CreateWorkflowDTO {
