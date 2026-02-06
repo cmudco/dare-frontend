@@ -11,9 +11,9 @@ export const serializeWorkflow = (
   return {
     nodes,
     edges,
-    viewport_x: viewport?.x,
-    viewport_y: viewport?.y,
-    viewport_zoom: viewport?.zoom,
-    output_display_mode: outputDisplayMode,
+    viewportX: viewport?.x,
+    viewportY: viewport?.y,
+    viewportZoom: viewport?.zoom,
+    outputDisplayMode,
   }
 }

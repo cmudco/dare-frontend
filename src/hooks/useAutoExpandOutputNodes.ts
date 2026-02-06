@@ -18,8 +18,9 @@ export function useAutoExpandOutputNodes() {
   const dispatch = useAppDispatch()
   const expandedNodesRef = useRef<Set<string>>(new Set())
 
-  const { nodes, currentRun, streamingResponses, outputDisplayMode } =
-    useAppSelector((s) => s.workflowBuilder)
+  const { nodes, currentRun, outputDisplayMode } = useAppSelector(
+    (s) => s.workflowBuilder
+  )
 
   const currentStatus = currentRun?.status || null
 
@@ -31,10 +32,10 @@ export function useAutoExpandOutputNodes() {
       (n) => n.type === WorkflowNodeType.ChatOutput
     )
 
-    // Set isExpanded=true for output nodes that have content
+    // Set isExpanded=true for output nodes that have content in nodeStates
     outputNodes.forEach((node) => {
-      const streamingData = streamingResponses[node.id]
-      const hasContent = streamingData?.content?.trim()
+      const nodeState = currentRun?.nodeStates?.[node.id]
+      const hasContent = nodeState?.response?.trim()
 
       if (hasContent && !expandedNodesRef.current.has(node.id)) {
         expandedNodesRef.current.add(node.id)
@@ -46,7 +47,7 @@ export function useAutoExpandOutputNodes() {
         )
       }
     })
-  }, [nodes, dispatch, outputDisplayMode, streamingResponses])
+  }, [nodes, dispatch, outputDisplayMode, currentRun?.nodeStates])
 
   // Reset tracking when a new run starts
   useEffect(() => {
