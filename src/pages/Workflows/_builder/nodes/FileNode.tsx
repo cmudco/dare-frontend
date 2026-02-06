@@ -1,5 +1,6 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { Brain, Settings, Copy, Trash2, Play } from 'lucide-react'
+import { FileText, Settings, Trash2, Play } from 'lucide-react'
+
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
@@ -13,40 +14,30 @@ import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import {
   WorkflowRunStepStatus,
   WorkflowNodeType,
+  RetrievalMode,
 } from '@/utils/constants/workflows'
 import { saveAndExecuteStep } from '@/redux/asyncThunks/workflowBuilder'
 
-export type StepNodeData = {
-  agent: number | null
-  prompt: number | null
-  contentFiles: number[]
-  embeddingFiles: number[]
-  llm: number | null
-  stepNumber: number
-  maxTokens?: number
-  temperature?: number
-  maxContextSnippets?: number
-  documentSimilarityThreshold?: number
-  apiId?: number
-  usePreviousStepFiles?: boolean
-  usePreviousStepEmbeddings?: boolean
+export interface FileNodeData {
+  files?: number[]
+  retrievalMode?: RetrievalMode
+  similarityThreshold?: number
+  maxResults?: number
+  querySource?: string
   textInput?: string
-  enableWebSearch?: boolean
-  id?: string
-  isCollapsed?: boolean
+  includeMetadata?: boolean
+  stepNumber?: number
 }
 
-export default function StepNode({ id, data, selected }: NodeProps) {
+export default function FileNode({ id, data, selected }: NodeProps) {
   const nodeId = id as string
-  const stepData = data as StepNodeData
+  const fileData = data as FileNodeData
   const dispatch = useAppDispatch()
 
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
-  const agents = useAppSelector((s) => s.agent.agents)
-  const prompts = useAppSelector((s) => s.prompt.prompts)
+  const files = useAppSelector((s) => s.files.files)
 
-  // Get workflow execution data
   const {
     executedStepNodeIds,
     availableRuns,
@@ -59,7 +50,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     isRunning,
   } = useAppSelector((s) => s.workflowBuilder)
 
-  // Get the run to display
   const displayRun = getDisplayRun(
     nodeId,
     selectedRunIds,
@@ -67,33 +57,21 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     currentRun
   )
 
-  // Get node state from the display run
   const nodeState = getNodeState(displayRun, nodeId)
   const status = nodeState?.status || null
   const isExecuted = executedStepNodeIds.includes(nodeId)
   const isStreaming = activeStreamingNodeId === nodeId
 
-  // Get status indicator class for execution visualization
   const getStatusClass = () => {
-    if (isStreaming) {
-      return 'streaming'
-    }
-    if (isExecuted || status === WorkflowRunStepStatus.Completed) {
+    if (isStreaming) return 'streaming'
+    if (isExecuted || status === WorkflowRunStepStatus.Completed)
       return 'completed'
-    }
-    if (status === WorkflowRunStepStatus.Running) {
-      return 'running'
-    }
-    if (status === WorkflowRunStepStatus.Failed) {
-      return 'error'
-    }
-    if (status === WorkflowRunStepStatus.Pending) {
-      return 'pending'
-    }
+    if (status === WorkflowRunStepStatus.Running) return 'running'
+    if (status === WorkflowRunStepStatus.Failed) return 'error'
+    if (status === WorkflowRunStepStatus.Pending) return 'pending'
     return ''
   }
 
-  // Calculate input handles based on actual connections
   const connectedInputEdges = edges.filter((edge) => {
     const sourceNode = nodes.find((n) => n.id === edge.source)
     return (
@@ -101,28 +79,18 @@ export default function StepNode({ id, data, selected }: NodeProps) {
       (sourceNode?.type === WorkflowNodeType.Start ||
         sourceNode?.type === WorkflowNodeType.Step ||
         sourceNode?.type === WorkflowNodeType.ChatOutput ||
-        sourceNode?.type === WorkflowNodeType.StructuredOutput ||
-        sourceNode?.type === WorkflowNodeType.File)
+        sourceNode?.type === WorkflowNodeType.StructuredOutput)
     )
   })
 
-  // Get display info
-  const selectedAgent = stepData.agent
-    ? agents.find((a) => a.id === stepData.agent)
-    : null
-  const selectedPrompt = stepData.prompt
-    ? prompts.find((p) => p.id === stepData.prompt)
-    : null
+  const fileCount = fileData?.files?.length || 0
+  const selectedFileNames = (fileData?.files || [])
+    .map((fId) => files.find((f) => f.id === fId)?.name)
+    .filter(Boolean)
 
-  // Quick action handlers
   const handleConfigure = (e: React.MouseEvent) => {
     e.stopPropagation()
     dispatch(setSelectedNodeId(nodeId))
-  }
-
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    // TODO: Implement duplicate
   }
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -130,12 +98,9 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     dispatch(removeNodeWithEdges({ nodeId }))
   }
 
-  // Handle manual step execution - saves workflow first, then executes
   const handleRunStep = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!lastWorkflowId || isRunning) return
-
-    // Save workflow first, then execute the step
     dispatch(
       saveAndExecuteStep({
         workflowId: lastWorkflowId,
@@ -145,15 +110,25 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     )
   }
 
-  // Check if this step can be run in manual mode
-  // Allow re-running already executed steps (backend will replace the response)
   const canRunStep = manualModeEnabled && !isRunning && lastWorkflowId
 
-  // Get subtitle text
   const getSubtitle = () => {
-    if (selectedAgent) return selectedAgent.name
-    if (selectedPrompt) return selectedPrompt.title
-    return 'Configure step'
+    if (fileCount === 0) return 'No files selected'
+    if (fileCount === 1) return selectedFileNames[0] || '1 file'
+    return `${fileCount} files`
+  }
+
+  const getRetrievalLabel = () => {
+    switch (fileData?.retrievalMode) {
+      case RetrievalMode.Embeddings:
+        return 'Embeddings'
+      case RetrievalMode.Content:
+        return 'Content'
+      case RetrievalMode.Both:
+        return 'Both'
+      default:
+        return 'Embeddings'
+    }
   }
 
   const statusClass = getStatusClass()
@@ -162,17 +137,14 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     <div
       className={`workflow-node ${selected ? 'selected' : ''} ${statusClass}`}
     >
-      {/* Status indicator dot */}
       {statusClass && (
         <div
           className={`node-status-dot ${statusClass === 'completed' ? 'success' : statusClass}`}
         />
       )}
 
-      {/* Quick Actions Bar - appears on selection */}
       {selected && (
         <div className='node-quick-actions'>
-          {/* Run button - only in manual mode */}
           {canRunStep && (
             <button
               className='quick-action-btn run'
@@ -190,13 +162,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             <Settings size={14} />
           </button>
           <button
-            className='quick-action-btn'
-            title='Duplicate'
-            onClick={handleDuplicate}
-          >
-            <Copy size={14} />
-          </button>
-          <button
             className='quick-action-btn danger'
             title='Delete'
             onClick={handleDelete}
@@ -206,32 +171,32 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         </div>
       )}
 
-      {/* Node Header */}
       <div className='node-header'>
         <div className='node-icon step'>
-          <Brain size={16} />
+          <FileText size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>Step {stepData?.stepNumber}</div>
+          <div className='node-title'>File {fileData?.stepNumber}</div>
           <div className='node-subtitle'>{getSubtitle()}</div>
         </div>
       </div>
 
-      {/* Input handles - 5 fixed colorful handles for all connections */}
+      {fileCount > 0 && (
+        <div className='px-3 pb-2'>
+          <span className='rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground'>
+            {getRetrievalLabel()}
+          </span>
+        </div>
+      )}
+
       {HANDLE_NUMBERS.map((num) => {
         const handleId = `input-${num}`
         const isConnected = connectedInputEdges.some(
           (edge) => edge.targetHandle === handleId
         )
-
-        // Fixed positions: 20%, 35%, 50%, 65%, 80%
         const topPercent = 5 + num * 15
-
-        // Show logic: always show connected handles + one extra for next connection
         const connectedCount = connectedInputEdges.length
         const shouldShow = num <= connectedCount + 1
-
-        // Get color from constants
         const handleColor = HANDLE_COLORS[num - 1]
 
         return (
@@ -240,9 +205,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             type='target'
             position={Position.Left}
             id={handleId}
-            style={{
-              top: `${topPercent}%`,
-            }}
+            style={{ top: `${topPercent}%` }}
             className={`transition-all duration-200 ${
               isConnected
                 ? `${handleColor} !opacity-100`
@@ -254,7 +217,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
         )
       })}
 
-      {/* Default output handle */}
       <Handle
         type='source'
         position={Position.Right}

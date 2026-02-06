@@ -1,6 +1,7 @@
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { FormikErrors, FormikTouched } from 'formik'
 import { type Node, type Edge } from '@xyflow/react'
+import { OutputDisplayMode } from './workflowBuilder'
 
 export enum WorkflowMode {
   Serial = 1,
@@ -148,6 +149,7 @@ export interface Workflow {
   mode: WorkflowMode
   viewport?: { x: number; y: number; zoom: number }
   manualModeEnabled?: boolean
+  outputDisplayMode?: OutputDisplayMode
 }
 
 export interface WorkflowState {
@@ -201,6 +203,7 @@ export interface CreateWorkflowDTO {
   viewport_x?: number
   viewport_y?: number
   viewport_zoom?: number
+  output_display_mode?: OutputDisplayMode
 }
 
 export interface UpdateWorkflowDTO {
@@ -209,6 +212,7 @@ export interface UpdateWorkflowDTO {
   viewport_x?: number
   viewport_y?: number
   viewport_zoom?: number
+  output_display_mode?: OutputDisplayMode
 }
 
 export interface PartialRunStep {
