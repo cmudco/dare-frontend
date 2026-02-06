@@ -10,13 +10,8 @@ import {
   HANDLE_NUMBERS,
   HANDLE_COLORS,
 } from '@/utils/constants/workflowBuilder'
-import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
-import {
-  WorkflowRunStepStatus,
-  WorkflowNodeType,
-  RetrievalMode,
-} from '@/utils/constants/workflows'
-import { saveAndExecuteStep } from '@/redux/asyncThunks/workflowBuilder'
+import { WorkflowNodeType, RetrievalMode } from '@/utils/constants/workflows'
+import { useNodeExecutionState } from '@/hooks/useNodeExecutionState'
 
 export interface FileNodeData {
   files?: number[]
@@ -38,39 +33,8 @@ export default function FileNode({ id, data, selected }: NodeProps) {
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
   const files = useAppSelector((s) => s.files.files)
 
-  const {
-    executedStepNodeIds,
-    availableRuns,
-    selectedRunIds,
-    currentRun,
-    activeStreamingNodeId,
-    manualModeEnabled,
-    currentPartialRunId,
-    lastWorkflowId,
-    isRunning,
-  } = useAppSelector((s) => s.workflowBuilder)
-
-  const displayRun = getDisplayRun(
-    nodeId,
-    selectedRunIds,
-    availableRuns,
-    currentRun
-  )
-
-  const nodeState = getNodeState(displayRun, nodeId)
-  const status = nodeState?.status || null
-  const isExecuted = executedStepNodeIds.includes(nodeId)
-  const isStreaming = activeStreamingNodeId === nodeId
-
-  const getStatusClass = () => {
-    if (isStreaming) return 'streaming'
-    if (isExecuted || status === WorkflowRunStepStatus.Completed)
-      return 'completed'
-    if (status === WorkflowRunStepStatus.Running) return 'running'
-    if (status === WorkflowRunStepStatus.Failed) return 'error'
-    if (status === WorkflowRunStepStatus.Pending) return 'pending'
-    return ''
-  }
+  const { statusClass, canRunStep, handleRunStep } =
+    useNodeExecutionState(nodeId)
 
   const connectedInputEdges = edges.filter((edge) => {
     const sourceNode = nodes.find((n) => n.id === edge.source)
@@ -98,20 +62,6 @@ export default function FileNode({ id, data, selected }: NodeProps) {
     dispatch(removeNodeWithEdges({ nodeId }))
   }
 
-  const handleRunStep = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!lastWorkflowId || isRunning) return
-    dispatch(
-      saveAndExecuteStep({
-        workflowId: lastWorkflowId,
-        stepNodeId: nodeId,
-        workflowRunId: currentPartialRunId || undefined,
-      })
-    )
-  }
-
-  const canRunStep = manualModeEnabled && !isRunning && lastWorkflowId
-
   const getSubtitle = () => {
     if (fileCount === 0) return 'No files selected'
     if (fileCount === 1) return selectedFileNames[0] || '1 file'
@@ -130,8 +80,6 @@ export default function FileNode({ id, data, selected }: NodeProps) {
         return 'Embeddings'
     }
   }
-
-  const statusClass = getStatusClass()
 
   return (
     <div
