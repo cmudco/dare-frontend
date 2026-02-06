@@ -4,7 +4,7 @@ import { type Node, type Edge } from '@xyflow/react'
 import type { Workflow, WorkflowRun } from '../types/workflow'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { workflowSocketExecuteSingleStep } from '../middleware/workflowSocketMiddleware'
-import { setShowExecutionPanel, setSavingStatus } from '../workflowBuilderSlice'
+import { setSavingStatus } from '../workflowBuilderSlice'
 import { SavingStatus } from '../types/workflowBuilder'
 import type { RootState, AppDispatch } from '../store'
 
@@ -51,11 +51,17 @@ export const saveAndExecuteStep = createAsyncThunk<
   'workflowBuilder/saveAndExecuteStep',
   async ({ workflowId, stepNodeId, workflowRunId }, { dispatch, getState }) => {
     const state = getState()
-    const { nodes, edges, savedViewport } = state.workflowBuilder
+    const { nodes, edges, savedViewport, outputDisplayMode } =
+      state.workflowBuilder
 
     // 1. Save the workflow first
     dispatch(setSavingStatus(SavingStatus.Saving))
-    const serializedWorkflow = serializeWorkflow(nodes, edges, savedViewport)
+    const serializedWorkflow = serializeWorkflow(
+      nodes,
+      edges,
+      savedViewport,
+      outputDisplayMode
+    )
 
     if (serializedWorkflow) {
       try {
@@ -74,8 +80,7 @@ export const saveAndExecuteStep = createAsyncThunk<
       }
     }
 
-    // 2. Open execution panel and execute the step
-    dispatch(setShowExecutionPanel(true))
+    // 2. Execute the step (panel visibility is handled by socket event based on outputDisplayMode)
     dispatch(
       workflowSocketExecuteSingleStep({
         workflowId,

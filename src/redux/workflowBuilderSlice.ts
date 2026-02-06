@@ -9,11 +9,15 @@ import {
   applyEdgeChanges,
 } from '@xyflow/react'
 import { initialState } from './initialState/workflowBuilder'
-import { WorkflowBuilderState } from './types/workflowBuilder'
+import {
+  WorkflowBuilderState,
+  OutputDisplayMode,
+} from './types/workflowBuilder'
 import { handleConnection } from '@/utils/workflowBuilder/handleConnection'
 import { createNode } from '@/utils/workflowBuilder/createNode'
 import { removeNodeById as removeNodeByIdHelper } from '@/utils/workflowBuilder/removeNodeById'
 import { updateNodeData as updateNodeDataHelper } from '@/utils/workflowBuilder/updateNodeData'
+import { getConnectedOutputNodeIds } from '@/utils/workflowBuilder/getConnectedOutputNodeIds'
 import { loadWorkflowIntoBuilder } from './asyncThunks/workflowBuilder'
 import { getActivePartialRun, getWorkflowRuns } from './asyncThunks/workflow'
 import type {
@@ -264,6 +268,20 @@ const workflowBuilderSlice = createSlice({
         }
       }
     },
+    expandAllOutputNodes: (state) => {
+      state.nodes = state.nodes.map((node) =>
+        node.type === WorkflowNodeType.ChatOutput
+          ? { ...node, data: { ...node.data, isExpanded: true } }
+          : node
+      )
+    },
+    collapseAllOutputNodes: (state) => {
+      state.nodes = state.nodes.map((node) =>
+        node.type === WorkflowNodeType.ChatOutput
+          ? { ...node, data: { ...node.data, isExpanded: false } }
+          : node
+      )
+    },
     // Manual execution mode actions
     setManualMode: (state, action: PayloadAction<boolean>) => {
       state.manualModeEnabled = action.payload
@@ -354,6 +372,15 @@ const workflowBuilderSlice = createSlice({
     setShowExecutionPanel: (state, action: PayloadAction<boolean>) => {
       state.showExecutionPanel = action.payload
     },
+    setOutputDisplayMode: (state, action: PayloadAction<OutputDisplayMode>) => {
+      state.outputDisplayMode = action.payload
+    },
+    toggleOutputDisplayMode: (state) => {
+      state.outputDisplayMode =
+        state.outputDisplayMode === OutputDisplayMode.Panel
+          ? OutputDisplayMode.Nodes
+          : OutputDisplayMode.Panel
+    },
     /**
      * Clear all execution-related state.
      * Used when switching between workflows to prevent stale data.
@@ -389,6 +416,8 @@ const workflowBuilderSlice = createSlice({
         state.savedViewport = action.payload.viewport ?? null
         state.manualModeEnabled =
           action.payload.workflow.manualModeEnabled ?? false
+        state.outputDisplayMode =
+          action.payload.workflow.outputDisplayMode ?? OutputDisplayMode.Panel
 
         // Clear history when loading a workflow
         state.history.past = []
@@ -511,24 +540,29 @@ const workflowBuilderSlice = createSlice({
             '🚀 executionStarted - clearing pendingValidation, runId:',
             workflowRunId
           )
-          // Update currentRun with the new run ID so validation uses correct run
+          // Update currentRun with the new run ID, clearing old nodeStates
           if (state.currentRun) {
             state.currentRun = {
               ...state.currentRun,
               id: workflowRunId,
               status: WorkflowRunStepStatus.Running,
+              nodeStates: {}, // Clear old node states for fresh run
             }
           } else {
             // Create minimal run object if none exists
             state.currentRun = {
               id: workflowRunId,
               status: WorkflowRunStepStatus.Running,
+              nodeStates: {},
             } as WorkflowRun
           }
           state.isRunning = true
           state.streamingResponses = {}
           state.activeStreamingNodeId = null
-          state.showExecutionPanel = true
+          // Only auto-show execution panel in 'panel' mode
+          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
+            state.showExecutionPanel = true
+          }
           state.pendingValidation = null // Clear any previous validation
         }
       )
@@ -559,7 +593,10 @@ const workflowBuilderSlice = createSlice({
           state.currentPartialRunId = workflowRunId
           state.isRunning = true
           state.activeStreamingNodeId = stepNodeId
-          state.showExecutionPanel = true
+          // Only auto-show execution panel in 'panel' mode
+          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
+            state.showExecutionPanel = true
+          }
           state.pendingValidation = null
           // Don't clear streaming responses - keep previous step results
           if (!state.streamingResponses[stepNodeId]) {
@@ -576,8 +613,30 @@ const workflowBuilderSlice = createSlice({
         } => action.type === 'workflowSocket/step_started',
         (state, action) => {
           const { nodeId } = action.payload
+          const node = state.nodes.find((n) => n.id === nodeId)
+          const isOutputNode = node?.type === WorkflowNodeType.ChatOutput
+
           state.activeStreamingNodeId = nodeId
+
+          // In panel mode, don't initialize streamingResponses for output nodes
+          // (they display in the execution panel, not in the node itself)
+          if (
+            isOutputNode &&
+            state.outputDisplayMode === OutputDisplayMode.Panel
+          ) {
+            return
+          }
+
           state.streamingResponses[nodeId] = { content: '' }
+
+          // Only propagate to connected output nodes when in 'nodes' display mode
+          if (state.outputDisplayMode === OutputDisplayMode.Nodes) {
+            getConnectedOutputNodeIds(nodeId, state.edges, state.nodes).forEach(
+              (outputNodeId) => {
+                state.streamingResponses[outputNodeId] = { content: '' }
+              }
+            )
+          }
         }
       )
       .addMatcher(
@@ -589,10 +648,24 @@ const workflowBuilderSlice = createSlice({
         } => action.type === 'workflowSocket/step_streaming',
         (state, action) => {
           const { nodeId, chunk } = action.payload
+          // Update the step node's streaming response
           if (state.streamingResponses[nodeId] !== undefined) {
             state.streamingResponses[nodeId].content += chunk
           } else {
             state.streamingResponses[nodeId] = { content: chunk }
+          }
+
+          // Only propagate to output nodes when in 'nodes' display mode
+          if (state.outputDisplayMode === OutputDisplayMode.Nodes) {
+            getConnectedOutputNodeIds(nodeId, state.edges, state.nodes).forEach(
+              (outputNodeId) => {
+                if (state.streamingResponses[outputNodeId] !== undefined) {
+                  state.streamingResponses[outputNodeId].content += chunk
+                } else {
+                  state.streamingResponses[outputNodeId] = { content: chunk }
+                }
+              }
+            )
           }
         }
       )
@@ -619,6 +692,20 @@ const workflowBuilderSlice = createSlice({
             snippets: metadata?.snippets,
             webSearchSources: metadata?.webSearchSources,
           }
+
+          // In 'nodes' display mode, propagate final response to connected output nodes
+          if (state.outputDisplayMode === OutputDisplayMode.Nodes) {
+            getConnectedOutputNodeIds(nodeId, state.edges, state.nodes).forEach(
+              (outputNodeId) => {
+                state.streamingResponses[outputNodeId] = {
+                  content: response,
+                  snippets: metadata?.snippets,
+                  webSearchSources: metadata?.webSearchSources,
+                }
+              }
+            )
+          }
+
           // Clear active streaming node
           if (state.activeStreamingNodeId === nodeId) {
             state.activeStreamingNodeId = null
@@ -688,8 +775,10 @@ const workflowBuilderSlice = createSlice({
             runData as WorkflowRun & { type: string }
           state.currentRun = { ...workflowRunData, status } as WorkflowRun
 
-          // Show execution panel when we receive workflow status
-          state.showExecutionPanel = true
+          // Only auto-show execution panel in 'panel' mode
+          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
+            state.showExecutionPanel = true
+          }
 
           // Update running state based on status
           state.isRunning =
@@ -771,6 +860,8 @@ export const {
   collapseAllNodes,
   expandAllNodes,
   toggleNodeCollapse,
+  expandAllOutputNodes,
+  collapseAllOutputNodes,
   setManualMode,
   setCurrentPartialRunId,
   markStepExecuted,
@@ -784,6 +875,8 @@ export const {
   setRightPanelTab,
   clearStreamingResponses,
   setShowExecutionPanel,
+  setOutputDisplayMode,
+  toggleOutputDisplayMode,
   clearExecutionState,
 } = workflowBuilderSlice.actions
 

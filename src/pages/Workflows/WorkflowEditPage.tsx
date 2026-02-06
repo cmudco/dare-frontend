@@ -18,8 +18,11 @@ import {
   resetPartialRun,
   setSavingStatus,
   setShowExecutionPanel,
+  setOutputDisplayMode,
+  expandAllOutputNodes,
+  collapseAllOutputNodes,
 } from '@/redux/workflowBuilderSlice'
-import { SavingStatus } from '@/redux/types/workflowBuilder'
+import { SavingStatus, OutputDisplayMode } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
@@ -34,6 +37,7 @@ import { toast } from '@/utils/toast'
 import type { GetActivePartialRunResponse } from '@/redux/types/workflow'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useWorkflowSocket } from '@/hooks/useWorkflowSocket'
+import { useAutoExpandOutputNodes } from '@/hooks/useAutoExpandOutputNodes'
 import {
   Loader2,
   Check,
@@ -43,6 +47,7 @@ import {
   Undo2,
   Redo2,
   Eye,
+  ChevronsUpDown,
 } from 'lucide-react'
 import {
   exportWorkflow,
@@ -79,9 +84,22 @@ const WorkflowEditPage = () => {
   const loadedWorkflow = useAppSelector((s) => s.workflowBuilder.loadedWorkflow)
   const history = useAppSelector((s) => s.workflowBuilder.history)
   const currentRun = useAppSelector((s) => s.workflowBuilder.currentRun)
+  const outputDisplayMode = useAppSelector(
+    (s) => s.workflowBuilder.outputDisplayMode
+  )
   const hasExecutionData = currentRun !== null
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
+
+  // Track if any output nodes are expanded
+  const outputNodes = nodes.filter(
+    (n) => n.type === WorkflowNodeType.ChatOutput
+  )
+  const hasOutputNodes = outputNodes.length > 0
+  const anyOutputExpanded = outputNodes.some((n) => n.data?.isExpanded)
+
+  // Auto-expand output nodes when execution completes
+  useAutoExpandOutputNodes()
 
   // Socket-based workflow execution
   // This auto-subscribes to get execution state when connected
@@ -139,10 +157,20 @@ const WorkflowEditPage = () => {
     }
   }
 
-  const handleSave = async () => {
+  const handleOutputDisplayModeToggle = (checked: boolean) => {
+    const newMode = checked ? OutputDisplayMode.Nodes : OutputDisplayMode.Panel
+    dispatch(setOutputDisplayMode(newMode))
+  }
+
+  const handleSave = useCallback(async () => {
     dispatch(setSavingStatus(SavingStatus.Saving))
 
-    const serializedWorkflow = serializeWorkflow(nodes, edges, savedViewport)
+    const serializedWorkflow = serializeWorkflow(
+      nodes,
+      edges,
+      savedViewport,
+      outputDisplayMode
+    )
     if (!serializedWorkflow) {
       dispatch(setSavingStatus(SavingStatus.Error))
       return
@@ -165,7 +193,7 @@ const WorkflowEditPage = () => {
       console.error('Save failed:', error)
       dispatch(setSavingStatus(SavingStatus.Error))
     }
-  }
+  }, [dispatch, nodes, edges, savedViewport, outputDisplayMode, id])
 
   const handleRunWorkflow = async () => {
     if (!id) return
@@ -410,6 +438,38 @@ const WorkflowEditPage = () => {
             </Tooltip>
           </TooltipProvider>
 
+          {/* Expand/Collapse Outputs Toggle */}
+          {hasOutputNodes && hasExecutionData && (
+            <TooltipProvider>
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={() =>
+                      dispatch(
+                        anyOutputExpanded
+                          ? collapseAllOutputNodes()
+                          : expandAllOutputNodes()
+                      )
+                    }
+                    className='h-8 w-8'
+                    aria-label={
+                      anyOutputExpanded ? 'Collapse outputs' : 'Expand outputs'
+                    }
+                  >
+                    <ChevronsUpDown className='h-4 w-4' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {anyOutputExpanded ? 'Collapse outputs' : 'Expand outputs'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
           <TooltipProvider>
             <Tooltip delayDuration={150}>
               <TooltipTrigger asChild>
@@ -434,8 +494,25 @@ const WorkflowEditPage = () => {
             </Tooltip>
           </TooltipProvider>
 
-          {/* Peek Execution Button - shows latest run */}
-          {id && hasExecutionData && !isRunning && (
+          {/* Output Display Mode Toggle */}
+          {id && (
+            <div className='flex items-center gap-2 border-r border-border pr-3'>
+              <Switch
+                id='output-mode'
+                checked={outputDisplayMode === OutputDisplayMode.Nodes}
+                onCheckedChange={handleOutputDisplayModeToggle}
+              />
+              <Label
+                htmlFor='output-mode'
+                className='cursor-pointer text-xs font-medium'
+              >
+                Node Output
+              </Label>
+            </div>
+          )}
+
+          {/* Peek Execution Button - shows latest run or current execution */}
+          {id && (hasExecutionData || isRunning) && (
             <TooltipProvider>
               <Tooltip delayDuration={150}>
                 <TooltipTrigger asChild>
@@ -444,13 +521,15 @@ const WorkflowEditPage = () => {
                     size='icon'
                     onClick={() => dispatch(setShowExecutionPanel(true))}
                     className='h-8 w-8'
-                    aria-label='View latest execution'
+                    aria-label={
+                      isRunning ? 'View execution' : 'View latest execution'
+                    }
                   >
                     <Eye className='h-4 w-4' />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>View latest run</p>
+                  <p>{isRunning ? 'View execution' : 'View latest run'}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

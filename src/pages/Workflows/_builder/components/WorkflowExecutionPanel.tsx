@@ -82,7 +82,11 @@ export default function WorkflowExecutionPanel() {
   const getNodeName = useCallback(
     (nodeId: string) => {
       const node = nodes.find((n) => n.id === nodeId)
-      return (node?.data?.label as string) || node?.type || 'Step'
+      if (node?.data?.label && node.data.label !== node.type) {
+        return node.data.label as string
+      }
+      if (node?.type === WorkflowNodeType.File) return 'file'
+      return node?.type || 'step'
     },
     [nodes]
   )
@@ -103,7 +107,7 @@ export default function WorkflowExecutionPanel() {
     : pendingValidation
       ? 'Awaiting validation'
       : isViewingCompletedRun
-        ? `Viewing run #${currentRun?.id}`
+        ? 'Viewing results'
         : 'Ready'
 
   return (
@@ -162,26 +166,36 @@ export default function WorkflowExecutionPanel() {
           </div>
         )}
 
-        {/* Streaming responses - data comes in correct order from backend */}
+        {/* Streaming responses - filter to execution nodes only */}
+        {/* chatOutput nodes display their content directly in the canvas */}
         {hasStreamingData && (
           <div className='space-y-4'>
-            {Object.entries(streamingResponses).map(([nodeId, data]) => (
-              <StepResponseCard
-                key={nodeId}
-                nodeId={nodeId}
-                nodeName={getNodeName(nodeId)}
-                stepNumber={
-                  nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
-                    | number
-                    | undefined
-                }
-                nodeType={nodes.find((n) => n.id === nodeId)?.type}
-                content={data.content}
-                isActive={activeStreamingNodeId === nodeId}
-                snippets={data.snippets}
-                webSearchSources={data.webSearchSources}
-              />
-            ))}
+            {Object.entries(streamingResponses)
+              .filter(([nodeId]) => {
+                const node = nodes.find((n) => n.id === nodeId)
+                return (
+                  node?.type === WorkflowNodeType.Step ||
+                  node?.type === WorkflowNodeType.StructuredOutput ||
+                  node?.type === WorkflowNodeType.File
+                )
+              })
+              .map(([nodeId, data]) => (
+                <StepResponseCard
+                  key={nodeId}
+                  nodeId={nodeId}
+                  nodeName={getNodeName(nodeId)}
+                  stepNumber={
+                    nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
+                      | number
+                      | undefined
+                  }
+                  nodeType={nodes.find((n) => n.id === nodeId)?.type}
+                  content={data.content}
+                  isActive={activeStreamingNodeId === nodeId}
+                  snippets={data.snippets}
+                  webSearchSources={data.webSearchSources}
+                />
+              ))}
           </div>
         )}
 
@@ -194,7 +208,8 @@ export default function WorkflowExecutionPanel() {
                 ([, state]) =>
                   state.response &&
                   (state.nodeType === WorkflowNodeType.Step ||
-                    state.nodeType === WorkflowNodeType.StructuredOutput)
+                    state.nodeType === WorkflowNodeType.StructuredOutput ||
+                    state.nodeType === WorkflowNodeType.File)
               )
               .map(([nodeId, state]) => (
                 <StepResponseCard
@@ -234,8 +249,7 @@ export default function WorkflowExecutionPanel() {
       {/* Footer */}
       {currentRun && (
         <div className='rounded-b-2xl border-t border-border/50 bg-gradient-to-r from-slate-50 to-white p-3'>
-          <div className='flex items-center justify-between text-xs text-muted-foreground'>
-            <span>Run #{currentRun.id}</span>
+          <div className='flex items-center justify-end text-xs text-muted-foreground'>
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-xs font-medium',

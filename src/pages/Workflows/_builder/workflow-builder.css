@@ -24,6 +24,11 @@
     overflow: visible;
 }
 
+/* Output node width constraint when expanded */
+.workflow-node.output {
+    max-width: 720px;
+}
+
 /* Gradient border effect using pseudo-element */
 .workflow-node::before {
     content: '';

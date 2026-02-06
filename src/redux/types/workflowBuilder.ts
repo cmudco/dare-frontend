@@ -26,6 +26,12 @@ export type WebSocketConnectionStatus =
   | 'connecting'
   | 'connected'
 
+// Output display mode: where to show workflow output during/after execution
+export enum OutputDisplayMode {
+  Panel = 'panel', // Show output in execution panel (default)
+  Nodes = 'nodes', // Show output in output nodes (auto-expand), execution panel stays closed
+}
+
 // Rich streaming response with content and citation metadata
 // Uses camelCase interfaces from workflow.ts (backend sends camelCase via camelize())
 export interface StreamingResponse {
@@ -62,4 +68,5 @@ export interface WorkflowBuilderState {
   rightPanelTab: 'config' | 'execution' // Active tab in right panel
   showExecutionPanel: boolean // Whether to show the execution panel overlay
   pendingValidation: PendingValidation | null // Human validation required state
+  outputDisplayMode: OutputDisplayMode // Where to show output: 'panel' or 'nodes'
 }

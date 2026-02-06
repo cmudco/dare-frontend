@@ -15,6 +15,8 @@ import StructuredOutputNodeConfig, {
   type StructuredOutputNodeData,
 } from './StructuredOutputNodeConfig'
 import ChatOutputNodeConfig from './ChatOutputNodeConfig'
+import NotesNodeConfig from './NotesNodeConfig'
+import FileNodeConfig, { type FileNodeData } from './FileNodeConfig'
 import { WorkflowNodeType } from '@/utils/constants/workflows'
 
 interface NodeConfigPanelProps {
@@ -60,6 +62,10 @@ export default function NodeConfigPanel({
         return 'Conditional Configuration'
       case 'chatOutput':
         return 'Output'
+      case 'notes':
+        return 'Note'
+      case 'file':
+        return 'File Retrieval'
       default:
         return 'Node Configuration'
     }
@@ -76,6 +82,10 @@ export default function NodeConfigPanel({
         return 'Configure routing decision logic'
       case 'chatOutput':
         return 'View response and select version'
+      case 'notes':
+        return 'Add documentation or comments'
+      case 'file':
+        return 'Configure file retrieval settings'
       default:
         return "Configure this node's settings"
     }
@@ -124,6 +134,19 @@ export default function NodeConfigPanel({
         )}
         {nodeType === WorkflowNodeType.ChatOutput && (
           <ChatOutputNodeConfig nodeId={nodeId} />
+        )}
+        {nodeType === WorkflowNodeType.Notes && (
+          <NotesNodeConfig
+            nodeData={nodeData as { content?: string }}
+            updateNodeData={updateNodeData}
+          />
+        )}
+        {nodeType === WorkflowNodeType.File && (
+          <FileNodeConfig
+            nodeData={nodeData as FileNodeData}
+            updateNodeData={updateNodeData}
+            files={files}
+          />
         )}
       </div>
     </div>
