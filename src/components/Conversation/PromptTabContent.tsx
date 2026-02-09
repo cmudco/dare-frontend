@@ -19,12 +19,14 @@ import { AppDispatch } from '@/redux/store'
 import { formatDate, groupPrompts } from '@/utils/constants/prompts'
 import { openModal, clearSelectedPrompt } from '@/redux/promptSlice'
 import { setPrompt } from '@/redux/conversationSlice'
-import { Prompt } from '@/redux/types/prompt'
+import { Prompt, PublishedPrompt } from '@/redux/types/prompt'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { stripHtml } from '@/utils/textUtils'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
 import { useAppSelector } from '@/redux/hooks'
+import { getPromptsLibrary } from '@/redux/asyncThunks/promptsLibrary'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const RichTextPreview = ({ content }: { content: string }) => {
   const truncateHtml = (html: string, maxLength: number = 150): string => {
@@ -50,6 +52,8 @@ const RichTextPreview = ({ content }: { content: string }) => {
 const PromptTabContent = () => {
   const dispatch = useDispatch<AppDispatch>()
   const prompts = useAppSelector((state) => state.prompt.prompts)
+  const { publishedPrompts } = useAppSelector((state) => state.promptsLibrary)
+  const currentUserEmail = useAppSelector((state) => state.user.user?.email)
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
 
@@ -59,6 +63,11 @@ const PromptTabContent = () => {
   const { activeConversation } = useAppSelector((state) => state.conversation)
 
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set())
+
+  useEffect(() => {
+    dispatch(getPromptsLibrary())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (selectedPrompt) {
@@ -81,6 +90,40 @@ const PromptTabContent = () => {
   }, [selectedPrompt, prompts])
 
   const handlePromptSelect = (prompt: Prompt) => {
+    if (selectedPrompt?.id === prompt.id) {
+      dispatch(clearSelectedPrompt())
+      if (activeConversation) {
+        dispatch(
+          updateConversation({
+            conversationId: activeConversation.conversationId,
+            updates: { promptId: null },
+          })
+        )
+      }
+    } else {
+      dispatch(setPrompt(prompt))
+      if (activeConversation) {
+        dispatch(
+          updateConversation({
+            conversationId: activeConversation.conversationId,
+            updates: { promptId: prompt?.id },
+          })
+        )
+      }
+    }
+  }
+
+  const handleLibraryPromptSelect = (published: PublishedPrompt) => {
+    // Convert to prompt format for selection
+    const prompt: Prompt = {
+      id: published.promptId,
+      title: published.title,
+      content: published.content,
+      version: published.version,
+      user: published.authorEmail,
+      createdAt: published.publishedAt,
+    }
+
     if (selectedPrompt?.id === prompt.id) {
       dispatch(clearSelectedPrompt())
       if (activeConversation) {
@@ -138,6 +181,20 @@ const PromptTabContent = () => {
     return filtered
   }, [groupedPrompts, searchQuery, selectedPrompt])
 
+  const filteredLibraryPrompts = useMemo(() => {
+    // Filter out user's own prompts from library view here
+    return publishedPrompts.filter((prompt) => {
+      const matchesSearch =
+        searchQuery === '' ||
+        prompt.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        prompt.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        prompt.authorEmail?.toLowerCase().includes(searchQuery.toLowerCase())
+      // Only show other users' prompts in library
+      const isOtherUser = prompt.authorEmail !== currentUserEmail
+      return matchesSearch && isOtherUser
+    })
+  }, [publishedPrompts, searchQuery, currentUserEmail])
+
   const toggleExpand = (rootId: number) => {
     setExpandedGroups((prev) => {
       const newSet = new Set(prev)
@@ -148,6 +205,93 @@ const PromptTabContent = () => {
       }
       return newSet
     })
+  }
+
+  const renderPromptCard = (
+    prompt: Prompt,
+    isLatest: boolean = true,
+    group?: { rootPrompt: Prompt; versions: Prompt[] }
+  ) => {
+    const isExpanded = group ? expandedGroups.has(group.rootPrompt.id) : false
+
+    return (
+      <div
+        className={`mb-3 cursor-pointer rounded-lg border border-border p-3 text-foreground transition-colors ${
+          selectedPrompt?.id === prompt.id
+            ? 'cursor-pointer bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
+            : 'cursor-pointer bg-background hover:bg-muted dark:hover:bg-blue-900/30'
+        }`}
+        onClick={() => handlePromptSelect(prompt)}
+      >
+        <div className='mb-1 flex items-start justify-between'>
+          <div className='flex items-center gap-2'>
+            <h4 className='text-xl font-medium text-foreground'>
+              {prompt.title || 'Untitled'}
+            </h4>
+            <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+              v{prompt.version || 1}
+            </span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <span className='text-xs text-muted-foreground'>
+              {formatDate(prompt.createdAt)}
+            </span>
+            {isLatest && group && group.versions.length > 1 && (
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleExpand(group.rootPrompt.id)
+                }}
+              >
+                {isExpanded ? (
+                  <ChevronUpIcon className='h-4 w-4' />
+                ) : (
+                  <ChevronDownIcon className='h-4 w-4' />
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className='max-h-[4.5em] overflow-hidden'>
+          <RichTextPreview content={prompt.content || 'No content'} />
+        </div>
+      </div>
+    )
+  }
+
+  const renderLibraryPromptCard = (published: PublishedPrompt) => {
+    return (
+      <div
+        key={published.id}
+        className={`mb-3 cursor-pointer rounded-lg border border-border p-3 text-foreground transition-colors ${
+          selectedPrompt?.id === published.promptId
+            ? 'cursor-pointer bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
+            : 'cursor-pointer bg-background hover:bg-muted dark:hover:bg-blue-900/30'
+        }`}
+        onClick={() => handleLibraryPromptSelect(published)}
+      >
+        <div className='mb-1 flex items-start justify-between'>
+          <div className='flex items-center gap-2'>
+            <h4 className='text-xl font-medium text-foreground'>
+              {published.title || 'Untitled'}
+            </h4>
+            <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+              v{published.version || 1}
+            </span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <span className='text-xs text-muted-foreground'>
+              by {published.authorEmail}
+            </span>
+          </div>
+        </div>
+        <div className='max-h-[4.5em] overflow-hidden'>
+          <RichTextPreview content={published.content || 'No content'} />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -172,111 +316,60 @@ const PromptTabContent = () => {
         </Button>
       </div>
 
-      <hr className='mx-1 mb-4 border-gray-200' />
+      <Tabs defaultValue='my-prompts' className='w-full'>
+        <TabsList className='mb-4 grid w-full grid-cols-2'>
+          <TabsTrigger value='my-prompts'>My Prompts</TabsTrigger>
+          <TabsTrigger value='library'>
+            Library ({filteredLibraryPrompts.length})
+          </TabsTrigger>
+        </TabsList>
 
-      <div className='max-h-[50vh] overflow-y-auto'>
-        {filteredPrompts.length === 0 && (
-          <div className='py-6 text-center text-muted-foreground'>
-            {prompts.length === 0
-              ? 'No prompts available'
-              : 'No matching prompts found'}
-          </div>
-        )}
-
-        {filteredPrompts.map((group) => {
-          const isExpanded = expandedGroups.has(group.rootPrompt.id)
-          const latestVersion = group.versions[0]
-
-          return (
-            <div key={group.rootPrompt.id}>
-              <div
-                className={`mb-3 cursor-pointer rounded-lg border border-border p-3 text-foreground transition-colors ${
-                  selectedPrompt?.id === latestVersion.id
-                    ? 'cursor-pointer bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
-                    : 'cursor-pointer bg-background hover:bg-muted dark:hover:bg-blue-900/30'
-                }`}
-                onClick={() => handlePromptSelect(latestVersion)}
-              >
-                <div className='mb-1 flex items-start justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <h4 className='text-xl font-medium text-foreground'>
-                      {latestVersion.title || 'Untitled'}
-                    </h4>
-                    <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
-                      v{latestVersion.version || 1}
-                    </span>
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    <span className='text-xs text-muted-foreground'>
-                      {formatDate(latestVersion.createdAt)}
-                    </span>
-                    {group.versions.length > 1 && (
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleExpand(group.rootPrompt.id)
-                        }}
-                      >
-                        {isExpanded ? (
-                          <ChevronUpIcon className='h-4 w-4' />
-                        ) : (
-                          <ChevronDownIcon className='h-4 w-4' />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className='max-h-[4.5em] overflow-hidden'>
-                  <RichTextPreview
-                    content={latestVersion.content || 'No content'}
-                  />
-                </div>
+        <TabsContent value='my-prompts'>
+          <div className='max-h-[50vh] overflow-y-auto'>
+            {filteredPrompts.length === 0 && (
+              <div className='py-6 text-center text-muted-foreground'>
+                {prompts.length === 0
+                  ? 'No prompts available'
+                  : 'No matching prompts found'}
               </div>
-              {isExpanded && (
-                <div className='mb-4 space-y-2 pl-4'>
-                  {group.versions.slice(1).map((version) => (
-                    <div
-                      key={version.id}
-                      className={`mb-3 cursor-pointer rounded-lg border border-border p-3 text-foreground transition-colors ${
-                        selectedPrompt?.id === version.id
-                          ? 'cursor-pointer bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
-                          : 'cursor-pointer bg-background hover:bg-muted dark:hover:bg-blue-900/30'
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handlePromptSelect(version)
-                      }}
-                    >
-                      <div className='mb-1 flex items-start justify-between'>
-                        <div className='flex items-center gap-2'>
-                          <h4 className='text-xl font-medium text-foreground'>
-                            {version.title || 'Untitled'}
-                          </h4>
-                          <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
-                            v{version.version || 1}
-                          </span>
+            )}
+
+            {filteredPrompts.map((group) => {
+              const isExpanded = expandedGroups.has(group.rootPrompt.id)
+              const latestVersion = group.versions[0]
+
+              return (
+                <div key={group.rootPrompt.id}>
+                  {renderPromptCard(latestVersion, true, group)}
+                  {isExpanded && (
+                    <div className='mb-4 space-y-2 pl-4'>
+                      {group.versions.slice(1).map((version) => (
+                        <div key={version.id}>
+                          {renderPromptCard(version, false)}
                         </div>
-                        <div className='flex items-center gap-2'>
-                          <span className='text-xs text-muted-foreground'>
-                            {formatDate(version.createdAt)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className='max-h-[4.5em] overflow-hidden'>
-                        <RichTextPreview
-                          content={version.content || 'No content'}
-                        />
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+              )
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value='library'>
+          <div className='max-h-[50vh] overflow-y-auto'>
+            {filteredLibraryPrompts.length === 0 && (
+              <div className='py-6 text-center text-muted-foreground'>
+                No published prompts from other users
+              </div>
+            )}
+
+            {filteredLibraryPrompts.map((published) =>
+              renderLibraryPromptCard(published)
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </>
   )
 }

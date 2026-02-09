@@ -29,11 +29,13 @@ const dareToolsSlice = createSlice({
         (state, action: PayloadAction<DareTool[]>) => {
           state.loading = false
           state.tools = action.payload
+          state.fetched = true
         }
       )
       .addCase(getDareTools.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
+        state.fetched = true // Mark as fetched even on error to prevent infinite retries
       })
   },
 })

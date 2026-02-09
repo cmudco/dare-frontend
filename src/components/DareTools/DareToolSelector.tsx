@@ -46,13 +46,14 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
 
   const tools = useSelector((state: RootState) => state.dareTools.tools)
   const loading = useSelector((state: RootState) => state.dareTools.loading)
+  const fetched = useSelector((state: RootState) => state.dareTools.fetched)
 
   // Fetch tools on mount if not already loaded
   useEffect(() => {
-    if (tools.length === 0 && !loading) {
+    if (!fetched && !loading) {
       dispatch(getDareTools())
     }
-  }, [dispatch, tools.length, loading])
+  }, [dispatch, fetched, loading])
 
   const handleToggleTool = (slug: string) => {
     const newSlugs = selectedSlugs.includes(slug)

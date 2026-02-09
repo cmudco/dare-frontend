@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
+
 import { AppDispatch } from '../../redux/store'
 import { getPrompts } from '../../redux/asyncThunks/prompt'
 import PromptHeader from './PromptHeader'
 import PromptTable from './PromptTable'
 import PromptModal from './PromptModal'
+import PromptsLibraryTable from './PromptsLibraryTable'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 
 const PromptManagerLayout = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -12,7 +15,8 @@ const PromptManagerLayout = () => {
 
   useEffect(() => {
     dispatch(getPrompts())
-  }, [dispatch])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
@@ -28,7 +32,21 @@ const PromptManagerLayout = () => {
         >
           <div className='px-0' placeholder=''>
             <PromptHeader onSearch={handleSearch} />
-            <PromptTable searchQuery={searchQuery} />
+
+            <Tabs defaultValue='my-prompts' className='mt-6 w-full'>
+              <TabsList className='mb-4 grid w-full max-w-md grid-cols-2'>
+                <TabsTrigger value='my-prompts'>My Prompts</TabsTrigger>
+                <TabsTrigger value='library'>Library</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value='my-prompts'>
+                <PromptTable searchQuery={searchQuery} />
+              </TabsContent>
+
+              <TabsContent value='library'>
+                <PromptsLibraryTable searchQuery={searchQuery} />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
         <PromptModal />
