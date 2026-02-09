@@ -1,0 +1,132 @@
+# DARE Frontend Development Rules
+
+## Naming & Casing
+- **Always use `camelCase`** for all properties, variables, API responses, and Redux state.
+- Backend uses `djangorestframework-camel-case` for auto-conversion; FE should expect `camelCase`.
+- Never use `snake_case` in TypeScript interfaces or API response types.
+- **Auto-conversion reminder**: Every request from FE is converted to `snake_case` by BE, and every response from BE is converted to `camelCase` by BE. FE never needs to handle this manually.
+
+## TypeScript Types & Interfaces
+- **Use interfaces, not loose types**. Always define proper interfaces for data structures.
+- **Single source of truth**: Reuse types defined for BE responses; don't duplicate or recreate similar types.
+- **Avoid `Record<string, T>`**: Use explicit interfaces for better readability and type safety.
+- **Array syntax**: Use `MyInterface[]` instead of `Array<MyInterface>` for consistency and readability.
+- **No `any` types**: Always use proper types; if unsure, define an interface.
+
+## Enums & Constants
+- Use TypeScript `enum` for finite option sets (e.g., `AvatarType`, `VectorDbSource`).
+- Store enums in `utils/constants/` organized by domain (e.g., `user.ts`).
+- Never use string literals for type checks; use enum values for robust validation.
+- Example: `user.avatarType === AvatarType.CUSTOM` not `user.avatarType === 'custom'`.
+
+## Imports
+- All imports at top of file; no inline imports.
+- Group imports: React → external libs → internal paths → relative paths.
+
+## Redux & Async Thunks (API Integration Cycle)
+**Always follow this cycle when integrating API endpoints:**
+
+1. **API Layer (`api/` directory)**: Create base request wrapper that calls the BE endpoint.
+2. **Async Thunk (`redux/asyncThunks/`)**: Create thunk that calls the API layer method.
+3. **Component**: Dispatch the thunk from the React component.
+4. **Slice (`redux/` slices)**: Listen to thunk states (pending/fulfilled/rejected) in the slice.
+
+```
+Component → dispatch(thunk) → thunk calls api → api calls BE
+                                    ↓
+Slice listens to thunk states ← thunk returns result
+```
+
+- Avoid naming collisions between slice actions and async thunks.
+- Use descriptive thunk names (e.g., `updateUserProfile` not `updateUser`).
+- Never alias imports to avoid collisions; rename the source instead.
+
+## useEffect Best Practices
+- **Keep dependencies minimal**: Don't add unnecessary dependencies that can cause infinite renders.
+- **Use eslint-disable when appropriate**: If a dependency causes issues, use `// eslint-disable-next-line react-hooks/exhaustive-deps` rather than adding problematic dependencies.
+- **Avoid multiple useEffects for related logic**: Combine related side effects when possible.
+- **Run once on mount**: For data fetching, use empty dependency array `[]` with eslint-disable if needed.
+
+## API Layer
+- Keep API functions in `api/` directory; one file per domain.
+- API function types should match the camelCase response from backend.
+- Use proper TypeScript interfaces for all request/response types.
+
+## Components
+- **One component per file**. Each React component must be in its own file. Never define multiple components in a single file, even if they are small helper components.
+- Reusable components go in `components/Layout/` or `components/ui/`.
+- Feature-specific components in feature folders (e.g., `components/Settings/`).
+- Use component props interfaces; avoid `any` types.
+
+## Styling
+- **Always use Tailwind CSS** for styling components. Never create separate `.css` files unless absolutely mandatory (e.g., global styles or third-party library overrides).
+- Use Tailwind utility classes directly in component JSX/TSX.
+- For complex/repeated patterns, use `@apply` in `index.css` sparingly.
+- Keep component files clean by using Tailwind's responsive and state variants inline.
+
+## File Upload
+- Validate file type and size on frontend before upload.
+- Use `FormData` for file uploads; field names should match backend expectations.
+- Display appropriate loading states and error toasts.
+
+## Data Schema Design (Clean BE-FE Contracts)
+
+### Separate Fields for Different Data Types
+
+When a field can contain different data structures based on context, **use separate named fields** instead of union types.
+
+**Bad** - Ambiguous union type:
+```typescript
+interface ToolCall {
+  result?: DareToolResult | McpToolResult | string  // Which one is it?!
+}
+```
+
+**Good** - Separate named fields:
+```typescript
+interface ToolCall {
+  /** Result from DARE internal tools (when serverSlug === 'dare') */
+  dareResult?: DareToolResult
+  
+  /** Result from MCP external tools (when serverSlug !== 'dare') */
+  mcpResult?: McpToolResult
+}
+```
+
+### Benefits of This Pattern
+
+1. **Zero confusion** - Developer knows exactly which field to check
+2. **Type-safe** - No type guards or casting needed
+3. **Self-documenting** - Field names describe their purpose
+4. **No parsing** - BE sends structured objects, FE reads directly
+
+### Usage Pattern
+
+```typescript
+// Check which field based on serverSlug
+if (tc.serverSlug === ServerSlug.DARE) {
+  // Use tc.dareResult (typed as DareToolResult)
+  renderChart(tc.dareResult?.chartConfig)
+} else {
+  // Use tc.mcpResult (typed as McpToolResult)
+  displayResult(tc.mcpResult?.content)
+}
+```
+
+### Organize Types by Domain
+
+Store result types in appropriate files:
+
+```
+redux/types/
+├── conversation.ts    # ToolCall interface with dareResult/mcpResult
+├── dareToolResults.ts # DareToolResult, ChartConfig interfaces
+└── mcp.ts            # McpToolResult, McpToolContent interfaces
+```
+
+### Reference Implementation
+
+See: `redux/types/conversation.ts` - ToolCall interface
+See: `redux/types/dareToolResults.ts` - DareToolResult, McpToolResult interfaces
+
+This ensures **10/10 readability** and **zero confusion** when working with BE data.
