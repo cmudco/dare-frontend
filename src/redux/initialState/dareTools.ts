@@ -8,4 +8,5 @@ export const initialDareToolsState: DareToolsState = {
   tools: [],
   loading: false,
   error: null,
+  fetched: false,
 }

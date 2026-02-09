@@ -36,3 +36,4 @@ dist-ssr
 .env.gatech
 
 package-lock.json
+config.bat

@@ -50,6 +50,8 @@ export interface DareToolsState {
   tools: DareTool[]
   loading: boolean
   error: string | null
+  /** Whether tools have been fetched at least once (prevents infinite loops when no tools exist) */
+  fetched: boolean
 }
 
 /**
