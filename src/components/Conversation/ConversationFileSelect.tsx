@@ -21,6 +21,7 @@ import { updateConversationSelectedIds } from '@/redux/asyncThunks/conversation'
 import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { Tag } from '@/redux/types/tags'
 import { useDebounce } from '@/utils/debounce'
+import { useOwnerFiles } from '@/hooks/useOwnerFiles'
 
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -68,8 +69,17 @@ const ConversationFileSelect: React.FC = () => {
     'files' | 'embeddings' | 'media' | 'tags' | 'folders'
   >('embeddings')
 
+  // Fetch and merge owner files for forked or shared conversations
+  // For shared conversations (viewing from library): use ownerUserId
+  // For forked conversations (after forking): use fileOwnerId
+  const effectiveOwnerId =
+    activeConversation?.fileOwnerId || activeConversation?.ownerUserId
+  const { allFiles, ownerFiles } = useOwnerFiles(files, effectiveOwnerId)
+
   const saveSelectedIds = useCallback(() => {
-    if (activeConversation) {
+    // Only save selected IDs if user owns the conversation
+    // Skip for shared conversations viewed from library (before forking)
+    if (activeConversation && activeConversation.isOwner !== false) {
       const selectedFileIds = selectedFiles.map((file) => file.id)
       const selectedEmbeddingIds = selectedEmbeddings.map((file) => file.id)
       const selectedMediaIds = selectedMediaFiles.map((file) => file.id)
@@ -103,19 +113,22 @@ const ConversationFileSelect: React.FC = () => {
       return []
     }
 
-    return files.filter((file) => {
+    return allFiles.filter((file) => {
       const matchesSearch = file.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
-      const matchesVectorDb = file.vectorDbSource === user.vectorDb
+      // For owner files, allow all vector DB sources since they're already shared
+      const isOwnerFile = ownerFiles.some((f) => f.id === file.id)
+      const matchesVectorDb =
+        isOwnerFile || file.vectorDbSource === user.vectorDb
       const isProcessed = file.status === FileStatus.PROCESSED
       const isNotMedia = !file.isMedia // Exclude media files from document tabs
       return matchesSearch && matchesVectorDb && isProcessed && isNotMedia
     })
-  }, [files, searchQuery, user])
+  }, [allFiles, ownerFiles, searchQuery, user])
 
   const filteredMediaFiles = useMemo(() => {
-    return files.filter((file) => {
+    return allFiles.filter((file) => {
       const matchesSearch = file.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
@@ -123,7 +136,7 @@ const ConversationFileSelect: React.FC = () => {
       const isProcessed = file.status === FileStatus.PROCESSED
       return matchesSearch && isMedia && isProcessed
     })
-  }, [files, searchQuery])
+  }, [allFiles, searchQuery])
 
   const filteredTags = useMemo(() => {
     return tags.filter((tag) =>

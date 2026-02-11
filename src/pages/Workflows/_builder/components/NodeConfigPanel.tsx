@@ -6,9 +6,8 @@ import {
   updateNodeDataById,
   setSelectedNodeId,
 } from '@/redux/workflowBuilderSlice'
-import { useCallback, useEffect, useState, useMemo } from 'react'
-import { getFilesByOwnerAPI } from '@/api/files'
-import type { MyFile } from '@/redux/types/files'
+import { useCallback } from 'react'
+import { useOwnerFiles } from '@/hooks/useOwnerFiles'
 
 // Import node-specific config components
 import StartNodeConfig, { type StartNodeData } from './StartNodeConfig'
@@ -36,46 +35,13 @@ export default function NodeConfigPanel({
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const agents = useAppSelector((s) => s.agent.agents)
   const loadedWorkflow = useAppSelector((s) => s.workflowBuilder.loadedWorkflow)
-  const fileOwnerId = loadedWorkflow?.fileOwnerId
 
-  // State for owner files (for forked workflows)
-  const [ownerFiles, setOwnerFiles] = useState<MyFile[]>([])
-  const [ownerFilesLoading, setOwnerFilesLoading] = useState(false)
-  const [ownerFilesError, setOwnerFilesError] = useState<string | null>(null)
-
-  // Fetch owner files when fileOwnerId is present (forked workflow)
-  useEffect(() => {
-    if (fileOwnerId) {
-      setOwnerFilesLoading(true)
-      setOwnerFilesError(null)
-      getFilesByOwnerAPI(fileOwnerId)
-        .then((response) => {
-          setOwnerFiles(response.results || [])
-        })
-        .catch(() => {
-          setOwnerFiles([])
-          setOwnerFilesError(
-            'Failed to load shared files from original workflow'
-          )
-        })
-        .finally(() => {
-          setOwnerFilesLoading(false)
-        })
-    } else {
-      setOwnerFiles([])
-      setOwnerFilesError(null)
-    }
-  }, [fileOwnerId])
-
-  // Merge user files with owner files, avoiding duplicates
-  const files = useMemo(() => {
-    if (!fileOwnerId || ownerFiles.length === 0) {
-      return userFiles
-    }
-    const userFileIds = new Set(userFiles.map((f) => f.id))
-    const uniqueOwnerFiles = ownerFiles.filter((f) => !userFileIds.has(f.id))
-    return [...userFiles, ...uniqueOwnerFiles]
-  }, [userFiles, ownerFiles, fileOwnerId])
+  // Fetch and merge owner files for forked workflows
+  const {
+    allFiles: files,
+    isLoading: ownerFilesLoading,
+    error: ownerFilesError,
+  } = useOwnerFiles(userFiles, loadedWorkflow?.fileOwnerId)
 
   const nodeType = selectedNode.type
   const nodeData = selectedNode.data as Record<string, unknown>
