@@ -8,8 +8,12 @@ import {
   updateSearchQuery,
   updateSelectedTags,
   setHistorySidebarCollapsed,
+  setActiveTab,
 } from '../../redux/conversationSlice'
-import { createConversation } from '../../redux/asyncThunks/conversation'
+import {
+  createConversation,
+  fetchSharedConversations,
+} from '../../redux/asyncThunks/conversation'
 import { AppDispatch, RootState } from '../../redux/store'
 import ConversationList from './ConversationList'
 import { useNavigate } from 'react-router-dom'
@@ -27,6 +31,12 @@ const ConversationHistory = () => {
   )
   const sidecarOpen = useSelector(
     (state: RootState) => state.artifact.sidecarOpen
+  )
+  const activeTab = useSelector(
+    (state: RootState) => state.conversation.activeTab
+  )
+  const sharedConversations = useSelector(
+    (state: RootState) => state.conversation.sharedConversations
   )
 
   const setIsCollapsed = (collapsed: boolean) => {
@@ -64,6 +74,13 @@ const ConversationHistory = () => {
       .catch((error) => {
         console.error('Error creating conversation:', error)
       })
+  }
+
+  const handleTabChange = (tab: 'mine' | 'shared') => {
+    dispatch(setActiveTab(tab))
+    if (tab === 'shared') {
+      dispatch(fetchSharedConversations())
+    }
   }
 
   // Hide conversation history when artifact sidecar is open
@@ -107,16 +124,44 @@ const ConversationHistory = () => {
                 className='min-w-0 flex-1 bg-transparent font-normal placeholder-gray-600 outline-none dark:text-white dark:placeholder-dark-icon-unselected'
               />
             </div>
-            <Button
-              onClick={handleCreateConversation}
-              className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl'
-            >
-              <span className='text-xl'>+</span>
-            </Button>
+            {activeTab === 'mine' && (
+              <Button
+                onClick={handleCreateConversation}
+                className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl'
+              >
+                <span className='text-xl'>+</span>
+              </Button>
+            )}
           </div>
           <hr className='mx-1 mb-2 shrink-0 border-gray-200' />
+          {/* Tab switcher */}
+          <div className='mx-1 mb-2 flex shrink-0 rounded-lg bg-gray-100 p-0.5 dark:bg-slate-800'>
+            <button
+              onClick={() => handleTabChange('mine')}
+              className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                activeTab === 'mine'
+                  ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+            >
+              My Conversations
+            </button>
+            <button
+              onClick={() => handleTabChange('shared')}
+              className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                activeTab === 'shared'
+                  ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+            >
+              Shared
+            </button>
+          </div>
           <div className='min-h-0 flex-1 overflow-y-auto'>
-            <ConversationList />
+            <ConversationList
+              isSharedTab={activeTab === 'shared'}
+              sharedConversations={sharedConversations}
+            />
           </div>
         </div>
       )}

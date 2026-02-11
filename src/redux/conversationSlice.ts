@@ -14,6 +14,10 @@ import {
   updateConversationSelectedIds,
   updateConversationFeedbackTracking,
   deleteMessage,
+  fetchSharedConversations,
+  publishConversation,
+  forkConversation,
+  fetchConversationMessages,
 } from './asyncThunks/conversation'
 import {
   Message,
@@ -461,6 +465,9 @@ export const conversationSlice = createSlice({
       state.isGeneratingImage = action.payload.generating
       state.imageGenerationPrompt = action.payload.prompt
     },
+    setActiveTab(state, action: PayloadAction<'mine' | 'shared'>) {
+      state.activeTab = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -700,6 +707,37 @@ export const conversationSlice = createSlice({
           console.error('Failed to update feedback tracking:', action.payload)
         }
       )
+      // ─────────────────────────────────────────────────────────────────────
+      // Conversation Sharing thunks
+      // ─────────────────────────────────────────────────────────────────────
+      .addCase(fetchSharedConversations.fulfilled, (state, action) => {
+        state.sharedConversations = action.payload
+      })
+      .addCase(publishConversation.fulfilled, (state, action) => {
+        // Update in user's own conversations list
+        const idx = state.conversations.findIndex(
+          (c) => c.conversationId === action.payload.conversationId
+        )
+        if (idx !== -1) {
+          state.conversations[idx] = action.payload
+        }
+        // Also update activeConversation if it's the same
+        if (
+          state.activeConversation?.conversationId ===
+          action.payload.conversationId
+        ) {
+          state.activeConversation = action.payload
+        }
+      })
+      .addCase(forkConversation.fulfilled, (state, action) => {
+        // Add forked conversation to user's list and switch to "mine" tab
+        state.conversations.unshift(action.payload)
+        state.activeTab = 'mine'
+        state.activeConversation = action.payload
+      })
+      .addCase(fetchConversationMessages.fulfilled, (state, action) => {
+        state.activeConversationMessages = action.payload
+      })
       // ─────────────────────────────────────────────────────────────────────
       // Socket.IO message handlers (from socketMiddleware)
       // ─────────────────────────────────────────────────────────────────────
@@ -1031,5 +1069,6 @@ export const {
   updateSelectedDareTools,
   updateSelectedAgent,
   applyAgentSettings,
+  setActiveTab,
 } = conversationSlice.actions
 export default conversationSlice.reducer

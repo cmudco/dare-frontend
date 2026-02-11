@@ -64,6 +64,7 @@ const Message: React.FC<MessageProps> = ({
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
+  const isReadOnly = activeConversation?.isOwner === false
   const activeConversationMessages = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages
   )
@@ -236,7 +237,7 @@ const Message: React.FC<MessageProps> = ({
           </div>
         )}
 
-        {message.isSender && !message.streaming && (
+        {message.isSender && !message.streaming && !isReadOnly && (
           <div className='mr-2 mt-2 flex flex-shrink-0 items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
             <button
               className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
@@ -546,7 +547,7 @@ const Message: React.FC<MessageProps> = ({
         )}
       </div>
 
-      {!message.isSender && !message.streaming && (
+      {!message.isSender && !message.streaming && !isReadOnly && (
         <div className='flex w-full max-w-[95%] pl-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
           <button
             className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'

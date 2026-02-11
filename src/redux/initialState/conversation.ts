@@ -39,4 +39,7 @@ export const initialState: ConversationState = {
   isTranscribingAudio: false,
   audioTranscriptionSettings: DEFAULT_TRANSCRIPTION_SETTINGS,
   historySidebarCollapsed: false,
+  // Sharing state
+  sharedConversations: [],
+  activeTab: 'mine' as const,
 }
