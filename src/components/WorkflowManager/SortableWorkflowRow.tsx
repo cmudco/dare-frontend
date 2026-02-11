@@ -12,6 +12,7 @@ import {
   EllipsisVerticalIcon,
   PencilIcon,
   TrashIcon,
+  GlobeAltIcon,
 } from '@heroicons/react/20/solid'
 import { GripVertical } from 'lucide-react'
 import { Workflow } from '@/redux/types/workflow'
@@ -27,6 +28,7 @@ interface SortableWorkflowRowProps {
   onEdit: (id: number) => void
   onClone: (id: number) => void
   onDelete: (id: number, title: string) => void
+  onPublish: (id: number) => void
 }
 
 const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
@@ -34,6 +36,7 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
   onEdit,
   onClone,
   onDelete,
+  onPublish,
 }) => {
   const {
     attributes,
@@ -62,9 +65,16 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
         </div>
       </TableCell>
       <TableCell className='p-4'>
-        <h3 className='font-medium text-foreground'>
-          {workflow.title || 'Untitled'}
-        </h3>
+        <div className='flex items-center gap-2'>
+          <h3 className='font-medium text-foreground'>
+            {workflow.title || 'Untitled'}
+          </h3>
+          {workflow.isPublished && (
+            <span className='inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400'>
+              Published
+            </span>
+          )}
+        </div>
       </TableCell>
       <TableCell className='p-4'>
         <p className='max-w-[300px] truncate text-sm text-muted-foreground'>
@@ -104,6 +114,13 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
             >
               <TrashIcon className='mr-2 h-4 w-4' />
               <span>Delete</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onPublish(workflow.id)}
+              className='cursor-pointer text-blue-500'
+            >
+              <GlobeAltIcon className='mr-2 h-4 w-4' />
+              <span>{workflow.isPublished ? 'Unpublish' : 'Publish'}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
