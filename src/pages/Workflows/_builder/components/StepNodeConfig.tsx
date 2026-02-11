@@ -44,6 +44,8 @@ interface StepNodeConfigProps {
   files: Array<{ id: number; name: string }>
   availableModels: Array<{ id: number; name: string }>
   agents?: Agent[]
+  filesLoading?: boolean
+  filesError?: string | null
 }
 
 export default function StepNodeConfig({
@@ -53,6 +55,8 @@ export default function StepNodeConfig({
   files,
   availableModels,
   agents = [],
+  filesLoading = false,
+  filesError = null,
 }: StepNodeConfigProps) {
   const [localTextInput, setLocalTextInput] = useState(
     nodeData?.textInput || ''
@@ -197,7 +201,11 @@ export default function StepNodeConfig({
         <Label className='flex items-center gap-2 text-xs font-medium'>
           <FileText className='h-3 w-3' />
           Content Files
+          {filesLoading && (
+            <span className='text-muted-foreground'>(loading...)</span>
+          )}
         </Label>
+        {filesError && <p className='text-xs text-destructive'>{filesError}</p>}
         <div className='flex flex-wrap gap-1'>
           {(nodeData?.contentFiles || []).map((fileId) => {
             const file = files.find((f) => f.id === fileId)
