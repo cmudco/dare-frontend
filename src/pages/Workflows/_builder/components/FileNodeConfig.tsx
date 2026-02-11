@@ -15,8 +15,13 @@ import {
 import { useState, useEffect } from 'react'
 import { RetrievalMode, QuerySource } from '@/utils/constants/workflows'
 
+interface FileNameMap {
+  [id: number]: string
+}
+
 export interface FileNodeData {
   files?: number[]
+  fileNames?: FileNameMap
   retrievalMode?: RetrievalMode
   similarityThreshold?: number
   maxResults?: number
@@ -73,7 +78,9 @@ export default function FileNodeConfig({
             const file = files.find((f) => f.id === fileId)
             return (
               <Badge key={fileId} variant='secondary' className='text-xs'>
-                {file?.name || `File ${fileId}`}
+                {file?.name ||
+                  nodeData?.fileNames?.[fileId] ||
+                  `File ${fileId}`}
                 <Button
                   size='sm'
                   variant='ghost'
