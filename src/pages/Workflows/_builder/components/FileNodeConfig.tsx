@@ -35,12 +35,16 @@ interface FileNodeConfigProps {
   nodeData: FileNodeData
   updateNodeData: (updates: Record<string, unknown>) => void
   files: Array<{ id: number; name: string }>
+  filesLoading?: boolean
+  filesError?: string | null
 }
 
 export default function FileNodeConfig({
   nodeData,
   updateNodeData,
   files,
+  filesLoading = false,
+  filesError = null,
 }: FileNodeConfigProps) {
   const [localTextInput, setLocalTextInput] = useState(
     nodeData?.textInput || ''
@@ -72,7 +76,11 @@ export default function FileNodeConfig({
         <Label className='flex items-center gap-2 text-xs font-medium'>
           <FileText className='h-3 w-3' />
           Files
+          {filesLoading && (
+            <span className='text-muted-foreground'>(loading...)</span>
+          )}
         </Label>
+        {filesError && <p className='text-xs text-destructive'>{filesError}</p>}
         <div className='flex flex-wrap gap-1'>
           {(nodeData?.files || []).map((fileId) => {
             const file = files.find((f) => f.id === fileId)
