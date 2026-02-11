@@ -27,6 +27,7 @@ import CreditErrorAlert from './CreditErrorAlert'
 import ImageDropOverlay from './ImageDropOverlay'
 import MessageList from './MessageList'
 import { ArtifactSidecar } from '../Artifacts'
+import { useOwnerFiles } from '@/hooks/useOwnerFiles'
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -107,6 +108,14 @@ const ActiveConversation: React.FC = () => {
     useState(false)
   const [userJustSentMessage, setUserJustSentMessage] = useState(false)
 
+  // Fetch and merge owner files for forked or shared conversations
+  // For shared conversations (viewing from library): use ownerUserId
+  // For forked conversations (after forking): use fileOwnerId
+  const effectiveOwnerId =
+    activeConversation?.fileOwnerId || activeConversation?.ownerUserId
+  const { allFiles: allFilesForSelection, isLoading: ownerFilesLoading } =
+    useOwnerFiles(files, effectiveOwnerId)
+
   // Refs
   const hasCheckedAutoFeedback = useRef(false)
   const prevActiveConversationRef = useRef<typeof activeConversation>(null)
@@ -148,19 +157,29 @@ const ActiveConversation: React.FC = () => {
     }
   }, [activeConversation?.conversationId, dispatch])
 
-  // Load selected files for conversation
+  // Load selected files for conversation (using merged files for forked conversations)
+  // Wait for owner files to finish loading before attempting to match selected files
   useEffect(() => {
-    if (activeConversation && files.length > 0) {
+    if (
+      activeConversation &&
+      allFilesForSelection.length > 0 &&
+      !ownerFilesLoading
+    ) {
       dispatch(
         loadSelectedFilesFromIds({
-          files,
+          files: allFilesForSelection,
           selectedFileIds: activeConversation.selectedFileIds || [],
           selectedEmbeddingIds: activeConversation.selectedEmbeddingIds || [],
           selectedMediaIds: activeConversation.selectedMediaIds || [],
         })
       )
     }
-  }, [activeConversation?.conversationId, files, dispatch])
+  }, [
+    activeConversation?.conversationId,
+    allFilesForSelection,
+    ownerFilesLoading,
+    dispatch,
+  ])
 
   // Navigate to conversation URL
   useEffect(() => {
