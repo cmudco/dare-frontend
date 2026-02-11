@@ -122,3 +122,38 @@ export const deleteMessageAPI = async (messageId: string): Promise<void> => {
     method: METHOD.POST,
   })
 }
+
+export const getSharedConversationsAPI =
+  async (): Promise<ConversationResponse> => {
+    return await baseRequest<ConversationResponse>({
+      url: 'api/conversations/?shared=true',
+      method: METHOD.GET,
+    })
+  }
+
+export const publishConversationAPI = async (
+  conversationId: string
+): Promise<Conversation> => {
+  return await baseRequest<Conversation>({
+    url: `api/conversations/${conversationId}/publish/`,
+    method: METHOD.POST,
+  })
+}
+
+export const forkConversationAPI = async (
+  conversationId: string
+): Promise<Conversation> => {
+  return await baseRequest<Conversation>({
+    url: `api/conversations/${conversationId}/fork/`,
+    method: METHOD.POST,
+  })
+}
+
+export const getConversationMessagesAPI = async (
+  conversationId: string
+): Promise<Message[]> => {
+  return await baseRequest<Message[]>({
+    url: `api/conversations/${conversationId}/messages/`,
+    method: METHOD.GET,
+  })
+}

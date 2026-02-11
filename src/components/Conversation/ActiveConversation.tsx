@@ -10,7 +10,10 @@ import {
   saveDraftForConversation,
   clearConversation,
 } from '../../redux/conversationSlice'
-import { updateConversationFeedbackTracking } from '@/redux/asyncThunks/conversation'
+import {
+  updateConversationFeedbackTracking,
+  forkConversation,
+} from '@/redux/asyncThunks/conversation'
 import { useSocketSubscription } from '@/hooks/useSocketSubscription'
 import { useImageDragAndDrop } from '../../hooks/useImageDragAndDrop'
 import { FEEDBACK_AUTO_TRIGGER_CONFIG } from '@/config/feedback'
@@ -288,6 +291,19 @@ const ActiveConversation: React.FC = () => {
     dispatch(updateConversationInput(''))
   }
 
+  const handleForkAndContinue = async () => {
+    if (!activeConversation) return
+    try {
+      const forked = await dispatch(
+        forkConversation(activeConversation.conversationId)
+      ).unwrap()
+      dispatch(updateActiveConversation(forked))
+      navigate(`/conversation/${forked.conversationId}`)
+    } catch (err) {
+      console.error('Error forking:', err)
+    }
+  }
+
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER
   // ──────────────────────────────────────────────────────────────────────────
@@ -318,10 +334,26 @@ const ActiveConversation: React.FC = () => {
               />
             )}
             <div className='flex flex-col items-center justify-center'>
+              {/* Read-only banner for shared conversations */}
+              {activeConversation && activeConversation.isOwner === false && (
+                <div className='mb-2 flex w-full max-w-3xl items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 dark:border-amber-800 dark:bg-amber-950/30'>
+                  <span className='text-sm text-amber-700 dark:text-amber-400'>
+                    This is a shared conversation (read-only)
+                  </span>
+                  <button
+                    onClick={handleForkAndContinue}
+                    className='ml-3 shrink-0 rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600'
+                  >
+                    Fork & Continue
+                  </button>
+                </div>
+              )}
               <ConversationPill
                 editMessageId={editMessageId}
                 onCancelEdit={handleCancelEdit}
-                disabled={!activeConversation}
+                disabled={
+                  !activeConversation || activeConversation.isOwner === false
+                }
               />
             </div>
           </div>

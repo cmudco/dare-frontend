@@ -47,6 +47,11 @@ export interface Conversation {
   feedbackAutoPromptCount?: number // How many auto-prompts have been shown
   feedbackLastPromptMessageCount?: number // Message # when last shown
   feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
+  // Sharing fields
+  isPublished?: boolean
+  publishedAt?: string | null
+  isOwner?: boolean
+  ownerEmail?: string | null
 }
 
 export interface Message {
@@ -244,6 +249,9 @@ export interface ConversationState {
   isTranscribingAudio: boolean
   audioTranscriptionSettings: AudioTranscriptionSettings
   historySidebarCollapsed: boolean
+  // Sharing state
+  sharedConversations: Conversation[]
+  activeTab: 'mine' | 'shared'
 }
 
 export interface ConversationResponse {
@@ -267,12 +275,15 @@ export interface SortableConversationItemProps {
   isSelected: boolean
   editingId: string | null
   editValue: string
+  isSharedTab?: boolean
   onConversationClick: (
     conversation: Conversation,
     event?: React.MouseEvent
   ) => void
   onEditClick: (conversation: Conversation) => void
   onCloneClick: (conversation: Conversation) => void
+  onPublishClick?: (conversation: Conversation) => void
+  onForkClick?: (conversation: Conversation) => void
   onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onEditBlur: () => void
   onEditKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
