@@ -27,6 +27,7 @@ import {
 } from '@dnd-kit/sortable'
 import { GripVertical } from 'lucide-react'
 import SortableWorkflowRow from './SortableWorkflowRow'
+import ForkWorkflowConfirmDialog from './ForkWorkflowConfirmDialog'
 import { toast } from '@/utils/toast'
 import {
   useDragSensors,
@@ -88,6 +89,8 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
   )
   const [deleteWorkflowId, setDeleteWorkflowId] = useState<number | null>(null)
   const [deleteWorkflowTitle, setDeleteWorkflowTitle] = useState<string>('')
+  const [forkWorkflowId, setForkWorkflowId] = useState<number | null>(null)
+  const [forkWorkflowTitle, setForkWorkflowTitle] = useState<string>('')
   const [activeId, setActiveId] = useState<number | null>(null)
   const sensors = useDragSensors()
 
@@ -173,13 +176,27 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
     }
   }
 
-  const handleFork = (id: number) => {
-    dispatch(forkWorkflow(id)).then((action) => {
-      if (forkWorkflow.fulfilled.match(action)) {
-        const payload = action.payload as Workflow
-        navigate(`/workflows/${payload.id}/edit`)
-      }
-    })
+  const handleForkClick = (id: number, title: string) => {
+    setForkWorkflowId(id)
+    setForkWorkflowTitle(title)
+  }
+
+  const handleConfirmFork = () => {
+    if (forkWorkflowId) {
+      dispatch(forkWorkflow(forkWorkflowId)).then((action) => {
+        if (forkWorkflow.fulfilled.match(action)) {
+          const payload = action.payload as Workflow
+          setForkWorkflowId(null)
+          setForkWorkflowTitle('')
+          navigate(`/workflows/${payload.id}/edit`)
+        }
+      })
+    }
+  }
+
+  const handleCancelFork = () => {
+    setForkWorkflowId(null)
+    setForkWorkflowTitle('')
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -267,7 +284,12 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                     <Button
                       variant='outline'
                       size='sm'
-                      onClick={() => handleFork(workflow.id)}
+                      onClick={() =>
+                        handleForkClick(
+                          workflow.id,
+                          workflow.title || 'Untitled'
+                        )
+                      }
                     >
                       Fork
                     </Button>
@@ -317,6 +339,13 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
             </TableFooter>
           )}
         </Table>
+
+        <ForkWorkflowConfirmDialog
+          isOpen={!!forkWorkflowId}
+          workflowTitle={forkWorkflowTitle}
+          onConfirm={handleConfirmFork}
+          onCancel={handleCancelFork}
+        />
       </div>
     )
   }
@@ -487,6 +516,13 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
         description='Are you sure you want to delete this workflow? This action cannot be undone.'
         itemName={deleteWorkflowTitle}
         confirmText='Delete'
+      />
+
+      <ForkWorkflowConfirmDialog
+        isOpen={!!forkWorkflowId}
+        workflowTitle={forkWorkflowTitle}
+        onConfirm={handleConfirmFork}
+        onCancel={handleCancelFork}
       />
     </div>
   )
