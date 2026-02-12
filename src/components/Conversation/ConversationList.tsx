@@ -46,6 +46,7 @@ import {
 import { toggleDarkMode } from '../../redux/themeSlice'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
+import { toast } from '@/utils/toast'
 import {
   filterConversations,
   createSortOrderUpdates,
@@ -226,6 +227,15 @@ const ConversationList: React.FC<ConversationListProps> = ({
       await dispatch(publishConversation(conversation.conversationId)).unwrap()
     } catch (error) {
       console.error('Error publishing conversation:', error)
+      // Show user-friendly error message for forked conversations
+      const errorMessage = typeof error === 'string' ? error : String(error)
+      if (errorMessage.includes('forked')) {
+        toast.error(
+          'Cannot publish forked conversations. Only original conversations can be published.'
+        )
+      } else {
+        toast.error('Failed to publish conversation')
+      }
     }
   }
 
