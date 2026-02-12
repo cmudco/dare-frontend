@@ -125,7 +125,7 @@ export default function NodeConfigPanel({
         )}
         {nodeType === WorkflowNodeType.Step && (
           <StepNodeConfig
-            nodeData={nodeData as StepNodeData}
+            nodeData={nodeData as unknown as StepNodeData}
             updateNodeData={updateNodeData}
             prompts={prompts}
             files={files}

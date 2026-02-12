@@ -90,6 +90,12 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                   Published
                 </span>
               )}
+              {/* Forked badge for forked conversations */}
+              {!isSharedTab && conversation.fileOwnerId && (
+                <span className='inline-flex shrink-0 items-center rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'>
+                  Forked
+                </span>
+              )}
             </div>
             {/* Owner email on shared tab */}
             {isSharedTab && conversation.ownerEmail && (
@@ -124,15 +130,18 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                   ) : (
                     /* My Conversations tab actions */
                     <>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onPublishClick?.(conversation)
-                        }}
-                      >
-                        <Globe className='mr-2 h-4 w-4' />
-                        {conversation.isPublished ? 'Unpublish' : 'Publish'}
-                      </DropdownMenuItem>
+                      {/* Only show publish option if NOT forked (fileOwnerId is null) */}
+                      {!conversation.fileOwnerId && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onPublishClick?.(conversation)
+                          }}
+                        >
+                          <Globe className='mr-2 h-4 w-4' />
+                          {conversation.isPublished ? 'Unpublish' : 'Publish'}
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation()
