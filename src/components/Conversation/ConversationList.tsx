@@ -46,6 +46,7 @@ import {
 import { toggleDarkMode } from '../../redux/themeSlice'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
+import ForkConversationConfirmDialog from './ForkConversationConfirmDialog'
 import { toast } from '@/utils/toast'
 import {
   filterConversations,
@@ -79,6 +80,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [forkConversationData, setForkConversationData] =
+    useState<Conversation | null>(null)
   const searchQuery = useSelector(
     (state: RootState) => state.conversation?.searchQuery || ''
   )
@@ -239,20 +242,32 @@ const ConversationList: React.FC<ConversationListProps> = ({
     }
   }
 
-  const handleForkClick = async (conversation: Conversation) => {
+  const handleForkClick = (conversation: Conversation) => {
+    setForkConversationData(conversation)
+  }
+
+  const handleConfirmFork = async () => {
+    if (!forkConversationData) return
+
     try {
       // Load messages first via REST
       await dispatch(
-        fetchConversationMessages(conversation.conversationId)
+        fetchConversationMessages(forkConversationData.conversationId)
       ).unwrap()
       const forkedConversation = await dispatch(
-        forkConversation(conversation.conversationId)
+        forkConversation(forkConversationData.conversationId)
       ).unwrap()
+      setForkConversationData(null)
       dispatch(updateActiveConversation(forkedConversation))
       navigate(`/conversation/${forkedConversation.conversationId}`)
     } catch (error) {
       console.error('Error forking conversation:', error)
+      setForkConversationData(null)
     }
+  }
+
+  const handleCancelFork = () => {
+    setForkConversationData(null)
   }
 
   const handleSharedConversationClick = async (conversation: Conversation) => {
@@ -468,6 +483,15 @@ const ConversationList: React.FC<ConversationListProps> = ({
               : activeConversation?.title || 'New Chat'
           }
           confirmText='Delete'
+        />
+
+        <ForkConversationConfirmDialog
+          isOpen={!!forkConversationData}
+          conversationTitle={
+            forkConversationData?.title || 'Untitled Conversation'
+          }
+          onConfirm={handleConfirmFork}
+          onCancel={handleCancelFork}
         />
       </nav>
     </TooltipProvider>

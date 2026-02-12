@@ -21,6 +21,7 @@ import { features } from '@/config/environment'
 import { Conversation } from '@/redux/types/conversation'
 import { Card } from '../ui/card'
 import ConversationPill from './ConversationPill'
+import ForkConversationConfirmDialog from './ForkConversationConfirmDialog'
 import NewConversation from './NewConversation'
 import EmptyConversation from './EmptyConversation'
 import CreditErrorAlert from './CreditErrorAlert'
@@ -107,6 +108,7 @@ const ActiveConversation: React.FC = () => {
   const [shouldShowAutoFeedbackModal, setShouldShowAutoFeedbackModal] =
     useState(false)
   const [userJustSentMessage, setUserJustSentMessage] = useState(false)
+  const [showForkDialog, setShowForkDialog] = useState(false)
 
   // Fetch and merge owner files for forked or shared conversations
   // For shared conversations (viewing from library): use ownerUserId
@@ -310,17 +312,27 @@ const ActiveConversation: React.FC = () => {
     dispatch(updateConversationInput(''))
   }
 
-  const handleForkAndContinue = async () => {
+  const handleForkAndContinue = () => {
+    setShowForkDialog(true)
+  }
+
+  const handleConfirmFork = async () => {
     if (!activeConversation) return
     try {
       const forked = await dispatch(
         forkConversation(activeConversation.conversationId)
       ).unwrap()
+      setShowForkDialog(false)
       dispatch(updateActiveConversation(forked))
       navigate(`/conversation/${forked.conversationId}`)
     } catch (err) {
       console.error('Error forking:', err)
+      setShowForkDialog(false)
     }
+  }
+
+  const handleCancelFork = () => {
+    setShowForkDialog(false)
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -379,6 +391,13 @@ const ActiveConversation: React.FC = () => {
         </Card>
         {features.enableArtifacts && <ArtifactSidecar />}
       </div>
+
+      <ForkConversationConfirmDialog
+        isOpen={showForkDialog}
+        conversationTitle={activeConversation?.title || 'Untitled Conversation'}
+        onConfirm={handleConfirmFork}
+        onCancel={handleCancelFork}
+      />
     </>
   )
 }
