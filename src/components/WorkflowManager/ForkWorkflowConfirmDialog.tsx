@@ -28,7 +28,7 @@ const ForkWorkflowConfirmDialog: React.FC<ForkWorkflowConfirmDialogProps> = ({
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
-            <GitFork className='h-5 w-5 text-blue-600' />
+            <GitFork className='h-5 w-5 text-primary' />
             Fork Workflow?
           </DialogTitle>
           <DialogDescription>
@@ -71,7 +71,7 @@ const ForkWorkflowConfirmDialog: React.FC<ForkWorkflowConfirmDialogProps> = ({
           <Button variant='outline' onClick={onCancel}>
             Cancel
           </Button>
-          <Button onClick={onConfirm} className='bg-blue-600 hover:bg-blue-700'>
+          <Button onClick={onConfirm}>
             <GitFork className='mr-2 h-4 w-4' />
             Fork Workflow
           </Button>
