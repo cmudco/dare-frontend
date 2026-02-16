@@ -27,7 +27,7 @@ import {
 } from '@dnd-kit/sortable'
 import { GripVertical } from 'lucide-react'
 import SortableWorkflowRow from './SortableWorkflowRow'
-import ForkWorkflowConfirmDialog from './ForkWorkflowConfirmDialog'
+import ForkConfirmDialog from '../shared/ForkConfirmDialog'
 import { toast } from '@/utils/toast'
 import {
   useDragSensors,
@@ -340,9 +340,16 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
           )}
         </Table>
 
-        <ForkWorkflowConfirmDialog
+        <ForkConfirmDialog
           isOpen={!!forkWorkflowId}
-          workflowTitle={forkWorkflowTitle}
+          title={forkWorkflowTitle}
+          entityType='workflow'
+          copiedItems={[
+            'Workflow structure and settings',
+            'All step configurations',
+            'All prompts (as new copies with "FORK OF" prefix)',
+          ]}
+          infoNote="Files are not copied. You'll need to upload your own files after forking."
           onConfirm={handleConfirmFork}
           onCancel={handleCancelFork}
         />
@@ -518,9 +525,16 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
         confirmText='Delete'
       />
 
-      <ForkWorkflowConfirmDialog
+      <ForkConfirmDialog
         isOpen={!!forkWorkflowId}
-        workflowTitle={forkWorkflowTitle}
+        title={forkWorkflowTitle}
+        entityType='workflow'
+        copiedItems={[
+          'Workflow structure and settings',
+          'All step configurations',
+          'All prompts (as new copies with "FORK OF" prefix)',
+        ]}
+        infoNote="Files are not copied. You'll need to upload your own files after forking."
         onConfirm={handleConfirmFork}
         onCancel={handleCancelFork}
       />

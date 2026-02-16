@@ -46,7 +46,7 @@ import {
 import { toggleDarkMode } from '../../redux/themeSlice'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
-import ForkConversationConfirmDialog from './ForkConversationConfirmDialog'
+import ForkConfirmDialog from '../shared/ForkConfirmDialog'
 import { toast } from '@/utils/toast'
 import {
   filterConversations,
@@ -485,11 +485,15 @@ const ConversationList: React.FC<ConversationListProps> = ({
           confirmText='Delete'
         />
 
-        <ForkConversationConfirmDialog
+        <ForkConfirmDialog
           isOpen={!!forkConversationData}
-          conversationTitle={
-            forkConversationData?.title || 'Untitled Conversation'
-          }
+          title={forkConversationData?.title || 'Untitled Conversation'}
+          entityType='conversation'
+          copiedItems={[
+            'All messages and conversation history',
+            'Conversation settings and configuration',
+            'File selections (shared from the original owner)',
+          ]}
           onConfirm={handleConfirmFork}
           onCancel={handleCancelFork}
         />
