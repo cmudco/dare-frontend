@@ -91,7 +91,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                 </span>
               )}
               {/* Forked badge for forked conversations */}
-              {!isSharedTab && conversation.fileOwnerId && (
+              {!isSharedTab && conversation.isForked && (
                 <span className='inline-flex shrink-0 items-center rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'>
                   Forked
                 </span>
@@ -130,8 +130,8 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                   ) : (
                     /* My Conversations tab actions */
                     <>
-                      {/* Only show publish option if NOT forked (fileOwnerId is null) */}
-                      {!conversation.fileOwnerId && (
+                      {/* Only show publish option if NOT forked */}
+                      {!conversation.isForked && (
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation()

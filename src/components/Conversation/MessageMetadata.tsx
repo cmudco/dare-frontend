@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux/store'
-import { Message } from '@/redux/types/conversation'
+import { Message, isSenderMessage } from '@/redux/types/conversation'
 import { FeedbackType } from '@/utils/constants/conversation'
 import {
   Drawer,
@@ -50,7 +50,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
     (state: RootState) => state.conversation.allModels
   )
 
-  const getLLMName = (llmId?: number) => {
+  const getLLMName = (llmId?: number | null) => {
     if (!llmId) return 'N/A'
     const llm = allModels.find((model) => model.id === llmId)
     return llm ? llm.name : `Model ${llmId}`
@@ -77,7 +77,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
   }
 
   const getSenderTypeInfo = () => {
-    if (message.isSender) {
+    if (isSenderMessage(message)) {
       return {
         icon: <User className='h-4 w-4' />,
         label: 'User',
@@ -92,7 +92,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
     }
   }
 
-  const dateInfo = formatDate(message.date)
+  const dateInfo = formatDate(message.createdAt)
   const senderInfo = getSenderTypeInfo()
 
   return (
@@ -185,7 +185,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
               </Card>
 
               {/* AI Model Information */}
-              {!message.isSender && (
+              {!isSenderMessage(message) && (
                 <Card>
                   <CardHeader>
                     <CardTitle className='flex items-center gap-2 text-lg'>
@@ -198,7 +198,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                       <label className='text-sm font-medium text-gray-600'>
                         Model
                       </label>
-                      <p className='text-sm'>{getLLMName(message.llmId)}</p>
+                      <p className='text-sm'>{getLLMName(message.llm)}</p>
                     </div>
 
                     {(message.inputTokens || message.outputTokens) && (

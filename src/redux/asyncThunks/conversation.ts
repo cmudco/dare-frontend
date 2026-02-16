@@ -298,35 +298,9 @@ export const fetchConversationMessages = createAsyncThunk<
   'conversation/fetchConversationMessages',
   async (conversationId, thunkAPI) => {
     try {
-      const rawMessages = await getConversationMessagesAPI(conversationId)
-      // DRF's CamelCaseJSONRenderer auto-camelizes the REST response,
-      // so most fields already match the frontend Message interface.
-      // We only need to remap the few fields where the WebSocket path
-      // (fetch_chat_history_from_db) uses different names:
-      //   - createdAt → date
-      //   - llm (PK) → llmId
-      //   - isSender (not in serializer, derived from senderType)
-      //   - mcpToolCalls → toolCalls
-      interface RawSerializerMessage extends Omit<
-        Message,
-        'date' | 'llmId' | 'isSender' | 'toolCalls' | 'senderType'
-      > {
-        createdAt?: string
-        date?: string
-        llm?: number | null
-        llmId?: number | null
-        senderType?: number
-        isSender?: boolean
-        mcpToolCalls?: Message['toolCalls']
-        toolCalls?: Message['toolCalls']
-      }
-      return (rawMessages as RawSerializerMessage[]).map((msg) => ({
-        ...msg,
-        date: msg.createdAt ?? msg.date ?? '',
-        llmId: msg.llm ?? msg.llmId,
-        isSender: msg.isSender ?? msg.senderType === 1,
-        toolCalls: msg.mcpToolCalls ?? msg.toolCalls ?? [],
-      })) as Message[]
+      // BE MessageSerializer now returns date, llmId, isSender, toolCalls
+      // alongside original fields — no client-side remapping needed.
+      return await getConversationMessagesAPI(conversationId)
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }
