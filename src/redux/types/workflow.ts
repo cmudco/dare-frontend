@@ -153,7 +153,6 @@ export interface Workflow {
   // Publishing / sharing fields
   isPublished?: boolean
   publishedAt?: string | null
-  fileOwnerId?: number | null
   isForked?: boolean
   ownerUsername?: string
 }

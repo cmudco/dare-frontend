@@ -7,7 +7,6 @@ import {
   setSelectedNodeId,
 } from '@/redux/workflowBuilderSlice'
 import { useCallback } from 'react'
-import { useOwnerFiles } from '@/hooks/useOwnerFiles'
 
 // Import node-specific config components
 import StartNodeConfig, { type StartNodeData } from './StartNodeConfig'
@@ -31,17 +30,9 @@ export default function NodeConfigPanel({
 
   // Get data from Redux
   const prompts = useAppSelector((s) => s.prompt.prompts)
-  const userFiles = useAppSelector((s) => s.files.files)
+  const files = useAppSelector((s) => s.files.files)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const agents = useAppSelector((s) => s.agent.agents)
-  const loadedWorkflow = useAppSelector((s) => s.workflowBuilder.loadedWorkflow)
-
-  // Fetch and merge owner files for forked workflows
-  const {
-    allFiles: files,
-    isLoading: ownerFilesLoading,
-    error: ownerFilesError,
-  } = useOwnerFiles(userFiles, loadedWorkflow?.fileOwnerId)
 
   const nodeType = selectedNode.type
   const nodeData = selectedNode.data as Record<string, unknown>
@@ -131,8 +122,6 @@ export default function NodeConfigPanel({
             files={files}
             availableModels={availableModels}
             agents={agents}
-            filesLoading={ownerFilesLoading}
-            filesError={ownerFilesError}
           />
         )}
         {nodeType === WorkflowNodeType.StructuredOutput && (
@@ -157,8 +146,6 @@ export default function NodeConfigPanel({
             nodeData={nodeData as FileNodeData}
             updateNodeData={updateNodeData}
             files={files}
-            filesLoading={ownerFilesLoading}
-            filesError={ownerFilesError}
           />
         )}
       </div>
