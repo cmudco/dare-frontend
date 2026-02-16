@@ -18,7 +18,7 @@ import { useSocketSubscription } from '@/hooks/useSocketSubscription'
 import { useImageDragAndDrop } from '../../hooks/useImageDragAndDrop'
 import { FEEDBACK_AUTO_TRIGGER_CONFIG } from '@/config/feedback'
 import { features } from '@/config/environment'
-import { Conversation } from '@/redux/types/conversation'
+import { Conversation, isSenderMessage } from '@/redux/types/conversation'
 import { Card } from '../ui/card'
 import ConversationPill from './ConversationPill'
 import ForkConversationConfirmDialog from './ForkConversationConfirmDialog'
@@ -243,11 +243,13 @@ const ActiveConversation: React.FC = () => {
     }
 
     const lastMessage = conversationHistory[conversationHistory.length - 1]
-    if (lastMessage.isSender || lastMessage.streaming) {
+    if (isSenderMessage(lastMessage) || lastMessage.streaming) {
       return
     }
 
-    const nModelMessages = conversationHistory.filter((m) => !m.isSender).length
+    const nModelMessages = conversationHistory.filter(
+      (m) => !isSenderMessage(m)
+    ).length
     const shouldTrigger = shouldShowAutoFeedback(
       activeConversation,
       nModelMessages
@@ -288,7 +290,7 @@ const ActiveConversation: React.FC = () => {
     if (currentCount > prevCount) {
       const newMessage = conversationHistory[currentCount - 1]
       // If the new message is from the user, trigger scroll
-      if (newMessage?.isSender) {
+      if (newMessage && isSenderMessage(newMessage)) {
         setUserJustSentMessage(true)
         // Reset after a tick so the effect in MessageList can fire
         requestAnimationFrame(() => setUserJustSentMessage(false))

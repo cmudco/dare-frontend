@@ -226,19 +226,19 @@ const ConversationList: React.FC<ConversationListProps> = ({
   }
 
   const handlePublishClick = async (conversation: Conversation) => {
+    // Guard: prevent publishing forked conversations (matches BE validation)
+    if (conversation.isForked) {
+      toast.error(
+        'Cannot publish forked conversations. Only original conversations can be published.'
+      )
+      return
+    }
+
     try {
       await dispatch(publishConversation(conversation.conversationId)).unwrap()
     } catch (error) {
       console.error('Error publishing conversation:', error)
-      // Show user-friendly error message for forked conversations
-      const errorMessage = typeof error === 'string' ? error : String(error)
-      if (errorMessage.includes('forked')) {
-        toast.error(
-          'Cannot publish forked conversations. Only original conversations can be published.'
-        )
-      } else {
-        toast.error('Failed to publish conversation')
-      }
+      toast.error('Failed to publish conversation')
     }
   }
 
