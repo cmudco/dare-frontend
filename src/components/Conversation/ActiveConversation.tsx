@@ -5,7 +5,6 @@ import { AppDispatch, RootState } from '../../redux/store'
 import {
   updateConversationInput,
   updateActiveConversation,
-  loadSelectedFilesFromIds,
   loadDraftForConversation,
   saveDraftForConversation,
   clearConversation,
@@ -28,7 +27,7 @@ import CreditErrorAlert from './CreditErrorAlert'
 import ImageDropOverlay from './ImageDropOverlay'
 import MessageList from './MessageList'
 import { ArtifactSidecar } from '../Artifacts'
-import { useOwnerFiles } from '@/hooks/useOwnerFiles'
+import { useConversationFiles } from '@/hooks/useConversationFiles'
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -95,7 +94,6 @@ const ActiveConversation: React.FC = () => {
   const conversations = useSelector(
     (state: RootState) => state.conversation?.conversations || []
   )
-  const files = useSelector((state: RootState) => state.files.files)
   const conversationInput = useSelector(
     (state: RootState) => state.conversation.conversationInput
   )
@@ -110,13 +108,8 @@ const ActiveConversation: React.FC = () => {
   const [userJustSentMessage, setUserJustSentMessage] = useState(false)
   const [showForkDialog, setShowForkDialog] = useState(false)
 
-  // Fetch and merge owner files for forked or shared conversations
-  // For shared conversations (viewing from library): use ownerUserId
-  // For forked conversations (after forking): use fileOwnerId
-  const effectiveOwnerId =
-    activeConversation?.fileOwnerId || activeConversation?.ownerUserId
-  const { allFiles: allFilesForSelection, isLoading: ownerFilesLoading } =
-    useOwnerFiles(files, effectiveOwnerId)
+  // Resolve and load files for forked/shared conversations
+  useConversationFiles(activeConversation)
 
   // Refs
   const hasCheckedAutoFeedback = useRef(false)
@@ -158,30 +151,6 @@ const ActiveConversation: React.FC = () => {
       dispatch(updateConversationInput(''))
     }
   }, [activeConversation?.conversationId, dispatch])
-
-  // Load selected files for conversation (using merged files for forked conversations)
-  // Wait for owner files to finish loading before attempting to match selected files
-  useEffect(() => {
-    if (
-      activeConversation &&
-      allFilesForSelection.length > 0 &&
-      !ownerFilesLoading
-    ) {
-      dispatch(
-        loadSelectedFilesFromIds({
-          files: allFilesForSelection,
-          selectedFileIds: activeConversation.selectedFileIds || [],
-          selectedEmbeddingIds: activeConversation.selectedEmbeddingIds || [],
-          selectedMediaIds: activeConversation.selectedMediaIds || [],
-        })
-      )
-    }
-  }, [
-    activeConversation?.conversationId,
-    allFilesForSelection,
-    ownerFilesLoading,
-    dispatch,
-  ])
 
   // Navigate to conversation URL
   useEffect(() => {

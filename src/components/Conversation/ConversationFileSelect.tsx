@@ -8,6 +8,7 @@ import {
   Settings,
   Folder,
   Image,
+  Users,
 } from 'lucide-react'
 import type { RootState, AppDispatch } from '@/redux/store'
 import {
@@ -22,6 +23,7 @@ import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { Tag } from '@/redux/types/tags'
 import { useDebounce } from '@/utils/debounce'
 import { useOwnerFiles } from '@/hooks/useOwnerFiles'
+import { getConversationFileOwnerId } from '@/hooks/useConversationFiles'
 
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -70,11 +72,14 @@ const ConversationFileSelect: React.FC = () => {
   >('embeddings')
 
   // Fetch and merge owner files for forked or shared conversations
-  // For shared conversations (viewing from library): use ownerUserId
-  // For forked conversations (after forking): use fileOwnerId
-  const effectiveOwnerId =
-    activeConversation?.fileOwnerId || activeConversation?.ownerUserId
+  const effectiveOwnerId = getConversationFileOwnerId(activeConversation)
   const { allFiles, ownerFiles } = useOwnerFiles(files, effectiveOwnerId)
+
+  // Helper to check if a file is from the owner (shared)
+  const isOwnerFile = useCallback(
+    (fileId: number) => ownerFiles.some((f) => f.id === fileId),
+    [ownerFiles]
+  )
 
   const saveSelectedIds = useCallback(() => {
     // Only save selected IDs if user owns the conversation
@@ -292,29 +297,35 @@ const ConversationFileSelect: React.FC = () => {
 
               <TabsContent value='embeddings' className='mt-4'>
                 <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredFiles.map((file) => (
-                    <div
-                      key={file.id}
-                      onClick={() => handleToggleEmbedding(file)}
-                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
-                    >
+                  {filteredFiles.map((file) => {
+                    const isShared = isOwnerFile(file.id)
+                    return (
                       <div
-                        className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                          selectedEmbeddings.some((f) => f.id === file.id)
-                            ? 'border-primary bg-primary'
-                            : 'border-input hover:border-muted-foreground dark:border-dark-icon-unselected dark:hover:border-gray-300'
-                        }`}
+                        key={file.id}
+                        onClick={() => handleToggleEmbedding(file)}
+                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
                       >
-                        {selectedEmbeddings.some((f) => f.id === file.id) && (
-                          <Check className='h-3 w-3 text-primary-foreground' />
+                        <div
+                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
+                            selectedEmbeddings.some((f) => f.id === file.id)
+                              ? 'border-primary bg-primary'
+                              : 'border-input hover:border-muted-foreground dark:border-dark-icon-unselected dark:hover:border-gray-300'
+                          }`}
+                        >
+                          {selectedEmbeddings.some((f) => f.id === file.id) && (
+                            <Check className='h-3 w-3 text-primary-foreground' />
+                          )}
+                        </div>
+                        <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+                        <span className='flex-1 text-sm dark:text-white'>
+                          {file.name}
+                        </span>
+                        {isShared && (
+                          <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
                         )}
                       </div>
-                      <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                      <span className='text-sm dark:text-white'>
-                        {file.name}
-                      </span>
-                    </div>
-                  ))}
+                    )
+                  })}
                   {filteredFiles.length === 0 && (
                     <p className='py-4 text-center text-muted-foreground'>
                       No files found
@@ -325,31 +336,37 @@ const ConversationFileSelect: React.FC = () => {
 
               <TabsContent value='files' className='mt-4'>
                 <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredFiles.map((file) => (
-                    <div
-                      key={file.id}
-                      onClick={() => handleToggleFile(file)}
-                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
-                    >
+                  {filteredFiles.map((file) => {
+                    const isShared = isOwnerFile(file.id)
+                    return (
                       <div
-                        className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                          selectedFiles.some((f) => f.id === file.id)
-                            ? 'border-primary bg-primary'
-                            : 'border-input hover:border-muted-foreground'
-                        }`}
+                        key={file.id}
+                        onClick={() => handleToggleFile(file)}
+                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
                       >
-                        {selectedFiles.some((f) => f.id === file.id) && (
-                          <Check className='h-3 w-3 text-primary-foreground' />
+                        <div
+                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
+                            selectedFiles.some((f) => f.id === file.id)
+                              ? 'border-primary bg-primary'
+                              : 'border-input hover:border-muted-foreground'
+                          }`}
+                        >
+                          {selectedFiles.some((f) => f.id === file.id) && (
+                            <Check className='h-3 w-3 text-primary-foreground' />
+                          )}
+                        </div>
+                        <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+                        <span
+                          className={`flex-1 text-sm ${selectedFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'}`}
+                        >
+                          {file.name}
+                        </span>
+                        {isShared && (
+                          <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
                         )}
                       </div>
-                      <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                      <span
-                        className={`text-sm ${selectedFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'}`}
-                      >
-                        {file.name}
-                      </span>
-                    </div>
-                  ))}
+                    )
+                  })}
                   {filteredFiles.length === 0 && (
                     <p className='py-4 text-center text-muted-foreground'>
                       No files found
@@ -360,34 +377,40 @@ const ConversationFileSelect: React.FC = () => {
 
               <TabsContent value='media' className='mt-4'>
                 <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredMediaFiles.map((file) => (
-                    <div
-                      key={file.id}
-                      onClick={() => handleToggleMedia(file)}
-                      className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
-                    >
+                  {filteredMediaFiles.map((file) => {
+                    const isShared = isOwnerFile(file.id)
+                    return (
                       <div
-                        className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                          selectedMediaFiles.some((f) => f.id === file.id)
-                            ? 'border-primary bg-primary'
-                            : 'border-input hover:border-muted-foreground dark:border-dark-icon-unselected dark:hover:border-gray-300'
-                        }`}
+                        key={file.id}
+                        onClick={() => handleToggleMedia(file)}
+                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
                       >
-                        {selectedMediaFiles.some((f) => f.id === file.id) && (
-                          <Check className='h-3 w-3 text-primary-foreground' />
+                        <div
+                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
+                            selectedMediaFiles.some((f) => f.id === file.id)
+                              ? 'border-primary bg-primary'
+                              : 'border-input hover:border-muted-foreground dark:border-dark-icon-unselected dark:hover:border-gray-300'
+                          }`}
+                        >
+                          {selectedMediaFiles.some((f) => f.id === file.id) && (
+                            <Check className='h-3 w-3 text-primary-foreground' />
+                          )}
+                        </div>
+                        <Image className='mr-2 h-4 w-4 text-muted-foreground' />
+                        <span
+                          className={`flex-1 text-sm ${selectedMediaFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'} dark:text-white`}
+                        >
+                          {file.name}
+                        </span>
+                        <span className='ml-1 text-xs text-muted-foreground'>
+                          ({file.mediaType})
+                        </span>
+                        {isShared && (
+                          <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
                         )}
                       </div>
-                      <Image className='mr-2 h-4 w-4 text-muted-foreground' />
-                      <span
-                        className={`text-sm ${selectedMediaFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'} dark:text-white`}
-                      >
-                        {file.name}
-                      </span>
-                      <span className='ml-2 text-xs text-muted-foreground'>
-                        ({file.mediaType})
-                      </span>
-                    </div>
-                  ))}
+                    )
+                  })}
                   {filteredMediaFiles.length === 0 && (
                     <p className='py-4 text-center text-muted-foreground'>
                       No media files found
