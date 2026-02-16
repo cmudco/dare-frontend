@@ -8,30 +8,42 @@ import {
   DialogTitle,
 } from '../ui/dialog'
 import { Button } from '../ui/button'
-import { GitFork, Check } from 'lucide-react'
+import { GitFork, Check, Info } from 'lucide-react'
 
-interface ForkConversationConfirmDialogProps {
+interface ForkConfirmDialogProps {
   isOpen: boolean
-  conversationTitle: string
+  title: string
+  entityType: 'conversation' | 'workflow'
+  copiedItems: string[]
+  infoNote?: string
   onConfirm: () => void
   onCancel: () => void
 }
 
-const ForkConversationConfirmDialog: React.FC<
-  ForkConversationConfirmDialogProps
-> = ({ isOpen, conversationTitle, onConfirm, onCancel }) => {
+const ForkConfirmDialog: React.FC<ForkConfirmDialogProps> = ({
+  isOpen,
+  title,
+  entityType,
+  copiedItems,
+  infoNote,
+  onConfirm,
+  onCancel,
+}) => {
+  const entityLabel =
+    entityType === 'conversation' ? 'Conversation' : 'Workflow'
+
   return (
     <Dialog open={isOpen} onOpenChange={onCancel}>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <GitFork className='h-5 w-5 text-primary' />
-            Fork Conversation?
+            Fork {entityLabel}?
           </DialogTitle>
           <DialogDescription>
             This will create a copy of{' '}
             <span className='font-semibold text-foreground'>
-              "{conversationTitle}"
+              &ldquo;{title}&rdquo;
             </span>{' '}
             in your account.
           </DialogDescription>
@@ -42,22 +54,19 @@ const ForkConversationConfirmDialog: React.FC<
             What will be copied:
           </p>
           <ul className='space-y-2 text-sm text-muted-foreground'>
-            <li className='flex items-start gap-2'>
-              <Check className='mt-0.5 h-4 w-4 shrink-0 text-green-600' />
-              <span>All messages and conversation history</span>
-            </li>
-            <li className='flex items-start gap-2'>
-              <Check className='mt-0.5 h-4 w-4 shrink-0 text-green-600' />
-              <span>Conversation settings and configuration</span>
-            </li>
-            <li className='flex items-start gap-2'>
-              <Check className='mt-0.5 h-4 w-4 shrink-0 text-green-600' />
-              <span>
-                File selections (you'll have access to the original owner's
-                files)
-              </span>
-            </li>
+            {copiedItems.map((item) => (
+              <li key={item} className='flex items-start gap-2'>
+                <Check className='mt-0.5 h-4 w-4 shrink-0 text-green-600' />
+                <span>{item}</span>
+              </li>
+            ))}
           </ul>
+          {infoNote && (
+            <div className='mt-3 flex items-start gap-2 rounded-md bg-muted p-2.5 text-sm text-muted-foreground'>
+              <Info className='mt-0.5 h-4 w-4 shrink-0' />
+              <span>{infoNote}</span>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -66,7 +75,7 @@ const ForkConversationConfirmDialog: React.FC<
           </Button>
           <Button onClick={onConfirm}>
             <GitFork className='mr-2 h-4 w-4' />
-            Fork Conversation
+            Fork {entityLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -74,4 +83,4 @@ const ForkConversationConfirmDialog: React.FC<
   )
 }
 
-export default ForkConversationConfirmDialog
+export default ForkConfirmDialog

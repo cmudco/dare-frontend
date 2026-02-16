@@ -21,7 +21,7 @@ import { features } from '@/config/environment'
 import { Conversation, isSenderMessage } from '@/redux/types/conversation'
 import { Card } from '../ui/card'
 import ConversationPill from './ConversationPill'
-import ForkConversationConfirmDialog from './ForkConversationConfirmDialog'
+import ForkConfirmDialog from '../shared/ForkConfirmDialog'
 import NewConversation from './NewConversation'
 import EmptyConversation from './EmptyConversation'
 import CreditErrorAlert from './CreditErrorAlert'
@@ -394,9 +394,15 @@ const ActiveConversation: React.FC = () => {
         {features.enableArtifacts && <ArtifactSidecar />}
       </div>
 
-      <ForkConversationConfirmDialog
+      <ForkConfirmDialog
         isOpen={showForkDialog}
-        conversationTitle={activeConversation?.title || 'Untitled Conversation'}
+        title={activeConversation?.title || 'Untitled Conversation'}
+        entityType='conversation'
+        copiedItems={[
+          'All messages and conversation history',
+          'Conversation settings and configuration',
+          'File selections (shared from the original owner)',
+        ]}
         onConfirm={handleConfirmFork}
         onCancel={handleCancelFork}
       />
