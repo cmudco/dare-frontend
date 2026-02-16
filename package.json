@@ -54,8 +54,6 @@
     "formik": "^2.4.6",
     "framer-motion": "^12.23.26",
     "highlight.js": "^11.11.1",
-    "html2canvas": "^1.4.1",
-    "html2pdf.js": "^0.10.3",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.479.0",
     "mermaid": "^10.9.3",
