@@ -22,7 +22,7 @@ import {
  */
 export const getModeBadge = (mode: WorkflowMode) => {
   switch (mode) {
-    case WorkflowMode.Serial:
+    case WorkflowMode.Sequential:
       return (
         <Badge
           variant='outline'

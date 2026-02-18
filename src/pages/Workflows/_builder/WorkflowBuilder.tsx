@@ -51,7 +51,6 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     nodes,
     edges,
     currentRun,
-    isRunning: isWorkflowRunning,
     savedViewport,
     history,
     selectedNodeId,
@@ -227,8 +226,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
       {/* Config Panel - shown when a node is selected */}
       {selectedNode && <NodeConfigPanel selectedNode={selectedNode} />}
 
-      {/* Execution Panel - shown when running or explicitly opened */}
-      {(isWorkflowRunning || showExecutionPanel) && <WorkflowExecutionPanel />}
+      {/* Execution Panel - shown based on showExecutionPanel state */}
+      {showExecutionPanel && <WorkflowExecutionPanel />}
     </div>
   )
 }

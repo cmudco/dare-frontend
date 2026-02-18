@@ -49,7 +49,6 @@ export interface StepResponseCardProps {
 }
 
 export function StepResponseCard({
-  nodeId,
   nodeName,
   stepNumber,
   nodeType,
@@ -94,16 +93,13 @@ export function StepResponseCard({
       </div>
 
       {/* Node metadata line */}
-      <div className='mb-2 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground'>
-        {nodeType && (
+      {nodeType && (
+        <div className='mb-2 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground'>
           <span className='rounded bg-muted px-1.5 py-0.5 font-mono'>
             {nodeType}
           </span>
-        )}
-        <span className='rounded bg-muted/50 px-1.5 py-0.5 font-mono text-muted-foreground/70'>
-          {nodeId}
-        </span>
-      </div>
+        </div>
+      )}
 
       {/* Response content with markdown */}
       {content && (

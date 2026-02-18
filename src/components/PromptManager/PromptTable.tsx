@@ -1,12 +1,20 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+
+import { toast } from '@/utils/toast'
+
 import { RootState, AppDispatch } from '../../redux/store'
 import {
   clonePrompt,
   deletePrompt,
   getPrompts,
 } from '../../redux/asyncThunks/prompt'
+import {
+  publishPrompt,
+  unpublishPrompt,
+} from '../../redux/asyncThunks/promptsLibrary'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
+import { GlobeAltIcon } from '@heroicons/react/24/outline'
 import {
   formatDate,
   PROMPTS_TABLE_HEAD,
@@ -146,6 +154,28 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
     setVersionHistoryPromptId(null)
   }
 
+  const handlePublish = async (id: number) => {
+    try {
+      await dispatch(publishPrompt({ id })).unwrap()
+      dispatch(getPrompts())
+      toast.success('Prompt published to library')
+    } catch (error) {
+      toast.error('Failed to publish prompt')
+      console.error('Failed to publish prompt:', error)
+    }
+  }
+
+  const handleUnpublish = async (id: number) => {
+    try {
+      await dispatch(unpublishPrompt(id)).unwrap()
+      dispatch(getPrompts())
+      toast.success('Prompt unpublished from library')
+    } catch (error) {
+      toast.error('Failed to unpublish prompt')
+      console.error('Failed to unpublish prompt:', error)
+    }
+  }
+
   const renderPromptContent = (content: string) => {
     return stripHtml(content)
   }
@@ -228,6 +258,11 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                         <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'>
                           v{prompt.version || 1}
                         </span>
+                        {prompt.isPublished && (
+                          <span className='inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400'>
+                            Published
+                          </span>
+                        )}
                       </div>
                       <p className='max-w-[300px] truncate text-sm text-gray-500 dark:text-gray-400'>
                         {renderPromptContent(prompt.content) || 'No content'}
@@ -264,6 +299,23 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                           <EyeIcon className='h-4 w-4' />
                           <span>View Versions</span>
                         </DropdownMenuItem>
+                        {prompt.isPublished ? (
+                          <DropdownMenuItem
+                            onClick={() => handleUnpublish(prompt.id)}
+                            className='cursor-pointer text-orange-500'
+                          >
+                            <GlobeAltIcon className='h-4 w-4' />
+                            <span>Unpublish</span>
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={() => handlePublish(prompt.id)}
+                            className='cursor-pointer text-green-500'
+                          >
+                            <GlobeAltIcon className='h-4 w-4' />
+                            <span>Publish</span>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() =>

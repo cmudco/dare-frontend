@@ -13,12 +13,20 @@ export interface UserStats {
   totalTokens: number
 }
 
+export type PlatformRole =
+  | 'SUPERADMIN'
+  | 'RESEARCHER'
+  | 'USER'
+  | 'CREATOR'
+  | 'SB_USER'
+
 export interface User {
   id: string
   email: string
   username: string | null
   name: string
   role: string // Hoping it's ok to commandeer this for the user.role from the BE
+  platformRole?: PlatformRole
   industry?: string
   purpose?: string
   referralSource?: string

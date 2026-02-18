@@ -7,6 +7,8 @@ import {
   clearDraftForConversation,
   addAttachedImage,
   clearAttachedImages,
+  updateSelectedMcpServers,
+  updateSelectedDareTools,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker'
@@ -16,6 +18,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   sendMessage,
   createConversation,
+  updateConversation,
 } from '../../redux/asyncThunks/conversation'
 import ConversationFileSelect from './ConversationFileSelect'
 import ConversationReferenceSelect from './ConversationReferenceSelect'
@@ -28,6 +31,9 @@ import VoiceModeButton from './VoiceModeButton'
 import { ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
+import { features } from '@/config/environment'
+import { MCPServerSelector } from '@/components/MCP/MCPServerSelector'
+import { DareToolSelector } from '@/components/DareTools/DareToolSelector'
 
 interface ConversationPillProps {
   editMessageId?: string | null
@@ -307,7 +313,40 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <PromptSet />
             <div className='h-8 w-[2px] rounded-lg bg-gray-300'></div>
             <ConversationReferenceSelect />
+
             <ModelPicker />
+            {features.enableMcp && (
+              <MCPServerSelector
+                selectedIds={activeConversation?.selectedMcpServerIds || []}
+                onChange={(serverIds) => {
+                  dispatch(updateSelectedMcpServers(serverIds))
+                  if (activeConversation) {
+                    dispatch(
+                      updateConversation({
+                        conversationId: activeConversation.conversationId,
+                        updates: { selectedMcpServerIds: serverIds },
+                      })
+                    )
+                  }
+                }}
+                disabled={!activeConversation}
+              />
+            )}
+            <DareToolSelector
+              selectedSlugs={activeConversation?.selectedDareToolSlugs || []}
+              onChange={(slugs) => {
+                dispatch(updateSelectedDareTools(slugs))
+                if (activeConversation) {
+                  dispatch(
+                    updateConversation({
+                      conversationId: activeConversation.conversationId,
+                      updates: { selectedDareToolSlugs: slugs },
+                    })
+                  )
+                }
+              }}
+              disabled={!activeConversation}
+            />
           </div>
           <div className='flex items-center gap-3'>
             <div className={clsx(!imageGenerationEnabled && 'hidden')}>

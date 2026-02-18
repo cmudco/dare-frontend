@@ -1,10 +1,10 @@
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
-import { FormikErrors, FormikTouched } from 'formik'
 import { type Node, type Edge } from '@xyflow/react'
+import { OutputDisplayMode } from './workflowBuilder'
 
 export enum WorkflowMode {
-  Serial = 1,
-  Parallel = 2,
+  Sequential = 'sequential',
+  Parallel = 'parallel',
 }
 
 export interface WorkflowStepSnippet {
@@ -148,6 +148,7 @@ export interface Workflow {
   mode: WorkflowMode
   viewport?: { x: number; y: number; zoom: number }
   manualModeEnabled?: boolean
+  outputDisplayMode?: OutputDisplayMode
 }
 
 export interface WorkflowState {
@@ -156,83 +157,28 @@ export interface WorkflowState {
   workflowRuns: WorkflowRun[]
   loading: boolean
   error: string | null
-  savedNodeIds: string[]
-  tempNodes: Node[]
-  tempEdges: Edge[]
-}
-
-export interface FormValues {
-  title: string
-  description: string
-  mode: number
-  nodes: Node[]
-  edges: Edge[]
 }
 
 export interface WorkflowTableProps {
   searchQuery: string
 }
 
-export interface WorkflowFieldsProps {
-  values: FormValues
-  errors: FormikErrors<FormValues>
-  touched: FormikTouched<FormValues>
-  handleChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => void
-  setFieldValue: <K extends keyof FormValues>(
-    field: K,
-    value: FormValues[K]
-  ) => void
-  isEditMode: boolean
-}
-
-export interface WorkflowFooterProps {
-  loading: boolean
-  isValid: boolean
-  dirty: boolean
-  unsavedNodes: number
-  nodesCount: number
-}
-
 export interface CreateWorkflowDTO {
-  nodes: Node[] // Direct React Flow nodes
-  edges: Edge[] // Direct React Flow edges
-  viewport_x?: number
-  viewport_y?: number
-  viewport_zoom?: number
+  nodes: Node[]
+  edges: Edge[]
+  viewportX?: number
+  viewportY?: number
+  viewportZoom?: number
+  outputDisplayMode?: OutputDisplayMode
 }
 
 export interface UpdateWorkflowDTO {
-  nodes?: Node[] // Direct React Flow nodes
-  edges?: Edge[] // Direct React Flow edges
-  viewport_x?: number
-  viewport_y?: number
-  viewport_zoom?: number
-}
-
-export interface PartialRunStep {
-  id: number
-  stepNode: number
-  order: number
-  status: WorkflowRunStepStatus
-  response: string | null
-  error: string | null
-  metadata: {
-    routingDecision?: string
-    analysis?: string
-    aiRecommendation?: string
-    availableRoutes?: RouteDef[]
-    isHumanValidated?: boolean
-    fullResponse?: string
-    pendingHumanDecision?: boolean
-    userChoice?: string
-    selectedRoute?: string
-    rawResponse?: string
-  } | null
-  createdAt: string
-  updatedAt: string
-  nodeId: string // Enriched field from backend containing the workflow node ID
+  nodes?: Node[]
+  edges?: Edge[]
+  viewportX?: number
+  viewportY?: number
+  viewportZoom?: number
+  outputDisplayMode?: OutputDisplayMode
 }
 
 export interface GetActivePartialRunResponse {

@@ -25,7 +25,7 @@ export type StructuredOutputNodeData = {
 interface StructuredOutputNodeConfigProps {
   nodeData: StructuredOutputNodeData
   updateNodeData: (updates: Record<string, unknown>) => void
-  prompts: Array<{ id: number; title: string }>
+  prompts: Array<{ id: number; title: string; version?: number }>
   availableModels: Array<{ id: number; name: string }>
 }
 
@@ -132,8 +132,12 @@ export default function StructuredOutputNodeConfig({
           </SelectTrigger>
           <SelectContent>
             {prompts.map((prompt) => (
-              <SelectItem key={prompt.id} value={prompt.id.toString()}>
-                {prompt.title}
+              <SelectItem
+                key={prompt.id}
+                value={prompt.id.toString()}
+                textValue={prompt.title}
+              >
+                {prompt.title} {prompt.version ? `(v${prompt.version})` : ''}
               </SelectItem>
             ))}
           </SelectContent>

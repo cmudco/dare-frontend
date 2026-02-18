@@ -28,6 +28,9 @@ export {
 // MiniMap utilities
 export { getNodeColor } from './getNodeColor'
 
+// Streaming utilities
+export { getConnectedOutputNodeIds } from './getConnectedOutputNodeIds'
+
 // Re-export types
 export type { Mode } from './isValidConnection'
 export type { ExportedWorkflow } from './exportWorkflow'

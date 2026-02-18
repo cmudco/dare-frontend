@@ -1,4 +1,4 @@
-import { X, FileText, Database, Settings, Globe, Type, Bot } from 'lucide-react'
+import { X, FileText, Database, Globe, Type, Bot } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -33,7 +33,7 @@ export type StepNodeData = {
 interface StepNodeConfigProps {
   nodeData: StepNodeData
   updateNodeData: (updates: Record<string, unknown>) => void
-  prompts: Array<{ id: number; title: string }>
+  prompts: Array<{ id: number; title: string; version?: number }>
   files: Array<{ id: number; name: string }>
   availableModels: Array<{ id: number; name: string }>
   agents?: Agent[]
@@ -47,7 +47,6 @@ export default function StepNodeConfig({
   availableModels,
   agents = [],
 }: StepNodeConfigProps) {
-  const [showAdvanced, setShowAdvanced] = useState(false)
   const [localTextInput, setLocalTextInput] = useState(
     nodeData?.textInput || ''
   )
@@ -143,8 +142,12 @@ export default function StepNodeConfig({
           </SelectTrigger>
           <SelectContent>
             {prompts.map((p) => (
-              <SelectItem key={p.id} value={p.id.toString()}>
-                {p.title}
+              <SelectItem
+                key={p.id}
+                value={p.id.toString()}
+                textValue={p.title}
+              >
+                {p.title} {p.version ? `(v${p.version})` : ''}
               </SelectItem>
             ))}
           </SelectContent>
@@ -305,106 +308,92 @@ export default function StepNodeConfig({
         </Select>
       </div>
 
-      {/* Advanced Settings Toggle */}
-      <Button
-        type='button'
-        variant='outline'
-        size='sm'
-        className='w-full text-xs'
-        onClick={() => setShowAdvanced(!showAdvanced)}
-      >
-        <Settings className='mr-2 h-3 w-3' />
-        {showAdvanced ? 'Hide' : 'Show'} Advanced Settings
-      </Button>
-
       {/* Advanced Settings */}
-      {showAdvanced && (
-        <div className='space-y-4 border-t pt-4'>
-          <div className='space-y-2'>
-            <Label className='text-xs font-medium'>
-              Max Tokens: {nodeData?.maxTokens || 2048}
-            </Label>
-            <Slider
-              value={[nodeData?.maxTokens || 2048]}
-              onValueChange={(value) => {
-                updateNodeData({ maxTokens: value[0] })
-              }}
-              max={8192}
-              min={100}
-              step={100}
-              className='w-full'
-            />
-          </div>
-
-          <div className='space-y-2'>
-            <Label className='text-xs font-medium'>
-              Temperature: {nodeData?.temperature ?? 0.7}
-            </Label>
-            <Slider
-              value={[nodeData?.temperature ?? 0.7]}
-              onValueChange={(value) => {
-                updateNodeData({ temperature: value[0] })
-              }}
-              max={2}
-              min={0}
-              step={0.1}
-              className='w-full'
-            />
-          </div>
-
-          <div className='space-y-2'>
-            <Label className='text-xs font-medium'>
-              Max Context Snippets: {nodeData?.maxContextSnippets || 4}
-            </Label>
-            <Slider
-              value={[nodeData?.maxContextSnippets || 4]}
-              onValueChange={(value) => {
-                updateNodeData({ maxContextSnippets: value[0] })
-              }}
-              max={20}
-              min={1}
-              step={1}
-              className='w-full'
-            />
-          </div>
-
-          <div className='space-y-2'>
-            <Label className='text-xs font-medium'>
-              Document Similarity Threshold:{' '}
-              {nodeData?.documentSimilarityThreshold ?? 0.2}
-            </Label>
-            <Slider
-              value={[nodeData?.documentSimilarityThreshold ?? 0.2]}
-              onValueChange={(value) => {
-                updateNodeData({ documentSimilarityThreshold: value[0] })
-              }}
-              max={1}
-              min={0}
-              step={0.1}
-              className='w-full'
-            />
-          </div>
-
-          <div className='flex items-center justify-between rounded-md border border-muted bg-muted/20 p-3'>
-            <div className='flex-1'>
-              <Label className='flex cursor-pointer items-center gap-2 text-xs font-medium'>
-                <Globe className='h-3 w-3' />
-                Enable Web Search
-              </Label>
-              <p className='mt-0.5 text-xs text-muted-foreground'>
-                Allow the LLM to search the web
-              </p>
-            </div>
-            <Switch
-              checked={nodeData?.enableWebSearch || false}
-              onCheckedChange={(checked) => {
-                updateNodeData({ enableWebSearch: checked })
-              }}
-              className='ml-2'
-            />
-          </div>
+      <div className='space-y-4 border-t pt-4'>
+        <div className='space-y-2'>
+          <Label className='text-xs font-medium'>
+            Max Tokens: {nodeData?.maxTokens || 2048}
+          </Label>
+          <Slider
+            value={[nodeData?.maxTokens || 2048]}
+            onValueChange={(value) => {
+              updateNodeData({ maxTokens: value[0] })
+            }}
+            max={8192}
+            min={100}
+            step={100}
+            className='w-full'
+          />
         </div>
-      )}
+
+        <div className='space-y-2'>
+          <Label className='text-xs font-medium'>
+            Temperature: {nodeData?.temperature ?? 0.7}
+          </Label>
+          <Slider
+            value={[nodeData?.temperature ?? 0.7]}
+            onValueChange={(value) => {
+              updateNodeData({ temperature: value[0] })
+            }}
+            max={2}
+            min={0}
+            step={0.1}
+            className='w-full'
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <Label className='text-xs font-medium'>
+            Max Context Snippets: {nodeData?.maxContextSnippets || 4}
+          </Label>
+          <Slider
+            value={[nodeData?.maxContextSnippets || 4]}
+            onValueChange={(value) => {
+              updateNodeData({ maxContextSnippets: value[0] })
+            }}
+            max={20}
+            min={1}
+            step={1}
+            className='w-full'
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <Label className='text-xs font-medium'>
+            Document Similarity Threshold:{' '}
+            {nodeData?.documentSimilarityThreshold ?? 0.2}
+          </Label>
+          <Slider
+            value={[nodeData?.documentSimilarityThreshold ?? 0.2]}
+            onValueChange={(value) => {
+              updateNodeData({ documentSimilarityThreshold: value[0] })
+            }}
+            max={1}
+            min={0}
+            step={0.1}
+            className='w-full'
+          />
+        </div>
+
+        <div className='flex items-center justify-between rounded-md border border-muted bg-muted/20 p-3'>
+          <div className='flex-1'>
+            <Label className='flex cursor-pointer items-center gap-2 text-xs font-medium'>
+              <Globe className='h-3 w-3' />
+              Enable Web Search
+            </Label>
+            <p className='mt-0.5 text-xs text-muted-foreground'>
+              Allow the LLM to search the web
+            </p>
+          </div>
+          <Switch
+            checked={nodeData?.enableWebSearch || false}
+            onCheckedChange={(checked) => {
+              updateNodeData({ enableWebSearch: checked })
+            }}
+            className='ml-2'
+          />
+        </div>
+      </div>
     </div>
   )
 }

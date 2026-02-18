@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/redux/store'
+import { FeedbackWidget } from '@/components/Feedback'
 import Dashboard from '../pages/Dashboard'
 import Files from '../pages/Files'
 import VerifyCodeScreen from '../pages/VerifyCode'
@@ -24,11 +27,20 @@ import OnboardingScreen from '@/pages/Onboarding/index.tsx'
 import WorkflowCreatePage from '@/pages/Workflows/WorkflowCreatePage.tsx'
 import Agents from '@/pages/Agents/index.tsx'
 import ModelCards from '@/pages/ModelCards'
+import MCPLayout from '@/pages/MCP/MCPLayout.tsx'
+import MCPServerList from '@/pages/MCP/MCPServerList.tsx'
+import MCPServerDetail from '@/pages/MCP/MCPServerDetail.tsx'
+import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
+import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
+import MemoryScreen from '@/pages/Memory'
 
 const AppRoutes = () => {
+  const { isAuthenticated } = useSelector((state: RootState) => state.user)
+
   return (
     <BrowserRouter>
       <RouteListener>
+        {isAuthenticated && <FeedbackWidget />}
         <Routes>
           <Route path='/login' element={<LoginScreen />} />
           <Route path='/register' element={<RegistrationScreen />} />
@@ -90,7 +102,17 @@ const AppRoutes = () => {
             <Route path='/workflows' element={<Workflows />} />
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
+            <Route path='/mcp' element={<MCPLayout />}>
+              <Route index element={<MCPServerList />} />
+              <Route path=':serverSlug' element={<MCPServerDetail />} />
+              <Route
+                path=':serverSlug/tools/:toolName'
+                element={<MCPToolExecute />}
+              />
+              <Route path='history' element={<MCPExecutionHistory />} />
+            </Route>
             <Route path='/profile' element={<ProfileScreen />} />
+            <Route path='/memory' element={<MemoryScreen />} />
             <Route path='/billing/' element={<BillingScreen />} />
           </Route>
           <Route path='/models/:slug' element={<ModelCards />} />
