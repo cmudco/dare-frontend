@@ -9,12 +9,8 @@ import {
   HANDLE_NUMBERS,
   HANDLE_COLORS,
 } from '@/utils/constants/workflowBuilder'
-import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
-import {
-  WorkflowRunStepStatus,
-  WorkflowNodeType,
-} from '@/utils/constants/workflows'
-import { saveAndExecuteStep } from '@/redux/asyncThunks/workflowBuilder'
+import { WorkflowNodeType } from '@/utils/constants/workflows'
+import { useNodeExecutionState } from '@/hooks/useNodeExecutionState'
 
 export type StepNodeData = {
   agent: number | null
@@ -46,52 +42,8 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const agents = useAppSelector((s) => s.agent.agents)
   const prompts = useAppSelector((s) => s.prompt.prompts)
 
-  // Get workflow execution data
-  const {
-    executedStepNodeIds,
-    availableRuns,
-    selectedRunIds,
-    currentRun,
-    activeStreamingNodeId,
-    manualModeEnabled,
-    currentPartialRunId,
-    lastWorkflowId,
-    isRunning,
-  } = useAppSelector((s) => s.workflowBuilder)
-
-  // Get the run to display
-  const displayRun = getDisplayRun(
-    nodeId,
-    selectedRunIds,
-    availableRuns,
-    currentRun
-  )
-
-  // Get node state from the display run
-  const nodeState = getNodeState(displayRun, nodeId)
-  const status = nodeState?.status || null
-  const isExecuted = executedStepNodeIds.includes(nodeId)
-  const isStreaming = activeStreamingNodeId === nodeId
-
-  // Get status indicator class for execution visualization
-  const getStatusClass = () => {
-    if (isStreaming) {
-      return 'streaming'
-    }
-    if (isExecuted || status === WorkflowRunStepStatus.Completed) {
-      return 'completed'
-    }
-    if (status === WorkflowRunStepStatus.Running) {
-      return 'running'
-    }
-    if (status === WorkflowRunStepStatus.Failed) {
-      return 'error'
-    }
-    if (status === WorkflowRunStepStatus.Pending) {
-      return 'pending'
-    }
-    return ''
-  }
+  const { statusClass, canRunStep, handleRunStep } =
+    useNodeExecutionState(nodeId)
 
   // Calculate input handles based on actual connections
   const connectedInputEdges = edges.filter((edge) => {
@@ -101,7 +53,8 @@ export default function StepNode({ id, data, selected }: NodeProps) {
       (sourceNode?.type === WorkflowNodeType.Start ||
         sourceNode?.type === WorkflowNodeType.Step ||
         sourceNode?.type === WorkflowNodeType.ChatOutput ||
-        sourceNode?.type === WorkflowNodeType.StructuredOutput)
+        sourceNode?.type === WorkflowNodeType.StructuredOutput ||
+        sourceNode?.type === WorkflowNodeType.File)
     )
   })
 
@@ -129,33 +82,12 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     dispatch(removeNodeWithEdges({ nodeId }))
   }
 
-  // Handle manual step execution - saves workflow first, then executes
-  const handleRunStep = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!lastWorkflowId || isRunning) return
-
-    // Save workflow first, then execute the step
-    dispatch(
-      saveAndExecuteStep({
-        workflowId: lastWorkflowId,
-        stepNodeId: nodeId,
-        workflowRunId: currentPartialRunId || undefined,
-      })
-    )
-  }
-
-  // Check if this step can be run (has dependencies met)
-  const canRunStep =
-    manualModeEnabled && !isRunning && !isExecuted && lastWorkflowId
-
   // Get subtitle text
   const getSubtitle = () => {
     if (selectedAgent) return selectedAgent.name
     if (selectedPrompt) return selectedPrompt.title
     return 'Configure step'
   }
-
-  const statusClass = getStatusClass()
 
   return (
     <div

@@ -24,6 +24,11 @@
     overflow: visible;
 }
 
+/* Output node width constraint when expanded */
+.workflow-node.output {
+    max-width: 720px;
+}
+
 /* Gradient border effect using pseudo-element */
 .workflow-node::before {
     content: '';
@@ -207,6 +212,31 @@
     color: #22c55e;
 }
 
+.node-icon.start.chained {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
+    color: #a855f7;
+}
+
+.node-icon.step {
+    background: linear-gradient(135deg, rgba(51, 65, 85, 0.2) 0%, rgba(30, 41, 59, 0.15) 100%);
+    color: #334155;
+}
+
+.dark .node-icon.step {
+    background: linear-gradient(135deg, rgba(148, 163, 184, 0.2) 0%, rgba(100, 116, 139, 0.15) 100%);
+    color: #94a3b8;
+}
+
+.node-icon.conditional {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
+    color: #a855f7;
+}
+
+.node-icon.output {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
+    color: #3b82f6;
+}
+
 .node-icon.agent {
     background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
     color: #fbbf24;
@@ -225,6 +255,39 @@
 .node-icon.end {
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
     color: #3b82f6;
+}
+
+/* ============================================
+   NODE TYPE-SPECIFIC BORDER STYLING
+   Subtle left border accent for node type distinction
+   ============================================ */
+
+/* Start node - Green accent */
+.workflow-node:has(.node-icon.start) {
+    border-left: 3px solid rgba(34, 197, 94, 0.6);
+}
+
+.workflow-node:has(.node-icon.start.chained) {
+    border-left: 3px solid rgba(168, 85, 247, 0.6);
+}
+
+/* Step node - Slate/dark accent */
+.workflow-node:has(.node-icon.step) {
+    border-left: 3px solid rgba(51, 65, 85, 0.5);
+}
+
+.dark .workflow-node:has(.node-icon.step) {
+    border-left: 3px solid rgba(148, 163, 184, 0.4);
+}
+
+/* Conditional node - Purple accent */
+.workflow-node.conditional {
+    border-left: 3px solid rgba(168, 85, 247, 0.6);
+}
+
+/* Output node - Blue accent */
+.workflow-node.output {
+    border-left: 3px solid rgba(59, 130, 246, 0.6);
 }
 
 .node-title {
@@ -455,16 +518,16 @@
     pointer-events: none;
 }
 
-/* ---- COMPLETED STATE (DARE Gradient) ---- */
+/* ---- COMPLETED STATE ---- */
 .workflow-node.completed {
-    border-color: rgba(2, 53, 114, 0.4);
+    border-color: rgba(100, 116, 139, 0.3);
 }
 
 .workflow-node.completed::before {
-    background: linear-gradient(135deg, rgba(2, 53, 114, 0.08) 0%, rgba(238, 24, 60, 0.04) 100%);
+    background: linear-gradient(135deg, rgba(100, 116, 139, 0.06) 0%, rgba(100, 116, 139, 0.02) 100%);
 }
 
-/* Success indicator bar at top using DARE gradient */
+/* Default success indicator bar at top - neutral gray */
 .workflow-node.completed::after {
     content: '';
     position: absolute;
@@ -472,9 +535,59 @@
     left: 16px;
     right: 16px;
     height: 3px;
-    background: var(--dare-gradient);
+    background: #64748b;
     border-radius: 0 0 4px 4px;
     pointer-events: none;
+}
+
+/* Node-type-specific completed states */
+/* Start node completed - Green */
+.workflow-node.completed:has(.node-icon.start) {
+    border-color: rgba(34, 197, 94, 0.4) !important;
+    border-left: 3px solid rgba(34, 197, 94, 0.8) !important;
+}
+
+.workflow-node.completed:has(.node-icon.start)::after {
+    background: #22c55e !important;
+}
+
+/* Step node completed - Slate/Dark */
+.workflow-node.completed:has(.node-icon.step) {
+    border-color: rgba(51, 65, 85, 0.4) !important;
+    border-left: 3px solid rgba(51, 65, 85, 0.7) !important;
+}
+
+.workflow-node.completed:has(.node-icon.step)::after {
+    background: #334155 !important;
+}
+
+.dark .workflow-node.completed:has(.node-icon.step) {
+    border-color: rgba(148, 163, 184, 0.3) !important;
+    border-left: 3px solid rgba(148, 163, 184, 0.6) !important;
+}
+
+.dark .workflow-node.completed:has(.node-icon.step)::after {
+    background: #94a3b8 !important;
+}
+
+/* Conditional node completed - Purple */
+.workflow-node.conditional.completed {
+    border-color: rgba(168, 85, 247, 0.4) !important;
+    border-left: 3px solid rgba(168, 85, 247, 0.8) !important;
+}
+
+.workflow-node.conditional.completed::after {
+    background: #a855f7 !important;
+}
+
+/* Output node completed - Blue */
+.workflow-node.output.completed {
+    border-color: rgba(59, 130, 246, 0.4) !important;
+    border-left: 3px solid rgba(59, 130, 246, 0.8) !important;
+}
+
+.workflow-node.output.completed::after {
+    background: #3b82f6 !important;
 }
 
 /* ---- ERROR STATE (DARE Red - stronger) ---- */
@@ -504,19 +617,25 @@
    ============================================ */
 
 @keyframes executionPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.8;
     }
+
     50% {
         opacity: 1;
     }
 }
 
 @keyframes executionRing {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.3;
         border-color: rgba(238, 24, 60, 0.3);
     }
+
     50% {
         opacity: 0.7;
         border-color: rgba(238, 24, 60, 0.6);
@@ -524,10 +643,13 @@
 }
 
 @keyframes streamingPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.4;
         border-color: rgba(2, 53, 114, 0.3);
     }
+
     50% {
         opacity: 0.8;
         border-color: rgba(2, 53, 114, 0.6);
@@ -580,10 +702,13 @@
 }
 
 @keyframes validationPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.5;
         border-color: rgba(238, 24, 60, 0.3);
     }
+
     50% {
         opacity: 1;
         border-color: rgba(238, 24, 60, 0.7);

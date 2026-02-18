@@ -1,13 +1,15 @@
 /**
  * WorkflowExecutionPanel - Real-time workflow execution preview
  *
+ * Single source of truth: all execution data read from currentRun.nodeStates.
+ * During streaming, nodeStates[nodeId].response accumulates token-by-token.
+ * After completion, the same field holds the final response.
+ *
  * Features:
- * - Live streaming LLM responses during execution with markdown rendering
- * - Rich content display: snippets, web search sources, code blocks
+ * - Live streaming LLM responses with markdown rendering
+ * - Rich content: snippets, web search sources, code blocks
  * - Human validation UI when required
  * - Connection status indicator
- *
- * Pattern: Follows MessageList.tsx auto-scroll implementation
  */
 
 import { useEffect, useRef, useCallback } from 'react'
@@ -30,18 +32,15 @@ import {
 export default function WorkflowExecutionPanel() {
   const dispatch = useAppDispatch()
 
-  // Direct state access - backend provides clean, ordered data
   const {
     currentRun,
     isRunning,
-    streamingResponses,
-    activeStreamingNodeId,
+    activeNodeId,
     wsConnectionStatus,
     pendingValidation,
     nodes,
   } = useAppSelector((state) => state.workflowBuilder)
 
-  // Use the shared auto-scroll hook (same pattern as MessageList)
   const {
     containerRef,
     anchorRef,
@@ -61,12 +60,12 @@ export default function WorkflowExecutionPanel() {
     }
   }, [currentRun?.id, forceScrollToBottom])
 
-  // Auto-scroll during streaming (respects user scroll state)
+  // Auto-scroll during streaming
   useEffect(() => {
-    if (activeStreamingNodeId) {
+    if (activeNodeId) {
       scrollToBottom('auto')
     }
-  }, [streamingResponses, activeStreamingNodeId, scrollToBottom])
+  }, [currentRun?.nodeStates, activeNodeId, scrollToBottom])
 
   // Force scroll when validation appears
   useEffect(() => {
@@ -82,32 +81,44 @@ export default function WorkflowExecutionPanel() {
   const getNodeName = useCallback(
     (nodeId: string) => {
       const node = nodes.find((n) => n.id === nodeId)
-      return (node?.data?.label as string) || node?.type || 'Step'
+      if (node?.data?.label && node.data.label !== node.type) {
+        return node.data.label as string
+      }
+      if (node?.type === WorkflowNodeType.File) return 'file'
+      return node?.type || 'step'
     },
     [nodes]
   )
 
-  // Simple derived state
-  const hasStreamingData = Object.keys(streamingResponses).length > 0
-  const isViewingCompletedRun =
-    !isRunning && !hasStreamingData && !!currentRun?.nodeStates
-  const hasDisplayData = hasStreamingData || isViewingCompletedRun
-  const isWaiting =
-    isRunning && !hasDisplayData && !activeStreamingNodeId && !pendingValidation
+  // Derive execution node entries from the single source: currentRun.nodeStates
+  const executionNodeEntries = currentRun?.nodeStates
+    ? Object.entries(currentRun.nodeStates).filter(
+        ([, state]) =>
+          state.response &&
+          (state.nodeType === WorkflowNodeType.Step ||
+            state.nodeType === WorkflowNodeType.StructuredOutput ||
+            state.nodeType === WorkflowNodeType.File)
+      )
+    : []
 
-  // Status text
+  const hasDisplayData = executionNodeEntries.length > 0
+  const isViewingCompletedRun =
+    !isRunning && currentRun?.status === WorkflowRunStepStatus.Completed
+  const isWaiting =
+    isRunning && !hasDisplayData && !activeNodeId && !pendingValidation
+
   const statusText = isRunning
-    ? activeStreamingNodeId
+    ? activeNodeId
       ? 'Streaming response...'
       : 'Workflow running...'
     : pendingValidation
       ? 'Awaiting validation'
       : isViewingCompletedRun
-        ? `Viewing run #${currentRun?.id}`
+        ? 'Viewing results'
         : 'Ready'
 
   return (
-    <div className='absolute inset-x-0 bottom-4 top-10 z-20 ml-auto flex w-[90%] max-w-[35vw] flex-col rounded-2xl border border-border/30 bg-white/95 shadow-2xl backdrop-blur-sm'>
+    <div className='absolute inset-x-0 bottom-4 top-10 z-20 ml-auto flex w-[90%] max-w-[45vw] flex-col rounded-2xl border border-border/30 bg-white/95 shadow-2xl backdrop-blur-sm'>
       {/* Header */}
       <div className='flex items-center justify-between rounded-t-2xl border-b border-border/50 bg-gradient-to-r from-slate-50 to-white p-4'>
         <div>
@@ -162,10 +173,10 @@ export default function WorkflowExecutionPanel() {
           </div>
         )}
 
-        {/* Streaming responses - data comes in correct order from backend */}
-        {hasStreamingData && (
+        {/* Execution node responses — single render block from nodeStates */}
+        {hasDisplayData && (
           <div className='space-y-4'>
-            {Object.entries(streamingResponses).map(([nodeId, data]) => (
+            {executionNodeEntries.map(([nodeId, state]) => (
               <StepResponseCard
                 key={nodeId}
                 nodeId={nodeId}
@@ -176,43 +187,12 @@ export default function WorkflowExecutionPanel() {
                     | undefined
                 }
                 nodeType={nodes.find((n) => n.id === nodeId)?.type}
-                content={data.content}
-                isActive={activeStreamingNodeId === nodeId}
-                snippets={data.snippets}
-                webSearchSources={data.webSearchSources}
+                content={state.response || ''}
+                isActive={activeNodeId === nodeId}
+                snippets={state.snippets}
+                webSearchSources={state.webSearchSources}
               />
             ))}
-          </div>
-        )}
-
-        {/* Completed run responses - filter to execution nodes only */}
-        {/* chatOutput nodes have their own UI for viewing responses/versions */}
-        {isViewingCompletedRun && currentRun?.nodeStates && (
-          <div className='space-y-4'>
-            {Object.entries(currentRun.nodeStates)
-              .filter(
-                ([, state]) =>
-                  state.response &&
-                  (state.nodeType === WorkflowNodeType.Step ||
-                    state.nodeType === WorkflowNodeType.StructuredOutput)
-              )
-              .map(([nodeId, state]) => (
-                <StepResponseCard
-                  key={nodeId}
-                  nodeId={nodeId}
-                  nodeName={getNodeName(nodeId)}
-                  stepNumber={
-                    nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
-                      | number
-                      | undefined
-                  }
-                  nodeType={nodes.find((n) => n.id === nodeId)?.type}
-                  content={state.response || ''}
-                  isActive={false}
-                  snippets={state.snippets}
-                  webSearchSources={state.webSearchSources}
-                />
-              ))}
           </div>
         )}
 
@@ -234,8 +214,7 @@ export default function WorkflowExecutionPanel() {
       {/* Footer */}
       {currentRun && (
         <div className='rounded-b-2xl border-t border-border/50 bg-gradient-to-r from-slate-50 to-white p-3'>
-          <div className='flex items-center justify-between text-xs text-muted-foreground'>
-            <span>Run #{currentRun.id}</span>
+          <div className='flex items-center justify-end text-xs text-muted-foreground'>
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-xs font-medium',

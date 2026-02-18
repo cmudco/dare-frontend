@@ -4,6 +4,7 @@ import userReducer from './userSlice'
 import fileReducer from './fileSlice'
 import conversationReducer from './conversationSlice'
 import promptReducer from './promptSlice'
+import promptsLibraryReducer from './promptsLibrarySlice'
 import agentReducer from './agentSlice'
 import websocketReducer from './websocketSlice'
 import tagsReducer from './tagslice'
@@ -14,6 +15,9 @@ import themeReducer from './themeSlice'
 import notificationReducer from './notificationSlice'
 import apiKeysReducer from './apiKeysSlice'
 import artifactReducer from './artifactSlice'
+import mcpReducer from './mcpSlice'
+import dareToolsReducer from './dareToolsSlice'
+import memoryReducer from './memorySlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
@@ -30,6 +34,7 @@ export const store = configureStore({
     files: fileReducer,
     conversation: conversationReducer,
     prompt: promptReducer,
+    promptsLibrary: promptsLibraryReducer,
     agent: agentReducer,
     websocket: websocketReducer,
     tags: tagsReducer,
@@ -42,6 +47,9 @@ export const store = configureStore({
     artifact: artifactReducer,
     socket: socketReducer,
     feedback: feedbackReducer,
+    mcp: mcpReducer,
+    dareTools: dareToolsReducer,
+    memory: memoryReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware

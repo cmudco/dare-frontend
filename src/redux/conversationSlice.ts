@@ -21,7 +21,9 @@ import {
   LLMModel,
   ImageGenerationSettings,
   AudioTranscriptionSettings,
+  ToolCallStatus,
 } from './types/conversation'
+import { ServerSlug } from '@/utils/constants/dareTools'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
@@ -190,6 +192,74 @@ export const conversationSlice = createSlice({
       if (state.activeConversation) {
         state.activeConversation.artifactsEnabled = action.payload
       }
+    },
+    updateSelectedMcpServers(state, action: PayloadAction<number[]>) {
+      if (state.activeConversation) {
+        state.activeConversation.selectedMcpServerIds = action.payload
+      }
+    },
+    updateSelectedDareTools(state, action: PayloadAction<string[]>) {
+      if (state.activeConversation) {
+        state.activeConversation.selectedDareToolSlugs = action.payload
+      }
+    },
+    updateSelectedAgent(
+      state,
+      action: PayloadAction<{
+        agentId: number | null
+        agentName: string | null
+      }>
+    ) {
+      if (state.activeConversation) {
+        state.activeConversation.selectedAgent = action.payload.agentId
+        state.activeConversation.selectedAgentName = action.payload.agentName
+      }
+    },
+    /**
+     * Apply all agent settings to the active conversation in a single action.
+     * This consolidates multiple individual updates for better performance and cleaner code.
+     */
+    applyAgentSettings(
+      state,
+      action: PayloadAction<{
+        agentId: number
+        agentName: string
+        llm?: number
+        temperature: number
+        maxTokens: number
+        maxContextSnippets: number
+        documentSimilarityThreshold: number
+        enableWebSearch: boolean
+      }>
+    ) {
+      if (!state.activeConversation) return
+
+      const {
+        agentId,
+        agentName,
+        llm,
+        temperature,
+        maxTokens,
+        maxContextSnippets,
+        documentSimilarityThreshold,
+        enableWebSearch,
+      } = action.payload
+
+      // Update agent selection
+      state.activeConversation.selectedAgent = agentId
+      state.activeConversation.selectedAgentName = agentName
+
+      // Apply all settings atomically
+      if (llm) {
+        state.selectedModel = llm
+      }
+      state.activeConversation.temperature = temperature
+      state.activeConversation.maxTokens = maxTokens
+      state.activeConversation.maxContextSnippets = maxContextSnippets
+      state.activeConversation.documentSimilarityThreshold =
+        documentSimilarityThreshold
+      state.webSearchEnabled = enableWebSearch
+      state.activeConversation.webSearchEnabled = enableWebSearch
     },
     updateImageGenerationSettings(
       state,
@@ -739,6 +809,171 @@ export const conversationSlice = createSlice({
           }
         }
       )
+      // MCP Tool Call - tool starts executing
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            messageId: number
+            toolCallId: string
+            toolName: string
+            serverSlug: string
+            status: ToolCallStatus
+          }
+        } => action.type === 'socket/mcp_tool_call',
+        (state, action) => {
+          const { messageId, toolCallId, toolName, serverSlug, status } =
+            action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (msg) {
+            // Initialize toolCalls array if not present
+            if (!msg.toolCalls) {
+              msg.toolCalls = []
+            }
+            // Add new tool call entry using the ID from backend
+            msg.toolCalls.push({
+              id: toolCallId,
+              toolName,
+              serverSlug,
+              status,
+            })
+          }
+        }
+      )
+      // MCP Tool Result - tool completes (success or error)
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            messageId: number
+            toolCallId: string
+            toolName: string
+            serverSlug: string
+            status: 'success' | 'error'
+            result?: unknown
+            error?: string
+          }
+        } => action.type === 'socket/mcp_tool_result',
+        (state, action) => {
+          const { messageId, toolCallId, status, result, error } =
+            action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (msg && msg.toolCalls) {
+            // Find the matching tool call by unique id only
+            // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
+            const toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId)
+            if (toolCall) {
+              toolCall.status =
+                status === 'success'
+                  ? ToolCallStatus.COMPLETED
+                  : ToolCallStatus.FAILED
+              if (result) {
+                // Store as mcpResult (MCP tools use this field)
+                toolCall.mcpResult = result
+              }
+              if (error) {
+                toolCall.error = error
+              }
+            }
+          }
+        }
+      )
+      // DARE Tool Call - tool starts executing
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            messageId: number
+            toolCall: {
+              id: string
+              toolName: string
+              toolSlug: string
+              serverSlug: string
+              status: ToolCallStatus
+              arguments?: Record<string, unknown>
+            }
+          }
+        } => action.type === 'socket/dareToolCall',
+        (state, action) => {
+          const { messageId, toolCall } = action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (msg) {
+            // Initialize toolCalls array if not present
+            if (!msg.toolCalls) {
+              msg.toolCalls = []
+            }
+            // Add new tool call entry
+            msg.toolCalls.push({
+              id: toolCall.id,
+              toolName: toolCall.toolName,
+              serverSlug: toolCall.serverSlug || ServerSlug.DARE,
+              status: toolCall.status,
+            })
+          }
+        }
+      )
+      // DARE Tool Result - tool completes (success or error)
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: {
+            messageId: number
+            toolCall: {
+              id: string
+              toolName: string
+              toolSlug: string
+              serverSlug: string
+              status: 'completed' | 'failed'
+              result?: Record<string, unknown>
+              arguments?: Record<string, unknown>
+            }
+          }
+        } => action.type === 'socket/dareToolResult',
+        (state, action) => {
+          const { messageId, toolCall } = action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (msg && msg.toolCalls) {
+            // Find the matching tool call by unique id only
+            // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
+            const existingToolCall = msg.toolCalls.find(
+              (tc) => tc.id === toolCall.id
+            )
+            if (existingToolCall) {
+              existingToolCall.status =
+                toolCall.status === 'completed'
+                  ? ToolCallStatus.COMPLETED
+                  : ToolCallStatus.FAILED
+              if (toolCall.result) {
+                // Store as dareResult (DARE tools use this field)
+                // Result is already parsed and camelCased from BE
+                existingToolCall.dareResult =
+                  toolCall.result as unknown as import('@/redux/types/dareToolResults').DareToolResult
+
+                // If result indicates failure, also set error
+                if (!toolCall.result.success && toolCall.result.error) {
+                  existingToolCall.error = toolCall.result.error as string
+                }
+              }
+            }
+          }
+        }
+      )
   },
 })
 
@@ -791,5 +1026,10 @@ export const {
   removeAttachedImage,
   clearAttachedImages,
   setHistorySidebarCollapsed,
+  setImageGenerating,
+  updateSelectedMcpServers,
+  updateSelectedDareTools,
+  updateSelectedAgent,
+  applyAgentSettings,
 } = conversationSlice.actions
 export default conversationSlice.reducer

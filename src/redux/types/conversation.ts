@@ -1,4 +1,5 @@
 import { SenderType, FeedbackType } from '@/utils/constants/conversation'
+import { ToolCallStatus, MessageContentType } from '@/utils/constants/dareTools'
 import type {
   ImageSizeType,
   ImageQualityType,
@@ -39,6 +40,10 @@ export interface Conversation {
   sortOrder?: number
   selectedEmbeddingIds?: number[]
   selectedFileIds?: number[]
+  selectedMcpServerIds?: number[] // MCP servers enabled for this conversation
+  selectedDareToolSlugs?: string[] // DARE tools enabled for this conversation
+  selectedAgent?: number | null // Agent template selected for this conversation
+  selectedAgentName?: string | null // Name of the selected agent (read-only)
   feedbackAutoPromptCount?: number // How many auto-prompts have been shown
   feedbackLastPromptMessageCount?: number // Message # when last shown
   feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
@@ -72,6 +77,51 @@ export interface Message {
   generatedTranscription?: GeneratedTranscription
   // Artifact reference (when message has associated artifact)
   artifactId?: number
+  // MCP tool calls made by this message
+  toolCalls?: ToolCall[]
+  // Content type for specialized rendering
+  contentType?: MessageContentType
+  contentMetadata?: Record<string, unknown>
+}
+
+// ToolCallStatus is now imported from @/utils/constants/dareTools
+// Re-export for backwards compatibility
+export { ToolCallStatus }
+
+// ─────────────────────────────────────────────────────────────
+// Tool Call Interface
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Tool Call - tracks tool execution within a message
+ *
+ * Supports both MCP external tools and DARE internal tools.
+ * Use serverSlug to determine which result field to read:
+ *
+ *   - serverSlug === 'dare'  → read `dareResult`
+ *   - serverSlug !== 'dare'  → read `mcpResult`
+ */
+export interface ToolCall {
+  /** Unique ID from the LLM */
+  id: string
+
+  /** Name of the tool executed */
+  toolName: string
+
+  /** Server identifier ('dare' for internal, or MCP server slug) */
+  serverSlug: string
+
+  /** Current execution status */
+  status: ToolCallStatus
+
+  /** Result from DARE internal tools (when serverSlug === 'dare') */
+  dareResult?: import('@/redux/types/dareToolResults').DareToolResult
+
+  /** Result from MCP external tools (when serverSlug !== 'dare') */
+  mcpResult?: import('@/redux/types/dareToolResults').McpToolResult
+
+  /** Error message if execution failed */
+  error?: string
 }
 
 export interface GeneratedImage {

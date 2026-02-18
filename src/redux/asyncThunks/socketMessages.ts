@@ -63,8 +63,7 @@ export const sendSocketMessage = createAsyncThunk<
       artifactsEnabled &&
       sidecarOpen &&
       activeArtifact &&
-      (activeArtifact.status === 'completed' ||
-        activeArtifact.status === 'paused')
+      activeArtifact.status === 'completed'
 
     // Build payload
     const payload = {
@@ -108,6 +107,8 @@ export const sendSocketMessage = createAsyncThunk<
       active_artifact_id: shouldSendArtifactContext
         ? activeArtifactId
         : undefined,
+      mcp_server_ids: activeConversation.selectedMcpServerIds || [],
+      dare_tool_slugs: activeConversation.selectedDareToolSlugs || [],
     }
 
     dispatch(socketSendMessage(activeConversation.conversationId, payload))

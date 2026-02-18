@@ -8,108 +8,47 @@
  * - Step-by-step execution progress
  * - Human validation request handling
  * - Automatic reconnection
+ * - Zod validation of all incoming socket events
  *
- * Usage:
- *   1. Add workflowSocketMiddleware to Redux store
- *   2. Dispatch workflow socket actions
- *   3. Listen for incoming actions in reducers
+ * Event naming convention:
+ *   Backend sends snake_case event names (step_started, step_streaming, etc.)
+ *   with camelCase payload keys (nodeId, stepNumber, etc.).
+ *   Exception: workflow_status uses DRF serializer snake_case fields
+ *   (started_at, workflow_title) because DRF camelCase middleware
+ *   doesn't apply to socket events.
  */
 
 import type { Middleware } from '@reduxjs/toolkit'
 import { io, Socket } from 'socket.io-client'
 import { config } from '@/config/environment'
 import { debugLog } from '@/utils/debugLogger'
-import type {
-  RouteOption,
-  PendingValidationContext,
-  WorkflowStepSnippet,
-  WorkflowStepWebSearchSource,
-} from '@/redux/types/workflow'
+import {
+  WorkflowEventSchema,
+  WorkflowStatusSchema,
+  SubscribeWorkflowResponseSchema,
+  type WorkflowEvent,
+  type WorkflowStatusEvent,
+} from '@/schemas/workflowSocket'
 
 // ════════════════════════════════════════════════════════════════════════════
-// TYPES
+// SOCKET INTERFACE
 // ════════════════════════════════════════════════════════════════════════════
 
-// Workflow event types from backend
-export interface WorkflowStepStarted {
-  type: 'step_started'
-  nodeId: string
-  stepNumber: number
-  nodeType: string
+interface WorkflowSocketResponse {
+  success: boolean
+  error?: string
+  workflowRunId?: number
 }
 
-export interface WorkflowStepStreaming {
-  type: 'step_streaming'
-  nodeId: string
-  chunk: string
-  accumulatedTokens?: number
-}
-
-export interface StepCompletedMetadata {
-  snippets?: WorkflowStepSnippet[]
-  webSearchSources?: WorkflowStepWebSearchSource[]
-}
-
-export interface WorkflowStepCompleted {
-  type: 'step_completed'
-  nodeId: string
-  response: string
-  status: 'completed' | 'failed' | 'skipped'
-  tokens?: { input: number; output: number }
-  metadata?: StepCompletedMetadata
-}
-
-export interface WorkflowExecutionComplete {
-  type: 'execution_complete'
-  workflowRunId: number
-  status: 'completed' | 'failed' | 'pending_human_input'
-  totalCost?: number
-  totalTokens?: { input: number; output: number }
-  endedAt?: string
-}
-
-export interface WorkflowStepError {
-  type: 'step_error'
-  nodeId?: string
-  error: string
-  errorType?: string
-}
-
-export interface WorkflowValidationRequired {
-  type: 'validation_required'
-  nodeId: string
-  routes: RouteOption[]
-  context?: PendingValidationContext
-  aiRecommendation?: string
-}
-
-export interface WorkflowStatus {
-  type: 'workflow_status'
-  id: number
-  status: string
-  [key: string]: unknown
-}
-
-export type WorkflowEvent =
-  | WorkflowStepStarted
-  | WorkflowStepStreaming
-  | WorkflowStepCompleted
-  | WorkflowExecutionComplete
-  | WorkflowStepError
-  | WorkflowValidationRequired
-  | WorkflowStatus
-
-// Server to client events
-export interface WorkflowServerToClientEvents {
+interface WorkflowServerToClientEvents {
   workflow_event: (data: WorkflowEvent) => void
-  workflow_status: (data: WorkflowStatus) => void
+  workflow_status: (data: WorkflowStatusEvent) => void
   connect: () => void
   disconnect: (reason: string) => void
   connect_error: (error: Error) => void
 }
 
-// Client to server events
-export interface WorkflowClientToServerEvents {
+interface WorkflowClientToServerEvents {
   subscribe_workflow_run: (
     data: { workflowRunId: number },
     callback: (response: WorkflowSocketResponse) => void
@@ -123,12 +62,16 @@ export interface WorkflowClientToServerEvents {
     callback: (response: {
       success: boolean
       workflowId?: number
-      latestRun?: unknown
+      latestRun?: Record<string, unknown> | null
       error?: string
     }) => void
   ) => void
   start_execution: (
     data: { workflowRunId?: number; workflowId?: number; userInput?: string },
+    callback: (response: WorkflowSocketResponse) => void
+  ) => void
+  execute_single_step: (
+    data: { workflowId: number; stepNodeId: string; workflowRunId?: number },
     callback: (response: WorkflowSocketResponse) => void
   ) => void
   submit_validation: (
@@ -142,11 +85,10 @@ export interface WorkflowClientToServerEvents {
   ) => void
 }
 
-export interface WorkflowSocketResponse {
-  success: boolean
-  error?: string
-  workflowRunId?: number
-}
+type TypedWorkflowSocket = Socket<
+  WorkflowServerToClientEvents,
+  WorkflowClientToServerEvents
+>
 
 // ════════════════════════════════════════════════════════════════════════════
 // ACTION TYPES
@@ -242,11 +184,6 @@ export type WorkflowSocketAction =
 // MIDDLEWARE
 // ════════════════════════════════════════════════════════════════════════════
 
-type TypedWorkflowSocket = Socket<
-  WorkflowServerToClientEvents,
-  WorkflowClientToServerEvents
->
-
 interface WorkflowSocketActionWithPayload {
   type: string
   payload?: Record<string, unknown>
@@ -260,6 +197,7 @@ interface WorkflowSocketActionWithPayload {
  * - Workflow run subscriptions
  * - Execution start/progress streaming
  * - Human validation submissions
+ * - Zod validation of all incoming events
  */
 export function createWorkflowSocketMiddleware(): Middleware {
   let socket: TypedWorkflowSocket | null = null
@@ -337,16 +275,42 @@ export function createWorkflowSocketMiddleware(): Middleware {
           })
         })
 
-        // Incoming workflow events → dispatch as Redux actions
+        // Incoming workflow events → validate with Zod, then dispatch as Redux actions
         socket.on('workflow_event', (data) => {
-          debugLog('📡 [WorkflowSocket] workflow_event:', data.type, data)
-          dispatch({ type: `workflowSocket/${data.type}`, payload: data })
+          const result = WorkflowEventSchema.safeParse(data)
+          if (!result.success) {
+            console.warn(
+              `[WorkflowSocket] Invalid workflow_event (${data?.type}):`,
+              result.error.issues
+            )
+            return
+          }
+          debugLog(
+            '📡 [WorkflowSocket] workflow_event:',
+            result.data.type,
+            result.data
+          )
+          dispatch({
+            type: `workflowSocket/${result.data.type}`,
+            payload: result.data,
+          })
         })
 
-        // Workflow status updates
+        // Workflow status updates (full run snapshot from DRF serializer)
         socket.on('workflow_status', (data) => {
-          debugLog('📡 [WorkflowSocket] workflow_status:', data)
-          dispatch({ type: 'workflowSocket/workflow_status', payload: data })
+          const result = WorkflowStatusSchema.safeParse(data)
+          if (!result.success) {
+            console.warn(
+              '[WorkflowSocket] Invalid workflow_status:',
+              result.error.issues
+            )
+            return
+          }
+          debugLog('📡 [WorkflowSocket] workflow_status:', result.data)
+          dispatch({
+            type: 'workflowSocket/workflow_status',
+            payload: result.data,
+          })
         })
 
         break
@@ -420,42 +384,40 @@ export function createWorkflowSocketMiddleware(): Middleware {
           return next(typedAction)
         }
 
-        socket.emit(
-          'subscribe_workflow',
-          { workflowId },
-          (response: {
-            success: boolean
-            workflowId?: number
-            latestRun?: unknown
-            error?: string
-          }) => {
-            if (response.success) {
-              // If there's a latest run, add to subscriptions and dispatch state
-              if (
-                response.latestRun &&
-                typeof response.latestRun === 'object'
-              ) {
-                const latestRun = response.latestRun as { id?: number }
-                if (latestRun.id) {
-                  subscriptions.add(latestRun.id)
-                }
-              }
-
-              dispatch({
-                type: 'workflowSocket/workflowSubscribed',
-                payload: {
-                  workflowId,
-                  latestRun: response.latestRun || null,
-                },
-              })
-            } else {
-              dispatch({
-                type: 'workflowSocket/subscribeError',
-                payload: { workflowId, error: response.error },
-              })
-            }
+        socket.emit('subscribe_workflow', { workflowId }, (response) => {
+          // Validate the subscribe_workflow response shape
+          const result = SubscribeWorkflowResponseSchema.safeParse(response)
+          if (!result.success) {
+            console.warn(
+              '[WorkflowSocket] Invalid subscribe_workflow response:',
+              result.error.issues
+            )
+            // Fall through with raw response to avoid breaking existing flow
           }
-        )
+
+          if (response.success) {
+            // If there's a latest run, add to subscriptions
+            if (response.latestRun && typeof response.latestRun === 'object') {
+              const latestRun = response.latestRun as Record<string, unknown>
+              if (typeof latestRun.id === 'number') {
+                subscriptions.add(latestRun.id)
+              }
+            }
+
+            dispatch({
+              type: 'workflowSocket/workflowSubscribed',
+              payload: {
+                workflowId,
+                latestRun: response.latestRun || null,
+              },
+            })
+          } else {
+            dispatch({
+              type: 'workflowSocket/subscribeError',
+              payload: { workflowId, error: response.error },
+            })
+          }
+        })
         break
       }
 
@@ -531,8 +493,7 @@ export function createWorkflowSocketMiddleware(): Middleware {
           workflowRunId?: number
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(socket as any).emit(
+        socket.emit(
           'execute_single_step',
           singleStepParams,
           (response: WorkflowSocketResponse) => {
