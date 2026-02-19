@@ -39,10 +39,15 @@ import {
   updateConversationSortOrder,
   deleteMultipleConversations,
   cloneConversation,
+  publishConversation,
+  forkConversation,
+  fetchConversationMessages,
 } from '@/redux/asyncThunks/conversation'
 import { toggleDarkMode } from '../../redux/themeSlice'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
+import ForkConfirmDialog from '../shared/ForkConfirmDialog'
+import { toast } from '@/utils/toast'
 import {
   filterConversations,
   createSortOrderUpdates,
@@ -53,7 +58,15 @@ import {
   getConversationTitle,
 } from '../../utils/conversationUtils'
 
-const ConversationList: React.FC = () => {
+interface ConversationListProps {
+  isSharedTab?: boolean
+  sharedConversations?: Conversation[]
+}
+
+const ConversationList: React.FC<ConversationListProps> = ({
+  isSharedTab = false,
+  sharedConversations = [],
+}) => {
   const location = useLocation()
   const conversations = useSelector(
     (state: RootState) => state.conversation.conversations
@@ -67,6 +80,8 @@ const ConversationList: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [forkConversationData, setForkConversationData] =
+    useState<Conversation | null>(null)
   const searchQuery = useSelector(
     (state: RootState) => state.conversation?.searchQuery || ''
   )
@@ -88,7 +103,11 @@ const ConversationList: React.FC = () => {
     },
   ]
 
-  const filteredConversations = filterConversations(conversations, searchQuery)
+  const displayConversations = isSharedTab ? sharedConversations : conversations
+  const filteredConversations = filterConversations(
+    displayConversations,
+    searchQuery
+  )
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
@@ -206,6 +225,58 @@ const ConversationList: React.FC = () => {
     }
   }
 
+  const handlePublishClick = async (conversation: Conversation) => {
+    // Guard: prevent publishing forked conversations (matches BE validation)
+    if (conversation.isForked) {
+      toast.error(
+        'Cannot publish forked conversations. Only original conversations can be published.'
+      )
+      return
+    }
+
+    try {
+      await dispatch(publishConversation(conversation.conversationId)).unwrap()
+    } catch (error) {
+      console.error('Error publishing conversation:', error)
+      toast.error('Failed to publish conversation')
+    }
+  }
+
+  const handleForkClick = (conversation: Conversation) => {
+    setForkConversationData(conversation)
+  }
+
+  const handleConfirmFork = async () => {
+    if (!forkConversationData) return
+
+    try {
+      // Load messages first via REST
+      await dispatch(
+        fetchConversationMessages(forkConversationData.conversationId)
+      ).unwrap()
+      const forkedConversation = await dispatch(
+        forkConversation(forkConversationData.conversationId)
+      ).unwrap()
+      setForkConversationData(null)
+      dispatch(updateActiveConversation(forkedConversation))
+      navigate(`/conversation/${forkedConversation.conversationId}`)
+    } catch (error) {
+      console.error('Error forking conversation:', error)
+      setForkConversationData(null)
+    }
+  }
+
+  const handleCancelFork = () => {
+    setForkConversationData(null)
+  }
+
+  const handleSharedConversationClick = async (conversation: Conversation) => {
+    // Load messages via REST for read-only view
+    dispatch(updateActiveConversation(conversation))
+    await dispatch(fetchConversationMessages(conversation.conversationId))
+    navigate(`/conversation/${conversation.conversationId}`)
+  }
+
   return (
     <TooltipProvider>
       <nav className='text-blue-gray-700 flex h-full flex-col gap-1 font-sans text-base font-normal'>
@@ -216,36 +287,70 @@ const ConversationList: React.FC = () => {
           onDragEnd={handleDragEnd}
         >
           <div className='flex h-[65vh] w-full flex-col gap-1 overflow-scroll'>
-            <SortableContext
-              items={filteredConversations.map((c) => c.conversationId)}
-              strategy={verticalListSortingStrategy}
-            >
-              {filteredConversations.map((conversation) => {
-                const conversationId = conversation.conversationId
-                const isActive = isConversationActive(
-                  conversation,
-                  location.pathname
-                )
-                const isSelected =
-                  selectedConversations.includes(conversationId)
-                return (
-                  <SortableConversationItem
-                    key={conversationId}
-                    conversation={conversation}
-                    isActive={isActive}
-                    isSelected={isSelected}
-                    editingId={editingId}
-                    editValue={editValue}
-                    onConversationClick={handleConversationClick}
-                    onEditClick={handleEditClick}
-                    onCloneClick={handleCloneClick}
-                    onEditChange={handleEditChange}
-                    onEditBlur={handleEditBlur}
-                    onEditKeyDown={handleEditKeyDown}
-                  />
-                )
-              })}
-            </SortableContext>
+            {isSharedTab ? (
+              /* Shared tab: no drag-and-drop */
+              <>
+                {filteredConversations.map((conversation) => {
+                  const conversationId = conversation.conversationId
+                  const isActive = isConversationActive(
+                    conversation,
+                    location.pathname
+                  )
+                  return (
+                    <SortableConversationItem
+                      key={conversationId}
+                      conversation={conversation}
+                      isActive={isActive}
+                      isSelected={false}
+                      editingId={null}
+                      editValue=''
+                      isSharedTab={true}
+                      onConversationClick={handleSharedConversationClick}
+                      onEditClick={() => {}}
+                      onCloneClick={() => {}}
+                      onForkClick={handleForkClick}
+                      onEditChange={() => {}}
+                      onEditBlur={() => {}}
+                      onEditKeyDown={() => {}}
+                    />
+                  )
+                })}
+              </>
+            ) : (
+              /* My Conversations tab: with drag-and-drop */
+              <SortableContext
+                items={filteredConversations.map((c) => c.conversationId)}
+                strategy={verticalListSortingStrategy}
+              >
+                {filteredConversations.map((conversation) => {
+                  const conversationId = conversation.conversationId
+                  const isActive = isConversationActive(
+                    conversation,
+                    location.pathname
+                  )
+                  const isSelected =
+                    selectedConversations.includes(conversationId)
+                  return (
+                    <SortableConversationItem
+                      key={conversationId}
+                      conversation={conversation}
+                      isActive={isActive}
+                      isSelected={isSelected}
+                      editingId={editingId}
+                      editValue={editValue}
+                      isSharedTab={false}
+                      onConversationClick={handleConversationClick}
+                      onEditClick={handleEditClick}
+                      onCloneClick={handleCloneClick}
+                      onPublishClick={handlePublishClick}
+                      onEditChange={handleEditChange}
+                      onEditBlur={handleEditBlur}
+                      onEditKeyDown={handleEditKeyDown}
+                    />
+                  )
+                })}
+              </SortableContext>
+            )}
           </div>
 
           <DragOverlay>
@@ -274,8 +379,8 @@ const ConversationList: React.FC = () => {
             const hasSelectedConversations = selectedConversations.length > 0
             const isDisabled =
               item.action === 'clear' &&
-              !activeConversation &&
-              !hasSelectedConversations
+              ((!activeConversation && !hasSelectedConversations) ||
+                activeConversation?.isOwner === false)
             const buttonText =
               item.action === 'clear' && hasSelectedConversations
                 ? 'Clear Selected Conversations'
@@ -378,6 +483,19 @@ const ConversationList: React.FC = () => {
               : activeConversation?.title || 'New Chat'
           }
           confirmText='Delete'
+        />
+
+        <ForkConfirmDialog
+          isOpen={!!forkConversationData}
+          title={forkConversationData?.title || 'Untitled Conversation'}
+          entityType='conversation'
+          copiedItems={[
+            'All messages and conversation history',
+            'Conversation settings and configuration',
+            'File selections (shared from the original owner)',
+          ]}
+          onConfirm={handleConfirmFork}
+          onCancel={handleCancelFork}
         />
       </nav>
     </TooltipProvider>

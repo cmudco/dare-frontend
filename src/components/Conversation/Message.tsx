@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { MessageProps, MessageReaction } from '@/redux/types/conversation'
+import {
+  MessageProps,
+  MessageReaction,
+  isSenderMessage,
+} from '@/redux/types/conversation'
 import { FeedbackType } from '@/utils/constants/conversation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -64,6 +68,7 @@ const Message: React.FC<MessageProps> = ({
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
+  const isReadOnly = activeConversation?.isOwner === false
   const activeConversationMessages = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages
   )
@@ -116,7 +121,7 @@ const Message: React.FC<MessageProps> = ({
 
   if (!message) return null
 
-  const llm = llms.find((model) => model.id === message.llmId)
+  const llm = llms.find((model) => model.id === message.llm)
   const llmName = llm ? llm.name : 'Unknown LLM'
   const userInitial = user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'
 
@@ -167,7 +172,7 @@ const Message: React.FC<MessageProps> = ({
       // If feedback is triggering by clicking thumb or manually providing it, reset the auto-prompt interval timer
       if ((source === 'manual' || source === 'thumbs') && activeConversation) {
         const messageResponseCount = activeConversationMessages.filter(
-          (m) => !m.isSender
+          (m) => !isSenderMessage(m)
         ).length
 
         dispatch(
@@ -188,13 +193,13 @@ const Message: React.FC<MessageProps> = ({
   }
 
   const handleEdit = () => {
-    if (message.isSender && onEditMessage) {
+    if (isSenderMessage(message) && onEditMessage) {
       onEditMessage(message.id, message.message)
     }
   }
 
   const handleRegenerate = () => {
-    if (!message.isSender) {
+    if (!isSenderMessage(message)) {
       dispatch(regenerateSocketResponse({ messageId: message.id }))
     }
   }
@@ -222,21 +227,21 @@ const Message: React.FC<MessageProps> = ({
   return (
     <div
       className={`flex flex-col px-5 ${
-        message.isSender ? 'items-end' : 'items-start'
+        isSenderMessage(message) ? 'items-end' : 'items-start'
       } group mb-4`}
     >
       <div
         className={`flex w-full max-w-[100%] ${
-          message.isSender ? 'justify-end' : 'justify-start'
+          isSenderMessage(message) ? 'justify-end' : 'justify-start'
         } items-start`}
       >
-        {!message.isSender && (
+        {!isSenderMessage(message) && (
           <div className='mr-2 mt-1 flex-shrink-0'>
             <Bot className='h-8 w-8' />
           </div>
         )}
 
-        {message.isSender && !message.streaming && (
+        {isSenderMessage(message) && !message.streaming && !isReadOnly && (
           <div className='mr-2 mt-2 flex flex-shrink-0 items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
             <button
               className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
@@ -303,7 +308,7 @@ const Message: React.FC<MessageProps> = ({
 
         <div
           className={`relative mb-2 max-w-[95%] text-wrap rounded-xl px-5 py-3 ${
-            message.isSender
+            isSenderMessage(message)
               ? 'border border-blue-200 bg-blue-50 dark:border-blue-800/30 dark:bg-blue-900/20'
               : 'border border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-800'
           } inline-block hover:z-20`}
@@ -537,7 +542,7 @@ const Message: React.FC<MessageProps> = ({
           </div>
         </div>
 
-        {message.isSender && (
+        {isSenderMessage(message) && (
           <div className='ml-2 mt-1 flex-shrink-0'>
             <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 font-medium text-white'>
               {userInitial.toUpperCase()}
@@ -546,7 +551,7 @@ const Message: React.FC<MessageProps> = ({
         )}
       </div>
 
-      {!message.isSender && !message.streaming && (
+      {!isSenderMessage(message) && !message.streaming && !isReadOnly && (
         <div className='flex w-full max-w-[95%] pl-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
           <button
             className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
@@ -659,10 +664,10 @@ const Message: React.FC<MessageProps> = ({
         </div>
       )}
 
-      {!message.isSender && !message.streaming && message.llmId && (
+      {!isSenderMessage(message) && !message.streaming && message.llm && (
         <div
           className={`mt-1 text-xs text-muted-foreground ${
-            message.isSender ? 'text-right' : 'pl-10 text-left'
+            isSenderMessage(message) ? 'text-right' : 'pl-10 text-left'
           }`}
         >
           <span>{llmName}</span>
@@ -674,7 +679,7 @@ const Message: React.FC<MessageProps> = ({
         </div>
       )}
 
-      {!message.isSender &&
+      {!isSenderMessage(message) &&
         !message.streaming &&
         message.snippets &&
         message.snippets.length > 0 && (
@@ -730,7 +735,7 @@ const Message: React.FC<MessageProps> = ({
         )}
 
       {/* Web Search Sources */}
-      {!message.isSender &&
+      {!isSenderMessage(message) &&
         !message.streaming &&
         message.webSearchSources &&
         message.webSearchSources.length > 0 && (
@@ -738,12 +743,12 @@ const Message: React.FC<MessageProps> = ({
         )}
 
       {/* MCP Tool Calls - Show tool usage indicator for AI messages */}
-      {!message.isSender &&
+      {!isSenderMessage(message) &&
         !message.streaming &&
-        message.toolCalls &&
-        message.toolCalls.length > 0 && (
+        message.mcpToolCalls &&
+        message.mcpToolCalls.length > 0 && (
           <div className='mt-2 max-w-[95%] pl-10'>
-            <ToolCallIndicator toolCalls={message.toolCalls} />
+            <ToolCallIndicator toolCalls={message.mcpToolCalls} />
           </div>
         )}
 

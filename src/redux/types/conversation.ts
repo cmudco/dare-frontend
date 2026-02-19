@@ -1,4 +1,8 @@
-import { SenderType, FeedbackType } from '@/utils/constants/conversation'
+import {
+  SenderType,
+  FeedbackType,
+  ConversationTab,
+} from '@/utils/constants/conversation'
 import { ToolCallStatus, MessageContentType } from '@/utils/constants/dareTools'
 import type {
   ImageSizeType,
@@ -47,6 +51,14 @@ export interface Conversation {
   feedbackAutoPromptCount?: number // How many auto-prompts have been shown
   feedbackLastPromptMessageCount?: number // Message # when last shown
   feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
+  // Sharing fields
+  isPublished?: boolean
+  publishedAt?: string | null
+  isOwner?: boolean
+  isForked?: boolean // True if this conversation was forked from another user
+  ownerEmail?: string | null
+  ownerUserId?: number | null // Owner's user ID for shared conversations (to fetch their files)
+  fileOwnerId?: number | null // Original file owner's user ID for forked conversations
 }
 
 export interface Message {
@@ -54,11 +66,10 @@ export interface Message {
   message: string
   senderType: SenderType
   senderName: string
-  isSender: boolean
-  date: string
+  createdAt: string
   files?: MyFile[]
   tags?: Tag[]
-  llmId?: number
+  llm?: number | null
   streaming?: boolean
   snippets?: Snippet[]
   webSearchSources?: WebSearchSource[]
@@ -71,18 +82,17 @@ export interface Message {
   cost?: string | null
   inputTokens?: number | null
   outputTokens?: number | null
-  // Image generation fields
   generatedImage?: GeneratedImage
-  // Audio transcription fields
   generatedTranscription?: GeneratedTranscription
-  // Artifact reference (when message has associated artifact)
   artifactId?: number
-  // MCP tool calls made by this message
-  toolCalls?: ToolCall[]
-  // Content type for specialized rendering
+  mcpToolCalls?: ToolCall[]
   contentType?: MessageContentType
   contentMetadata?: Record<string, unknown>
 }
+
+/** Check if a message was sent by the user (not the AI). */
+export const isSenderMessage = (msg: Message): boolean =>
+  msg.senderType === SenderType.PLAYER
 
 // ToolCallStatus is now imported from @/utils/constants/dareTools
 // Re-export for backwards compatibility
@@ -244,6 +254,9 @@ export interface ConversationState {
   isTranscribingAudio: boolean
   audioTranscriptionSettings: AudioTranscriptionSettings
   historySidebarCollapsed: boolean
+  // Sharing state
+  sharedConversations: Conversation[]
+  activeTab: ConversationTab
 }
 
 export interface ConversationResponse {
@@ -267,12 +280,15 @@ export interface SortableConversationItemProps {
   isSelected: boolean
   editingId: string | null
   editValue: string
+  isSharedTab?: boolean
   onConversationClick: (
     conversation: Conversation,
     event?: React.MouseEvent
   ) => void
   onEditClick: (conversation: Conversation) => void
   onCloneClick: (conversation: Conversation) => void
+  onPublishClick?: (conversation: Conversation) => void
+  onForkClick?: (conversation: Conversation) => void
   onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onEditBlur: () => void
   onEditKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void

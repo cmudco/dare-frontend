@@ -1,13 +1,19 @@
 import React from 'react'
 import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline'
 import { useSortable } from '@dnd-kit/sortable'
-import { Pencil, Copy } from 'lucide-react'
+import { Pencil, Copy, MoreVertical, Globe, GitFork } from 'lucide-react'
 import { SortableConversationItemProps } from '../../redux/types/conversation'
 import {
   createDragStyle,
   getConversationItemClassName,
   getConversationTitle,
 } from '../../utils/conversationUtils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu'
 
 const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   conversation,
@@ -15,9 +21,12 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   isSelected,
   editingId,
   editValue,
+  isSharedTab = false,
   onConversationClick,
   onEditClick,
   onCloneClick,
+  onPublishClick,
+  onForkClick,
   onEditChange,
   onEditBlur,
   onEditKeyDown,
@@ -29,7 +38,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: conversation.conversationId })
+  } = useSortable({ id: conversation.conversationId, disabled: isSharedTab })
 
   const style = createDragStyle(transform, transition, isDragging)
 
@@ -41,14 +50,21 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
       onClick={(e) => onConversationClick(conversation, e)}
     >
       <div className='flex flex-shrink-0 items-center gap-1'>
-        <div
-          className={`p-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-          {...attributes}
-          {...listeners}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ChatBubbleLeftEllipsisIcon className='h-5 w-5' />
-        </div>
+        {!isSharedTab && (
+          <div
+            className={`p-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            {...attributes}
+            {...listeners}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ChatBubbleLeftEllipsisIcon className='h-5 w-5' />
+          </div>
+        )}
+        {isSharedTab && (
+          <div className='p-1'>
+            <ChatBubbleLeftEllipsisIcon className='h-5 w-5' />
+          </div>
+        )}
       </div>
 
       <div className='relative min-w-0 flex-1'>
@@ -64,30 +80,90 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
           />
         ) : (
           <>
-            <span className='block overflow-hidden text-ellipsis whitespace-nowrap pr-2 text-sm'>
-              {getConversationTitle(conversation)}
-            </span>
+            <div className='flex items-center gap-1.5 pr-8'>
+              <span className='block overflow-hidden text-ellipsis whitespace-nowrap text-sm'>
+                {getConversationTitle(conversation)}
+              </span>
+              {/* Published badge for user's own conversations */}
+              {!isSharedTab && conversation.isPublished && (
+                <span className='inline-flex shrink-0 items-center rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400'>
+                  Published
+                </span>
+              )}
+              {/* Forked badge for forked conversations */}
+              {!isSharedTab && conversation.isForked && (
+                <span className='inline-flex shrink-0 items-center rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'>
+                  Forked
+                </span>
+              )}
+            </div>
+            {/* Owner email on shared tab */}
+            {isSharedTab && conversation.ownerEmail && (
+              <span className='block truncate text-[10px] text-gray-400 dark:text-slate-500'>
+                {conversation.ownerEmail}
+              </span>
+            )}
+            {/* 3-dot dropdown menu */}
             <div className='absolute right-0 top-1/2 flex -translate-y-1/2 gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
-              <button
-                className='rounded-md bg-gray-100 p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-200 dark:bg-white/20 dark:hover:bg-white/30'
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onCloneClick(conversation)
-                }}
-                aria-label='Clone chat'
-              >
-                <Copy className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
-              </button>
-              <button
-                className='rounded-md bg-gray-100 p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-200 dark:bg-white/20 dark:hover:bg-white/30'
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onEditClick(conversation)
-                }}
-                aria-label='Rename chat'
-              >
-                <Pencil className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className='rounded-md bg-gray-100 p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-200 dark:bg-white/20 dark:hover:bg-white/30'
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label='Conversation actions'
+                  >
+                    <MoreVertical className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end' className='w-44'>
+                  {isSharedTab ? (
+                    /* Shared tab actions */
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onForkClick?.(conversation)
+                      }}
+                    >
+                      <GitFork className='mr-2 h-4 w-4' />
+                      Fork & Continue
+                    </DropdownMenuItem>
+                  ) : (
+                    /* My Conversations tab actions */
+                    <>
+                      {/* Only show publish option if NOT forked */}
+                      {!conversation.isForked && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onPublishClick?.(conversation)
+                          }}
+                        >
+                          <Globe className='mr-2 h-4 w-4' />
+                          {conversation.isPublished ? 'Unpublish' : 'Publish'}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onCloneClick(conversation)
+                        }}
+                      >
+                        <Copy className='mr-2 h-4 w-4' />
+                        Clone
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onEditClick(conversation)
+                        }}
+                      >
+                        <Pencil className='mr-2 h-4 w-4' />
+                        Rename
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </>
         )}
