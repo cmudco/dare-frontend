@@ -11,6 +11,9 @@ import {
   getActivePartialRunAPI,
   toggleManualModeAPI,
   updateWorkflowDisplayOrderAPI,
+  publishWorkflowAPI,
+  forkWorkflowAPI,
+  getSharedWorkflowsAPI,
 } from '@/api/workflows'
 import {
   CreateWorkflowDTO,
@@ -147,6 +150,40 @@ export const updateWorkflowDisplayOrder = createAsyncThunk(
     try {
       await updateWorkflowDisplayOrderAPI(updates)
       return updates
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const publishWorkflow = createAsyncThunk(
+  'workflows/publishWorkflow',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      return await publishWorkflowAPI(id)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getSharedWorkflows = createAsyncThunk(
+  'workflows/getSharedWorkflows',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await getSharedWorkflowsAPI()
+      return response.results
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const forkWorkflow = createAsyncThunk(
+  'workflows/forkWorkflow',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      return await forkWorkflowAPI(id)
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }

@@ -115,3 +115,26 @@ export const updateWorkflowDisplayOrderAPI = async (
     data: updates,
   })
 }
+
+export const publishWorkflowAPI = async (id: number): Promise<Workflow> => {
+  return await baseRequest<Workflow>({
+    url: `api/workflows/${id}/publish/`,
+    method: METHOD.POST,
+  })
+}
+
+export const forkWorkflowAPI = async (id: number): Promise<Workflow> => {
+  return await baseRequest<Workflow>({
+    url: `api/workflows/${id}/fork/`,
+    method: METHOD.POST,
+  })
+}
+
+export const getSharedWorkflowsAPI = async (): Promise<{
+  results: Workflow[]
+}> => {
+  return await baseRequest<{ results: Workflow[] }>({
+    url: 'api/workflows/?shared=true',
+    method: METHOD.GET,
+  })
+}

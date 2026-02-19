@@ -6,6 +6,8 @@ import {
   cloneWorkflow,
   getWorkflows,
   updateWorkflowDisplayOrder,
+  publishWorkflow,
+  forkWorkflow,
 } from '../../redux/asyncThunks/workflow'
 import { WORKFLOWS_TABLE_HEAD } from '../../utils/constants/workflows'
 import { updateWorkflowOrder } from '../../redux/workflowSlice'
@@ -25,12 +27,16 @@ import {
 } from '@dnd-kit/sortable'
 import { GripVertical } from 'lucide-react'
 import SortableWorkflowRow from './SortableWorkflowRow'
+import ForkConfirmDialog from '../shared/ForkConfirmDialog'
+import { toast } from '@/utils/toast'
 import {
   useDragSensors,
   createDisplayOrderUpdates,
   findWorkflowIndexes,
   isDragOperationValid,
   getWorkflowTitle,
+  getModeBadge,
+  getStepCount,
 } from '@/utils/workflowUtils'
 import {
   Select,
@@ -59,16 +65,21 @@ import { WorkflowTableProps } from '@/redux/types/workflow'
 import { SortDirectionEnum } from '@/utils/constants/sort'
 import { Workflow } from '@/redux/types/workflow'
 
-const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
+const LIBRARY_TABLE_HEAD = [
+  'Title',
+  'Description',
+  'Owner',
+  'Mode',
+  'Steps',
+  'Action',
+]
+
+const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
-  const { workflows, loading } = useSelector(
+  const { workflows, sharedWorkflows, loading } = useSelector(
     (state: RootState) => state.workflow
   )
   const navigate = useNavigate()
-  // LEGACY: Removing editModePromptOpen since we directly navigate to edit mode
-  // const [editModePromptOpen, setEditModePromptOpen] = useState<number | null>(
-  //   null
-  // )
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -78,11 +89,16 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
   )
   const [deleteWorkflowId, setDeleteWorkflowId] = useState<number | null>(null)
   const [deleteWorkflowTitle, setDeleteWorkflowTitle] = useState<string>('')
+  const [forkWorkflowId, setForkWorkflowId] = useState<number | null>(null)
+  const [forkWorkflowTitle, setForkWorkflowTitle] = useState<string>('')
   const [activeId, setActiveId] = useState<number | null>(null)
   const sensors = useDragSensors()
 
+  const isLibrary = activeTab === 'library'
+  const sourceWorkflows = isLibrary ? sharedWorkflows : workflows
+
   const filteredWorkflows = useMemo(() => {
-    return workflows.filter((workflow) => {
+    return sourceWorkflows.filter((workflow) => {
       const workflowTitle = workflow.title?.toLowerCase() || ''
       const workflowDescription = workflow.description?.toLowerCase() || ''
       const matchesSearch =
@@ -91,7 +107,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
         workflowDescription.includes(searchQuery.toLowerCase())
       return matchesSearch
     })
-  }, [workflows, searchQuery])
+  }, [sourceWorkflows, searchQuery])
 
   const sortedWorkflows = useMemo(() => {
     return sortWorkflows(filteredWorkflows, sortColumn, sortDirection)
@@ -105,7 +121,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery])
+  }, [searchQuery, activeTab])
 
   const handleSort = (column: string) => {
     updateSortState(column, sortColumn, setSortColumn, setSortDirection)
@@ -137,12 +153,50 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
       if (cloneWorkflow.fulfilled.match(action)) {
         const payload = action.payload as Workflow
         dispatch(getWorkflows()).then(() => {
-          // LEGACY: Commenting out legacy modal usage, redirecting to new editor instead
-          // dispatch(openEditModal(payload.id))
           navigate(`/workflows/${payload.id}/edit`)
         })
       }
     })
+  }
+
+  const handlePublish = async (id: number) => {
+    try {
+      await dispatch(publishWorkflow(id)).unwrap()
+    } catch (error) {
+      console.error('Error publishing workflow:', error)
+      // Show user-friendly error message for forked workflows
+      const errorMessage = typeof error === 'string' ? error : String(error)
+      if (errorMessage.includes('forked')) {
+        toast.error(
+          'Cannot publish forked workflows. Only original workflows can be published.'
+        )
+      } else {
+        toast.error('Failed to publish workflow')
+      }
+    }
+  }
+
+  const handleForkClick = (id: number, title: string) => {
+    setForkWorkflowId(id)
+    setForkWorkflowTitle(title)
+  }
+
+  const handleConfirmFork = () => {
+    if (forkWorkflowId) {
+      dispatch(forkWorkflow(forkWorkflowId)).then((action) => {
+        if (forkWorkflow.fulfilled.match(action)) {
+          const payload = action.payload as Workflow
+          setForkWorkflowId(null)
+          setForkWorkflowTitle('')
+          navigate(`/workflows/${payload.id}/edit`)
+        }
+      })
+    }
+  }
+
+  const handleCancelFork = () => {
+    setForkWorkflowId(null)
+    setForkWorkflowTitle('')
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -177,6 +231,133 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
     }
   }
 
+  // Library view — simple table without drag-and-drop
+  if (isLibrary) {
+    return (
+      <div className='overflow-auto'>
+        <Table className='mt-4 w-full min-w-max bg-background text-left'>
+          <TableHeader>
+            <TableRow className='bg-muted'>
+              {LIBRARY_TABLE_HEAD.map((head) => (
+                <TableHead
+                  key={head}
+                  className='p-4 text-sm font-semibold text-foreground'
+                >
+                  {head}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sharedWorkflows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={LIBRARY_TABLE_HEAD.length}
+                  className='p-4 text-center text-muted-foreground'
+                >
+                  No shared workflows available yet.
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedWorkflows.map((workflow) => (
+                <TableRow key={workflow.id} className='border-border'>
+                  <TableCell className='p-4'>
+                    <h3 className='font-medium text-foreground'>
+                      {workflow.title || 'Untitled'}
+                    </h3>
+                  </TableCell>
+                  <TableCell className='p-4'>
+                    <p className='max-w-[300px] truncate text-sm text-muted-foreground'>
+                      {workflow.description || 'No description'}
+                    </p>
+                  </TableCell>
+                  <TableCell className='p-4 text-sm text-muted-foreground'>
+                    {workflow.ownerUsername || 'Unknown'}
+                  </TableCell>
+                  <TableCell className='p-4'>
+                    {getModeBadge(workflow.mode)}
+                  </TableCell>
+                  <TableCell className='p-4 text-foreground'>
+                    {getStepCount(workflow)}
+                  </TableCell>
+                  <TableCell className='p-4'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() =>
+                        handleForkClick(
+                          workflow.id,
+                          workflow.title || 'Untitled'
+                        )
+                      }
+                    >
+                      Fork
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+          {sortedWorkflows.length > 0 && (
+            <TableFooter>
+              <TableRow className='bg-background'>
+                <TableCell
+                  colSpan={LIBRARY_TABLE_HEAD.length}
+                  className='w-full p-4'
+                >
+                  <div className='flex w-full items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {sortedWorkflows.length} shared workflow
+                      {sortedWorkflows.length !== 1 ? 's' : ''}
+                    </span>
+                    <div className='flex items-center gap-4'>
+                      <Button
+                        variant='secondary'
+                        size='sm'
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((p) => p - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <span className='text-sm dark:text-white'>
+                        Page {currentPage} of {totalPages || 1}
+                      </span>
+                      <Button
+                        variant='secondary'
+                        size='sm'
+                        disabled={
+                          currentPage === totalPages || totalPages === 0
+                        }
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          )}
+        </Table>
+
+        <ForkConfirmDialog
+          isOpen={!!forkWorkflowId}
+          title={forkWorkflowTitle}
+          entityType='workflow'
+          copiedItems={[
+            'Workflow structure and settings',
+            'All step configurations',
+            'All prompts (as new copies with "FORK OF" prefix)',
+          ]}
+          infoNote="Files are not copied. You'll need to upload your own files after forking."
+          onConfirm={handleConfirmFork}
+          onCancel={handleCancelFork}
+        />
+      </div>
+    )
+  }
+
+  // My Workflows view — with drag-and-drop and publish/clone/delete actions
   return (
     <div className='overflow-auto'>
       <DndContext
@@ -253,6 +434,7 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
                     onEdit={handleEdit}
                     onClone={handleClone}
                     onDelete={handleDelete}
+                    onPublish={handlePublish}
                   />
                 ))
               )}
@@ -341,6 +523,20 @@ const WorkflowTable = ({ searchQuery }: WorkflowTableProps) => {
         description='Are you sure you want to delete this workflow? This action cannot be undone.'
         itemName={deleteWorkflowTitle}
         confirmText='Delete'
+      />
+
+      <ForkConfirmDialog
+        isOpen={!!forkWorkflowId}
+        title={forkWorkflowTitle}
+        entityType='workflow'
+        copiedItems={[
+          'Workflow structure and settings',
+          'All step configurations',
+          'All prompts (as new copies with "FORK OF" prefix)',
+        ]}
+        infoNote="Files are not copied. You'll need to upload your own files after forking."
+        onConfirm={handleConfirmFork}
+        onCancel={handleCancelFork}
       />
     </div>
   )

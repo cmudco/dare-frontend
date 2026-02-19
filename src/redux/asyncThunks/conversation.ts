@@ -17,6 +17,10 @@ import {
   deleteMultipleConversationsAPI,
   cloneConversationAPI,
   deleteMessageAPI,
+  getSharedConversationsAPI,
+  publishConversationAPI,
+  forkConversationAPI,
+  getConversationMessagesAPI,
 } from '../../api/conversation'
 import { AppDispatch, RootState } from '../store'
 import { sendWebSocketMessage } from './websocket'
@@ -248,3 +252,57 @@ export const deleteMessage = createAsyncThunk<
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })
+
+export const fetchSharedConversations = createAsyncThunk<
+  Conversation[],
+  void,
+  { rejectValue: string }
+>('conversation/fetchSharedConversations', async (_, thunkAPI) => {
+  try {
+    const response = await getSharedConversationsAPI()
+    return response.results
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const publishConversation = createAsyncThunk<
+  Conversation,
+  string,
+  { rejectValue: string }
+>('conversation/publishConversation', async (conversationId, thunkAPI) => {
+  try {
+    return await publishConversationAPI(conversationId)
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const forkConversation = createAsyncThunk<
+  Conversation,
+  string,
+  { rejectValue: string }
+>('conversation/forkConversation', async (conversationId, thunkAPI) => {
+  try {
+    return await forkConversationAPI(conversationId)
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const fetchConversationMessages = createAsyncThunk<
+  Message[],
+  string,
+  { rejectValue: string }
+>(
+  'conversation/fetchConversationMessages',
+  async (conversationId, thunkAPI) => {
+    try {
+      // BE MessageSerializer now returns date, llmId, isSender, toolCalls
+      // alongside original fields — no client-side remapping needed.
+      return await getConversationMessagesAPI(conversationId)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)

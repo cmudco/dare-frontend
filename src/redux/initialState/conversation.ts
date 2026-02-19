@@ -1,4 +1,5 @@
 import { ConversationState } from '../types/conversation'
+import { ConversationTab } from '../../utils/constants/conversation'
 import { MyFile, MyFolder } from '../types/files'
 import { Tag } from '../types/tags'
 import { loadDraftsFromLocalStorage } from '../../utils/draftStorage'
@@ -39,4 +40,7 @@ export const initialState: ConversationState = {
   isTranscribingAudio: false,
   audioTranscriptionSettings: DEFAULT_TRANSCRIPTION_SETTINGS,
   historySidebarCollapsed: false,
+  // Sharing state
+  sharedConversations: [],
+  activeTab: ConversationTab.MINE,
 }

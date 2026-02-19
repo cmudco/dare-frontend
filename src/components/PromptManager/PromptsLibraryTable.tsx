@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
 import { DocumentDuplicateIcon } from '@heroicons/react/20/solid'
-import { EllipsisVerticalIcon } from 'lucide-react'
+import { EllipsisVerticalIcon, Eye } from 'lucide-react'
 
 import { AppDispatch, RootState } from '../../redux/store'
 import {
@@ -38,6 +38,7 @@ import { PublishedPrompt } from '@/redux/types/prompt'
 import { stripHtml } from '../../utils/textUtils'
 import { formatDate } from '../../utils/constants/prompts'
 import { toast } from '@/utils/toast'
+import PromptDetailsModal from './PromptDetailsModal'
 
 const LIBRARY_TABLE_HEAD = ['Prompt', 'Author', 'Published', 'Action']
 
@@ -58,6 +59,9 @@ const PromptsLibraryTable = ({ searchQuery }: PromptsLibraryTableProps) => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [selectedPrompt, setSelectedPrompt] = useState<PublishedPrompt | null>(
+    null
+  )
 
   useEffect(() => {
     dispatch(getPromptsLibrary())
@@ -239,6 +243,13 @@ const PromptsLibraryTable = ({ searchQuery }: PromptsLibraryTableProps) => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem
+                          onClick={() => setSelectedPrompt(prompt)}
+                          className='cursor-pointer text-blue-500'
+                        >
+                          <Eye className='h-4 w-4' />
+                          <span>View Details</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                           onClick={() => handleClone(prompt)}
                           className='cursor-pointer text-green-600'
                         >
@@ -323,6 +334,20 @@ const PromptsLibraryTable = ({ searchQuery }: PromptsLibraryTableProps) => {
           </TableFooter>
         )}
       </Table>
+
+      <PromptDetailsModal
+        isOpen={!!selectedPrompt}
+        prompt={selectedPrompt}
+        onClose={() => setSelectedPrompt(null)}
+        onClone={
+          selectedPrompt
+            ? () => {
+                handleClone(selectedPrompt)
+                setSelectedPrompt(null)
+              }
+            : undefined
+        }
+      />
     </div>
   )
 }
