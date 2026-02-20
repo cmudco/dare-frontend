@@ -49,6 +49,8 @@ export interface FeatureFlags {
   enableDebugLogs: boolean
   // MCP - Model Context Protocol server integration for external tools
   enableMcp: boolean
+  // Memory - conversation memory feature
+  enableMemory: boolean
 }
 
 /**
@@ -86,6 +88,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableVoiceInput: true, // Voice input enabled for local testing
         enableDebugLogs: true, // Debug logs enabled for local
         enableMcp: true, // MCP enabled for local development
+        enableMemory: true, // Memory enabled for local development
       }
 
     case 'dare-staging':
@@ -98,6 +101,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableVoiceInput: true, // Voice input enabled for staging testing
         enableDebugLogs: true, // Debug logs enabled for staging
         enableMcp: true, // MCP enabled for staging testing
+        enableMemory: true, // Memory enabled for staging testing
       }
 
     case 'dare-production':
@@ -110,6 +114,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableVoiceInput: false, // Voice input disabled in production (beta)
         enableDebugLogs: false, // Debug logs disabled in production
         enableMcp: false, // MCP disabled in production (beta)
+        enableMemory: false, // Memory disabled in production (beta)
       }
 
     case 'gt-production':
@@ -122,6 +127,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableVoiceInput: false, // Voice input disabled in production (beta)
         enableDebugLogs: false, // Debug logs disabled in production
         enableMcp: true, // MCP enabled for Georgia Tech
+        enableMemory: true, // Memory enabled for Georgia Tech
       }
 
     default:
@@ -134,6 +140,7 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableVoiceInput: false, // Default off for safety
         enableDebugLogs: false, // Default off for safety
         enableMcp: false, // Default off for safety
+        enableMemory: false, // Default off for safety
       }
   }
 }
