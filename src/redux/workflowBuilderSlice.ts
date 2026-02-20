@@ -66,6 +66,8 @@ const singleStepStarted = createAction<{
 const stepStarted = createAction<{
   nodeId: string
   nodeType?: string
+  stepNumber?: number
+  startedAt?: string
   workflowRunId?: number
 }>('workflowSocket/step_started')
 
@@ -160,6 +162,7 @@ function initializeNodeStates(nodes: Node[]): NodeStatesMap {
     states[node.id] = {
       nodeId: node.id,
       stepId: null,
+      startedAt: null,
       nodeType: node.type || 'unknown',
       status: WorkflowRunStepStatus.Pending,
       response: '',
@@ -186,6 +189,7 @@ function ensureNodeState(
     nodeStates[nodeId] = {
       nodeId,
       stepId: null,
+      startedAt: null,
       nodeType,
       status: WorkflowRunStepStatus.Pending,
       response: '',
@@ -783,7 +787,7 @@ const workflowBuilderSlice = createSlice({
 
       // ── Step Execution Events ────────────────────────────────────────
       .addCase(stepStarted, (state, action) => {
-        const { nodeId, nodeType, workflowRunId } = action.payload
+        const { nodeId, nodeType, startedAt, workflowRunId } = action.payload
 
         if (isBatchRunEvent(state, workflowRunId)) {
           const run = ensureBatchRun(state, workflowRunId as number)
@@ -791,6 +795,9 @@ const workflowBuilderSlice = createSlice({
             ensureNodeState(run.nodeStates, nodeId, nodeType)
             run.nodeStates[nodeId].status = WorkflowRunStepStatus.Running
             run.nodeStates[nodeId].response = ''
+            if (startedAt) {
+              run.nodeStates[nodeId].startedAt = startedAt
+            }
           }
           state.batchRun.activeNodeIds[workflowRunId as number] = nodeId
           return
@@ -804,6 +811,9 @@ const workflowBuilderSlice = createSlice({
         state.currentRun.nodeStates[nodeId].status =
           WorkflowRunStepStatus.Running
         state.currentRun.nodeStates[nodeId].response = ''
+        if (startedAt) {
+          state.currentRun.nodeStates[nodeId].startedAt = startedAt
+        }
 
         propagateToOutputNodes(state, nodeId, {
           status: WorkflowRunStepStatus.Running,
