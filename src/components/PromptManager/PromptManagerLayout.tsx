@@ -8,6 +8,7 @@ import PromptTable from './PromptTable'
 import PromptModal from './PromptModal'
 import PromptsLibraryTable from './PromptsLibraryTable'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { features } from '@/config/environment'
 
 const PromptManagerLayout = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -33,20 +34,26 @@ const PromptManagerLayout = () => {
           <div className='px-0' placeholder=''>
             <PromptHeader onSearch={handleSearch} />
 
-            <Tabs defaultValue='my-prompts' className='mt-6 w-full'>
-              <TabsList className='mb-4 grid w-full max-w-md grid-cols-2'>
-                <TabsTrigger value='my-prompts'>My Prompts</TabsTrigger>
-                <TabsTrigger value='library'>Library</TabsTrigger>
-              </TabsList>
+            {features.enableSharing ? (
+              <Tabs defaultValue='my-prompts' className='mt-6 w-full'>
+                <TabsList className='mb-4 grid w-full max-w-md grid-cols-2'>
+                  <TabsTrigger value='my-prompts'>My Prompts</TabsTrigger>
+                  <TabsTrigger value='library'>Library</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value='my-prompts'>
+                <TabsContent value='my-prompts'>
+                  <PromptTable searchQuery={searchQuery} />
+                </TabsContent>
+
+                <TabsContent value='library'>
+                  <PromptsLibraryTable searchQuery={searchQuery} />
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <div className='mt-6'>
                 <PromptTable searchQuery={searchQuery} />
-              </TabsContent>
-
-              <TabsContent value='library'>
-                <PromptsLibraryTable searchQuery={searchQuery} />
-              </TabsContent>
-            </Tabs>
+              </div>
+            )}
           </div>
         </div>
         <PromptModal />
