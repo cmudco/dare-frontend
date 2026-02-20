@@ -63,6 +63,7 @@ export const StepStartedSchema = z.object({
   nodeId: z.string(),
   stepNumber: z.number(),
   nodeType: z.string(),
+  startedAt: z.string().optional(),
   workflowRunId: z.number().optional(),
 })
 
@@ -153,6 +154,7 @@ const NodeStateSchema = z
   .object({
     nodeId: z.string(),
     stepId: z.number().nullable(),
+    startedAt: z.string().nullable().optional(),
     nodeType: z.string(),
     status: z.string(),
     response: z.string().nullable(),
