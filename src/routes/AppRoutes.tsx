@@ -33,6 +33,7 @@ import MCPServerDetail from '@/pages/MCP/MCPServerDetail.tsx'
 import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
 import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
 import MemoryScreen from '@/pages/Memory'
+import { features } from '@/config/environment'
 
 const AppRoutes = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.user)
@@ -102,17 +103,21 @@ const AppRoutes = () => {
             <Route path='/workflows' element={<Workflows />} />
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
-            <Route path='/mcp' element={<MCPLayout />}>
-              <Route index element={<MCPServerList />} />
-              <Route path=':serverSlug' element={<MCPServerDetail />} />
-              <Route
-                path=':serverSlug/tools/:toolName'
-                element={<MCPToolExecute />}
-              />
-              <Route path='history' element={<MCPExecutionHistory />} />
-            </Route>
+            {features.enableMcp && (
+              <Route path='/mcp' element={<MCPLayout />}>
+                <Route index element={<MCPServerList />} />
+                <Route path=':serverSlug' element={<MCPServerDetail />} />
+                <Route
+                  path=':serverSlug/tools/:toolName'
+                  element={<MCPToolExecute />}
+                />
+                <Route path='history' element={<MCPExecutionHistory />} />
+              </Route>
+            )}
             <Route path='/profile' element={<ProfileScreen />} />
-            <Route path='/memory' element={<MemoryScreen />} />
+            {features.enableMemory && (
+              <Route path='/memory' element={<MemoryScreen />} />
+            )}
             <Route path='/billing/' element={<BillingScreen />} />
           </Route>
           <Route path='/models/:slug' element={<ModelCards />} />
