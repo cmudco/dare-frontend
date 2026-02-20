@@ -43,7 +43,7 @@ const RichTextPreview = ({ content }: { content: string }) => {
 
   return (
     <div
-      className='prose prose-sm w-full max-w-full text-sm text-gray-600 dark:prose-invert focus:outline-none'
+      className='prose prose-sm max-w-none overflow-hidden text-sm text-gray-600 dark:prose-invert focus:outline-none [&_*]:max-w-full [&_*]:overflow-hidden [&_*]:text-ellipsis'
       dangerouslySetInnerHTML={{ __html: truncateHtml(content || '') }}
     />
   )
@@ -216,23 +216,23 @@ const PromptTabContent = () => {
 
     return (
       <div
-        className={`mb-3 cursor-pointer rounded-lg border border-border p-3 text-foreground transition-colors ${
+        className={`mb-3 min-w-0 cursor-pointer overflow-hidden rounded-lg border border-border p-3 text-foreground transition-colors ${
           selectedPrompt?.id === prompt.id
-            ? 'cursor-pointer bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
-            : 'cursor-pointer bg-background hover:bg-muted dark:hover:bg-blue-900/30'
+            ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
+            : 'bg-background hover:bg-muted dark:hover:bg-blue-900/30'
         }`}
         onClick={() => handlePromptSelect(prompt)}
       >
-        <div className='mb-1 flex items-start justify-between'>
-          <div className='flex items-center gap-2'>
-            <h4 className='text-xl font-medium text-foreground'>
+        <div className='mb-1 flex items-start justify-between gap-2'>
+          <div className='flex min-w-0 items-center gap-2'>
+            <h4 className='truncate text-xl font-medium text-foreground'>
               {prompt.title || 'Untitled'}
             </h4>
-            <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+            <span className='inline-flex shrink-0 items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
               v{prompt.version || 1}
             </span>
           </div>
-          <div className='flex items-center gap-2'>
+          <div className='flex shrink-0 items-center gap-2'>
             <span className='text-xs text-muted-foreground'>
               {formatDate(prompt.createdAt)}
             </span>
@@ -265,23 +265,23 @@ const PromptTabContent = () => {
     return (
       <div
         key={published.id}
-        className={`mb-3 cursor-pointer rounded-lg border border-border p-3 text-foreground transition-colors ${
+        className={`mb-3 min-w-0 cursor-pointer overflow-hidden rounded-lg border border-border p-3 text-foreground transition-colors ${
           selectedPrompt?.id === published.promptId
-            ? 'cursor-pointer bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
-            : 'cursor-pointer bg-background hover:bg-muted dark:hover:bg-blue-900/30'
+            ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
+            : 'bg-background hover:bg-muted dark:hover:bg-blue-900/30'
         }`}
         onClick={() => handleLibraryPromptSelect(published)}
       >
-        <div className='mb-1 flex items-start justify-between'>
-          <div className='flex items-center gap-2'>
-            <h4 className='text-xl font-medium text-foreground'>
+        <div className='mb-1 flex items-start justify-between gap-2'>
+          <div className='flex min-w-0 items-center gap-2'>
+            <h4 className='truncate text-xl font-medium text-foreground'>
               {published.title || 'Untitled'}
             </h4>
-            <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
+            <span className='inline-flex shrink-0 items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800'>
               v{published.version || 1}
             </span>
           </div>
-          <div className='flex items-center gap-2'>
+          <div className='flex shrink-0 items-center gap-2'>
             <span className='text-xs text-muted-foreground'>
               by {published.authorEmail}
             </span>
