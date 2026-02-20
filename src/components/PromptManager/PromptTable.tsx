@@ -58,6 +58,7 @@ import {
   sortPromptGroups,
 } from '@/utils/sortUtils'
 import { SortDirectionEnum } from '@/utils/constants/sort'
+import { features } from '@/config/environment'
 
 const PromptTable = ({ searchQuery }: PromptTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -258,7 +259,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                         <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'>
                           v{prompt.version || 1}
                         </span>
-                        {prompt.isPublished && (
+                        {features.enableSharing && prompt.isPublished && (
                           <span className='inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400'>
                             Published
                           </span>
@@ -299,23 +300,24 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                           <EyeIcon className='h-4 w-4' />
                           <span>View Versions</span>
                         </DropdownMenuItem>
-                        {prompt.isPublished ? (
-                          <DropdownMenuItem
-                            onClick={() => handleUnpublish(prompt.id)}
-                            className='cursor-pointer text-orange-500'
-                          >
-                            <GlobeAltIcon className='h-4 w-4' />
-                            <span>Unpublish</span>
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem
-                            onClick={() => handlePublish(prompt.id)}
-                            className='cursor-pointer text-green-500'
-                          >
-                            <GlobeAltIcon className='h-4 w-4' />
-                            <span>Publish</span>
-                          </DropdownMenuItem>
-                        )}
+                        {features.enableSharing &&
+                          (prompt.isPublished ? (
+                            <DropdownMenuItem
+                              onClick={() => handleUnpublish(prompt.id)}
+                              className='cursor-pointer text-orange-500'
+                            >
+                              <GlobeAltIcon className='h-4 w-4' />
+                              <span>Unpublish</span>
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => handlePublish(prompt.id)}
+                              className='cursor-pointer text-green-500'
+                            >
+                              <GlobeAltIcon className='h-4 w-4' />
+                              <span>Publish</span>
+                            </DropdownMenuItem>
+                          ))}
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() =>

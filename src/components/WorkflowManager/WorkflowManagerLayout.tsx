@@ -5,6 +5,7 @@ import { useAppDispatch } from '@/redux/hooks'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
 import { getWorkflows, getSharedWorkflows } from '@/redux/asyncThunks/workflow'
+import { features } from '@/config/environment'
 
 const WorkflowManagerLayout = () => {
   const dispatch = useAppDispatch()
@@ -38,28 +39,30 @@ const WorkflowManagerLayout = () => {
         >
           <div className='px-0' placeholder=''>
             <WorkflowHeader onSearch={handleSearch} />
-            <div className='mt-4 flex gap-1 border-b border-border'>
-              <button
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'my'
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-                onClick={() => setActiveTab('my')}
-              >
-                My Workflows
-              </button>
-              <button
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'library'
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-                onClick={() => setActiveTab('library')}
-              >
-                Library
-              </button>
-            </div>
+            {features.enableSharing && (
+              <div className='mt-4 flex gap-1 border-b border-border'>
+                <button
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    activeTab === 'my'
+                      ? 'border-b-2 border-primary text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setActiveTab('my')}
+                >
+                  My Workflows
+                </button>
+                <button
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    activeTab === 'library'
+                      ? 'border-b-2 border-primary text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setActiveTab('library')}
+                >
+                  Library
+                </button>
+              </div>
+            )}
             <WorkflowTable searchQuery={searchQuery} activeTab={activeTab} />
           </div>
         </div>

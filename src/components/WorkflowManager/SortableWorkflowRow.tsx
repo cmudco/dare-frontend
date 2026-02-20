@@ -22,6 +22,7 @@ import {
   getStepCount,
   createDragStyle,
 } from '@/utils/workflowUtils'
+import { features } from '@/config/environment'
 
 interface SortableWorkflowRowProps {
   workflow: Workflow
@@ -69,12 +70,12 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
           <h3 className='font-medium text-foreground'>
             {workflow.title || 'Untitled'}
           </h3>
-          {workflow.isPublished && (
+          {features.enableSharing && workflow.isPublished && (
             <span className='inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400'>
               Published
             </span>
           )}
-          {workflow.isForked && (
+          {features.enableSharing && workflow.isForked && (
             <span className='inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'>
               Forked
             </span>
@@ -120,8 +121,8 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
               <TrashIcon className='mr-2 h-4 w-4' />
               <span>Delete</span>
             </DropdownMenuItem>
-            {/* Only show publish option if NOT forked */}
-            {!workflow.isForked && (
+            {/* Only show publish option if NOT forked and sharing is enabled */}
+            {features.enableSharing && !workflow.isForked && (
               <DropdownMenuItem
                 onClick={() => onPublish(workflow.id)}
                 className='cursor-pointer text-blue-500'
