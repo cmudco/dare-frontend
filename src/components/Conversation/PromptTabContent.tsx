@@ -27,6 +27,7 @@ import { updateConversation } from '@/redux/asyncThunks/conversation'
 import { useAppSelector } from '@/redux/hooks'
 import { getPromptsLibrary } from '@/redux/asyncThunks/promptsLibrary'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { features } from '@/config/environment'
 
 const RichTextPreview = ({ content }: { content: string }) => {
   const truncateHtml = (html: string, maxLength: number = 150): string => {
@@ -316,60 +317,92 @@ const PromptTabContent = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue='my-prompts' className='w-full'>
-        <TabsList className='mb-4 grid w-full grid-cols-2'>
-          <TabsTrigger value='my-prompts'>My Prompts</TabsTrigger>
-          <TabsTrigger value='library'>
-            Library ({filteredLibraryPrompts.length})
-          </TabsTrigger>
-        </TabsList>
+      {features.enableSharing ? (
+        <Tabs defaultValue='my-prompts' className='w-full'>
+          <TabsList className='mb-4 grid w-full grid-cols-2'>
+            <TabsTrigger value='my-prompts'>My Prompts</TabsTrigger>
+            <TabsTrigger value='library'>
+              Library ({filteredLibraryPrompts.length})
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value='my-prompts'>
-          <div className='max-h-[50vh] overflow-y-auto'>
-            {filteredPrompts.length === 0 && (
-              <div className='py-6 text-center text-muted-foreground'>
-                {prompts.length === 0
-                  ? 'No prompts available'
-                  : 'No matching prompts found'}
-              </div>
-            )}
-
-            {filteredPrompts.map((group) => {
-              const isExpanded = expandedGroups.has(group.rootPrompt.id)
-              const latestVersion = group.versions[0]
-
-              return (
-                <div key={group.rootPrompt.id}>
-                  {renderPromptCard(latestVersion, true, group)}
-                  {isExpanded && (
-                    <div className='mb-4 space-y-2 pl-4'>
-                      {group.versions.slice(1).map((version) => (
-                        <div key={version.id}>
-                          {renderPromptCard(version, false)}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+          <TabsContent value='my-prompts'>
+            <div className='max-h-[50vh] overflow-y-auto'>
+              {filteredPrompts.length === 0 && (
+                <div className='py-6 text-center text-muted-foreground'>
+                  {prompts.length === 0
+                    ? 'No prompts available'
+                    : 'No matching prompts found'}
                 </div>
-              )
-            })}
-          </div>
-        </TabsContent>
+              )}
 
-        <TabsContent value='library'>
-          <div className='max-h-[50vh] overflow-y-auto'>
-            {filteredLibraryPrompts.length === 0 && (
-              <div className='py-6 text-center text-muted-foreground'>
-                No published prompts from other users
+              {filteredPrompts.map((group) => {
+                const isExpanded = expandedGroups.has(group.rootPrompt.id)
+                const latestVersion = group.versions[0]
+
+                return (
+                  <div key={group.rootPrompt.id}>
+                    {renderPromptCard(latestVersion, true, group)}
+                    {isExpanded && (
+                      <div className='mb-4 space-y-2 pl-4'>
+                        {group.versions.slice(1).map((version) => (
+                          <div key={version.id}>
+                            {renderPromptCard(version, false)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </TabsContent>
+
+          <TabsContent value='library'>
+            <div className='max-h-[50vh] overflow-y-auto'>
+              {filteredLibraryPrompts.length === 0 && (
+                <div className='py-6 text-center text-muted-foreground'>
+                  No published prompts from other users
+                </div>
+              )}
+
+              {filteredLibraryPrompts.map((published) =>
+                renderLibraryPromptCard(published)
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <div className='max-h-[50vh] overflow-y-auto'>
+          {filteredPrompts.length === 0 && (
+            <div className='py-6 text-center text-muted-foreground'>
+              {prompts.length === 0
+                ? 'No prompts available'
+                : 'No matching prompts found'}
+            </div>
+          )}
+
+          {filteredPrompts.map((group) => {
+            const isExpanded = expandedGroups.has(group.rootPrompt.id)
+            const latestVersion = group.versions[0]
+
+            return (
+              <div key={group.rootPrompt.id}>
+                {renderPromptCard(latestVersion, true, group)}
+                {isExpanded && (
+                  <div className='mb-4 space-y-2 pl-4'>
+                    {group.versions.slice(1).map((version) => (
+                      <div key={version.id}>
+                        {renderPromptCard(version, false)}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-
-            {filteredLibraryPrompts.map((published) =>
-              renderLibraryPromptCard(published)
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+            )
+          })}
+        </div>
+      )}
     </>
   )
 }

@@ -136,28 +136,30 @@ const ConversationHistory = () => {
           </div>
           <hr className='mx-1 mb-2 shrink-0 border-gray-200' />
           {/* Tab switcher */}
-          <div className='mx-1 mb-2 flex shrink-0 rounded-lg bg-gray-100 p-0.5 dark:bg-slate-800'>
-            <button
-              onClick={() => handleTabChange(ConversationTab.MINE)}
-              className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                activeTab === ConversationTab.MINE
-                  ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
-              }`}
-            >
-              My Conversations
-            </button>
-            <button
-              onClick={() => handleTabChange(ConversationTab.SHARED)}
-              className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                activeTab === ConversationTab.SHARED
-                  ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
-              }`}
-            >
-              Shared
-            </button>
-          </div>
+          {features.enableSharing && (
+            <div className='mx-1 mb-2 flex shrink-0 rounded-lg bg-gray-100 p-0.5 dark:bg-slate-800'>
+              <button
+                onClick={() => handleTabChange(ConversationTab.MINE)}
+                className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                  activeTab === ConversationTab.MINE
+                    ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
+                }`}
+              >
+                My Conversations
+              </button>
+              <button
+                onClick={() => handleTabChange(ConversationTab.SHARED)}
+                className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                  activeTab === ConversationTab.SHARED
+                    ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
+                }`}
+              >
+                Shared
+              </button>
+            </div>
+          )}
           <div className='min-h-0 flex-1 overflow-y-auto'>
             <ConversationList
               isSharedTab={activeTab === ConversationTab.SHARED}

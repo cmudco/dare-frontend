@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
+import { features } from '@/config/environment'
 
 const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   conversation,
@@ -85,24 +86,30 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                 {getConversationTitle(conversation)}
               </span>
               {/* Published badge for user's own conversations */}
-              {!isSharedTab && conversation.isPublished && (
-                <span className='inline-flex shrink-0 items-center rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400'>
-                  Published
-                </span>
-              )}
+              {features.enableSharing &&
+                !isSharedTab &&
+                conversation.isPublished && (
+                  <span className='inline-flex shrink-0 items-center rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400'>
+                    Published
+                  </span>
+                )}
               {/* Forked badge for forked conversations */}
-              {!isSharedTab && conversation.isForked && (
-                <span className='inline-flex shrink-0 items-center rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'>
-                  Forked
-                </span>
-              )}
+              {features.enableSharing &&
+                !isSharedTab &&
+                conversation.isForked && (
+                  <span className='inline-flex shrink-0 items-center rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'>
+                    Forked
+                  </span>
+                )}
             </div>
             {/* Owner email on shared tab */}
-            {isSharedTab && conversation.ownerEmail && (
-              <span className='block truncate text-[10px] text-gray-400 dark:text-slate-500'>
-                {conversation.ownerEmail}
-              </span>
-            )}
+            {features.enableSharing &&
+              isSharedTab &&
+              conversation.ownerEmail && (
+                <span className='block truncate text-[10px] text-gray-400 dark:text-slate-500'>
+                  {conversation.ownerEmail}
+                </span>
+              )}
             {/* 3-dot dropdown menu */}
             <div className='absolute right-0 top-1/2 flex -translate-y-1/2 gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
               <DropdownMenu>
@@ -130,8 +137,8 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                   ) : (
                     /* My Conversations tab actions */
                     <>
-                      {/* Only show publish option if NOT forked */}
-                      {!conversation.isForked && (
+                      {/* Only show publish option if NOT forked and sharing is enabled */}
+                      {features.enableSharing && !conversation.isForked && (
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation()
