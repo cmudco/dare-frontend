@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
+import { features } from '@/config/environment'
 
 const PromptsIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -133,10 +134,14 @@ const Sidebar = () => {
     { name: 'Conversations', icon: ChatBubbleLeftIcon, path: '/conversation' },
     { name: 'Files', icon: FolderOpenIcon, path: '/files' },
     { name: 'Prompts', icon: PromptsIcon, path: '/prompts' },
-    { name: 'Agents', icon: AgentsIcon, path: '/agents' },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
-    { name: 'Integrations', icon: IntegrationsIcon, path: '/mcp' },
-    { name: 'Memory', icon: MemoryIcon, path: '/memory' },
+    { name: 'Agents', icon: AgentsIcon, path: '/agents' },
+    ...(features.enableMcp
+      ? [{ name: 'Integrations', icon: IntegrationsIcon, path: '/mcp' }]
+      : []),
+    ...(features.enableMemory
+      ? [{ name: 'Memory', icon: MemoryIcon, path: '/memory' }]
+      : []),
   ]
 
   const bottomItems = [

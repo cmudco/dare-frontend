@@ -332,21 +332,23 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
                 disabled={!activeConversation}
               />
             )}
-            <DareToolSelector
-              selectedSlugs={activeConversation?.selectedDareToolSlugs || []}
-              onChange={(slugs) => {
-                dispatch(updateSelectedDareTools(slugs))
-                if (activeConversation) {
-                  dispatch(
-                    updateConversation({
-                      conversationId: activeConversation.conversationId,
-                      updates: { selectedDareToolSlugs: slugs },
-                    })
-                  )
-                }
-              }}
-              disabled={!activeConversation}
-            />
+            {features.enableMcp && (
+              <DareToolSelector
+                selectedSlugs={activeConversation?.selectedDareToolSlugs || []}
+                onChange={(slugs) => {
+                  dispatch(updateSelectedDareTools(slugs))
+                  if (activeConversation) {
+                    dispatch(
+                      updateConversation({
+                        conversationId: activeConversation.conversationId,
+                        updates: { selectedDareToolSlugs: slugs },
+                      })
+                    )
+                  }
+                }}
+                disabled={!activeConversation}
+              />
+            )}
           </div>
           <div className='flex items-center gap-3'>
             <div className={clsx(!imageGenerationEnabled && 'hidden')}>
