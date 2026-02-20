@@ -63,6 +63,7 @@ export const StepStartedSchema = z.object({
   nodeId: z.string(),
   stepNumber: z.number(),
   nodeType: z.string(),
+  workflowRunId: z.number().optional(),
 })
 
 export const StepStreamingSchema = z.object({
@@ -70,6 +71,7 @@ export const StepStreamingSchema = z.object({
   nodeId: z.string(),
   chunk: z.string(),
   accumulatedTokens: z.number().optional(),
+  workflowRunId: z.number().optional(),
 })
 
 export const StepCompletedSchema = z.object({
@@ -79,6 +81,7 @@ export const StepCompletedSchema = z.object({
   status: z.enum(['completed', 'failed', 'skipped']),
   tokens: TokensSchema.optional(),
   metadata: StepCompletedMetadataSchema.optional(),
+  workflowRunId: z.number().optional(),
 })
 
 export const ExecutionCompleteSchema = z.object({
@@ -95,6 +98,7 @@ export const StepErrorSchema = z.object({
   error: z.string(),
   nodeId: z.string().optional(),
   errorType: z.string().optional(),
+  workflowRunId: z.number().optional(),
 })
 
 export const ValidationRequiredSchema = z.object({
@@ -103,6 +107,33 @@ export const ValidationRequiredSchema = z.object({
   routes: z.array(RouteOptionSchema),
   context: z.object({ aiAnalysis: z.string().optional() }).optional(),
   aiRecommendation: z.string().optional(),
+  workflowRunId: z.number().optional(),
+})
+
+export const BatchStartedSchema = z.object({
+  type: z.literal('batch_started'),
+  batchId: z.number(),
+  totalFiles: z.number(),
+  workflowId: z.number(),
+})
+
+export const BatchProgressSchema = z.object({
+  type: z.literal('batch_progress'),
+  batchId: z.number(),
+  index: z.number(),
+  total: z.number(),
+  fileId: z.number(),
+  fileName: z.string(),
+  status: z.enum(['running', 'completed', 'failed']),
+  workflowRunId: z.number().optional(),
+})
+
+export const BatchCompleteSchema = z.object({
+  type: z.literal('batch_complete'),
+  batchId: z.number(),
+  completedCount: z.number(),
+  failedCount: z.number(),
+  totalFiles: z.number(),
 })
 
 // workflow_status: full WorkflowRunV2Serializer output.
@@ -161,6 +192,9 @@ export const WorkflowEventSchema = z.discriminatedUnion('type', [
   ExecutionCompleteSchema,
   StepErrorSchema,
   ValidationRequiredSchema,
+  BatchStartedSchema,
+  BatchProgressSchema,
+  BatchCompleteSchema,
 ])
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -173,6 +207,9 @@ export type StepCompletedEvent = z.infer<typeof StepCompletedSchema>
 export type ExecutionCompleteEvent = z.infer<typeof ExecutionCompleteSchema>
 export type StepErrorEvent = z.infer<typeof StepErrorSchema>
 export type ValidationRequiredEvent = z.infer<typeof ValidationRequiredSchema>
+export type BatchStartedEvent = z.infer<typeof BatchStartedSchema>
+export type BatchProgressEvent = z.infer<typeof BatchProgressSchema>
+export type BatchCompleteEvent = z.infer<typeof BatchCompleteSchema>
 export type WorkflowStatusEvent = z.infer<typeof WorkflowStatusSchema>
 export type WorkflowEvent = z.infer<typeof WorkflowEventSchema>
 
@@ -187,6 +224,26 @@ export const SubscribeWorkflowResponseSchema = z.object({
     .extend({
       workflow: z.number().optional(),
       user: z.number().optional(),
+    })
+    .nullable()
+    .optional(),
+  latestBatchRun: z
+    .object({
+      batchId: z.number(),
+      workflowId: z.number(),
+      status: z.string(),
+      totalFiles: z.number(),
+      completedCount: z.number(),
+      failedCount: z.number(),
+      fileStatuses: z.array(
+        z.object({
+          fileId: z.number(),
+          fileName: z.string(),
+          status: z.enum(['running', 'completed', 'failed']),
+          workflowRunId: z.number().optional(),
+          index: z.number(),
+        })
+      ),
     })
     .nullable()
     .optional(),

@@ -20,6 +20,7 @@ import {
   workflowSocketStartExecution,
   workflowSocketSubscribeWorkflow,
   workflowSocketUnsubscribeWorkflow,
+  workflowSocketStartBatchExecution,
 } from '@/redux/middleware/workflowSocketMiddleware'
 import { clearExecutionState } from '@/redux/workflowBuilderSlice'
 
@@ -38,6 +39,10 @@ interface UseWorkflowSocketReturn {
     workflowRunId?: number
     workflowId?: number
     userInput?: string
+  }) => void
+  startBatchExecution: (params: {
+    workflowId: number
+    fileIds: number[]
   }) => void
 }
 
@@ -83,9 +88,24 @@ export function useWorkflowSocket(
     [wsConnectionStatus, dispatch]
   )
 
+  const startBatchExecution = useCallback(
+    (params: { workflowId: number; fileIds: number[] }) => {
+      if (wsConnectionStatus === 'connected') {
+        debugLog('🚀 Starting batch execution via socket:', params)
+        dispatch(workflowSocketStartBatchExecution(params))
+      } else {
+        console.error(
+          '❌ WebSocket not connected, cannot start batch execution'
+        )
+      }
+    },
+    [wsConnectionStatus, dispatch]
+  )
+
   return {
     connectionStatus: wsConnectionStatus,
     isConnected: wsConnectionStatus === 'connected',
     startExecution,
+    startBatchExecution,
   }
 }

@@ -17,7 +17,18 @@ import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { Loader2, X, Play, History, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { setShowExecutionPanel } from '@/redux/workflowBuilderSlice'
+import {
+  setShowExecutionPanel,
+  setSelectedBatchRunId,
+} from '@/redux/workflowBuilderSlice'
+import { workflowSocketSubscribe } from '@/redux/middleware/workflowSocketMiddleware'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useAutoScroll } from '@/hooks/useAutoScroll'
 import 'katex/dist/katex.min.css'
 import 'highlight.js/styles/atom-one-light.css'
@@ -39,6 +50,7 @@ export default function WorkflowExecutionPanel() {
     wsConnectionStatus,
     pendingValidation,
     nodes,
+    batchRun,
   } = useAppSelector((state) => state.workflowBuilder)
 
   const {
@@ -50,29 +62,70 @@ export default function WorkflowExecutionPanel() {
     handleScrollToBottomClick,
   } = useAutoScroll()
 
-  const prevRunIdRef = useRef<number | undefined>(currentRun?.id)
+  const shouldShowBatch = batchRun.latestRunIsBatch
+  const lastBatchRunId =
+    [...batchRun.fileStatuses].reverse().find((status) => status.workflowRunId)
+      ?.workflowRunId ?? null
+  const effectiveBatchRunId = batchRun.selectedRunId ?? lastBatchRunId
+
+  const selectedBatchRun =
+    effectiveBatchRunId && batchRun.runsById[effectiveBatchRunId]
+      ? batchRun.runsById[effectiveBatchRunId]
+      : null
+
+  const displayRun = shouldShowBatch ? selectedBatchRun : currentRun
+  const displayActiveNodeId = shouldShowBatch
+    ? effectiveBatchRunId
+      ? batchRun.activeNodeIds[effectiveBatchRunId] || null
+      : null
+    : activeNodeId
+  const displayPendingValidation = shouldShowBatch ? null : pendingValidation
+
+  const batchRunOptions = shouldShowBatch
+    ? batchRun.fileStatuses.filter((status) => status.workflowRunId)
+    : []
+
+  const lastSubscribedRunIdRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!shouldShowBatch || !effectiveBatchRunId) return
+
+    const run = batchRun.runsById[effectiveBatchRunId]
+    const hasNodeStates = Boolean(
+      run?.nodeStates && Object.keys(run.nodeStates).length
+    )
+    if (
+      !hasNodeStates &&
+      lastSubscribedRunIdRef.current !== effectiveBatchRunId
+    ) {
+      lastSubscribedRunIdRef.current = effectiveBatchRunId
+      dispatch(workflowSocketSubscribe(effectiveBatchRunId))
+    }
+  }, [shouldShowBatch, effectiveBatchRunId, batchRun.runsById, dispatch])
+
+  const prevRunIdRef = useRef<number | undefined>(displayRun?.id)
 
   // Force scroll on new run start
   useEffect(() => {
-    if (currentRun?.id !== prevRunIdRef.current) {
-      prevRunIdRef.current = currentRun?.id
+    if (displayRun?.id !== prevRunIdRef.current) {
+      prevRunIdRef.current = displayRun?.id
       forceScrollToBottom('auto')
     }
-  }, [currentRun?.id, forceScrollToBottom])
+  }, [displayRun?.id, forceScrollToBottom])
 
   // Auto-scroll during streaming
   useEffect(() => {
-    if (activeNodeId) {
+    if (displayActiveNodeId) {
       scrollToBottom('auto')
     }
-  }, [currentRun?.nodeStates, activeNodeId, scrollToBottom])
+  }, [displayRun?.nodeStates, displayActiveNodeId, scrollToBottom])
 
   // Force scroll when validation appears
   useEffect(() => {
-    if (pendingValidation) {
+    if (displayPendingValidation) {
       forceScrollToBottom('smooth')
     }
-  }, [pendingValidation, forceScrollToBottom])
+  }, [displayPendingValidation, forceScrollToBottom])
 
   const handleClose = useCallback(() => {
     dispatch(setShowExecutionPanel(false))
@@ -91,8 +144,8 @@ export default function WorkflowExecutionPanel() {
   )
 
   // Derive execution node entries from the single source: currentRun.nodeStates
-  const executionNodeEntries = currentRun?.nodeStates
-    ? Object.entries(currentRun.nodeStates).filter(
+  const executionNodeEntries = displayRun?.nodeStates
+    ? Object.entries(displayRun.nodeStates).filter(
         ([, state]) =>
           state.response &&
           (state.nodeType === WorkflowNodeType.Step ||
@@ -103,15 +156,18 @@ export default function WorkflowExecutionPanel() {
 
   const hasDisplayData = executionNodeEntries.length > 0
   const isViewingCompletedRun =
-    !isRunning && currentRun?.status === WorkflowRunStepStatus.Completed
+    !isRunning && displayRun?.status === WorkflowRunStepStatus.Completed
   const isWaiting =
-    isRunning && !hasDisplayData && !activeNodeId && !pendingValidation
+    isRunning &&
+    !hasDisplayData &&
+    !displayActiveNodeId &&
+    !displayPendingValidation
 
   const statusText = isRunning
-    ? activeNodeId
+    ? displayActiveNodeId
       ? 'Streaming response...'
       : 'Workflow running...'
-    : pendingValidation
+    : displayPendingValidation
       ? 'Awaiting validation'
       : isViewingCompletedRun
         ? 'Viewing results'
@@ -127,6 +183,30 @@ export default function WorkflowExecutionPanel() {
           </h3>
           <p className='text-xs text-muted-foreground'>{statusText}</p>
         </div>
+        {shouldShowBatch && batchRunOptions.length > 0 && (
+          <div className='min-w-[180px]'>
+            <Select
+              value={effectiveBatchRunId ? effectiveBatchRunId.toString() : ''}
+              onValueChange={(value) => {
+                dispatch(setSelectedBatchRunId(Number(value)))
+              }}
+            >
+              <SelectTrigger className='h-8 bg-background text-xs'>
+                <SelectValue placeholder='Select batch run' />
+              </SelectTrigger>
+              <SelectContent>
+                {batchRunOptions.map((status) => (
+                  <SelectItem
+                    key={status.workflowRunId}
+                    value={String(status.workflowRunId)}
+                  >
+                    {status.fileName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className='flex items-center gap-2'>
           <ConnectionIndicator status={wsConnectionStatus} />
           <Button variant='ghost' size='sm' onClick={handleClose}>
@@ -138,11 +218,11 @@ export default function WorkflowExecutionPanel() {
       {/* Scrollable content */}
       <div ref={containerRef} className='flex-1 overflow-y-auto p-4'>
         {/* Human Validation UI */}
-        {pendingValidation && (
+        {displayPendingValidation && (
           <ValidationPanel
-            validation={pendingValidation}
-            workflowRunId={currentRun?.id}
-            nodeName={getNodeName(pendingValidation.nodeId)}
+            validation={displayPendingValidation}
+            workflowRunId={displayRun?.id}
+            nodeName={getNodeName(displayPendingValidation.nodeId)}
           />
         )}
 
@@ -188,7 +268,7 @@ export default function WorkflowExecutionPanel() {
                 }
                 nodeType={nodes.find((n) => n.id === nodeId)?.type}
                 content={state.response || ''}
-                isActive={activeNodeId === nodeId}
+                isActive={displayActiveNodeId === nodeId}
                 snippets={state.snippets}
                 webSearchSources={state.webSearchSources}
               />
@@ -212,23 +292,23 @@ export default function WorkflowExecutionPanel() {
       )}
 
       {/* Footer */}
-      {currentRun && (
+      {displayRun && (
         <div className='rounded-b-2xl border-t border-border/50 bg-gradient-to-r from-slate-50 to-white p-3'>
           <div className='flex items-center justify-end text-xs text-muted-foreground'>
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-xs font-medium',
-                currentRun.status === WorkflowRunStepStatus.Completed &&
+                displayRun.status === WorkflowRunStepStatus.Completed &&
                   'bg-[#023572]/10 text-[#023572]',
-                currentRun.status === WorkflowRunStepStatus.Running &&
+                displayRun.status === WorkflowRunStepStatus.Running &&
                   'bg-[#EE183C]/10 text-[#EE183C]',
-                currentRun.status === WorkflowRunStepStatus.Failed &&
+                displayRun.status === WorkflowRunStepStatus.Failed &&
                   'bg-red-100 text-red-700',
-                currentRun.status === WorkflowRunStepStatus.PendingHumanInput &&
+                displayRun.status === WorkflowRunStepStatus.PendingHumanInput &&
                   'bg-[#EE183C]/10 text-[#EE183C]'
               )}
             >
-              {currentRun.status}
+              {displayRun.status}
             </span>
           </div>
         </div>

@@ -18,6 +18,7 @@ import {
   resetPartialRun,
   setSavingStatus,
   setShowExecutionPanel,
+  setSelectedBatchRunId,
   setOutputDisplayMode,
   expandAllOutputNodes,
   collapseAllOutputNodes,
@@ -49,6 +50,8 @@ import {
   Eye,
   ChevronsUpDown,
 } from 'lucide-react'
+import BatchFileSelectDialog from './_components/BatchFileSelectDialog'
+import BatchProgressPanel from './_components/BatchProgressPanel'
 import {
   exportWorkflow,
   exportWorkflowToString,
@@ -87,7 +90,13 @@ const WorkflowEditPage = () => {
   const outputDisplayMode = useAppSelector(
     (s) => s.workflowBuilder.outputDisplayMode
   )
+  const batchRun = useAppSelector((s) => s.workflowBuilder.batchRun)
   const hasExecutionData = currentRun !== null
+  const hasBatchExecutionData = batchRun.fileStatuses.length > 0
+  const canViewExecutionPanel =
+    hasExecutionData ||
+    isRunning ||
+    (hasBatchExecutionData && batchRun.latestRunIsBatch)
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
 
@@ -104,9 +113,10 @@ const WorkflowEditPage = () => {
   // Socket-based workflow execution
   // This auto-subscribes to get execution state when connected
   const workflowId = idParam ? parseInt(idParam, 10) : undefined
-  const { isConnected, startExecution } = useWorkflowSocket({
-    workflowId,
-  })
+  const { isConnected, startExecution, startBatchExecution } =
+    useWorkflowSocket({
+      workflowId,
+    })
 
   // Undo/Redo handlers that call the exposed window functions
   const handleUndo = useCallback(() => {
@@ -211,6 +221,30 @@ const WorkflowEditPage = () => {
     startExecution({ workflowId: id })
   }
 
+  const handleBatchRun = async (fileIds: number[]) => {
+    if (!id) return
+
+    if (!isConnected) {
+      toast.error('WebSocket not connected. Please wait and try again.')
+      return
+    }
+
+    await handleSave()
+    startBatchExecution({ workflowId: id, fileIds })
+  }
+
+  const handleViewExecution = () => {
+    if (batchRun.latestRunIsBatch && batchRun.selectedRunId === null) {
+      const latestBatchRun = [...batchRun.fileStatuses]
+        .reverse()
+        .find((status) => status.workflowRunId)
+      if (latestBatchRun?.workflowRunId) {
+        dispatch(setSelectedBatchRunId(latestBatchRun.workflowRunId))
+      }
+    }
+    dispatch(setShowExecutionPanel(true))
+  }
+
   // Auto-save logic
   const debouncedNodes = useDebounce(nodes, 3000)
   const debouncedEdges = useDebounce(edges, 3000)
@@ -218,6 +252,7 @@ const WorkflowEditPage = () => {
 
   // Track if initial load is done to avoid saving on mount
   const [isLoaded, setIsLoaded] = useState(false)
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false)
 
   useEffect(() => {
     if (loadedWorkflow) {
@@ -512,14 +547,14 @@ const WorkflowEditPage = () => {
           )}
 
           {/* Peek Execution Button - shows latest run or current execution */}
-          {id && (hasExecutionData || isRunning) && (
+          {id && canViewExecutionPanel && (
             <TooltipProvider>
               <Tooltip delayDuration={150}>
                 <TooltipTrigger asChild>
                   <Button
                     variant='ghost'
                     size='icon'
-                    onClick={() => dispatch(setShowExecutionPanel(true))}
+                    onClick={handleViewExecution}
                     className='h-8 w-8'
                     aria-label={
                       isRunning ? 'View execution' : 'View latest execution'
@@ -536,18 +571,37 @@ const WorkflowEditPage = () => {
           )}
 
           {id && !manualModeEnabled && (
-            <Button
-              size='sm'
-              variant='outline'
-              onClick={handleRunWorkflow}
-              disabled={isRunning || manualModeEnabled}
-              className='normal-case'
-            >
-              Run All
-            </Button>
+            <div className='flex items-center gap-2'>
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={() => setBatchDialogOpen(true)}
+                disabled={isRunning}
+                className='normal-case'
+              >
+                Run Batch
+              </Button>
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={handleRunWorkflow}
+                disabled={isRunning || manualModeEnabled}
+                className='normal-case'
+              >
+                Run All
+              </Button>
+            </div>
           )}
         </div>
       </div>
+
+      <BatchFileSelectDialog
+        isOpen={batchDialogOpen}
+        onClose={() => setBatchDialogOpen(false)}
+        onConfirm={handleBatchRun}
+        isRunning={isRunning}
+      />
+      <BatchProgressPanel />
     </div>
   )
 }
