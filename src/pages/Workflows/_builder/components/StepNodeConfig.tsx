@@ -16,11 +16,18 @@ import { useState, useEffect } from 'react'
 import type { Agent } from '@/redux/types/agent'
 
 // Step Node Data Type
-export type StepNodeData = {
+interface FileNameMap {
+  [id: number]: string
+}
+
+export interface StepNodeData {
   agent?: number | null
   prompt: number | null
+  promptTitle?: string | null
   contentFiles: number[]
+  contentFileNames?: FileNameMap
   embeddingFiles: number[]
+  embeddingFileNames?: FileNameMap
   llm: number | null
   maxTokens?: number
   temperature?: number
@@ -138,7 +145,16 @@ export default function StepNodeConfig({
           }}
         >
           <SelectTrigger className='bg-background text-sm'>
-            <SelectValue placeholder='Select a prompt' />
+            <SelectValue placeholder='Select a prompt'>
+              {nodeData?.prompt
+                ? (() => {
+                    const found = prompts.find((p) => p.id === nodeData.prompt)
+                    if (found)
+                      return `${found.title} ${found.version ? `(v${found.version})` : ''}`
+                    return nodeData.promptTitle || `Prompt ${nodeData.prompt}`
+                  })()
+                : 'Select a prompt'}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {prompts.map((p) => (
@@ -187,7 +203,9 @@ export default function StepNodeConfig({
             const file = files.find((f) => f.id === fileId)
             return (
               <Badge key={fileId} variant='secondary' className='text-xs'>
-                {file?.name || `File ${fileId}`}
+                {file?.name ||
+                  nodeData?.contentFileNames?.[fileId] ||
+                  `File ${fileId}`}
                 <Button
                   size='sm'
                   variant='ghost'
@@ -241,7 +259,9 @@ export default function StepNodeConfig({
             const file = files.find((f) => f.id === fileId)
             return (
               <Badge key={fileId} variant='secondary' className='text-xs'>
-                {file?.name || `File ${fileId}`}
+                {file?.name ||
+                  nodeData?.embeddingFileNames?.[fileId] ||
+                  `File ${fileId}`}
                 <Button
                   size='sm'
                   variant='ghost'

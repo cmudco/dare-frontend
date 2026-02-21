@@ -14,6 +14,10 @@ import {
   updateConversationSelectedIds,
   updateConversationFeedbackTracking,
   deleteMessage,
+  fetchSharedConversations,
+  publishConversation,
+  forkConversation,
+  fetchConversationMessages,
 } from './asyncThunks/conversation'
 import {
   Message,
@@ -24,6 +28,7 @@ import {
   ToolCallStatus,
 } from './types/conversation'
 import { ServerSlug } from '@/utils/constants/dareTools'
+import { ConversationTab } from '@/utils/constants/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
@@ -461,6 +466,9 @@ export const conversationSlice = createSlice({
       state.isGeneratingImage = action.payload.generating
       state.imageGenerationPrompt = action.payload.prompt
     },
+    setActiveTab(state, action: PayloadAction<ConversationTab>) {
+      state.activeTab = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -701,6 +709,37 @@ export const conversationSlice = createSlice({
         }
       )
       // ─────────────────────────────────────────────────────────────────────
+      // Conversation Sharing thunks
+      // ─────────────────────────────────────────────────────────────────────
+      .addCase(fetchSharedConversations.fulfilled, (state, action) => {
+        state.sharedConversations = action.payload
+      })
+      .addCase(publishConversation.fulfilled, (state, action) => {
+        // Update in user's own conversations list
+        const idx = state.conversations.findIndex(
+          (c) => c.conversationId === action.payload.conversationId
+        )
+        if (idx !== -1) {
+          state.conversations[idx] = action.payload
+        }
+        // Also update activeConversation if it's the same
+        if (
+          state.activeConversation?.conversationId ===
+          action.payload.conversationId
+        ) {
+          state.activeConversation = action.payload
+        }
+      })
+      .addCase(forkConversation.fulfilled, (state, action) => {
+        // Add forked conversation to user's list and switch to "mine" tab
+        state.conversations.unshift(action.payload)
+        state.activeTab = ConversationTab.MINE
+        state.activeConversation = action.payload
+      })
+      .addCase(fetchConversationMessages.fulfilled, (state, action) => {
+        state.activeConversationMessages = action.payload
+      })
+      // ─────────────────────────────────────────────────────────────────────
       // Socket.IO message handlers (from socketMiddleware)
       // ─────────────────────────────────────────────────────────────────────
       .addMatcher(
@@ -831,11 +870,11 @@ export const conversationSlice = createSlice({
           )
           if (msg) {
             // Initialize toolCalls array if not present
-            if (!msg.toolCalls) {
-              msg.toolCalls = []
+            if (!msg.mcpToolCalls) {
+              msg.mcpToolCalls = []
             }
             // Add new tool call entry using the ID from backend
-            msg.toolCalls.push({
+            msg.mcpToolCalls.push({
               id: toolCallId,
               toolName,
               serverSlug,
@@ -866,10 +905,10 @@ export const conversationSlice = createSlice({
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
-          if (msg && msg.toolCalls) {
+          if (msg && msg.mcpToolCalls) {
             // Find the matching tool call by unique id only
             // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
-            const toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId)
+            const toolCall = msg.mcpToolCalls.find((tc) => tc.id === toolCallId)
             if (toolCall) {
               toolCall.status =
                 status === 'success'
@@ -911,11 +950,11 @@ export const conversationSlice = createSlice({
           )
           if (msg) {
             // Initialize toolCalls array if not present
-            if (!msg.toolCalls) {
-              msg.toolCalls = []
+            if (!msg.mcpToolCalls) {
+              msg.mcpToolCalls = []
             }
             // Add new tool call entry
-            msg.toolCalls.push({
+            msg.mcpToolCalls.push({
               id: toolCall.id,
               toolName: toolCall.toolName,
               serverSlug: toolCall.serverSlug || ServerSlug.DARE,
@@ -948,10 +987,10 @@ export const conversationSlice = createSlice({
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
-          if (msg && msg.toolCalls) {
+          if (msg && msg.mcpToolCalls) {
             // Find the matching tool call by unique id only
             // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
-            const existingToolCall = msg.toolCalls.find(
+            const existingToolCall = msg.mcpToolCalls.find(
               (tc) => tc.id === toolCall.id
             )
             if (existingToolCall) {
@@ -1031,5 +1070,6 @@ export const {
   updateSelectedDareTools,
   updateSelectedAgent,
   applyAgentSettings,
+  setActiveTab,
 } = conversationSlice.actions
 export default conversationSlice.reducer
