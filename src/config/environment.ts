@@ -49,6 +49,10 @@ export interface FeatureFlags {
   enableDebugLogs: boolean
   // MCP - Model Context Protocol server integration for external tools
   enableMcp: boolean
+  // Memory - conversation memory feature
+  enableMemory: boolean
+  // Sharing - prompt/conversation/workflow publishing and sharing features
+  enableSharing: boolean
 }
 
 /**
@@ -86,6 +90,8 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableVoiceInput: true, // Voice input enabled for local testing
         enableDebugLogs: true, // Debug logs enabled for local
         enableMcp: true, // MCP enabled for local development
+        enableMemory: true, // Memory enabled for local development
+        enableSharing: true, // Sharing disabled
       }
 
     case 'dare-staging':
@@ -98,6 +104,8 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableVoiceInput: true, // Voice input enabled for staging testing
         enableDebugLogs: true, // Debug logs enabled for staging
         enableMcp: true, // MCP enabled for staging testing
+        enableMemory: true, // Memory enabled for staging testing
+        enableSharing: true, // Sharing disabled
       }
 
     case 'dare-production':
@@ -110,6 +118,8 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableVoiceInput: false, // Voice input disabled in production (beta)
         enableDebugLogs: false, // Debug logs disabled in production
         enableMcp: false, // MCP disabled in production (beta)
+        enableMemory: false, // Memory disabled in production (beta)
+        enableSharing: false, // Sharing disabled
       }
 
     case 'gt-production':
@@ -122,6 +132,8 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableVoiceInput: false, // Voice input disabled in production (beta)
         enableDebugLogs: false, // Debug logs disabled in production
         enableMcp: true, // MCP enabled for Georgia Tech
+        enableMemory: true, // Memory enabled for Georgia Tech
+        enableSharing: false, // Sharing disabled
       }
 
     default:
@@ -134,6 +146,8 @@ function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
         enableVoiceInput: false, // Default off for safety
         enableDebugLogs: false, // Default off for safety
         enableMcp: false, // Default off for safety
+        enableMemory: false, // Default off for safety
+        enableSharing: false, // Default off for safety
       }
   }
 }

@@ -10,6 +10,15 @@ export const getFilesAPI = async (): Promise<{ results: MyFile[] }> => {
   })
 }
 
+export const getFilesByOwnerAPI = async (
+  ownerId: number
+): Promise<{ results: MyFile[] }> => {
+  return await baseRequest<{ results: MyFile[] }>({
+    url: `api/files/by-owner/${ownerId}/`,
+    method: METHOD.GET,
+  })
+}
+
 export const uploadFileAPI = async (data: FormData): Promise<MyFile[]> => {
   return await baseRequest<MyFile[]>({
     url: 'api/files/',

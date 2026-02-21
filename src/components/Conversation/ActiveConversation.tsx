@@ -5,25 +5,29 @@ import { AppDispatch, RootState } from '../../redux/store'
 import {
   updateConversationInput,
   updateActiveConversation,
-  loadSelectedFilesFromIds,
   loadDraftForConversation,
   saveDraftForConversation,
   clearConversation,
 } from '../../redux/conversationSlice'
-import { updateConversationFeedbackTracking } from '@/redux/asyncThunks/conversation'
+import {
+  updateConversationFeedbackTracking,
+  forkConversation,
+} from '@/redux/asyncThunks/conversation'
 import { useSocketSubscription } from '@/hooks/useSocketSubscription'
 import { useImageDragAndDrop } from '../../hooks/useImageDragAndDrop'
 import { FEEDBACK_AUTO_TRIGGER_CONFIG } from '@/config/feedback'
 import { features } from '@/config/environment'
-import { Conversation } from '@/redux/types/conversation'
+import { Conversation, isSenderMessage } from '@/redux/types/conversation'
 import { Card } from '../ui/card'
 import ConversationPill from './ConversationPill'
+import ForkConfirmDialog from '../shared/ForkConfirmDialog'
 import NewConversation from './NewConversation'
 import EmptyConversation from './EmptyConversation'
 import CreditErrorAlert from './CreditErrorAlert'
 import ImageDropOverlay from './ImageDropOverlay'
 import MessageList from './MessageList'
 import { ArtifactSidecar } from '../Artifacts'
+import { useConversationFiles } from '@/hooks/useConversationFiles'
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -90,7 +94,6 @@ const ActiveConversation: React.FC = () => {
   const conversations = useSelector(
     (state: RootState) => state.conversation?.conversations || []
   )
-  const files = useSelector((state: RootState) => state.files.files)
   const conversationInput = useSelector(
     (state: RootState) => state.conversation.conversationInput
   )
@@ -103,6 +106,10 @@ const ActiveConversation: React.FC = () => {
   const [shouldShowAutoFeedbackModal, setShouldShowAutoFeedbackModal] =
     useState(false)
   const [userJustSentMessage, setUserJustSentMessage] = useState(false)
+  const [showForkDialog, setShowForkDialog] = useState(false)
+
+  // Resolve and load files for forked/shared conversations
+  useConversationFiles(activeConversation)
 
   // Refs
   const hasCheckedAutoFeedback = useRef(false)
@@ -144,20 +151,6 @@ const ActiveConversation: React.FC = () => {
       dispatch(updateConversationInput(''))
     }
   }, [activeConversation?.conversationId, dispatch])
-
-  // Load selected files for conversation
-  useEffect(() => {
-    if (activeConversation && files.length > 0) {
-      dispatch(
-        loadSelectedFilesFromIds({
-          files,
-          selectedFileIds: activeConversation.selectedFileIds || [],
-          selectedEmbeddingIds: activeConversation.selectedEmbeddingIds || [],
-          selectedMediaIds: activeConversation.selectedMediaIds || [],
-        })
-      )
-    }
-  }, [activeConversation?.conversationId, files, dispatch])
 
   // Navigate to conversation URL
   useEffect(() => {
@@ -219,11 +212,13 @@ const ActiveConversation: React.FC = () => {
     }
 
     const lastMessage = conversationHistory[conversationHistory.length - 1]
-    if (lastMessage.isSender || lastMessage.streaming) {
+    if (isSenderMessage(lastMessage) || lastMessage.streaming) {
       return
     }
 
-    const nModelMessages = conversationHistory.filter((m) => !m.isSender).length
+    const nModelMessages = conversationHistory.filter(
+      (m) => !isSenderMessage(m)
+    ).length
     const shouldTrigger = shouldShowAutoFeedback(
       activeConversation,
       nModelMessages
@@ -264,7 +259,7 @@ const ActiveConversation: React.FC = () => {
     if (currentCount > prevCount) {
       const newMessage = conversationHistory[currentCount - 1]
       // If the new message is from the user, trigger scroll
-      if (newMessage?.isSender) {
+      if (newMessage && isSenderMessage(newMessage)) {
         setUserJustSentMessage(true)
         // Reset after a tick so the effect in MessageList can fire
         requestAnimationFrame(() => setUserJustSentMessage(false))
@@ -286,6 +281,29 @@ const ActiveConversation: React.FC = () => {
   const handleCancelEdit = () => {
     setEditMessageId(null)
     dispatch(updateConversationInput(''))
+  }
+
+  const handleForkAndContinue = () => {
+    setShowForkDialog(true)
+  }
+
+  const handleConfirmFork = async () => {
+    if (!activeConversation) return
+    try {
+      const forked = await dispatch(
+        forkConversation(activeConversation.conversationId)
+      ).unwrap()
+      setShowForkDialog(false)
+      dispatch(updateActiveConversation(forked))
+      navigate(`/conversation/${forked.conversationId}`)
+    } catch (err) {
+      console.error('Error forking:', err)
+      setShowForkDialog(false)
+    }
+  }
+
+  const handleCancelFork = () => {
+    setShowForkDialog(false)
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -318,16 +336,47 @@ const ActiveConversation: React.FC = () => {
               />
             )}
             <div className='flex flex-col items-center justify-center'>
+              {/* Read-only banner for shared conversations */}
+              {features.enableSharing &&
+                activeConversation &&
+                activeConversation.isOwner === false && (
+                  <div className='mb-2 flex w-full max-w-3xl items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 dark:border-amber-800 dark:bg-amber-950/30'>
+                    <span className='text-sm text-amber-700 dark:text-amber-400'>
+                      This is a shared conversation (read-only)
+                    </span>
+                    <button
+                      onClick={handleForkAndContinue}
+                      className='ml-3 shrink-0 rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600'
+                    >
+                      Fork & Continue
+                    </button>
+                  </div>
+                )}
               <ConversationPill
                 editMessageId={editMessageId}
                 onCancelEdit={handleCancelEdit}
-                disabled={!activeConversation}
+                disabled={
+                  !activeConversation || activeConversation.isOwner === false
+                }
               />
             </div>
           </div>
         </Card>
         {features.enableArtifacts && <ArtifactSidecar />}
       </div>
+
+      <ForkConfirmDialog
+        isOpen={showForkDialog}
+        title={activeConversation?.title || 'Untitled Conversation'}
+        entityType='conversation'
+        copiedItems={[
+          'All messages and conversation history',
+          'Conversation settings and configuration',
+          'File selections (shared from the original owner)',
+        ]}
+        onConfirm={handleConfirmFork}
+        onCancel={handleCancelFork}
+      />
     </>
   )
 }

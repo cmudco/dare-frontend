@@ -6,6 +6,9 @@ import {
   deleteWorkflow,
   getWorkflowRunById,
   updateWorkflowDisplayOrder,
+  publishWorkflow,
+  getSharedWorkflows,
+  forkWorkflow,
 } from './asyncThunks/workflow'
 import { initialState } from './initialState/workflow'
 
@@ -125,6 +128,22 @@ const workflowSlice = createSlice({
       .addCase(updateWorkflowDisplayOrder.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
+      })
+      // Publishing
+      .addCase(publishWorkflow.fulfilled, (state, action) => {
+        const updated = action.payload
+        const index = state.workflows.findIndex((w) => w.id === updated.id)
+        if (index !== -1) {
+          state.workflows[index] = updated
+        }
+      })
+      // Shared library
+      .addCase(getSharedWorkflows.fulfilled, (state, action) => {
+        state.sharedWorkflows = action.payload
+      })
+      // Fork: add forked workflow to user's list
+      .addCase(forkWorkflow.fulfilled, (state, action) => {
+        state.workflows.push(action.payload)
       })
   },
 })

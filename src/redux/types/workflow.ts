@@ -149,10 +149,17 @@ export interface Workflow {
   viewport?: { x: number; y: number; zoom: number }
   manualModeEnabled?: boolean
   outputDisplayMode?: OutputDisplayMode
+
+  // Publishing / sharing fields
+  isPublished?: boolean
+  publishedAt?: string | null
+  isForked?: boolean
+  ownerUsername?: string
 }
 
 export interface WorkflowState {
   workflows: Workflow[]
+  sharedWorkflows: Workflow[]
   selectedWorkflow: Workflow | null
   workflowRuns: WorkflowRun[]
   loading: boolean
@@ -161,6 +168,7 @@ export interface WorkflowState {
 
 export interface WorkflowTableProps {
   searchQuery: string
+  activeTab: 'my' | 'library'
 }
 
 export interface CreateWorkflowDTO {

@@ -14,10 +14,11 @@ import {
 import { useState, useEffect } from 'react'
 
 // Structured Output Node Data Type
-export type StructuredOutputNodeData = {
-  routes?: Array<{ name: string; description: string }>
+export interface StructuredOutputNodeData {
+  routes?: { name: string; description: string }[]
   textInput?: string
   prompt?: number | null
+  promptTitle?: string | null
   llm?: number | null
   requireHumanValidation?: boolean
 }
@@ -128,7 +129,16 @@ export default function StructuredOutputNodeConfig({
           }}
         >
           <SelectTrigger id='prompt' className='text-sm'>
-            <SelectValue placeholder='Use default routing prompt' />
+            <SelectValue placeholder='Use default routing prompt'>
+              {nodeData?.prompt
+                ? (() => {
+                    const found = prompts.find((p) => p.id === nodeData.prompt)
+                    if (found)
+                      return `${found.title} ${found.version ? `(v${found.version})` : ''}`
+                    return nodeData.promptTitle || 'Use default routing prompt'
+                  })()
+                : 'Use default routing prompt'}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {prompts.map((prompt) => (
