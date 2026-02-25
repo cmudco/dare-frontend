@@ -100,6 +100,7 @@ export interface RoutingMetadata {
 export interface NodeState {
   nodeId: string // Node ID from workflow graph (survives DRF CamelCase key mangling)
   stepId: number | null // Backend step ID (null for display nodes)
+  startedAt?: string | null // Server timestamp when execution started
   nodeType: string // 'step' | 'structuredOutput' | 'chatOutput' | 'start'
   status: WorkflowRunStepStatus
   response: string | null

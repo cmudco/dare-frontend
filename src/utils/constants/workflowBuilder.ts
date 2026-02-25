@@ -1,10 +1,16 @@
-import { type NodeTypes, type Node, type Edge } from '@xyflow/react'
+import {
+  type NodeTypes,
+  type EdgeTypes,
+  type Node,
+  type Edge,
+} from '@xyflow/react'
 import StartNode from '@/pages/Workflows/_builder/nodes/StartNode'
 import StepNode from '@/pages/Workflows/_builder/nodes/StepNode'
 import ChatOutputNode from '@/pages/Workflows/_builder/nodes/ChatOutputNode'
 import StructuredOutputNode from '@/pages/Workflows/_builder/nodes/StructuredOutputNode'
 import NotesNode from '@/pages/Workflows/_builder/nodes/NotesNode'
 import FileNode from '@/pages/Workflows/_builder/nodes/FileNode'
+import ColoredBezierEdge from '@/pages/Workflows/_builder/edges/ColoredBezierEdge'
 
 export const WORKFLOW_NODE_TYPES: NodeTypes = {
   start: StartNode,
@@ -15,10 +21,23 @@ export const WORKFLOW_NODE_TYPES: NodeTypes = {
   file: FileNode,
 }
 
-// Theme-aware default edge styling
+// Edge type registration (custom colored bezier edge as default)
+export const WORKFLOW_EDGE_TYPES: EdgeTypes = {
+  default: ColoredBezierEdge,
+}
+
+// Default edge options — type 'default' maps to our ColoredBezierEdge
 export const DEFAULT_EDGE_OPTIONS = {
-  type: 'smoothstep',
-  style: { stroke: 'hsl(var(--primary))', strokeOpacity: 0.5 },
+  type: 'default' as const,
+}
+
+// Hex equivalents of HANDLE_COLORS for SVG edge stroke coloring
+export const HANDLE_COLOR_HEX: Record<string, string> = {
+  '!bg-blue-500': '#3b82f6',
+  '!bg-purple-500': '#a855f7',
+  '!bg-green-500': '#22c55e',
+  '!bg-orange-500': '#f97316',
+  '!bg-pink-500': '#ec4899',
 }
 
 // Shared handle id prefix for route-based outputs
