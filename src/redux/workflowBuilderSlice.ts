@@ -12,6 +12,7 @@ import { initialState } from './initialState/workflowBuilder'
 import {
   WorkflowBuilderState,
   OutputDisplayMode,
+  BatchFileStatus,
 } from './types/workflowBuilder'
 import { handleConnection } from '@/utils/workflowBuilder/handleConnection'
 import { createNode } from '@/utils/workflowBuilder/createNode'
@@ -62,13 +63,19 @@ const singleStepStarted = createAction<{
   stepNodeId: string
 }>('workflowSocket/singleStepStarted')
 
-const stepStarted = createAction<{ nodeId: string; nodeType?: string }>(
-  'workflowSocket/step_started'
-)
+const stepStarted = createAction<{
+  nodeId: string
+  nodeType?: string
+  stepNumber?: number
+  startedAt?: string
+  workflowRunId?: number
+}>('workflowSocket/step_started')
 
-const stepStreaming = createAction<{ nodeId: string; chunk: string }>(
-  'workflowSocket/step_streaming'
-)
+const stepStreaming = createAction<{
+  nodeId: string
+  chunk: string
+  workflowRunId?: number
+}>('workflowSocket/step_streaming')
 
 const stepCompleted = createAction<{
   nodeId: string
@@ -78,6 +85,7 @@ const stepCompleted = createAction<{
     snippets?: WorkflowStepSnippet[]
     webSearchSources?: WorkflowStepWebSearchSource[]
   }
+  workflowRunId?: number
 }>('workflowSocket/step_completed')
 
 const executionComplete = createAction<{
@@ -86,9 +94,11 @@ const executionComplete = createAction<{
   endedAt?: string
 }>('workflowSocket/execution_complete')
 
-const stepError = createAction<{ nodeId?: string; error?: string }>(
-  'workflowSocket/step_error'
-)
+const stepError = createAction<{
+  nodeId?: string
+  error?: string
+  workflowRunId?: number
+}>('workflowSocket/step_error')
 
 const workflowStatus = createAction<WorkflowRun & { type: 'workflow_status' }>(
   'workflowSocket/workflow_status'
@@ -99,9 +109,44 @@ const validationRequired = createAction<{
   routes: RouteOption[]
   context?: PendingValidationContext
   aiRecommendation?: string
+  workflowRunId?: number
 }>('workflowSocket/validation_required')
 
 const validationSubmitted = createAction('workflowSocket/validationSubmitted')
+
+const batchStarted = createAction<{
+  batchId: number
+  totalFiles: number
+  workflowId: number
+}>('workflowSocket/batch_started')
+
+const batchProgress = createAction<{
+  batchId: number
+  index: number
+  total: number
+  fileId: number
+  fileName: string
+  status: 'running' | 'completed' | 'failed'
+  workflowRunId?: number
+}>('workflowSocket/batch_progress')
+
+const batchComplete = createAction<{
+  batchId: number
+  completedCount: number
+  failedCount: number
+  totalFiles: number
+}>('workflowSocket/batch_complete')
+
+const batchSummaryLoaded = createAction<{
+  batchId: number
+  workflowId: number
+  status: string
+  totalFiles: number
+  completedCount: number
+  failedCount: number
+  fileStatuses: BatchFileStatus[]
+  latestRunId?: number | null
+}>('workflowSocket/batch_summary_loaded')
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -117,6 +162,7 @@ function initializeNodeStates(nodes: Node[]): NodeStatesMap {
     states[node.id] = {
       nodeId: node.id,
       stepId: null,
+      startedAt: null,
       nodeType: node.type || 'unknown',
       status: WorkflowRunStepStatus.Pending,
       response: '',
@@ -143,6 +189,7 @@ function ensureNodeState(
     nodeStates[nodeId] = {
       nodeId,
       stepId: null,
+      startedAt: null,
       nodeType,
       status: WorkflowRunStepStatus.Pending,
       response: '',
@@ -153,6 +200,14 @@ function ensureNodeState(
       webSearchSources: [],
     }
   }
+}
+
+function isWorkflowRunActive(run: WorkflowRun | null): boolean {
+  if (!run) return false
+  return (
+    run.status === WorkflowRunStepStatus.Running ||
+    run.status === WorkflowRunStepStatus.PendingHumanInput
+  )
 }
 
 /**
@@ -202,6 +257,59 @@ function propagateToOutputNodes(
       outputState.webSearchSources = update.webSearchSources
     }
   }
+}
+
+function createBatchRunStub(
+  state: WorkflowBuilderState,
+  workflowRunId: number
+) {
+  const workflowId = state.loadedWorkflow?.id || state.lastWorkflowId || 0
+  const workflowTitle = state.loadedWorkflow?.title || ''
+  const workflowDescription = state.loadedWorkflow?.description || ''
+
+  return {
+    id: workflowRunId,
+    workflow: workflowId,
+    user: 0,
+    status: WorkflowRunStepStatus.Running,
+    startedAt: new Date().toISOString(),
+    endedAt: null,
+    workflowTitle,
+    workflowDescription,
+    isPartial: false,
+    nodeStates: initializeNodeStates(state.nodes),
+  } as WorkflowRun
+}
+
+function ensureBatchRun(
+  state: WorkflowBuilderState,
+  workflowRunId: number
+): WorkflowRun {
+  if (!state.batchRun.runsById[workflowRunId]) {
+    state.batchRun.runsById[workflowRunId] = createBatchRunStub(
+      state,
+      workflowRunId
+    )
+  }
+  return state.batchRun.runsById[workflowRunId]
+}
+
+function isBatchRunEvent(
+  state: WorkflowBuilderState,
+  workflowRunId?: number
+): boolean {
+  if (!workflowRunId) return false
+  if (state.batchRun.runsById[workflowRunId]) return true
+  if (
+    state.batchRun.isActive &&
+    workflowRunId !== state.currentRun?.id &&
+    workflowRunId !== state.currentPartialRunId
+  ) {
+    return true
+  }
+  return state.batchRun.fileStatuses.some(
+    (status) => status.workflowRunId === workflowRunId
+  )
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -418,6 +526,21 @@ const workflowBuilderSlice = createSlice({
       state.showExecutionPanel = false
       state.availableRuns = []
       state.selectedRunIds = {}
+      state.batchRun = {
+        isActive: false,
+        batchId: null,
+        workflowId: null,
+        latestRunIsBatch: false,
+        dismissedBatchId: null,
+        totalFiles: 0,
+        completedCount: 0,
+        failedCount: 0,
+        currentIndex: 0,
+        fileStatuses: [],
+        runsById: {},
+        activeNodeIds: {},
+        selectedRunId: null,
+      }
     },
 
     // ── Manual Mode ──────────────────────────────────────────────────────
@@ -449,6 +572,10 @@ const workflowBuilderSlice = createSlice({
       action: PayloadAction<{ nodeId: string; runId: number }>
     ) => {
       state.selectedRunIds[action.payload.nodeId] = action.payload.runId
+    },
+
+    setSelectedBatchRunId: (state, action: PayloadAction<number | null>) => {
+      state.batchRun.selectedRunId = action.payload
     },
 
     // ── UI State ─────────────────────────────────────────────────────────
@@ -504,6 +631,12 @@ const workflowBuilderSlice = createSlice({
       const wsConnectionStatus = state.wsConnectionStatus
       return { ...initialState, wsConnectionStatus }
     },
+    setBatchProgressDismissed: (
+      state,
+      action: PayloadAction<number | null>
+    ) => {
+      state.batchRun.dismissedBatchId = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -513,6 +646,7 @@ const workflowBuilderSlice = createSlice({
           workflowId: action.payload.workflow.id,
         })
 
+        const previousWorkflowId = state.lastWorkflowId
         // Static workflow data from REST
         state.nodes = action.payload.nodes
         state.edges = action.payload.edges
@@ -532,6 +666,15 @@ const workflowBuilderSlice = createSlice({
         state.activeNodeId = null
         state.availableRuns = []
         state.selectedRunIds = {}
+        const incomingWorkflowId = action.payload.workflow.id
+        const hasBatchRunForWorkflow =
+          state.batchRun.workflowId === incomingWorkflowId
+        const isWorkflowSwitch =
+          previousWorkflowId && previousWorkflowId !== incomingWorkflowId
+
+        if (!hasBatchRunForWorkflow || isWorkflowSwitch) {
+          state.batchRun = initialState.batchRun
+        }
       })
       .addCase(getActivePartialRun.fulfilled, (state, action) => {
         const { partialRun, executedStepNodeIds } = action.payload
@@ -597,6 +740,8 @@ const workflowBuilderSlice = createSlice({
         state.isRunning = true
         state.activeNodeId = null
         state.pendingValidation = null
+        state.batchRun.selectedRunId = null
+        state.batchRun.latestRunIsBatch = false
 
         if (state.outputDisplayMode === OutputDisplayMode.Panel) {
           state.showExecutionPanel = true
@@ -632,6 +777,8 @@ const workflowBuilderSlice = createSlice({
         state.isRunning = true
         state.activeNodeId = stepNodeId
         state.pendingValidation = null
+        state.batchRun.selectedRunId = null
+        state.batchRun.latestRunIsBatch = false
 
         if (state.outputDisplayMode === OutputDisplayMode.Panel) {
           state.showExecutionPanel = true
@@ -640,7 +787,22 @@ const workflowBuilderSlice = createSlice({
 
       // ── Step Execution Events ────────────────────────────────────────
       .addCase(stepStarted, (state, action) => {
-        const { nodeId, nodeType } = action.payload
+        const { nodeId, nodeType, startedAt, workflowRunId } = action.payload
+
+        if (isBatchRunEvent(state, workflowRunId)) {
+          const run = ensureBatchRun(state, workflowRunId as number)
+          if (run.nodeStates) {
+            ensureNodeState(run.nodeStates, nodeId, nodeType)
+            run.nodeStates[nodeId].status = WorkflowRunStepStatus.Running
+            run.nodeStates[nodeId].response = ''
+            if (startedAt) {
+              run.nodeStates[nodeId].startedAt = startedAt
+            }
+          }
+          state.batchRun.activeNodeIds[workflowRunId as number] = nodeId
+          return
+        }
+
         state.activeNodeId = nodeId
 
         if (!state.currentRun?.nodeStates) return
@@ -649,6 +811,9 @@ const workflowBuilderSlice = createSlice({
         state.currentRun.nodeStates[nodeId].status =
           WorkflowRunStepStatus.Running
         state.currentRun.nodeStates[nodeId].response = ''
+        if (startedAt) {
+          state.currentRun.nodeStates[nodeId].startedAt = startedAt
+        }
 
         propagateToOutputNodes(state, nodeId, {
           status: WorkflowRunStepStatus.Running,
@@ -656,7 +821,18 @@ const workflowBuilderSlice = createSlice({
         })
       })
       .addCase(stepStreaming, (state, action) => {
-        const { nodeId, chunk } = action.payload
+        const { nodeId, chunk, workflowRunId } = action.payload
+
+        if (isBatchRunEvent(state, workflowRunId)) {
+          const run = ensureBatchRun(state, workflowRunId as number)
+          if (!run.nodeStates) return
+          ensureNodeState(run.nodeStates, nodeId)
+          run.nodeStates[nodeId].response =
+            (run.nodeStates[nodeId].response || '') + chunk
+          state.batchRun.activeNodeIds[workflowRunId as number] = nodeId
+          return
+        }
+
         if (!state.currentRun?.nodeStates) return
 
         ensureNodeState(state.currentRun.nodeStates, nodeId)
@@ -666,7 +842,21 @@ const workflowBuilderSlice = createSlice({
         propagateToOutputNodes(state, nodeId, { append: chunk })
       })
       .addCase(stepCompleted, (state, action) => {
-        const { nodeId, response, metadata } = action.payload
+        const { nodeId, response, metadata, workflowRunId } = action.payload
+
+        if (isBatchRunEvent(state, workflowRunId)) {
+          const run = ensureBatchRun(state, workflowRunId as number)
+          if (!run.nodeStates) return
+          ensureNodeState(run.nodeStates, nodeId)
+          const nodeState = run.nodeStates[nodeId]
+          nodeState.response = response
+          nodeState.status = WorkflowRunStepStatus.Completed
+          nodeState.snippets = metadata?.snippets || []
+          nodeState.webSearchSources = metadata?.webSearchSources || []
+          state.batchRun.activeNodeIds[workflowRunId as number] = null
+          return
+        }
+
         if (!state.currentRun?.nodeStates) return
 
         ensureNodeState(state.currentRun.nodeStates, nodeId)
@@ -695,9 +885,20 @@ const workflowBuilderSlice = createSlice({
         }
       })
       .addCase(executionComplete, (state, action) => {
-        const { status, endedAt } = action.payload
-        state.isRunning = status === 'pending_human_input'
+        const { status, endedAt, workflowRunId } = action.payload
+
+        if (isBatchRunEvent(state, workflowRunId)) {
+          const run = ensureBatchRun(state, workflowRunId as number)
+          run.status = status as typeof run.status
+          run.endedAt = endedAt || run.endedAt
+          state.batchRun.activeNodeIds[workflowRunId as number] = null
+          return
+        }
+
+        state.isRunning =
+          status === 'pending_human_input' || state.batchRun.isActive
         state.activeNodeId = null
+        state.batchRun.latestRunIsBatch = false
 
         if (state.currentRun) {
           state.currentRun = {
@@ -708,7 +909,18 @@ const workflowBuilderSlice = createSlice({
         }
       })
       .addCase(stepError, (state, action) => {
-        const { nodeId } = action.payload
+        const { nodeId, workflowRunId } = action.payload
+
+        if (isBatchRunEvent(state, workflowRunId) && nodeId) {
+          const run = ensureBatchRun(state, workflowRunId as number)
+          if (run.nodeStates?.[nodeId]) {
+            run.nodeStates[nodeId].status = WorkflowRunStepStatus.Failed
+            run.nodeStates[nodeId].error = action.payload.error || null
+          }
+          state.batchRun.activeNodeIds[workflowRunId as number] = null
+          return
+        }
+
         if (nodeId) {
           if (state.activeNodeId === nodeId) {
             state.activeNodeId = null
@@ -725,10 +937,20 @@ const workflowBuilderSlice = createSlice({
       // ── Full Status Update ───────────────────────────────────────────
       .addCase(workflowStatus, (state, action) => {
         const { status, pendingValidation, ...runData } = action.payload
+        const workflowRunId = action.payload.id
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { type: _eventType, ...workflowRunData } =
           runData as WorkflowRun & { type: string }
+
+        if (isBatchRunEvent(state, workflowRunId)) {
+          state.batchRun.runsById[workflowRunId] = {
+            ...workflowRunData,
+            status,
+          } as WorkflowRun
+          return
+        }
+
         state.currentRun = { ...workflowRunData, status } as WorkflowRun
 
         if (state.outputDisplayMode === OutputDisplayMode.Panel) {
@@ -736,7 +958,9 @@ const workflowBuilderSlice = createSlice({
         }
 
         state.isRunning =
-          status === 'running' || status === 'pending_human_input'
+          status === 'running' ||
+          status === 'pending_human_input' ||
+          state.batchRun.isActive
 
         if (pendingValidation) {
           state.pendingValidation = pendingValidation
@@ -747,6 +971,9 @@ const workflowBuilderSlice = createSlice({
 
       // ── Human Validation ─────────────────────────────────────────────
       .addCase(validationRequired, (state, action) => {
+        if (isBatchRunEvent(state, action.payload.workflowRunId)) {
+          return
+        }
         state.isRunning = true
         state.activeNodeId = null
         state.pendingValidation = {
@@ -758,6 +985,138 @@ const workflowBuilderSlice = createSlice({
       })
       .addCase(validationSubmitted, (state) => {
         state.pendingValidation = null
+      })
+
+      // ── Batch Execution ─────────────────────────────────────────────
+      .addCase(batchStarted, (state, action) => {
+        state.batchRun = {
+          isActive: true,
+          batchId: action.payload.batchId,
+          workflowId: action.payload.workflowId,
+          latestRunIsBatch: true,
+          dismissedBatchId: null,
+          totalFiles: action.payload.totalFiles,
+          completedCount: 0,
+          failedCount: 0,
+          currentIndex: 0,
+          fileStatuses: [],
+          runsById: {},
+          activeNodeIds: {},
+          selectedRunId: null,
+        }
+        state.isRunning = true
+      })
+      .addCase(batchProgress, (state, action) => {
+        const {
+          batchId,
+          index,
+          total,
+          fileId,
+          fileName,
+          status,
+          workflowRunId,
+        } = action.payload
+
+        if (state.batchRun.batchId !== batchId) {
+          state.batchRun.batchId = batchId
+        }
+
+        state.batchRun.isActive = true
+        state.batchRun.totalFiles = total
+        state.batchRun.currentIndex = index
+        state.isRunning = true
+
+        const existing = state.batchRun.fileStatuses.find(
+          (item) => item.fileId === fileId
+        )
+        const previousStatus = existing?.status
+
+        const updatedStatus: BatchFileStatus = {
+          fileId,
+          fileName,
+          status,
+          workflowRunId,
+          index,
+        }
+
+        if (existing) {
+          Object.assign(existing, updatedStatus)
+        } else {
+          state.batchRun.fileStatuses.push(updatedStatus)
+        }
+
+        if (status === 'completed' && previousStatus !== 'completed') {
+          state.batchRun.completedCount += 1
+        }
+        if (status === 'failed' && previousStatus !== 'failed') {
+          state.batchRun.failedCount += 1
+        }
+
+        if (workflowRunId) {
+          ensureBatchRun(state, workflowRunId)
+          if (!state.batchRun.selectedRunId) {
+            state.batchRun.selectedRunId = workflowRunId
+          }
+        }
+
+        state.batchRun.fileStatuses.sort((a, b) => a.index - b.index)
+      })
+      .addCase(batchComplete, (state, action) => {
+        state.batchRun.isActive = false
+        state.batchRun.completedCount = action.payload.completedCount
+        state.batchRun.failedCount = action.payload.failedCount
+        state.batchRun.totalFiles = action.payload.totalFiles
+        state.isRunning = isWorkflowRunActive(state.currentRun)
+      })
+      .addCase(batchSummaryLoaded, (state, action) => {
+        const {
+          batchId,
+          workflowId,
+          status,
+          totalFiles,
+          completedCount,
+          failedCount,
+          fileStatuses,
+          latestRunId,
+        } = action.payload
+
+        const isActive = status === 'running'
+        const sortedStatuses = [...fileStatuses].sort(
+          (a, b) => a.index - b.index
+        )
+        const batchRunIds = new Set(
+          sortedStatuses
+            .map((statusItem) => statusItem.workflowRunId)
+            .filter((runId): runId is number => typeof runId === 'number')
+        )
+        const latestRunIsBatch =
+          typeof latestRunId === 'number' && batchRunIds.has(latestRunId)
+        const lastBatchRunId =
+          [...sortedStatuses]
+            .reverse()
+            .find((statusItem) => statusItem.workflowRunId)?.workflowRunId ??
+          null
+        state.batchRun = {
+          isActive,
+          batchId,
+          workflowId,
+          latestRunIsBatch,
+          dismissedBatchId: state.batchRun.dismissedBatchId,
+          totalFiles,
+          completedCount,
+          failedCount,
+          currentIndex: completedCount + failedCount,
+          fileStatuses: sortedStatuses,
+          runsById: state.batchRun.runsById,
+          activeNodeIds: state.batchRun.activeNodeIds,
+          selectedRunId: latestRunIsBatch
+            ? latestRunId || lastBatchRunId
+            : null,
+        }
+
+        if (isActive) {
+          state.isRunning = true
+        }
       })
   },
 })
@@ -794,6 +1153,7 @@ export const {
   markStepExecuted,
   resetPartialRun,
   setNodeSelectedRun,
+  setSelectedBatchRunId,
   resetBuilder,
   setSavingStatus,
   importNodes,
@@ -804,6 +1164,9 @@ export const {
   setOutputDisplayMode,
   toggleOutputDisplayMode,
   clearExecutionState,
+  setBatchProgressDismissed,
 } = workflowBuilderSlice.actions
+
+export { batchSummaryLoaded }
 
 export default workflowBuilderSlice.reducer

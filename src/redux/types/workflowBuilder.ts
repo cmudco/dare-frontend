@@ -53,4 +53,37 @@ export interface WorkflowBuilderState {
   showExecutionPanel: boolean // Whether to show the execution panel overlay
   pendingValidation: PendingValidation | null // Human validation required state
   outputDisplayMode: OutputDisplayMode // Where to show output: 'panel' or 'nodes'
+  batchRun: BatchRunState
+}
+
+export interface BatchFileStatus {
+  fileId: number
+  fileName: string
+  status: 'running' | 'completed' | 'failed'
+  workflowRunId?: number
+  index: number
+}
+
+export interface WorkflowRunMap {
+  [runId: number]: WorkflowRun
+}
+
+export interface ActiveNodeMap {
+  [runId: number]: string | null
+}
+
+export interface BatchRunState {
+  isActive: boolean
+  batchId: number | null
+  workflowId: number | null
+  latestRunIsBatch: boolean
+  dismissedBatchId: number | null
+  totalFiles: number
+  completedCount: number
+  failedCount: number
+  currentIndex: number
+  fileStatuses: BatchFileStatus[]
+  runsById: WorkflowRunMap
+  activeNodeIds: ActiveNodeMap
+  selectedRunId: number | null
 }
