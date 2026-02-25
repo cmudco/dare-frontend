@@ -22,6 +22,7 @@ import {
 import { isValidConnection } from '@/utils/workflowBuilder/isValidConnection'
 import {
   WORKFLOW_NODE_TYPES,
+  WORKFLOW_EDGE_TYPES,
   DEFAULT_EDGE_OPTIONS,
 } from '@/utils/constants/workflowBuilder'
 import { loadWorkflowIntoBuilder } from '@/redux/asyncThunks/workflowBuilder'
@@ -180,6 +181,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           isValidConnection(connection, nodes, edges)
         }
         nodeTypes={WORKFLOW_NODE_TYPES}
+        edgeTypes={WORKFLOW_EDGE_TYPES}
         defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
         onMoveEnd={(_, viewport) => dispatch(setSavedViewport(viewport))}
         fitView={!savedViewport}

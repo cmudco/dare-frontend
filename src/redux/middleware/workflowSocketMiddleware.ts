@@ -29,6 +29,7 @@ import {
   type WorkflowEvent,
   type WorkflowStatusEvent,
 } from '@/schemas/workflowSocket'
+import { batchSummaryLoaded } from '@/redux/workflowBuilderSlice'
 
 // ════════════════════════════════════════════════════════════════════════════
 // SOCKET INTERFACE
@@ -38,6 +39,7 @@ interface WorkflowSocketResponse {
   success: boolean
   error?: string
   workflowRunId?: number
+  batchId?: number
 }
 
 interface WorkflowServerToClientEvents {
@@ -83,6 +85,10 @@ interface WorkflowClientToServerEvents {
     },
     callback: (response: WorkflowSocketResponse) => void
   ) => void
+  start_batch_execution: (
+    data: { workflowId: number; fileIds: number[] },
+    callback: (response: WorkflowSocketResponse) => void
+  ) => void
 }
 
 type TypedWorkflowSocket = Socket<
@@ -103,6 +109,8 @@ export const WORKFLOW_SOCKET_UNSUBSCRIBE_WORKFLOW =
   'workflowSocket/unsubscribeWorkflow'
 export const WORKFLOW_SOCKET_UNSUBSCRIBE = 'workflowSocket/unsubscribe'
 export const WORKFLOW_SOCKET_START_EXECUTION = 'workflowSocket/startExecution'
+export const WORKFLOW_SOCKET_START_BATCH_EXECUTION =
+  'workflowSocket/startBatchExecution'
 export const WORKFLOW_SOCKET_EXECUTE_SINGLE_STEP =
   'workflowSocket/executeSingleStep'
 export const WORKFLOW_SOCKET_SUBMIT_VALIDATION =
@@ -150,6 +158,14 @@ export const workflowSocketStartExecution = (params: {
   payload: params,
 })
 
+export const workflowSocketStartBatchExecution = (params: {
+  workflowId: number
+  fileIds: number[]
+}) => ({
+  type: WORKFLOW_SOCKET_START_BATCH_EXECUTION as typeof WORKFLOW_SOCKET_START_BATCH_EXECUTION,
+  payload: params,
+})
+
 export const workflowSocketExecuteSingleStep = (params: {
   workflowId: number
   stepNodeId: string
@@ -177,6 +193,7 @@ export type WorkflowSocketAction =
   | ReturnType<typeof workflowSocketUnsubscribe>
   | ReturnType<typeof workflowSocketUnsubscribeWorkflow>
   | ReturnType<typeof workflowSocketStartExecution>
+  | ReturnType<typeof workflowSocketStartBatchExecution>
   | ReturnType<typeof workflowSocketExecuteSingleStep>
   | ReturnType<typeof workflowSocketSubmitValidation>
 
@@ -404,6 +421,39 @@ export function createWorkflowSocketMiddleware(): Middleware {
               }
             }
 
+            if (response.latestBatchRun) {
+              const latestRunId =
+                typeof response.latestRun?.id === 'number'
+                  ? response.latestRun.id
+                  : null
+              dispatch(
+                batchSummaryLoaded({
+                  ...response.latestBatchRun,
+                  latestRunId,
+                })
+              )
+
+              response.latestBatchRun.fileStatuses.forEach((statusItem) => {
+                if (typeof statusItem.workflowRunId !== 'number') return
+                if (subscriptions.has(statusItem.workflowRunId)) return
+
+                socket.emit(
+                  'subscribe_workflow_run',
+                  { workflowRunId: statusItem.workflowRunId },
+                  (runResponse) => {
+                    if (runResponse.success) {
+                      subscriptions.add(statusItem.workflowRunId as number)
+                    } else {
+                      console.warn(
+                        'Failed to subscribe to batch workflow run',
+                        runResponse.error
+                      )
+                    }
+                  }
+                )
+              })
+            }
+
             dispatch({
               type: 'workflowSocket/workflowSubscribed',
               payload: {
@@ -474,6 +524,28 @@ export function createWorkflowSocketMiddleware(): Middleware {
           } else {
             dispatch({
               type: 'workflowSocket/executionError',
+              payload: { error: response.error },
+            })
+          }
+        })
+        break
+      }
+
+      case WORKFLOW_SOCKET_START_BATCH_EXECUTION: {
+        if (!socket?.connected) {
+          console.warn('Cannot start batch execution: not connected')
+          return next(typedAction)
+        }
+
+        const params = typedAction.payload as {
+          workflowId: number
+          fileIds: number[]
+        }
+
+        socket.emit('start_batch_execution', params, (response) => {
+          if (!response.success) {
+            dispatch({
+              type: 'workflowSocket/batchStartError',
               payload: { error: response.error },
             })
           }
