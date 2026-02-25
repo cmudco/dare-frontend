@@ -12,7 +12,7 @@
  * - Connection status indicator
  */
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useMemo } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { Loader2, X, Play, History, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -143,6 +143,17 @@ export default function WorkflowExecutionPanel() {
     [nodes]
   )
 
+  const stepNumberByNodeId = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const node of nodes) {
+      const stepNumber = (node.data as { stepNumber?: number })?.stepNumber
+      if (typeof stepNumber === 'number') {
+        map.set(node.id, stepNumber)
+      }
+    }
+    return map
+  }, [nodes])
+
   // Derive execution node entries from the single source: currentRun.nodeStates
   const executionNodeEntries = displayRun?.nodeStates
     ? Object.entries(displayRun.nodeStates).filter(
@@ -153,6 +164,41 @@ export default function WorkflowExecutionPanel() {
             state.nodeType === WorkflowNodeType.File)
       )
     : []
+
+  // Execution panel should reflect actual start order; keep deterministic fallbacks.
+  const sortedExecutionNodeEntries = useMemo(() => {
+    if (!executionNodeEntries.length) return executionNodeEntries
+    // Sort by actual execution start time; fall back to step number then node ID.
+    return [...executionNodeEntries].sort(([aId, aState], [bId, bState]) => {
+      // Normalize timestamps; invalid/missing values become null.
+      const aStartedRaw = aState.startedAt ? Date.parse(aState.startedAt) : NaN
+      const bStartedRaw = bState.startedAt ? Date.parse(bState.startedAt) : NaN
+      const aStarted = Number.isNaN(aStartedRaw) ? null : aStartedRaw
+      const bStarted = Number.isNaN(bStartedRaw) ? null : bStartedRaw
+
+      // Primary: earliest started first (actual execution order).
+      if (aStarted !== null && bStarted !== null && aStarted !== bStarted) {
+        return aStarted - bStarted
+      }
+      // Prefer nodes with a known start time over missing timestamps.
+      if (aStarted !== null && bStarted === null) return -1
+      if (aStarted === null && bStarted !== null) return 1
+
+      // Secondary: workflow step number for stable ordering.
+      const aStepNumber = stepNumberByNodeId.get(aId)
+      const bStepNumber = stepNumberByNodeId.get(bId)
+      if (
+        typeof aStepNumber === 'number' &&
+        typeof bStepNumber === 'number' &&
+        aStepNumber !== bStepNumber
+      ) {
+        return aStepNumber - bStepNumber
+      }
+
+      // Final tie-breaker: node ID for deterministic output.
+      return aId.localeCompare(bId)
+    })
+  }, [executionNodeEntries, stepNumberByNodeId])
 
   const hasDisplayData = executionNodeEntries.length > 0
   const isViewingCompletedRun =
@@ -256,7 +302,7 @@ export default function WorkflowExecutionPanel() {
         {/* Execution node responses — single render block from nodeStates */}
         {hasDisplayData && (
           <div className='space-y-4'>
-            {executionNodeEntries.map(([nodeId, state]) => (
+            {sortedExecutionNodeEntries.map(([nodeId, state]) => (
               <StepResponseCard
                 key={nodeId}
                 nodeId={nodeId}
