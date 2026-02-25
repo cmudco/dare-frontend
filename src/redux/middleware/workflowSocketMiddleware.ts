@@ -28,6 +28,7 @@ import {
   SubscribeWorkflowResponseSchema,
   type WorkflowEvent,
   type WorkflowStatusEvent,
+  type SubscribeWorkflowResponse,
 } from '@/schemas/workflowSocket'
 import { batchSummaryLoaded } from '@/redux/workflowBuilderSlice'
 
@@ -61,12 +62,7 @@ interface WorkflowClientToServerEvents {
   ) => void
   subscribe_workflow: (
     data: { workflowId: number },
-    callback: (response: {
-      success: boolean
-      workflowId?: number
-      latestRun?: Record<string, unknown> | null
-      error?: string
-    }) => void
+    callback: (response: SubscribeWorkflowResponse) => void
   ) => void
   start_execution: (
     data: { workflowRunId?: number; workflowId?: number; userInput?: string },
@@ -437,6 +433,7 @@ export function createWorkflowSocketMiddleware(): Middleware {
                 if (typeof statusItem.workflowRunId !== 'number') return
                 if (subscriptions.has(statusItem.workflowRunId)) return
 
+                if (!socket) return
                 socket.emit(
                   'subscribe_workflow_run',
                   { workflowRunId: statusItem.workflowRunId },
