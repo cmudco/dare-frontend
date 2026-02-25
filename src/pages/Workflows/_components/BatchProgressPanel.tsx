@@ -143,7 +143,10 @@ export default function BatchProgressPanel() {
                     size='sm'
                     variant='ghost'
                     className='h-7 px-2 text-xs'
-                    onClick={() => handleViewRun(fileStatus.workflowRunId)}
+                    onClick={() => {
+                      if (fileStatus.workflowRunId != null)
+                        handleViewRun(fileStatus.workflowRunId)
+                    }}
                   >
                     View details
                   </Button>
