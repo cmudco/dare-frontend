@@ -166,7 +166,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
               Move ({selectedItems.length})
             </Button>
           )}
-          {selectedItems.length > 1 && (
+          {selectedItems.length > 0 && (
             <Button
               className='whitespace-nowrap rounded-md bg-red-600 py-2 font-normal normal-case shadow-sm hover:bg-red-700'
               variant='default'
@@ -174,7 +174,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
               onClick={handleBulkDelete}
             >
               <Trash2 className='mr-1' />
-              Delete Files
+              {selectedItems.length === 1 ? 'Delete File' : 'Delete Files'}
             </Button>
           )}
           <Button

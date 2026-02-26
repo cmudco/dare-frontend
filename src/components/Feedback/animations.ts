@@ -5,7 +5,7 @@ import { Variants } from 'framer-motion'
 // FAB Button Animations
 export const fabVariants: Variants = {
   idle: {
-    y: [0, -4, 0],
+    y: [0, -3, 0],
     transition: {
       duration: 3,
       repeat: Infinity,
@@ -13,20 +13,15 @@ export const fabVariants: Variants = {
     },
   },
   hover: {
-    scale: 1.1,
-    boxShadow: '0 8px 30px rgba(238, 24, 60, 0.4)',
+    y: -2,
     transition: {
-      type: 'spring',
-      stiffness: 400,
-      damping: 10,
+      duration: 0.2,
     },
   },
   tap: {
-    scale: 0.95,
+    y: 0,
     transition: {
-      type: 'spring',
-      stiffness: 400,
-      damping: 10,
+      duration: 0.1,
     },
   },
 }
