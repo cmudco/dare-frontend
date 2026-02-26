@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle, X } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { ThumbsUp, X } from 'lucide-react'
 import type { AppDispatch, RootState } from '@/redux/store'
 import {
   toggleFeedback,
@@ -17,11 +17,7 @@ import {
   submitFeedback,
 } from '@/redux/feedbackSlice'
 import { FeedbackPanel } from './FeedbackPanel'
-import {
-  fabVariants,
-  pulseRingVariants,
-  iconRotateVariants,
-} from './animations'
+import { fabVariants } from './animations'
 
 export function FeedbackWidget() {
   const feedbackRef = useRef<HTMLDivElement>(null)
@@ -105,7 +101,7 @@ export function FeedbackWidget() {
     <div
       ref={feedbackRef}
       data-feedback-widget
-      className='fixed bottom-6 right-6 z-50'
+      className='fixed bottom-4 right-4 z-50'
     >
       {/* Feedback Panel */}
       <FeedbackPanel
@@ -137,73 +133,11 @@ export function FeedbackWidget() {
         whileHover='hover'
         whileTap='tap'
         onClick={handleToggle}
-        className={`relative flex h-14 w-14 items-center justify-center rounded-full bg-dare-gradient text-white shadow-lg shadow-black/30 transition-shadow duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isOpen ? 'shadow-xl shadow-primary/40' : ''} `}
+        className={`relative flex h-11 w-11 items-center justify-center rounded-full bg-dare-gradient text-white shadow-md shadow-black/25 transition-shadow duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isOpen ? 'shadow-lg shadow-primary/40' : ''} `}
         aria-label={isOpen ? 'Close feedback' : 'Send feedback'}
         aria-expanded={isOpen}
       >
-        {/* Pulse ring animation (only when closed) */}
-        <AnimatePresence>
-          {!isOpen && (
-            <>
-              {/* First pulse ring */}
-              <motion.span
-                variants={pulseRingVariants}
-                initial='initial'
-                animate='animate'
-                exit={{ opacity: 0, scale: 1 }}
-                className='absolute inset-0 rounded-full bg-primary/40'
-                style={{ willChange: 'transform, opacity' }}
-              />
-              {/* Second pulse ring (offset) */}
-              <motion.span
-                variants={pulseRingVariants}
-                initial='initial'
-                animate='animate'
-                exit={{ opacity: 0, scale: 1 }}
-                className='absolute inset-0 rounded-full bg-primary/30'
-                style={{
-                  willChange: 'transform, opacity',
-                  animationDelay: '0.5s',
-                }}
-              />
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* Icon with rotation */}
-        <motion.div
-          variants={iconRotateVariants}
-          initial='closed'
-          animate={isOpen ? 'open' : 'closed'}
-          className='relative z-10'
-        >
-          <AnimatePresence mode='wait'>
-            {isOpen ? (
-              <motion.div
-                key='close'
-                initial={{ opacity: 0, rotate: -45 }}
-                animate={{ opacity: 1, rotate: 0 }}
-                exit={{ opacity: 0, rotate: 45 }}
-                transition={{ duration: 0.15 }}
-              >
-                <X className='h-6 w-6' />
-              </motion.div>
-            ) : (
-              <motion.div
-                key='message'
-                initial={{ opacity: 0, rotate: 45 }}
-                animate={{ opacity: 1, rotate: 0 }}
-                exit={{ opacity: 0, rotate: -45 }}
-                transition={{ duration: 0.15 }}
-              >
-                <MessageCircle className='h-6 w-6' />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Hover glow effect */}
-        <div className='absolute inset-0 rounded-full bg-white/0 transition-colors duration-200 hover:bg-white/10' />
+        {isOpen ? <X className='h-4 w-4' /> : <ThumbsUp className='h-4 w-4' />}
       </motion.button>
     </div>
   )
