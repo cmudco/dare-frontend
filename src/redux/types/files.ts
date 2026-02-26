@@ -26,6 +26,9 @@ export interface MyFile {
   }
   createdAt: string
   updatedAt: string
+  sharedBy?: { id: number; name: string; initials: string }
+  isSharedByMe?: boolean
+  isSharedPublicly?: boolean
 }
 
 export interface MyFolder {
@@ -64,6 +67,12 @@ export interface FileState {
   currentView: 'files' | 'folders' | 'media'
   isMoveModalOpen: boolean
   mediaTypeFilter: MediaTypeFilter
+  sharedFiles: MyFile[]
+  sharedFilesLoading: boolean
+  sharedFilesError: string | null
+  activeTab: 'my-files' | 'shared'
+  shareModalFileId: number | null
+  shareModalFileName: string
 }
 
 export interface FolderHeaderProps {
