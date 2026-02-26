@@ -133,11 +133,15 @@ export function FeedbackWidget() {
         whileHover='hover'
         whileTap='tap'
         onClick={handleToggle}
-        className={`relative flex h-11 w-11 items-center justify-center rounded-full bg-dare-gradient text-white shadow-md shadow-black/25 transition-shadow duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isOpen ? 'shadow-lg shadow-primary/40' : ''} `}
+        className={`relative flex h-8 w-8 items-center justify-center rounded-full bg-dare-gradient text-white shadow-md shadow-black/25 transition-shadow duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isOpen ? 'shadow-lg shadow-primary/40' : ''} `}
         aria-label={isOpen ? 'Close feedback' : 'Send feedback'}
         aria-expanded={isOpen}
       >
-        {isOpen ? <X className='h-4 w-4' /> : <ThumbsUp className='h-4 w-4' />}
+        {isOpen ? (
+          <X className='h-3.5 w-3.5' />
+        ) : (
+          <ThumbsUp className='h-3.5 w-3.5' />
+        )}
       </motion.button>
     </div>
   )
