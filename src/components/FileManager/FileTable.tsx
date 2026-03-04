@@ -48,6 +48,7 @@ import { SortDirectionEnum } from '@/utils/constants/sort'
 import FileTagModal from './FileTagModal'
 import FileViewerModal from './FileViewerModal'
 import TagsDisplay from './TagsDisplay'
+import { formatDate } from '@/utils/constants/prompts'
 
 const FileTable = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -229,7 +230,16 @@ const FileTable = () => {
             </TableRow>
           ) : (
             paginatedFiles.map(
-              ({ id, name, fileType, size, tags, status, errorMessage }) => (
+              ({
+                id,
+                name,
+                fileType,
+                size,
+                tags,
+                status,
+                errorMessage,
+                createdAt,
+              }) => (
                 <TableRow key={id}>
                   <TableCell className='w-[50px] p-4 text-center'>
                     <input
@@ -256,6 +266,7 @@ const FileTable = () => {
                     </div>
                   </TableCell>
                   <TableCell className='p-4'>{formatFileSize(size)}</TableCell>
+                  <TableCell className='p-4'>{formatDate(createdAt)}</TableCell>
                   <TableCell className='p-4'>
                     <TagsDisplay
                       tags={tags || []}
