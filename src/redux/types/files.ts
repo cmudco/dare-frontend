@@ -24,6 +24,8 @@ export interface MyFile {
     quality: string
     style: string
   }
+  createdAt: string
+  updatedAt: string
 }
 
 export interface MyFolder {
