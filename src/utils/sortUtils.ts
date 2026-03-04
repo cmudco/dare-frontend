@@ -86,6 +86,13 @@ export function sortFiles(
         return sortDirection === SortDirectionEnum.ASC ? 1 : -1
       return 0
     }
+    if (prop === 'createdAt') {
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      if (aDate < bDate) return sortDirection === SortDirectionEnum.ASC ? -1 : 1
+      if (aDate > bDate) return sortDirection === SortDirectionEnum.ASC ? 1 : -1
+      return 0
+    }
     if (prop === 'status') {
       const aStatus = getStatusDisplay(a.status)
       const bStatus = getStatusDisplay(b.status)
