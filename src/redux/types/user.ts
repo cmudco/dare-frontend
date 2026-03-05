@@ -15,7 +15,7 @@ export interface UserStats {
 
 export type PlatformRole =
   | 'SUPERADMIN'
-  | 'ADMIN'
+  | 'SUPERVISOR'
   | 'RESEARCHER'
   | 'USER'
   | 'CREATOR'
