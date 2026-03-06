@@ -59,7 +59,7 @@ export default function BatchProgressPanel() {
   if (!showPanel) return null
 
   return (
-    <div className='fixed bottom-6 right-6 z-30 w-[340px] rounded-2xl border border-border bg-white/95 shadow-2xl backdrop-blur'>
+    <div className='fixed bottom-6 right-6 z-30 w-[340px] overflow-hidden rounded-2xl border border-border bg-white/95 shadow-2xl backdrop-blur'>
       <div className='flex items-center justify-between border-b border-border px-4 py-3'>
         <div>
           <p className='text-sm font-semibold text-foreground'>
@@ -115,9 +115,9 @@ export default function BatchProgressPanel() {
               key={fileStatus.fileId}
               className='rounded-lg border border-border/60 bg-background px-3 py-2'
             >
-              <div className='flex items-center justify-between gap-2'>
-                <div>
-                  <p className='text-xs font-medium text-foreground'>
+              <div className='flex items-start justify-between gap-2'>
+                <div className='min-w-0 flex-1'>
+                  <p className='break-words text-xs font-medium text-foreground'>
                     {fileStatus.fileName}
                   </p>
                   <p className='text-[11px] text-muted-foreground'>
@@ -126,7 +126,7 @@ export default function BatchProgressPanel() {
                 </div>
                 <span
                   className={cn(
-                    'rounded-full px-2 py-0.5 text-[11px] font-medium',
+                    'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium',
                     fileStatus.status === 'running' &&
                       'bg-blue-100 text-blue-700',
                     fileStatus.status === 'completed' &&
