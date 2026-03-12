@@ -11,7 +11,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   setManualMode,
@@ -20,8 +20,6 @@ import {
   setShowExecutionPanel,
   setSelectedBatchRunId,
   setOutputDisplayMode,
-  expandAllOutputNodes,
-  collapseAllOutputNodes,
 } from '@/redux/workflowBuilderSlice'
 import { SavingStatus, OutputDisplayMode } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
@@ -48,7 +46,7 @@ import {
   Undo2,
   Redo2,
   Eye,
-  ChevronsUpDown,
+  SkipForward,
 } from 'lucide-react'
 import BatchFileSelectDialog from './_components/BatchFileSelectDialog'
 import BatchProgressPanel from './_components/BatchProgressPanel'
@@ -57,6 +55,11 @@ import {
   exportWorkflowToString,
 } from '@/utils/workflowBuilder/exportWorkflow'
 import { WorkflowNodeType } from '@/utils/constants/workflows'
+import {
+  getTopologicalOrder,
+  getNextExecutableNodeId,
+} from '@/utils/workflowBuilder/getTopologicalOrder'
+import { saveAndExecuteStep } from '@/redux/asyncThunks/workflowBuilder'
 import ToastContainer from '@/components/ui/ToastContainer'
 
 const WorkflowEditPage = () => {
@@ -100,15 +103,18 @@ const WorkflowEditPage = () => {
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
 
-  // Track if any output nodes are expanded
-  const outputNodes = nodes.filter(
-    (n) => n.type === WorkflowNodeType.ChatOutput
-  )
-  const hasOutputNodes = outputNodes.length > 0
-  const anyOutputExpanded = outputNodes.some((n) => n.data?.isExpanded)
-
   // Auto-expand output nodes when execution completes
   useAutoExpandOutputNodes()
+
+  // Compute next executable step for manual mode
+  const topologicalOrder = useMemo(
+    () => getTopologicalOrder(nodes, edges),
+    [nodes, edges]
+  )
+  const nextStepNodeId = useMemo(
+    () => getNextExecutableNodeId(topologicalOrder, executedStepNodeIds, nodes),
+    [topologicalOrder, executedStepNodeIds, nodes]
+  )
 
   // Socket-based workflow execution
   // This auto-subscribes to get execution state when connected
@@ -219,6 +225,23 @@ const WorkflowEditPage = () => {
 
     // Then start execution via socket (handles creation, subscription, and execution atomically)
     startExecution({ workflowId: id })
+  }
+
+  const handleRunNextStep = () => {
+    if (!id || !nextStepNodeId || isRunning) return
+
+    if (!isConnected) {
+      toast.error('WebSocket not connected. Please wait and try again.')
+      return
+    }
+
+    dispatch(
+      saveAndExecuteStep({
+        workflowId: id,
+        stepNodeId: nextStepNodeId,
+        workflowRunId: currentPartialRunId || undefined,
+      })
+    )
   }
 
   const handleBatchRun = async (fileIds: number[]) => {
@@ -473,38 +496,6 @@ const WorkflowEditPage = () => {
             </Tooltip>
           </TooltipProvider>
 
-          {/* Expand/Collapse Outputs Toggle */}
-          {hasOutputNodes && hasExecutionData && (
-            <TooltipProvider>
-              <Tooltip delayDuration={150}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    onClick={() =>
-                      dispatch(
-                        anyOutputExpanded
-                          ? collapseAllOutputNodes()
-                          : expandAllOutputNodes()
-                      )
-                    }
-                    className='h-8 w-8'
-                    aria-label={
-                      anyOutputExpanded ? 'Collapse outputs' : 'Expand outputs'
-                    }
-                  >
-                    <ChevronsUpDown className='h-4 w-4' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {anyOutputExpanded ? 'Collapse outputs' : 'Expand outputs'}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-
           <TooltipProvider>
             <Tooltip delayDuration={150}>
               <TooltipTrigger asChild>
@@ -566,6 +557,32 @@ const WorkflowEditPage = () => {
                 <TooltipContent>
                   <p>{isRunning ? 'View execution' : 'View latest run'}</p>
                 </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {id && manualModeEnabled && (
+            <TooltipProvider>
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      onClick={handleRunNextStep}
+                      disabled={isRunning || !nextStepNodeId}
+                      className='gap-1.5 normal-case'
+                    >
+                      <SkipForward className='h-3.5 w-3.5' />
+                      Run Next Step
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!nextStepNodeId && !isRunning && (
+                  <TooltipContent>
+                    <p>All steps have been executed</p>
+                  </TooltipContent>
+                )}
               </Tooltip>
             </TooltipProvider>
           )}
