@@ -620,6 +620,13 @@ const workflowBuilderSlice = createSlice({
     },
     setOutputDisplayMode: (state, action: PayloadAction<OutputDisplayMode>) => {
       state.outputDisplayMode = action.payload
+      // Sync output node expansion with display mode
+      const shouldExpand = action.payload === OutputDisplayMode.Nodes
+      state.nodes = state.nodes.map((node) =>
+        node.type === WorkflowNodeType.ChatOutput
+          ? { ...node, data: { ...node.data, isExpanded: shouldExpand } }
+          : node
+      )
     },
     toggleOutputDisplayMode: (state) => {
       state.outputDisplayMode =
