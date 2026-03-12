@@ -20,6 +20,8 @@ import {
   setShowExecutionPanel,
   setSelectedBatchRunId,
   setOutputDisplayMode,
+  expandAllOutputNodes,
+  collapseAllOutputNodes,
 } from '@/redux/workflowBuilderSlice'
 import { SavingStatus, OutputDisplayMode } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
@@ -176,6 +178,7 @@ const WorkflowEditPage = () => {
   const handleOutputDisplayModeToggle = (checked: boolean) => {
     const newMode = checked ? OutputDisplayMode.Nodes : OutputDisplayMode.Panel
     dispatch(setOutputDisplayMode(newMode))
+    dispatch(checked ? expandAllOutputNodes() : collapseAllOutputNodes())
   }
 
   const handleSave = useCallback(async () => {
