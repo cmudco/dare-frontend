@@ -31,6 +31,7 @@ export default function NodeConfigPanel({
   // Get data from Redux
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
+  const tags = useAppSelector((s) => s.tags.tags)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const agents = useAppSelector((s) => s.agent.agents)
 
@@ -122,6 +123,7 @@ export default function NodeConfigPanel({
             files={files}
             availableModels={availableModels}
             agents={agents}
+            tags={tags}
           />
         )}
         {nodeType === WorkflowNodeType.StructuredOutput && (

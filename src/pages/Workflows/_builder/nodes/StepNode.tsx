@@ -16,7 +16,8 @@ export type StepNodeData = {
   agent: number | null
   prompt: number | null
   contentFiles: number[]
-  embeddingFiles: number[]
+  embeddingFiles?: number[]
+  tags?: number[]
   llm: number | null
   stepNumber: number
   maxTokens?: number
