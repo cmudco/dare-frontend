@@ -131,6 +131,15 @@ export const getSharedConversationsAPI =
     })
   }
 
+export const toggleFavouriteConversationAPI = async (
+  conversationId: string
+): Promise<Conversation> => {
+  return await baseRequest<Conversation>({
+    url: `api/conversations/${conversationId}/favourite/`,
+    method: METHOD.POST,
+  })
+}
+
 export const publishConversationAPI = async (
   conversationId: string
 ): Promise<Conversation> => {

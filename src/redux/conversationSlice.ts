@@ -15,6 +15,7 @@ import {
   updateConversationFeedbackTracking,
   deleteMessage,
   fetchSharedConversations,
+  toggleFavouriteConversation,
   publishConversation,
   forkConversation,
   fetchConversationMessages,
@@ -713,6 +714,20 @@ export const conversationSlice = createSlice({
       // ─────────────────────────────────────────────────────────────────────
       .addCase(fetchSharedConversations.fulfilled, (state, action) => {
         state.sharedConversations = action.payload
+      })
+      .addCase(toggleFavouriteConversation.fulfilled, (state, action) => {
+        const idx = state.conversations.findIndex(
+          (c) => c.conversationId === action.payload.conversationId
+        )
+        if (idx !== -1) {
+          state.conversations[idx] = action.payload
+        }
+        if (
+          state.activeConversation?.conversationId ===
+          action.payload.conversationId
+        ) {
+          state.activeConversation = action.payload
+        }
       })
       .addCase(publishConversation.fulfilled, (state, action) => {
         // Update in user's own conversations list

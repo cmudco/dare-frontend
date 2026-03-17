@@ -1,7 +1,7 @@
 import React from 'react'
 import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline'
 import { useSortable } from '@dnd-kit/sortable'
-import { Pencil, Copy, MoreVertical, Globe, GitFork } from 'lucide-react'
+import { Pencil, Copy, MoreVertical, Globe, GitFork, Star } from 'lucide-react'
 import { SortableConversationItemProps } from '../../redux/types/conversation'
 import {
   createDragStyle,
@@ -27,6 +27,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   onEditClick,
   onCloneClick,
   onPublishClick,
+  onFavoriteClick,
   onForkClick,
   onEditChange,
   onEditBlur,
@@ -85,6 +86,10 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
               <span className='block overflow-hidden text-ellipsis whitespace-nowrap text-sm'>
                 {getConversationTitle(conversation)}
               </span>
+              {/* Favorite indicator */}
+              {!isSharedTab && conversation.isFavorite && (
+                <Star className='h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400' />
+              )}
               {/* Published badge for user's own conversations */}
               {features.enableSharing &&
                 !isSharedTab &&
@@ -166,6 +171,17 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                       >
                         <Pencil className='mr-2 h-4 w-4' />
                         Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onFavoriteClick?.(conversation)
+                        }}
+                      >
+                        <Star
+                          className={`mr-2 h-4 w-4 ${conversation.isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`}
+                        />
+                        {conversation.isFavorite ? 'Unfavorite' : 'Favorite'}
                       </DropdownMenuItem>
                     </>
                   )}

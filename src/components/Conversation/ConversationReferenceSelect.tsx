@@ -85,13 +85,15 @@ const ConversationReferenceSelect: React.FC = () => {
         <PopoverTrigger asChild>
           <Button
             variant='ghost'
-            className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
+            className='h-auto cursor-pointer gap-0 p-0 hover:bg-transparent'
           >
-            <MessageSquare className='h-5 w-5 text-muted-foreground transition-colors hover:text-foreground' />
+            <span className='flex h-9 w-9 items-center justify-center rounded-md transition-all hover:bg-gray-200 hover:shadow-sm dark:hover:bg-white/10'>
+              <MessageSquare className='h-5 w-5 text-muted-foreground' />
+            </span>
             {selectedCount > 0 && (
               <Badge
                 variant='secondary'
-                className='ml-2 h-5 min-w-[20px] px-1.5 text-xs'
+                className='ml-1 h-5 min-w-[20px] cursor-pointer px-1.5 text-xs transition-all hover:shadow-sm hover:ring-1 hover:ring-border'
               >
                 {selectedCount}
               </Badge>

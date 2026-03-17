@@ -39,6 +39,7 @@ import {
   updateConversationSortOrder,
   deleteMultipleConversations,
   cloneConversation,
+  toggleFavouriteConversation,
   publishConversation,
   forkConversation,
   fetchConversationMessages,
@@ -225,6 +226,17 @@ const ConversationList: React.FC<ConversationListProps> = ({
     }
   }
 
+  const handleFavoriteClick = async (conversation: Conversation) => {
+    try {
+      await dispatch(
+        toggleFavouriteConversation(conversation.conversationId)
+      ).unwrap()
+    } catch (error) {
+      console.error('Error toggling favourite:', error)
+      toast.error('Failed to update favourite status')
+    }
+  }
+
   const handlePublishClick = async (conversation: Conversation) => {
     // Guard: prevent publishing forked conversations (matches BE validation)
     if (conversation.isForked) {
@@ -342,6 +354,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       onConversationClick={handleConversationClick}
                       onEditClick={handleEditClick}
                       onCloneClick={handleCloneClick}
+                      onFavoriteClick={handleFavoriteClick}
                       onPublishClick={handlePublishClick}
                       onEditChange={handleEditChange}
                       onEditBlur={handleEditBlur}

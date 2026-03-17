@@ -51,6 +51,8 @@ export interface Conversation {
   feedbackAutoPromptCount?: number // How many auto-prompts have been shown
   feedbackLastPromptMessageCount?: number // Message # when last shown
   feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
+  // Favorite
+  isFavorite?: boolean
   // Sharing fields
   isPublished?: boolean
   publishedAt?: string | null
@@ -288,6 +290,7 @@ export interface SortableConversationItemProps {
   onEditClick: (conversation: Conversation) => void
   onCloneClick: (conversation: Conversation) => void
   onPublishClick?: (conversation: Conversation) => void
+  onFavoriteClick?: (conversation: Conversation) => void
   onForkClick?: (conversation: Conversation) => void
   onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onEditBlur: () => void

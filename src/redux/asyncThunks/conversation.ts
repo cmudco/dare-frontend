@@ -18,6 +18,7 @@ import {
   cloneConversationAPI,
   deleteMessageAPI,
   getSharedConversationsAPI,
+  toggleFavouriteConversationAPI,
   publishConversationAPI,
   forkConversationAPI,
   getConversationMessagesAPI,
@@ -265,6 +266,21 @@ export const fetchSharedConversations = createAsyncThunk<
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })
+
+export const toggleFavouriteConversation = createAsyncThunk<
+  Conversation,
+  string,
+  { rejectValue: string }
+>(
+  'conversation/toggleFavouriteConversation',
+  async (conversationId, thunkAPI) => {
+    try {
+      return await toggleFavouriteConversationAPI(conversationId)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
 
 export const publishConversation = createAsyncThunk<
   Conversation,
