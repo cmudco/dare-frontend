@@ -16,7 +16,7 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
-import Tiptap from '../Tiptap'
+import MarkdownEditor from '../MarkdownEditor'
 import { getUserData } from '@/redux/asyncThunks/user'
 import { Switch } from '@/components/ui/switch'
 
@@ -81,7 +81,7 @@ const PromptUploadModal: React.FC = () => {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className='mx-auto w-auto min-w-[50vw] max-w-[90vw] rounded-lg bg-background p-6 shadow-lg'>
+      <DialogContent className='!top-[50%] mx-auto max-h-[90vh] w-[85%] !max-w-none !-translate-y-1/2 overflow-y-auto rounded-lg bg-background p-6 shadow-lg'>
         <DialogHeader>
           <DialogTitle className='text-lg font-semibold text-foreground'>
             {isEditMode ? 'Edit Prompt' : 'Create New Prompt'}
@@ -139,15 +139,16 @@ const PromptUploadModal: React.FC = () => {
                 <div
                   className={
                     errors.content && touched.content
-                      ? 'max-h-[50vh] overflow-y-scroll rounded-md border border-red-500'
-                      : 'max-h-[50vh] overflow-y-scroll'
+                      ? 'max-h-[75vh] overflow-y-auto rounded-md border border-red-500'
+                      : 'max-h-[75vh] overflow-y-auto'
                   }
                 >
-                  <Tiptap
+                  <MarkdownEditor
                     content={values.content}
                     onChange={(newContent) =>
                       setFieldValue('content', newContent)
                     }
+                    placeholder='Enter prompt content...'
                   />
                 </div>
                 {errors.content && touched.content && (
