@@ -1,3 +1,57 @@
+export enum ModelTier {
+  Premium = 'premium',
+  Standard = 'standard',
+  Economy = 'economy',
+}
+
+export const ModelTierLabels = {
+  [ModelTier.Premium]: 'Premium',
+  [ModelTier.Standard]: 'Standard',
+  [ModelTier.Economy]: 'Economy',
+}
+
+export const ModelTierDescriptions = {
+  [ModelTier.Premium]: 'Flagship models with highest capability',
+  [ModelTier.Standard]: 'Balanced performance and cost',
+  [ModelTier.Economy]: 'Cost-optimized for high-volume tasks',
+}
+
+export const ModelTierColors = {
+  [ModelTier.Premium]: {
+    bg: 'bg-amber-100 dark:bg-amber-950/50',
+    text: 'text-amber-700 dark:text-amber-400',
+    border: 'border-amber-200 dark:border-amber-900',
+    icon: 'text-amber-500',
+    dot: 'bg-amber-500',
+    ring: 'ring-amber-200 dark:ring-amber-800',
+    gradient: 'from-amber-500/10 to-transparent',
+  },
+  [ModelTier.Standard]: {
+    bg: 'bg-blue-100 dark:bg-blue-950/50',
+    text: 'text-blue-700 dark:text-blue-400',
+    border: 'border-blue-200 dark:border-blue-900',
+    icon: 'text-blue-500',
+    dot: 'bg-blue-500',
+    ring: 'ring-blue-200 dark:ring-blue-800',
+    gradient: 'from-blue-500/10 to-transparent',
+  },
+  [ModelTier.Economy]: {
+    bg: 'bg-emerald-100 dark:bg-emerald-950/50',
+    text: 'text-emerald-700 dark:text-emerald-400',
+    border: 'border-emerald-200 dark:border-emerald-900',
+    icon: 'text-emerald-500',
+    dot: 'bg-emerald-500',
+    ring: 'ring-emerald-200 dark:ring-emerald-800',
+    gradient: 'from-emerald-500/10 to-transparent',
+  },
+}
+
+export const ModelTierOrder = [
+  ModelTier.Premium,
+  ModelTier.Standard,
+  ModelTier.Economy,
+]
+
 export enum ReasoningStatus {
   Yes = 'yes',
   No = 'no',

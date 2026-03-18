@@ -189,7 +189,11 @@ export const conversationSlice = createSlice({
       }
 
       // Sync available models and auto-select appropriate model
-      syncModelsWithImageGenerationState(state, action.payload)
+      syncModelsWithImageGenerationState(
+        state,
+        action.payload,
+        state.selectedModel
+      )
     },
     updateArtifactsEnabled(state, action: PayloadAction<boolean>) {
       // Update global and conversation-level state
@@ -280,7 +284,11 @@ export const conversationSlice = createSlice({
       }
 
       // Sync available models and auto-select appropriate model
-      syncModelsWithAudioTranscriptionState(state, action.payload)
+      syncModelsWithAudioTranscriptionState(
+        state,
+        action.payload,
+        state.selectedModel
+      )
     },
     updateAudioTranscriptionSettings(
       state,
@@ -315,7 +323,6 @@ export const conversationSlice = createSlice({
     },
     setAvailableModels(state, action: PayloadAction<LLMModel[]>) {
       state.availableModels = action.payload
-      state.selectedModel = action.payload[0]?.id
     },
     setAllModels(state, action: PayloadAction<LLMModel[]>) {
       state.allModels = action.payload
@@ -359,7 +366,7 @@ export const conversationSlice = createSlice({
       state.webSearchEnabled = false
       state.artifactsEnabled = false
 
-      // Reset to text models with appropriate selection
+      // Reset to text models — no auto-select (conversationModel is undefined → null)
       syncModelsWithImageGenerationState(state, false)
     },
     updateConversationOrder(state, action: PayloadAction<string[]>) {
@@ -500,7 +507,6 @@ export const conversationSlice = createSlice({
             (model) => !model.isImageGenerator && !model.isAudioTranscriber
           )
           state.availableModels = regularModels
-          state.selectedModel = regularModels[0]?.id
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
