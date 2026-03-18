@@ -176,6 +176,7 @@ export interface LLMModel {
   isAudioTranscriber?: boolean
   inputTokenRatePerMillion: number
   outputTokenRatePerMillion: number
+  tier: string
 }
 
 export interface Snippet {

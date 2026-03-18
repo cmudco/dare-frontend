@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+
+import { AppDispatch, RootState } from '../../redux/store'
 import {
   toggleDropdown,
   updateSelectedModel,
 } from '../../redux/conversationSlice'
-import { AppDispatch, RootState } from '../../redux/store'
 import {
   getAvailableModels,
   getAllModels,
@@ -18,8 +19,18 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '../ui/dropdown-menu'
+import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
-import { Box, HelpCircle, Info } from 'lucide-react'
+import {
+  Box,
+  Check,
+  ChevronDown,
+  Crown,
+  HelpCircle,
+  Info,
+  Sparkles,
+  Zap,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
   Tooltip,
@@ -28,6 +39,18 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip'
 import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
+import {
+  ModelTier,
+  ModelTierLabels,
+  ModelTierColors,
+  ModelTierOrder,
+} from '@/utils/constants/model'
+
+const tierIcons = {
+  [ModelTier.Premium]: Crown,
+  [ModelTier.Standard]: Sparkles,
+  [ModelTier.Economy]: Zap,
+}
 
 const ModelPicker: React.FC = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -44,6 +67,7 @@ const ModelPicker: React.FC = () => {
   const error = useSelector((state: RootState) => state.conversation.error)
   const user = useSelector((state: RootState) => state.user.user)
   const [providerFilter, setProviderFilter] = useState<string>('all')
+  const [expandedTiers, setExpandedTiers] = useState<Set<ModelTier>>(new Set())
 
   useEffect(() => {
     dispatch(getAvailableModels())
@@ -64,10 +88,11 @@ const ModelPicker: React.FC = () => {
     }
   }
 
-  const getModelButtonText = () => {
-    const model = models.find((m: LLMModel) => m.id === selectedModel)
-    return model ? model.name : 'Select Model'
-  }
+  const selectedModelData = useMemo(
+    () => models.find((m: LLMModel) => m.id === selectedModel),
+    [models, selectedModel]
+  )
+
   const hasModels = Array.isArray(models) && models.length > 0
 
   const uniqueProviders = hasModels
@@ -79,31 +104,56 @@ const ModelPicker: React.FC = () => {
       ? models
       : models.filter((model) => model.provider === providerFilter)
 
+  const toggleTier = (tier: ModelTier) => {
+    setExpandedTiers((prev) => {
+      const next = new Set(prev)
+      if (next.has(tier)) {
+        next.delete(tier)
+      } else {
+        next.add(tier)
+      }
+      return next
+    })
+  }
+
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      setExpandedTiers(new Set())
+    }
+  }
+
+  const tierGroups = useMemo(() => {
+    return ModelTierOrder.map((tier) => ({
+      tier,
+      models: filteredModels.filter((model) => model.tier === tier),
+    })).filter((group) => group.models.length > 0)
+  }, [filteredModels])
+
   return (
     <TooltipProvider>
-      <DropdownMenu>
+      <DropdownMenu onOpenChange={handleOpenChange}>
         <DropdownMenuTrigger asChild>
           <Button
             variant='ghost'
             className='group flex h-9 items-center gap-2 px-3 hover:bg-gray-200 dark:hover:bg-white/10'
           >
             <Box className='h-5 w-5 text-muted-foreground transition-colors group-hover:text-foreground dark:text-muted-foreground dark:group-hover:text-white' />
-            <span className='max-w-[120px] truncate text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground dark:text-muted-foreground dark:group-hover:text-white'>
-              {getModelButtonText()}
+            <span className='max-w-[140px] truncate text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground dark:text-muted-foreground dark:group-hover:text-white'>
+              {selectedModelData?.name || 'Select Model'}
             </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align='end'
-          className='max-h-[70vh] min-h-[20vh] w-72 overflow-y-auto rounded-md border-border bg-popover p-2 shadow-lg'
+          className='max-h-[70vh] min-h-[20vh] w-80 overflow-y-auto rounded-lg border-border bg-popover p-0 shadow-xl'
         >
           {loading && (
-            <p className='py-2 text-center text-gray-500 dark:text-gray-400'>
+            <p className='py-6 text-center text-sm text-muted-foreground'>
               Loading models...
             </p>
           )}
           {error && (
-            <p className='py-2 text-center text-red-500 dark:text-red-400'>
+            <p className='py-6 text-center text-sm text-red-500 dark:text-red-400'>
               Error loading models: {error}
             </p>
           )}
@@ -111,29 +161,29 @@ const ModelPicker: React.FC = () => {
           {!loading && !error && hasModels && (
             <>
               {user?.modelGroup && (
-                <div className='mb-2 border-b border-border pb-2'>
-                  <div className='px-2 py-1'>
-                    <div className='flex items-center gap-2'>
-                      <span className='rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'>
-                        {user.modelGroup.name}
+                <div className='border-b border-border px-3 py-2'>
+                  <div className='flex items-center gap-2'>
+                    <span className='rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'>
+                      {user.modelGroup.name}
+                    </span>
+                    {user.modelGroup.description && (
+                      <span className='text-xs text-muted-foreground'>
+                        {user.modelGroup.description}
                       </span>
-                      {user.modelGroup.description && (
-                        <span className='text-xs text-muted-foreground'>
-                          {user.modelGroup.description}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
-              <div className='mb-2 px-2 py-2'>
-                <div className='mb-2.5 flex items-center gap-2'>
-                  <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                    Filter by provider:
-                  </h4>
+
+              {/* Provider filter */}
+              <div className='border-b border-border px-3 py-2.5'>
+                <div className='mb-2 flex items-center gap-1.5'>
+                  <span className='text-xs font-medium text-muted-foreground'>
+                    Provider
+                  </span>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                      <Info className='h-3 w-3 cursor-help text-muted-foreground/60' />
                     </TooltipTrigger>
                     <TooltipContent className='max-w-xs'>
                       <div className='space-y-2'>
@@ -143,92 +193,144 @@ const ModelPicker: React.FC = () => {
                         <p className='text-sm'>
                           {TOOLTIP_CONTENT.modelPicker.provider.description}
                         </p>
-                        <p className='text-xs text-muted-foreground'>
-                          💡 {TOOLTIP_CONTENT.modelPicker.provider.tip}
-                        </p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <div className='flex flex-wrap gap-2'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className={`rounded-md px-4 py-1 text-sm font-medium transition-all ${
+                <div className='flex flex-wrap gap-1.5'>
+                  <button
+                    className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                       providerFilter === 'all'
-                        ? 'border-primary/20 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground'
-                        : 'border-border bg-transparent text-muted-foreground hover:bg-blue-50 dark:hover:bg-primary/30 dark:hover:text-white'
+                        ? 'bg-foreground text-background'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                     }`}
                     onClick={() => setProviderFilter('all')}
                   >
                     All
-                  </Button>
+                  </button>
                   {uniqueProviders.map((provider) => (
-                    <Button
+                    <button
                       key={provider}
-                      variant='outline'
-                      size='sm'
-                      className={`rounded-md px-4 py-1 text-sm font-medium capitalize transition-all ${
+                      className={`rounded-md px-2.5 py-1 text-xs font-medium capitalize transition-colors ${
                         providerFilter === provider
-                          ? 'border-primary/20 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground'
-                          : 'border-border bg-transparent text-muted-foreground hover:bg-blue-50 dark:hover:bg-primary/30 dark:hover:text-white'
+                          ? 'bg-foreground text-background'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                       }`}
                       onClick={() => setProviderFilter(provider)}
                     >
                       {provider}
-                    </Button>
+                    </button>
                   ))}
                 </div>
               </div>
-              <DropdownMenuSeparator className='my-1 dark:border-gray-700' />
+
+              {/* Tier-grouped models */}
+              <div className='py-1'>
+                {tierGroups.map((group, groupIndex) => {
+                  const TierIcon = tierIcons[group.tier]
+                  const colors = ModelTierColors[group.tier]
+
+                  return (
+                    <div key={group.tier}>
+                      {groupIndex > 0 && (
+                        <DropdownMenuSeparator className='my-1' />
+                      )}
+                      {/* Tier header — clickable to collapse/expand */}
+                      <button
+                        type='button'
+                        onClick={() => toggleTier(group.tier)}
+                        className='flex w-full items-center gap-2 px-3 py-1.5 transition-colors hover:bg-accent/30'
+                      >
+                        <TierIcon className={`h-3 w-3 ${colors.icon}`} />
+                        <span
+                          className={`text-xs font-semibold uppercase tracking-wider ${colors.text}`}
+                        >
+                          {ModelTierLabels[group.tier]}
+                        </span>
+                        <Badge
+                          variant='outline'
+                          className={`ml-auto h-4 px-1.5 text-[10px] font-normal ${colors.bg} ${colors.text} ${colors.border}`}
+                        >
+                          {group.models.length}
+                        </Badge>
+                        <ChevronDown
+                          className={`h-3 w-3 text-muted-foreground transition-transform ${
+                            expandedTiers.has(group.tier) ? '' : '-rotate-90'
+                          }`}
+                        />
+                      </button>
+
+                      {/* Model items — hidden by default, shown when expanded */}
+                      {expandedTiers.has(group.tier) &&
+                        group.models.map((model) => {
+                          const isSelected = model.id === selectedModel
+                          return (
+                            <DropdownMenuItem
+                              key={model.id}
+                              onClick={() => handleModelSelect(model.id)}
+                              className={`mx-1 cursor-pointer rounded-md px-3 py-2.5 transition-colors ${
+                                isSelected
+                                  ? `${colors.bg} ring-1 ${colors.ring}`
+                                  : 'hover:bg-accent/50'
+                              }`}
+                            >
+                              <div className='flex w-full items-center gap-2'>
+                                <div className='min-w-0 flex-1'>
+                                  <div className='flex items-center gap-2'>
+                                    <span
+                                      className={`truncate text-sm ${isSelected ? 'font-semibold' : 'font-medium'}`}
+                                    >
+                                      {model.name}
+                                    </span>
+                                    {model.isReasoning && (
+                                      <Badge
+                                        variant='outline'
+                                        className='h-4 shrink-0 border-purple-200 bg-purple-50 px-1 text-[10px] text-purple-600 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-400'
+                                      >
+                                        Reasoning
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  {model.description && (
+                                    <p className='mt-0.5 truncate text-xs text-muted-foreground'>
+                                      {model.description}
+                                    </p>
+                                  )}
+                                </div>
+                                {isSelected && (
+                                  <Check className='h-4 w-4 shrink-0 text-foreground' />
+                                )}
+                              </div>
+                            </DropdownMenuItem>
+                          )
+                        })}
+                    </div>
+                  )
+                })}
+              </div>
             </>
           )}
 
-          {!loading &&
-            !error &&
-            hasModels &&
-            filteredModels.length > 0 &&
-            filteredModels.map((model: LLMModel) => (
-              <DropdownMenuItem
-                key={model.id}
-                onClick={() => handleModelSelect(model.id)}
-                className={`mt-1 cursor-pointer rounded-md p-3 ${
-                  model.id === selectedModel
-                    ? 'bg-pink-50 dark:bg-pink-900/20'
-                    : 'hover:bg-gray-50 dark:hover:bg-white/10'
-                }`}
-              >
-                <div className='flex flex-col'>
-                  <span
-                    className={`font-medium ${model.id === selectedModel ? 'font-semibold' : ''}`}
-                  >
-                    {model.name}
-                  </span>
-                  <span className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
-                    {model.description}
-                  </span>
-                </div>
-              </DropdownMenuItem>
-            ))}
           {!loading && !error && hasModels && filteredModels.length === 0 && (
-            <p className='py-2 text-center text-gray-500 dark:text-gray-400'>
+            <p className='py-6 text-center text-sm text-muted-foreground'>
               No models match the filter.
             </p>
           )}
 
           {!loading && !error && !hasModels && (
-            <p className='py-2 text-center text-muted-foreground'>
+            <p className='py-6 text-center text-sm text-muted-foreground'>
               No models available
             </p>
           )}
-          <DropdownMenuSeparator className='dark:border-gray-700' />
+
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             asChild
-            className='cursor-pointer rounded px-4 py-2 hover:bg-gray-100 dark:text-white dark:hover:bg-white/10'
+            className='mx-1 mb-1 cursor-pointer rounded-md px-3 py-2 text-muted-foreground hover:text-foreground'
           >
             <Link to='/help' className='flex items-center'>
               <HelpCircle className='mr-2 h-4 w-4' />
-              Model Information
+              <span className='text-sm'>Model Information</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
