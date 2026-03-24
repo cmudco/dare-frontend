@@ -65,6 +65,8 @@ import { WorkflowTableProps } from '@/redux/types/workflow'
 import { SortDirectionEnum } from '@/utils/constants/sort'
 import { Workflow } from '@/redux/types/workflow'
 import { features } from '@/config/environment'
+import { openShareDialog, openManageDialog } from '@/redux/sharingSlice'
+import { ShareableEntityType } from '@/redux/types/sharing'
 
 const LIBRARY_TABLE_HEAD = [
   'Title',
@@ -175,6 +177,26 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
         toast.error('Failed to publish workflow')
       }
     }
+  }
+
+  const handleShare = (id: number, title: string) => {
+    dispatch(
+      openShareDialog({
+        type: ShareableEntityType.Workflow,
+        id,
+        title: title || 'Untitled',
+      })
+    )
+  }
+
+  const handleManageShares = (id: number, title: string) => {
+    dispatch(
+      openManageDialog({
+        type: ShareableEntityType.Workflow,
+        id,
+        title: title || 'Untitled',
+      })
+    )
   }
 
   const handleForkClick = (id: number, title: string) => {
@@ -436,6 +458,8 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                     onClone={handleClone}
                     onDelete={handleDelete}
                     onPublish={handlePublish}
+                    onShare={handleShare}
+                    onManageShares={handleManageShares}
                   />
                 ))
               )}

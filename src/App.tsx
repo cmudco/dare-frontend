@@ -6,6 +6,8 @@ import Loader from './components/Loader'
 import { useEffect } from 'react'
 import { initializeTheme } from './redux/themeSlice'
 import { Toaster } from '@/components/ui/toaster'
+import ShareDialog from '@/components/shared/ShareDialog'
+import ManageSharesDialog from '@/components/shared/ManageSharesDialog'
 import { tokenExpirationService } from '@/services/tokenExpirationService'
 import { clearOldDrafts } from './redux/conversationSlice'
 import { useSocketConnection } from './hooks/useSocketConnection'
@@ -91,6 +93,8 @@ function App() {
       <BackgroundCircle />
       <AppRoutes />
       <Toaster />
+      <ShareDialog />
+      <ManageSharesDialog />
     </>
   )
 }
