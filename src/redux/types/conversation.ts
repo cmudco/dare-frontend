@@ -56,6 +56,7 @@ export interface Conversation {
   publishedAt?: string | null
   isOwner?: boolean
   isForked?: boolean // True if this conversation was forked from another user
+  canShare?: boolean
   ownerEmail?: string | null
   ownerUserId?: number | null // Owner's user ID for shared conversations (to fetch their files)
   fileOwnerId?: number | null // Original file owner's user ID for forked conversations

@@ -164,29 +164,31 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                         </DropdownMenuItem>
                       )}
                       {/* Share with specific user */}
-                      {features.enableSharing && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onShareClick?.(conversation)
-                          }}
-                        >
-                          <Share2 className='mr-2 h-4 w-4' />
-                          Share with User
-                        </DropdownMenuItem>
-                      )}
+                      {features.enableSharing &&
+                        conversation.canShare !== false && (
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onShareClick?.(conversation)
+                            }}
+                          >
+                            <Share2 className='mr-2 h-4 w-4' />
+                            Share with User
+                          </DropdownMenuItem>
+                        )}
                       {/* Manage shares */}
-                      {features.enableSharing && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onManageSharesClick?.(conversation)
-                          }}
-                        >
-                          <Users className='mr-2 h-4 w-4' />
-                          Manage Shares
-                        </DropdownMenuItem>
-                      )}
+                      {features.enableSharing &&
+                        conversation.canShare !== false && (
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onManageSharesClick?.(conversation)
+                            }}
+                          >
+                            <Users className='mr-2 h-4 w-4' />
+                            Manage Shares
+                          </DropdownMenuItem>
+                        )}
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation()
