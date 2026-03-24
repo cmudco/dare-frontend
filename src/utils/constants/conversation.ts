@@ -22,6 +22,7 @@ export enum FeedbackType {
 export enum ConversationTab {
   MINE = 'mine',
   SHARED = 'shared',
+  SHARED_WITH_ME = 'shared-with-me',
 }
 
 /** Error codes returned by the sharing API (matches BE SharingErrorCode). */

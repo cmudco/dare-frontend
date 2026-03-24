@@ -14,7 +14,7 @@ import {
   TrashIcon,
   GlobeAltIcon,
 } from '@heroicons/react/20/solid'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, Share2, Users } from 'lucide-react'
 import { Workflow } from '@/redux/types/workflow'
 import { formatDate } from '@/utils/constants/prompts'
 import {
@@ -30,6 +30,8 @@ interface SortableWorkflowRowProps {
   onClone: (id: number) => void
   onDelete: (id: number, title: string) => void
   onPublish: (id: number) => void
+  onShare?: (id: number, title: string) => void
+  onManageShares?: (id: number, title: string) => void
 }
 
 const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
@@ -38,6 +40,8 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
   onClone,
   onDelete,
   onPublish,
+  onShare,
+  onManageShares,
 }) => {
   const {
     attributes,
@@ -129,6 +133,24 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
               >
                 <GlobeAltIcon className='mr-2 h-4 w-4' />
                 <span>{workflow.isPublished ? 'Unpublish' : 'Publish'}</span>
+              </DropdownMenuItem>
+            )}
+            {features.enableSharing && (
+              <DropdownMenuItem
+                onClick={() => onShare?.(workflow.id, workflow.title)}
+                className='cursor-pointer'
+              >
+                <Share2 className='mr-2 h-4 w-4' />
+                <span>Share with User</span>
+              </DropdownMenuItem>
+            )}
+            {features.enableSharing && (
+              <DropdownMenuItem
+                onClick={() => onManageShares?.(workflow.id, workflow.title)}
+                className='cursor-pointer'
+              >
+                <Users className='mr-2 h-4 w-4' />
+                <span>Manage Shares</span>
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

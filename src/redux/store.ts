@@ -20,6 +20,7 @@ import dareToolsReducer from './dareToolsSlice'
 import memoryReducer from './memorySlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
+import sharingReducer from './sharingSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
@@ -50,6 +51,7 @@ export const store = configureStore({
     mcp: mcpReducer,
     dareTools: dareToolsReducer,
     memory: memoryReducer,
+    sharing: sharingReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware

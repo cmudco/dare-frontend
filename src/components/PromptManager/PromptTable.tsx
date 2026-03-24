@@ -44,7 +44,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { EllipsisVerticalIcon } from 'lucide-react'
+import { EllipsisVerticalIcon, Share2, Users } from 'lucide-react'
 import { Prompt, PromptTableProps } from '@/redux/types/prompt'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { stripHtml } from '../../utils/textUtils'
@@ -59,6 +59,8 @@ import {
 } from '@/utils/sortUtils'
 import { SortDirectionEnum } from '@/utils/constants/sort'
 import { features } from '@/config/environment'
+import { openShareDialog, openManageDialog } from '@/redux/sharingSlice'
+import { ShareableEntityType } from '@/redux/types/sharing'
 
 const PromptTable = ({ searchQuery }: PromptTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -175,6 +177,26 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
       toast.error('Failed to unpublish prompt')
       console.error('Failed to unpublish prompt:', error)
     }
+  }
+
+  const handleShare = (id: number, title: string) => {
+    dispatch(
+      openShareDialog({
+        type: ShareableEntityType.Prompt,
+        id,
+        title: title || 'Untitled',
+      })
+    )
+  }
+
+  const handleManageShares = (id: number, title: string) => {
+    dispatch(
+      openManageDialog({
+        type: ShareableEntityType.Prompt,
+        id,
+        title: title || 'Untitled',
+      })
+    )
   }
 
   const renderPromptContent = (content: string) => {
@@ -318,6 +340,31 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                               <span>Publish</span>
                             </DropdownMenuItem>
                           ))}
+                        {features.enableSharing && (
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleShare(prompt.id, prompt.title || 'Untitled')
+                            }
+                            className='cursor-pointer'
+                          >
+                            <Share2 className='h-4 w-4' />
+                            <span>Share with User</span>
+                          </DropdownMenuItem>
+                        )}
+                        {features.enableSharing && (
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleManageShares(
+                                prompt.id,
+                                prompt.title || 'Untitled'
+                              )
+                            }
+                            className='cursor-pointer'
+                          >
+                            <Users className='h-4 w-4' />
+                            <span>Manage Shares</span>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() =>

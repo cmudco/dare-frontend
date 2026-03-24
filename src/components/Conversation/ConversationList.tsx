@@ -48,6 +48,8 @@ import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
 import ForkConfirmDialog from '../shared/ForkConfirmDialog'
 import { toast } from '@/utils/toast'
+import { openShareDialog, openManageDialog } from '@/redux/sharingSlice'
+import { ShareableEntityType } from '@/redux/types/sharing'
 import {
   filterConversations,
   createSortOrderUpdates,
@@ -270,6 +272,26 @@ const ConversationList: React.FC<ConversationListProps> = ({
     setForkConversationData(null)
   }
 
+  const handleShareClick = (conversation: Conversation) => {
+    dispatch(
+      openShareDialog({
+        type: ShareableEntityType.Conversation,
+        id: conversation.conversationId,
+        title: conversation.title || 'New Chat',
+      })
+    )
+  }
+
+  const handleManageSharesClick = (conversation: Conversation) => {
+    dispatch(
+      openManageDialog({
+        type: ShareableEntityType.Conversation,
+        id: conversation.conversationId,
+        title: conversation.title || 'New Chat',
+      })
+    )
+  }
+
   const handleSharedConversationClick = async (conversation: Conversation) => {
     // Load messages via REST for read-only view
     dispatch(updateActiveConversation(conversation))
@@ -343,6 +365,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       onEditClick={handleEditClick}
                       onCloneClick={handleCloneClick}
                       onPublishClick={handlePublishClick}
+                      onShareClick={handleShareClick}
+                      onManageSharesClick={handleManageSharesClick}
                       onEditChange={handleEditChange}
                       onEditBlur={handleEditBlur}
                       onEditKeyDown={handleEditKeyDown}
