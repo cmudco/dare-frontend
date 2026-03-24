@@ -340,31 +340,36 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                               <span>Publish</span>
                             </DropdownMenuItem>
                           ))}
-                        {features.enableSharing && (
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleShare(prompt.id, prompt.title || 'Untitled')
-                            }
-                            className='cursor-pointer'
-                          >
-                            <Share2 className='h-4 w-4' />
-                            <span>Share with User</span>
-                          </DropdownMenuItem>
-                        )}
-                        {features.enableSharing && (
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleManageShares(
-                                prompt.id,
-                                prompt.title || 'Untitled'
-                              )
-                            }
-                            className='cursor-pointer'
-                          >
-                            <Users className='h-4 w-4' />
-                            <span>Manage Shares</span>
-                          </DropdownMenuItem>
-                        )}
+                        {features.enableSharing &&
+                          prompt.canShare !== false && (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleShare(
+                                  prompt.id,
+                                  prompt.title || 'Untitled'
+                                )
+                              }
+                              className='cursor-pointer'
+                            >
+                              <Share2 className='h-4 w-4' />
+                              <span>Share with User</span>
+                            </DropdownMenuItem>
+                          )}
+                        {features.enableSharing &&
+                          prompt.canShare !== false && (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleManageShares(
+                                  prompt.id,
+                                  prompt.title || 'Untitled'
+                                )
+                              }
+                              className='cursor-pointer'
+                            >
+                              <Users className='h-4 w-4' />
+                              <span>Manage Shares</span>
+                            </DropdownMenuItem>
+                          )}
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() =>

@@ -135,7 +135,7 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
                 <span>{workflow.isPublished ? 'Unpublish' : 'Publish'}</span>
               </DropdownMenuItem>
             )}
-            {features.enableSharing && (
+            {features.enableSharing && workflow.canShare !== false && (
               <DropdownMenuItem
                 onClick={() => onShare?.(workflow.id, workflow.title)}
                 className='cursor-pointer'
@@ -144,7 +144,7 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
                 <span>Share with User</span>
               </DropdownMenuItem>
             )}
-            {features.enableSharing && (
+            {features.enableSharing && workflow.canShare !== false && (
               <DropdownMenuItem
                 onClick={() => onManageShares?.(workflow.id, workflow.title)}
                 className='cursor-pointer'
