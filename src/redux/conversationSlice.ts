@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialState } from './initialState/conversation'
 import {
   getConversations,
+  fetchConversationById,
   getAvailableModels,
   getAllModels,
   createConversation,
@@ -518,6 +519,25 @@ export const conversationSlice = createSlice({
         state.referencedConversations = []
       })
       .addCase(createConversation.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(fetchConversationById.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchConversationById.fulfilled, (state, action) => {
+        state.loading = false
+        state.activeConversation = action.payload
+
+        const index = state.conversations.findIndex(
+          (conv) => conv.conversationId === action.payload.conversationId
+        )
+        if (index !== -1) {
+          state.conversations[index] = action.payload
+        }
+      })
+      .addCase(fetchConversationById.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

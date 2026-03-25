@@ -1,7 +1,15 @@
 import React from 'react'
 import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline'
 import { useSortable } from '@dnd-kit/sortable'
-import { Pencil, Copy, MoreVertical, Globe, GitFork } from 'lucide-react'
+import {
+  Pencil,
+  Copy,
+  MoreVertical,
+  Globe,
+  GitFork,
+  Share2,
+  Users,
+} from 'lucide-react'
 import { SortableConversationItemProps } from '../../redux/types/conversation'
 import {
   createDragStyle,
@@ -23,11 +31,14 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   editingId,
   editValue,
   isSharedTab = false,
+  isSharedWithMeTab = false,
   onConversationClick,
   onEditClick,
   onCloneClick,
   onPublishClick,
   onForkClick,
+  onShareClick,
+  onManageSharesClick,
   onEditChange,
   onEditBlur,
   onEditKeyDown,
@@ -39,7 +50,10 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: conversation.conversationId, disabled: isSharedTab })
+  } = useSortable({
+    id: conversation.conversationId,
+    disabled: isSharedTab || isSharedWithMeTab,
+  })
 
   const style = createDragStyle(transform, transition, isDragging)
 
@@ -51,7 +65,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
       onClick={(e) => onConversationClick(conversation, e)}
     >
       <div className='flex flex-shrink-0 items-center gap-1'>
-        {!isSharedTab && (
+        {!isSharedTab && !isSharedWithMeTab && (
           <div
             className={`p-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             {...attributes}
@@ -61,7 +75,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
             <ChatBubbleLeftEllipsisIcon className='h-5 w-5' />
           </div>
         )}
-        {isSharedTab && (
+        {(isSharedTab || isSharedWithMeTab) && (
           <div className='p-1'>
             <ChatBubbleLeftEllipsisIcon className='h-5 w-5' />
           </div>
@@ -122,9 +136,9 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                     <MoreVertical className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align='end' className='w-44'>
-                  {isSharedTab ? (
-                    /* Shared tab actions */
+                <DropdownMenuContent align='end' className='w-48'>
+                  {isSharedTab || isSharedWithMeTab ? (
+                    /* Shared / Shared With Me tab actions */
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation()
@@ -149,6 +163,32 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                           {conversation.isPublished ? 'Unpublish' : 'Publish'}
                         </DropdownMenuItem>
                       )}
+                      {/* Share with specific user */}
+                      {features.enableSharing &&
+                        conversation.canShare !== false && (
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onShareClick?.(conversation)
+                            }}
+                          >
+                            <Share2 className='mr-2 h-4 w-4' />
+                            Share with User
+                          </DropdownMenuItem>
+                        )}
+                      {/* Manage shares */}
+                      {features.enableSharing &&
+                        conversation.canShare !== false && (
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onManageSharesClick?.(conversation)
+                            }}
+                          >
+                            <Users className='mr-2 h-4 w-4' />
+                            Manage Shares
+                          </DropdownMenuItem>
+                        )}
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation()

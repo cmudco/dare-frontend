@@ -10,6 +10,7 @@ import {
   getAllModelsAPI,
   createConversationAPI,
   getConversationsAPI,
+  getConversationAPI,
   deleteConversationAPI,
   updateConversationAPI,
   updateMessageAPI,
@@ -67,6 +68,18 @@ export const getConversations = createAsyncThunk(
     }
   }
 )
+
+export const fetchConversationById = createAsyncThunk<
+  Conversation,
+  string,
+  { rejectValue: string }
+>('conversation/fetchConversationById', async (conversationId, thunkAPI) => {
+  try {
+    return await getConversationAPI(conversationId)
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
 
 export const createConversation = createAsyncThunk<
   Conversation,

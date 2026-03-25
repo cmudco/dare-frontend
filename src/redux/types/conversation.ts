@@ -56,6 +56,7 @@ export interface Conversation {
   publishedAt?: string | null
   isOwner?: boolean
   isForked?: boolean // True if this conversation was forked from another user
+  canShare?: boolean
   ownerEmail?: string | null
   ownerUserId?: number | null // Owner's user ID for shared conversations (to fetch their files)
   fileOwnerId?: number | null // Original file owner's user ID for forked conversations
@@ -281,6 +282,7 @@ export interface SortableConversationItemProps {
   editingId: string | null
   editValue: string
   isSharedTab?: boolean
+  isSharedWithMeTab?: boolean
   onConversationClick: (
     conversation: Conversation,
     event?: React.MouseEvent
@@ -289,6 +291,8 @@ export interface SortableConversationItemProps {
   onCloneClick: (conversation: Conversation) => void
   onPublishClick?: (conversation: Conversation) => void
   onForkClick?: (conversation: Conversation) => void
+  onShareClick?: (conversation: Conversation) => void
+  onManageSharesClick?: (conversation: Conversation) => void
   onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onEditBlur: () => void
   onEditKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
