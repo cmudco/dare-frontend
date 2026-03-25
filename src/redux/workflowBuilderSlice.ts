@@ -210,6 +210,151 @@ function isWorkflowRunActive(run: WorkflowRun | null): boolean {
   )
 }
 
+function getWorkflowRunWorkflowId(run: WorkflowRun | null): number | null {
+  return run && typeof run.workflow === 'number' ? run.workflow : null
+}
+
+function isWorkflowRunForWorkflow(
+  run: WorkflowRun | null,
+  workflowId: number
+): boolean {
+  return getWorkflowRunWorkflowId(run) === workflowId
+}
+
+function getPreferredResponse(
+  cachedResponse?: string | null,
+  incomingResponse?: string | null
+): string | null {
+  const cachedText = cachedResponse ?? null
+  const incomingText = incomingResponse ?? null
+
+  if (cachedText === null) return incomingText
+  if (incomingText === null) return cachedText
+
+  return cachedText.length > incomingText.length ? cachedText : incomingText
+}
+
+function mergeNodeStates(
+  cachedNodeStates?: NodeStatesMap,
+  incomingNodeStates?: NodeStatesMap
+): NodeStatesMap | undefined {
+  if (!cachedNodeStates) return incomingNodeStates
+  if (!incomingNodeStates) return cachedNodeStates
+
+  const mergedNodeStates: NodeStatesMap = {}
+  const nodeIds = new Set([
+    ...Object.keys(cachedNodeStates),
+    ...Object.keys(incomingNodeStates),
+  ])
+
+  for (const nodeId of nodeIds) {
+    const cachedNodeState = cachedNodeStates[nodeId]
+    const incomingNodeState = incomingNodeStates[nodeId]
+
+    if (!cachedNodeState && incomingNodeState) {
+      mergedNodeStates[nodeId] = incomingNodeState
+      continue
+    }
+
+    if (cachedNodeState && !incomingNodeState) {
+      mergedNodeStates[nodeId] = cachedNodeState
+      continue
+    }
+
+    if (!cachedNodeState || !incomingNodeState) {
+      continue
+    }
+
+    mergedNodeStates[nodeId] = {
+      ...cachedNodeState,
+      ...incomingNodeState,
+      response: getPreferredResponse(
+        cachedNodeState.response,
+        incomingNodeState.response
+      ),
+      snippets: incomingNodeState.snippets ?? cachedNodeState.snippets ?? [],
+      webSearchSources:
+        incomingNodeState.webSearchSources ??
+        cachedNodeState.webSearchSources ??
+        [],
+      metadata:
+        incomingNodeState.metadata !== undefined
+          ? incomingNodeState.metadata
+          : (cachedNodeState.metadata ?? null),
+      validationContext:
+        incomingNodeState.validationContext !== undefined
+          ? incomingNodeState.validationContext
+          : (cachedNodeState.validationContext ?? null),
+    }
+  }
+
+  return mergedNodeStates
+}
+
+function mergeWorkflowRuns(
+  cachedRun: WorkflowRun | null,
+  incomingRun: WorkflowRun | null
+): WorkflowRun | null {
+  if (!cachedRun) return incomingRun
+  if (!incomingRun) return cachedRun
+
+  if (cachedRun.id !== incomingRun.id) {
+    return incomingRun.id > cachedRun.id ? incomingRun : cachedRun
+  }
+
+  return {
+    ...cachedRun,
+    ...incomingRun,
+    nodeStates: mergeNodeStates(cachedRun.nodeStates, incomingRun.nodeStates),
+    pendingValidation:
+      incomingRun.pendingValidation !== undefined
+        ? incomingRun.pendingValidation
+        : (cachedRun.pendingValidation ?? null),
+  }
+}
+
+function createEmptyBatchRunState(): WorkflowBuilderState['batchRun'] {
+  return {
+    isActive: false,
+    batchId: null,
+    workflowId: null,
+    latestRunIsBatch: false,
+    dismissedBatchId: null,
+    totalFiles: 0,
+    completedCount: 0,
+    failedCount: 0,
+    currentIndex: 0,
+    fileStatuses: [],
+    runsById: {},
+    activeNodeIds: {},
+    selectedRunId: null,
+  }
+}
+
+function clearExecutionStateFields(state: WorkflowBuilderState): void {
+  state.currentRun = null
+  state.isRunning = false
+  state.currentPartialRunId = null
+  state.executedStepNodeIds = []
+  state.activeNodeId = null
+  state.pendingValidation = null
+  state.showExecutionPanel = false
+  state.availableRuns = []
+  state.selectedRunIds = {}
+  state.batchRun = createEmptyBatchRunState()
+}
+
+function getRunningNodeId(run: WorkflowRun | null): string | null {
+  if (!run?.nodeStates) return null
+
+  return (
+    Object.keys(run.nodeStates).find(
+      (nodeId) =>
+        run.nodeStates?.[nodeId]?.status === WorkflowRunStepStatus.Running
+    ) || null
+  )
+}
+
 /**
  * Propagate execution state to connected output nodes (nodes display mode only).
  * Output nodes mirror their source step's response.
@@ -517,30 +662,7 @@ const workflowBuilderSlice = createSlice({
         action.payload.status === WorkflowRunStepStatus.PendingHumanInput
     },
     clearExecutionState: (state) => {
-      state.currentRun = null
-      state.isRunning = false
-      state.currentPartialRunId = null
-      state.executedStepNodeIds = []
-      state.activeNodeId = null
-      state.pendingValidation = null
-      state.showExecutionPanel = false
-      state.availableRuns = []
-      state.selectedRunIds = {}
-      state.batchRun = {
-        isActive: false,
-        batchId: null,
-        workflowId: null,
-        latestRunIsBatch: false,
-        dismissedBatchId: null,
-        totalFiles: 0,
-        completedCount: 0,
-        failedCount: 0,
-        currentIndex: 0,
-        fileStatuses: [],
-        runsById: {},
-        activeNodeIds: {},
-        selectedRunId: null,
-      }
+      clearExecutionStateFields(state)
     },
 
     // ── Manual Mode ──────────────────────────────────────────────────────
@@ -647,11 +769,26 @@ const workflowBuilderSlice = createSlice({
         })
 
         const previousWorkflowId = state.lastWorkflowId
+        const incomingWorkflowId = action.payload.workflow.id
+        const cachedRunForWorkflow = isWorkflowRunForWorkflow(
+          state.currentRun,
+          incomingWorkflowId
+        )
+          ? state.currentRun
+          : null
+        const isWorkflowSwitch =
+          previousWorkflowId !== undefined &&
+          previousWorkflowId !== incomingWorkflowId
+
+        if (isWorkflowSwitch) {
+          clearExecutionStateFields(state)
+        }
+
         // Static workflow data from REST
         state.nodes = action.payload.nodes
         state.edges = action.payload.edges
         state.loadedWorkflow = action.payload.workflow
-        state.lastWorkflowId = action.payload.workflow.id
+        state.lastWorkflowId = incomingWorkflowId
         state.savedViewport = action.payload.viewport ?? null
         state.manualModeEnabled =
           action.payload.workflow.manualModeEnabled ?? false
@@ -661,26 +798,60 @@ const workflowBuilderSlice = createSlice({
         // Clear history when loading a workflow
         state.history.past = []
         state.history.future = []
-
-        // Reset execution state — socket is the source of truth for execution
-        state.activeNodeId = null
         state.availableRuns = []
         state.selectedRunIds = {}
-        const incomingWorkflowId = action.payload.workflow.id
         const hasBatchRunForWorkflow =
           state.batchRun.workflowId === incomingWorkflowId
-        const isWorkflowSwitch =
-          previousWorkflowId && previousWorkflowId !== incomingWorkflowId
 
-        if (!hasBatchRunForWorkflow || isWorkflowSwitch) {
-          state.batchRun = initialState.batchRun
+        if (!hasBatchRunForWorkflow) {
+          state.batchRun = createEmptyBatchRunState()
+        }
+
+        if (!cachedRunForWorkflow) {
+          state.currentPartialRunId = null
+          state.executedStepNodeIds = []
+          state.pendingValidation = null
+          state.activeNodeId = null
+        }
+
+        state.currentRun = mergeWorkflowRuns(
+          cachedRunForWorkflow,
+          action.payload.currentRun
+        )
+        state.pendingValidation = state.currentRun?.pendingValidation ?? null
+        state.activeNodeId = getRunningNodeId(state.currentRun)
+        state.isRunning =
+          isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
+
+        if (
+          state.isRunning &&
+          state.outputDisplayMode === OutputDisplayMode.Panel
+        ) {
+          state.showExecutionPanel = true
+        } else if (!state.isRunning && !state.pendingValidation) {
+          state.showExecutionPanel = false
+        }
+
+        // Restore execution UI after outputDisplayMode is set from workflow.
+        // Handles case where socket subscription fired before REST loaded the workflow.
+        if (state.isRunning && state.currentRun) {
+          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
+            state.showExecutionPanel = true
+          }
+
+          if (!state.activeNodeId) {
+            const runningNodeId = getRunningNodeId(state.currentRun)
+            if (runningNodeId) {
+              state.activeNodeId = runningNodeId
+            }
+          }
         }
       })
       .addCase(getActivePartialRun.fulfilled, (state, action) => {
         const { partialRun, executedStepNodeIds } = action.payload
         if (!partialRun) return
 
-        state.currentRun = partialRun
+        state.currentRun = mergeWorkflowRuns(state.currentRun, partialRun)
         state.currentPartialRunId = partialRun.id
         state.executedStepNodeIds = executedStepNodeIds
       })
@@ -709,19 +880,39 @@ const workflowBuilderSlice = createSlice({
         })
 
         if (latestRun) {
-          state.currentRun = latestRun
+          const cachedRun = isWorkflowRunForWorkflow(
+            state.currentRun,
+            workflowId
+          )
+            ? state.currentRun
+            : null
+          state.currentRun = mergeWorkflowRuns(cachedRun, latestRun)
           state.isRunning =
-            latestRun.status === 'running' ||
-            latestRun.status === 'pending_human_input'
+            isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
 
-          state.pendingValidation = latestRun.pendingValidation ?? null
+          state.pendingValidation = state.currentRun?.pendingValidation ?? null
           if (state.pendingValidation) {
             state.showExecutionPanel = true
           }
+
+          // Restore UI visibility for running workflows on reconnect
+          if (
+            state.isRunning &&
+            state.outputDisplayMode === OutputDisplayMode.Panel
+          ) {
+            state.showExecutionPanel = true
+          }
+
+          // Restore active node from nodeStates so the streaming indicator shows
+          const runningNodeId = getRunningNodeId(state.currentRun)
+          if (runningNodeId) {
+            state.activeNodeId = runningNodeId
+          }
         } else {
           state.currentRun = null
-          state.isRunning = false
+          state.isRunning = state.batchRun.isActive
           state.pendingValidation = null
+          state.activeNodeId = null
         }
       })
 
@@ -731,10 +922,18 @@ const workflowBuilderSlice = createSlice({
         debugLog('🚀 executionStarted, runId:', workflowRunId)
 
         const baseRun = state.currentRun || ({} as WorkflowRun)
+        const workflowId = state.loadedWorkflow?.id || state.lastWorkflowId || 0
         state.currentRun = {
           ...baseRun,
           id: workflowRunId,
+          workflow: workflowId,
           status: WorkflowRunStepStatus.Running,
+          workflowTitle:
+            baseRun.workflowTitle || state.loadedWorkflow?.title || '',
+          workflowDescription:
+            baseRun.workflowDescription ||
+            state.loadedWorkflow?.description ||
+            '',
           nodeStates: initializeNodeStates(state.nodes),
         }
         state.isRunning = true
@@ -749,18 +948,26 @@ const workflowBuilderSlice = createSlice({
       })
       .addCase(singleStepStarted, (state, action) => {
         const { workflowRunId, stepNodeId } = action.payload
+        const workflowId = state.loadedWorkflow?.id || state.lastWorkflowId || 0
 
         if (state.currentRun) {
           state.currentRun = {
             ...state.currentRun,
             id: workflowRunId,
+            workflow: workflowId,
             status: WorkflowRunStepStatus.Running,
             isPartial: true,
           }
         } else {
           state.currentRun = {
             id: workflowRunId,
+            workflow: workflowId,
+            user: 0,
             status: WorkflowRunStepStatus.Running,
+            startedAt: new Date().toISOString(),
+            endedAt: null,
+            workflowTitle: state.loadedWorkflow?.title || '',
+            workflowDescription: state.loadedWorkflow?.description || '',
             isPartial: true,
             nodeStates: initializeNodeStates(state.nodes),
           } as WorkflowRun
@@ -951,22 +1158,18 @@ const workflowBuilderSlice = createSlice({
           return
         }
 
-        state.currentRun = { ...workflowRunData, status } as WorkflowRun
+        const incomingRun = { ...workflowRunData, status } as WorkflowRun
+        state.currentRun = mergeWorkflowRuns(state.currentRun, incomingRun)
 
         if (state.outputDisplayMode === OutputDisplayMode.Panel) {
           state.showExecutionPanel = true
         }
 
         state.isRunning =
-          status === 'running' ||
-          status === 'pending_human_input' ||
-          state.batchRun.isActive
+          isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
 
-        if (pendingValidation) {
-          state.pendingValidation = pendingValidation
-        } else if (status !== 'pending_human_input') {
-          state.pendingValidation = null
-        }
+        state.pendingValidation = pendingValidation ?? null
+        state.activeNodeId = getRunningNodeId(state.currentRun)
       })
 
       // ── Human Validation ─────────────────────────────────────────────
@@ -1066,7 +1269,8 @@ const workflowBuilderSlice = createSlice({
         state.batchRun.completedCount = action.payload.completedCount
         state.batchRun.failedCount = action.payload.failedCount
         state.batchRun.totalFiles = action.payload.totalFiles
-        state.isRunning = isWorkflowRunActive(state.currentRun)
+        state.isRunning =
+          isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
       })
       .addCase(batchSummaryLoaded, (state, action) => {
         const {
@@ -1114,9 +1318,8 @@ const workflowBuilderSlice = createSlice({
             : null,
         }
 
-        if (isActive) {
-          state.isRunning = true
-        }
+        state.isRunning =
+          isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
       })
   },
 })

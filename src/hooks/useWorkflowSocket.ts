@@ -9,8 +9,8 @@
  * NOTE: Socket CONNECTION is managed at App root level by useSocketConnection.
  * This hook only handles subscription and execution operations.
  *
- * NOTE: Execution state comes ONLY from socket, not from REST API.
- * When workflowId is provided, automatically subscribes to get current execution state.
+ * NOTE: Live execution updates come from socket. The builder may seed from cached/REST
+ * state on mount, then this hook refreshes the active workflow subscription.
  */
 
 import { useEffect, useCallback } from 'react'
@@ -22,7 +22,6 @@ import {
   workflowSocketUnsubscribeWorkflow,
   workflowSocketStartBatchExecution,
 } from '@/redux/middleware/workflowSocketMiddleware'
-import { clearExecutionState } from '@/redux/workflowBuilderSlice'
 
 interface UseWorkflowSocketOptions {
   /** Workflow ID to subscribe to for execution state */
@@ -67,7 +66,6 @@ export function useWorkflowSocket(
     // Cleanup: unsubscribe when workflowId changes or component unmounts
     return () => {
       dispatch(workflowSocketUnsubscribeWorkflow(workflowId))
-      dispatch(clearExecutionState())
     }
   }, [wsConnectionStatus, workflowId, dispatch])
 
