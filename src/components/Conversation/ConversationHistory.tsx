@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
@@ -12,6 +12,9 @@ import {
 } from '../../redux/conversationSlice'
 import {
   createConversation,
+  fetchConversationById,
+  fetchConversationMessages,
+  forkConversation,
   fetchSharedConversations,
 } from '../../redux/asyncThunks/conversation'
 import { AppDispatch, RootState } from '../../redux/store'
@@ -20,10 +23,17 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../ui/button'
 import { features } from '@/config/environment'
 import { ConversationTab } from '@/utils/constants/conversation'
+import { fetchSharedWithMe } from '@/redux/asyncThunks/sharing'
+import { ShareableEntityType, SharedItem } from '@/redux/types/sharing'
+import SharedWithMeList from '../shared/SharedWithMeList'
+import ForkConfirmDialog from '../shared/ForkConfirmDialog'
+import { toast } from '@/utils/toast'
 
 const ConversationHistory = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
+  const [forkConversationItem, setForkConversationItem] =
+    useState<SharedItem | null>(null)
   const isCollapsed = useSelector(
     (state: RootState) => state.conversation.historySidebarCollapsed
   )
@@ -81,6 +91,47 @@ const ConversationHistory = () => {
     dispatch(setActiveTab(tab))
     if (tab === ConversationTab.SHARED) {
       dispatch(fetchSharedConversations())
+    }
+    if (tab === ConversationTab.SHARED_WITH_ME) {
+      dispatch(fetchSharedWithMe(ShareableEntityType.Conversation))
+    }
+  }
+
+  const handleSharedConversationClick = async (item: SharedItem) => {
+    try {
+      const conversation = await dispatch(
+        fetchConversationById(item.objectId)
+      ).unwrap()
+      await dispatch(fetchConversationMessages(item.objectId)).unwrap()
+      dispatch(updateActiveConversation(conversation))
+      navigate(`/conversation/${item.objectId}`)
+    } catch (error) {
+      toast.error(
+        (error as Error).message || 'Failed to open shared conversation.'
+      )
+    }
+  }
+
+  const handleConfirmFork = async () => {
+    if (!forkConversationItem) {
+      return
+    }
+
+    try {
+      await dispatch(
+        fetchConversationMessages(forkConversationItem.objectId)
+      ).unwrap()
+      const forkedConversation = await dispatch(
+        forkConversation(forkConversationItem.objectId)
+      ).unwrap()
+      setForkConversationItem(null)
+      dispatch(updateActiveConversation(forkedConversation))
+      navigate(`/conversation/${forkedConversation.conversationId}`)
+    } catch (error) {
+      setForkConversationItem(null)
+      toast.error(
+        (error as Error).message || 'Failed to fork shared conversation.'
+      )
     }
   }
 
@@ -140,18 +191,28 @@ const ConversationHistory = () => {
             <div className='mx-1 mb-2 flex shrink-0 rounded-lg bg-gray-100 p-0.5 dark:bg-slate-800'>
               <button
                 onClick={() => handleTabChange(ConversationTab.MINE)}
-                className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-all ${
                   activeTab === ConversationTab.MINE
                     ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
                     : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
               >
-                My Conversations
+                Mine
               </button>
               <button
                 onClick={() => handleTabChange(ConversationTab.SHARED)}
-                className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-all ${
                   activeTab === ConversationTab.SHARED
+                    ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
+                }`}
+              >
+                Library
+              </button>
+              <button
+                onClick={() => handleTabChange(ConversationTab.SHARED_WITH_ME)}
+                className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-all ${
+                  activeTab === ConversationTab.SHARED_WITH_ME
                     ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
                     : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
@@ -161,11 +222,32 @@ const ConversationHistory = () => {
             </div>
           )}
           <div className='min-h-0 flex-1 overflow-y-auto'>
-            <ConversationList
-              isSharedTab={activeTab === ConversationTab.SHARED}
-              sharedConversations={sharedConversations}
-            />
+            {activeTab === ConversationTab.SHARED_WITH_ME ? (
+              <SharedWithMeList
+                entityType={ShareableEntityType.Conversation}
+                onItemClick={handleSharedConversationClick}
+                onForkClick={setForkConversationItem}
+              />
+            ) : (
+              <ConversationList
+                isSharedTab={activeTab === ConversationTab.SHARED}
+                sharedConversations={sharedConversations}
+              />
+            )}
           </div>
+          <ForkConfirmDialog
+            isOpen={!!forkConversationItem}
+            title={forkConversationItem?.entityTitle || 'Untitled Conversation'}
+            entityType='conversation'
+            copiedItems={[
+              'Conversation settings and messages',
+              'Referenced prompts and context configuration',
+              'Conversation structure for continued work in your account',
+            ]}
+            infoNote="Files are not copied. You'll need to attach your own files after forking."
+            onConfirm={handleConfirmFork}
+            onCancel={() => setForkConversationItem(null)}
+          />
         </div>
       )}
     </div>

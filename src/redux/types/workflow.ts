@@ -155,6 +155,7 @@ export interface Workflow {
   isPublished?: boolean
   publishedAt?: string | null
   isForked?: boolean
+  canShare?: boolean
   ownerUsername?: string
 }
 

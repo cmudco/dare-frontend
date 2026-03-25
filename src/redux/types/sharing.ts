@@ -1,0 +1,68 @@
+export enum ShareableEntityType {
+  Conversation = 'conversation',
+  Workflow = 'workflow',
+  Prompt = 'prompt',
+}
+
+export interface ShareRequest {
+  contentType: ShareableEntityType
+  objectId: string | number
+  emails: string[]
+  message?: string
+}
+
+export interface ShareSuccessItem {
+  id: number
+  email: string
+}
+
+export interface ShareFailureItem {
+  email: string
+  reason: string
+}
+
+export interface ShareResponse {
+  shared: ShareSuccessItem[]
+  failed: ShareFailureItem[]
+}
+
+export interface SharedItem {
+  id: number
+  contentType: ShareableEntityType
+  objectId: string
+  sharedByEmail: string
+  sharedWithEmail: string
+  message: string
+  entityTitle: string
+  entityDescription: string
+  entityContent: string
+  entityVersion: number | null
+  entityMode: string
+  entityStepCount: number | null
+  createdAt: string
+}
+
+export interface ShareRecipient {
+  id: number
+  email: string
+  sharedAt: string
+}
+
+export interface ShareDialogEntity {
+  type: ShareableEntityType
+  id: string | number
+  title: string
+}
+
+export interface SharingState {
+  sharedWithMe: SharedItem[]
+  recipients: ShareRecipient[]
+  loading: boolean
+  recipientsLoading: boolean
+  error: string | null
+  shareDialogOpen: boolean
+  shareDialogEntity: ShareDialogEntity | null
+  manageDialogOpen: boolean
+  manageDialogEntity: ShareDialogEntity | null
+  lastShareResult: ShareResponse | null
+}
