@@ -82,8 +82,8 @@ const stepCompleted = createAction<{
   response: string
   status?: string
   metadata?: {
-    snippets?: WorkflowStepSnippet[]
-    webSearchSources?: WorkflowStepWebSearchSource[]
+    snippets: WorkflowStepSnippet[]
+    webSearchSources: WorkflowStepWebSearchSource[]
   }
   workflowRunId?: number
 }>('workflowSocket/step_completed')
@@ -160,7 +160,6 @@ function initializeNodeStates(nodes: Node[]): NodeStatesMap {
   const states: NodeStatesMap = {}
   for (const node of nodes) {
     states[node.id] = {
-      nodeId: node.id,
       stepId: null,
       startedAt: null,
       nodeType: node.type || 'unknown',
@@ -187,7 +186,6 @@ function ensureNodeState(
 ): void {
   if (!nodeStates[nodeId]) {
     nodeStates[nodeId] = {
-      nodeId,
       stepId: null,
       startedAt: null,
       nodeType,
@@ -272,11 +270,9 @@ function mergeNodeStates(
         cachedNodeState.response,
         incomingNodeState.response
       ),
-      snippets: incomingNodeState.snippets ?? cachedNodeState.snippets ?? [],
+      snippets: incomingNodeState.snippets ?? cachedNodeState.snippets,
       webSearchSources:
-        incomingNodeState.webSearchSources ??
-        cachedNodeState.webSearchSources ??
-        [],
+        incomingNodeState.webSearchSources ?? cachedNodeState.webSearchSources,
       metadata:
         incomingNodeState.metadata !== undefined
           ? incomingNodeState.metadata
@@ -1045,8 +1041,8 @@ const workflowBuilderSlice = createSlice({
           const nodeState = run.nodeStates[nodeId]
           nodeState.response = response
           nodeState.status = WorkflowRunStepStatus.Completed
-          nodeState.snippets = metadata?.snippets || []
-          nodeState.webSearchSources = metadata?.webSearchSources || []
+          nodeState.snippets = metadata?.snippets ?? []
+          nodeState.webSearchSources = metadata?.webSearchSources ?? []
           state.batchRun.activeNodeIds[workflowRunId as number] = null
           return
         }
@@ -1057,8 +1053,8 @@ const workflowBuilderSlice = createSlice({
         const nodeState = state.currentRun.nodeStates[nodeId]
         nodeState.response = response
         nodeState.status = WorkflowRunStepStatus.Completed
-        nodeState.snippets = metadata?.snippets || []
-        nodeState.webSearchSources = metadata?.webSearchSources || []
+        nodeState.snippets = metadata?.snippets ?? []
+        nodeState.webSearchSources = metadata?.webSearchSources ?? []
 
         propagateToOutputNodes(state, nodeId, {
           response,

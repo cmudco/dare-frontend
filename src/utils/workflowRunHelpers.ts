@@ -57,19 +57,5 @@ export function getNodeState(
   nodeId: string
 ): NodeState | null {
   if (!run?.nodeStates) return null
-
-  // Direct key lookup
-  if (run.nodeStates[nodeId]) {
-    return run.nodeStates[nodeId]
-  }
-
-  // Fallback: search by nodeId field inside state objects
-  // Handles DRF CamelCase renderer key mangling edge cases
-  for (const state of Object.values(run.nodeStates)) {
-    if (state.nodeId === nodeId) {
-      return state
-    }
-  }
-
-  return null
+  return run.nodeStates[nodeId] ?? null
 }

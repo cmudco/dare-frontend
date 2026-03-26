@@ -98,7 +98,6 @@ export interface RoutingMetadata {
 }
 
 export interface NodeState {
-  nodeId: string // Node ID from workflow graph (survives DRF CamelCase key mangling)
   stepId: number | null // Backend step ID (null for display nodes)
   startedAt?: string | null // Server timestamp when execution started
   nodeType: string // 'step' | 'structuredOutput' | 'chatOutput' | 'start'
@@ -107,8 +106,8 @@ export interface NodeState {
   error: string | null
   validationContext: ValidationContext | null // Only present when status is PENDING_HUMAN_INPUT
   metadata: RoutingMetadata | null // Present for completed routing nodes with AI analysis
-  snippets?: WorkflowStepSnippet[] // RAG snippets retrieved for this step
-  webSearchSources?: WorkflowStepWebSearchSource[] // Web search citations for this step
+  snippets: WorkflowStepSnippet[] // RAG snippets retrieved for this step
+  webSearchSources: WorkflowStepWebSearchSource[] // Web search citations for this step
 }
 
 /**
