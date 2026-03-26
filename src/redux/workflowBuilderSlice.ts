@@ -210,15 +210,15 @@ function isWorkflowRunActive(run: WorkflowRun | null): boolean {
   )
 }
 
-function getWorkflowRunWorkflowId(run: WorkflowRun | null): number | null {
-  return run && typeof run.workflow === 'number' ? run.workflow : null
-}
-
 function isWorkflowRunForWorkflow(
   run: WorkflowRun | null,
   workflowId: number
 ): boolean {
-  return getWorkflowRunWorkflowId(run) === workflowId
+  return (
+    run !== null &&
+    typeof run.workflow === 'number' &&
+    run.workflow === workflowId
+  )
 }
 
 function getPreferredResponse(
@@ -353,6 +353,10 @@ function getRunningNodeId(run: WorkflowRun | null): string | null {
         run.nodeStates?.[nodeId]?.status === WorkflowRunStepStatus.Running
     ) || null
   )
+}
+
+function deriveIsRunning(state: WorkflowBuilderState): boolean {
+  return isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
 }
 
 /**
@@ -820,8 +824,7 @@ const workflowBuilderSlice = createSlice({
         )
         state.pendingValidation = state.currentRun?.pendingValidation ?? null
         state.activeNodeId = getRunningNodeId(state.currentRun)
-        state.isRunning =
-          isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
+        state.isRunning = deriveIsRunning(state)
 
         if (
           state.isRunning &&
@@ -830,21 +833,6 @@ const workflowBuilderSlice = createSlice({
           state.showExecutionPanel = true
         } else if (!state.isRunning && !state.pendingValidation) {
           state.showExecutionPanel = false
-        }
-
-        // Restore execution UI after outputDisplayMode is set from workflow.
-        // Handles case where socket subscription fired before REST loaded the workflow.
-        if (state.isRunning && state.currentRun) {
-          if (state.outputDisplayMode === OutputDisplayMode.Panel) {
-            state.showExecutionPanel = true
-          }
-
-          if (!state.activeNodeId) {
-            const runningNodeId = getRunningNodeId(state.currentRun)
-            if (runningNodeId) {
-              state.activeNodeId = runningNodeId
-            }
-          }
         }
       })
       .addCase(getActivePartialRun.fulfilled, (state, action) => {
@@ -887,8 +875,7 @@ const workflowBuilderSlice = createSlice({
             ? state.currentRun
             : null
           state.currentRun = mergeWorkflowRuns(cachedRun, latestRun)
-          state.isRunning =
-            isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
+          state.isRunning = deriveIsRunning(state)
 
           state.pendingValidation = state.currentRun?.pendingValidation ?? null
           if (state.pendingValidation) {
@@ -1165,8 +1152,7 @@ const workflowBuilderSlice = createSlice({
           state.showExecutionPanel = true
         }
 
-        state.isRunning =
-          isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
+        state.isRunning = deriveIsRunning(state)
 
         state.pendingValidation = pendingValidation ?? null
         state.activeNodeId = getRunningNodeId(state.currentRun)
@@ -1269,8 +1255,7 @@ const workflowBuilderSlice = createSlice({
         state.batchRun.completedCount = action.payload.completedCount
         state.batchRun.failedCount = action.payload.failedCount
         state.batchRun.totalFiles = action.payload.totalFiles
-        state.isRunning =
-          isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
+        state.isRunning = deriveIsRunning(state)
       })
       .addCase(batchSummaryLoaded, (state, action) => {
         const {
@@ -1318,8 +1303,7 @@ const workflowBuilderSlice = createSlice({
             : null,
         }
 
-        state.isRunning =
-          isWorkflowRunActive(state.currentRun) || state.batchRun.isActive
+        state.isRunning = deriveIsRunning(state)
       })
   },
 })
