@@ -13,6 +13,7 @@ import {
   setSelectedNodeId,
   updateNodeDataById,
 } from '@/redux/workflowBuilderSlice'
+import { EditableLabel } from '../components/EditableLabel'
 import { OutputDisplayMode } from '@/redux/types/workflowBuilder'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
@@ -21,6 +22,14 @@ import { OutputNodeContent } from '../components/OutputNodeContent'
 
 export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const dispatch = useAppDispatch()
+  const outputData = data as { label?: string; isExpanded?: boolean }
+
+  const handleLabelChange = useCallback(
+    (newLabel: string) => {
+      dispatch(updateNodeDataById({ nodeId: id, newData: { label: newLabel } }))
+    },
+    [dispatch, id]
+  )
 
   const {
     availableRuns,
@@ -59,7 +68,7 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
     return null
   })()
 
-  const isExpanded = (data?.isExpanded as boolean) ?? false
+  const isExpanded = outputData?.isExpanded ?? false
 
   // In nodes mode: auto-show when streaming
   // In panel mode: only show when manually expanded
@@ -148,7 +157,11 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
           <Send size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>Output</div>
+          <EditableLabel
+            value={outputData?.label ?? ''}
+            onChange={handleLabelChange}
+            placeholder='Name this node'
+          />
           <div className='node-subtitle'>{getSubtitle()}</div>
         </div>
         {hasResponse && (
