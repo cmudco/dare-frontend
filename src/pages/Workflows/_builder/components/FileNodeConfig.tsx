@@ -28,7 +28,6 @@ export interface FileNodeData {
   querySource?: QuerySource
   textInput?: string
   includeMetadata?: boolean
-  stepNumber?: number
 }
 
 interface FileNodeConfigProps {

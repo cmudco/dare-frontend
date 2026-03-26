@@ -30,7 +30,7 @@ export const createNode = (
 
   if (type === WorkflowNodeType.Step) {
     // Auto-create step + output node pair
-    const stepNumber =
+    const stepCount =
       nodes.filter((n) => n.type === WorkflowNodeType.Step).length + 1
     const stepId = nanoid() // UUID for React Flow (guaranteed unique)
     const outputId = nanoid() // UUID for output node (guaranteed unique)
@@ -40,8 +40,7 @@ export const createNode = (
       type: 'step',
       position,
       data: {
-        label: 'step',
-        stepNumber, // Keep stepNumber for display/execution order only
+        label: `Step ${stepCount}`,
         apiId: null, // Will be set after save
       },
     }
@@ -51,8 +50,7 @@ export const createNode = (
       type: 'chatOutput',
       position: { x: position.x + 400, y: position.y }, // Keep same Y as step for now
       data: {
-        label: `Step ${stepNumber} Output`,
-        stepNumber, // Keep stepNumber for display only
+        label: `Step ${stepCount} Output`,
       },
     }
 
@@ -77,29 +75,25 @@ export const createNode = (
     const existingStructuredOutputCount = nodes.filter(
       (n) => n.type === WorkflowNodeType.StructuredOutput
     ).length
-    const structuredOutputStepNumber =
-      stepCount + existingStructuredOutputCount + 1
+    const structuredOutputLabel = stepCount + existingStructuredOutputCount + 1
 
     const structuredOutputNode: Node = {
       id: structuredOutputId,
       type: 'structuredOutput',
       position,
       data: {
+        label: `Router ${structuredOutputLabel}`,
         routes: [
           { name: '1', description: 'First route' },
           { name: '2', description: 'Second route' },
         ],
-        stepNumber: structuredOutputStepNumber, // Keep stepNumber for display/execution order only
       },
     }
 
     return { nodes: [...nodes, structuredOutputNode], edges }
   } else if (type === WorkflowNodeType.File) {
-    const stepNumber =
-      nodes.filter(
-        (n) =>
-          n.type === WorkflowNodeType.Step || n.type === WorkflowNodeType.File
-      ).length + 1
+    const fileCount =
+      nodes.filter((n) => n.type === WorkflowNodeType.File).length + 1
     const fileNodeId = nanoid()
 
     const fileNode: Node = {
@@ -107,7 +101,7 @@ export const createNode = (
       type: 'file',
       position,
       data: {
-        label: 'file',
+        label: `File ${fileCount}`,
         files: [],
         retrievalMode: 'embeddings',
         similarityThreshold: 0.5,
@@ -115,7 +109,6 @@ export const createNode = (
         querySource: 'previous_step',
         textInput: '',
         includeMetadata: true,
-        stepNumber,
       },
     }
 

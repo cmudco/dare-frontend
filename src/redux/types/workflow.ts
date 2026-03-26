@@ -78,7 +78,7 @@ export interface ValidationContext {
   customPrompt: string
   aiRecommendation: string | null
   aiAnalysis: string | null
-  stepNumber: number | null
+  label: string | null
 }
 
 /**

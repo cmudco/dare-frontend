@@ -7,7 +7,7 @@
  *
  * Event naming convention:
  *   - Backend sends snake_case event names (step_started, step_streaming, etc.)
- *   - All payload keys are camelCase (nodeId, stepNumber, startedAt, etc.)
+ *   - All payload keys are camelCase (nodeId, label, startedAt, etc.)
  *   - Backend applies camelize() before socket emission, so the payload
  *     format is identical to REST API responses.
  */
@@ -60,7 +60,7 @@ const StepCompletedMetadataSchema = z
 export const StepStartedSchema = z.object({
   type: z.literal('step_started'),
   nodeId: z.string(),
-  stepNumber: z.number(),
+  label: z.string().nullable().optional(),
   nodeType: z.string(),
   startedAt: z.string().optional(),
   workflowRunId: z.number().optional(),

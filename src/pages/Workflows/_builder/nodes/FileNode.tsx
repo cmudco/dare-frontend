@@ -21,7 +21,7 @@ export interface FileNodeData {
   querySource?: string
   textInput?: string
   includeMetadata?: boolean
-  stepNumber?: number
+  label?: string
 }
 
 export default function FileNode({ id, data, selected }: NodeProps) {
@@ -124,7 +124,7 @@ export default function FileNode({ id, data, selected }: NodeProps) {
           <FileText size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>File {fileData?.stepNumber}</div>
+          <div className='node-title'>{fileData?.label || 'File'}</div>
           <div className='node-subtitle'>{getSubtitle()}</div>
         </div>
       </div>

@@ -21,11 +21,6 @@ export const getMode = (startNode?: Node): Mode => {
   return (startNode.data as { mode: Mode }).mode
 }
 
-export const getStepNumber = (node?: Node): number | undefined => {
-  if (!node) return undefined
-  return (node.data as { stepNumber: number }).stepNumber
-}
-
 export const isValidConnection = (
   connection: Edge | Connection,
   nodes: Node[],

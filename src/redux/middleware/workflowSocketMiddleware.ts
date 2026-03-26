@@ -12,7 +12,7 @@
  *
  * Event naming convention:
  *   Backend sends snake_case event names (step_started, step_streaming, etc.)
- *   with camelCase payload keys (nodeId, stepNumber, etc.).
+ *   with camelCase payload keys (nodeId, label, etc.).
  *   All events including workflow_status use camelCase payload keys —
  *   backend applies camelize() before socket emission.
  */
