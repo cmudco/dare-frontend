@@ -1,11 +1,14 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { FileText, Settings, Trash2, Play } from 'lucide-react'
+import { useCallback } from 'react'
 
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
   setSelectedNodeId,
+  updateNodeDataById,
 } from '@/redux/workflowBuilderSlice'
+import { EditableLabel } from '../components/EditableLabel'
 import {
   HANDLE_NUMBERS,
   HANDLE_COLORS,
@@ -28,6 +31,13 @@ export default function FileNode({ id, data, selected }: NodeProps) {
   const nodeId = id as string
   const fileData = data as FileNodeData
   const dispatch = useAppDispatch()
+
+  const handleLabelChange = useCallback(
+    (newLabel: string) => {
+      dispatch(updateNodeDataById({ nodeId, newData: { label: newLabel } }))
+    },
+    [dispatch, nodeId]
+  )
 
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
   const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
@@ -124,7 +134,11 @@ export default function FileNode({ id, data, selected }: NodeProps) {
           <FileText size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>{fileData?.label || 'File'}</div>
+          <EditableLabel
+            value={fileData?.label ?? ''}
+            onChange={handleLabelChange}
+            placeholder='Name this node'
+          />
           <div className='node-subtitle'>{getSubtitle()}</div>
         </div>
       </div>

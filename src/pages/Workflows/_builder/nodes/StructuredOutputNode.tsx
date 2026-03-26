@@ -5,12 +5,14 @@ import {
   useUpdateNodeInternals,
 } from '@xyflow/react'
 import { GitBranch, Settings, Copy, Trash2, Play } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useAppDispatch } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
   setSelectedNodeId,
+  updateNodeDataById,
 } from '@/redux/workflowBuilderSlice'
+import { EditableLabel } from '../components/EditableLabel'
 import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
 import { useNodeExecutionState } from '@/hooks/useNodeExecutionState'
 
@@ -20,6 +22,7 @@ export interface StructuredOutputRoute {
 }
 
 type StructuredOutputNodeData = {
+  label?: string
   routes?: StructuredOutputRoute[]
   textInput?: string
   prompt?: number | null
@@ -35,6 +38,13 @@ export default function StructuredOutputNode({
 }: NodeProps) {
   const nodeData = (data as Partial<StructuredOutputNodeData>) || {}
   const dispatch = useAppDispatch()
+
+  const handleLabelChange = useCallback(
+    (newLabel: string) => {
+      dispatch(updateNodeDataById({ nodeId: id, newData: { label: newLabel } }))
+    },
+    [dispatch, id]
+  )
   const updateNodeInternals = useUpdateNodeInternals()
 
   const { statusClass, canRunStep, handleRunStep } = useNodeExecutionState(id)
@@ -128,7 +138,11 @@ export default function StructuredOutputNode({
           <GitBranch size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>Conditional</div>
+          <EditableLabel
+            value={nodeData?.label ?? ''}
+            onChange={handleLabelChange}
+            placeholder='Name this node'
+          />
           <div className='node-subtitle'>
             {routes.length} routes
             {nodeData.requireHumanValidation ? ' • Human validation' : ''}

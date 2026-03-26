@@ -134,12 +134,7 @@ export default function WorkflowExecutionPanel() {
   const getNodeName = useCallback(
     (nodeId: string) => {
       const node = nodes.find((n) => n.id === nodeId)
-      const label = (node?.data as { label?: string })?.label
-      if (label && label !== node?.type) {
-        return label
-      }
-      if (node?.type === WorkflowNodeType.File) return 'File'
-      return node?.type || 'step'
+      return (node?.data as { label?: string })?.label || nodeId
     },
     [nodes]
   )
