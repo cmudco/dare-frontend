@@ -18,7 +18,6 @@ export type StepNodeData = {
   contentFiles: number[]
   embeddingFiles: number[]
   llm: number | null
-  stepNumber: number
   maxTokens?: number
   temperature?: number
   maxContextSnippets?: number
@@ -34,7 +33,7 @@ export type StepNodeData = {
 
 export default function StepNode({ id, data, selected }: NodeProps) {
   const nodeId = id as string
-  const stepData = data as StepNodeData
+  const stepData = data as StepNodeData & { label?: string }
   const dispatch = useAppDispatch()
 
   const edges = useAppSelector((s) => s.workflowBuilder.edges)
@@ -143,7 +142,7 @@ export default function StepNode({ id, data, selected }: NodeProps) {
           <Brain size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>Step {stepData?.stepNumber}</div>
+          <div className='node-title'>{stepData?.label || 'Step'}</div>
           <div className='node-subtitle'>{getSubtitle()}</div>
         </div>
       </div>

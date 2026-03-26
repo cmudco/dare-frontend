@@ -134,21 +134,22 @@ export default function WorkflowExecutionPanel() {
   const getNodeName = useCallback(
     (nodeId: string) => {
       const node = nodes.find((n) => n.id === nodeId)
-      if (node?.data?.label && node.data.label !== node.type) {
-        return node.data.label as string
+      const label = (node?.data as { label?: string })?.label
+      if (label && label !== node?.type) {
+        return label
       }
-      if (node?.type === WorkflowNodeType.File) return 'file'
+      if (node?.type === WorkflowNodeType.File) return 'File'
       return node?.type || 'step'
     },
     [nodes]
   )
 
-  const stepNumberByNodeId = useMemo(() => {
-    const map = new Map<string, number>()
+  const labelByNodeId = useMemo(() => {
+    const map = new Map<string, string>()
     for (const node of nodes) {
-      const stepNumber = (node.data as { stepNumber?: number })?.stepNumber
-      if (typeof stepNumber === 'number') {
-        map.set(node.id, stepNumber)
+      const label = (node.data as { label?: string })?.label
+      if (label) {
+        map.set(node.id, label)
       }
     }
     return map
@@ -184,21 +185,17 @@ export default function WorkflowExecutionPanel() {
       if (aStarted !== null && bStarted === null) return -1
       if (aStarted === null && bStarted !== null) return 1
 
-      // Secondary: workflow step number for stable ordering.
-      const aStepNumber = stepNumberByNodeId.get(aId)
-      const bStepNumber = stepNumberByNodeId.get(bId)
-      if (
-        typeof aStepNumber === 'number' &&
-        typeof bStepNumber === 'number' &&
-        aStepNumber !== bStepNumber
-      ) {
-        return aStepNumber - bStepNumber
+      // Secondary: label for stable ordering (natural string sort).
+      const aLabel = labelByNodeId.get(aId)
+      const bLabel = labelByNodeId.get(bId)
+      if (aLabel && bLabel && aLabel !== bLabel) {
+        return aLabel.localeCompare(bLabel, undefined, { numeric: true })
       }
 
       // Final tie-breaker: node ID for deterministic output.
       return aId.localeCompare(bId)
     })
-  }, [executionNodeEntries, stepNumberByNodeId])
+  }, [executionNodeEntries, labelByNodeId])
 
   const hasDisplayData = executionNodeEntries.length > 0
   const isViewingCompletedRun =
@@ -307,10 +304,12 @@ export default function WorkflowExecutionPanel() {
                 key={nodeId}
                 nodeId={nodeId}
                 nodeName={getNodeName(nodeId)}
-                stepNumber={
-                  nodes.find((n) => n.id === nodeId)?.data?.stepNumber as
-                    | number
-                    | undefined
+                label={
+                  (
+                    nodes.find((n) => n.id === nodeId)?.data as {
+                      label?: string
+                    }
+                  )?.label
                 }
                 nodeType={nodes.find((n) => n.id === nodeId)?.type}
                 content={state.response || ''}

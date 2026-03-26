@@ -66,7 +66,7 @@ const singleStepStarted = createAction<{
 const stepStarted = createAction<{
   nodeId: string
   nodeType?: string
-  stepNumber?: number
+  label?: string | null
   startedAt?: string
   workflowRunId?: number
 }>('workflowSocket/step_started')
