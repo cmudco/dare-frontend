@@ -74,8 +74,8 @@ export default function ChatOutputNodeConfig({
   const response = nodeState?.response || null
   const status = nodeState?.status || null
   const error = nodeState?.error || null
-  const snippets = nodeState?.snippets || []
-  const webSearchSources = nodeState?.webSearchSources || []
+  const snippets = nodeState?.snippets ?? []
+  const webSearchSources = nodeState?.webSearchSources ?? []
 
   // Get available versions for this node
   const nodeVersionRuns = availableRuns.filter((run) => {

@@ -13,9 +13,8 @@
  * Event naming convention:
  *   Backend sends snake_case event names (step_started, step_streaming, etc.)
  *   with camelCase payload keys (nodeId, stepNumber, etc.).
- *   Exception: workflow_status uses DRF serializer snake_case fields
- *   (started_at, workflow_title) because DRF camelCase middleware
- *   doesn't apply to socket events.
+ *   All events including workflow_status use camelCase payload keys —
+ *   backend applies camelize() before socket emission.
  */
 
 import type { Middleware } from '@reduxjs/toolkit'
