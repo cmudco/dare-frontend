@@ -7,6 +7,7 @@ import { AppDispatch, RootState } from '../../redux/store'
 import { forkWorkflow } from '../../redux/asyncThunks/workflow'
 import { SharedItem, ShareableEntityType } from '@/redux/types/sharing'
 import { toast } from '@/utils/toast'
+import { WorkflowMode } from '@/redux/types/workflow'
 import { getModeBadge } from '@/utils/workflowUtils'
 import { Button } from '../ui/button'
 import ForkConfirmDialog from '../shared/ForkConfirmDialog'
@@ -236,7 +237,10 @@ const SharedWorkflowsTable = ({ searchQuery }: SharedWorkflowsTableProps) => {
                   {workflow.sharedByEmail}
                 </TableCell>
                 <TableCell className='p-4'>
-                  {getModeBadge(workflow.entityMode || 'parallel')}
+                  {getModeBadge(
+                    (workflow.entityMode as WorkflowMode) ||
+                      WorkflowMode.Parallel
+                  )}
                 </TableCell>
                 <TableCell className='p-4 text-foreground'>
                   {workflow.entityStepCount || 0}
