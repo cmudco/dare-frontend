@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-import { ShareDialogEntity, SharingState } from './types/sharing'
+import { SharingEntity, SharingState } from './types/sharing'
 import {
   fetchRecipients,
   fetchSharedWithMe,
   revokeShare,
   shareItem,
+  toggleEntityVisibility,
 } from './asyncThunks/sharing'
 
 const initialState: SharingState = {
@@ -14,10 +15,8 @@ const initialState: SharingState = {
   loading: false,
   recipientsLoading: false,
   error: null,
-  shareDialogOpen: false,
-  shareDialogEntity: null,
-  manageDialogOpen: false,
-  manageDialogEntity: null,
+  isOpen: false,
+  entity: null,
   lastShareResult: null,
 }
 
@@ -25,23 +24,15 @@ const sharingSlice = createSlice({
   name: 'sharing',
   initialState,
   reducers: {
-    openShareDialog: (state, action: PayloadAction<ShareDialogEntity>) => {
-      state.shareDialogOpen = true
-      state.shareDialogEntity = action.payload
+    openSharing: (state, action: PayloadAction<SharingEntity>) => {
+      state.isOpen = true
+      state.entity = action.payload
       state.lastShareResult = null
     },
-    closeShareDialog: (state) => {
-      state.shareDialogOpen = false
-      state.shareDialogEntity = null
+    closeSharing: (state) => {
+      state.isOpen = false
+      state.entity = null
       state.lastShareResult = null
-    },
-    openManageDialog: (state, action: PayloadAction<ShareDialogEntity>) => {
-      state.manageDialogOpen = true
-      state.manageDialogEntity = action.payload
-    },
-    closeManageDialog: (state) => {
-      state.manageDialogOpen = false
-      state.manageDialogEntity = null
       state.recipients = []
     },
     clearSharingError: (state) => {
@@ -101,15 +92,25 @@ const sharingSlice = createSlice({
     builder.addCase(revokeShare.rejected, (state, action) => {
       state.error = action.payload as string
     })
+
+    // Toggle visibility
+    builder.addCase(toggleEntityVisibility.pending, (state) => {
+      state.loading = true
+    })
+    builder.addCase(toggleEntityVisibility.fulfilled, (state, action) => {
+      state.loading = false
+      if (state.entity) {
+        state.entity.isPublished = action.payload
+      }
+    })
+    builder.addCase(toggleEntityVisibility.rejected, (state, action) => {
+      state.loading = false
+      state.error = action.payload as string
+    })
   },
 })
 
-export const {
-  openShareDialog,
-  closeShareDialog,
-  openManageDialog,
-  closeManageDialog,
-  clearSharingError,
-} = sharingSlice.actions
+export const { openSharing, closeSharing, clearSharingError } =
+  sharingSlice.actions
 
 export default sharingSlice.reducer

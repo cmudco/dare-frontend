@@ -289,10 +289,8 @@ export interface SortableConversationItemProps {
   ) => void
   onEditClick: (conversation: Conversation) => void
   onCloneClick: (conversation: Conversation) => void
-  onPublishClick?: (conversation: Conversation) => void
+  onSharingClick?: (conversation: Conversation) => void
   onForkClick?: (conversation: Conversation) => void
-  onShareClick?: (conversation: Conversation) => void
-  onManageSharesClick?: (conversation: Conversation) => void
   onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onEditBlur: () => void
   onEditKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void

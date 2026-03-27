@@ -12,9 +12,8 @@ import {
   EllipsisVerticalIcon,
   PencilIcon,
   TrashIcon,
-  GlobeAltIcon,
 } from '@heroicons/react/20/solid'
-import { GripVertical, Share2, Users } from 'lucide-react'
+import { GripVertical, Share2 } from 'lucide-react'
 import { Workflow } from '@/redux/types/workflow'
 import { formatDate } from '@/utils/constants/prompts'
 import {
@@ -29,9 +28,7 @@ interface SortableWorkflowRowProps {
   onEdit: (id: number) => void
   onClone: (id: number) => void
   onDelete: (id: number, title: string) => void
-  onPublish: (id: number) => void
-  onShare?: (id: number, title: string) => void
-  onManageShares?: (id: number, title: string) => void
+  onSharing?: (workflow: Workflow) => void
 }
 
 const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
@@ -39,9 +36,7 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
   onEdit,
   onClone,
   onDelete,
-  onPublish,
-  onShare,
-  onManageShares,
+  onSharing,
 }) => {
   const {
     attributes,
@@ -125,32 +120,14 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
               <TrashIcon className='mr-2 h-4 w-4' />
               <span>Delete</span>
             </DropdownMenuItem>
-            {/* Only show publish option if NOT forked and sharing is enabled */}
-            {features.enableSharing && !workflow.isForked && (
+            {/* Sharing consolidated option */}
+            {features.enableSharing && (
               <DropdownMenuItem
-                onClick={() => onPublish(workflow.id)}
-                className='cursor-pointer text-blue-500'
-              >
-                <GlobeAltIcon className='mr-2 h-4 w-4' />
-                <span>{workflow.isPublished ? 'Unpublish' : 'Publish'}</span>
-              </DropdownMenuItem>
-            )}
-            {features.enableSharing && workflow.canShare !== false && (
-              <DropdownMenuItem
-                onClick={() => onShare?.(workflow.id, workflow.title)}
+                onClick={() => onSharing?.(workflow)}
                 className='cursor-pointer'
               >
                 <Share2 className='mr-2 h-4 w-4' />
-                <span>Share with User</span>
-              </DropdownMenuItem>
-            )}
-            {features.enableSharing && workflow.canShare !== false && (
-              <DropdownMenuItem
-                onClick={() => onManageShares?.(workflow.id, workflow.title)}
-                className='cursor-pointer'
-              >
-                <Users className='mr-2 h-4 w-4' />
-                <span>Manage Shares</span>
+                <span>Sharing</span>
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
