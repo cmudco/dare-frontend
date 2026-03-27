@@ -61,11 +61,11 @@ export function useWorkflowSocket(
       return
     }
 
-    dispatch(workflowSocketSubscribeWorkflow(workflowId))
+    dispatch(workflowSocketSubscribeWorkflow({ workflowId }))
 
     // Cleanup: unsubscribe when workflowId changes or component unmounts
     return () => {
-      dispatch(workflowSocketUnsubscribeWorkflow(workflowId))
+      dispatch(workflowSocketUnsubscribeWorkflow({ workflowId }))
     }
   }, [wsConnectionStatus, workflowId, dispatch])
 

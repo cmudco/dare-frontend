@@ -96,7 +96,7 @@ export default function WorkflowExecutionPanel() {
       lastSubscribedRunIdRef.current !== effectiveBatchRunId
     ) {
       lastSubscribedRunIdRef.current = effectiveBatchRunId
-      dispatch(workflowSocketSubscribe(effectiveBatchRunId))
+      dispatch(workflowSocketSubscribe({ workflowRunId: effectiveBatchRunId }))
     }
   }, [shouldShowBatch, effectiveBatchRunId, batchRun.runsById, dispatch])
 
