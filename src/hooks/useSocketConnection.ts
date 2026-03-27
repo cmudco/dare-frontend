@@ -38,7 +38,7 @@ export function useSocketConnection() {
     if (isAuthenticated && user && token) {
       if (!chatConnected) dispatch(socketConnect(token))
       if (workflowStatus === 'disconnected')
-        dispatch(workflowSocketConnect(token))
+        dispatch(workflowSocketConnect({ jwtToken: token }))
     }
 
     if (!isAuthenticated) {
