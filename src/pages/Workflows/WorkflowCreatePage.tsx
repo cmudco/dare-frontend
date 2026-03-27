@@ -23,11 +23,13 @@ import ToastContainer from '@/components/ui/ToastContainer'
 const WorkflowCreatePage = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
-  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
-  const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
+  const nodes = useAppSelector((s) => s.workflowBuilder.builder.nodes)
+  const edges = useAppSelector((s) => s.workflowBuilder.builder.edges)
+  const savedViewport = useAppSelector(
+    (s) => s.workflowBuilder.builder.savedViewport
+  )
   const hasAtLeastOneStep = nodes.some((n) => n.type === WorkflowNodeType.Step)
-  const history = useAppSelector((s) => s.workflowBuilder.history)
+  const history = useAppSelector((s) => s.workflowBuilder.builder.history)
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
 

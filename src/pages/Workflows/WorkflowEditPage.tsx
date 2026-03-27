@@ -22,7 +22,7 @@ import {
   setOutputDisplayMode,
   expandAllOutputNodes,
   collapseAllOutputNodes,
-} from '@/redux/workflowBuilderSlice'
+} from '@/redux/workflowBuilder'
 import { SavingStatus, OutputDisplayMode } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
@@ -69,33 +69,41 @@ const WorkflowEditPage = () => {
   const { id: idParam } = useParams<{ id: string }>()
   const id = idParam ? Number(idParam) : undefined
   const dispatch = useAppDispatch()
-  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
-  const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
+  const nodes = useAppSelector((s) => s.workflowBuilder.builder.nodes)
+  const edges = useAppSelector((s) => s.workflowBuilder.builder.edges)
+  const savedViewport = useAppSelector(
+    (s) => s.workflowBuilder.builder.savedViewport
+  )
   const hasAtLeastOneStep = nodes.some((n) => n.type === WorkflowNodeType.Step)
-  const isRunning = useAppSelector((s) => s.workflowBuilder.isRunning)
+  const isRunning = useAppSelector((s) => s.workflowBuilder.execution.isRunning)
   const manualModeEnabled = useAppSelector(
-    (s) => s.workflowBuilder.manualModeEnabled
+    (s) => s.workflowBuilder.execution.manualModeEnabled
   )
   const executedStepNodeIds = useAppSelector(
-    (s) => s.workflowBuilder.executedStepNodeIds
+    (s) => s.workflowBuilder.execution.executedStepNodeIds
   )
   const currentPartialRunId = useAppSelector(
-    (s) => s.workflowBuilder.currentPartialRunId
+    (s) => s.workflowBuilder.execution.currentPartialRunId
   )
-  const savingStatus = useAppSelector((s) => s.workflowBuilder.savingStatus)
+  const savingStatus = useAppSelector(
+    (s) => s.workflowBuilder.builder.savingStatus
+  )
 
   const stepNodes = nodes.filter((n) => n.type === WorkflowNodeType.Step)
   const executedStepsCount = stepNodes.filter((n) =>
     executedStepNodeIds.includes(n.id)
   ).length
-  const loadedWorkflow = useAppSelector((s) => s.workflowBuilder.loadedWorkflow)
-  const history = useAppSelector((s) => s.workflowBuilder.history)
-  const currentRun = useAppSelector((s) => s.workflowBuilder.currentRun)
-  const outputDisplayMode = useAppSelector(
-    (s) => s.workflowBuilder.outputDisplayMode
+  const loadedWorkflow = useAppSelector(
+    (s) => s.workflowBuilder.builder.loadedWorkflow
   )
-  const batchRun = useAppSelector((s) => s.workflowBuilder.batchRun)
+  const history = useAppSelector((s) => s.workflowBuilder.builder.history)
+  const currentRun = useAppSelector(
+    (s) => s.workflowBuilder.execution.currentRun
+  )
+  const outputDisplayMode = useAppSelector(
+    (s) => s.workflowBuilder.builder.outputDisplayMode
+  )
+  const batchRun = useAppSelector((s) => s.workflowBuilder.batch.batchRun)
   const hasExecutionData = currentRun !== null
   const hasBatchExecutionData = batchRun.fileStatuses.length > 0
   const canViewExecutionPanel =
