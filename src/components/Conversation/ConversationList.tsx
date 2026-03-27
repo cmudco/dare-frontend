@@ -39,7 +39,6 @@ import {
   updateConversationSortOrder,
   deleteMultipleConversations,
   cloneConversation,
-  publishConversation,
   forkConversation,
   fetchConversationMessages,
 } from '@/redux/asyncThunks/conversation'
@@ -47,8 +46,7 @@ import { toggleDarkMode } from '../../redux/themeSlice'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
 import ForkConfirmDialog from '../shared/ForkConfirmDialog'
-import { toast } from '@/utils/toast'
-import { openShareDialog, openManageDialog } from '@/redux/sharingSlice'
+import { openSharing } from '@/redux/sharingSlice'
 import { ShareableEntityType } from '@/redux/types/sharing'
 import {
   filterConversations,
@@ -227,21 +225,17 @@ const ConversationList: React.FC<ConversationListProps> = ({
     }
   }
 
-  const handlePublishClick = async (conversation: Conversation) => {
-    // Guard: prevent publishing forked conversations (matches BE validation)
-    if (conversation.isForked) {
-      toast.error(
-        'Cannot publish forked conversations. Only original conversations can be published.'
-      )
-      return
-    }
-
-    try {
-      await dispatch(publishConversation(conversation.conversationId)).unwrap()
-    } catch (error) {
-      console.error('Error publishing conversation:', error)
-      toast.error('Failed to publish conversation')
-    }
+  const handleSharingClick = (conversation: Conversation) => {
+    dispatch(
+      openSharing({
+        type: ShareableEntityType.Conversation,
+        id: conversation.conversationId,
+        title: conversation.title || 'New Chat',
+        isPublished: !!conversation.isPublished,
+        canPublish: !conversation.isForked,
+        isForked: !!conversation.isForked,
+      })
+    )
   }
 
   const handleForkClick = (conversation: Conversation) => {
@@ -270,26 +264,6 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
   const handleCancelFork = () => {
     setForkConversationData(null)
-  }
-
-  const handleShareClick = (conversation: Conversation) => {
-    dispatch(
-      openShareDialog({
-        type: ShareableEntityType.Conversation,
-        id: conversation.conversationId,
-        title: conversation.title || 'New Chat',
-      })
-    )
-  }
-
-  const handleManageSharesClick = (conversation: Conversation) => {
-    dispatch(
-      openManageDialog({
-        type: ShareableEntityType.Conversation,
-        id: conversation.conversationId,
-        title: conversation.title || 'New Chat',
-      })
-    )
   }
 
   const handleSharedConversationClick = async (conversation: Conversation) => {
@@ -330,6 +304,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       onConversationClick={handleSharedConversationClick}
                       onEditClick={() => {}}
                       onCloneClick={() => {}}
+                      onSharingClick={handleSharingClick}
                       onForkClick={handleForkClick}
                       onEditChange={() => {}}
                       onEditBlur={() => {}}
@@ -364,9 +339,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       onConversationClick={handleConversationClick}
                       onEditClick={handleEditClick}
                       onCloneClick={handleCloneClick}
-                      onPublishClick={handlePublishClick}
-                      onShareClick={handleShareClick}
-                      onManageSharesClick={handleManageSharesClick}
+                      onSharingClick={handleSharingClick}
                       onEditChange={handleEditChange}
                       onEditBlur={handleEditBlur}
                       onEditKeyDown={handleEditKeyDown}
