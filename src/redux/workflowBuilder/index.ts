@@ -6,8 +6,17 @@ import executionReducer from './executionSlice'
 import batchReducer from './batchSlice'
 import type { WorkflowBuilderCombinedState } from '../types/workflowBuilder'
 import type { NodeStatesMap } from '../types/workflow'
-import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
-import { executionStarted, singleStepStarted } from './actions'
+import {
+  WorkflowRunStepStatus,
+  WorkflowNodeType,
+} from '@/utils/constants/workflows'
+import {
+  executionStarted,
+  singleStepStarted,
+  stepStarted,
+  stepStreaming,
+  stepCompleted,
+} from './actions'
 import { loadWorkflowIntoBuilder } from '../asyncThunks/workflowBuilder'
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -31,6 +40,22 @@ function initializeNodeStates(nodes: Node[]): NodeStatesMap {
     }
   }
   return states
+}
+
+/**
+ * Find chatOutput node IDs connected as targets of a given source node.
+ */
+function getConnectedChatOutputIds(
+  sourceNodeId: string,
+  edges: { source: string; target: string }[],
+  nodes: Node[]
+): string[] {
+  const chatOutputIds = new Set(
+    nodes.filter((n) => n.type === WorkflowNodeType.ChatOutput).map((n) => n.id)
+  )
+  return edges
+    .filter((e) => e.source === sourceNodeId && chatOutputIds.has(e.target))
+    .map((e) => e.target)
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -65,6 +90,9 @@ function workflowBuilderReducer(
   const needsCrossSlice =
     executionStarted.match(action) ||
     singleStepStarted.match(action) ||
+    stepStarted.match(action) ||
+    stepStreaming.match(action) ||
+    stepCompleted.match(action) ||
     action.type === 'workflowSocket/execution_complete' ||
     action.type === 'workflowSocket/batch_complete' ||
     action.type === 'workflowSocket/workflowSubscribed' ||
@@ -131,6 +159,49 @@ function workflowBuilderReducer(
     if (action.type === 'workflowSocket/workflowSubscribed') {
       if (draft.batch.batchRun.isActive && !draft.execution.isRunning) {
         draft.execution.isRunning = true
+      }
+    }
+
+    // Cross-slice: propagate step execution state to connected chatOutput nodes.
+    // chatOutput nodes are non-executable — they never receive WebSocket events.
+    // We mirror the source step's state so output nodes display streamed content.
+    if (
+      stepStarted.match(action) ||
+      stepStreaming.match(action) ||
+      stepCompleted.match(action)
+    ) {
+      const { nodeId } = action.payload
+      const nodeStates = draft.execution.currentRun?.nodeStates
+      if (nodeStates) {
+        const outputIds = getConnectedChatOutputIds(
+          nodeId,
+          draft.builder.edges,
+          draft.builder.nodes
+        )
+        const sourceState = nodeStates[nodeId]
+        if (sourceState) {
+          for (const outputId of outputIds) {
+            if (!nodeStates[outputId]) {
+              nodeStates[outputId] = {
+                stepId: null,
+                startedAt: null,
+                nodeType: WorkflowNodeType.ChatOutput,
+                status: WorkflowRunStepStatus.Pending,
+                response: '',
+                error: null,
+                validationContext: null,
+                metadata: null,
+                snippets: [],
+                webSearchSources: [],
+              }
+            }
+            nodeStates[outputId].status = sourceState.status
+            nodeStates[outputId].response = sourceState.response
+            nodeStates[outputId].startedAt = sourceState.startedAt
+            nodeStates[outputId].snippets = sourceState.snippets
+            nodeStates[outputId].webSearchSources = sourceState.webSearchSources
+          }
+        }
       }
     }
 

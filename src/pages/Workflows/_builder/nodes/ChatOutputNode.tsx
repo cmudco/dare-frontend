@@ -57,12 +57,10 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
     isRunning &&
     nodeState?.status === WorkflowRunStepStatus.Running
 
-  // Status derivation
+  // Status derivation — prefer nodeState.status (propagated from source step)
   const status = (() => {
-    if (isStreaming) return WorkflowRunStepStatus.Running
-    if (hasResponse) return WorkflowRunStepStatus.Completed
-    if (isRunning) return WorkflowRunStepStatus.Pending
     if (nodeState?.status) return nodeState.status
+    if (isRunning) return WorkflowRunStepStatus.Pending
     return null
   })()
 
