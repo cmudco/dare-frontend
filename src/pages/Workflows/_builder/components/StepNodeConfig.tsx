@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useState, useEffect } from 'react'
+import { useDebouncedNodeField } from '@/hooks/useDebouncedNodeField'
 import type { Agent } from '@/redux/types/agent'
 
 // Step Node Data Type
@@ -54,24 +54,10 @@ export default function StepNodeConfig({
   availableModels,
   agents = [],
 }: StepNodeConfigProps) {
-  const [localTextInput, setLocalTextInput] = useState(
-    nodeData?.textInput || ''
+  const [localTextInput, setLocalTextInput] = useDebouncedNodeField(
+    nodeData.textInput ?? '',
+    (v) => updateNodeData({ textInput: v })
   )
-
-  // Sync local state when external data changes
-  useEffect(() => {
-    setLocalTextInput(nodeData?.textInput || '')
-  }, [nodeData?.textInput])
-
-  // Debounced sync to Redux for text input
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (localTextInput !== (nodeData?.textInput || '')) {
-        updateNodeData({ textInput: localTextInput })
-      }
-    }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [localTextInput, nodeData?.textInput, updateNodeData])
 
   // Handle agent selection - prefill all configuration from the agent template
   const handleAgentSelect = (agentId: string) => {

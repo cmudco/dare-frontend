@@ -120,3 +120,71 @@ export const selectRunningNodeId = createSelector(
     )
   }
 )
+
+// ════════════════════════════════════════════════════════════════════════════
+// BATCH + DISPLAY RUN SELECTORS — single source of truth for batch/single
+// run resolution. Components should use these instead of deriving locally.
+// ════════════════════════════════════════════════════════════════════════════
+
+export const selectShouldShowBatch = createSelector(
+  [selectBatchRun],
+  (batchRun) => batchRun.latestRunIsBatch
+)
+
+export const selectEffectiveBatchRunId = createSelector(
+  [selectBatchRun],
+  (batchRun) => {
+    if (batchRun.selectedRunId !== null) return batchRun.selectedRunId
+    // Walk backwards to find the most recent file status with an assigned run
+    for (let i = batchRun.fileStatuses.length - 1; i >= 0; i--) {
+      const status = batchRun.fileStatuses[i]
+      if (status.workflowRunId) return status.workflowRunId
+    }
+    return null
+  }
+)
+
+export const selectBatchRunOptions = createSelector(
+  [selectBatchRun, selectShouldShowBatch],
+  (batchRun, shouldShowBatch) => {
+    if (!shouldShowBatch) return []
+    return batchRun.fileStatuses.filter((status) => status.workflowRunId)
+  }
+)
+
+export const selectSelectedBatchRun = createSelector(
+  [selectEffectiveBatchRunId, selectBatchRun],
+  (effectiveId, batchRun) => {
+    if (!effectiveId) return null
+    return batchRun.runsById[effectiveId] ?? null
+  }
+)
+
+/** The run to render in the execution panel — batch or single. */
+export const selectDisplayRun = createSelector(
+  [selectShouldShowBatch, selectSelectedBatchRun, selectCurrentRun],
+  (shouldShowBatch, selectedBatchRun, currentRun) =>
+    shouldShowBatch ? selectedBatchRun : currentRun
+)
+
+/** The active (streaming) node ID for the current display run. */
+export const selectDisplayActiveNodeId = createSelector(
+  [
+    selectShouldShowBatch,
+    selectEffectiveBatchRunId,
+    selectBatchRun,
+    selectActiveNodeId,
+  ],
+  (shouldShowBatch, effectiveId, batchRun, activeNodeId) => {
+    if (!shouldShowBatch) return activeNodeId
+    if (!effectiveId) return null
+    return batchRun.activeNodeIds[effectiveId] ?? null
+  }
+)
+
+/** Pending validation for the current display context (null during batch). */
+export const selectDisplayPendingValidation = createSelector(
+  [selectShouldShowBatch, selectPendingValidation],
+  (shouldShowBatch, pendingValidation) =>
+    shouldShowBatch ? null : pendingValidation
+)

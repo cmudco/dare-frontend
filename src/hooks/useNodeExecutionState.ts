@@ -2,6 +2,18 @@ import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { saveAndExecuteStep } from '@/redux/asyncThunks/workflowBuilder'
+import {
+  selectExecutedStepNodeIds,
+  selectAvailableRuns,
+  selectSelectedRunIds,
+  selectCurrentRun,
+  selectActiveNodeId,
+  selectPendingValidation,
+  selectManualModeEnabled,
+  selectCurrentPartialRunId,
+  selectIsRunning,
+  selectLastWorkflowId,
+} from '@/redux/workflowBuilder'
 
 interface NodeExecutionState {
   nodeState: ReturnType<typeof getNodeState>
@@ -23,20 +35,16 @@ interface NodeExecutionState {
 export function useNodeExecutionState(nodeId: string): NodeExecutionState {
   const dispatch = useAppDispatch()
 
-  const {
-    executedStepNodeIds,
-    availableRuns,
-    selectedRunIds,
-    currentRun,
-    activeNodeId,
-    pendingValidation,
-    manualModeEnabled,
-    currentPartialRunId,
-    isRunning,
-  } = useAppSelector((s) => s.workflowBuilder.execution)
-  const lastWorkflowId = useAppSelector(
-    (s) => s.workflowBuilder.builder.lastWorkflowId
-  )
+  const executedStepNodeIds = useAppSelector(selectExecutedStepNodeIds)
+  const availableRuns = useAppSelector(selectAvailableRuns)
+  const selectedRunIds = useAppSelector(selectSelectedRunIds)
+  const currentRun = useAppSelector(selectCurrentRun)
+  const activeNodeId = useAppSelector(selectActiveNodeId)
+  const pendingValidation = useAppSelector(selectPendingValidation)
+  const manualModeEnabled = useAppSelector(selectManualModeEnabled)
+  const currentPartialRunId = useAppSelector(selectCurrentPartialRunId)
+  const isRunning = useAppSelector(selectIsRunning)
+  const lastWorkflowId = useAppSelector(selectLastWorkflowId)
 
   const displayRun = getDisplayRun(
     nodeId,
