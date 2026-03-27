@@ -12,7 +12,7 @@ import {
   removeNodeWithEdges,
   setSelectedNodeId,
   updateNodeDataById,
-} from '@/redux/workflowBuilderSlice'
+} from '@/redux/workflowBuilder'
 import { EditableLabel } from '../components/EditableLabel'
 import { OutputDisplayMode } from '@/redux/types/workflowBuilder'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
@@ -31,13 +31,11 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
     [dispatch, id]
   )
 
-  const {
-    availableRuns,
-    selectedRunIds,
-    currentRun,
-    isRunning,
-    outputDisplayMode,
-  } = useAppSelector((s) => s.workflowBuilder)
+  const { availableRuns, selectedRunIds, currentRun, isRunning } =
+    useAppSelector((s) => s.workflowBuilder.execution)
+  const outputDisplayMode = useAppSelector(
+    (s) => s.workflowBuilder.builder.outputDisplayMode
+  )
 
   const isNodesMode = outputDisplayMode === OutputDisplayMode.Nodes
 

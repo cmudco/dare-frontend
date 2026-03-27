@@ -6,12 +6,12 @@ import {
   setSelectedBatchRunId,
   setShowExecutionPanel,
   setBatchProgressDismissed,
-} from '@/redux/workflowBuilderSlice'
+} from '@/redux/workflowBuilder'
 import { X } from 'lucide-react'
 
 export default function BatchProgressPanel() {
   const dispatch = useAppDispatch()
-  const batchRun = useAppSelector((s) => s.workflowBuilder.batchRun)
+  const batchRun = useAppSelector((s) => s.workflowBuilder.batch.batchRun)
 
   const progress = useMemo(() => {
     if (!batchRun.totalFiles) return 0

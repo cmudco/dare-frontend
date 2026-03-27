@@ -69,7 +69,7 @@ export interface RoutingNodeState {
  */
 export function useRoutingNode(nodeId: string): RoutingNodeState {
   const { currentRun, availableRuns, selectedRunIds } = useAppSelector(
-    (s) => s.workflowBuilder
+    (s) => s.workflowBuilder.execution
   )
 
   // Get the run to display (handles all modes automatically)

@@ -32,9 +32,11 @@ export function useNodeExecutionState(nodeId: string): NodeExecutionState {
     pendingValidation,
     manualModeEnabled,
     currentPartialRunId,
-    lastWorkflowId,
     isRunning,
-  } = useAppSelector((s) => s.workflowBuilder)
+  } = useAppSelector((s) => s.workflowBuilder.execution)
+  const lastWorkflowId = useAppSelector(
+    (s) => s.workflowBuilder.builder.lastWorkflowId
+  )
 
   const displayRun = getDisplayRun(
     nodeId,
