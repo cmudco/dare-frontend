@@ -18,7 +18,7 @@ import {
   undo,
   redo,
   setSelectedNodeId,
-} from '@/redux/workflowBuilderSlice'
+} from '@/redux/workflowBuilder'
 import { isValidConnection } from '@/utils/workflowBuilder/isValidConnection'
 import {
   WORKFLOW_NODE_TYPES,
@@ -48,15 +48,11 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   const reactFlowInstance = useReactFlow()
 
   // Get current state from Redux
-  const {
-    nodes,
-    edges,
-    currentRun,
-    savedViewport,
-    history,
-    selectedNodeId,
-    showExecutionPanel,
-  } = useAppSelector((state) => state.workflowBuilder)
+  const { nodes, edges, savedViewport, history, selectedNodeId } =
+    useAppSelector((state) => state.workflowBuilder.builder)
+  const { currentRun, showExecutionPanel } = useAppSelector(
+    (state) => state.workflowBuilder.execution
+  )
 
   // Check if undo/redo is available (used by keyboard shortcuts)
   const canUndo = history.past.length > 0

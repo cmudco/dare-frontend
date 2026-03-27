@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button'
 import {
   setShowExecutionPanel,
   setSelectedBatchRunId,
-} from '@/redux/workflowBuilderSlice'
+} from '@/redux/workflowBuilder'
 import { workflowSocketSubscribe } from '@/redux/middleware/workflowSocketMiddleware'
 import {
   Select,
@@ -43,15 +43,12 @@ import {
 export default function WorkflowExecutionPanel() {
   const dispatch = useAppDispatch()
 
-  const {
-    currentRun,
-    isRunning,
-    activeNodeId,
-    wsConnectionStatus,
-    pendingValidation,
-    nodes,
-    batchRun,
-  } = useAppSelector((state) => state.workflowBuilder)
+  const { currentRun, isRunning, activeNodeId, pendingValidation } =
+    useAppSelector((state) => state.workflowBuilder.execution)
+  const { nodes, wsConnectionStatus } = useAppSelector(
+    (state) => state.workflowBuilder.builder
+  )
+  const { batchRun } = useAppSelector((state) => state.workflowBuilder.batch)
 
   const {
     containerRef,

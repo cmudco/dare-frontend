@@ -26,35 +26,55 @@ export enum OutputDisplayMode {
   Nodes = 'nodes', // Show output in output nodes (auto-expand), execution panel stays closed
 }
 
-export interface WorkflowBuilderState {
+// ════════════════════════════════════════════════════════════════════════════
+// SPLIT STATE TYPES
+// ════════════════════════════════════════════════════════════════════════════
+
+export interface BuilderState {
   nodes: Node[]
   edges: Edge[]
   currentMode: 'sequential' | 'parallel'
   lastWorkflowId: number | undefined
   savedViewport: { x: number; y: number; zoom: number } | null
-  currentRun: WorkflowRun | null
-  isRunning: boolean
   loadedWorkflow: Workflow | null
   history: {
     past: HistorySnapshot[]
     future: HistorySnapshot[]
   }
+  savingStatus: SavingStatus
+  selectedNodeId: string | null
+  wsConnectionStatus: WebSocketConnectionStatus
+  outputDisplayMode: OutputDisplayMode
+}
+
+export interface ExecutionState {
+  currentRun: WorkflowRun | null
+  isRunning: boolean
   manualModeEnabled: boolean
   currentPartialRunId: number | null
   executedStepNodeIds: string[]
   availableRuns: WorkflowRun[]
-  selectedRunIds: Record<string, number> // nodeId -> runId mapping
-  savingStatus: SavingStatus
-  selectedNodeId: string | null // Currently selected node for config panel
-  // WebSocket state
-  wsConnectionStatus: WebSocketConnectionStatus
-  activeNodeId: string | null // Currently executing node (streaming or processing)
-  rightPanelTab: 'config' | 'execution' // Active tab in right panel
-  showExecutionPanel: boolean // Whether to show the execution panel overlay
-  pendingValidation: PendingValidation | null // Human validation required state
-  outputDisplayMode: OutputDisplayMode // Where to show output: 'panel' or 'nodes'
+  selectedRunIds: Record<string, number>
+  activeNodeId: string | null
+  rightPanelTab: 'config' | 'execution'
+  showExecutionPanel: boolean
+  pendingValidation: PendingValidation | null
+}
+
+export interface BatchState {
   batchRun: BatchRunState
 }
+
+// Combined type — used by combineReducers output
+export interface WorkflowBuilderCombinedState {
+  builder: BuilderState
+  execution: ExecutionState
+  batch: BatchState
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// BATCH TYPES
+// ════════════════════════════════════════════════════════════════════════════
 
 export interface BatchFileStatus {
   fileId: number
