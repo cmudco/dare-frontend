@@ -11,7 +11,7 @@ import {
   updateSelectedDareTools,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
-import ModelPicker from './ModelPicker'
+import ModelPicker from './ModelPicker/index'
 import PromptSet from './PromptSet'
 import { Message } from '../../redux/types/conversation'
 import { useNavigate } from 'react-router-dom'
