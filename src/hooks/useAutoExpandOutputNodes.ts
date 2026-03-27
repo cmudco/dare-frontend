@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { updateNodeDataById } from '@/redux/workflowBuilder'
+import {
+  updateNodeDataById,
+  selectNodes,
+  selectCurrentRun,
+  selectOutputDisplayMode,
+} from '@/redux/workflowBuilder'
 import {
   WorkflowRunStepStatus,
   WorkflowNodeType,
@@ -18,15 +23,11 @@ export function useAutoExpandOutputNodes() {
   const dispatch = useAppDispatch()
   const expandedNodesRef = useRef<Set<string>>(new Set())
 
-  const nodes = useAppSelector((s) => s.workflowBuilder.builder.nodes)
-  const currentRun = useAppSelector(
-    (s) => s.workflowBuilder.execution.currentRun
-  )
-  const outputDisplayMode = useAppSelector(
-    (s) => s.workflowBuilder.builder.outputDisplayMode
-  )
+  const nodes = useAppSelector(selectNodes)
+  const currentRun = useAppSelector(selectCurrentRun)
+  const outputDisplayMode = useAppSelector(selectOutputDisplayMode)
 
-  const currentStatus = currentRun?.status || null
+  const currentStatus = currentRun?.status ?? null
 
   useEffect(() => {
     // Only run in nodes mode

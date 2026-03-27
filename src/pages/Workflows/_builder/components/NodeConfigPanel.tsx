@@ -32,7 +32,6 @@ export default function NodeConfigPanel({
   const agents = useAppSelector((s) => s.agent.agents)
 
   const nodeType = selectedNode.type
-  const nodeData = selectedNode.data as Record<string, unknown>
   const nodeId = selectedNode.id
 
   // Update node data helper
@@ -105,46 +104,56 @@ export default function NodeConfigPanel({
 
       {/* Content - Scrollable */}
       <div className='flex-1 overflow-y-auto p-4'>
-        {nodeType === WorkflowNodeType.Start && (
-          <StartNodeConfig
-            nodeData={nodeData as StartNodeData}
-            updateNodeData={updateNodeData}
-          />
-        )}
-        {nodeType === WorkflowNodeType.Step && (
-          <StepNodeConfig
-            nodeData={nodeData as unknown as StepNodeData}
-            updateNodeData={updateNodeData}
-            prompts={prompts}
-            files={files}
-            availableModels={availableModels}
-            agents={agents}
-          />
-        )}
-        {nodeType === WorkflowNodeType.StructuredOutput && (
-          <StructuredOutputNodeConfig
-            nodeData={nodeData as StructuredOutputNodeData}
-            updateNodeData={updateNodeData}
-            prompts={prompts}
-            availableModels={availableModels}
-          />
-        )}
-        {nodeType === WorkflowNodeType.ChatOutput && (
-          <ChatOutputNodeConfig nodeId={nodeId} />
-        )}
-        {nodeType === WorkflowNodeType.Notes && (
-          <NotesNodeConfig
-            nodeData={nodeData as { content?: string }}
-            updateNodeData={updateNodeData}
-          />
-        )}
-        {nodeType === WorkflowNodeType.File && (
-          <FileNodeConfig
-            nodeData={nodeData as FileNodeData}
-            updateNodeData={updateNodeData}
-            files={files}
-          />
-        )}
+        {(() => {
+          switch (nodeType) {
+            case WorkflowNodeType.Start:
+              return (
+                <StartNodeConfig
+                  nodeData={selectedNode.data as StartNodeData}
+                  updateNodeData={updateNodeData}
+                />
+              )
+            case WorkflowNodeType.Step:
+              return (
+                <StepNodeConfig
+                  nodeData={selectedNode.data as unknown as StepNodeData}
+                  updateNodeData={updateNodeData}
+                  prompts={prompts}
+                  files={files}
+                  availableModels={availableModels}
+                  agents={agents}
+                />
+              )
+            case WorkflowNodeType.StructuredOutput:
+              return (
+                <StructuredOutputNodeConfig
+                  nodeData={selectedNode.data as StructuredOutputNodeData}
+                  updateNodeData={updateNodeData}
+                  prompts={prompts}
+                  availableModels={availableModels}
+                />
+              )
+            case WorkflowNodeType.ChatOutput:
+              return <ChatOutputNodeConfig nodeId={nodeId} />
+            case WorkflowNodeType.Notes:
+              return (
+                <NotesNodeConfig
+                  nodeData={selectedNode.data as { content?: string }}
+                  updateNodeData={updateNodeData}
+                />
+              )
+            case WorkflowNodeType.File:
+              return (
+                <FileNodeConfig
+                  nodeData={selectedNode.data as FileNodeData}
+                  updateNodeData={updateNodeData}
+                  files={files}
+                />
+              )
+            default:
+              return null
+          }
+        })()}
       </div>
     </div>
   )

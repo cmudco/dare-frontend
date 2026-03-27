@@ -4,7 +4,7 @@ import {
   type NodeProps,
   useUpdateNodeInternals,
 } from '@xyflow/react'
-import { GitBranch, Settings, Copy, Trash2, Play } from 'lucide-react'
+import { GitBranch, Settings, Trash2, Play } from 'lucide-react'
 import { useCallback, useEffect, useMemo } from 'react'
 import { useAppDispatch } from '@/redux/hooks'
 import {
@@ -36,7 +36,7 @@ export default function StructuredOutputNode({
   data,
   selected,
 }: NodeProps) {
-  const nodeData = (data as Partial<StructuredOutputNodeData>) || {}
+  const nodeData = data as StructuredOutputNodeData
   const dispatch = useAppDispatch()
 
   const handleLabelChange = useCallback(
@@ -52,7 +52,7 @@ export default function StructuredOutputNode({
   // Memoize routes
   const routes = useMemo(
     () =>
-      nodeData.routes || [
+      nodeData.routes ?? [
         { name: '1', description: 'First route' },
         { name: '2', description: 'Second route' },
       ],
@@ -72,11 +72,6 @@ export default function StructuredOutputNode({
   const handleConfigure = (e: React.MouseEvent) => {
     e.stopPropagation()
     dispatch(setSelectedNodeId(id))
-  }
-
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    // TODO: Implement duplicate
   }
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -116,13 +111,6 @@ export default function StructuredOutputNode({
             <Settings size={14} />
           </button>
           <button
-            className='quick-action-btn'
-            title='Duplicate'
-            onClick={handleDuplicate}
-          >
-            <Copy size={14} />
-          </button>
-          <button
             className='quick-action-btn danger'
             title='Delete'
             onClick={handleDelete}
@@ -139,7 +127,7 @@ export default function StructuredOutputNode({
         </div>
         <div className='flex-1'>
           <EditableLabel
-            value={nodeData?.label ?? ''}
+            value={nodeData.label ?? ''}
             onChange={handleLabelChange}
             placeholder='Name this node'
           />

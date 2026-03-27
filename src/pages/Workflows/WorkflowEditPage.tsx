@@ -14,6 +14,8 @@ import WorkflowBuilder from './_builder/WorkflowBuilder'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
+  undo,
+  redo,
   setManualMode,
   resetPartialRun,
   setSavingStatus,
@@ -134,16 +136,14 @@ const WorkflowEditPage = () => {
       workflowId,
     })
 
-  // Undo/Redo handlers that call the exposed window functions
+  // Undo/Redo handlers — dispatch directly to the builder slice
   const handleUndo = useCallback(() => {
-    // @ts-expect-error - exposed by WorkflowBuilder
-    if (window.__workflowUndo) window.__workflowUndo()
-  }, [])
+    if (canUndo) dispatch(undo())
+  }, [canUndo, dispatch])
 
   const handleRedo = useCallback(() => {
-    // @ts-expect-error - exposed by WorkflowBuilder
-    if (window.__workflowRedo) window.__workflowRedo()
-  }, [])
+    if (canRedo) dispatch(redo())
+  }, [canRedo, dispatch])
 
   const handleManualModeToggle = async (checked: boolean) => {
     if (!loadedWorkflow?.id) return

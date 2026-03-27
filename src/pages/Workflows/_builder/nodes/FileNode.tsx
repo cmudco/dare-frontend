@@ -57,8 +57,9 @@ export default function FileNode({ id, data, selected }: NodeProps) {
     )
   })
 
-  const fileCount = fileData?.files?.length || 0
-  const selectedFileNames = (fileData?.files || [])
+  const nodeFiles = fileData.files ?? []
+  const fileCount = nodeFiles.length
+  const selectedFileNames = nodeFiles
     .map((fId) => files.find((f) => f.id === fId)?.name)
     .filter(Boolean)
 
@@ -79,7 +80,7 @@ export default function FileNode({ id, data, selected }: NodeProps) {
   }
 
   const getRetrievalLabel = () => {
-    switch (fileData?.retrievalMode) {
+    switch (fileData.retrievalMode) {
       case RetrievalMode.Embeddings:
         return 'Embeddings'
       case RetrievalMode.Content:
@@ -135,7 +136,7 @@ export default function FileNode({ id, data, selected }: NodeProps) {
         </div>
         <div className='flex-1'>
           <EditableLabel
-            value={fileData?.label ?? ''}
+            value={fileData.label ?? ''}
             onChange={handleLabelChange}
             placeholder='Name this node'
           />

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useState, useEffect } from 'react'
+import { useDebouncedNodeField } from '@/hooks/useDebouncedNodeField'
 
 // Structured Output Node Data Type
 export interface StructuredOutputNodeData {
@@ -36,29 +36,15 @@ export default function StructuredOutputNodeConfig({
   prompts,
   availableModels,
 }: StructuredOutputNodeConfigProps) {
-  const routes = nodeData?.routes || [
+  const routes = nodeData.routes ?? [
     { name: '1', description: 'First route' },
     { name: '2', description: 'Second route' },
   ]
 
-  const [localTextInput, setLocalTextInput] = useState(
-    nodeData?.textInput || ''
+  const [localTextInput, setLocalTextInput] = useDebouncedNodeField(
+    nodeData.textInput ?? '',
+    (v) => updateNodeData({ textInput: v })
   )
-
-  // Sync local state when external data changes
-  useEffect(() => {
-    setLocalTextInput(nodeData?.textInput || '')
-  }, [nodeData?.textInput])
-
-  // Debounced sync to Redux for text input
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (localTextInput !== (nodeData?.textInput || '')) {
-        updateNodeData({ textInput: localTextInput })
-      }
-    }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [localTextInput, nodeData?.textInput, updateNodeData])
 
   const addRoute = () => {
     const newRoutes = [

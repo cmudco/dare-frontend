@@ -1,5 +1,5 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { Brain, Settings, Copy, Trash2, Play } from 'lucide-react'
+import { Brain, Settings, Trash2, Play } from 'lucide-react'
 import { useCallback } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
@@ -81,11 +81,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     dispatch(setSelectedNodeId(nodeId))
   }
 
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    // TODO: Implement duplicate
-  }
-
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation()
     dispatch(removeNodeWithEdges({ nodeId }))
@@ -128,13 +123,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             onClick={handleConfigure}
           >
             <Settings size={14} />
-          </button>
-          <button
-            className='quick-action-btn'
-            title='Duplicate'
-            onClick={handleDuplicate}
-          >
-            <Copy size={14} />
           </button>
           <button
             className='quick-action-btn danger'

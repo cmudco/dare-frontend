@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useState, useEffect } from 'react'
+import { useDebouncedNodeField } from '@/hooks/useDebouncedNodeField'
 import { RetrievalMode, QuerySource } from '@/utils/constants/workflows'
 
 interface FileNameMap {
@@ -41,25 +41,12 @@ export default function FileNodeConfig({
   updateNodeData,
   files,
 }: FileNodeConfigProps) {
-  const [localTextInput, setLocalTextInput] = useState(
-    nodeData?.textInput || ''
+  const [localTextInput, setLocalTextInput] = useDebouncedNodeField(
+    nodeData?.textInput ?? '',
+    (v) => updateNodeData({ textInput: v })
   )
 
-  useEffect(() => {
-    setLocalTextInput(nodeData?.textInput || '')
-  }, [nodeData?.textInput])
-
-  // Debounced sync to Redux
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (localTextInput !== (nodeData?.textInput || '')) {
-        updateNodeData({ textInput: localTextInput })
-      }
-    }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [localTextInput, nodeData?.textInput, updateNodeData])
-
-  const retrievalMode = nodeData?.retrievalMode || RetrievalMode.Embeddings
+  const retrievalMode = nodeData.retrievalMode ?? RetrievalMode.Embeddings
   const showEmbeddingsSettings =
     retrievalMode === RetrievalMode.Embeddings ||
     retrievalMode === RetrievalMode.Both
@@ -73,7 +60,7 @@ export default function FileNodeConfig({
           Files
         </Label>
         <div className='flex flex-wrap gap-1'>
-          {(nodeData?.files || []).map((fileId) => {
+          {(nodeData.files ?? []).map((fileId) => {
             const file = files.find((f) => f.id === fileId)
             return (
               <Badge key={fileId} variant='secondary' className='text-xs'>

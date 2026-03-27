@@ -58,28 +58,6 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
 
-  // Expose undo/redo via window for parent components to call
-  React.useEffect(() => {
-    // @ts-expect-error - exposing for parent component access
-    window.__workflowUndo = () => canUndo && dispatch(undo())
-    // @ts-expect-error - exposing for parent component access
-    window.__workflowRedo = () => canRedo && dispatch(redo())
-    // @ts-expect-error - exposing for parent component access
-    window.__workflowCanUndo = () => canUndo
-    // @ts-expect-error - exposing for parent component access
-    window.__workflowCanRedo = () => canRedo
-    return () => {
-      // @ts-expect-error - cleanup
-      delete window.__workflowUndo
-      // @ts-expect-error - cleanup
-      delete window.__workflowRedo
-      // @ts-expect-error - cleanup
-      delete window.__workflowCanUndo
-      // @ts-expect-error - cleanup
-      delete window.__workflowCanRedo
-    }
-  }, [canUndo, canRedo, dispatch])
-
   // Load agents on mount
   useEffect(() => {
     dispatch(getAgents())
