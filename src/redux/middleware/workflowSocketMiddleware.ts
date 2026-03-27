@@ -29,7 +29,7 @@ import {
   type WorkflowStatusEvent,
   type SubscribeWorkflowResponse,
 } from '@/schemas/workflowSocket'
-import { batchSummaryLoaded } from '@/redux/workflowBuilderSlice'
+import { batchSummaryLoaded } from '@/redux/workflowBuilder'
 
 // ════════════════════════════════════════════════════════════════════════════
 // SOCKET INTERFACE

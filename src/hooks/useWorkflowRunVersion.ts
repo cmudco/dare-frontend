@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { setNodeSelectedRun } from '@/redux/workflowBuilderSlice'
+import { setNodeSelectedRun } from '@/redux/workflowBuilder'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 
 /**
@@ -40,7 +40,7 @@ export function useWorkflowRunVersion(nodeId: string) {
     currentRun,
     isRunning,
     manualModeEnabled,
-  } = useAppSelector((s) => s.workflowBuilder)
+  } = useAppSelector((s) => s.workflowBuilder.execution)
 
   /**
    * FILTER LOGIC: Only show completed/failed full runs in dropdown

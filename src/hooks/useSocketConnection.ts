@@ -27,7 +27,7 @@ export function useSocketConnection() {
     (state: RootState) => state.socket.connected
   )
   const workflowStatus = useSelector(
-    (state: RootState) => state.workflowBuilder.wsConnectionStatus
+    (state: RootState) => state.workflowBuilder.builder.wsConnectionStatus
   )
 
   useEffect(() => {

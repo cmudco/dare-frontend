@@ -2,10 +2,7 @@ import { X } from 'lucide-react'
 import type { Node } from '@xyflow/react'
 import { Button } from '@/components/ui/button'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import {
-  updateNodeDataById,
-  setSelectedNodeId,
-} from '@/redux/workflowBuilderSlice'
+import { updateNodeDataById, setSelectedNodeId } from '@/redux/workflowBuilder'
 import { useCallback } from 'react'
 
 // Import node-specific config components

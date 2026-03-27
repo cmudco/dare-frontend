@@ -11,7 +11,7 @@ import {
   removeNodeWithEdges,
   setSelectedNodeId,
   updateNodeDataById,
-} from '@/redux/workflowBuilderSlice'
+} from '@/redux/workflowBuilder'
 import { EditableLabel } from '../components/EditableLabel'
 import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
 import { useNodeExecutionState } from '@/hooks/useNodeExecutionState'

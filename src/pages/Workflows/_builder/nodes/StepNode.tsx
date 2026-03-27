@@ -6,7 +6,7 @@ import {
   removeNodeWithEdges,
   setSelectedNodeId,
   updateNodeDataById,
-} from '@/redux/workflowBuilderSlice'
+} from '@/redux/workflowBuilder'
 import { EditableLabel } from '../components/EditableLabel'
 import {
   HANDLE_NUMBERS,
@@ -46,8 +46,8 @@ export default function StepNode({ id, data, selected }: NodeProps) {
     [dispatch, nodeId]
   )
 
-  const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const edges = useAppSelector((s) => s.workflowBuilder.builder.edges)
+  const nodes = useAppSelector((s) => s.workflowBuilder.builder.nodes)
   const agents = useAppSelector((s) => s.agent.agents)
   const prompts = useAppSelector((s) => s.prompt.prompts)
 
