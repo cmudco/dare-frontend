@@ -1,9 +1,6 @@
 import { Draft } from '@reduxjs/toolkit'
 import type { Node, Edge, NodeChange, EdgeChange } from '@xyflow/react'
-import type {
-  HistorySnapshot,
-  WorkflowBuilderState,
-} from '../types/workflowBuilder'
+import type { HistorySnapshot, BuilderState } from '../types/workflowBuilder'
 
 // Constants
 export const MAX_HISTORY_SIZE = 50
@@ -25,7 +22,7 @@ export const createSnapshot = (
  * Clears the future stack and enforces max history size
  */
 export const pushToHistory = (
-  state: Draft<WorkflowBuilderState>,
+  state: Draft<BuilderState>,
   snapshot: HistorySnapshot
 ): void => {
   state.history.past.push(snapshot)

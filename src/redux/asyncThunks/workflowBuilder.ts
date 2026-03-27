@@ -4,7 +4,7 @@ import { type Node, type Edge } from '@xyflow/react'
 import type { Workflow, WorkflowRun } from '../types/workflow'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { workflowSocketExecuteSingleStep } from '../middleware/workflowSocketMiddleware'
-import { setSavingStatus } from '../workflowBuilderSlice'
+import { setSavingStatus } from '../workflowBuilder'
 import { SavingStatus } from '../types/workflowBuilder'
 import type { RootState, AppDispatch } from '../store'
 
@@ -52,7 +52,7 @@ export const saveAndExecuteStep = createAsyncThunk<
   async ({ workflowId, stepNodeId, workflowRunId }, { dispatch, getState }) => {
     const state = getState()
     const { nodes, edges, savedViewport, outputDisplayMode } =
-      state.workflowBuilder
+      state.workflowBuilder.builder
 
     // 1. Save the workflow first
     dispatch(setSavingStatus(SavingStatus.Saving))
