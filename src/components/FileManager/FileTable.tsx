@@ -276,16 +276,14 @@ const FileTable = () => {
                         {name || 'Unnamed'}
                       </span>
                       {isSyftboxUser && isSharedPublicly && (
-                        <Globe
-                          className='h-3.5 w-3.5 shrink-0 text-blue-500'
-                          title='Shared with everyone'
-                        />
+                        <span title='Shared with everyone'>
+                          <Globe className='h-3.5 w-3.5 shrink-0 text-blue-500' />
+                        </span>
                       )}
                       {isSyftboxUser && isSharedByMe && !isSharedPublicly && (
-                        <Users
-                          className='h-3.5 w-3.5 shrink-0 text-green-600'
-                          title='Shared with specific users'
-                        />
+                        <span title='Shared with specific users'>
+                          <Users className='h-3.5 w-3.5 shrink-0 text-green-600' />
+                        </span>
                       )}
                     </div>
                   </TableCell>
