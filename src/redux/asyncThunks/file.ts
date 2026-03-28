@@ -13,6 +13,10 @@ import {
   removeFileFromFolderAPI,
   uploadFolderAPI,
   updateFileTagsAPI,
+  getSharedFilesAPI,
+  importSharedFileAPI,
+  shareFileWithUserAPI,
+  togglePublicShareAPI,
 } from '../../api/files'
 import { MyFile } from '../types/files'
 
@@ -217,6 +221,60 @@ export const uploadFolder = createAsyncThunk(
       const folder = await uploadFolderAPI(formData)
 
       return folder
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getSharedFiles = createAsyncThunk(
+  'files/getSharedFiles',
+  async (_, thunkAPI) => {
+    try {
+      const response = await getSharedFilesAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const importSharedFile = createAsyncThunk(
+  'files/importSharedFile',
+  async (fileId: number, thunkAPI) => {
+    try {
+      const response = await importSharedFileAPI(fileId)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const shareFileWithUser = createAsyncThunk(
+  'files/shareFileWithUser',
+  async ({ fileId, email }: { fileId: number; email: string }, thunkAPI) => {
+    try {
+      await shareFileWithUserAPI(fileId, email)
+      return fileId
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const togglePublicShare = createAsyncThunk(
+  'files/togglePublicShare',
+  async (
+    {
+      fileId,
+      shareWithEveryone,
+    }: { fileId: number; shareWithEveryone: boolean },
+    thunkAPI
+  ) => {
+    try {
+      const response = await togglePublicShareAPI(fileId, shareWithEveryone)
+      return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

@@ -1,26 +1,18 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
-import { deleteFile, getFolders } from '../../redux/asyncThunks/file'
-import {
-  addSelectedItem,
-  removeSelectedItem,
-  openShareModal,
-} from '../../redux/fileSlice'
+import { importSharedFile } from '../../redux/asyncThunks/file'
+import { openShareModal } from '../../redux/fileSlice'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
-import { TABLE_HEAD } from '../../utils/constants/file'
 import { formatFileSize } from '@/utils/files'
 import { SortDirection, sortFiles } from '@/utils/sortUtils'
 import {
-  filterFiles,
   paginateItems,
   getTotalPages,
   resetPaginationOnFilter,
-  handleSelectAllItems,
-  getSelectionState,
-  createFilterConfig,
   createPaginationConfig,
 } from '@/utils/tableUtils'
+import { toast } from '@/utils/toast'
 
 import {
   Select,
@@ -45,36 +37,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import {
-  EllipsisVerticalIcon,
-  Trash2,
-  Tag,
-  Eye,
-  Share2,
-  Globe,
-  Users,
-} from 'lucide-react'
+import { EllipsisVerticalIcon, Trash2, Share2, FolderInput } from 'lucide-react'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getStatusDisplay } from '@/utils/constants/files'
 import { SortDirectionEnum } from '@/utils/constants/sort'
-import FileTagModal from './FileTagModal'
-import FileViewerModal from './FileViewerModal'
 import TagsDisplay from './TagsDisplay'
-import { formatDate } from '@/utils/constants/prompts'
 
-const FileTable = () => {
+const SHARED_TABLE_HEAD = [
+  'File Name',
+  'File Type',
+  'Size',
+  'Tags',
+  'Shared by',
+  'Status',
+  'Action',
+]
+
+const SharedFilesTable = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const {
-    files,
-    loading,
-    searchQuery,
-    selectedTags,
-    selectedItems,
-    mediaTypeFilter,
-  } = useSelector((state: RootState) => state.files)
+  const { sharedFiles, sharedFilesLoading, searchQuery } = useSelector(
+    (state: RootState) => state.files
+  )
   const { tags: allTags } = useSelector((state: RootState) => state.tags)
-  const user = useSelector((state: RootState) => state.user.user)
-  const isSyftboxUser = user?.isSyftboxFileStorage ?? false
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -84,25 +68,12 @@ const FileTable = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>(
     SortDirectionEnum.ASC
   )
-  const [tagFileId, setTagFileId] = useState<number | null>(null)
-  const [tagFileName, setTagFileName] = useState<string>('')
-  const [tagFileExistingTags, setTagFileExistingTags] = useState<number[]>([])
-  const [viewFileId, setViewFileId] = useState<number | null>(null)
-  const [viewFileName, setViewFileName] = useState<string>('')
-  const [viewFileType, setViewFileType] = useState<string>('')
 
   const filteredFiles = useMemo(() => {
-    if (!user) return []
-    // SyftBox files have vectorDbSource: null — skip vectorDb filtering for SyftBox users
-    if (!isSyftboxUser && user.vectorDb === undefined) return []
-    const filterOptions = createFilterConfig(
-      searchQuery,
-      selectedTags,
-      isSyftboxUser ? undefined : user.vectorDb,
-      mediaTypeFilter
-    )
-    return filterFiles(files, filterOptions)
-  }, [files, searchQuery, selectedTags, user, mediaTypeFilter, isSyftboxUser])
+    if (!searchQuery) return sharedFiles
+    const q = searchQuery.toLowerCase()
+    return sharedFiles.filter((f) => f.name?.toLowerCase().includes(q))
+  }, [sharedFiles, searchQuery])
 
   const sortedFiles = useMemo(() => {
     return sortFiles(filteredFiles, sortColumn, sortDirection, allTags)
@@ -114,52 +85,7 @@ const FileTable = () => {
 
   useEffect(() => {
     resetPaginationOnFilter(setCurrentPage)
-  }, [searchQuery, selectedTags, mediaTypeFilter])
-
-  const handleSelectAll = (isSelected: boolean) => {
-    const shouldSelectAll = !isIndeterminate && isSelected
-    handleSelectAllItems(
-      shouldSelectAll,
-      paginatedFiles,
-      selectedItems,
-      (id: number) => dispatch(addSelectedItem(id)),
-      (id: number) => dispatch(removeSelectedItem(id))
-    )
-  }
-
-  const { isAllSelected, isIndeterminate } = getSelectionState(
-    paginatedFiles,
-    selectedItems
-  )
-
-  const handleDeleteConfirm = async () => {
-    if (deleteFileId !== null) {
-      try {
-        await dispatch(deleteFile(deleteFileId)).unwrap()
-        dispatch(getFolders())
-      } catch (error) {
-        console.error('Failed to delete file:', error)
-      }
-    }
-    setDeleteFileId(null)
-  }
-
-  const handleDelete = async (id: number, name: string) => {
-    setDeleteFileId(id)
-    setDeleteFileName(name || 'Unnamed')
-  }
-
-  const handleTag = (id: number, name: string, existingTags: number[]) => {
-    setTagFileId(id)
-    setTagFileName(name || 'Unnamed')
-    setTagFileExistingTags(existingTags)
-  }
-
-  const handleView = (id: number, name: string, fileType: string) => {
-    setViewFileId(id)
-    setViewFileName(name || 'Unnamed')
-    setViewFileType(fileType || '')
-  }
+  }, [searchQuery])
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -172,6 +98,25 @@ const FileTable = () => {
       setSortColumn(column)
       setSortDirection(SortDirectionEnum.ASC)
     }
+  }
+
+  const handleImport = async (id: number, name: string) => {
+    try {
+      await dispatch(importSharedFile(id)).unwrap()
+      toast.success(`"${name}" has been imported to My Files`)
+    } catch {
+      toast.error(`Failed to import "${name}"`)
+    }
+  }
+
+  const handleDelete = (id: number, name: string) => {
+    setDeleteFileId(id)
+    setDeleteFileName(name || 'Unnamed')
+  }
+
+  const handleDeleteConfirm = () => {
+    // Deleting a shared file removes it from the shared list (backend handles this)
+    setDeleteFileId(null)
   }
 
   return (
@@ -187,15 +132,11 @@ const FileTable = () => {
                 <input
                   type='checkbox'
                   className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                  checked={isAllSelected}
-                  ref={(input) => {
-                    if (input) input.indeterminate = isIndeterminate
-                  }}
+                  disabled
                 />
               </div>
             </TableHead>
-            {TABLE_HEAD.filter((head) => head !== 'Select').map((head) => (
+            {SHARED_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
                 className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 dark:text-white ${head !== 'Action' ? 'hover:bg-gray-100 hover:opacity-100 dark:hover:bg-gray-700' : ''}`}
@@ -203,7 +144,7 @@ const FileTable = () => {
               >
                 <div className='flex items-center gap-2 opacity-70'>
                   {head}
-                  {head !== 'Action' && (
+                  {head !== 'Action' && head !== 'Shared by' && (
                     <ChevronUpDownIcon
                       strokeWidth={2}
                       className={`h-4 w-4 ${sortColumn === head ? 'text-blue-500' : ''}`}
@@ -223,22 +164,22 @@ const FileTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {files.length === 0 && loading ? (
+          {sharedFiles.length === 0 && sharedFilesLoading ? (
             <TableRow>
               <TableCell
-                colSpan={TABLE_HEAD.length + 1}
+                colSpan={SHARED_TABLE_HEAD.length + 1}
                 className='p-4 text-center'
               >
-                Loading files...
+                Loading shared files...
               </TableCell>
             </TableRow>
           ) : sortedFiles.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={TABLE_HEAD.length + 1}
+                colSpan={SHARED_TABLE_HEAD.length + 1}
                 className='p-4 text-center'
               >
-                No matching files found
+                No files have been shared with you yet
               </TableCell>
             </TableRow>
           ) : (
@@ -251,42 +192,19 @@ const FileTable = () => {
                 tags,
                 status,
                 errorMessage,
-                isSharedByMe,
-                isSharedPublicly,
-                createdAt,
+                sharedBy,
               }) => (
                 <TableRow key={id}>
                   <TableCell className='w-[50px] p-4 text-center'>
                     <input
                       type='checkbox'
                       className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
-                      checked={selectedItems.includes(id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          dispatch(addSelectedItem(id))
-                        } else {
-                          dispatch(removeSelectedItem(id))
-                        }
-                      }}
+                      disabled
                     />
                   </TableCell>
                   <TableCell className='max-w-[250px] p-4'>
-                    <div className='flex items-center gap-1.5'>
-                      <span className='truncate' title={name || 'Unnamed'}>
-                        {name || 'Unnamed'}
-                      </span>
-                      {isSyftboxUser && isSharedPublicly && (
-                        <Globe
-                          className='h-3.5 w-3.5 shrink-0 text-blue-500'
-                          title='Shared with everyone'
-                        />
-                      )}
-                      {isSyftboxUser && isSharedByMe && !isSharedPublicly && (
-                        <Users
-                          className='h-3.5 w-3.5 shrink-0 text-green-600'
-                          title='Shared with specific users'
-                        />
-                      )}
+                    <div className='truncate' title={name || 'Unnamed'}>
+                      {name || 'Unnamed'}
                     </div>
                   </TableCell>
                   <TableCell className='max-w-[150px] p-4'>
@@ -295,21 +213,30 @@ const FileTable = () => {
                     </div>
                   </TableCell>
                   <TableCell className='p-4'>{formatFileSize(size)}</TableCell>
-                  <TableCell className='p-4'>{formatDate(createdAt)}</TableCell>
                   <TableCell className='p-4'>
-                    <div className='flex flex-wrap items-center gap-1'>
-                      <TagsDisplay
-                        tags={tags || []}
-                        allTags={allTags}
-                        fileId={id}
-                        maxVisible={3}
-                      />
-                      {isSharedByMe && (
-                        <span className='inline-flex items-center rounded-full border border-gray-400 px-2.5 py-0.5 text-xs font-semibold text-gray-700 dark:border-gray-500 dark:text-gray-300'>
-                          Shared by you
-                        </span>
-                      )}
-                    </div>
+                    <TagsDisplay
+                      tags={tags || []}
+                      allTags={allTags}
+                      fileId={id}
+                      maxVisible={3}
+                    />
+                  </TableCell>
+                  <TableCell className='p-4'>
+                    {sharedBy ? (
+                      <div className='flex items-center gap-2'>
+                        <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-400 text-xs font-semibold text-white'>
+                          {sharedBy.initials}
+                        </div>
+                        <span className='text-sm'>{sharedBy.name}</span>
+                      </div>
+                    ) : (
+                      <div className='flex items-center gap-2'>
+                        <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-semibold text-white'>
+                          EV
+                        </div>
+                        <span className='text-sm'>Everyone</span>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className='p-4'>
                     {getStatusDisplay(status, errorMessage)}
@@ -322,33 +249,18 @@ const FileTable = () => {
                       <DropdownMenuContent>
                         <DropdownMenuItem
                           className='cursor-pointer'
-                          onClick={() => handleView(id, name, fileType)}
+                          onClick={() => handleImport(id, name)}
                         >
-                          <Eye className='mr-2 h-4 w-4' />
-                          <span>View</span>
+                          <FolderInput className='mr-2 h-4 w-4' />
+                          <span>Import to My Files</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className='cursor-pointer'
-                          onClick={() => handleTag(id, name, tags || [])}
+                          onClick={() => dispatch(openShareModal({ id, name }))}
                         >
-                          <Tag className='mr-2 h-4 w-4' />
-                          <span>
-                            {!Array.isArray(tags) || tags.length === 0
-                              ? 'Add Tags'
-                              : 'Edit Tags'}
-                          </span>
+                          <Share2 className='mr-2 h-4 w-4' />
+                          <span>Share</span>
                         </DropdownMenuItem>
-                        {isSyftboxUser && (
-                          <DropdownMenuItem
-                            className='cursor-pointer'
-                            onClick={() =>
-                              dispatch(openShareModal({ id, name }))
-                            }
-                          >
-                            <Share2 className='mr-2 h-4 w-4' />
-                            <span>Share</span>
-                          </DropdownMenuItem>
-                        )}
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() => handleDelete(id, name)}
@@ -369,7 +281,7 @@ const FileTable = () => {
           <TableFooter>
             <TableRow className='dark:bg-gray-800/50'>
               <TableCell
-                colSpan={TABLE_HEAD.length + 1}
+                colSpan={SHARED_TABLE_HEAD.length + 1}
                 className='w-full p-4 dark:text-white'
               >
                 <div className='flex w-full items-center justify-between'>
@@ -438,29 +350,13 @@ const FileTable = () => {
         isOpen={deleteFileId !== null}
         onClose={() => setDeleteFileId(null)}
         onDelete={handleDeleteConfirm}
-        title='Delete File'
-        description='Are you sure you want to delete this file? This action cannot be undone.'
+        title='Remove Shared File'
+        description='Are you sure you want to remove this file from your shared list?'
         itemName={deleteFileName}
-        confirmText='Delete'
-      />
-
-      <FileTagModal
-        isOpen={tagFileId !== null}
-        onClose={() => setTagFileId(null)}
-        fileId={tagFileId}
-        fileName={tagFileName}
-        existingTags={tagFileExistingTags}
-      />
-
-      <FileViewerModal
-        isOpen={viewFileId !== null}
-        onClose={() => setViewFileId(null)}
-        fileId={viewFileId}
-        fileName={viewFileName}
-        fileType={viewFileType}
+        confirmText='Remove'
       />
     </div>
   )
 }
 
-export default FileTable
+export default SharedFilesTable
