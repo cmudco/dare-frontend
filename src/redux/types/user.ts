@@ -55,6 +55,7 @@ export interface User {
   avatarType?: AvatarType
   avatarPreset?: string
   avatarUrl?: string
+  isSyftboxFileStorage?: boolean
 }
 
 export interface ChunkSettings {
