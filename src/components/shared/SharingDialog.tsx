@@ -136,8 +136,8 @@ const SharingDialog: React.FC = () => {
       toast.success(
         `${entityLabel} is now ${!entity.isPublished ? 'Public' : 'Private'}`
       )
-    } catch {
-      toast.error('Failed to update visibility')
+    } catch (error) {
+      toast.error((error as Error).message || 'Failed to update visibility')
     }
   }
 
