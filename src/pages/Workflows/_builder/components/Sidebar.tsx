@@ -10,10 +10,7 @@ import {
 } from 'lucide-react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import { useReactFlow } from '@xyflow/react'
-import {
-  createNodeAtPosition,
-  resetBuilder,
-} from '@/redux/workflowBuilderSlice'
+import { createNodeAtPosition, resetBuilder } from '@/redux/workflowBuilder'
 import { DeleteConfirmation } from '@/components/DeleteConfirmation'
 import { useState } from 'react'
 import { WorkflowNodeType } from '@/utils/constants/workflows'
@@ -63,8 +60,9 @@ const nodeComponents = [
 export default function Sidebar({ disabled }: SidebarProps) {
   const dispatch = useAppDispatch()
   const reactFlowInstance = useReactFlow()
-  const { nodes, isRunning: isWorkflowRunning } = useAppSelector(
-    (state) => state.workflowBuilder
+  const nodes = useAppSelector((state) => state.workflowBuilder.builder.nodes)
+  const isWorkflowRunning = useAppSelector(
+    (state) => state.workflowBuilder.execution.isRunning
   )
 
   const [isClearConfirmationOpen, setIsClearConfirmationOpen] = useState(false)

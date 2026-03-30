@@ -23,7 +23,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
-import { setNodeSelectedRun } from '@/redux/workflowBuilderSlice'
+import { setNodeSelectedRun } from '@/redux/workflowBuilder'
 import { useState, useCallback } from 'react'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
@@ -53,7 +53,7 @@ export default function ChatOutputNodeConfig({
 
   // Get workflow execution data
   const { availableRuns, selectedRunIds, currentRun } = useAppSelector(
-    (s) => s.workflowBuilder
+    (s) => s.workflowBuilder.execution
   )
 
   // Get selected run ID for this node
@@ -74,8 +74,8 @@ export default function ChatOutputNodeConfig({
   const response = nodeState?.response || null
   const status = nodeState?.status || null
   const error = nodeState?.error || null
-  const snippets = nodeState?.snippets || []
-  const webSearchSources = nodeState?.webSearchSources || []
+  const snippets = nodeState?.snippets ?? []
+  const webSearchSources = nodeState?.webSearchSources ?? []
 
   // Get available versions for this node
   const nodeVersionRuns = availableRuns.filter((run) => {

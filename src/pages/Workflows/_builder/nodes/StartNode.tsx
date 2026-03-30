@@ -7,10 +7,7 @@ import {
 import { Play, Settings, Copy, Trash2 } from 'lucide-react'
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import {
-  removeNodeWithEdges,
-  setSelectedNodeId,
-} from '@/redux/workflowBuilderSlice'
+import { removeNodeWithEdges, setSelectedNodeId } from '@/redux/workflowBuilder'
 import {
   HANDLE_NUMBERS,
   HANDLE_COLORS,
@@ -31,8 +28,8 @@ export default function StartNode({ id, data, selected }: NodeProps) {
   const startData = data as StartData
 
   const dispatch = useAppDispatch()
-  const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const edges = useAppSelector((s) => s.workflowBuilder.builder.edges)
+  const nodes = useAppSelector((s) => s.workflowBuilder.builder.nodes)
 
   const updateNodeInternals = useUpdateNodeInternals()
 

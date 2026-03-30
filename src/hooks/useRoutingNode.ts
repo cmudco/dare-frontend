@@ -8,7 +8,7 @@ import type { ValidationContext } from '@/redux/types/workflow'
  */
 export interface HookPendingValidation {
   nodeId: string
-  stepNumber: number
+  label: string
   customPrompt: string
   availableRoutes: { name: string; description: string }[]
   currentResponse: string
@@ -69,7 +69,7 @@ export interface RoutingNodeState {
  */
 export function useRoutingNode(nodeId: string): RoutingNodeState {
   const { currentRun, availableRuns, selectedRunIds } = useAppSelector(
-    (s) => s.workflowBuilder
+    (s) => s.workflowBuilder.execution
   )
 
   // Get the run to display (handles all modes automatically)
@@ -108,7 +108,7 @@ export function useRoutingNode(nodeId: string): RoutingNodeState {
   const pendingValidation: HookPendingValidation | null = hasPendingValidation
     ? {
         nodeId,
-        stepNumber: validationContext?.stepNumber ?? 0,
+        label: validationContext?.label ?? '',
         customPrompt: validationContext?.customPrompt ?? '',
         availableRoutes: validationContext?.availableRoutes ?? [],
         currentResponse: nodeState?.response ?? '',

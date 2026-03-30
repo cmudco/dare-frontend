@@ -52,7 +52,7 @@ export function useWorkflowSocket(
   const dispatch = useAppDispatch()
 
   const wsConnectionStatus = useAppSelector(
-    (state) => state.workflowBuilder.wsConnectionStatus
+    (state) => state.workflowBuilder.builder.wsConnectionStatus
   )
 
   // Subscribe to workflow when connected and workflowId is provided
@@ -61,11 +61,11 @@ export function useWorkflowSocket(
       return
     }
 
-    dispatch(workflowSocketSubscribeWorkflow(workflowId))
+    dispatch(workflowSocketSubscribeWorkflow({ workflowId }))
 
     // Cleanup: unsubscribe when workflowId changes or component unmounts
     return () => {
-      dispatch(workflowSocketUnsubscribeWorkflow(workflowId))
+      dispatch(workflowSocketUnsubscribeWorkflow({ workflowId }))
     }
   }, [wsConnectionStatus, workflowId, dispatch])
 
