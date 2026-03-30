@@ -170,6 +170,11 @@ export default function StepNodeConfig({
           placeholder='Enter text to be included in this step...'
           value={localTextInput}
           onChange={(e) => setLocalTextInput(e.target.value)}
+          onBlur={() => {
+            if (localTextInput !== (nodeData.textInput ?? '')) {
+              updateNodeData({ textInput: localTextInput })
+            }
+          }}
           className='min-h-[80px] resize-y text-sm'
         />
         <p className='text-xs text-muted-foreground'>
