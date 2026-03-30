@@ -26,6 +26,8 @@ import {
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TokenBreakdownModal from '@/components/Dashboard/TokenBreakdownModal'
+import EnergyDashboard from '@/components/Dashboard/EnergyDashboard'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Tooltip,
   TooltipContent,
@@ -144,150 +146,172 @@ const Dashboard = () => {
 
   return (
     <TooltipProvider>
-      <div className='over container mx-auto space-y-6 p-6'>
-        <div className='flex flex-col space-y-2'>
-          <h1 className='text-3xl font-bold tracking-tight'>Dashboard</h1>
-          <p className='text-muted-foreground'>
-            Overview of your activity and usage statistics.
-          </p>
-        </div>
-
-        {userLoading || billingLoading ? (
-          <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
-            {[...Array(9)].map((_, i) => (
-              <Card key={i} className='overflow-hidden'>
-                <CardHeader className='pb-2'>
-                  <Skeleton className='h-4 w-24' />
-                  <Skeleton className='h-8 w-28' />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className='h-4 w-full' />
-                </CardContent>
-                <CardFooter>
-                  <Skeleton className='h-4 w-20' />
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
-            {statCards.map((card, index) => (
-              <Card
-                key={index}
-                className={`overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${card.onClick ? 'cursor-pointer' : ''}`}
-                onClick={card.onClick}
-              >
-                <div className={`h-1 w-full bg-gradient-to-r ${card.color}`} />
-                <CardHeader className='pb-2'>
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-2'>
-                      <CardTitle className='text-lg font-medium'>
-                        {card.title}
-                      </CardTitle>
-                      {card.tooltip && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info
-                              className='h-3.5 w-3.5 cursor-help text-muted-foreground'
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent className='max-w-xs'>
-                            <div className='space-y-2'>
-                              <p className='font-semibold'>
-                                {card.tooltip.title}
-                              </p>
-                              <p className='text-sm'>
-                                {card.tooltip.description}
-                              </p>
-                              {card.tooltip.tip && (
-                                <p className='text-xs text-muted-foreground'>
-                                  💡 {card.tooltip.tip}
-                                </p>
-                              )}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                    {card.icon}
-                  </div>
-                  <CardDescription>{card.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-3xl font-bold'>
-                    {formatNumber(card.value)}
-                  </div>
-                </CardContent>
-                <CardFooter className='text-xs text-muted-foreground'>
-                  Last updated: {new Date().toLocaleDateString()}
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        <Card className='border-none bg-white bg-gradient-to-br dark:from-slate-900 dark:to-slate-800'>
-          <CardHeader>
-            <CardTitle className='flex items-center gap-2'>
-              <Clock className='h-5 w-5' />
-              Activity Summary
-            </CardTitle>
-            <CardDescription>Your overall platform engagement</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-              <div className='flex flex-col space-y-1'>
-                <span className='text-sm font-medium text-muted-foreground'>
-                  Message Ratio
-                </span>
-                <div className='flex items-end gap-2'>
-                  <span className='text-2xl font-bold'>
-                    {stats?.messageCount
-                      ? (
-                          (stats.aiMessageCount / stats.messageCount) *
-                          100
-                        ).toFixed(1)
-                      : 0}
-                    %
-                  </span>
-                  <span className='text-sm text-muted-foreground'>
-                    AI messages
-                  </span>
-                </div>
-                <div className='h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700'>
-                  <div
-                    className='h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500'
-                    style={{
-                      width: `${stats?.messageCount ? (stats.aiMessageCount / stats.messageCount) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
-              </div>
-              <div className='flex flex-col space-y-1'>
-                <span className='text-sm font-medium text-muted-foreground'>
-                  Files per Conversation
-                </span>
-                <div className='flex items-end gap-2'>
-                  <span className='text-2xl font-bold'>
-                    {stats?.conversationCount
-                      ? (stats.fileCount / stats.conversationCount).toFixed(1)
-                      : 0}
-                  </span>
-                  <span className='text-sm text-muted-foreground'>average</span>
-                </div>
-                <div className='h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700'>
-                  <div
-                    className='h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500'
-                    style={{
-                      width: `${stats?.conversationCount ? Math.min((stats.fileCount / stats.conversationCount / 5) * 100, 100) : 0}%`,
-                    }}
-                  />
-                </div>
-              </div>
+      <div className='container mx-auto space-y-6 p-6'>
+        <Tabs defaultValue='overview'>
+          <div className='flex items-center justify-between'>
+            <div className='flex flex-col space-y-1'>
+              <h1 className='text-3xl font-bold tracking-tight'>Dashboard</h1>
+              <p className='text-muted-foreground'>
+                Overview of your activity and usage statistics.
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <TabsList>
+              <TabsTrigger value='overview'>Overview</TabsTrigger>
+              <TabsTrigger value='energy'>Environmental Impact</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value='overview' className='mt-6 space-y-6'>
+            {userLoading || billingLoading ? (
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                {[...Array(9)].map((_, i) => (
+                  <Card key={i} className='overflow-hidden'>
+                    <CardHeader className='pb-2'>
+                      <Skeleton className='h-4 w-24' />
+                      <Skeleton className='h-8 w-28' />
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className='h-4 w-full' />
+                    </CardContent>
+                    <CardFooter>
+                      <Skeleton className='h-4 w-20' />
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                {statCards.map((card, index) => (
+                  <Card
+                    key={index}
+                    className={`overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${card.onClick ? 'cursor-pointer' : ''}`}
+                    onClick={card.onClick}
+                  >
+                    <div
+                      className={`h-1 w-full bg-gradient-to-r ${card.color}`}
+                    />
+                    <CardHeader className='pb-2'>
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center gap-2'>
+                          <CardTitle className='text-lg font-medium'>
+                            {card.title}
+                          </CardTitle>
+                          {card.tooltip && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info
+                                  className='h-3.5 w-3.5 cursor-help text-muted-foreground'
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent className='max-w-xs'>
+                                <div className='space-y-2'>
+                                  <p className='font-semibold'>
+                                    {card.tooltip.title}
+                                  </p>
+                                  <p className='text-sm'>
+                                    {card.tooltip.description}
+                                  </p>
+                                  {card.tooltip.tip && (
+                                    <p className='text-xs text-muted-foreground'>
+                                      💡 {card.tooltip.tip}
+                                    </p>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                        {card.icon}
+                      </div>
+                      <CardDescription>{card.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className='text-3xl font-bold'>
+                        {formatNumber(card.value)}
+                      </div>
+                    </CardContent>
+                    <CardFooter className='text-xs text-muted-foreground'>
+                      Last updated: {new Date().toLocaleDateString()}
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            <Card className='border-none bg-white bg-gradient-to-br dark:from-slate-900 dark:to-slate-800'>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2'>
+                  <Clock className='h-5 w-5' />
+                  Activity Summary
+                </CardTitle>
+                <CardDescription>
+                  Your overall platform engagement
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                  <div className='flex flex-col space-y-1'>
+                    <span className='text-sm font-medium text-muted-foreground'>
+                      Message Ratio
+                    </span>
+                    <div className='flex items-end gap-2'>
+                      <span className='text-2xl font-bold'>
+                        {stats?.messageCount
+                          ? (
+                              (stats.aiMessageCount / stats.messageCount) *
+                              100
+                            ).toFixed(1)
+                          : 0}
+                        %
+                      </span>
+                      <span className='text-sm text-muted-foreground'>
+                        AI messages
+                      </span>
+                    </div>
+                    <div className='h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700'>
+                      <div
+                        className='h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500'
+                        style={{
+                          width: `${stats?.messageCount ? (stats.aiMessageCount / stats.messageCount) * 100 : 0}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className='flex flex-col space-y-1'>
+                    <span className='text-sm font-medium text-muted-foreground'>
+                      Files per Conversation
+                    </span>
+                    <div className='flex items-end gap-2'>
+                      <span className='text-2xl font-bold'>
+                        {stats?.conversationCount
+                          ? (stats.fileCount / stats.conversationCount).toFixed(
+                              1
+                            )
+                          : 0}
+                      </span>
+                      <span className='text-sm text-muted-foreground'>
+                        average
+                      </span>
+                    </div>
+                    <div className='h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700'>
+                      <div
+                        className='h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500'
+                        style={{
+                          width: `${stats?.conversationCount ? Math.min((stats.fileCount / stats.conversationCount / 5) * 100, 100) : 0}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value='energy' className='mt-6'>
+            <EnergyDashboard />
+          </TabsContent>
+        </Tabs>
 
         <TokenBreakdownModal
           open={modalOpen}

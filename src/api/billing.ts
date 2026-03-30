@@ -2,6 +2,7 @@ import {
   Transaction,
   Wallet,
   BillingModelStatsResponse,
+  EnergyStatsResponse,
 } from '@/redux/types/billing'
 import { METHOD } from '@/utils/constants/requests'
 import { baseRequest } from '@/utils/requests'
@@ -39,3 +40,12 @@ export const getBillingModelStatsAPI =
       method: METHOD.GET,
     })
   }
+
+export const getEnergyStatsAPI = async (
+  period: string = 'all'
+): Promise<EnergyStatsResponse> => {
+  return await baseRequest<EnergyStatsResponse>({
+    url: `api/billing/energy-stats/?period=${period}`,
+    method: METHOD.GET,
+  })
+}
