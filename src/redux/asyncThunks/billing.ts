@@ -3,6 +3,7 @@ import {
   getWalletAPI,
   getTransactionsAPI,
   getBillingModelStatsAPI,
+  getEnergyStatsAPI,
 } from '../../api/billing'
 
 export const getWallet = createAsyncThunk(
@@ -34,6 +35,18 @@ export const getBillingModelStats = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await getBillingModelStatsAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getEnergyStats = createAsyncThunk(
+  'billing/getEnergyStats',
+  async (period: string = 'all', thunkAPI) => {
+    try {
+      const response = await getEnergyStatsAPI(period)
       return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
