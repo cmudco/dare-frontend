@@ -22,7 +22,9 @@ const EnergyDashboard = () => {
   )
 
   useEffect(() => {
-    dispatch(getEnergyStats('all'))
+    if (!energyStats) {
+      dispatch(getEnergyStats('all'))
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -58,10 +60,7 @@ const EnergyDashboard = () => {
         </Tabs>
       </div>
 
-      <EnergyOverviewCards
-        stats={energyStats?.overallStats ?? null}
-        loading={energyStatsLoading}
-      />
+      <EnergyOverviewCards stats={energyStats?.overallStats ?? null} />
 
       {!energyStatsLoading && !hasData ? (
         <div className='py-8 text-center text-sm text-muted-foreground'>
@@ -74,10 +73,7 @@ const EnergyDashboard = () => {
             <h3 className='mb-3 text-sm font-medium text-muted-foreground'>
               That's equivalent to...
             </h3>
-            <RelatableStatsGrid
-              stats={energyStats?.relatableStats ?? null}
-              loading={energyStatsLoading}
-            />
+            <RelatableStatsGrid stats={energyStats?.relatableStats ?? null} />
           </div>
 
           <ModelBreakdownChart

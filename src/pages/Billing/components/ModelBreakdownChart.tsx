@@ -92,7 +92,7 @@ const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
       }))
   }, [models])
 
-  if (loading) {
+  if (loading && !models.length) {
     return (
       <Card className='border-slate-200/50 dark:border-slate-800/50'>
         <CardHeader className='pb-2'>
