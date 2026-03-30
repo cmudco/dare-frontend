@@ -1,15 +1,7 @@
 import React from 'react'
 import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline'
 import { useSortable } from '@dnd-kit/sortable'
-import {
-  Pencil,
-  Copy,
-  MoreVertical,
-  Globe,
-  GitFork,
-  Share2,
-  Users,
-} from 'lucide-react'
+import { Pencil, Copy, MoreVertical, GitFork, Share2 } from 'lucide-react'
 import { SortableConversationItemProps } from '../../redux/types/conversation'
 import {
   createDragStyle,
@@ -35,10 +27,8 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   onConversationClick,
   onEditClick,
   onCloneClick,
-  onPublishClick,
+  onSharingClick,
   onForkClick,
-  onShareClick,
-  onManageSharesClick,
   onEditChange,
   onEditBlur,
   onEditKeyDown,
@@ -151,44 +141,18 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                   ) : (
                     /* My Conversations tab actions */
                     <>
-                      {/* Only show publish option if NOT forked and sharing is enabled */}
-                      {features.enableSharing && !conversation.isForked && (
+                      {/* Sharing consolidated option */}
+                      {features.enableSharing && (
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation()
-                            onPublishClick?.(conversation)
+                            onSharingClick?.(conversation)
                           }}
                         >
-                          <Globe className='mr-2 h-4 w-4' />
-                          {conversation.isPublished ? 'Unpublish' : 'Publish'}
+                          <Share2 className='mr-2 h-4 w-4' />
+                          Sharing
                         </DropdownMenuItem>
                       )}
-                      {/* Share with specific user */}
-                      {features.enableSharing &&
-                        conversation.canShare !== false && (
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onShareClick?.(conversation)
-                            }}
-                          >
-                            <Share2 className='mr-2 h-4 w-4' />
-                            Share with User
-                          </DropdownMenuItem>
-                        )}
-                      {/* Manage shares */}
-                      {features.enableSharing &&
-                        conversation.canShare !== false && (
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onManageSharesClick?.(conversation)
-                            }}
-                          >
-                            <Users className='mr-2 h-4 w-4' />
-                            Manage Shares
-                          </DropdownMenuItem>
-                        )}
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation()
