@@ -28,7 +28,7 @@ export interface ListItem {
   /**
    * Additional metadata
    */
-  metadata?: Record<string, never>
+  metadata?: Record<string, unknown>
   /**
    * Optional URL to navigate to
    */
