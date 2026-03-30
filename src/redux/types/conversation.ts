@@ -3,6 +3,7 @@ import {
   FeedbackType,
   ConversationTab,
 } from '@/utils/constants/conversation'
+import type { RelatableStats } from '@/redux/types/billing'
 import { ToolCallStatus, MessageContentType } from '@/utils/constants/dareTools'
 import type {
   ImageSizeType,
@@ -83,6 +84,10 @@ export interface Message {
   cost?: string | null
   inputTokens?: number | null
   outputTokens?: number | null
+  energyWh?: string | null
+  carbonG?: string | null
+  waterMl?: string | null
+  energyStats?: RelatableStats | null
   generatedImage?: GeneratedImage
   generatedTranscription?: GeneratedTranscription
   artifactId?: number
@@ -177,6 +182,7 @@ export interface LLMModel {
   isAudioTranscriber?: boolean
   inputTokenRatePerMillion: number
   outputTokenRatePerMillion: number
+  tier: string
 }
 
 export interface Snippet {

@@ -5,8 +5,14 @@ import {
   getTransactions,
   getWallet,
   getBillingModelStats,
+  getEnergyStats,
 } from './asyncThunks/billing'
-import { Transaction, Wallet, BillingModelStatsResponse } from './types/billing'
+import {
+  Transaction,
+  Wallet,
+  BillingModelStatsResponse,
+  EnergyStatsResponse,
+} from './types/billing'
 
 const billingSlice = createSlice({
   name: 'billing',
@@ -66,6 +72,22 @@ const billingSlice = createSlice({
       )
       .addCase(getBillingModelStats.rejected, (state, action) => {
         state.modelStatsLoading = false
+        state.error = action.payload as string
+      })
+      .addCase(getEnergyStats.pending, (state) => {
+        state.energyStatsLoading = true
+        state.error = null
+      })
+      .addCase(
+        getEnergyStats.fulfilled,
+        (state, action: PayloadAction<EnergyStatsResponse>) => {
+          state.energyStatsLoading = false
+          state.energyStats = action.payload
+          state.energyStatsPeriod = action.payload.period
+        }
+      )
+      .addCase(getEnergyStats.rejected, (state, action) => {
+        state.energyStatsLoading = false
         state.error = action.payload as string
       })
   },
