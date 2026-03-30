@@ -48,10 +48,13 @@ export interface ShareRecipient {
   sharedAt: string
 }
 
-export interface ShareDialogEntity {
+export interface SharingEntity {
   type: ShareableEntityType
   id: string | number
   title: string
+  isPublished: boolean
+  canPublish: boolean
+  isForked: boolean
 }
 
 export interface SharingState {
@@ -60,9 +63,7 @@ export interface SharingState {
   loading: boolean
   recipientsLoading: boolean
   error: string | null
-  shareDialogOpen: boolean
-  shareDialogEntity: ShareDialogEntity | null
-  manageDialogOpen: boolean
-  manageDialogEntity: ShareDialogEntity | null
+  isOpen: boolean
+  entity: SharingEntity | null
   lastShareResult: ShareResponse | null
 }
