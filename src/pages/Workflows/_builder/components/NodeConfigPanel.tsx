@@ -116,6 +116,7 @@ export default function NodeConfigPanel({
             case WorkflowNodeType.Step:
               return (
                 <StepNodeConfig
+                  key={nodeId}
                   nodeData={selectedNode.data as unknown as StepNodeData}
                   updateNodeData={updateNodeData}
                   prompts={prompts}
