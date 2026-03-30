@@ -11,7 +11,6 @@ import { motion } from 'framer-motion'
 
 interface RelatableStatsGridProps {
   stats: RelatableStats | null
-  loading: boolean
 }
 
 const relatableItems = [
@@ -66,10 +65,7 @@ const relatableItems = [
   },
 ] as const
 
-const RelatableStatsGrid: React.FC<RelatableStatsGridProps> = ({
-  stats,
-  loading,
-}) => {
+const RelatableStatsGrid: React.FC<RelatableStatsGridProps> = ({ stats }) => {
   return (
     <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7'>
       {relatableItems.map(({ key, emoji, bgColor, label, format }, index) => (
@@ -87,7 +83,7 @@ const RelatableStatsGrid: React.FC<RelatableStatsGridProps> = ({
                 {emoji}
               </div>
               <div className='space-y-1'>
-                {loading || !stats ? (
+                {!stats ? (
                   <Skeleton className='mx-auto mb-1 h-5 w-16' />
                 ) : (
                   <p className='text-sm font-black tracking-tight text-slate-900 dark:text-slate-100'>

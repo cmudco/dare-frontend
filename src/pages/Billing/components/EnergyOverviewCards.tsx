@@ -10,7 +10,6 @@ import { motion } from 'framer-motion'
 
 interface EnergyOverviewCardsProps {
   stats: EnergyOverallStats | null
-  loading: boolean
 }
 
 const cards = [
@@ -52,10 +51,7 @@ const cards = [
   },
 ] as const
 
-const EnergyOverviewCards: React.FC<EnergyOverviewCardsProps> = ({
-  stats,
-  loading,
-}) => {
+const EnergyOverviewCards: React.FC<EnergyOverviewCardsProps> = ({ stats }) => {
   return (
     <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
       {cards.map(
@@ -91,7 +87,7 @@ const EnergyOverviewCards: React.FC<EnergyOverviewCardsProps> = ({
                   <p className='text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80'>
                     {label}
                   </p>
-                  {loading || !stats ? (
+                  {!stats ? (
                     <Skeleton className='mt-1.5 h-7 w-24 rounded-md' />
                   ) : (
                     <div className='flex items-baseline gap-1'>
