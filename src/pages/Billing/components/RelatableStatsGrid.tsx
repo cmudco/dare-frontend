@@ -72,7 +72,8 @@ const RelatableStatsGrid: React.FC<RelatableStatsGridProps> = ({ stats }) => {
         <motion.div
           key={key}
           initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.3, delay: index * 0.05 }}
         >
           <Card className='group h-full border-slate-200/50 bg-white/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/90 hover:shadow-lg dark:border-slate-800/50 dark:bg-slate-900/40 dark:hover:bg-slate-900/90'>
