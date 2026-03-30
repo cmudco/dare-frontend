@@ -11,7 +11,7 @@ import {
   updateSelectedDareTools,
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
-import ModelPicker from './ModelPicker'
+import ModelPicker from './ModelPicker/index'
 import PromptSet from './PromptSet'
 import { Message } from '../../redux/types/conversation'
 import { useNavigate } from 'react-router-dom'
@@ -28,7 +28,7 @@ import ImagePreview from './ImagePreview'
 import ImageGenerationPanel from './ImageGenerationPanel'
 import AudioTranscriptionPanel from './AudioTranscriptionPanel'
 import VoiceModeButton from './VoiceModeButton'
-import { ArrowUp, Pencil, X } from 'lucide-react'
+import { AlertCircle, ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
 import { features } from '@/config/environment'
@@ -59,7 +59,11 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const navigate = useNavigate()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode)
+  const selectedModel = useSelector(
+    (state: RootState) => state.conversation.selectedModel
+  )
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
+  const [showModelWarning, setShowModelWarning] = useState(false)
   const autoSaveEnabled = useSelector(
     (state: RootState) => state.conversation.autoSaveEnabled
   )
@@ -137,6 +141,12 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const handleSendMessage = () => {
     if (disabled || conversationInput.trim() === '') return
 
+    if (selectedModel === null) {
+      setShowModelWarning(true)
+      return
+    }
+
+    setShowModelWarning(false)
     clearPendingDraftSave()
 
     const newMessage: Partial<Message> = {
@@ -218,6 +228,12 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   }
 
   useEffect(() => {
+    if (selectedModel !== null) {
+      setShowModelWarning(false)
+    }
+  }, [selectedModel])
+
+  useEffect(() => {
     const textarea = textareaRef.current
     if (textarea) {
       textarea.style.height = 'auto'
@@ -255,6 +271,14 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             >
               <X className='-mr-2 h-5 w-5 text-gray-500 dark:text-dark-icon-unselected' />
             </button>
+          </div>
+        )}
+        {showModelWarning && (
+          <div className='mx-4 mt-2 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-800 dark:bg-amber-950/40'>
+            <AlertCircle className='h-4 w-4 shrink-0 text-amber-500' />
+            <span className='text-sm text-amber-700 dark:text-amber-400'>
+              Please select a model before sending a message.
+            </span>
           </div>
         )}
         <ImagePreview />

@@ -41,15 +41,19 @@ export const selectAppropriateModel = (
   conversationModel: number | null | undefined,
   availableModels: LLMModel[]
 ): number | null => {
-  // Check if conversation's model is in the available models
-  const isModelAvailable = availableModels.some(
-    (m) => m.id === conversationModel
-  )
+  // Only restore when conversation has an explicit model ID saved
+  if (typeof conversationModel === 'number') {
+    const isModelAvailable = availableModels.some(
+      (m) => m.id === conversationModel
+    )
+    // Return saved model if available, fallback to first if model was removed
+    return isModelAvailable
+      ? conversationModel
+      : (availableModels[0]?.id ?? null)
+  }
 
-  // Use conversation's model if it matches the current mode, otherwise use first available
-  return isModelAvailable && conversationModel
-    ? conversationModel
-    : (availableModels[0]?.id ?? null)
+  // null / undefined — no model saved, user must pick
+  return null
 }
 
 /**

@@ -31,7 +31,23 @@ import {
   Tag,
   Globe,
   ExternalLink,
+  Leaf,
+  Droplets,
+  Smartphone,
+  Search,
+  Lightbulb,
+  Tv,
+  Car,
+  Thermometer,
 } from 'lucide-react'
+import {
+  formatEnergy,
+  formatCarbon,
+  formatWater,
+  formatPhoneBattery,
+  formatSearches,
+  formatDuration,
+} from '@/utils/energyFormatUtils'
 import { formatDistance } from 'date-fns'
 import { getTagColor } from '@/utils/files'
 
@@ -244,6 +260,121 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                   </CardContent>
                 </Card>
               )}
+
+              {/* Environmental Impact */}
+              {!isSenderMessage(message) &&
+                message.energyWh &&
+                parseFloat(message.energyWh) > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className='flex items-center gap-2 text-lg'>
+                        <Leaf className='h-5 w-5 text-emerald-500' />
+                        Environmental Impact
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className='space-y-4'>
+                      <div className='grid grid-cols-3 gap-4'>
+                        <div className='text-center'>
+                          <Zap className='mx-auto mb-1 h-4 w-4 text-amber-500' />
+                          <p className='text-sm font-semibold'>
+                            {formatEnergy(parseFloat(message.energyWh!))}
+                          </p>
+                          <p className='text-xs text-muted-foreground'>
+                            Energy
+                          </p>
+                        </div>
+                        {message.carbonG && (
+                          <div className='text-center'>
+                            <Leaf className='mx-auto mb-1 h-4 w-4 text-emerald-500' />
+                            <p className='text-sm font-semibold'>
+                              {formatCarbon(parseFloat(message.carbonG))}
+                            </p>
+                            <p className='text-xs text-muted-foreground'>
+                              Carbon
+                            </p>
+                          </div>
+                        )}
+                        {message.waterMl && (
+                          <div className='text-center'>
+                            <Droplets className='mx-auto mb-1 h-4 w-4 text-blue-500' />
+                            <p className='text-sm font-semibold'>
+                              {formatWater(parseFloat(message.waterMl))}
+                            </p>
+                            <p className='text-xs text-muted-foreground'>
+                              Water
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {message.energyStats && (
+                        <div className='grid grid-cols-2 gap-2 border-t pt-3'>
+                          <div className='flex items-center gap-2 text-xs'>
+                            <Smartphone className='h-3.5 w-3.5 text-slate-500' />
+                            <span>
+                              {formatPhoneBattery(
+                                message.energyStats.phoneBatteryPct
+                              )}
+                            </span>
+                          </div>
+                          <div className='flex items-center gap-2 text-xs'>
+                            <Search className='h-3.5 w-3.5 text-blue-500' />
+                            <span>
+                              {formatSearches(
+                                message.energyStats.googleSearchesEquiv
+                              )}
+                            </span>
+                          </div>
+                          <div className='flex items-center gap-2 text-xs'>
+                            <Lightbulb className='h-3.5 w-3.5 text-yellow-500' />
+                            <span>
+                              {formatDuration(
+                                message.energyStats.ledBulbSeconds
+                              )}{' '}
+                              LED
+                            </span>
+                          </div>
+                          <div className='flex items-center gap-2 text-xs'>
+                            <Tv className='h-3.5 w-3.5 text-red-500' />
+                            <span>
+                              {formatDuration(
+                                message.energyStats.netflixSeconds
+                              )}{' '}
+                              Netflix
+                            </span>
+                          </div>
+                          <div className='flex items-center gap-2 text-xs'>
+                            <Car className='h-3.5 w-3.5 text-green-500' />
+                            <span>
+                              {message.energyStats.evMeters >= 1000
+                                ? `${(message.energyStats.evMeters / 1000).toFixed(2)} km`
+                                : `${message.energyStats.evMeters.toFixed(1)} m`}{' '}
+                              EV
+                            </span>
+                          </div>
+                          <div className='flex items-center gap-2 text-xs'>
+                            <Thermometer className='h-3.5 w-3.5 text-cyan-500' />
+                            <span>
+                              {formatDuration(
+                                message.energyStats.fridgeSeconds
+                              )}{' '}
+                              fridge
+                            </span>
+                          </div>
+                          <div className='flex items-center gap-2 text-xs'>
+                            <Brain className='h-3.5 w-3.5 text-purple-500' />
+                            <span>
+                              {formatDuration(
+                                message.energyStats.humanThinkingSeconds
+                              )}{' '}
+                              thinking
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
               {/* Files Information */}
               {message.files && message.files.length > 0 && (
