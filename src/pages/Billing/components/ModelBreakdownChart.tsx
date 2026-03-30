@@ -117,7 +117,8 @@ const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
       transition={{ duration: 0.4, delay: 0.2 }}
     >
       <Card className='group relative overflow-hidden border-slate-200/50 bg-white/40 shadow-sm transition-all duration-300 hover:shadow-md dark:border-slate-800/50 dark:bg-slate-900/40'>
