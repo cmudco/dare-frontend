@@ -7,11 +7,13 @@ import {
   selectAvailableRuns,
   selectSelectedRunIds,
   selectCurrentRun,
-  selectActiveNodeId,
+  selectDisplayActiveNodeId,
+  selectShouldShowBatch,
+  selectSelectedBatchRun,
   selectPendingValidation,
   selectManualModeEnabled,
   selectCurrentPartialRunId,
-  selectIsRunning,
+  selectIsWorkflowRunActive,
   selectLastWorkflowId,
 } from '@/redux/workflowBuilder'
 
@@ -39,19 +41,21 @@ export function useNodeExecutionState(nodeId: string): NodeExecutionState {
   const availableRuns = useAppSelector(selectAvailableRuns)
   const selectedRunIds = useAppSelector(selectSelectedRunIds)
   const currentRun = useAppSelector(selectCurrentRun)
-  const activeNodeId = useAppSelector(selectActiveNodeId)
+  // Batch-aware selectors — during batch runs these return the selected batch run's data
+  const shouldShowBatch = useAppSelector(selectShouldShowBatch)
+  const selectedBatchRun = useAppSelector(selectSelectedBatchRun)
+  const activeNodeId = useAppSelector(selectDisplayActiveNodeId)
   const pendingValidation = useAppSelector(selectPendingValidation)
   const manualModeEnabled = useAppSelector(selectManualModeEnabled)
   const currentPartialRunId = useAppSelector(selectCurrentPartialRunId)
-  const isRunning = useAppSelector(selectIsRunning)
+  const isRunning = useAppSelector(selectIsWorkflowRunActive)
   const lastWorkflowId = useAppSelector(selectLastWorkflowId)
 
-  const displayRun = getDisplayRun(
-    nodeId,
-    selectedRunIds,
-    availableRuns,
-    currentRun
-  )
+  // In batch mode: always show the selected batch run.
+  // In single-run mode: respect per-node version selection (selectedRunIds).
+  const displayRun = shouldShowBatch
+    ? selectedBatchRun
+    : getDisplayRun(nodeId, selectedRunIds, availableRuns, currentRun)
   const nodeState = getNodeState(displayRun, nodeId)
 
   const status = (nodeState?.status as WorkflowRunStepStatus) || null

@@ -26,7 +26,6 @@ import {
   selectDisplayPendingValidation,
   selectShouldShowBatch,
   selectEffectiveBatchRunId,
-  selectSelectedBatchRun,
   selectPendingValidation,
 } from '@/redux/workflowBuilder'
 import { workflowSocketSubscribe } from '@/redux/middleware/workflowSocketMiddleware'
@@ -56,7 +55,6 @@ export default function WorkflowExecutionPanel() {
   // Batch subscription needs these to know when to subscribe
   const shouldShowBatch = useAppSelector(selectShouldShowBatch)
   const effectiveBatchRunId = useAppSelector(selectEffectiveBatchRunId)
-  const selectedBatchRun = useAppSelector(selectSelectedBatchRun)
 
   const {
     containerRef,
@@ -73,18 +71,14 @@ export default function WorkflowExecutionPanel() {
   useEffect(() => {
     if (!shouldShowBatch || !effectiveBatchRunId) return
 
-    const hasNodeStates = Boolean(
-      selectedBatchRun?.nodeStates &&
-      Object.keys(selectedBatchRun.nodeStates).length
-    )
-    if (
-      !hasNodeStates &&
-      lastSubscribedRunIdRef.current !== effectiveBatchRunId
-    ) {
+    // Always fetch when switching to a different run, regardless of whether
+    // we already have some nodeStates. Partial data captured mid-execution
+    // must be replaced with the final complete state on demand.
+    if (lastSubscribedRunIdRef.current !== effectiveBatchRunId) {
       lastSubscribedRunIdRef.current = effectiveBatchRunId
       dispatch(workflowSocketSubscribe({ workflowRunId: effectiveBatchRunId }))
     }
-  }, [shouldShowBatch, effectiveBatchRunId, selectedBatchRun, dispatch])
+  }, [shouldShowBatch, effectiveBatchRunId, dispatch])
 
   // ── Auto-scroll effects ────────────────────────────────────────────────
   const prevRunIdRef = useRef<number | undefined>(displayRun?.id)

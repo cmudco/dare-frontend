@@ -171,13 +171,15 @@ function workflowBuilderReducer(
       stepCompleted.match(action)
     ) {
       const { nodeId } = action.payload
+      const outputIds = getConnectedChatOutputIds(
+        nodeId,
+        draft.builder.edges,
+        draft.builder.nodes
+      )
+
+      // Propagate to single-run nodeStates
       const nodeStates = draft.execution.currentRun?.nodeStates
       if (nodeStates) {
-        const outputIds = getConnectedChatOutputIds(
-          nodeId,
-          draft.builder.edges,
-          draft.builder.nodes
-        )
         const sourceState = nodeStates[nodeId]
         if (sourceState) {
           for (const outputId of outputIds) {
@@ -200,6 +202,40 @@ function workflowBuilderReducer(
             nodeStates[outputId].startedAt = sourceState.startedAt
             nodeStates[outputId].snippets = sourceState.snippets
             nodeStates[outputId].webSearchSources = sourceState.webSearchSources
+          }
+        }
+      }
+
+      // Propagate to batch run nodeStates — same logic, for the run that owns this step event.
+      const workflowRunId = action.payload.workflowRunId
+      if (workflowRunId && draft.batch.batchRun.runsById[workflowRunId]) {
+        const batchNodeStates =
+          draft.batch.batchRun.runsById[workflowRunId].nodeStates
+        if (batchNodeStates) {
+          const batchSourceState = batchNodeStates[nodeId]
+          if (batchSourceState) {
+            for (const outputId of outputIds) {
+              if (!batchNodeStates[outputId]) {
+                batchNodeStates[outputId] = {
+                  stepId: null,
+                  startedAt: null,
+                  nodeType: WorkflowNodeType.ChatOutput,
+                  status: WorkflowRunStepStatus.Pending,
+                  response: '',
+                  error: null,
+                  validationContext: null,
+                  metadata: null,
+                  snippets: [],
+                  webSearchSources: [],
+                }
+              }
+              batchNodeStates[outputId].status = batchSourceState.status
+              batchNodeStates[outputId].response = batchSourceState.response
+              batchNodeStates[outputId].startedAt = batchSourceState.startedAt
+              batchNodeStates[outputId].snippets = batchSourceState.snippets
+              batchNodeStates[outputId].webSearchSources =
+                batchSourceState.webSearchSources
+            }
           }
         }
       }

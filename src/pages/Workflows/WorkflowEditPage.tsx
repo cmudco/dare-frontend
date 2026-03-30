@@ -24,6 +24,7 @@ import {
   setOutputDisplayMode,
   expandAllOutputNodes,
   collapseAllOutputNodes,
+  selectIsWorkflowRunActive,
 } from '@/redux/workflowBuilder'
 import { SavingStatus, OutputDisplayMode } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
@@ -77,7 +78,9 @@ const WorkflowEditPage = () => {
     (s) => s.workflowBuilder.builder.savedViewport
   )
   const hasAtLeastOneStep = nodes.some((n) => n.type === WorkflowNodeType.Step)
-  const isRunning = useAppSelector((s) => s.workflowBuilder.execution.isRunning)
+  // selectIsWorkflowRunActive considers both single-run and batch execution,
+  // so the toolbar and canvas are locked during batch runs as well.
+  const isRunning = useAppSelector(selectIsWorkflowRunActive)
   const manualModeEnabled = useAppSelector(
     (s) => s.workflowBuilder.execution.manualModeEnabled
   )

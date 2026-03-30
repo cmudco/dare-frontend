@@ -12,10 +12,13 @@ import {
   removeNodeWithEdges,
   setSelectedNodeId,
   updateNodeDataById,
+  selectDisplayRun,
+  selectDisplayActiveNodeId,
+  selectIsWorkflowRunActive,
 } from '@/redux/workflowBuilder'
 import { EditableLabel } from '../components/EditableLabel'
 import { OutputDisplayMode } from '@/redux/types/workflowBuilder'
-import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
+import { getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useCallback } from 'react'
 import { OutputNodeContent } from '../components/OutputNodeContent'
@@ -31,31 +34,31 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
     [dispatch, id]
   )
 
-  const { availableRuns, selectedRunIds, currentRun, isRunning } =
-    useAppSelector((s) => s.workflowBuilder.execution)
+  // Use batch-aware selectors so batch runs display correctly on the canvas
+  const displayRun = useAppSelector(selectDisplayRun)
+  const displayActiveNodeId = useAppSelector(selectDisplayActiveNodeId)
+  const isRunning = useAppSelector(selectIsWorkflowRunActive)
   const outputDisplayMode = useAppSelector(
     (s) => s.workflowBuilder.builder.outputDisplayMode
   )
 
   const isNodesMode = outputDisplayMode === OutputDisplayMode.Nodes
 
-  const displayRun = getDisplayRun(
-    id,
-    selectedRunIds,
-    availableRuns,
-    currentRun
-  )
   const nodeState = getNodeState(displayRun, id)
 
   // Single source: response from nodeStates
   const response = nodeState?.response || null
   const hasResponse = Boolean(response?.trim())
 
-  // Streaming when this output node's status is running (propagated from source step)
+  // Streaming when this output node's source step is the active streaming node,
+  // or when this node's own status is Running (propagated from source step).
+  // displayActiveNodeId is batch-aware — it reflects the correct active node for
+  // both single runs and batch runs.
   const isStreaming =
     isNodesMode &&
     isRunning &&
-    nodeState?.status === WorkflowRunStepStatus.Running
+    (displayActiveNodeId === id ||
+      nodeState?.status === WorkflowRunStepStatus.Running)
 
   // Status derivation — prefer nodeState.status (propagated from source step)
   const status = (() => {

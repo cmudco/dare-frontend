@@ -314,8 +314,8 @@ const batchSlice = createSlice({
         run.status = status as typeof run.status
         run.endedAt = endedAt || run.endedAt
         state.batchRun.activeNodeIds[workflowRunId] = null
-
-        state.batchRun.latestRunIsBatch = false
+        // latestRunIsBatch is NOT cleared here — individual file runs completing does not
+        // mean the batch is done. Only batchComplete should flip this flag.
       })
       .addCase(stepError, (state, action) => {
         const { nodeId, workflowRunId } = action.payload
@@ -337,7 +337,13 @@ const batchSlice = createSlice({
         const { status, ...runData } = action.payload
         const workflowRunId = action.payload.id
 
-        if (!state.batchRun.runsById[workflowRunId]) return
+        // Accept updates for any run that belongs to the current batch,
+        // even if it hasn't been added to runsById yet (e.g. after page reload
+        // where batchSummaryLoaded restored fileStatuses but not runsById).
+        const isKnownBatchRun = state.batchRun.fileStatuses.some(
+          (fs) => fs.workflowRunId === workflowRunId
+        )
+        if (!isKnownBatchRun) return
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { type: _eventType, ...workflowRunData } =
