@@ -13,43 +13,17 @@ export interface ProviderGroup {
   groups: ModelGroup[]
 }
 
+const tierToGroupType: Record<string, ModelGroupType> = {
+  [ModelTier.Premium]: 'Premium',
+  [ModelTier.Advanced]: 'Advanced',
+  [ModelTier.Flash]: 'Flash',
+}
+
 /**
- * Categorize a model into a Type based on its tier or name
+ * Categorize a model into a group type based on its backend tier.
  */
 export const categorizeModel = (model: LLMModel): ModelGroupType => {
-  const name = model.name.toLowerCase()
-  const tier = model.tier.toLowerCase()
-
-  // Heuristics for Flash
-  if (
-    name.includes('flash') ||
-    name.includes('mini') ||
-    tier === ModelTier.Economy.toLowerCase()
-  ) {
-    return 'Flash'
-  }
-
-  // Heuristics for Premium
-  if (
-    tier === ModelTier.Premium.toLowerCase() ||
-    name.includes('large') ||
-    name.includes('o1') ||
-    name.includes('4o') ||
-    name.includes('opus')
-  ) {
-    return 'Premium'
-  }
-
-  // Default to Advanced for Standard tier or others
-  if (
-    tier === ModelTier.Standard.toLowerCase() ||
-    name.includes('pro') ||
-    name.includes('sonnet')
-  ) {
-    return 'Advanced'
-  }
-
-  return 'Advanced'
+  return tierToGroupType[model.tier] ?? 'Advanced'
 }
 
 /**
