@@ -62,7 +62,8 @@ const EnergyOverviewCards: React.FC<EnergyOverviewCardsProps> = ({ stats }) => {
           <motion.div
             key={key}
             initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
           >
             <Card
