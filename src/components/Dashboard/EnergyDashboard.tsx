@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { getEnergyStats } from '@/redux/asyncThunks/billing'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ExternalLink } from 'lucide-react'
+import { ECOLOGITS_METHODOLOGY_URL } from '@/utils/energyFormatUtils'
 import EnergyOverviewCards from '@/pages/Billing/components/EnergyOverviewCards'
 import RelatableStatsGrid from '@/pages/Billing/components/RelatableStatsGrid'
 import ModelBreakdownChart from '@/pages/Billing/components/ModelBreakdownChart'
@@ -34,7 +36,16 @@ const EnergyDashboard = () => {
     <div className='space-y-6'>
       <div className='flex items-center justify-between'>
         <p className='text-sm text-muted-foreground'>
-          Track the environmental footprint of your AI usage.
+          Track the environmental footprint of your AI usage.{' '}
+          <a
+            href={ECOLOGITS_METHODOLOGY_URL}
+            target='_blank'
+            rel='noopener noreferrer'
+            className='inline-flex items-center gap-0.5 text-muted-foreground underline decoration-muted-foreground/40 underline-offset-2 transition-colors hover:text-foreground'
+          >
+            Methodology
+            <ExternalLink className='h-3 w-3' />
+          </a>
         </p>
         <Tabs value={energyStatsPeriod} onValueChange={handlePeriodChange}>
           <TabsList>

@@ -1,3 +1,6 @@
+export const ECOLOGITS_METHODOLOGY_URL =
+  'https://ecologits.ai/latest/methodology/llm_inference/'
+
 /** Format Wh to the most readable unit */
 export const formatEnergy = (wh: number): string => {
   if (wh >= 1000) return `${(wh / 1000).toFixed(2)} kWh`
@@ -53,4 +56,10 @@ export const PROVIDER_CHART_COLORS: Record<string, string> = {
 
 export const getProviderChartColor = (provider: string): string => {
   return PROVIDER_CHART_COLORS[provider.toLowerCase()] || '#6B7280'
+}
+
+/** Format EV driving distance */
+export const formatEvDistance = (meters: number): string => {
+  if (meters >= 1000) return `${(meters / 1000).toFixed(2)} km`
+  return `${meters.toFixed(1)} meters`
 }

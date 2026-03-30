@@ -5,16 +5,9 @@ import {
   formatPhoneBattery,
   formatSearches,
   formatDuration,
+  formatEvDistance,
 } from '@/utils/energyFormatUtils'
-import {
-  Smartphone,
-  Search,
-  Lightbulb,
-  Tv,
-  Car,
-  Thermometer,
-  Brain,
-} from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface RelatableStatsGridProps {
   stats: RelatableStats | null
@@ -24,53 +17,50 @@ interface RelatableStatsGridProps {
 const relatableItems = [
   {
     key: 'phone',
-    icon: Smartphone,
-    iconColor: 'text-slate-600 dark:text-slate-300',
+    emoji: '📱',
+    bgColor: 'bg-slate-500/10',
     label: 'iPhone charge',
     format: (s: RelatableStats) => formatPhoneBattery(s.phoneBatteryPct),
   },
   {
     key: 'search',
-    icon: Search,
-    iconColor: 'text-blue-500',
+    emoji: '🔍',
+    bgColor: 'bg-blue-500/10',
     label: 'Google searches',
     format: (s: RelatableStats) => formatSearches(s.googleSearchesEquiv),
   },
   {
     key: 'led',
-    icon: Lightbulb,
-    iconColor: 'text-yellow-500',
+    emoji: '💡',
+    bgColor: 'bg-yellow-500/10',
     label: 'LED bulb',
     format: (s: RelatableStats) => formatDuration(s.ledBulbSeconds),
   },
   {
     key: 'netflix',
-    icon: Tv,
-    iconColor: 'text-red-500',
+    emoji: '🎬',
+    bgColor: 'bg-red-500/10',
     label: 'Netflix streaming',
     format: (s: RelatableStats) => formatDuration(s.netflixSeconds),
   },
   {
     key: 'ev',
-    icon: Car,
-    iconColor: 'text-green-500',
+    emoji: '🚗',
+    bgColor: 'bg-green-500/10',
     label: 'EV driving',
-    format: (s: RelatableStats) =>
-      s.evMeters >= 1000
-        ? `${(s.evMeters / 1000).toFixed(2)} km`
-        : `${s.evMeters.toFixed(1)} meters`,
+    format: (s: RelatableStats) => formatEvDistance(s.evMeters),
   },
   {
     key: 'fridge',
-    icon: Thermometer,
-    iconColor: 'text-cyan-500',
+    emoji: '🧊',
+    bgColor: 'bg-cyan-500/10',
     label: 'Fridge running',
     format: (s: RelatableStats) => formatDuration(s.fridgeSeconds),
   },
   {
     key: 'thinking',
-    icon: Brain,
-    iconColor: 'text-purple-500',
+    emoji: '🧠',
+    bgColor: 'bg-purple-500/10',
     label: 'Human thinking',
     format: (s: RelatableStats) => formatDuration(s.humanThinkingSeconds),
   },
@@ -81,19 +71,36 @@ const RelatableStatsGrid: React.FC<RelatableStatsGridProps> = ({
   loading,
 }) => {
   return (
-    <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4'>
-      {relatableItems.map(({ key, icon: Icon, iconColor, label, format }) => (
-        <Card key={key} className='transition-shadow hover:shadow-md'>
-          <CardContent className='flex flex-col items-center p-4 text-center'>
-            <Icon className={`mb-2 h-6 w-6 ${iconColor}`} />
-            {loading || !stats ? (
-              <Skeleton className='mb-1 h-5 w-16' />
-            ) : (
-              <p className='text-sm font-semibold'>{format(stats)}</p>
-            )}
-            <p className='text-xs text-muted-foreground'>{label}</p>
-          </CardContent>
-        </Card>
+    <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7'>
+      {relatableItems.map(({ key, emoji, bgColor, label, format }, index) => (
+        <motion.div
+          key={key}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: index * 0.05 }}
+        >
+          <Card className='group h-full border-slate-200/50 bg-white/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/90 hover:shadow-lg dark:border-slate-800/50 dark:bg-slate-900/40 dark:hover:bg-slate-900/90'>
+            <CardContent className='flex flex-col items-center justify-center p-4 text-center'>
+              <div
+                className={`mb-3 flex items-center justify-center rounded-xl p-2.5 text-2xl transition-transform duration-300 group-hover:scale-125 ${bgColor}`}
+              >
+                {emoji}
+              </div>
+              <div className='space-y-1'>
+                {loading || !stats ? (
+                  <Skeleton className='mx-auto mb-1 h-5 w-16' />
+                ) : (
+                  <p className='text-sm font-black tracking-tight text-slate-900 dark:text-slate-100'>
+                    {format(stats)}
+                  </p>
+                )}
+                <p className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 transition-colors group-hover:text-muted-foreground'>
+                  {label}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       ))}
     </div>
   )
