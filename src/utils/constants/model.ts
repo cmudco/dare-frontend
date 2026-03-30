@@ -1,19 +1,19 @@
 export enum ModelTier {
   Premium = 'premium',
-  Standard = 'standard',
-  Economy = 'economy',
+  Advanced = 'advanced',
+  Flash = 'flash',
 }
 
 export const ModelTierLabels = {
   [ModelTier.Premium]: 'Premium',
-  [ModelTier.Standard]: 'Standard',
-  [ModelTier.Economy]: 'Economy',
+  [ModelTier.Advanced]: 'Advanced',
+  [ModelTier.Flash]: 'Flash',
 }
 
 export const ModelTierDescriptions = {
   [ModelTier.Premium]: 'Flagship models with highest capability',
-  [ModelTier.Standard]: 'Balanced performance and cost',
-  [ModelTier.Economy]: 'Cost-optimized for high-volume tasks',
+  [ModelTier.Advanced]: 'Balanced performance and cost',
+  [ModelTier.Flash]: 'Fast, cost-optimized models',
 }
 
 export const ModelTierColors = {
@@ -26,7 +26,7 @@ export const ModelTierColors = {
     ring: 'ring-amber-200 dark:ring-amber-800',
     gradient: 'from-amber-500/10 to-transparent',
   },
-  [ModelTier.Standard]: {
+  [ModelTier.Advanced]: {
     bg: 'bg-blue-100 dark:bg-blue-950/50',
     text: 'text-blue-700 dark:text-blue-400',
     border: 'border-blue-200 dark:border-blue-900',
@@ -35,7 +35,7 @@ export const ModelTierColors = {
     ring: 'ring-blue-200 dark:ring-blue-800',
     gradient: 'from-blue-500/10 to-transparent',
   },
-  [ModelTier.Economy]: {
+  [ModelTier.Flash]: {
     bg: 'bg-emerald-100 dark:bg-emerald-950/50',
     text: 'text-emerald-700 dark:text-emerald-400',
     border: 'border-emerald-200 dark:border-emerald-900',
@@ -48,8 +48,8 @@ export const ModelTierColors = {
 
 export const ModelTierOrder = [
   ModelTier.Premium,
-  ModelTier.Standard,
-  ModelTier.Economy,
+  ModelTier.Advanced,
+  ModelTier.Flash,
 ]
 
 export enum ReasoningStatus {

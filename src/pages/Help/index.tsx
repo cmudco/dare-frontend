@@ -47,8 +47,8 @@ import { getSlugFromModelName, hasModelCardData } from '@/utils/modelCard'
 
 const tierIcons = {
   [ModelTier.Premium]: Crown,
-  [ModelTier.Standard]: Sparkles,
-  [ModelTier.Economy]: Zap,
+  [ModelTier.Advanced]: Sparkles,
+  [ModelTier.Flash]: Zap,
 }
 
 const Help = () => {
