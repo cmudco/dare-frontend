@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import { useReactFlow } from '@xyflow/react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { importNodes } from '@/redux/workflowBuilderSlice'
+import { importNodes } from '@/redux/workflowBuilder'
 import {
   importWorkflowFromString,
   type ImportOptions,
@@ -52,7 +52,7 @@ export const useWorkflowPaste = (
   const dispatch = useAppDispatch()
   const reactFlowInstance = useReactFlow()
   const isWorkflowRunning = useAppSelector(
-    (state) => state.workflowBuilder.isRunning
+    (state) => state.workflowBuilder.execution.isRunning
   )
 
   // Paste is enabled when not disabled and workflow is not running

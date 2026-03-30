@@ -40,7 +40,7 @@ import type {
 export interface StepResponseCardProps {
   nodeId: string
   nodeName: string
-  stepNumber?: number
+  label?: string
   nodeType?: string
   content: string
   isActive: boolean
@@ -50,7 +50,7 @@ export interface StepResponseCardProps {
 
 export function StepResponseCard({
   nodeName,
-  stepNumber,
+  label,
   nodeType,
   content,
   isActive,
@@ -75,10 +75,10 @@ export function StepResponseCard({
     >
       {/* Step header with number badge */}
       <div className='mb-2 flex items-center gap-2'>
-        {/* Step number badge */}
-        {stepNumber !== undefined && (
-          <div className='flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#023572] to-[#EE183C] text-[10px] font-bold text-white'>
-            {stepNumber}
+        {/* Label badge */}
+        {label && (
+          <div className='flex h-auto min-h-5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#023572] to-[#EE183C] px-1.5 text-[10px] font-bold text-white'>
+            {label}
           </div>
         )}
         {isActive ? (

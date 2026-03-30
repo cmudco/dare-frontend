@@ -12,54 +12,62 @@ import {
   removeNodeWithEdges,
   setSelectedNodeId,
   updateNodeDataById,
-} from '@/redux/workflowBuilderSlice'
+  selectDisplayRun,
+  selectDisplayActiveNodeId,
+  selectIsWorkflowRunActive,
+} from '@/redux/workflowBuilder'
+import { EditableLabel } from '../components/EditableLabel'
 import { OutputDisplayMode } from '@/redux/types/workflowBuilder'
-import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
+import { getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { useCallback } from 'react'
 import { OutputNodeContent } from '../components/OutputNodeContent'
 
 export default function ChatOutputNode({ id, selected, data }: NodeProps) {
   const dispatch = useAppDispatch()
+  const outputData = data as { label?: string; isExpanded?: boolean }
 
-  const {
-    availableRuns,
-    selectedRunIds,
-    currentRun,
-    isRunning,
-    outputDisplayMode,
-  } = useAppSelector((s) => s.workflowBuilder)
+  const handleLabelChange = useCallback(
+    (newLabel: string) => {
+      dispatch(updateNodeDataById({ nodeId: id, newData: { label: newLabel } }))
+    },
+    [dispatch, id]
+  )
+
+  // Use batch-aware selectors so batch runs display correctly on the canvas
+  const displayRun = useAppSelector(selectDisplayRun)
+  const displayActiveNodeId = useAppSelector(selectDisplayActiveNodeId)
+  const isRunning = useAppSelector(selectIsWorkflowRunActive)
+  const outputDisplayMode = useAppSelector(
+    (s) => s.workflowBuilder.builder.outputDisplayMode
+  )
 
   const isNodesMode = outputDisplayMode === OutputDisplayMode.Nodes
 
-  const displayRun = getDisplayRun(
-    id,
-    selectedRunIds,
-    availableRuns,
-    currentRun
-  )
   const nodeState = getNodeState(displayRun, id)
 
   // Single source: response from nodeStates
   const response = nodeState?.response || null
   const hasResponse = Boolean(response?.trim())
 
-  // Streaming when this output node's status is running (propagated from source step)
+  // Streaming when this output node's source step is the active streaming node,
+  // or when this node's own status is Running (propagated from source step).
+  // displayActiveNodeId is batch-aware — it reflects the correct active node for
+  // both single runs and batch runs.
   const isStreaming =
     isNodesMode &&
     isRunning &&
-    nodeState?.status === WorkflowRunStepStatus.Running
+    (displayActiveNodeId === id ||
+      nodeState?.status === WorkflowRunStepStatus.Running)
 
-  // Status derivation
+  // Status derivation — prefer nodeState.status (propagated from source step)
   const status = (() => {
-    if (isStreaming) return WorkflowRunStepStatus.Running
-    if (hasResponse) return WorkflowRunStepStatus.Completed
-    if (isRunning) return WorkflowRunStepStatus.Pending
     if (nodeState?.status) return nodeState.status
+    if (isRunning) return WorkflowRunStepStatus.Pending
     return null
   })()
 
-  const isExpanded = (data?.isExpanded as boolean) ?? false
+  const isExpanded = outputData?.isExpanded ?? false
 
   // In nodes mode: auto-show when streaming
   // In panel mode: only show when manually expanded
@@ -148,7 +156,11 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
           <Send size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>Output</div>
+          <EditableLabel
+            value={outputData?.label ?? ''}
+            onChange={handleLabelChange}
+            placeholder='Name this node'
+          />
           <div className='node-subtitle'>{getSubtitle()}</div>
         </div>
         {hasResponse && (

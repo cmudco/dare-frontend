@@ -3,12 +3,7 @@ export { edgesChanged } from './edgesChanged'
 export { createNode } from './createNode'
 export { removeNodeById } from './removeNodeById'
 export { updateNodeData } from './updateNodeData'
-export {
-  isValidConnection,
-  getStartNode,
-  getMode,
-  getStepNumber,
-} from './isValidConnection'
+export { isValidConnection, getStartNode, getMode } from './isValidConnection'
 export { handleConnection } from './handleConnection'
 export { serializeWorkflow } from './serializeWorkflow'
 

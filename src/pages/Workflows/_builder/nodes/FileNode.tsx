@@ -1,11 +1,14 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { FileText, Settings, Trash2, Play } from 'lucide-react'
+import { useCallback } from 'react'
 
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
   setSelectedNodeId,
-} from '@/redux/workflowBuilderSlice'
+  updateNodeDataById,
+} from '@/redux/workflowBuilder'
+import { EditableLabel } from '../components/EditableLabel'
 import {
   HANDLE_NUMBERS,
   HANDLE_COLORS,
@@ -21,7 +24,7 @@ export interface FileNodeData {
   querySource?: string
   textInput?: string
   includeMetadata?: boolean
-  stepNumber?: number
+  label?: string
 }
 
 export default function FileNode({ id, data, selected }: NodeProps) {
@@ -29,8 +32,15 @@ export default function FileNode({ id, data, selected }: NodeProps) {
   const fileData = data as FileNodeData
   const dispatch = useAppDispatch()
 
-  const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const handleLabelChange = useCallback(
+    (newLabel: string) => {
+      dispatch(updateNodeDataById({ nodeId, newData: { label: newLabel } }))
+    },
+    [dispatch, nodeId]
+  )
+
+  const edges = useAppSelector((s) => s.workflowBuilder.builder.edges)
+  const nodes = useAppSelector((s) => s.workflowBuilder.builder.nodes)
   const files = useAppSelector((s) => s.files.files)
 
   const { statusClass, canRunStep, handleRunStep } =
@@ -47,8 +57,9 @@ export default function FileNode({ id, data, selected }: NodeProps) {
     )
   })
 
-  const fileCount = fileData?.files?.length || 0
-  const selectedFileNames = (fileData?.files || [])
+  const nodeFiles = fileData.files ?? []
+  const fileCount = nodeFiles.length
+  const selectedFileNames = nodeFiles
     .map((fId) => files.find((f) => f.id === fId)?.name)
     .filter(Boolean)
 
@@ -69,7 +80,7 @@ export default function FileNode({ id, data, selected }: NodeProps) {
   }
 
   const getRetrievalLabel = () => {
-    switch (fileData?.retrievalMode) {
+    switch (fileData.retrievalMode) {
       case RetrievalMode.Embeddings:
         return 'Embeddings'
       case RetrievalMode.Content:
@@ -124,7 +135,11 @@ export default function FileNode({ id, data, selected }: NodeProps) {
           <FileText size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>File {fileData?.stepNumber}</div>
+          <EditableLabel
+            value={fileData.label ?? ''}
+            onChange={handleLabelChange}
+            placeholder='Name this node'
+          />
           <div className='node-subtitle'>{getSubtitle()}</div>
         </div>
       </div>

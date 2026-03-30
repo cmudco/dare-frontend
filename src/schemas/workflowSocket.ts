@@ -7,10 +7,9 @@
  *
  * Event naming convention:
  *   - Backend sends snake_case event names (step_started, step_streaming, etc.)
- *   - Backend sends camelCase payload keys (nodeId, stepNumber, etc.)
- *   - workflow_status is an exception: it uses the DRF serializer which
- *     sends snake_case fields (started_at, workflow_title) because DRF
- *     camelCase middleware only applies to REST responses, not sockets.
+ *   - All payload keys are camelCase (nodeId, label, startedAt, etc.)
+ *   - Backend applies camelize() before socket emission, so the payload
+ *     format is identical to REST API responses.
  */
 
 import { z } from 'zod'
@@ -49,8 +48,8 @@ const WebSearchSourceSchema = z.object({
 
 const StepCompletedMetadataSchema = z
   .object({
-    snippets: z.array(SnippetSchema).optional(),
-    webSearchSources: z.array(WebSearchSourceSchema).optional(),
+    snippets: z.array(SnippetSchema).default([]),
+    webSearchSources: z.array(WebSearchSourceSchema).default([]),
   })
   .passthrough()
 
@@ -61,7 +60,7 @@ const StepCompletedMetadataSchema = z
 export const StepStartedSchema = z.object({
   type: z.literal('step_started'),
   nodeId: z.string(),
-  stepNumber: z.number(),
+  label: z.string().nullable().optional(),
   nodeType: z.string(),
   startedAt: z.string().optional(),
   workflowRunId: z.number().optional(),
@@ -138,7 +137,8 @@ export const BatchCompleteSchema = z.object({
 })
 
 // workflow_status: full WorkflowRunV2Serializer output.
-// Uses snake_case from DRF serializer (no camelCase middleware on sockets).
+// Backend applies camelize() before socket emission, so all keys are camelCase
+// — identical to REST response format.
 const PendingValidationSchema = z
   .object({
     nodeId: z.string(),
@@ -152,7 +152,6 @@ const PendingValidationSchema = z
 
 const NodeStateSchema = z
   .object({
-    nodeId: z.string(),
     stepId: z.number().nullable(),
     startedAt: z.string().nullable().optional(),
     nodeType: z.string(),
@@ -161,8 +160,8 @@ const NodeStateSchema = z
     error: z.string().nullable(),
     validationContext: z.unknown().nullable(),
     metadata: z.unknown().nullable(),
-    snippets: z.array(SnippetSchema).optional(),
-    webSearchSources: z.array(WebSearchSourceSchema).optional(),
+    snippets: z.array(SnippetSchema).default([]),
+    webSearchSources: z.array(WebSearchSourceSchema).default([]),
   })
   .passthrough()
 
@@ -171,13 +170,12 @@ export const WorkflowStatusSchema = z
     type: z.literal('workflow_status'),
     id: z.number(),
     status: z.string(),
-    // DRF serializer fields (snake_case — NOT auto-converted on sockets)
-    started_at: z.string().optional(),
-    ended_at: z.string().nullable().optional(),
-    workflow_title: z.string().optional(),
-    workflow_description: z.string().optional(),
-    is_partial: z.boolean().optional(),
-    // These fields use camelCase because they are SerializerMethodField names
+    // All fields are camelCase — backend applies camelize() before socket emission
+    startedAt: z.string().optional(),
+    endedAt: z.string().nullable().optional(),
+    workflowTitle: z.string().optional(),
+    workflowDescription: z.string().optional(),
+    isPartial: z.boolean().optional(),
     nodeStates: z.record(z.string(), NodeStateSchema).optional(),
     pendingValidation: PendingValidationSchema.optional(),
   })

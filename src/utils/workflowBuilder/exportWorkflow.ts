@@ -90,7 +90,7 @@ const sanitizeNodeData = (
   // Node-type specific sanitization
   switch (nodeType) {
     case 'step':
-      // Preserve: stepNumber, maxTokens, temperature, maxContextSnippets,
+      // Preserve: label, maxTokens, temperature, maxContextSnippets,
       // documentSimilarityThreshold, usePreviousStepFiles, usePreviousStepEmbeddings,
       // textInput, enableWebSearch
       break
@@ -100,11 +100,11 @@ const sanitizeNodeData = (
       break
 
     case 'chatOutput':
-      // Preserve: stepNumber, label
+      // Preserve: label
       break
 
     case 'structuredOutput':
-      // Preserve: routes, requireHumanValidation, stepNumber, textInput
+      // Preserve: routes, requireHumanValidation, label, textInput
       break
   }
 

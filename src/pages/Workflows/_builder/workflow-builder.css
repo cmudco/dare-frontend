@@ -297,6 +297,48 @@
     letter-spacing: -0.02em;
 }
 
+/* Editable label — click-to-edit inline text */
+.editable-label {
+    cursor: text;
+    border-radius: 3px;
+    padding: 0 2px;
+    min-width: 40px;
+}
+
+.editable-label:hover {
+    background: hsl(var(--muted) / 0.5);
+}
+
+.editable-label-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid hsl(var(--primary));
+    outline: none;
+    padding: 0 2px;
+    width: 100%;
+    min-width: 40px;
+}
+
+.editable-label-placeholder {
+    color: hsl(var(--muted-foreground));
+    font-style: italic;
+    font-weight: 400;
+}
+
+/* Inherit white text for editable labels when node is selected */
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label,
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label-input {
+    color: white;
+}
+
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label-input {
+    border-bottom-color: white;
+}
+
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
 .node-subtitle {
     font-size: 11px;
     color: hsl(var(--muted-foreground));
