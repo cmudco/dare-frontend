@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '@/redux/hooks'
 import { McpServer } from '@/redux/types/mcp'
+import { McpCatalogSlug } from '@/utils/constants/mcp'
 import { MCPServerLogo } from './MCPServerLogo'
 
 interface MCPServerCardProps {
@@ -13,9 +14,13 @@ interface MCPServerCardProps {
 const MCPServerCard = ({ server }: MCPServerCardProps) => {
   const navigate = useNavigate()
   const connections = useAppSelector((state) => state.mcp.connections)
+  const user = useAppSelector((state) => state.user.user)
 
   const connection = connections.find((c) => c.server.slug === server.slug)
-  const isConnected = connection?.hasCredentials
+  const isSyftboxCard = server.slug === McpCatalogSlug.SYFTBOX
+  const isConnected =
+    Boolean(connection?.hasCredentials) ||
+    (isSyftboxCard && Boolean(user?.isSyftboxFileStorage))
 
   return (
     <div
