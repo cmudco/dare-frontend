@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { Share2, X, Loader2, Users, Trash2, Globe, Lock } from 'lucide-react'
+import {
+  Share2,
+  X,
+  Loader2,
+  Users,
+  Trash2,
+  Globe,
+  Lock,
+  UsersRound,
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -17,6 +26,7 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { closeSharing } from '@/redux/sharingSlice'
 import {
   shareItem,
+  shareWithGroup,
   fetchRecipients,
   revokeShare,
   toggleEntityVisibility,
@@ -129,6 +139,23 @@ const SharingDialog: React.FC = () => {
     }
   }
 
+  const handleShareWithGroup = async () => {
+    if (!entity) return
+    try {
+      await dispatch(
+        shareWithGroup({
+          contentType: entity.type,
+          objectId: entity.id,
+          message,
+        })
+      ).unwrap()
+      toast.success('Shared with your access code group.')
+      dispatch(fetchRecipients({ type: entity.type, objectId: entity.id }))
+    } catch (error) {
+      toast.error((error as Error).message || 'Failed to share with group.')
+    }
+  }
+
   const handleToggleVisibility = async () => {
     if (!entity) return
     try {
@@ -156,7 +183,7 @@ const SharingDialog: React.FC = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-lg'>
+      <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-2xl'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <Share2 className='h-5 w-5 text-primary' />
@@ -167,8 +194,8 @@ const SharingDialog: React.FC = () => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className='space-y-6 py-4'>
-          {/* Visibility Section */}
+        <div className='space-y-4 py-4'>
+          {/* ── Tier 1: General Access ── */}
           <div className='flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4'>
             <div className='flex items-center gap-3'>
               <div className='rounded-full bg-background p-2'>
@@ -196,6 +223,37 @@ const SharingDialog: React.FC = () => {
             )}
           </div>
 
+          {/* ── Tier 2: Access Code Group ── */}
+          <div className='flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4'>
+            <div className='flex items-center gap-3'>
+              <div className='rounded-full bg-background p-2'>
+                <UsersRound className='h-5 w-5 text-primary' />
+              </div>
+              <div>
+                <p className='text-sm font-semibold'>Access Code Group</p>
+                <p className='text-xs text-muted-foreground'>
+                  Share with everyone who registered with your access code.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleShareWithGroup}
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <UsersRound className='mr-1.5 h-4 w-4' />
+              )}
+              Share with Group
+            </Button>
+          </div>
+
+          <div className='border-t border-border' />
+
+          {/* ── Tier 3: Individual People ── */}
           {/* Tabs for Sharing vs Managing */}
           <div className='flex border-b border-border'>
             <button
@@ -311,18 +369,32 @@ const SharingDialog: React.FC = () => {
                       key={recipient.id}
                       className='flex items-center justify-between rounded-md border border-border p-3 transition-colors hover:bg-muted/30'
                     >
-                      <div>
-                        <p className='text-sm font-medium'>{recipient.email}</p>
-                        <p className='text-[10px] text-muted-foreground'>
-                          Shared on{' '}
-                          {new Date(recipient.sharedAt).toLocaleDateString()}
-                        </p>
+                      <div className='flex items-center gap-2'>
+                        {recipient.isGroupShare ? (
+                          <UsersRound className='h-4 w-4 shrink-0 text-primary' />
+                        ) : null}
+                        <div>
+                          <p className='text-sm font-medium'>
+                            {recipient.isGroupShare
+                              ? `Access code group: ${recipient.groupAccessCode}`
+                              : recipient.email}
+                          </p>
+                          <p className='text-[10px] text-muted-foreground'>
+                            Shared on{' '}
+                            {new Date(recipient.sharedAt).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
                       <Button
                         variant='ghost'
                         size='sm'
                         onClick={() =>
-                          handleRevoke(recipient.id, recipient.email)
+                          handleRevoke(
+                            recipient.id,
+                            recipient.isGroupShare
+                              ? `group ${recipient.groupAccessCode}`
+                              : (recipient.email ?? '')
+                          )
                         }
                         className='text-destructive hover:bg-destructive/10 hover:text-destructive'
                         disabled={loading}

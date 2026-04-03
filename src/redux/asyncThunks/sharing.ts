@@ -5,10 +5,12 @@ import {
   getSharedWithMeAPI,
   revokeShareAPI,
   shareItemAPI,
+  shareWithAccessCodeGroupAPI,
 } from '@/api/sharing'
 import {
   ShareableEntityType,
   ShareRequest,
+  ShareWithGroupRequest,
   SharingEntity,
 } from '../types/sharing'
 import { AppDispatch } from '../store'
@@ -64,6 +66,17 @@ export const revokeShare = createAsyncThunk(
     try {
       await revokeShareAPI(shareId)
       return shareId
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const shareWithGroup = createAsyncThunk(
+  'sharing/shareWithGroup',
+  async (data: ShareWithGroupRequest, { rejectWithValue }) => {
+    try {
+      return await shareWithAccessCodeGroupAPI(data)
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }
