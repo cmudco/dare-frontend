@@ -85,6 +85,7 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          data-tour='dare-tools'
           variant='ghost'
           size='sm'
           disabled={disabled}
