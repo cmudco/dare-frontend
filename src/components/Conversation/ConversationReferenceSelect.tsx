@@ -1,11 +1,20 @@
-import React, { useState, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Check, MessageSquare, Search, Settings, X } from 'lucide-react'
+import {
+  Check,
+  FileText,
+  MessageSquare,
+  Search,
+  Settings,
+  X,
+} from 'lucide-react'
 import type { RootState, AppDispatch } from '@/redux/store'
 import {
   updateReferencedConversations,
   updateReferencedConversationHistoryLimit,
+  updateReferencedSummaries,
 } from '@/redux/conversationSlice'
+import { fetchConversationSummaries } from '@/redux/asyncThunks/conversation'
 import type { Conversation } from '@/redux/types/conversation'
 
 import { Button } from '../ui/button'
@@ -18,6 +27,8 @@ import {
 } from '../ui/popover'
 import { Slider } from '../ui/slider'
 import { Badge } from '../ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import ConversationSummarySelect from './ConversationSummarySelect'
 
 const ConversationReferenceSelect: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -33,10 +44,14 @@ const ConversationReferenceSelect: React.FC = () => {
   const referencedConversationHistoryLimit = useSelector(
     (state: RootState) => state.conversation.referencedConversationHistoryLimit
   )
+  const referencedSummaries = useSelector(
+    (state: RootState) => state.conversation.referencedSummaries
+  )
 
   const [open, setOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState('references')
 
   // Filter out the active conversation and filter by search query
   const filteredConversations = useMemo(() => {
@@ -69,6 +84,18 @@ const ConversationReferenceSelect: React.FC = () => {
     dispatch(updateReferencedConversations([]))
   }
 
+  const removeSummary = (summaryId: number) => {
+    dispatch(
+      updateReferencedSummaries(
+        referencedSummaries.filter((s) => s.id !== summaryId)
+      )
+    )
+  }
+
+  const clearAllSummaries = () => {
+    dispatch(updateReferencedSummaries([]))
+  }
+
   const handleHistoryLimitChange = (values: number[]) => {
     dispatch(updateReferencedConversationHistoryLimit(values[0]))
   }
@@ -77,7 +104,19 @@ const ConversationReferenceSelect: React.FC = () => {
     return conversation.title || 'New Chat'
   }
 
-  const selectedCount = referencedConversations.length
+  const selectedCount =
+    referencedConversations.length + referencedSummaries.length
+  const searchPlaceholder =
+    activeTab === 'references'
+      ? 'Search conversations...'
+      : 'Search summaries...'
+
+  useEffect(() => {
+    if (!open || activeTab !== 'summaries') {
+      return
+    }
+    dispatch(fetchConversationSummaries())
+  }, [activeTab, dispatch, open])
 
   return (
     <div className='flex items-center gap-1'>
@@ -98,168 +137,243 @@ const ConversationReferenceSelect: React.FC = () => {
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className='w-96 border border-border bg-popover p-4'>
+        <PopoverContent className='w-[430px] border border-border bg-popover p-4'>
           <div className='space-y-4'>
             <div className='flex items-center justify-between'>
               <h3 className='text-lg font-semibold text-foreground'>
-                Reference Conversations
+                Conversation Context
               </h3>
               <div className='flex items-center gap-2'>
-                {selectedCount > 0 && (
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={clearAllReferences}
-                    className='text-xs'
-                  >
-                    Clear All
-                  </Button>
-                )}
-                <SettingsPopover
-                  open={settingsOpen}
-                  onOpenChange={setSettingsOpen}
-                >
-                  <SettingsPopoverTrigger asChild>
-                    <Button variant='ghost' size='sm' className='p-2'>
-                      <Settings className='h-4 w-4' />
+                {activeTab === 'references' &&
+                  referencedConversations.length > 0 && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={clearAllReferences}
+                      className='text-xs'
+                    >
+                      Clear All
                     </Button>
-                  </SettingsPopoverTrigger>
-                  <SettingsPopoverContent className='w-80 border border-border bg-popover p-4'>
-                    <div className='space-y-4'>
-                      <h4 className='font-medium text-foreground'>
-                        Reference Settings
-                      </h4>
-
-                      <div className='space-y-2'>
-                        <div className='flex items-center justify-between'>
-                          <label className='text-sm font-medium text-foreground'>
-                            History Limit per Conversation
-                          </label>
-                          <span className='text-sm text-muted-foreground'>
-                            {referencedConversationHistoryLimit} messages
-                          </span>
-                        </div>
-
-                        <Slider
-                          value={[referencedConversationHistoryLimit]}
-                          min={1}
-                          max={20}
-                          step={1}
-                          onValueChange={handleHistoryLimitChange}
-                          className='my-4 cursor-pointer'
-                        />
-
-                        <div className='flex justify-between px-1 text-xs text-muted-foreground'>
-                          <span>1</span>
-                          <span>10</span>
-                          <span>20</span>
-                        </div>
-
-                        <p className='text-xs text-muted-foreground'>
-                          Controls how many recent messages to include from each
-                          referenced conversation.
-                        </p>
-                      </div>
-                    </div>
-                  </SettingsPopoverContent>
-                </SettingsPopover>
-              </div>
-            </div>
-
-            <div className='relative'>
-              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
-              <Input
-                placeholder='Search conversations...'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className='pl-10'
-              />
-            </div>
-
-            {selectedCount > 0 && (
-              <div className='space-y-2'>
-                <p className='text-sm font-medium text-foreground'>
-                  Referenced ({selectedCount}):
-                </p>
-                <div className='flex flex-wrap gap-1'>
-                  {referencedConversations.map((conversation) => (
-                    <Badge
-                      key={conversation.conversationId}
-                      variant='secondary'
-                      className='flex min-w-0 max-w-[180px] items-center gap-1 px-2 py-1'
+                  )}
+                {activeTab === 'summaries' &&
+                  referencedSummaries.length > 0 && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={clearAllSummaries}
+                      className='text-xs'
                     >
-                      <span className='min-w-0 max-w-[140px] truncate text-xs'>
-                        {getConversationTitle(conversation)}
-                      </span>
-                      <button
-                        onClick={() => handleToggleConversation(conversation)}
-                        className='ml-1 hover:text-destructive'
-                      >
-                        <X className='h-3 w-3' />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-              {filteredConversations.map((conversation) => {
-                const isReferenced = referencedConversations.some(
-                  (c) => c.conversationId === conversation.conversationId
-                )
-                return (
-                  <div
-                    key={conversation.conversationId}
-                    onClick={() => handleToggleConversation(conversation)}
-                    className={`flex cursor-pointer items-center rounded-md p-2 transition-colors ${
-                      isReferenced
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
-                        : 'hover:bg-gray-200 dark:hover:bg-white/10'
-                    }`}
+                      Clear All
+                    </Button>
+                  )}
+                {activeTab === 'references' && (
+                  <SettingsPopover
+                    open={settingsOpen}
+                    onOpenChange={setSettingsOpen}
                   >
-                    <div
-                      className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                        isReferenced
-                          ? 'border-primary bg-primary'
-                          : 'border-input hover:border-muted-foreground'
-                      }`}
-                    >
-                      {isReferenced && (
-                        <Check className='h-3 w-3 text-primary-foreground' />
-                      )}
-                    </div>
-                    <MessageSquare className='mr-2 h-4 w-4 text-muted-foreground' />
-                    <div className='min-w-0 flex-1'>
-                      <span
-                        className={`block overflow-hidden text-ellipsis whitespace-nowrap pr-2 text-sm ${
-                          isReferenced
-                            ? 'font-medium text-primary'
-                            : 'text-foreground'
-                        }`}
-                      >
-                        {getConversationTitle(conversation)}
-                      </span>
-                      <p className='text-xs text-muted-foreground'>
-                        {new Date(conversation.createdAt).toLocaleDateString()}
-                      </p>
+                    <SettingsPopoverTrigger asChild>
+                      <Button variant='ghost' size='sm' className='p-2'>
+                        <Settings className='h-4 w-4' />
+                      </Button>
+                    </SettingsPopoverTrigger>
+                    <SettingsPopoverContent className='w-80 border border-border bg-popover p-4'>
+                      <div className='space-y-4'>
+                        <h4 className='font-medium text-foreground'>
+                          Reference Settings
+                        </h4>
+
+                        <div className='space-y-2'>
+                          <div className='flex items-center justify-between'>
+                            <label className='text-sm font-medium text-foreground'>
+                              History Limit per Conversation
+                            </label>
+                            <span className='text-sm text-muted-foreground'>
+                              {referencedConversationHistoryLimit} messages
+                            </span>
+                          </div>
+
+                          <Slider
+                            value={[referencedConversationHistoryLimit]}
+                            min={1}
+                            max={20}
+                            step={1}
+                            onValueChange={handleHistoryLimitChange}
+                            className='my-4 cursor-pointer'
+                          />
+
+                          <div className='flex justify-between px-1 text-xs text-muted-foreground'>
+                            <span>1</span>
+                            <span>10</span>
+                            <span>20</span>
+                          </div>
+
+                          <p className='text-xs text-muted-foreground'>
+                            Controls how many recent messages to include from
+                            each referenced conversation.
+                          </p>
+                        </div>
+                      </div>
+                    </SettingsPopoverContent>
+                  </SettingsPopover>
+                )}
+              </div>
+            </div>
+
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className='w-full'
+            >
+              <TabsList className='grid w-full grid-cols-2 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-800/80'>
+                <TabsTrigger
+                  value='references'
+                  className='gap-2 rounded-lg text-xs'
+                >
+                  <MessageSquare className='h-4 w-4' />
+                  Reference Conversations
+                </TabsTrigger>
+                <TabsTrigger
+                  value='summaries'
+                  className='gap-2 rounded-lg text-xs'
+                >
+                  <FileText className='h-4 w-4' />
+                  Conversation Summaries
+                </TabsTrigger>
+              </TabsList>
+
+              <div className='relative mt-4'>
+                <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                <Input
+                  placeholder={searchPlaceholder}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className='rounded-xl pl-10'
+                />
+              </div>
+
+              <TabsContent value='references' className='mt-4 space-y-4'>
+                {selectedCount > 0 && (
+                  <div className='rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/50'>
+                    <p className='text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400'>
+                      Referenced ({selectedCount})
+                    </p>
+                    <div className='mt-2 flex flex-wrap gap-1.5'>
+                      {referencedConversations.map((conversation) => (
+                        <Badge
+                          key={conversation.conversationId}
+                          variant='secondary'
+                          className='flex min-w-0 max-w-[190px] items-center gap-1 px-2 py-1'
+                        >
+                          <span className='min-w-0 max-w-[145px] truncate text-xs'>
+                            {getConversationTitle(conversation)}
+                          </span>
+                          <button
+                            onClick={() =>
+                              handleToggleConversation(conversation)
+                            }
+                            className='ml-1 hover:text-destructive'
+                          >
+                            <X className='h-3 w-3' />
+                          </button>
+                        </Badge>
+                      ))}
                     </div>
                   </div>
-                )
-              })}
-              {filteredConversations.length === 0 && (
-                <p className='py-4 text-center text-muted-foreground'>
-                  {searchQuery
-                    ? 'No conversations match your search.'
-                    : 'No other conversations available.'}
-                </p>
-              )}
-            </div>
+                )}
 
-            <div className='border-t pt-2'>
+                <div className='max-h-[320px] space-y-2 overflow-y-auto pr-1'>
+                  {filteredConversations.map((conversation) => {
+                    const isReferenced = referencedConversations.some(
+                      (item) =>
+                        item.conversationId === conversation.conversationId
+                    )
+                    return (
+                      <div
+                        key={conversation.conversationId}
+                        onClick={() => handleToggleConversation(conversation)}
+                        className={`flex cursor-pointer items-center rounded-2xl border px-3 py-3 transition-colors ${
+                          isReferenced
+                            ? 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-700 dark:bg-blue-950/40 dark:text-white'
+                            : 'border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40 dark:hover:bg-slate-900'
+                        }`}
+                      >
+                        <div
+                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
+                            isReferenced
+                              ? 'border-primary bg-primary'
+                              : 'border-input hover:border-muted-foreground'
+                          }`}
+                        >
+                          {isReferenced && (
+                            <Check className='h-3 w-3 text-primary-foreground' />
+                          )}
+                        </div>
+                        <MessageSquare className='mr-3 h-4 w-4 text-muted-foreground' />
+                        <div className='min-w-0 flex-1'>
+                          <span
+                            className={`block truncate pr-2 text-sm ${
+                              isReferenced
+                                ? 'font-semibold text-primary'
+                                : 'text-foreground'
+                            }`}
+                          >
+                            {getConversationTitle(conversation)}
+                          </span>
+                          <p className='mt-1 text-xs text-muted-foreground'>
+                            {new Date(
+                              conversation.createdAt
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  {filteredConversations.length === 0 && (
+                    <p className='py-6 text-center text-sm text-muted-foreground'>
+                      {searchQuery
+                        ? 'No conversations match your search.'
+                        : 'No other conversations available.'}
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value='summaries' className='mt-4 space-y-4'>
+                {referencedSummaries.length > 0 && (
+                  <div className='rounded-2xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-950/30'>
+                    <p className='text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400'>
+                      Selected ({referencedSummaries.length})
+                    </p>
+                    <div className='mt-2 flex flex-wrap gap-1.5'>
+                      {referencedSummaries.map((summary) => (
+                        <Badge
+                          key={summary.id}
+                          variant='secondary'
+                          className='flex min-w-0 max-w-[190px] items-center gap-1 bg-blue-100 px-2 py-1 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200'
+                        >
+                          <span className='min-w-0 max-w-[145px] truncate text-xs'>
+                            {summary.conversationTitle || 'New Chat'}
+                          </span>
+                          <button
+                            onClick={() => removeSummary(summary.id)}
+                            className='ml-1 hover:text-destructive'
+                          >
+                            <X className='h-3 w-3' />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <ConversationSummarySelect searchQuery={searchQuery} />
+              </TabsContent>
+            </Tabs>
+
+            <div className='border-t border-slate-200 pt-3 dark:border-slate-700'>
               <p className='text-xs text-muted-foreground'>
-                Referenced conversations will provide context to help the AI
-                understand your conversation history.
+                {activeTab === 'references'
+                  ? 'Referenced conversations provide extra context for the current chat.'
+                  : 'Conversation summaries refresh after every 5 completed assistant responses in a conversation.'}
               </p>
             </div>
           </div>

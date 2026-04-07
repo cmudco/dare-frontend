@@ -39,6 +39,7 @@ import {
   updateConversationSortOrder,
   deleteMultipleConversations,
   cloneConversation,
+  toggleFavoriteConversation,
   forkConversation,
   fetchConversationMessages,
 } from '@/redux/asyncThunks/conversation'
@@ -48,6 +49,7 @@ import SortableConversationItem from './SortableConversationItem'
 import ForkConfirmDialog from '../shared/ForkConfirmDialog'
 import { openSharing } from '@/redux/sharingSlice'
 import { ShareableEntityType } from '@/redux/types/sharing'
+import { toast } from '@/utils/toast'
 import {
   filterConversations,
   createSortOrderUpdates,
@@ -225,6 +227,17 @@ const ConversationList: React.FC<ConversationListProps> = ({
     }
   }
 
+  const handleFavoriteClick = async (conversation: Conversation) => {
+    try {
+      await dispatch(
+        toggleFavoriteConversation(conversation.conversationId)
+      ).unwrap()
+    } catch (error) {
+      console.error('Error toggling favorite conversation:', error)
+      toast.error('Failed to update favorite status')
+    }
+  }
+
   const handleSharingClick = (conversation: Conversation) => {
     dispatch(
       openSharing({
@@ -339,6 +352,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       onConversationClick={handleConversationClick}
                       onEditClick={handleEditClick}
                       onCloneClick={handleCloneClick}
+                      onFavoriteClick={handleFavoriteClick}
                       onSharingClick={handleSharingClick}
                       onEditChange={handleEditChange}
                       onEditBlur={handleEditBlur}
