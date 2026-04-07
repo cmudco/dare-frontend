@@ -34,6 +34,7 @@ const PromptSet: React.FC = () => {
     <Dialog>
       <DialogTrigger asChild>
         <Button
+          data-tour='prompt-set'
           variant='ghost'
           className='h-9 w-9 p-0 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
         >

@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react'
 import ConversationHistory from './ConversationHistory'
 import ActiveConversation from './ActiveConversation'
+import ConversationTourOverlay from '@/components/ConversationTour'
+import { useConversationTourAutoTrigger } from '@/components/ConversationTour/useConversationTour'
 import { useAppDispatch } from '@/redux/hooks'
 import { getTags } from '@/redux/asyncThunks/tag'
 import { getFiles, getFolders } from '@/redux/asyncThunks/file'
@@ -16,6 +18,7 @@ import { useParams, useLocation } from 'react-router-dom'
 
 const ConversationLayout: React.FC = () => {
   const dispatch = useAppDispatch()
+  useConversationTourAutoTrigger()
   const { id } = useParams<{ id: string }>()
   const location = useLocation()
 
@@ -39,6 +42,7 @@ const ConversationLayout: React.FC = () => {
     <div className='flex h-full min-h-0 overflow-hidden'>
       <ActiveConversation />
       <ConversationHistory />
+      <ConversationTourOverlay />
     </div>
   )
 }

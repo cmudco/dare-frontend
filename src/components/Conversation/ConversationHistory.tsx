@@ -142,6 +142,7 @@ const ConversationHistory = () => {
 
   return (
     <div
+      data-tour='conversation-history'
       className={`relative flex h-full flex-col border border-pink-50 bg-white bg-clip-border text-gray-700 transition-all duration-300 dark:border-slate-800 dark:bg-dark-bg dark:text-white ${
         isCollapsed
           ? 'w-12 min-w-12 items-center border-l-0 p-2'
@@ -178,6 +179,7 @@ const ConversationHistory = () => {
             </div>
             {activeTab === ConversationTab.MINE && (
               <Button
+                data-tour='new-conversation'
                 onClick={handleCreateConversation}
                 className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl'
               >

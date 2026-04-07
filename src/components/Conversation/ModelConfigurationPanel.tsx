@@ -213,6 +213,7 @@ const ModelConfigurationPanel: React.FC = () => {
       <Popover>
         <PopoverTrigger asChild>
           <Button
+            data-tour='model-config'
             variant='ghost'
             className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
           >
