@@ -1,5 +1,6 @@
 import {
   Conversation,
+  ConversationSummaryResponse,
   ConversationResponse,
   ConversationSortOrder,
   LLMModel,
@@ -130,6 +131,23 @@ export const getSharedConversationsAPI =
       method: METHOD.GET,
     })
   }
+
+export const getConversationSummariesAPI =
+  async (): Promise<ConversationSummaryResponse> => {
+    return await baseRequest<ConversationSummaryResponse>({
+      url: 'api/conversation-summaries/',
+      method: METHOD.GET,
+    })
+  }
+
+export const toggleFavoriteConversationAPI = async (
+  conversationId: string
+): Promise<Conversation> => {
+  return await baseRequest<Conversation>({
+    url: `api/conversations/${conversationId}/favorite/`,
+    method: METHOD.POST,
+  })
+}
 
 export const publishConversationAPI = async (
   conversationId: string

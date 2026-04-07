@@ -15,7 +15,9 @@ import {
   updateConversationSelectedIds,
   updateConversationFeedbackTracking,
   deleteMessage,
+  fetchConversationSummaries,
   fetchSharedConversations,
+  toggleFavoriteConversation,
   publishConversation,
   forkConversation,
   fetchConversationMessages,
@@ -23,6 +25,7 @@ import {
 import {
   Message,
   Conversation,
+  ConversationSummary,
   LLMModel,
   ImageGenerationSettings,
   AudioTranscriptionSettings,
@@ -138,6 +141,12 @@ export const conversationSlice = createSlice({
       action: PayloadAction<number>
     ) {
       state.referencedConversationHistoryLimit = action.payload
+    },
+    updateReferencedSummaries(
+      state,
+      action: PayloadAction<ConversationSummary[]>
+    ) {
+      state.referencedSummaries = action.payload
     },
     toggleDropdown(state) {
       state.showDropdown = !state.showDropdown
@@ -523,6 +532,7 @@ export const conversationSlice = createSlice({
         state.loading = false
         state.conversations.unshift(action.payload)
         state.referencedConversations = []
+        state.referencedSummaries = []
       })
       .addCase(createConversation.rejected, (state, action) => {
         state.loading = false
@@ -739,6 +749,24 @@ export const conversationSlice = createSlice({
       // ─────────────────────────────────────────────────────────────────────
       .addCase(fetchSharedConversations.fulfilled, (state, action) => {
         state.sharedConversations = action.payload
+      })
+      .addCase(fetchConversationSummaries.fulfilled, (state, action) => {
+        state.conversationSummaries = action.payload
+      })
+      .addCase(toggleFavoriteConversation.fulfilled, (state, action) => {
+        const idx = state.conversations.findIndex(
+          (conversation) =>
+            conversation.conversationId === action.payload.conversationId
+        )
+        if (idx !== -1) {
+          state.conversations[idx] = action.payload
+        }
+        if (
+          state.activeConversation?.conversationId ===
+          action.payload.conversationId
+        ) {
+          state.activeConversation = action.payload
+        }
       })
       .addCase(publishConversation.fulfilled, (state, action) => {
         // Update in user's own conversations list
@@ -1081,6 +1109,7 @@ export const {
   clearSelectedConversations,
   updateReferencedConversations,
   updateReferencedConversationHistoryLimit,
+  updateReferencedSummaries,
   loadSelectedFilesFromIds,
   saveDraftForConversation,
   loadDraftForConversation,
