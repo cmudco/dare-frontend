@@ -20,7 +20,9 @@ const ModelItem: React.FC<ModelItemProps> = ({
   onClick,
   showProvider,
 }) => {
-  const colors = ModelTierColors[model.tier as ModelTier]
+  const colors =
+    ModelTierColors[model.tier as ModelTier] ??
+    ModelTierColors[ModelTier.Advanced]
   const brand = getProviderBrand(model.provider)
 
   return (

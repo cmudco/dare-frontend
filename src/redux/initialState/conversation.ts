@@ -8,6 +8,7 @@ import { DEFAULT_TRANSCRIPTION_SETTINGS } from '../../utils/constants/audioTrans
 
 export const initialState: ConversationState = {
   conversations: [],
+  conversationSummaries: [],
   activeConversation: null,
   loading: false,
   error: null,
@@ -22,6 +23,7 @@ export const initialState: ConversationState = {
   selectedConversations: [],
   referencedConversations: [],
   referencedConversationHistoryLimit: 10,
+  referencedSummaries: [],
   showDropdown: false,
   hoveredModel: null,
   conversationInput: '',
