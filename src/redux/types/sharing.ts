@@ -31,7 +31,9 @@ export interface SharedItem {
   contentType: ShareableEntityType
   objectId: string
   sharedByEmail: string
-  sharedWithEmail: string
+  sharedWithEmail: string | null
+  isGroupShare: boolean
+  groupAccessCode: string | null
   message: string
   entityTitle: string
   entityDescription: string
@@ -42,9 +44,17 @@ export interface SharedItem {
   createdAt: string
 }
 
+export interface ShareWithGroupRequest {
+  contentType: ShareableEntityType
+  objectId: string | number
+  message?: string
+}
+
 export interface ShareRecipient {
   id: number
-  email: string
+  email: string | null
+  isGroupShare: boolean
+  groupAccessCode: string | null
   sharedAt: string
 }
 
