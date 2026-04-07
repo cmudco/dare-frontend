@@ -31,6 +31,7 @@ import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
+import { getTags } from '@/redux/asyncThunks/tag'
 import {
   createOrUpdateWorkflow,
   getActivePartialRun,
@@ -308,6 +309,7 @@ const WorkflowEditPage = () => {
     dispatch(getFiles())
     dispatch(getPrompts())
     dispatch(getAvailableModels())
+    dispatch(getTags())
   }, [dispatch])
 
   // Clear any previous workflow state when component mounts
