@@ -6,6 +6,7 @@ import {
   fetchSharedWithMe,
   revokeShare,
   shareItem,
+  shareWithGroup,
   toggleEntityVisibility,
 } from './asyncThunks/sharing'
 
@@ -79,6 +80,24 @@ const sharingSlice = createSlice({
     })
     builder.addCase(fetchRecipients.rejected, (state, action) => {
       state.recipientsLoading = false
+      state.error = action.payload as string
+    })
+
+    // Share with access code group
+    builder.addCase(shareWithGroup.pending, (state) => {
+      state.loading = true
+      state.error = null
+    })
+    builder.addCase(shareWithGroup.fulfilled, (state, action) => {
+      state.loading = false
+      // Add the group share entry to recipients if not already present
+      const exists = state.recipients.some((r) => r.id === action.payload.id)
+      if (!exists) {
+        state.recipients = [action.payload, ...state.recipients]
+      }
+    })
+    builder.addCase(shareWithGroup.rejected, (state, action) => {
+      state.loading = false
       state.error = action.payload as string
     })
 

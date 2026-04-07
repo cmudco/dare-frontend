@@ -3,6 +3,7 @@ import {
   ShareRecipient,
   ShareRequest,
   ShareResponse,
+  ShareWithGroupRequest,
   SharedItem,
 } from '../redux/types/sharing'
 import { baseRequest } from '@/utils/requests'
@@ -52,5 +53,19 @@ export const revokeShareAPI = async (shareId: number): Promise<void> => {
   await baseRequest<void>({
     url: `api/sharing/${shareId}/`,
     method: METHOD.DELETE,
+  })
+}
+
+export const shareWithAccessCodeGroupAPI = async (
+  data: ShareWithGroupRequest
+): Promise<ShareRecipient> => {
+  return await baseRequest<ShareRecipient>({
+    url: 'api/sharing/share-with-group/',
+    method: METHOD.POST,
+    data: {
+      contentType: data.contentType,
+      objectId: data.objectId,
+      message: data.message,
+    },
   })
 }
