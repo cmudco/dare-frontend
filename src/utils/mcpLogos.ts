@@ -9,6 +9,7 @@
 const MCP_LOGOS: Record<string, string> = {
   slack: '/mcp-logos/slack.svg',
   github: '/mcp-logos/github.svg',
+  syftbox: '/mcp-logos/syftbox.svg',
 }
 
 /**

@@ -13,6 +13,7 @@ import {
 import { clearTestResult } from '@/redux/mcpSlice'
 import { CredentialSchema } from '@/redux/types/mcp'
 import { MCPToolCard, MCPServerLogo } from '@/components/MCP'
+import SyftBoxOtpConnect from '@/components/MCP/SyftBoxOtpConnect'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,6 +27,7 @@ import {
   ExternalLink,
   ArrowLeft,
 } from 'lucide-react'
+import { McpCatalogSlug } from '@/utils/constants/mcp'
 
 /**
  * MCPServerDetail - Server detail page with connection management and tools list
@@ -44,13 +46,17 @@ const MCPServerDetail = () => {
     testingConnection,
     testResult,
   } = useAppSelector((state) => state.mcp)
+  const user = useAppSelector((state) => state.user.user)
 
   const [credentials, setCredentials] = useState<Record<string, string>>({})
   const [showSetupGuide, setShowSetupGuide] = useState(false)
 
   const server = servers.find((s) => s.slug === serverSlug)
   const connection = connections.find((c) => c.server.slug === serverSlug)
-  const isConnected = connection?.hasCredentials
+  const isSyftboxServer = serverSlug === McpCatalogSlug.SYFTBOX
+  const isConnected =
+    Boolean(connection?.hasCredentials) ||
+    (isSyftboxServer && Boolean(user?.isSyftboxFileStorage))
   const tools = serverSlug ? toolsByServer[serverSlug] || [] : []
   const isLoadingTools = serverSlug ? toolsLoading[serverSlug] : false
 
@@ -198,84 +204,92 @@ const MCPServerDetail = () => {
             </div>
           )}
 
-          {/* Credential Form */}
-          <div className='space-y-4'>
-            {server.requiredCredentials.map((cred: CredentialSchema) => (
-              <div key={cred.key} className='space-y-2'>
-                <Label htmlFor={cred.key}>
-                  {cred.label}
-                  {cred.required && (
-                    <span className='ml-1 text-red-500'>*</span>
-                  )}
-                </Label>
-                <Input
-                  id={cred.key}
-                  type={cred.type === 'password' ? 'password' : 'text'}
-                  placeholder={cred.placeholder}
-                  value={credentials[cred.key] || ''}
-                  onChange={(e) =>
-                    handleCredentialChange(cred.key, e.target.value)
-                  }
-                />
-                {cred.helpText && (
-                  <p className='text-xs text-muted-foreground'>
-                    {cred.helpText}
-                  </p>
-                )}
+          {server.slug === McpCatalogSlug.SYFTBOX ? (
+            <SyftBoxOtpConnect serverName={server.name} />
+          ) : (
+            <>
+              {/* Credential Form */}
+              <div className='space-y-4'>
+                {server.requiredCredentials.map((cred: CredentialSchema) => (
+                  <div key={cred.key} className='space-y-2'>
+                    <Label htmlFor={cred.key}>
+                      {cred.label}
+                      {cred.required && (
+                        <span className='ml-1 text-red-500'>*</span>
+                      )}
+                    </Label>
+                    <Input
+                      id={cred.key}
+                      type={cred.type === 'password' ? 'password' : 'text'}
+                      placeholder={cred.placeholder}
+                      value={credentials[cred.key] || ''}
+                      onChange={(e) =>
+                        handleCredentialChange(cred.key, e.target.value)
+                      }
+                    />
+                    {cred.helpText && (
+                      <p className='text-xs text-muted-foreground'>
+                        {cred.helpText}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Test Result */}
-          {testResult && (
-            <div
-              className={`mt-4 flex items-center gap-2 rounded-md p-3 text-sm ${
-                testResult.success
-                  ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300'
-                  : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
-              }`}
-            >
-              {testResult.success ? (
-                <CheckCircle2 className='h-4 w-4' />
-              ) : (
-                <XCircle className='h-4 w-4' />
+              {/* Test Result */}
+              {testResult && (
+                <div
+                  className={`mt-4 flex items-center gap-2 rounded-md p-3 text-sm ${
+                    testResult.success
+                      ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300'
+                      : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
+                  }`}
+                >
+                  {testResult.success ? (
+                    <CheckCircle2 className='h-4 w-4' />
+                  ) : (
+                    <XCircle className='h-4 w-4' />
+                  )}
+                  {testResult.message}
+                </div>
               )}
-              {testResult.message}
-            </div>
+
+              {/* Actions */}
+              <div className='mt-6 flex gap-3'>
+                <Button
+                  variant='secondary'
+                  onClick={handleTestConnection}
+                  disabled={
+                    !allRequiredFilled ||
+                    testingConnection ||
+                    connectionsLoading
+                  }
+                >
+                  {testingConnection ? (
+                    <>
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      Testing...
+                    </>
+                  ) : (
+                    'Test Connection'
+                  )}
+                </Button>
+                <Button
+                  onClick={handleConnect}
+                  disabled={!allRequiredFilled || connectionsLoading}
+                >
+                  {connectionsLoading ? (
+                    <>
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      Connecting...
+                    </>
+                  ) : (
+                    'Connect'
+                  )}
+                </Button>
+              </div>
+            </>
           )}
-
-          {/* Actions */}
-          <div className='mt-6 flex gap-3'>
-            <Button
-              variant='secondary'
-              onClick={handleTestConnection}
-              disabled={
-                !allRequiredFilled || testingConnection || connectionsLoading
-              }
-            >
-              {testingConnection ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Testing...
-                </>
-              ) : (
-                'Test Connection'
-              )}
-            </Button>
-            <Button
-              onClick={handleConnect}
-              disabled={!allRequiredFilled || connectionsLoading}
-            >
-              {connectionsLoading ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Connecting...
-                </>
-              ) : (
-                'Connect'
-              )}
-            </Button>
-          </div>
         </div>
       )}
 
