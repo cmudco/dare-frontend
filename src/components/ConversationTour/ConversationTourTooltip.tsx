@@ -272,7 +272,7 @@ export default function ConversationTourTooltip({
               {/* Gradient progress track */}
               <div className='h-1 w-full overflow-hidden rounded-full bg-secondary/80'>
                 <motion.div
-                  className='h-full rounded-full bg-gradient-to-r from-primary to-rose-400'
+                  className='h-full rounded-full bg-dare-gradient'
                   animate={{ width: `${progressPercent}%` }}
                   transition={{ duration: 0.35, ease: 'easeOut' }}
                 />
@@ -322,7 +322,7 @@ export default function ConversationTourTooltip({
                   className='group relative overflow-hidden rounded-xl px-4 py-2 text-xs font-semibold text-white transition-all'
                 >
                   {/* Gradient background */}
-                  <span className='absolute inset-0 bg-gradient-to-r from-primary to-rose-500 transition-opacity group-hover:opacity-90' />
+                  <span className='absolute inset-0 bg-dare-gradient transition-opacity group-hover:opacity-90' />
                   {/* Shine sweep */}
                   <span className='absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 group-hover:translate-x-full' />
                   <span className='relative'>{isLast ? 'Finish' : 'Next'}</span>
