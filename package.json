@@ -45,6 +45,7 @@
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@uiw/react-md-editor": "^4.1.0",
     "@xyflow/react": "^12.0.3",
     "axios": "^1.7.9",
     "canvas-confetti": "^1.9.4",
