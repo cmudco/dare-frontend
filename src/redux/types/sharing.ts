@@ -58,6 +58,21 @@ export interface ShareRecipient {
   sharedAt: string
 }
 
+export interface GroupMember {
+  email: string
+  name: string
+}
+
+export interface MyGroupResponse {
+  hasGroup: boolean
+  group: {
+    id: number
+    accessCode: string
+    memberCount: number
+  } | null
+  members: GroupMember[]
+}
+
 export interface SharingEntity {
   type: ShareableEntityType
   id: string | number
@@ -76,4 +91,6 @@ export interface SharingState {
   isOpen: boolean
   entity: SharingEntity | null
   lastShareResult: ShareResponse | null
+  groupInfo: MyGroupResponse | null
+  groupInfoLoading: boolean
 }
