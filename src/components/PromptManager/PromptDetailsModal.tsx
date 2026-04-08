@@ -1,4 +1,5 @@
 import React from 'react'
+import MDEditor from '@uiw/react-md-editor'
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,8 @@ import { Button } from '../ui/button'
 import { Eye, Copy, User, Calendar, Hash } from 'lucide-react'
 import { PublishedPrompt } from '@/redux/types/prompt'
 import { formatDate } from '@/utils/constants/prompts'
+import { useColorMode } from '@/hooks/useColorMode'
+import { isHtmlContent, isPlainTextContent } from '@/utils/contentUtils'
 
 interface PromptDetailsModalProps {
   isOpen: boolean
@@ -25,6 +28,8 @@ const PromptDetailsModal: React.FC<PromptDetailsModalProps> = ({
   onClose,
   onClone,
 }) => {
+  const colorMode = useColorMode()
+
   if (!prompt) return null
 
   return (
@@ -98,10 +103,20 @@ const PromptDetailsModal: React.FC<PromptDetailsModalProps> = ({
               Prompt Content
             </p>
             <div className='max-h-80 overflow-y-auto rounded-lg border border-border bg-muted/20 p-4'>
-              <div
-                className='prose prose-sm max-w-none dark:prose-invert'
-                dangerouslySetInnerHTML={{ __html: prompt.content }}
-              />
+              {isHtmlContent(prompt.content) ? (
+                <div
+                  className='prose prose-sm max-w-none dark:prose-invert'
+                  dangerouslySetInnerHTML={{ __html: prompt.content }}
+                />
+              ) : isPlainTextContent(prompt.content) ? (
+                <pre className='whitespace-pre-wrap break-all font-mono text-sm text-foreground'>
+                  {prompt.content}
+                </pre>
+              ) : (
+                <div data-color-mode={colorMode}>
+                  <MDEditor.Markdown source={prompt.content} />
+                </div>
+              )}
             </div>
           </div>
         </div>

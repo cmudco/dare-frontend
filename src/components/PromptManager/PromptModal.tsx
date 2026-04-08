@@ -16,7 +16,7 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
-import Tiptap from '../Tiptap'
+import MarkdownEditor from '../MarkdownEditor'
 import { getUserData } from '@/redux/asyncThunks/user'
 import { Switch } from '@/components/ui/switch'
 
@@ -143,11 +143,12 @@ const PromptUploadModal: React.FC = () => {
                       : 'max-h-[50vh] overflow-y-scroll'
                   }
                 >
-                  <Tiptap
+                  <MarkdownEditor
                     content={values.content}
                     onChange={(newContent) =>
                       setFieldValue('content', newContent)
                     }
+                    placeholder='Enter prompt content...'
                   />
                 </div>
                 {errors.content && touched.content && (
