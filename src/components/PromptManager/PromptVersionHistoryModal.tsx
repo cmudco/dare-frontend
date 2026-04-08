@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import MDEditor from '@uiw/react-md-editor'
 import { Prompt } from '@/redux/types/prompt'
 import { formatDate } from '../../utils/constants/prompts'
 import {
@@ -9,6 +10,8 @@ import {
   DialogDescription,
 } from '../ui/dialog'
 import { Label } from '../ui/label'
+import { useColorMode } from '@/hooks/useColorMode'
+import { isHtmlContent, isPlainTextContent } from '@/utils/contentUtils'
 
 interface PromptVersionHistoryModalProps {
   versions: Prompt[]
@@ -22,6 +25,7 @@ const PromptVersionHistoryModal: React.FC<PromptVersionHistoryModalProps> = ({
   onClose,
 }) => {
   const [selectedVersion, setSelectedVersion] = useState<Prompt | null>(null)
+  const colorMode = useColorMode()
 
   useEffect(() => {
     if (isOpen && versions.length > 0) {
@@ -85,12 +89,28 @@ const PromptVersionHistoryModal: React.FC<PromptVersionHistoryModalProps> = ({
               </div>
               <div>
                 <Label>Content</Label>
-                <div
-                  className='max-h-[50vh] overflow-y-scroll rounded-md border bg-gray-100 p-2'
-                  dangerouslySetInnerHTML={{
-                    __html: selectedVersion.content || 'No content',
-                  }}
-                />
+                <div className='max-h-[50vh] overflow-y-auto rounded-md border bg-gray-100 p-2'>
+                  {selectedVersion.content ? (
+                    isHtmlContent(selectedVersion.content) ? (
+                      <div
+                        className='prose prose-sm max-w-none'
+                        dangerouslySetInnerHTML={{
+                          __html: selectedVersion.content,
+                        }}
+                      />
+                    ) : isPlainTextContent(selectedVersion.content) ? (
+                      <pre className='whitespace-pre-wrap break-all font-mono text-sm text-foreground'>
+                        {selectedVersion.content}
+                      </pre>
+                    ) : (
+                      <div data-color-mode={colorMode}>
+                        <MDEditor.Markdown source={selectedVersion.content} />
+                      </div>
+                    )
+                  ) : (
+                    <span className='text-sm text-gray-500'>No content</span>
+                  )}
+                </div>
               </div>
               <div>
                 <Label>Version</Label>
