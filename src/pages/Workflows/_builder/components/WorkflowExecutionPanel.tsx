@@ -30,7 +30,6 @@ import {
 } from '@/redux/workflowBuilder'
 import { workflowSocketSubscribe } from '@/redux/middleware/workflowSocketMiddleware'
 import { useAutoScroll } from '@/hooks/useAutoScroll'
-import 'katex/dist/katex.min.css'
 import 'highlight.js/styles/atom-one-light.css'
 import { ValidationPanel } from './ValidationPanel'
 import { ConnectionIndicator } from './ConnectionIndicator'
