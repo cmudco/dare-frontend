@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 import { SharingEntity, SharingState } from './types/sharing'
 import {
+  fetchMyGroup,
   fetchRecipients,
   fetchSharedWithMe,
   revokeShare,
@@ -19,6 +20,8 @@ const initialState: SharingState = {
   isOpen: false,
   entity: null,
   lastShareResult: null,
+  groupInfo: null,
+  groupInfoLoading: false,
 }
 
 const sharingSlice = createSlice({
@@ -41,6 +44,18 @@ const sharingSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // Fetch my group
+    builder.addCase(fetchMyGroup.pending, (state) => {
+      state.groupInfoLoading = true
+    })
+    builder.addCase(fetchMyGroup.fulfilled, (state, action) => {
+      state.groupInfoLoading = false
+      state.groupInfo = action.payload
+    })
+    builder.addCase(fetchMyGroup.rejected, (state) => {
+      state.groupInfoLoading = false
+    })
+
     // Share item
     builder.addCase(shareItem.pending, (state) => {
       state.loading = true

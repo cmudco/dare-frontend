@@ -51,6 +51,11 @@ export interface User {
   }
   billingMode?: string
   billingModeDisplay?: string
+  accessCodeGroup?: {
+    id: number
+    accessCode: string
+    memberCount: number
+  } | null
   // Avatar settings
   avatarType?: AvatarType
   avatarPreset?: string

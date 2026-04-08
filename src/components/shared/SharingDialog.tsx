@@ -8,6 +8,9 @@ import {
   Globe,
   Lock,
   UsersRound,
+  ChevronDown,
+  ChevronUp,
+  UserX,
 } from 'lucide-react'
 import {
   Dialog,
@@ -25,6 +28,7 @@ import { Switch } from '../ui/switch'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { closeSharing } from '@/redux/sharingSlice'
 import {
+  fetchMyGroup,
   shareItem,
   shareWithGroup,
   fetchRecipients,
@@ -35,13 +39,21 @@ import { toast } from '@/utils/toast'
 
 const SharingDialog: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { isOpen, entity, loading, recipients, recipientsLoading } =
-    useAppSelector((state) => state.sharing)
+  const {
+    isOpen,
+    entity,
+    loading,
+    recipients,
+    recipientsLoading,
+    groupInfo,
+    groupInfoLoading,
+  } = useAppSelector((state) => state.sharing)
 
   const [emailInput, setEmailInput] = useState('')
   const [emails, setEmails] = useState<string[]>([])
   const [message, setMessage] = useState('')
   const [activeTab, setActiveTab] = useState<'share' | 'manage'>('share')
+  const [groupExpanded, setGroupExpanded] = useState(false)
 
   useEffect(() => {
     if (isOpen && entity) {
@@ -51,14 +63,18 @@ const SharingDialog: React.FC = () => {
           objectId: entity.id,
         })
       )
+      dispatch(fetchMyGroup())
     }
   }, [isOpen, entity, dispatch])
+
+  const hasGroup = groupInfo?.hasGroup ?? false
 
   const handleClose = () => {
     setEmailInput('')
     setEmails([])
     setMessage('')
     setActiveTab('share')
+    setGroupExpanded(false)
     dispatch(closeSharing())
   }
 
@@ -224,31 +240,103 @@ const SharingDialog: React.FC = () => {
           </div>
 
           {/* ── Tier 2: Access Code Group ── */}
-          <div className='flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4'>
-            <div className='flex items-center gap-3'>
-              <div className='rounded-full bg-background p-2'>
-                <UsersRound className='h-5 w-5 text-primary' />
+          <div className='rounded-lg border border-border bg-muted/30'>
+            <div className='flex items-center justify-between p-4'>
+              <div className='flex items-center gap-3'>
+                <div className='rounded-full bg-background p-2'>
+                  {hasGroup ? (
+                    <UsersRound className='h-5 w-5 text-primary' />
+                  ) : (
+                    <UserX className='h-5 w-5 text-muted-foreground' />
+                  )}
+                </div>
+                <div>
+                  <p className='text-sm font-semibold'>Access Code Group</p>
+                  {groupInfoLoading ? (
+                    <p className='text-xs text-muted-foreground'>Loading...</p>
+                  ) : hasGroup ? (
+                    <p className='text-xs text-muted-foreground'>
+                      <span className='font-medium text-foreground'>
+                        {groupInfo!.group!.accessCode}
+                      </span>
+                      {' · '}
+                      {groupInfo!.group!.memberCount} member
+                      {groupInfo!.group!.memberCount !== 1 ? 's' : ''}
+                    </p>
+                  ) : (
+                    <p className='text-xs text-muted-foreground'>
+                      You are not part of an access code group.
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <p className='text-sm font-semibold'>Access Code Group</p>
-                <p className='text-xs text-muted-foreground'>
-                  Share with everyone who registered with your access code.
-                </p>
+              <div className='flex items-center gap-2'>
+                {hasGroup && (
+                  <>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => setGroupExpanded(!groupExpanded)}
+                      className='text-muted-foreground'
+                    >
+                      {groupExpanded ? (
+                        <ChevronUp className='h-4 w-4' />
+                      ) : (
+                        <ChevronDown className='h-4 w-4' />
+                      )}
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={handleShareWithGroup}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <Loader2 className='h-4 w-4 animate-spin' />
+                      ) : (
+                        <UsersRound className='mr-1.5 h-4 w-4' />
+                      )}
+                      Share with Group
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleShareWithGroup}
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className='h-4 w-4 animate-spin' />
-              ) : (
-                <UsersRound className='mr-1.5 h-4 w-4' />
-              )}
-              Share with Group
-            </Button>
+
+            {/* Expandable member list */}
+            {hasGroup && groupExpanded && (
+              <div className='border-t border-border px-4 pb-3 pt-2'>
+                <p className='mb-2 text-xs font-medium text-muted-foreground'>
+                  Group Members
+                </p>
+                {groupInfo!.members.length === 0 ? (
+                  <p className='text-xs text-muted-foreground'>
+                    No other members in this group yet.
+                  </p>
+                ) : (
+                  <div className='max-h-[150px] space-y-1.5 overflow-y-auto'>
+                    {groupInfo!.members.map((member) => (
+                      <div
+                        key={member.email}
+                        className='flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50'
+                      >
+                        <div className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-medium text-primary'>
+                          {member.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className='min-w-0'>
+                          <p className='truncate text-xs font-medium'>
+                            {member.name}
+                          </p>
+                          <p className='truncate text-[10px] text-muted-foreground'>
+                            {member.email}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className='border-t border-border' />

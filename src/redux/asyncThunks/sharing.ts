@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 
 import {
+  getMyGroupAPI,
   getRecipientsAPI,
   getSharedWithMeAPI,
   revokeShareAPI,
@@ -8,6 +9,7 @@ import {
   shareWithAccessCodeGroupAPI,
 } from '@/api/sharing'
 import {
+  MyGroupResponse,
   ShareableEntityType,
   ShareRequest,
   ShareWithGroupRequest,
@@ -66,6 +68,17 @@ export const revokeShare = createAsyncThunk(
     try {
       await revokeShareAPI(shareId)
       return shareId
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const fetchMyGroup = createAsyncThunk<MyGroupResponse>(
+  'sharing/fetchMyGroup',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await getMyGroupAPI()
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }
