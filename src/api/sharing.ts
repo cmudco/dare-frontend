@@ -1,4 +1,5 @@
 import {
+  MyGroupResponse,
   ShareableEntityType,
   ShareRecipient,
   ShareRequest,
@@ -53,6 +54,13 @@ export const revokeShareAPI = async (shareId: number): Promise<void> => {
   await baseRequest<void>({
     url: `api/sharing/${shareId}/`,
     method: METHOD.DELETE,
+  })
+}
+
+export const getMyGroupAPI = async (): Promise<MyGroupResponse> => {
+  return await baseRequest<MyGroupResponse>({
+    url: 'api/sharing/my-group/',
+    method: METHOD.GET,
   })
 }
 
