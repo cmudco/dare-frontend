@@ -121,7 +121,7 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
               <span>Delete</span>
             </DropdownMenuItem>
             {/* Sharing consolidated option */}
-            {features.enableSharing && (
+            {features.enableSharing && !workflow.isForked && (
               <DropdownMenuItem
                 onClick={() => onSharing?.(workflow)}
                 className='cursor-pointer'

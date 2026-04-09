@@ -148,17 +148,18 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                     /* My Conversations tab actions */
                     <>
                       {/* Sharing consolidated option */}
-                      {features.enableSharing && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onSharingClick?.(conversation)
-                          }}
-                        >
-                          <Share2 className='mr-2 h-4 w-4' />
-                          Sharing
-                        </DropdownMenuItem>
-                      )}
+                      {features.enableSharing &&
+                        conversation.canShare !== false && (
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onSharingClick?.(conversation)
+                            }}
+                          >
+                            <Share2 className='mr-2 h-4 w-4' />
+                            Sharing
+                          </DropdownMenuItem>
+                        )}
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation()
