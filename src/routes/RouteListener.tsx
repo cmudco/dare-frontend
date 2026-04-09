@@ -5,7 +5,7 @@ import { AppDispatch } from '../redux/store'
 import { resetError } from '../redux/userSlice'
 import { ReactNode } from 'react'
 import { updateActiveConversation } from '@/redux/conversationSlice'
-import { resetBuilder } from '@/redux/workflowBuilderSlice'
+import { resetBuilder } from '@/redux/workflowBuilder'
 
 interface RouteListenerProps {
   children: ReactNode

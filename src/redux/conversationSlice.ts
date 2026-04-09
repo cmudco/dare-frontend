@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialState } from './initialState/conversation'
 import {
   getConversations,
+  fetchConversationById,
   getAvailableModels,
   getAllModels,
   createConversation,
@@ -14,7 +15,9 @@ import {
   updateConversationSelectedIds,
   updateConversationFeedbackTracking,
   deleteMessage,
+  fetchConversationSummaries,
   fetchSharedConversations,
+  toggleFavoriteConversation,
   publishConversation,
   forkConversation,
   fetchConversationMessages,
@@ -22,6 +25,7 @@ import {
 import {
   Message,
   Conversation,
+  ConversationSummary,
   LLMModel,
   ImageGenerationSettings,
   AudioTranscriptionSettings,
@@ -138,6 +142,12 @@ export const conversationSlice = createSlice({
     ) {
       state.referencedConversationHistoryLimit = action.payload
     },
+    updateReferencedSummaries(
+      state,
+      action: PayloadAction<ConversationSummary[]>
+    ) {
+      state.referencedSummaries = action.payload
+    },
     toggleDropdown(state) {
       state.showDropdown = !state.showDropdown
     },
@@ -189,7 +199,11 @@ export const conversationSlice = createSlice({
       }
 
       // Sync available models and auto-select appropriate model
-      syncModelsWithImageGenerationState(state, action.payload)
+      syncModelsWithImageGenerationState(
+        state,
+        action.payload,
+        state.selectedModel
+      )
     },
     updateArtifactsEnabled(state, action: PayloadAction<boolean>) {
       // Update global and conversation-level state
@@ -280,7 +294,11 @@ export const conversationSlice = createSlice({
       }
 
       // Sync available models and auto-select appropriate model
-      syncModelsWithAudioTranscriptionState(state, action.payload)
+      syncModelsWithAudioTranscriptionState(
+        state,
+        action.payload,
+        state.selectedModel
+      )
     },
     updateAudioTranscriptionSettings(
       state,
@@ -315,7 +333,6 @@ export const conversationSlice = createSlice({
     },
     setAvailableModels(state, action: PayloadAction<LLMModel[]>) {
       state.availableModels = action.payload
-      state.selectedModel = action.payload[0]?.id
     },
     setAllModels(state, action: PayloadAction<LLMModel[]>) {
       state.allModels = action.payload
@@ -359,7 +376,7 @@ export const conversationSlice = createSlice({
       state.webSearchEnabled = false
       state.artifactsEnabled = false
 
-      // Reset to text models with appropriate selection
+      // Reset to text models — no auto-select (conversationModel is undefined → null)
       syncModelsWithImageGenerationState(state, false)
     },
     updateConversationOrder(state, action: PayloadAction<string[]>) {
@@ -500,7 +517,6 @@ export const conversationSlice = createSlice({
             (model) => !model.isImageGenerator && !model.isAudioTranscriber
           )
           state.availableModels = regularModels
-          state.selectedModel = regularModels[0]?.id
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
@@ -516,8 +532,28 @@ export const conversationSlice = createSlice({
         state.loading = false
         state.conversations.unshift(action.payload)
         state.referencedConversations = []
+        state.referencedSummaries = []
       })
       .addCase(createConversation.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(fetchConversationById.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchConversationById.fulfilled, (state, action) => {
+        state.loading = false
+        state.activeConversation = action.payload
+
+        const index = state.conversations.findIndex(
+          (conv) => conv.conversationId === action.payload.conversationId
+        )
+        if (index !== -1) {
+          state.conversations[index] = action.payload
+        }
+      })
+      .addCase(fetchConversationById.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })
@@ -713,6 +749,24 @@ export const conversationSlice = createSlice({
       // ─────────────────────────────────────────────────────────────────────
       .addCase(fetchSharedConversations.fulfilled, (state, action) => {
         state.sharedConversations = action.payload
+      })
+      .addCase(fetchConversationSummaries.fulfilled, (state, action) => {
+        state.conversationSummaries = action.payload
+      })
+      .addCase(toggleFavoriteConversation.fulfilled, (state, action) => {
+        const idx = state.conversations.findIndex(
+          (conversation) =>
+            conversation.conversationId === action.payload.conversationId
+        )
+        if (idx !== -1) {
+          state.conversations[idx] = action.payload
+        }
+        if (
+          state.activeConversation?.conversationId ===
+          action.payload.conversationId
+        ) {
+          state.activeConversation = action.payload
+        }
       })
       .addCase(publishConversation.fulfilled, (state, action) => {
         // Update in user's own conversations list
@@ -1055,6 +1109,7 @@ export const {
   clearSelectedConversations,
   updateReferencedConversations,
   updateReferencedConversationHistoryLimit,
+  updateReferencedSummaries,
   loadSelectedFilesFromIds,
   saveDraftForConversation,
   loadDraftForConversation,

@@ -1,10 +1,13 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { Brain, Settings, Copy, Trash2, Play } from 'lucide-react'
+import { Brain, Settings, Trash2, Play } from 'lucide-react'
+import { useCallback } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
   setSelectedNodeId,
-} from '@/redux/workflowBuilderSlice'
+  updateNodeDataById,
+} from '@/redux/workflowBuilder'
+import { EditableLabel } from '../components/EditableLabel'
 import {
   HANDLE_NUMBERS,
   HANDLE_COLORS,
@@ -16,9 +19,9 @@ export type StepNodeData = {
   agent: number | null
   prompt: number | null
   contentFiles: number[]
-  embeddingFiles: number[]
+  embeddingFiles?: number[]
+  tags?: number[]
   llm: number | null
-  stepNumber: number
   maxTokens?: number
   temperature?: number
   maxContextSnippets?: number
@@ -34,11 +37,18 @@ export type StepNodeData = {
 
 export default function StepNode({ id, data, selected }: NodeProps) {
   const nodeId = id as string
-  const stepData = data as StepNodeData
+  const stepData = data as StepNodeData & { label?: string }
   const dispatch = useAppDispatch()
 
-  const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
+  const handleLabelChange = useCallback(
+    (newLabel: string) => {
+      dispatch(updateNodeDataById({ nodeId, newData: { label: newLabel } }))
+    },
+    [dispatch, nodeId]
+  )
+
+  const edges = useAppSelector((s) => s.workflowBuilder.builder.edges)
+  const nodes = useAppSelector((s) => s.workflowBuilder.builder.nodes)
   const agents = useAppSelector((s) => s.agent.agents)
   const prompts = useAppSelector((s) => s.prompt.prompts)
 
@@ -70,11 +80,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
   const handleConfigure = (e: React.MouseEvent) => {
     e.stopPropagation()
     dispatch(setSelectedNodeId(nodeId))
-  }
-
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    // TODO: Implement duplicate
   }
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -121,13 +126,6 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             <Settings size={14} />
           </button>
           <button
-            className='quick-action-btn'
-            title='Duplicate'
-            onClick={handleDuplicate}
-          >
-            <Copy size={14} />
-          </button>
-          <button
             className='quick-action-btn danger'
             title='Delete'
             onClick={handleDelete}
@@ -143,7 +141,11 @@ export default function StepNode({ id, data, selected }: NodeProps) {
           <Brain size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>Step {stepData?.stepNumber}</div>
+          <EditableLabel
+            value={stepData?.label ?? ''}
+            onChange={handleLabelChange}
+            placeholder='Name this node'
+          />
           <div className='node-subtitle'>{getSubtitle()}</div>
         </div>
       </div>

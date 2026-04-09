@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+
 import { AppDispatch, RootState } from '@/redux/store'
 import {
   getAvailableModels,
@@ -23,16 +24,39 @@ import {
 } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ReasoningStatus, ReasoningStatusColors } from '@/utils/constants/model'
-import { CheckCircle, XCircle, FileText, ExternalLink } from 'lucide-react'
+import {
+  ReasoningStatus,
+  ReasoningStatusColors,
+  ModelTier,
+  ModelTierLabels,
+  ModelTierDescriptions,
+  ModelTierColors,
+  ModelTierOrder,
+} from '@/utils/constants/model'
+import {
+  CheckCircle,
+  Crown,
+  FileText,
+  ExternalLink,
+  Sparkles,
+  XCircle,
+  Zap,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { getSlugFromModelName, hasModelCardData } from '@/utils/modelCard'
+
+const tierIcons = {
+  [ModelTier.Premium]: Crown,
+  [ModelTier.Advanced]: Sparkles,
+  [ModelTier.Flash]: Zap,
+}
 
 const Help = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { allModels, loading, error } = useSelector(
     (state: RootState) => state.conversation
   )
+  const [activeTier, setActiveTier] = useState<ModelTier | null>(null)
 
   useEffect(() => {
     dispatch(getAvailableModels())
@@ -45,6 +69,18 @@ const Help = () => {
       typeof value === 'string' ? parseFloat(value) : Number(value)
     return isNaN(numValue) ? '-' : `$${numValue.toFixed(2)}`
   }
+
+  const tierGroups = useMemo(() => {
+    return ModelTierOrder.map((tier) => ({
+      tier,
+      models: allModels.filter((model) => model.tier === tier),
+    })).filter((group) => group.models.length > 0)
+  }, [allModels])
+
+  const displayedGroups = useMemo(() => {
+    if (!activeTier) return tierGroups
+    return tierGroups.filter((g) => g.tier === activeTier)
+  }, [tierGroups, activeTier])
 
   if (loading) {
     return (
@@ -147,11 +183,13 @@ const Help = () => {
           </CardContent>
         </Card>
 
+        {/* Available AI Models */}
         <div className='mt-4'>
           <h2 className='mb-4 text-2xl font-semibold tracking-tight'>
             Available AI Models
           </h2>
         </div>
+
         {allModels.length === 0 ? (
           <div className='rounded-lg border border-gray-200 bg-gray-50 p-8 text-center'>
             <p className='text-gray-500'>
@@ -159,107 +197,202 @@ const Help = () => {
             </p>
           </div>
         ) : (
-          <Card className='overflow-hidden shadow-md'>
-            <CardHeader>
-              <CardTitle className='text-xl'>Model Details</CardTitle>
-              <CardDescription>
-                Detailed information about the AI models currently available in
-                the platform.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='p-0'>
-              <Table>
-                <TableHeader className=''>
-                  <TableRow>
-                    <TableHead className='font-semibold'>Name</TableHead>
-                    <TableHead className='font-semibold'>Identifier</TableHead>
-                    <TableHead className='font-semibold'>Description</TableHead>
-                    <TableHead className='text-left font-semibold'>
-                      <div className='flex flex-col items-start'>
-                        <span>Input Tokens</span>
-                        <span className='text-xs text-muted-foreground'>
-                          Per Million
-                        </span>
-                      </div>
-                    </TableHead>
+          <>
+            {/* Tier filter pills */}
+            <div className='flex flex-wrap items-center gap-2'>
+              <button
+                onClick={() => setActiveTier(null)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+                  activeTier === null
+                    ? 'bg-foreground text-background shadow-sm'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                }`}
+              >
+                All Tiers
+                <span className='ml-1.5 text-xs opacity-70'>
+                  {allModels.length}
+                </span>
+              </button>
+              {ModelTierOrder.map((tier) => {
+                const count = allModels.filter((m) => m.tier === tier).length
+                if (count === 0) return null
+                const colors = ModelTierColors[tier]
+                const TierIcon = tierIcons[tier]
+                const isActive = activeTier === tier
 
-                    <TableHead className='text-left font-semibold'>
-                      <div className='flex flex-col items-start'>
-                        <span>Output Tokens</span>
-                        <span className='text-xs text-muted-foreground'>
-                          Per Million
-                        </span>
-                      </div>
-                    </TableHead>
+                return (
+                  <button
+                    key={tier}
+                    onClick={() => setActiveTier(isActive ? null : tier)}
+                    className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+                      isActive
+                        ? `${colors.bg} ${colors.text} ring-1 ${colors.ring} shadow-sm`
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                    }`}
+                  >
+                    <TierIcon className='h-3.5 w-3.5' />
+                    {ModelTierLabels[tier]}
+                    <span className='text-xs opacity-70'>{count}</span>
+                  </button>
+                )
+              })}
+            </div>
 
-                    <TableHead className='font-semibold'>
-                      Reasoning Model
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {allModels.map((model: LLMModel) => {
-                    const reasoningStatus = model.isReasoning
-                      ? ReasoningStatus.Yes
-                      : ReasoningStatus.No
-                    const statusColors = ReasoningStatusColors[reasoningStatus]
+            {/* Tier sections */}
+            <div className='mt-4 space-y-6'>
+              {displayedGroups.map((group) => {
+                const colors = ModelTierColors[group.tier]
+                const TierIcon = tierIcons[group.tier]
 
-                    return (
-                      <TableRow
-                        key={model.id}
-                        className='hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                      >
-                        <TableCell className='font-medium'>
-                          {hasModelCardData(model.name) ? (
-                            <Link
-                              to={`/models/${getSlugFromModelName(model.name)}`}
-                              className='text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300'
-                            >
-                              {model.name}
-                            </Link>
-                          ) : (
-                            model.name
-                          )}
-                        </TableCell>
-                        <TableCell className='font-mono text-sm'>
-                          {model.identifier || 'N/A'}
-                        </TableCell>
-                        <TableCell className='max-w-xs'>
-                          {model.description || 'No description available.'}
-                        </TableCell>
-                        <TableCell className='text-left font-mono'>
-                          {formatCurrency(model.inputTokenRatePerMillion)}
-                        </TableCell>
-                        <TableCell className='text-left font-mono'>
-                          {formatCurrency(model.outputTokenRatePerMillion)}
-                        </TableCell>
-                        <TableCell>
-                          <div className='flex items-center'>
-                            <Badge
-                              variant='outline'
-                              className={`flex items-center gap-1 ${statusColors.bg} ${statusColors.text} ${statusColors.border}`}
-                            >
-                              {model.isReasoning ? (
-                                <CheckCircle
-                                  className={`h-3.5 w-3.5 ${statusColors.icon}`}
-                                />
-                              ) : (
-                                <XCircle
-                                  className={`h-3.5 w-3.5 ${statusColors.icon}`}
-                                />
-                              )}
-                              {reasoningStatus}
-                            </Badge>
+                return (
+                  <Card
+                    key={group.tier}
+                    className={`overflow-hidden border shadow-md ${colors.border}`}
+                  >
+                    {/* Tier header with gradient accent */}
+                    <div
+                      className={`bg-gradient-to-r ${colors.gradient} border-b ${colors.border} px-6 py-4`}
+                    >
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center gap-3'>
+                          <div
+                            className={`flex h-8 w-8 items-center justify-center rounded-lg ${colors.bg}`}
+                          >
+                            <TierIcon className={`h-4 w-4 ${colors.icon}`} />
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                          <div>
+                            <h3
+                              className={`text-base font-semibold ${colors.text}`}
+                            >
+                              {ModelTierLabels[group.tier]}
+                            </h3>
+                            <p className='text-xs text-muted-foreground'>
+                              {ModelTierDescriptions[group.tier]}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant='outline'
+                          className={`${colors.bg} ${colors.text} ${colors.border}`}
+                        >
+                          {group.models.length}{' '}
+                          {group.models.length === 1 ? 'model' : 'models'}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* Model table */}
+                    <CardContent className='p-0'>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className='font-semibold'>
+                              Name
+                            </TableHead>
+                            <TableHead className='font-semibold'>
+                              Identifier
+                            </TableHead>
+                            <TableHead className='font-semibold'>
+                              Description
+                            </TableHead>
+                            <TableHead className='text-left font-semibold'>
+                              <div className='flex flex-col items-start'>
+                                <span>Input</span>
+                                <span className='text-xs font-normal text-muted-foreground'>
+                                  $/1M tokens
+                                </span>
+                              </div>
+                            </TableHead>
+                            <TableHead className='text-left font-semibold'>
+                              <div className='flex flex-col items-start'>
+                                <span>Output</span>
+                                <span className='text-xs font-normal text-muted-foreground'>
+                                  $/1M tokens
+                                </span>
+                              </div>
+                            </TableHead>
+                            <TableHead className='font-semibold'>
+                              Reasoning
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {group.models.map((model: LLMModel) => {
+                            const reasoningStatus = model.isReasoning
+                              ? ReasoningStatus.Yes
+                              : ReasoningStatus.No
+                            const statusColors =
+                              ReasoningStatusColors[reasoningStatus]
+
+                            return (
+                              <TableRow
+                                key={model.id}
+                                className='transition-colors hover:bg-accent/30'
+                              >
+                                <TableCell className='font-medium'>
+                                  <div className='flex items-center gap-2'>
+                                    <span
+                                      className={`h-2 w-2 shrink-0 rounded-full ${colors.dot}`}
+                                    />
+                                    {hasModelCardData(model.name) ? (
+                                      <Link
+                                        to={`/models/${getSlugFromModelName(model.name)}`}
+                                        className='text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300'
+                                      >
+                                        {model.name}
+                                      </Link>
+                                    ) : (
+                                      model.name
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell className='font-mono text-xs text-muted-foreground'>
+                                  {model.identifier || 'N/A'}
+                                </TableCell>
+                                <TableCell className='max-w-xs text-sm text-muted-foreground'>
+                                  {model.description ||
+                                    'No description available.'}
+                                </TableCell>
+                                <TableCell className='text-left font-mono text-sm'>
+                                  {formatCurrency(
+                                    model.inputTokenRatePerMillion
+                                  )}
+                                </TableCell>
+                                <TableCell className='text-left font-mono text-sm'>
+                                  {formatCurrency(
+                                    model.outputTokenRatePerMillion
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge
+                                    variant='outline'
+                                    className={`flex w-fit items-center gap-1 ${statusColors.bg} ${statusColors.text} ${statusColors.border}`}
+                                  >
+                                    {model.isReasoning ? (
+                                      <CheckCircle
+                                        className={`h-3 w-3 ${statusColors.icon}`}
+                                      />
+                                    ) : (
+                                      <XCircle
+                                        className={`h-3 w-3 ${statusColors.icon}`}
+                                      />
+                                    )}
+                                    {reasoningStatus}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </>
         )}
+
         <div className='rounded-lg border border-blue-100 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30'>
           <h2 className='mb-2 font-semibold text-blue-800 dark:text-blue-300'>
             About Model Token Rates

@@ -9,6 +9,7 @@ export interface Prompt {
   parent?: number
   isDefault?: boolean
   isPublished?: boolean
+  canShare?: boolean
 }
 
 export interface PublishedPrompt {

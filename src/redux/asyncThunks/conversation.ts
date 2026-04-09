@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   Conversation,
+  ConversationSummary,
   ConversationSortOrder,
   Message,
   MessageReaction,
@@ -10,6 +11,7 @@ import {
   getAllModelsAPI,
   createConversationAPI,
   getConversationsAPI,
+  getConversationAPI,
   deleteConversationAPI,
   updateConversationAPI,
   updateMessageAPI,
@@ -17,7 +19,9 @@ import {
   deleteMultipleConversationsAPI,
   cloneConversationAPI,
   deleteMessageAPI,
+  getConversationSummariesAPI,
   getSharedConversationsAPI,
+  toggleFavoriteConversationAPI,
   publishConversationAPI,
   forkConversationAPI,
   getConversationMessagesAPI,
@@ -67,6 +71,18 @@ export const getConversations = createAsyncThunk(
     }
   }
 )
+
+export const fetchConversationById = createAsyncThunk<
+  Conversation,
+  string,
+  { rejectValue: string }
+>('conversation/fetchConversationById', async (conversationId, thunkAPI) => {
+  try {
+    return await getConversationAPI(conversationId)
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
 
 export const createConversation = createAsyncThunk<
   Conversation,
@@ -265,6 +281,34 @@ export const fetchSharedConversations = createAsyncThunk<
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })
+
+export const fetchConversationSummaries = createAsyncThunk<
+  ConversationSummary[],
+  void,
+  { rejectValue: string }
+>('conversation/fetchConversationSummaries', async (_, thunkAPI) => {
+  try {
+    const response = await getConversationSummariesAPI()
+    return response.results
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const toggleFavoriteConversation = createAsyncThunk<
+  Conversation,
+  string,
+  { rejectValue: string }
+>(
+  'conversation/toggleFavoriteConversation',
+  async (conversationId, thunkAPI) => {
+    try {
+      return await toggleFavoriteConversationAPI(conversationId)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
 
 export const publishConversation = createAsyncThunk<
   Conversation,

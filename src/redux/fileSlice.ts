@@ -13,6 +13,10 @@ import {
   removeFileFromFolder,
   uploadFolder,
   updateFileTags,
+  getSharedFiles,
+  importSharedFile,
+  shareFileWithUser,
+  togglePublicShare,
 } from './asyncThunks/file'
 import { initialState } from './initialState/files'
 import { MediaTypeFilter } from './types/files'
@@ -94,6 +98,20 @@ const fileSlice = createSlice({
     },
     setMediaTypeFilter: (state, action: PayloadAction<MediaTypeFilter>) => {
       state.mediaTypeFilter = action.payload
+    },
+    setActiveTab: (state, action: PayloadAction<'my-files' | 'shared'>) => {
+      state.activeTab = action.payload
+    },
+    openShareModal: (
+      state,
+      action: PayloadAction<{ id: number; name: string }>
+    ) => {
+      state.shareModalFileId = action.payload.id
+      state.shareModalFileName = action.payload.name
+    },
+    closeShareModal: (state) => {
+      state.shareModalFileId = null
+      state.shareModalFileName = ''
     },
   },
   extraReducers: (builder) => {
@@ -293,6 +311,64 @@ const fileSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
+      .addCase(getSharedFiles.pending, (state) => {
+        state.sharedFilesLoading = true
+        state.sharedFilesError = null
+      })
+      .addCase(getSharedFiles.fulfilled, (state, action) => {
+        state.sharedFilesLoading = false
+        state.sharedFiles = action.payload.results
+      })
+      .addCase(getSharedFiles.rejected, (state, action) => {
+        state.sharedFilesLoading = false
+        state.sharedFilesError = action.payload as string
+      })
+      .addCase(importSharedFile.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(importSharedFile.fulfilled, (state) => {
+        state.loading = false
+      })
+      .addCase(importSharedFile.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(shareFileWithUser.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(shareFileWithUser.fulfilled, (state, action) => {
+        state.loading = false
+        const fileId = action.payload
+        const index = state.files.findIndex((file) => file.id === fileId)
+        if (index !== -1) {
+          state.files[index].isSharedByMe = true
+        }
+      })
+      .addCase(shareFileWithUser.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(togglePublicShare.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(togglePublicShare.fulfilled, (state, action) => {
+        state.loading = false
+        const updatedFile = action.payload
+        const index = state.files.findIndex(
+          (file) => file.id === updatedFile.id
+        )
+        if (index !== -1) {
+          state.files[index].isSharedPublicly = updatedFile.isSharedPublicly
+          state.files[index].isSharedByMe = true
+        }
+      })
+      .addCase(togglePublicShare.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
   },
 })
 
@@ -317,6 +393,9 @@ export const {
   openMoveModal,
   closeMoveModal,
   setMediaTypeFilter,
+  setActiveTab,
+  openShareModal,
+  closeShareModal,
 } = fileSlice.actions
 
 export default fileSlice.reducer

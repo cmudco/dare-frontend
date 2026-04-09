@@ -2,10 +2,7 @@ import { type NodeProps } from '@xyflow/react'
 import { StickyNote, Trash2 } from 'lucide-react'
 
 import { useAppDispatch } from '@/redux/hooks'
-import {
-  removeNodeWithEdges,
-  setSelectedNodeId,
-} from '@/redux/workflowBuilderSlice'
+import { removeNodeWithEdges, setSelectedNodeId } from '@/redux/workflowBuilder'
 
 interface NotesNodeData {
   content?: string

@@ -9,7 +9,7 @@ import agentReducer from './agentSlice'
 import websocketReducer from './websocketSlice'
 import tagsReducer from './tagslice'
 import workflowReducer from './workflowSlice'
-import workflowBuilderReducer from './workflowBuilderSlice'
+import workflowBuilderReducer from './workflowBuilder'
 import billingReducer from './billingSlice'
 import themeReducer from './themeSlice'
 import notificationReducer from './notificationSlice'
@@ -20,6 +20,7 @@ import dareToolsReducer from './dareToolsSlice'
 import memoryReducer from './memorySlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
+import sharingReducer from './sharingSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
@@ -50,6 +51,7 @@ export const store = configureStore({
     mcp: mcpReducer,
     dareTools: dareToolsReducer,
     memory: memoryReducer,
+    sharing: sharingReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware

@@ -6,7 +6,6 @@ import {
   cloneWorkflow,
   getWorkflows,
   updateWorkflowDisplayOrder,
-  publishWorkflow,
   forkWorkflow,
 } from '../../redux/asyncThunks/workflow'
 import { WORKFLOWS_TABLE_HEAD } from '../../utils/constants/workflows'
@@ -28,7 +27,6 @@ import {
 import { GripVertical } from 'lucide-react'
 import SortableWorkflowRow from './SortableWorkflowRow'
 import ForkConfirmDialog from '../shared/ForkConfirmDialog'
-import { toast } from '@/utils/toast'
 import {
   useDragSensors,
   createDisplayOrderUpdates,
@@ -65,6 +63,8 @@ import { WorkflowTableProps } from '@/redux/types/workflow'
 import { SortDirectionEnum } from '@/utils/constants/sort'
 import { Workflow } from '@/redux/types/workflow'
 import { features } from '@/config/environment'
+import { openSharing } from '@/redux/sharingSlice'
+import { ShareableEntityType } from '@/redux/types/sharing'
 
 const LIBRARY_TABLE_HEAD = [
   'Title',
@@ -160,21 +160,17 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
     })
   }
 
-  const handlePublish = async (id: number) => {
-    try {
-      await dispatch(publishWorkflow(id)).unwrap()
-    } catch (error) {
-      console.error('Error publishing workflow:', error)
-      // Show user-friendly error message for forked workflows
-      const errorMessage = typeof error === 'string' ? error : String(error)
-      if (errorMessage.includes('forked')) {
-        toast.error(
-          'Cannot publish forked workflows. Only original workflows can be published.'
-        )
-      } else {
-        toast.error('Failed to publish workflow')
-      }
-    }
+  const handleSharing = (workflow: Workflow) => {
+    dispatch(
+      openSharing({
+        type: ShareableEntityType.Workflow,
+        id: workflow.id,
+        title: workflow.title || 'Untitled',
+        isPublished: !!workflow.isPublished,
+        canPublish: !workflow.isForked,
+        isForked: !!workflow.isForked,
+      })
+    )
   }
 
   const handleForkClick = (id: number, title: string) => {
@@ -435,7 +431,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                     onEdit={handleEdit}
                     onClone={handleClone}
                     onDelete={handleDelete}
-                    onPublish={handlePublish}
+                    onSharing={handleSharing}
                   />
                 ))
               )}

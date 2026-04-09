@@ -3,6 +3,7 @@ import {
   FeedbackType,
   ConversationTab,
 } from '@/utils/constants/conversation'
+import type { RelatableStats } from '@/redux/types/billing'
 import { ToolCallStatus, MessageContentType } from '@/utils/constants/dareTools'
 import type {
   ImageSizeType,
@@ -51,11 +52,13 @@ export interface Conversation {
   feedbackAutoPromptCount?: number // How many auto-prompts have been shown
   feedbackLastPromptMessageCount?: number // Message # when last shown
   feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
+  isFavorite?: boolean
   // Sharing fields
   isPublished?: boolean
   publishedAt?: string | null
   isOwner?: boolean
   isForked?: boolean // True if this conversation was forked from another user
+  canShare?: boolean
   ownerEmail?: string | null
   ownerUserId?: number | null // Owner's user ID for shared conversations (to fetch their files)
   fileOwnerId?: number | null // Original file owner's user ID for forked conversations
@@ -82,6 +85,10 @@ export interface Message {
   cost?: string | null
   inputTokens?: number | null
   outputTokens?: number | null
+  energyWh?: string | null
+  carbonG?: string | null
+  waterMl?: string | null
+  energyStats?: RelatableStats | null
   generatedImage?: GeneratedImage
   generatedTranscription?: GeneratedTranscription
   artifactId?: number
@@ -176,6 +183,7 @@ export interface LLMModel {
   isAudioTranscriber?: boolean
   inputTokenRatePerMillion: number
   outputTokenRatePerMillion: number
+  tier: string
 }
 
 export interface Snippet {
@@ -222,6 +230,7 @@ export interface AudioTranscriptionSettings {
 
 export interface ConversationState {
   conversations: Conversation[]
+  conversationSummaries: ConversationSummary[]
   activeConversation: Conversation | null
   loading: boolean
   error: string | null
@@ -236,6 +245,7 @@ export interface ConversationState {
   selectedConversations: string[]
   referencedConversations: Conversation[]
   referencedConversationHistoryLimit: number
+  referencedSummaries: ConversationSummary[]
   showDropdown: boolean
   hoveredModel: string | null
   conversationInput: string
@@ -263,6 +273,24 @@ export interface ConversationResponse {
   results: Conversation[]
 }
 
+export interface ConversationSummary {
+  id: number
+  conversationId: string
+  conversationTitle?: string | null
+  summary: string
+  llm?: number | null
+  llmName?: string | null
+  inputTokens: number
+  outputTokens: number
+  summarizedMessageCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ConversationSummaryResponse {
+  results: ConversationSummary[]
+}
+
 export interface MessageReaction {
   feedbackType?: FeedbackType | null
   feedbackText?: string
@@ -281,13 +309,15 @@ export interface SortableConversationItemProps {
   editingId: string | null
   editValue: string
   isSharedTab?: boolean
+  isSharedWithMeTab?: boolean
   onConversationClick: (
     conversation: Conversation,
     event?: React.MouseEvent
   ) => void
   onEditClick: (conversation: Conversation) => void
   onCloneClick: (conversation: Conversation) => void
-  onPublishClick?: (conversation: Conversation) => void
+  onFavoriteClick?: (conversation: Conversation) => void
+  onSharingClick?: (conversation: Conversation) => void
   onForkClick?: (conversation: Conversation) => void
   onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onEditBlur: () => void

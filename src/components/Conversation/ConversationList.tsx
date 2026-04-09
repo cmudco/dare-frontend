@@ -39,7 +39,7 @@ import {
   updateConversationSortOrder,
   deleteMultipleConversations,
   cloneConversation,
-  publishConversation,
+  toggleFavoriteConversation,
   forkConversation,
   fetchConversationMessages,
 } from '@/redux/asyncThunks/conversation'
@@ -47,6 +47,8 @@ import { toggleDarkMode } from '../../redux/themeSlice'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
 import ForkConfirmDialog from '../shared/ForkConfirmDialog'
+import { openSharing } from '@/redux/sharingSlice'
+import { ShareableEntityType } from '@/redux/types/sharing'
 import { toast } from '@/utils/toast'
 import {
   filterConversations,
@@ -225,21 +227,28 @@ const ConversationList: React.FC<ConversationListProps> = ({
     }
   }
 
-  const handlePublishClick = async (conversation: Conversation) => {
-    // Guard: prevent publishing forked conversations (matches BE validation)
-    if (conversation.isForked) {
-      toast.error(
-        'Cannot publish forked conversations. Only original conversations can be published.'
-      )
-      return
-    }
-
+  const handleFavoriteClick = async (conversation: Conversation) => {
     try {
-      await dispatch(publishConversation(conversation.conversationId)).unwrap()
+      await dispatch(
+        toggleFavoriteConversation(conversation.conversationId)
+      ).unwrap()
     } catch (error) {
-      console.error('Error publishing conversation:', error)
-      toast.error('Failed to publish conversation')
+      console.error('Error toggling favorite conversation:', error)
+      toast.error('Failed to update favorite status')
     }
+  }
+
+  const handleSharingClick = (conversation: Conversation) => {
+    dispatch(
+      openSharing({
+        type: ShareableEntityType.Conversation,
+        id: conversation.conversationId,
+        title: conversation.title || 'New Chat',
+        isPublished: !!conversation.isPublished,
+        canPublish: !conversation.isForked,
+        isForked: !!conversation.isForked,
+      })
+    )
   }
 
   const handleForkClick = (conversation: Conversation) => {
@@ -308,6 +317,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       onConversationClick={handleSharedConversationClick}
                       onEditClick={() => {}}
                       onCloneClick={() => {}}
+                      onSharingClick={handleSharingClick}
                       onForkClick={handleForkClick}
                       onEditChange={() => {}}
                       onEditBlur={() => {}}
@@ -342,7 +352,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       onConversationClick={handleConversationClick}
                       onEditClick={handleEditClick}
                       onCloneClick={handleCloneClick}
-                      onPublishClick={handlePublishClick}
+                      onFavoriteClick={handleFavoriteClick}
+                      onSharingClick={handleSharingClick}
                       onEditChange={handleEditChange}
                       onEditBlur={handleEditBlur}
                       onEditKeyDown={handleEditKeyDown}

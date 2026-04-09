@@ -78,7 +78,7 @@ export interface ValidationContext {
   customPrompt: string
   aiRecommendation: string | null
   aiAnalysis: string | null
-  stepNumber: number | null
+  label: string | null
 }
 
 /**
@@ -98,16 +98,16 @@ export interface RoutingMetadata {
 }
 
 export interface NodeState {
-  nodeId: string // Node ID from workflow graph (survives DRF CamelCase key mangling)
   stepId: number | null // Backend step ID (null for display nodes)
+  startedAt?: string | null // Server timestamp when execution started
   nodeType: string // 'step' | 'structuredOutput' | 'chatOutput' | 'start'
   status: WorkflowRunStepStatus
   response: string | null
   error: string | null
   validationContext: ValidationContext | null // Only present when status is PENDING_HUMAN_INPUT
   metadata: RoutingMetadata | null // Present for completed routing nodes with AI analysis
-  snippets?: WorkflowStepSnippet[] // RAG snippets retrieved for this step
-  webSearchSources?: WorkflowStepWebSearchSource[] // Web search citations for this step
+  snippets: WorkflowStepSnippet[] // RAG snippets retrieved for this step
+  webSearchSources: WorkflowStepWebSearchSource[] // Web search citations for this step
 }
 
 /**
@@ -154,6 +154,7 @@ export interface Workflow {
   isPublished?: boolean
   publishedAt?: string | null
   isForked?: boolean
+  canShare?: boolean
   ownerUsername?: string
 }
 

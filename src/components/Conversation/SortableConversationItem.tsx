@@ -1,7 +1,7 @@
 import React from 'react'
 import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline'
 import { useSortable } from '@dnd-kit/sortable'
-import { Pencil, Copy, MoreVertical, Globe, GitFork } from 'lucide-react'
+import { Pencil, Copy, MoreVertical, GitFork, Share2, Star } from 'lucide-react'
 import { SortableConversationItemProps } from '../../redux/types/conversation'
 import {
   createDragStyle,
@@ -23,10 +23,12 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   editingId,
   editValue,
   isSharedTab = false,
+  isSharedWithMeTab = false,
   onConversationClick,
   onEditClick,
   onCloneClick,
-  onPublishClick,
+  onFavoriteClick,
+  onSharingClick,
   onForkClick,
   onEditChange,
   onEditBlur,
@@ -39,7 +41,10 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: conversation.conversationId, disabled: isSharedTab })
+  } = useSortable({
+    id: conversation.conversationId,
+    disabled: isSharedTab || isSharedWithMeTab,
+  })
 
   const style = createDragStyle(transform, transition, isDragging)
 
@@ -51,7 +56,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
       onClick={(e) => onConversationClick(conversation, e)}
     >
       <div className='flex flex-shrink-0 items-center gap-1'>
-        {!isSharedTab && (
+        {!isSharedTab && !isSharedWithMeTab && (
           <div
             className={`p-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             {...attributes}
@@ -61,7 +66,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
             <ChatBubbleLeftEllipsisIcon className='h-5 w-5' />
           </div>
         )}
-        {isSharedTab && (
+        {(isSharedTab || isSharedWithMeTab) && (
           <div className='p-1'>
             <ChatBubbleLeftEllipsisIcon className='h-5 w-5' />
           </div>
@@ -85,6 +90,11 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
               <span className='block overflow-hidden text-ellipsis whitespace-nowrap text-sm'>
                 {getConversationTitle(conversation)}
               </span>
+              {!isSharedTab &&
+                !isSharedWithMeTab &&
+                conversation.isFavorite && (
+                  <Star className='h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400' />
+                )}
               {/* Published badge for user's own conversations */}
               {features.enableSharing &&
                 !isSharedTab &&
@@ -122,9 +132,9 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                     <MoreVertical className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align='end' className='w-44'>
-                  {isSharedTab ? (
-                    /* Shared tab actions */
+                <DropdownMenuContent align='end' className='w-48'>
+                  {isSharedTab || isSharedWithMeTab ? (
+                    /* Shared / Shared With Me tab actions */
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation()
@@ -137,18 +147,19 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                   ) : (
                     /* My Conversations tab actions */
                     <>
-                      {/* Only show publish option if NOT forked and sharing is enabled */}
-                      {features.enableSharing && !conversation.isForked && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onPublishClick?.(conversation)
-                          }}
-                        >
-                          <Globe className='mr-2 h-4 w-4' />
-                          {conversation.isPublished ? 'Unpublish' : 'Publish'}
-                        </DropdownMenuItem>
-                      )}
+                      {/* Sharing consolidated option */}
+                      {features.enableSharing &&
+                        conversation.canShare !== false && (
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onSharingClick?.(conversation)
+                            }}
+                          >
+                            <Share2 className='mr-2 h-4 w-4' />
+                            Sharing
+                          </DropdownMenuItem>
+                        )}
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation()
@@ -166,6 +177,17 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                       >
                         <Pencil className='mr-2 h-4 w-4' />
                         Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onFavoriteClick?.(conversation)
+                        }}
+                      >
+                        <Star
+                          className={`mr-2 h-4 w-4 ${conversation.isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`}
+                        />
+                        {conversation.isFavorite ? 'Unfavorite' : 'Favorite'}
                       </DropdownMenuItem>
                     </>
                   )}

@@ -26,9 +26,7 @@ import {
 } from '@/components/ui/collapsible'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
 import rehypeRaw from 'rehype-raw'
-import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import { CodeBlock } from '@/components/Conversation/CodeBlock'
 import { MermaidBlock } from '@/components/Conversation/MermaidBlock'
@@ -40,7 +38,7 @@ import type {
 export interface StepResponseCardProps {
   nodeId: string
   nodeName: string
-  stepNumber?: number
+  label?: string
   nodeType?: string
   content: string
   isActive: boolean
@@ -50,7 +48,7 @@ export interface StepResponseCardProps {
 
 export function StepResponseCard({
   nodeName,
-  stepNumber,
+  label,
   nodeType,
   content,
   isActive,
@@ -75,10 +73,10 @@ export function StepResponseCard({
     >
       {/* Step header with number badge */}
       <div className='mb-2 flex items-center gap-2'>
-        {/* Step number badge */}
-        {stepNumber !== undefined && (
-          <div className='flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#023572] to-[#EE183C] text-[10px] font-bold text-white'>
-            {stepNumber}
+        {/* Label badge */}
+        {label && (
+          <div className='flex h-auto min-h-5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#023572] to-[#EE183C] px-1.5 text-[10px] font-bold text-white'>
+            {label}
           </div>
         )}
         {isActive ? (
@@ -106,8 +104,8 @@ export function StepResponseCard({
         <div className='mt-2 rounded bg-white/80 p-2'>
           <div className='prose prose-sm max-w-full text-gray-700 dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-pre:bg-transparent prose-pre:p-0'>
             <ReactMarkdown
-              remarkPlugins={[remarkGfm, remarkMath]}
-              rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight, rehypeRaw]}
               components={{
                 table({ children, ...props }) {
                   return (

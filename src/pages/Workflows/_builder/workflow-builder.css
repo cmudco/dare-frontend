@@ -297,6 +297,48 @@
     letter-spacing: -0.02em;
 }
 
+/* Editable label — click-to-edit inline text */
+.editable-label {
+    cursor: text;
+    border-radius: 3px;
+    padding: 0 2px;
+    min-width: 40px;
+}
+
+.editable-label:hover {
+    background: hsl(var(--muted) / 0.5);
+}
+
+.editable-label-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid hsl(var(--primary));
+    outline: none;
+    padding: 0 2px;
+    width: 100%;
+    min-width: 40px;
+}
+
+.editable-label-placeholder {
+    color: hsl(var(--muted-foreground));
+    font-style: italic;
+    font-weight: 400;
+}
+
+/* Inherit white text for editable labels when node is selected */
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label,
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label-input {
+    color: white;
+}
+
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label-input {
+    border-bottom-color: white;
+}
+
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
 .node-subtitle {
     font-size: 11px;
     color: hsl(var(--muted-foreground));
@@ -385,22 +427,25 @@
    EDGE STYLES
    ============================================ */
 .workflow-builder-canvas .react-flow__edge-path {
-    stroke: #9ca3af;
+    /* stroke color is set per-edge by ColoredBezierEdge component */
     stroke-width: 2;
     stroke-dasharray: 6 4;
     animation: flowDash 15s linear infinite;
+    transition: stroke-opacity 0.2s ease, stroke-width 0.2s ease;
 }
 
-.dark .workflow-builder-canvas .react-flow__edge-path {
-    stroke: rgba(148, 163, 184, 0.5);
-}
-
+/* Selected/hover: increase width and add glow, but keep the edge's own color */
 .workflow-builder-canvas .react-flow__edge.selected .react-flow__edge-path,
 .workflow-builder-canvas .react-flow__edge:hover .react-flow__edge-path {
-    stroke: #EE183C;
     stroke-width: 3;
+    stroke-opacity: 1 !important;
     animation: flowDash 0.8s linear infinite;
-    filter: drop-shadow(0 0 4px rgba(238, 24, 60, 0.4));
+    filter: drop-shadow(0 0 6px currentColor);
+}
+
+/* Dim non-hovered edges when any edge is hovered */
+.workflow-builder-canvas .react-flow__edges:has(.react-flow__edge:hover) .react-flow__edge:not(:hover):not(.selected) .react-flow__edge-path {
+    stroke-opacity: 0.15 !important;
 }
 
 @keyframes flowDash {

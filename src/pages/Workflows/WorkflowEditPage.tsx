@@ -11,22 +11,27 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder from './_builder/WorkflowBuilder'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
+  undo,
+  redo,
   setManualMode,
   resetPartialRun,
   setSavingStatus,
   setShowExecutionPanel,
+  setSelectedBatchRunId,
   setOutputDisplayMode,
   expandAllOutputNodes,
   collapseAllOutputNodes,
-} from '@/redux/workflowBuilderSlice'
+  selectIsWorkflowRunActive,
+} from '@/redux/workflowBuilder'
 import { SavingStatus, OutputDisplayMode } from '@/redux/types/workflowBuilder'
 import { serializeWorkflow } from '@/utils/workflowBuilder/serializeWorkflow'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
+import { getTags } from '@/redux/asyncThunks/tag'
 import {
   createOrUpdateWorkflow,
   getActivePartialRun,
@@ -47,13 +52,20 @@ import {
   Undo2,
   Redo2,
   Eye,
-  ChevronsUpDown,
+  SkipForward,
 } from 'lucide-react'
+import BatchFileSelectDialog from './_components/BatchFileSelectDialog'
+import BatchProgressPanel from './_components/BatchProgressPanel'
 import {
   exportWorkflow,
   exportWorkflowToString,
 } from '@/utils/workflowBuilder/exportWorkflow'
 import { WorkflowNodeType } from '@/utils/constants/workflows'
+import {
+  getTopologicalOrder,
+  getNextExecutableNodeId,
+} from '@/utils/workflowBuilder/getTopologicalOrder'
+import { saveAndExecuteStep } from '@/redux/asyncThunks/workflowBuilder'
 import ToastContainer from '@/components/ui/ToastContainer'
 
 const WorkflowEditPage = () => {
@@ -61,63 +73,81 @@ const WorkflowEditPage = () => {
   const { id: idParam } = useParams<{ id: string }>()
   const id = idParam ? Number(idParam) : undefined
   const dispatch = useAppDispatch()
-  const nodes = useAppSelector((s) => s.workflowBuilder.nodes)
-  const edges = useAppSelector((s) => s.workflowBuilder.edges)
-  const savedViewport = useAppSelector((s) => s.workflowBuilder.savedViewport)
+  const nodes = useAppSelector((s) => s.workflowBuilder.builder.nodes)
+  const edges = useAppSelector((s) => s.workflowBuilder.builder.edges)
+  const savedViewport = useAppSelector(
+    (s) => s.workflowBuilder.builder.savedViewport
+  )
   const hasAtLeastOneStep = nodes.some((n) => n.type === WorkflowNodeType.Step)
-  const isRunning = useAppSelector((s) => s.workflowBuilder.isRunning)
+  // selectIsWorkflowRunActive considers both single-run and batch execution,
+  // so the toolbar and canvas are locked during batch runs as well.
+  const isRunning = useAppSelector(selectIsWorkflowRunActive)
   const manualModeEnabled = useAppSelector(
-    (s) => s.workflowBuilder.manualModeEnabled
+    (s) => s.workflowBuilder.execution.manualModeEnabled
   )
   const executedStepNodeIds = useAppSelector(
-    (s) => s.workflowBuilder.executedStepNodeIds
+    (s) => s.workflowBuilder.execution.executedStepNodeIds
   )
   const currentPartialRunId = useAppSelector(
-    (s) => s.workflowBuilder.currentPartialRunId
+    (s) => s.workflowBuilder.execution.currentPartialRunId
   )
-  const savingStatus = useAppSelector((s) => s.workflowBuilder.savingStatus)
+  const savingStatus = useAppSelector(
+    (s) => s.workflowBuilder.builder.savingStatus
+  )
 
   const stepNodes = nodes.filter((n) => n.type === WorkflowNodeType.Step)
   const executedStepsCount = stepNodes.filter((n) =>
     executedStepNodeIds.includes(n.id)
   ).length
-  const loadedWorkflow = useAppSelector((s) => s.workflowBuilder.loadedWorkflow)
-  const history = useAppSelector((s) => s.workflowBuilder.history)
-  const currentRun = useAppSelector((s) => s.workflowBuilder.currentRun)
-  const outputDisplayMode = useAppSelector(
-    (s) => s.workflowBuilder.outputDisplayMode
+  const loadedWorkflow = useAppSelector(
+    (s) => s.workflowBuilder.builder.loadedWorkflow
   )
+  const history = useAppSelector((s) => s.workflowBuilder.builder.history)
+  const currentRun = useAppSelector(
+    (s) => s.workflowBuilder.execution.currentRun
+  )
+  const outputDisplayMode = useAppSelector(
+    (s) => s.workflowBuilder.builder.outputDisplayMode
+  )
+  const batchRun = useAppSelector((s) => s.workflowBuilder.batch.batchRun)
   const hasExecutionData = currentRun !== null
+  const hasBatchExecutionData = batchRun.fileStatuses.length > 0
+  const canViewExecutionPanel =
+    hasExecutionData ||
+    isRunning ||
+    (hasBatchExecutionData && batchRun.latestRunIsBatch)
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
-
-  // Track if any output nodes are expanded
-  const outputNodes = nodes.filter(
-    (n) => n.type === WorkflowNodeType.ChatOutput
-  )
-  const hasOutputNodes = outputNodes.length > 0
-  const anyOutputExpanded = outputNodes.some((n) => n.data?.isExpanded)
 
   // Auto-expand output nodes when execution completes
   useAutoExpandOutputNodes()
 
+  // Compute next executable step for manual mode
+  const topologicalOrder = useMemo(
+    () => getTopologicalOrder(nodes, edges),
+    [nodes, edges]
+  )
+  const nextStepNodeId = useMemo(
+    () => getNextExecutableNodeId(topologicalOrder, executedStepNodeIds, nodes),
+    [topologicalOrder, executedStepNodeIds, nodes]
+  )
+
   // Socket-based workflow execution
   // This auto-subscribes to get execution state when connected
   const workflowId = idParam ? parseInt(idParam, 10) : undefined
-  const { isConnected, startExecution } = useWorkflowSocket({
-    workflowId,
-  })
+  const { isConnected, startExecution, startBatchExecution } =
+    useWorkflowSocket({
+      workflowId,
+    })
 
-  // Undo/Redo handlers that call the exposed window functions
+  // Undo/Redo handlers — dispatch directly to the builder slice
   const handleUndo = useCallback(() => {
-    // @ts-expect-error - exposed by WorkflowBuilder
-    if (window.__workflowUndo) window.__workflowUndo()
-  }, [])
+    if (canUndo) dispatch(undo())
+  }, [canUndo, dispatch])
 
   const handleRedo = useCallback(() => {
-    // @ts-expect-error - exposed by WorkflowBuilder
-    if (window.__workflowRedo) window.__workflowRedo()
-  }, [])
+    if (canRedo) dispatch(redo())
+  }, [canRedo, dispatch])
 
   const handleManualModeToggle = async (checked: boolean) => {
     if (!loadedWorkflow?.id) return
@@ -160,6 +190,7 @@ const WorkflowEditPage = () => {
   const handleOutputDisplayModeToggle = (checked: boolean) => {
     const newMode = checked ? OutputDisplayMode.Nodes : OutputDisplayMode.Panel
     dispatch(setOutputDisplayMode(newMode))
+    dispatch(checked ? expandAllOutputNodes() : collapseAllOutputNodes())
   }
 
   const handleSave = useCallback(async () => {
@@ -211,6 +242,47 @@ const WorkflowEditPage = () => {
     startExecution({ workflowId: id })
   }
 
+  const handleRunNextStep = () => {
+    if (!id || !nextStepNodeId || isRunning) return
+
+    if (!isConnected) {
+      toast.error('WebSocket not connected. Please wait and try again.')
+      return
+    }
+
+    dispatch(
+      saveAndExecuteStep({
+        workflowId: id,
+        stepNodeId: nextStepNodeId,
+        workflowRunId: currentPartialRunId || undefined,
+      })
+    )
+  }
+
+  const handleBatchRun = async (fileIds: number[]) => {
+    if (!id) return
+
+    if (!isConnected) {
+      toast.error('WebSocket not connected. Please wait and try again.')
+      return
+    }
+
+    await handleSave()
+    startBatchExecution({ workflowId: id, fileIds })
+  }
+
+  const handleViewExecution = () => {
+    if (batchRun.latestRunIsBatch && batchRun.selectedRunId === null) {
+      const latestBatchRun = [...batchRun.fileStatuses]
+        .reverse()
+        .find((status) => status.workflowRunId)
+      if (latestBatchRun?.workflowRunId) {
+        dispatch(setSelectedBatchRunId(latestBatchRun.workflowRunId))
+      }
+    }
+    dispatch(setShowExecutionPanel(true))
+  }
+
   // Auto-save logic
   const debouncedNodes = useDebounce(nodes, 3000)
   const debouncedEdges = useDebounce(edges, 3000)
@@ -218,6 +290,7 @@ const WorkflowEditPage = () => {
 
   // Track if initial load is done to avoid saving on mount
   const [isLoaded, setIsLoaded] = useState(false)
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false)
 
   useEffect(() => {
     if (loadedWorkflow) {
@@ -236,6 +309,7 @@ const WorkflowEditPage = () => {
     dispatch(getFiles())
     dispatch(getPrompts())
     dispatch(getAvailableModels())
+    dispatch(getTags())
   }, [dispatch])
 
   // Clear any previous workflow state when component mounts
@@ -438,38 +512,6 @@ const WorkflowEditPage = () => {
             </Tooltip>
           </TooltipProvider>
 
-          {/* Expand/Collapse Outputs Toggle */}
-          {hasOutputNodes && hasExecutionData && (
-            <TooltipProvider>
-              <Tooltip delayDuration={150}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    onClick={() =>
-                      dispatch(
-                        anyOutputExpanded
-                          ? collapseAllOutputNodes()
-                          : expandAllOutputNodes()
-                      )
-                    }
-                    className='h-8 w-8'
-                    aria-label={
-                      anyOutputExpanded ? 'Collapse outputs' : 'Expand outputs'
-                    }
-                  >
-                    <ChevronsUpDown className='h-4 w-4' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {anyOutputExpanded ? 'Collapse outputs' : 'Expand outputs'}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-
           <TooltipProvider>
             <Tooltip delayDuration={150}>
               <TooltipTrigger asChild>
@@ -512,14 +554,14 @@ const WorkflowEditPage = () => {
           )}
 
           {/* Peek Execution Button - shows latest run or current execution */}
-          {id && (hasExecutionData || isRunning) && (
+          {id && canViewExecutionPanel && (
             <TooltipProvider>
               <Tooltip delayDuration={150}>
                 <TooltipTrigger asChild>
                   <Button
                     variant='ghost'
                     size='icon'
-                    onClick={() => dispatch(setShowExecutionPanel(true))}
+                    onClick={handleViewExecution}
                     className='h-8 w-8'
                     aria-label={
                       isRunning ? 'View execution' : 'View latest execution'
@@ -535,19 +577,64 @@ const WorkflowEditPage = () => {
             </TooltipProvider>
           )}
 
+          {id && manualModeEnabled && (
+            <TooltipProvider>
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      onClick={handleRunNextStep}
+                      disabled={isRunning || !nextStepNodeId}
+                      className='gap-1.5 normal-case'
+                    >
+                      <SkipForward className='h-3.5 w-3.5' />
+                      Run Next Step
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!nextStepNodeId && !isRunning && (
+                  <TooltipContent>
+                    <p>All steps have been executed</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
           {id && !manualModeEnabled && (
-            <Button
-              size='sm'
-              variant='outline'
-              onClick={handleRunWorkflow}
-              disabled={isRunning || manualModeEnabled}
-              className='normal-case'
-            >
-              Run All
-            </Button>
+            <div className='flex items-center gap-2'>
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={() => setBatchDialogOpen(true)}
+                disabled={isRunning}
+                className='normal-case'
+              >
+                Run Batch
+              </Button>
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={handleRunWorkflow}
+                disabled={isRunning || manualModeEnabled}
+                className='normal-case'
+              >
+                Run All
+              </Button>
+            </div>
           )}
         </div>
       </div>
+
+      <BatchFileSelectDialog
+        isOpen={batchDialogOpen}
+        onClose={() => setBatchDialogOpen(false)}
+        onConfirm={handleBatchRun}
+        isRunning={isRunning}
+      />
+      <BatchProgressPanel />
     </div>
   )
 }

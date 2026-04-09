@@ -18,10 +18,11 @@ import {
   undo,
   redo,
   setSelectedNodeId,
-} from '@/redux/workflowBuilderSlice'
+} from '@/redux/workflowBuilder'
 import { isValidConnection } from '@/utils/workflowBuilder/isValidConnection'
 import {
   WORKFLOW_NODE_TYPES,
+  WORKFLOW_EDGE_TYPES,
   DEFAULT_EDGE_OPTIONS,
 } from '@/utils/constants/workflowBuilder'
 import { loadWorkflowIntoBuilder } from '@/redux/asyncThunks/workflowBuilder'
@@ -47,41 +48,15 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   const reactFlowInstance = useReactFlow()
 
   // Get current state from Redux
-  const {
-    nodes,
-    edges,
-    currentRun,
-    savedViewport,
-    history,
-    selectedNodeId,
-    showExecutionPanel,
-  } = useAppSelector((state) => state.workflowBuilder)
+  const { nodes, edges, savedViewport, history, selectedNodeId } =
+    useAppSelector((state) => state.workflowBuilder.builder)
+  const { currentRun, showExecutionPanel } = useAppSelector(
+    (state) => state.workflowBuilder.execution
+  )
 
   // Check if undo/redo is available (used by keyboard shortcuts)
   const canUndo = history.past.length > 0
   const canRedo = history.future.length > 0
-
-  // Expose undo/redo via window for parent components to call
-  React.useEffect(() => {
-    // @ts-expect-error - exposing for parent component access
-    window.__workflowUndo = () => canUndo && dispatch(undo())
-    // @ts-expect-error - exposing for parent component access
-    window.__workflowRedo = () => canRedo && dispatch(redo())
-    // @ts-expect-error - exposing for parent component access
-    window.__workflowCanUndo = () => canUndo
-    // @ts-expect-error - exposing for parent component access
-    window.__workflowCanRedo = () => canRedo
-    return () => {
-      // @ts-expect-error - cleanup
-      delete window.__workflowUndo
-      // @ts-expect-error - cleanup
-      delete window.__workflowRedo
-      // @ts-expect-error - cleanup
-      delete window.__workflowCanUndo
-      // @ts-expect-error - cleanup
-      delete window.__workflowCanRedo
-    }
-  }, [canUndo, canRedo, dispatch])
 
   // Load agents on mount
   useEffect(() => {
@@ -180,6 +155,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           isValidConnection(connection, nodes, edges)
         }
         nodeTypes={WORKFLOW_NODE_TYPES}
+        edgeTypes={WORKFLOW_EDGE_TYPES}
         defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
         onMoveEnd={(_, viewport) => dispatch(setSavedViewport(viewport))}
         fitView={!savedViewport}

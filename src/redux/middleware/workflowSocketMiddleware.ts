@@ -12,13 +12,12 @@
  *
  * Event naming convention:
  *   Backend sends snake_case event names (step_started, step_streaming, etc.)
- *   with camelCase payload keys (nodeId, stepNumber, etc.).
- *   Exception: workflow_status uses DRF serializer snake_case fields
- *   (started_at, workflow_title) because DRF camelCase middleware
- *   doesn't apply to socket events.
+ *   with camelCase payload keys (nodeId, label, etc.).
+ *   All events including workflow_status use camelCase payload keys —
+ *   backend applies camelize() before socket emission.
  */
 
-import type { Middleware } from '@reduxjs/toolkit'
+import { createAction, type Middleware } from '@reduxjs/toolkit'
 import { io, Socket } from 'socket.io-client'
 import { config } from '@/config/environment'
 import { debugLog } from '@/utils/debugLogger'
@@ -28,7 +27,28 @@ import {
   SubscribeWorkflowResponseSchema,
   type WorkflowEvent,
   type WorkflowStatusEvent,
+  type SubscribeWorkflowResponse,
 } from '@/schemas/workflowSocket'
+import {
+  wsConnecting,
+  wsConnected,
+  wsDisconnected,
+  executionStarted,
+  singleStepStarted,
+  workflowSubscribed,
+  validationSubmitted,
+  workflowStatus,
+  stepStarted,
+  stepStreaming,
+  stepCompleted,
+  executionComplete,
+  stepError,
+  validationRequired,
+  batchStarted,
+  batchProgress,
+  batchComplete,
+  batchSummaryLoaded,
+} from '@/redux/workflowBuilder/actions'
 
 // ════════════════════════════════════════════════════════════════════════════
 // SOCKET INTERFACE
@@ -38,6 +58,7 @@ interface WorkflowSocketResponse {
   success: boolean
   error?: string
   workflowRunId?: number
+  batchId?: number
 }
 
 interface WorkflowServerToClientEvents {
@@ -59,12 +80,7 @@ interface WorkflowClientToServerEvents {
   ) => void
   subscribe_workflow: (
     data: { workflowId: number },
-    callback: (response: {
-      success: boolean
-      workflowId?: number
-      latestRun?: Record<string, unknown> | null
-      error?: string
-    }) => void
+    callback: (response: SubscribeWorkflowResponse) => void
   ) => void
   start_execution: (
     data: { workflowRunId?: number; workflowId?: number; userInput?: string },
@@ -83,6 +99,10 @@ interface WorkflowClientToServerEvents {
     },
     callback: (response: WorkflowSocketResponse) => void
   ) => void
+  start_batch_execution: (
+    data: { workflowId: number; fileIds: number[] },
+    callback: (response: WorkflowSocketResponse) => void
+  ) => void
 }
 
 type TypedWorkflowSocket = Socket<
@@ -91,103 +111,73 @@ type TypedWorkflowSocket = Socket<
 >
 
 // ════════════════════════════════════════════════════════════════════════════
-// ACTION TYPES
+// MIDDLEWARE COMMAND ACTIONS
+// Actions dispatched by UI components that the middleware intercepts.
+// These never reach reducers — the middleware handles them and emits
+// socket events instead.
 // ════════════════════════════════════════════════════════════════════════════
 
-export const WORKFLOW_SOCKET_CONNECT = 'workflowSocket/connect'
-export const WORKFLOW_SOCKET_DISCONNECT = 'workflowSocket/disconnect'
-export const WORKFLOW_SOCKET_SUBSCRIBE = 'workflowSocket/subscribe'
-export const WORKFLOW_SOCKET_SUBSCRIBE_WORKFLOW =
-  'workflowSocket/subscribeWorkflow'
-export const WORKFLOW_SOCKET_UNSUBSCRIBE_WORKFLOW =
-  'workflowSocket/unsubscribeWorkflow'
-export const WORKFLOW_SOCKET_UNSUBSCRIBE = 'workflowSocket/unsubscribe'
-export const WORKFLOW_SOCKET_START_EXECUTION = 'workflowSocket/startExecution'
-export const WORKFLOW_SOCKET_EXECUTE_SINGLE_STEP =
-  'workflowSocket/executeSingleStep'
-export const WORKFLOW_SOCKET_SUBMIT_VALIDATION =
-  'workflowSocket/submitValidation'
-
-// ════════════════════════════════════════════════════════════════════════════
-// ACTION CREATORS
-// ════════════════════════════════════════════════════════════════════════════
-
-export const workflowSocketConnect = (jwtToken: string) => ({
-  type: WORKFLOW_SOCKET_CONNECT as typeof WORKFLOW_SOCKET_CONNECT,
-  payload: { jwtToken },
-})
-
-export const workflowSocketDisconnect = () => ({
-  type: WORKFLOW_SOCKET_DISCONNECT as typeof WORKFLOW_SOCKET_DISCONNECT,
-})
-
-export const workflowSocketSubscribe = (workflowRunId: number) => ({
-  type: WORKFLOW_SOCKET_SUBSCRIBE as typeof WORKFLOW_SOCKET_SUBSCRIBE,
-  payload: { workflowRunId },
-})
-
-export const workflowSocketSubscribeWorkflow = (workflowId: number) => ({
-  type: WORKFLOW_SOCKET_SUBSCRIBE_WORKFLOW as typeof WORKFLOW_SOCKET_SUBSCRIBE_WORKFLOW,
-  payload: { workflowId },
-})
-
-export const workflowSocketUnsubscribe = (workflowRunId: number) => ({
-  type: WORKFLOW_SOCKET_UNSUBSCRIBE as typeof WORKFLOW_SOCKET_UNSUBSCRIBE,
-  payload: { workflowRunId },
-})
-
-export const workflowSocketUnsubscribeWorkflow = (workflowId: number) => ({
-  type: WORKFLOW_SOCKET_UNSUBSCRIBE_WORKFLOW as typeof WORKFLOW_SOCKET_UNSUBSCRIBE_WORKFLOW,
-  payload: { workflowId },
-})
-
-export const workflowSocketStartExecution = (params: {
+export const workflowSocketConnect = createAction<{ jwtToken: string }>(
+  'workflowSocket/connect'
+)
+export const workflowSocketDisconnect = createAction(
+  'workflowSocket/disconnect'
+)
+export const workflowSocketSubscribe = createAction<{
+  workflowRunId: number
+}>('workflowSocket/subscribe')
+export const workflowSocketSubscribeWorkflow = createAction<{
+  workflowId: number
+}>('workflowSocket/subscribeWorkflow')
+export const workflowSocketUnsubscribeWorkflow = createAction<{
+  workflowId: number
+}>('workflowSocket/unsubscribeWorkflow')
+export const workflowSocketUnsubscribe = createAction<{
+  workflowRunId: number
+}>('workflowSocket/unsubscribe')
+export const workflowSocketStartExecution = createAction<{
   workflowRunId?: number
   workflowId?: number
   userInput?: string
-}) => ({
-  type: WORKFLOW_SOCKET_START_EXECUTION as typeof WORKFLOW_SOCKET_START_EXECUTION,
-  payload: params,
-})
-
-export const workflowSocketExecuteSingleStep = (params: {
+}>('workflowSocket/startExecution')
+export const workflowSocketStartBatchExecution = createAction<{
+  workflowId: number
+  fileIds: number[]
+}>('workflowSocket/startBatchExecution')
+export const workflowSocketExecuteSingleStep = createAction<{
   workflowId: number
   stepNodeId: string
   workflowRunId?: number
-}) => ({
-  type: WORKFLOW_SOCKET_EXECUTE_SINGLE_STEP as typeof WORKFLOW_SOCKET_EXECUTE_SINGLE_STEP,
-  payload: params,
-})
-
-export const workflowSocketSubmitValidation = (params: {
+}>('workflowSocket/executeSingleStep')
+export const workflowSocketSubmitValidation = createAction<{
   workflowRunId: number
   nodeId: string
   selectedRoute: string
   continueExecution?: boolean
-}) => ({
-  type: WORKFLOW_SOCKET_SUBMIT_VALIDATION as typeof WORKFLOW_SOCKET_SUBMIT_VALIDATION,
-  payload: params,
-})
+}>('workflowSocket/submitValidation')
 
-// Action type union
-export type WorkflowSocketAction =
-  | ReturnType<typeof workflowSocketConnect>
-  | ReturnType<typeof workflowSocketDisconnect>
-  | ReturnType<typeof workflowSocketSubscribe>
-  | ReturnType<typeof workflowSocketUnsubscribe>
-  | ReturnType<typeof workflowSocketUnsubscribeWorkflow>
-  | ReturnType<typeof workflowSocketStartExecution>
-  | ReturnType<typeof workflowSocketExecuteSingleStep>
-  | ReturnType<typeof workflowSocketSubmitValidation>
+// ════════════════════════════════════════════════════════════════════════════
+// INCOMING EVENT DISPATCH MAP
+// Maps snake_case event type strings from the backend to typed action
+// creators. If a new event type is added, it must be mapped here explicitly.
+// ════════════════════════════════════════════════════════════════════════════
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const eventDispatchMap: Record<WorkflowEvent['type'], (payload: any) => any> = {
+  step_started: stepStarted,
+  step_streaming: stepStreaming,
+  step_completed: stepCompleted,
+  execution_complete: executionComplete,
+  step_error: stepError,
+  validation_required: validationRequired,
+  batch_started: batchStarted,
+  batch_progress: batchProgress,
+  batch_complete: batchComplete,
+}
 
 // ════════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE
 // ════════════════════════════════════════════════════════════════════════════
-
-interface WorkflowSocketActionWithPayload {
-  type: string
-  payload?: Record<string, unknown>
-}
 
 /**
  * Create Workflow Socket.IO Redux middleware
@@ -204,351 +194,357 @@ export function createWorkflowSocketMiddleware(): Middleware {
   const subscriptions = new Set<number>()
 
   return (store) => (next) => (action: unknown) => {
-    const typedAction = action as WorkflowSocketActionWithPayload
     const dispatch = store.dispatch
 
-    switch (typedAction.type) {
-      // ─────────────────────────────────────────────────────────────────────
-      // Connection
-      // ─────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────
+    // Connection
+    // ─────────────────────────────────────────────────────────────────────
 
-      case WORKFLOW_SOCKET_CONNECT: {
-        const { jwtToken } = typedAction.payload as { jwtToken: string }
+    if (workflowSocketConnect.match(action)) {
+      const { jwtToken } = action.payload
 
-        // Already connected or connecting - don't create another socket
-        if (socket) {
-          debugLog('🔧 Workflow socket already exists, skipping connection')
-          return next(typedAction)
-        }
+      // Already connected or connecting - don't create another socket
+      if (socket) {
+        debugLog('🔧 Workflow socket already exists, skipping connection')
+        return next(action)
+      }
 
-        debugLog('🔧 Workflow socket CONNECT action received')
+      debugLog('🔧 Workflow socket CONNECT action received')
 
-        // Dispatch connecting state immediately
-        dispatch({ type: 'workflowWebsocket/connecting' })
+      // Dispatch connecting state immediately
+      dispatch(wsConnecting())
 
-        // Build URL with /workflow namespace
-        const baseUrl = config.apiUrl.replace(/\/api\/?$/, '')
-        const socketUrl = `${baseUrl}/workflow`
+      // Build URL with /workflow namespace
+      const baseUrl = config.apiUrl.replace(/\/api\/?$/, '')
+      const socketUrl = `${baseUrl}/workflow`
 
-        debugLog('🔧 Workflow Socket.IO connecting to:', socketUrl)
+      debugLog('🔧 Workflow Socket.IO connecting to:', socketUrl)
 
-        // Create socket connecting to /workflow namespace
-        // Use websocket first, with polling fallback for compatibility
-        socket = io(socketUrl, {
-          path: '/socket.io/',
-          auth: { token: jwtToken },
-          transports: ['websocket', 'polling'],
-          reconnection: true,
-          reconnectionAttempts: Infinity,
-          reconnectionDelay: 1000,
-          reconnectionDelayMax: 30000,
-        }) as TypedWorkflowSocket
+      // Create socket connecting to /workflow namespace
+      // Use websocket first, with polling fallback for compatibility
+      socket = io(socketUrl, {
+        path: '/socket.io/',
+        auth: { token: jwtToken },
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 30000,
+      }) as TypedWorkflowSocket
 
-        // Connection events
-        socket.on('connect', () => {
-          debugLog('🔧 Workflow Socket.IO connected')
-          dispatch({ type: 'workflowWebsocket/connected' })
+      // Connection events
+      socket.on('connect', () => {
+        debugLog('🔧 Workflow Socket.IO connected')
+        dispatch(wsConnected())
 
-          // Re-subscribe after reconnect
-          subscriptions.forEach((runId) => {
-            socket?.emit(
-              'subscribe_workflow_run',
-              { workflowRunId: runId },
-              () => {}
-            )
-          })
-        })
-
-        socket.on('disconnect', (reason) => {
-          debugLog('🔧 Workflow Socket.IO disconnected:', reason)
-          dispatch({
-            type: 'workflowWebsocket/disconnected',
-            payload: { reason },
-          })
-        })
-
-        socket.on('connect_error', (error) => {
-          console.error('🔧 Workflow Socket.IO error:', error.message)
-          dispatch({
-            type: 'workflowWebsocket/error',
-            payload: { error: error.message },
-          })
-        })
-
-        // Incoming workflow events → validate with Zod, then dispatch as Redux actions
-        socket.on('workflow_event', (data) => {
-          const result = WorkflowEventSchema.safeParse(data)
-          if (!result.success) {
-            console.warn(
-              `[WorkflowSocket] Invalid workflow_event (${data?.type}):`,
-              result.error.issues
-            )
-            return
-          }
-          debugLog(
-            '📡 [WorkflowSocket] workflow_event:',
-            result.data.type,
-            result.data
+        // Re-subscribe after reconnect
+        subscriptions.forEach((runId) => {
+          socket?.emit(
+            'subscribe_workflow_run',
+            { workflowRunId: runId },
+            () => {}
           )
-          dispatch({
-            type: `workflowSocket/${result.data.type}`,
-            payload: result.data,
-          })
         })
+      })
 
-        // Workflow status updates (full run snapshot from DRF serializer)
-        socket.on('workflow_status', (data) => {
-          const result = WorkflowStatusSchema.safeParse(data)
-          if (!result.success) {
-            console.warn(
-              '[WorkflowSocket] Invalid workflow_status:',
-              result.error.issues
-            )
-            return
-          }
-          debugLog('📡 [WorkflowSocket] workflow_status:', result.data)
-          dispatch({
-            type: 'workflowSocket/workflow_status',
-            payload: result.data,
-          })
-        })
+      socket.on('disconnect', (reason) => {
+        debugLog('🔧 Workflow Socket.IO disconnected:', reason)
+        dispatch(wsDisconnected())
+      })
 
-        break
+      socket.on('connect_error', (error) => {
+        console.error('🔧 Workflow Socket.IO error:', error.message)
+      })
+
+      // Incoming workflow events → validate with Zod, then dispatch as Redux actions
+      socket.on('workflow_event', (data) => {
+        const result = WorkflowEventSchema.safeParse(data)
+        if (!result.success) {
+          console.warn(
+            `[WorkflowSocket] Invalid workflow_event (${data?.type}):`,
+            result.error.issues
+          )
+          return
+        }
+        debugLog(
+          '📡 [WorkflowSocket] workflow_event:',
+          result.data.type,
+          result.data
+        )
+
+        const creator = eventDispatchMap[result.data.type]
+        dispatch(creator(result.data))
+      })
+
+      // Workflow status updates (full run snapshot from DRF serializer)
+      socket.on('workflow_status', (data) => {
+        const result = WorkflowStatusSchema.safeParse(data)
+        if (!result.success) {
+          console.warn(
+            '[WorkflowSocket] Invalid workflow_status:',
+            result.error.issues
+          )
+          return
+        }
+        debugLog('📡 [WorkflowSocket] workflow_status:', result.data)
+        // Zod .passthrough() adds an index signature incompatible with
+        // the strict WorkflowRun type — cast is safe post-validation
+        dispatch(
+          workflowStatus(
+            result.data as unknown as Parameters<typeof workflowStatus>[0]
+          )
+        )
+      })
+
+      return next(action)
+    }
+
+    if (workflowSocketDisconnect.match(action)) {
+      if (socket) {
+        socket.disconnect()
+        socket = null
+      }
+      subscriptions.clear()
+      dispatch(wsDisconnected())
+      return next(action)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Subscriptions
+    // ─────────────────────────────────────────────────────────────────────
+
+    if (workflowSocketSubscribe.match(action)) {
+      const { workflowRunId } = action.payload
+
+      if (!socket?.connected) {
+        console.warn('Cannot subscribe to workflow run: not connected')
+        return next(action)
       }
 
-      case WORKFLOW_SOCKET_DISCONNECT: {
-        if (socket) {
-          socket.disconnect()
-          socket = null
+      socket.emit('subscribe_workflow_run', { workflowRunId }, (response) => {
+        if (response.success) {
+          subscriptions.add(workflowRunId)
+        } else {
+          console.error(
+            `[WorkflowSocket] Failed to subscribe to run ${workflowRunId}:`,
+            response.error
+          )
         }
-        subscriptions.clear()
-        dispatch({ type: 'workflowWebsocket/disconnected' })
-        break
+      })
+      return next(action)
+    }
+
+    if (workflowSocketUnsubscribe.match(action)) {
+      const { workflowRunId } = action.payload
+
+      if (!socket?.connected) {
+        return next(action)
       }
 
-      // ─────────────────────────────────────────────────────────────────────
-      // Subscriptions
-      // ─────────────────────────────────────────────────────────────────────
+      socket.emit('unsubscribe_workflow_run', { workflowRunId }, () => {
+        subscriptions.delete(workflowRunId)
+      })
+      return next(action)
+    }
 
-      case WORKFLOW_SOCKET_SUBSCRIBE: {
-        const { workflowRunId } = typedAction.payload as {
-          workflowRunId: number
-        }
+    if (workflowSocketSubscribeWorkflow.match(action)) {
+      const { workflowId } = action.payload
 
-        if (!socket?.connected) {
-          console.warn('Cannot subscribe to workflow run: not connected')
-          return next(typedAction)
-        }
-
-        socket.emit('subscribe_workflow_run', { workflowRunId }, (response) => {
-          if (response.success) {
-            subscriptions.add(workflowRunId)
-            dispatch({
-              type: 'workflowSocket/subscribed',
-              payload: { workflowRunId },
-            })
-          } else {
-            dispatch({
-              type: 'workflowSocket/subscribeError',
-              payload: { workflowRunId, error: response.error },
-            })
-          }
-        })
-        break
+      if (!socket?.connected) {
+        console.warn('Cannot subscribe to workflow: not connected')
+        return next(action)
       }
 
-      case WORKFLOW_SOCKET_UNSUBSCRIBE: {
-        const { workflowRunId } = typedAction.payload as {
-          workflowRunId: number
+      socket.emit('subscribe_workflow', { workflowId }, (response) => {
+        // Validate the subscribe_workflow response shape
+        const result = SubscribeWorkflowResponseSchema.safeParse(response)
+        if (!result.success) {
+          console.warn(
+            '[WorkflowSocket] Invalid subscribe_workflow response:',
+            result.error.issues
+          )
+          // Fall through with raw response to avoid breaking existing flow
         }
 
-        if (!socket?.connected) {
-          return next(typedAction)
-        }
-
-        socket.emit('unsubscribe_workflow_run', { workflowRunId }, () => {
-          subscriptions.delete(workflowRunId)
-          dispatch({
-            type: 'workflowSocket/unsubscribed',
-            payload: { workflowRunId },
-          })
-        })
-        break
-      }
-
-      case WORKFLOW_SOCKET_SUBSCRIBE_WORKFLOW: {
-        const { workflowId } = typedAction.payload as { workflowId: number }
-
-        if (!socket?.connected) {
-          console.warn('Cannot subscribe to workflow: not connected')
-          return next(typedAction)
-        }
-
-        socket.emit('subscribe_workflow', { workflowId }, (response) => {
-          // Validate the subscribe_workflow response shape
-          const result = SubscribeWorkflowResponseSchema.safeParse(response)
-          if (!result.success) {
-            console.warn(
-              '[WorkflowSocket] Invalid subscribe_workflow response:',
-              result.error.issues
-            )
-            // Fall through with raw response to avoid breaking existing flow
-          }
-
-          if (response.success) {
-            // If there's a latest run, add to subscriptions
-            if (response.latestRun && typeof response.latestRun === 'object') {
-              const latestRun = response.latestRun as Record<string, unknown>
-              if (typeof latestRun.id === 'number') {
-                subscriptions.add(latestRun.id)
-              }
+        if (response.success) {
+          // If there's a latest run, add to subscriptions
+          if (response.latestRun && typeof response.latestRun === 'object') {
+            const latestRun = response.latestRun as Record<string, unknown>
+            if (typeof latestRun.id === 'number') {
+              subscriptions.add(latestRun.id)
             }
+          }
 
-            dispatch({
-              type: 'workflowSocket/workflowSubscribed',
-              payload: {
-                workflowId,
-                latestRun: response.latestRun || null,
-              },
-            })
-          } else {
-            dispatch({
-              type: 'workflowSocket/subscribeError',
-              payload: { workflowId, error: response.error },
+          if (response.latestBatchRun) {
+            const latestRunId =
+              typeof response.latestRun?.id === 'number'
+                ? response.latestRun.id
+                : null
+            dispatch(
+              batchSummaryLoaded({
+                ...response.latestBatchRun,
+                latestRunId,
+              })
+            )
+
+            response.latestBatchRun.fileStatuses.forEach((statusItem) => {
+              if (typeof statusItem.workflowRunId !== 'number') return
+              if (subscriptions.has(statusItem.workflowRunId)) return
+
+              if (!socket) return
+              socket.emit(
+                'subscribe_workflow_run',
+                { workflowRunId: statusItem.workflowRunId },
+                (runResponse) => {
+                  if (runResponse.success) {
+                    subscriptions.add(statusItem.workflowRunId as number)
+                  } else {
+                    console.warn(
+                      'Failed to subscribe to batch workflow run',
+                      runResponse.error
+                    )
+                  }
+                }
+              )
             })
           }
+
+          // Zod schema has optional workflow/user fields that WorkflowRun
+          // requires — cast is safe since the slice handles partial data
+          dispatch(
+            workflowSubscribed({
+              workflowId,
+              latestRun:
+                (response.latestRun as Parameters<
+                  typeof workflowSubscribed
+                >[0]['latestRun']) || null,
+            })
+          )
+        } else {
+          console.error(
+            `[WorkflowSocket] Failed to subscribe to workflow ${workflowId}:`,
+            response.error
+          )
+        }
+      })
+      return next(action)
+    }
+
+    if (workflowSocketUnsubscribeWorkflow.match(action)) {
+      const { workflowId } = action.payload
+
+      debugLog('🔌 Unsubscribing from workflow:', workflowId)
+
+      // Backend uses run-based subscriptions, so we need to leave all run rooms
+      // associated with this workflow. Since we don't track workflow->run mapping,
+      // we just clear all subscriptions to ensure clean state when switching workflows.
+      if (socket?.connected) {
+        subscriptions.forEach((runId) => {
+          socket?.emit(
+            'unsubscribe_workflow_run',
+            { workflowRunId: runId },
+            () => {}
+          )
         })
-        break
+      }
+      subscriptions.clear()
+      return next(action)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Execution
+    // ─────────────────────────────────────────────────────────────────────
+
+    if (workflowSocketStartExecution.match(action)) {
+      if (!socket?.connected) {
+        console.warn('Cannot start workflow execution: not connected')
+        return next(action)
       }
 
-      case WORKFLOW_SOCKET_UNSUBSCRIBE_WORKFLOW: {
-        const { workflowId } = typedAction.payload as { workflowId: number }
-
-        debugLog('🔌 Unsubscribing from workflow:', workflowId)
-
-        // Backend uses run-based subscriptions, so we need to leave all run rooms
-        // associated with this workflow. Since we don't track workflow->run mapping,
-        // we just clear all subscriptions to ensure clean state when switching workflows.
-        if (socket?.connected) {
-          subscriptions.forEach((runId) => {
-            socket?.emit(
-              'unsubscribe_workflow_run',
-              { workflowRunId: runId },
-              () => {}
-            )
-          })
+      socket.emit('start_execution', action.payload, (response) => {
+        if (response.success && response.workflowRunId) {
+          // Auto-subscribe to the run
+          subscriptions.add(response.workflowRunId)
+          dispatch(executionStarted({ workflowRunId: response.workflowRunId }))
+        } else {
+          console.error(
+            '[WorkflowSocket] Failed to start execution:',
+            response.error
+          )
         }
-        subscriptions.clear()
+      })
+      return next(action)
+    }
 
-        dispatch({
-          type: 'workflowSocket/workflowUnsubscribed',
-          payload: { workflowId },
-        })
-        break
+    if (workflowSocketStartBatchExecution.match(action)) {
+      if (!socket?.connected) {
+        console.warn('Cannot start batch execution: not connected')
+        return next(action)
       }
 
-      // ─────────────────────────────────────────────────────────────────────
-      // Execution
-      // ─────────────────────────────────────────────────────────────────────
-
-      case WORKFLOW_SOCKET_START_EXECUTION: {
-        if (!socket?.connected) {
-          console.warn('Cannot start workflow execution: not connected')
-          return next(typedAction)
+      socket.emit('start_batch_execution', action.payload, (response) => {
+        if (!response.success) {
+          console.error(
+            '[WorkflowSocket] Failed to start batch execution:',
+            response.error
+          )
         }
+      })
+      return next(action)
+    }
 
-        const params = typedAction.payload as {
-          workflowRunId?: number
-          workflowId?: number
-          userInput?: string
-        }
+    if (workflowSocketExecuteSingleStep.match(action)) {
+      if (!socket?.connected) {
+        console.warn('Cannot execute single step: not connected')
+        return next(action)
+      }
 
-        socket.emit('start_execution', params, (response) => {
+      const { stepNodeId } = action.payload
+
+      socket.emit(
+        'execute_single_step',
+        action.payload,
+        (response: WorkflowSocketResponse) => {
           if (response.success && response.workflowRunId) {
             // Auto-subscribe to the run
             subscriptions.add(response.workflowRunId)
-            dispatch({
-              type: 'workflowSocket/executionStarted',
-              payload: { workflowRunId: response.workflowRunId },
-            })
-          } else {
-            dispatch({
-              type: 'workflowSocket/executionError',
-              payload: { error: response.error },
-            })
-          }
-        })
-        break
-      }
-
-      case WORKFLOW_SOCKET_EXECUTE_SINGLE_STEP: {
-        if (!socket?.connected) {
-          console.warn('Cannot execute single step: not connected')
-          return next(typedAction)
-        }
-
-        const singleStepParams = typedAction.payload as {
-          workflowId: number
-          stepNodeId: string
-          workflowRunId?: number
-        }
-
-        socket.emit(
-          'execute_single_step',
-          singleStepParams,
-          (response: WorkflowSocketResponse) => {
-            if (response.success && response.workflowRunId) {
-              // Auto-subscribe to the run
-              subscriptions.add(response.workflowRunId)
-              dispatch({
-                type: 'workflowSocket/singleStepStarted',
-                payload: {
-                  workflowRunId: response.workflowRunId,
-                  stepNodeId: singleStepParams.stepNodeId,
-                },
+            dispatch(
+              singleStepStarted({
+                workflowRunId: response.workflowRunId,
+                stepNodeId,
               })
-            } else {
-              dispatch({
-                type: 'workflowSocket/executionError',
-                payload: { error: response.error },
-              })
-            }
-          }
-        )
-        break
-      }
-
-      case WORKFLOW_SOCKET_SUBMIT_VALIDATION: {
-        if (!socket?.connected) {
-          console.warn('Cannot submit validation: not connected')
-          return next(typedAction)
-        }
-
-        const validationParams = typedAction.payload as {
-          workflowRunId: number
-          nodeId: string
-          selectedRoute: string
-          continueExecution?: boolean
-        }
-
-        socket.emit('submit_validation', validationParams, (response) => {
-          if (response.success) {
-            dispatch({
-              type: 'workflowSocket/validationSubmitted',
-              payload: validationParams,
-            })
+            )
           } else {
-            dispatch({
-              type: 'workflowSocket/validationError',
-              payload: { error: response.error },
-            })
+            console.error(
+              '[WorkflowSocket] Failed to execute single step:',
+              response.error
+            )
           }
-        })
-        break
-      }
+        }
+      )
+      return next(action)
     }
 
-    return next(typedAction)
+    if (workflowSocketSubmitValidation.match(action)) {
+      if (!socket?.connected) {
+        console.warn('Cannot submit validation: not connected')
+        return next(action)
+      }
+
+      socket.emit('submit_validation', action.payload, (response) => {
+        if (response.success) {
+          dispatch(validationSubmitted())
+        } else {
+          console.error(
+            '[WorkflowSocket] Failed to submit validation:',
+            response.error
+          )
+        }
+      })
+      return next(action)
+    }
+
+    return next(action)
   }
 }
 

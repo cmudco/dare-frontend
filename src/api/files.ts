@@ -149,3 +149,65 @@ export const uploadFolderAPI = async (data: FormData): Promise<MyFolder> => {
     },
   })
 }
+
+export const getSharedFilesAPI = async (): Promise<{ results: MyFile[] }> => {
+  return await baseRequest<{ results: MyFile[] }>({
+    url: 'api/files/shared/',
+    method: METHOD.GET,
+  })
+}
+
+export const importSharedFileAPI = async (fileId: number): Promise<MyFile> => {
+  return await baseRequest<MyFile>({
+    url: `api/files/${fileId}/import/`,
+    method: METHOD.POST,
+  })
+}
+
+export const shareFileWithUserAPI = async (
+  fileId: number,
+  email: string
+): Promise<void> => {
+  await baseRequest<void>({
+    url: `api/files/${fileId}/share/`,
+    method: METHOD.POST,
+    data: { email },
+  })
+}
+
+export const togglePublicShareAPI = async (
+  fileId: number,
+  shareWithEveryone: boolean
+): Promise<MyFile> => {
+  return await baseRequest<MyFile>({
+    url: `api/files/${fileId}/share-public/`,
+    method: METHOD.PATCH,
+    data: { shareWithEveryone },
+  })
+}
+
+export interface FileShare {
+  id: number
+  email: string
+  name: string
+}
+
+export const getFileSharesAPI = async (
+  fileId: number
+): Promise<{ shares: FileShare[] }> => {
+  return await baseRequest<{ shares: FileShare[] }>({
+    url: `api/files/${fileId}/shares/`,
+    method: METHOD.GET,
+  })
+}
+
+export const unshareFileAPI = async (
+  fileId: number,
+  email: string
+): Promise<void> => {
+  await baseRequest<void>({
+    url: `api/files/${fileId}/share/`,
+    method: METHOD.DELETE,
+    data: { email },
+  })
+}

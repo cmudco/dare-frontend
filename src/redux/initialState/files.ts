@@ -17,4 +17,10 @@ export const initialState: FileState = {
   currentView: 'files',
   isMoveModalOpen: false,
   mediaTypeFilter: 'all',
+  sharedFiles: [],
+  sharedFilesLoading: false,
+  sharedFilesError: null,
+  activeTab: 'my-files',
+  shareModalFileId: null,
+  shareModalFileName: '',
 }

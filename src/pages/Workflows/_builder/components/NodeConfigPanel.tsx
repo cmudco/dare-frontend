@@ -2,10 +2,7 @@ import { X } from 'lucide-react'
 import type { Node } from '@xyflow/react'
 import { Button } from '@/components/ui/button'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import {
-  updateNodeDataById,
-  setSelectedNodeId,
-} from '@/redux/workflowBuilderSlice'
+import { updateNodeDataById, setSelectedNodeId } from '@/redux/workflowBuilder'
 import { useCallback } from 'react'
 
 // Import node-specific config components
@@ -31,11 +28,11 @@ export default function NodeConfigPanel({
   // Get data from Redux
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
+  const tags = useAppSelector((s) => s.tags.tags)
   const availableModels = useAppSelector((s) => s.conversation.availableModels)
   const agents = useAppSelector((s) => s.agent.agents)
 
   const nodeType = selectedNode.type
-  const nodeData = selectedNode.data as Record<string, unknown>
   const nodeId = selectedNode.id
 
   // Update node data helper
@@ -108,46 +105,58 @@ export default function NodeConfigPanel({
 
       {/* Content - Scrollable */}
       <div className='flex-1 overflow-y-auto p-4'>
-        {nodeType === WorkflowNodeType.Start && (
-          <StartNodeConfig
-            nodeData={nodeData as StartNodeData}
-            updateNodeData={updateNodeData}
-          />
-        )}
-        {nodeType === WorkflowNodeType.Step && (
-          <StepNodeConfig
-            nodeData={nodeData as unknown as StepNodeData}
-            updateNodeData={updateNodeData}
-            prompts={prompts}
-            files={files}
-            availableModels={availableModels}
-            agents={agents}
-          />
-        )}
-        {nodeType === WorkflowNodeType.StructuredOutput && (
-          <StructuredOutputNodeConfig
-            nodeData={nodeData as StructuredOutputNodeData}
-            updateNodeData={updateNodeData}
-            prompts={prompts}
-            availableModels={availableModels}
-          />
-        )}
-        {nodeType === WorkflowNodeType.ChatOutput && (
-          <ChatOutputNodeConfig nodeId={nodeId} />
-        )}
-        {nodeType === WorkflowNodeType.Notes && (
-          <NotesNodeConfig
-            nodeData={nodeData as { content?: string }}
-            updateNodeData={updateNodeData}
-          />
-        )}
-        {nodeType === WorkflowNodeType.File && (
-          <FileNodeConfig
-            nodeData={nodeData as FileNodeData}
-            updateNodeData={updateNodeData}
-            files={files}
-          />
-        )}
+        {(() => {
+          switch (nodeType) {
+            case WorkflowNodeType.Start:
+              return (
+                <StartNodeConfig
+                  nodeData={selectedNode.data as StartNodeData}
+                  updateNodeData={updateNodeData}
+                />
+              )
+            case WorkflowNodeType.Step:
+              return (
+                <StepNodeConfig
+                  key={nodeId}
+                  nodeData={selectedNode.data as unknown as StepNodeData}
+                  updateNodeData={updateNodeData}
+                  prompts={prompts}
+                  files={files}
+                  availableModels={availableModels}
+                  agents={agents}
+                  tags={tags}
+                />
+              )
+            case WorkflowNodeType.StructuredOutput:
+              return (
+                <StructuredOutputNodeConfig
+                  nodeData={selectedNode.data as StructuredOutputNodeData}
+                  updateNodeData={updateNodeData}
+                  prompts={prompts}
+                  availableModels={availableModels}
+                />
+              )
+            case WorkflowNodeType.ChatOutput:
+              return <ChatOutputNodeConfig nodeId={nodeId} />
+            case WorkflowNodeType.Notes:
+              return (
+                <NotesNodeConfig
+                  nodeData={selectedNode.data as { content?: string }}
+                  updateNodeData={updateNodeData}
+                />
+              )
+            case WorkflowNodeType.File:
+              return (
+                <FileNodeConfig
+                  nodeData={selectedNode.data as FileNodeData}
+                  updateNodeData={updateNodeData}
+                  files={files}
+                />
+              )
+            default:
+              return null
+          }
+        })()}
       </div>
     </div>
   )

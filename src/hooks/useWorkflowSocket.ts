@@ -9,8 +9,8 @@
  * NOTE: Socket CONNECTION is managed at App root level by useSocketConnection.
  * This hook only handles subscription and execution operations.
  *
- * NOTE: Execution state comes ONLY from socket, not from REST API.
- * When workflowId is provided, automatically subscribes to get current execution state.
+ * NOTE: Live execution updates come from socket. The builder may seed from cached/REST
+ * state on mount, then this hook refreshes the active workflow subscription.
  */
 
 import { useEffect, useCallback } from 'react'
@@ -20,8 +20,8 @@ import {
   workflowSocketStartExecution,
   workflowSocketSubscribeWorkflow,
   workflowSocketUnsubscribeWorkflow,
+  workflowSocketStartBatchExecution,
 } from '@/redux/middleware/workflowSocketMiddleware'
-import { clearExecutionState } from '@/redux/workflowBuilderSlice'
 
 interface UseWorkflowSocketOptions {
   /** Workflow ID to subscribe to for execution state */
@@ -39,6 +39,10 @@ interface UseWorkflowSocketReturn {
     workflowId?: number
     userInput?: string
   }) => void
+  startBatchExecution: (params: {
+    workflowId: number
+    fileIds: number[]
+  }) => void
 }
 
 export function useWorkflowSocket(
@@ -48,7 +52,7 @@ export function useWorkflowSocket(
   const dispatch = useAppDispatch()
 
   const wsConnectionStatus = useAppSelector(
-    (state) => state.workflowBuilder.wsConnectionStatus
+    (state) => state.workflowBuilder.builder.wsConnectionStatus
   )
 
   // Subscribe to workflow when connected and workflowId is provided
@@ -57,12 +61,11 @@ export function useWorkflowSocket(
       return
     }
 
-    dispatch(workflowSocketSubscribeWorkflow(workflowId))
+    dispatch(workflowSocketSubscribeWorkflow({ workflowId }))
 
     // Cleanup: unsubscribe when workflowId changes or component unmounts
     return () => {
-      dispatch(workflowSocketUnsubscribeWorkflow(workflowId))
-      dispatch(clearExecutionState())
+      dispatch(workflowSocketUnsubscribeWorkflow({ workflowId }))
     }
   }, [wsConnectionStatus, workflowId, dispatch])
 
@@ -83,9 +86,24 @@ export function useWorkflowSocket(
     [wsConnectionStatus, dispatch]
   )
 
+  const startBatchExecution = useCallback(
+    (params: { workflowId: number; fileIds: number[] }) => {
+      if (wsConnectionStatus === 'connected') {
+        debugLog('🚀 Starting batch execution via socket:', params)
+        dispatch(workflowSocketStartBatchExecution(params))
+      } else {
+        console.error(
+          '❌ WebSocket not connected, cannot start batch execution'
+        )
+      }
+    },
+    [wsConnectionStatus, dispatch]
+  )
+
   return {
     connectionStatus: wsConnectionStatus,
     isConnected: wsConnectionStatus === 'connected',
     startExecution,
+    startBatchExecution,
   }
 }

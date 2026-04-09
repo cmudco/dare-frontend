@@ -4,13 +4,15 @@ import {
   type NodeProps,
   useUpdateNodeInternals,
 } from '@xyflow/react'
-import { GitBranch, Settings, Copy, Trash2, Play } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
+import { GitBranch, Settings, Trash2, Play } from 'lucide-react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useAppDispatch } from '@/redux/hooks'
 import {
   removeNodeWithEdges,
   setSelectedNodeId,
-} from '@/redux/workflowBuilderSlice'
+  updateNodeDataById,
+} from '@/redux/workflowBuilder'
+import { EditableLabel } from '../components/EditableLabel'
 import { ROUTE_HANDLE_PREFIX } from '@/utils/constants/workflowBuilder'
 import { useNodeExecutionState } from '@/hooks/useNodeExecutionState'
 
@@ -20,6 +22,7 @@ export interface StructuredOutputRoute {
 }
 
 type StructuredOutputNodeData = {
+  label?: string
   routes?: StructuredOutputRoute[]
   textInput?: string
   prompt?: number | null
@@ -33,8 +36,15 @@ export default function StructuredOutputNode({
   data,
   selected,
 }: NodeProps) {
-  const nodeData = (data as Partial<StructuredOutputNodeData>) || {}
+  const nodeData = data as StructuredOutputNodeData
   const dispatch = useAppDispatch()
+
+  const handleLabelChange = useCallback(
+    (newLabel: string) => {
+      dispatch(updateNodeDataById({ nodeId: id, newData: { label: newLabel } }))
+    },
+    [dispatch, id]
+  )
   const updateNodeInternals = useUpdateNodeInternals()
 
   const { statusClass, canRunStep, handleRunStep } = useNodeExecutionState(id)
@@ -42,7 +52,7 @@ export default function StructuredOutputNode({
   // Memoize routes
   const routes = useMemo(
     () =>
-      nodeData.routes || [
+      nodeData.routes ?? [
         { name: '1', description: 'First route' },
         { name: '2', description: 'Second route' },
       ],
@@ -62,11 +72,6 @@ export default function StructuredOutputNode({
   const handleConfigure = (e: React.MouseEvent) => {
     e.stopPropagation()
     dispatch(setSelectedNodeId(id))
-  }
-
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    // TODO: Implement duplicate
   }
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -106,13 +111,6 @@ export default function StructuredOutputNode({
             <Settings size={14} />
           </button>
           <button
-            className='quick-action-btn'
-            title='Duplicate'
-            onClick={handleDuplicate}
-          >
-            <Copy size={14} />
-          </button>
-          <button
             className='quick-action-btn danger'
             title='Delete'
             onClick={handleDelete}
@@ -128,7 +126,11 @@ export default function StructuredOutputNode({
           <GitBranch size={16} />
         </div>
         <div className='flex-1'>
-          <div className='node-title'>Conditional</div>
+          <EditableLabel
+            value={nodeData.label ?? ''}
+            onChange={handleLabelChange}
+            placeholder='Name this node'
+          />
           <div className='node-subtitle'>
             {routes.length} routes
             {nodeData.requireHumanValidation ? ' • Human validation' : ''}

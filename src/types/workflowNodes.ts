@@ -13,11 +13,6 @@
  */
 export interface BaseOutputNodeData {
   /**
-   * The step number/order in the workflow execution
-   */
-  stepNumber: number
-
-  /**
    * Whether the node is collapsed in the UI
    */
   isCollapsed?: boolean

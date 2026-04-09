@@ -1,9 +1,8 @@
-import { X, FileText, Database, Globe, Type, Bot } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { FileText, Database, Globe, Type, Bot, Tag } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
+import MultiSelectBadge from './MultiSelectBadge'
 import { Switch } from '@/components/ui/switch'
 import {
   Select,
@@ -12,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useState, useEffect } from 'react'
+import { useDebouncedNodeField } from '@/hooks/useDebouncedNodeField'
 import type { Agent } from '@/redux/types/agent'
 
 // Step Node Data Type
@@ -28,6 +27,8 @@ export interface StepNodeData {
   contentFileNames?: FileNameMap
   embeddingFiles: number[]
   embeddingFileNames?: FileNameMap
+  tags?: number[]
+  tagNames?: FileNameMap
   llm: number | null
   maxTokens?: number
   temperature?: number
@@ -44,6 +45,7 @@ interface StepNodeConfigProps {
   files: Array<{ id: number; name: string }>
   availableModels: Array<{ id: number; name: string }>
   agents?: Agent[]
+  tags?: Array<{ id: number; label: string }>
 }
 
 export default function StepNodeConfig({
@@ -53,25 +55,12 @@ export default function StepNodeConfig({
   files,
   availableModels,
   agents = [],
+  tags = [],
 }: StepNodeConfigProps) {
-  const [localTextInput, setLocalTextInput] = useState(
-    nodeData?.textInput || ''
+  const [localTextInput, setLocalTextInput] = useDebouncedNodeField(
+    nodeData.textInput ?? '',
+    (v) => updateNodeData({ textInput: v })
   )
-
-  // Sync local state when external data changes
-  useEffect(() => {
-    setLocalTextInput(nodeData?.textInput || '')
-  }, [nodeData?.textInput])
-
-  // Debounced sync to Redux for text input
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (localTextInput !== (nodeData?.textInput || '')) {
-        updateNodeData({ textInput: localTextInput })
-      }
-    }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [localTextInput, nodeData?.textInput, updateNodeData])
 
   // Handle agent selection - prefill all configuration from the agent template
   const handleAgentSelect = (agentId: string) => {
@@ -184,6 +173,11 @@ export default function StepNodeConfig({
           placeholder='Enter text to be included in this step...'
           value={localTextInput}
           onChange={(e) => setLocalTextInput(e.target.value)}
+          onBlur={() => {
+            if (localTextInput !== (nodeData.textInput ?? '')) {
+              updateNodeData({ textInput: localTextInput })
+            }
+          }}
           className='min-h-[80px] resize-y text-sm'
         />
         <p className='text-xs text-muted-foreground'>
@@ -193,116 +187,75 @@ export default function StepNodeConfig({
       </div>
 
       {/* Content Files */}
-      <div className='space-y-2'>
-        <Label className='flex items-center gap-2 text-xs font-medium'>
-          <FileText className='h-3 w-3' />
-          Content Files
-        </Label>
-        <div className='flex flex-wrap gap-1'>
-          {(nodeData?.contentFiles || []).map((fileId) => {
-            const file = files.find((f) => f.id === fileId)
-            return (
-              <Badge key={fileId} variant='secondary' className='text-xs'>
-                {file?.name ||
-                  nodeData?.contentFileNames?.[fileId] ||
-                  `File ${fileId}`}
-                <Button
-                  size='sm'
-                  variant='ghost'
-                  className='ml-1 h-4 w-4 p-0'
-                  onClick={() => {
-                    const newFiles = (nodeData?.contentFiles || []).filter(
-                      (id) => id !== fileId
-                    )
-                    updateNodeData({ contentFiles: newFiles })
-                  }}
-                >
-                  <X className='h-3 w-3' />
-                </Button>
-              </Badge>
-            )
-          })}
-          <Select
-            value=''
-            onValueChange={(value) => {
-              const fileId = Number(value)
-              const currentFiles = nodeData?.contentFiles || []
-              if (value && !currentFiles.includes(fileId)) {
-                updateNodeData({ contentFiles: [...currentFiles, fileId] })
-              }
-            }}
-          >
-            <SelectTrigger className='w-full bg-background text-sm'>
-              <SelectValue placeholder='+ Add' />
-            </SelectTrigger>
-            <SelectContent>
-              {files
-                .filter((f) => !(nodeData?.contentFiles || []).includes(f.id))
-                .map((file) => (
-                  <SelectItem key={file.id} value={file.id.toString()}>
-                    {file.name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <MultiSelectBadge
+        label='Files'
+        icon={FileText}
+        selectedIds={nodeData?.contentFiles || []}
+        items={files}
+        nameMap={nodeData?.contentFileNames}
+        placeholder='+ Add file'
+        onAdd={(id) =>
+          updateNodeData({
+            contentFiles: [...(nodeData?.contentFiles || []), id],
+          })
+        }
+        onRemove={(id) =>
+          updateNodeData({
+            contentFiles: (nodeData?.contentFiles || []).filter(
+              (fid) => fid !== id
+            ),
+          })
+        }
+      />
 
       {/* Embedding Files */}
-      <div className='space-y-2'>
-        <Label className='flex items-center gap-2 text-xs font-medium'>
-          <Database className='h-3 w-3' />
-          Embedding Files
-        </Label>
-        <div className='flex flex-wrap gap-1'>
-          {(nodeData?.embeddingFiles || []).map((fileId) => {
-            const file = files.find((f) => f.id === fileId)
-            return (
-              <Badge key={fileId} variant='secondary' className='text-xs'>
-                {file?.name ||
-                  nodeData?.embeddingFileNames?.[fileId] ||
-                  `File ${fileId}`}
-                <Button
-                  size='sm'
-                  variant='ghost'
-                  className='ml-1 h-4 w-4 p-0'
-                  onClick={() => {
-                    const newFiles = (nodeData?.embeddingFiles || []).filter(
-                      (id) => id !== fileId
-                    )
-                    updateNodeData({ embeddingFiles: newFiles })
-                  }}
-                >
-                  <X className='h-3 w-3' />
-                </Button>
-              </Badge>
-            )
-          })}
-          <Select
-            value=''
-            onValueChange={(value) => {
-              const fileId = Number(value)
-              const currentFiles = nodeData?.embeddingFiles || []
-              if (value && !currentFiles.includes(fileId)) {
-                updateNodeData({ embeddingFiles: [...currentFiles, fileId] })
-              }
-            }}
-          >
-            <SelectTrigger className='w-full bg-background text-sm'>
-              <SelectValue placeholder='+ Add' />
-            </SelectTrigger>
-            <SelectContent>
-              {files
-                .filter((f) => !(nodeData?.embeddingFiles || []).includes(f.id))
-                .map((file) => (
-                  <SelectItem key={file.id} value={file.id.toString()}>
-                    {file.name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <MultiSelectBadge
+        label='Embedding'
+        icon={Database}
+        selectedIds={nodeData?.embeddingFiles || []}
+        items={files}
+        nameMap={nodeData?.embeddingFileNames}
+        placeholder='+ Add embedding file'
+        onAdd={(id) =>
+          updateNodeData({
+            embeddingFiles: [...(nodeData?.embeddingFiles || []), id],
+          })
+        }
+        onRemove={(id) =>
+          updateNodeData({
+            embeddingFiles: (nodeData?.embeddingFiles || []).filter(
+              (fid) => fid !== id
+            ),
+          })
+        }
+      />
+
+      {/* Embedding Tags */}
+      {tags.length > 0 && (
+        <>
+          <MultiSelectBadge
+            label='Tags'
+            icon={Tag}
+            selectedIds={nodeData?.tags || []}
+            items={tags}
+            nameMap={nodeData?.tagNames}
+            placeholder='+ Add embedding tag'
+            onAdd={(id) =>
+              updateNodeData({
+                tags: [...(nodeData?.tags || []), id],
+              })
+            }
+            onRemove={(id) =>
+              updateNodeData({
+                tags: (nodeData?.tags || []).filter((tid) => tid !== id),
+              })
+            }
+          />
+          <p className='-mt-2 text-xs text-muted-foreground'>
+            Files from these tags are retrieved via embedding / RAG search.
+          </p>
+        </>
+      )}
 
       {/* LLM Model */}
       <div className='space-y-2'>

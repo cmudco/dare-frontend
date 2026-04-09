@@ -1,20 +1,13 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
-import { toast } from '@/utils/toast'
-
 import { RootState, AppDispatch } from '../../redux/store'
 import {
   clonePrompt,
   deletePrompt,
   getPrompts,
 } from '../../redux/asyncThunks/prompt'
-import {
-  publishPrompt,
-  unpublishPrompt,
-} from '../../redux/asyncThunks/promptsLibrary'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
-import { GlobeAltIcon } from '@heroicons/react/24/outline'
 import {
   formatDate,
   PROMPTS_TABLE_HEAD,
@@ -44,7 +37,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { EllipsisVerticalIcon } from 'lucide-react'
+import { EllipsisVerticalIcon, Share2 } from 'lucide-react'
 import { Prompt, PromptTableProps } from '@/redux/types/prompt'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { stripHtml } from '../../utils/textUtils'
@@ -59,6 +52,8 @@ import {
 } from '@/utils/sortUtils'
 import { SortDirectionEnum } from '@/utils/constants/sort'
 import { features } from '@/config/environment'
+import { openSharing } from '@/redux/sharingSlice'
+import { ShareableEntityType } from '@/redux/types/sharing'
 
 const PromptTable = ({ searchQuery }: PromptTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -155,26 +150,17 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
     setVersionHistoryPromptId(null)
   }
 
-  const handlePublish = async (id: number) => {
-    try {
-      await dispatch(publishPrompt({ id })).unwrap()
-      dispatch(getPrompts())
-      toast.success('Prompt published to library')
-    } catch (error) {
-      toast.error('Failed to publish prompt')
-      console.error('Failed to publish prompt:', error)
-    }
-  }
-
-  const handleUnpublish = async (id: number) => {
-    try {
-      await dispatch(unpublishPrompt(id)).unwrap()
-      dispatch(getPrompts())
-      toast.success('Prompt unpublished from library')
-    } catch (error) {
-      toast.error('Failed to unpublish prompt')
-      console.error('Failed to unpublish prompt:', error)
-    }
+  const handleSharing = (prompt: Prompt) => {
+    dispatch(
+      openSharing({
+        type: ShareableEntityType.Prompt,
+        id: prompt.id,
+        title: prompt.title || 'Untitled',
+        isPublished: !!prompt.isPublished,
+        canPublish: true, // Prompts can always be published by owner
+        isForked: false, // Prompts don't have isForked yet, but for consistency
+      })
+    )
   }
 
   const renderPromptContent = (content: string) => {
@@ -301,23 +287,15 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                           <span>View Versions</span>
                         </DropdownMenuItem>
                         {features.enableSharing &&
-                          (prompt.isPublished ? (
+                          prompt.canShare !== false && (
                             <DropdownMenuItem
-                              onClick={() => handleUnpublish(prompt.id)}
-                              className='cursor-pointer text-orange-500'
+                              onClick={() => handleSharing(prompt)}
+                              className='cursor-pointer'
                             >
-                              <GlobeAltIcon className='h-4 w-4' />
-                              <span>Unpublish</span>
+                              <Share2 className='h-4 w-4' />
+                              <span>Sharing</span>
                             </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem
-                              onClick={() => handlePublish(prompt.id)}
-                              className='cursor-pointer text-green-500'
-                            >
-                              <GlobeAltIcon className='h-4 w-4' />
-                              <span>Publish</span>
-                            </DropdownMenuItem>
-                          ))}
+                          )}
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() =>

@@ -2,7 +2,11 @@ import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
 import { deleteFile, getFolders } from '../../redux/asyncThunks/file'
-import { addSelectedItem, removeSelectedItem } from '../../redux/fileSlice'
+import {
+  addSelectedItem,
+  removeSelectedItem,
+  openShareModal,
+} from '../../redux/fileSlice'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
 import { TABLE_HEAD } from '../../utils/constants/file'
 import { formatFileSize } from '@/utils/files'
@@ -41,7 +45,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { EllipsisVerticalIcon, Trash2, Tag, Eye } from 'lucide-react'
+import {
+  EllipsisVerticalIcon,
+  Trash2,
+  Tag,
+  Eye,
+  Share2,
+  Globe,
+  Users,
+} from 'lucide-react'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getStatusDisplay } from '@/utils/constants/files'
 import { SortDirectionEnum } from '@/utils/constants/sort'
@@ -62,6 +74,7 @@ const FileTable = () => {
   } = useSelector((state: RootState) => state.files)
   const { tags: allTags } = useSelector((state: RootState) => state.tags)
   const user = useSelector((state: RootState) => state.user.user)
+  const isSyftboxUser = user?.isSyftboxFileStorage ?? false
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -79,17 +92,17 @@ const FileTable = () => {
   const [viewFileType, setViewFileType] = useState<string>('')
 
   const filteredFiles = useMemo(() => {
-    if (!user || user.vectorDb === undefined) {
-      return []
-    }
+    if (!user) return []
+    // SyftBox files have vectorDbSource: null — skip vectorDb filtering for SyftBox users
+    if (!isSyftboxUser && user.vectorDb === undefined) return []
     const filterOptions = createFilterConfig(
       searchQuery,
       selectedTags,
-      user.vectorDb,
+      isSyftboxUser ? undefined : user.vectorDb,
       mediaTypeFilter
     )
     return filterFiles(files, filterOptions)
-  }, [files, searchQuery, selectedTags, user, mediaTypeFilter])
+  }, [files, searchQuery, selectedTags, user, mediaTypeFilter, isSyftboxUser])
 
   const sortedFiles = useMemo(() => {
     return sortFiles(filteredFiles, sortColumn, sortDirection, allTags)
@@ -238,6 +251,8 @@ const FileTable = () => {
                 tags,
                 status,
                 errorMessage,
+                isSharedByMe,
+                isSharedPublicly,
                 createdAt,
               }) => (
                 <TableRow key={id}>
@@ -256,8 +271,20 @@ const FileTable = () => {
                     />
                   </TableCell>
                   <TableCell className='max-w-[250px] p-4'>
-                    <div className='truncate' title={name || 'Unnamed'}>
-                      {name || 'Unnamed'}
+                    <div className='flex items-center gap-1.5'>
+                      <span className='truncate' title={name || 'Unnamed'}>
+                        {name || 'Unnamed'}
+                      </span>
+                      {isSyftboxUser && isSharedPublicly && (
+                        <span title='Shared with everyone'>
+                          <Globe className='h-3.5 w-3.5 shrink-0 text-blue-500' />
+                        </span>
+                      )}
+                      {isSyftboxUser && isSharedByMe && !isSharedPublicly && (
+                        <span title='Shared with specific users'>
+                          <Users className='h-3.5 w-3.5 shrink-0 text-green-600' />
+                        </span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className='max-w-[150px] p-4'>
@@ -268,12 +295,19 @@ const FileTable = () => {
                   <TableCell className='p-4'>{formatFileSize(size)}</TableCell>
                   <TableCell className='p-4'>{formatDate(createdAt)}</TableCell>
                   <TableCell className='p-4'>
-                    <TagsDisplay
-                      tags={tags || []}
-                      allTags={allTags}
-                      fileId={id}
-                      maxVisible={3}
-                    />
+                    <div className='flex flex-wrap items-center gap-1'>
+                      <TagsDisplay
+                        tags={tags || []}
+                        allTags={allTags}
+                        fileId={id}
+                        maxVisible={3}
+                      />
+                      {isSharedByMe && (
+                        <span className='inline-flex items-center rounded-full border border-gray-400 px-2.5 py-0.5 text-xs font-semibold text-gray-700 dark:border-gray-500 dark:text-gray-300'>
+                          Shared by you
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className='p-4'>
                     {getStatusDisplay(status, errorMessage)}
@@ -302,6 +336,17 @@ const FileTable = () => {
                               : 'Edit Tags'}
                           </span>
                         </DropdownMenuItem>
+                        {isSyftboxUser && (
+                          <DropdownMenuItem
+                            className='cursor-pointer'
+                            onClick={() =>
+                              dispatch(openShareModal({ id, name }))
+                            }
+                          >
+                            <Share2 className='mr-2 h-4 w-4' />
+                            <span>Share</span>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() => handleDelete(id, name)}

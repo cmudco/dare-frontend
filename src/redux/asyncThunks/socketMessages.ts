@@ -42,6 +42,7 @@ export const sendSocketMessage = createAsyncThunk<
       selectedFolders,
       referencedConversations,
       referencedConversationHistoryLimit,
+      referencedSummaries,
       selectedModel,
       attachedImages,
       webSearchEnabled,
@@ -78,6 +79,7 @@ export const sendSocketMessage = createAsyncThunk<
         (conv) => conv.conversationId
       ),
       referenced_conversation_history_limit: referencedConversationHistoryLimit,
+      referenced_summary_ids: referencedSummaries.map((s) => s.id),
       llm_id: selectedModel,
       prompt_id: activeConversation.prompt?.id,
       temperature: activeConversation.temperature,

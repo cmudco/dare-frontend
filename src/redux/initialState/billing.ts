@@ -11,4 +11,7 @@ export const initialBillingState: BillingState = {
   modelStats: [],
   overallStats: null,
   modelStatsLoading: false,
+  energyStats: null,
+  energyStatsLoading: false,
+  energyStatsPeriod: 'all',
 }

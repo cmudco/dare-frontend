@@ -4,7 +4,10 @@ import ActiveConversation from './ActiveConversation'
 import { useAppDispatch } from '@/redux/hooks'
 import { getTags } from '@/redux/asyncThunks/tag'
 import { getFiles, getFolders } from '@/redux/asyncThunks/file'
-import { getConversations } from '@/redux/asyncThunks/conversation'
+import {
+  fetchConversationSummaries,
+  getConversations,
+} from '@/redux/asyncThunks/conversation'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAgents } from '@/redux/asyncThunks/agent'
 import { Conversation } from '@/redux/types/conversation'
@@ -27,6 +30,7 @@ const ConversationLayout: React.FC = () => {
           dispatch(updateActiveConversation(conversations[0] || null))
         }
       })
+    dispatch(fetchConversationSummaries())
     dispatch(getPrompts())
     dispatch(getAgents())
   }, [dispatch, id, location.pathname])

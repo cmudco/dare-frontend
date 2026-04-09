@@ -107,16 +107,29 @@ const ModelCards = () => {
     )
   }
 
-  const {
-    overallSentiment,
-    strengths,
-    weaknesses,
-    taskSpecificInsights,
-    keyThemes,
-    comparativeMentions,
-    metadata,
-    analysisDate,
-  } = modelCard.publicFeedback
+  const hasPublicFeedback =
+    modelCard.publicFeedback &&
+    Object.keys(modelCard.publicFeedback).length > 0 &&
+    modelCard.publicFeedback.overallSentiment
+
+  const overallSentiment = hasPublicFeedback
+    ? modelCard.publicFeedback.overallSentiment
+    : null
+  const strengths = hasPublicFeedback ? modelCard.publicFeedback.strengths : []
+  const weaknesses = hasPublicFeedback
+    ? modelCard.publicFeedback.weaknesses
+    : []
+  const taskSpecificInsights = hasPublicFeedback
+    ? modelCard.publicFeedback.taskSpecificInsights
+    : {}
+  const keyThemes = hasPublicFeedback ? modelCard.publicFeedback.keyThemes : []
+  const comparativeMentions = hasPublicFeedback
+    ? modelCard.publicFeedback.comparativeMentions
+    : []
+  const metadata = hasPublicFeedback ? modelCard.publicFeedback.metadata : null
+  const analysisDate = hasPublicFeedback
+    ? modelCard.publicFeedback.analysisDate
+    : null
 
   // Build cluster lookup map for citations
   const clusterMap = buildClusterMap(modelCard.sourceClusters || [])
@@ -135,7 +148,7 @@ const ModelCards = () => {
       })
     })
 
-    if (dates.length === 0) return metadata.dateRange // fallback to LLM's guess
+    if (dates.length === 0) return metadata?.dateRange || ''
 
     dates.sort((a, b) => a.getTime() - b.getTime())
     const earliest = dates[0]
@@ -150,7 +163,8 @@ const ModelCards = () => {
 
   // Collect all cited reference numbers for the references list
   const citedRefs = new Set<number>()
-  overallSentiment.refs?.forEach((r) => citedRefs.add(r))
+  overallSentiment?.refs?.forEach((r) => citedRefs.add(r))
+
   strengths.forEach((s) => s.refs?.forEach((r) => citedRefs.add(r)))
   weaknesses.forEach((w) => w.refs?.forEach((r) => citedRefs.add(r)))
   keyThemes.forEach((t) => {
@@ -178,241 +192,280 @@ const ModelCards = () => {
           </Link>
 
           {/* Header */}
-          <div className='flex items-start justify-between'>
-            <div>
-              <h1 className='text-3xl font-bold tracking-tight'>
-                {modelCard.name}
-              </h1>
-              <p className='mt-1 text-muted-foreground'>
-                {metadata.sourcesAnalyzed} sources analyzed · {dateRange}
-              </p>
-            </div>
-            <div className='flex flex-col items-end gap-2'>
-              <div
-                className={`flex items-center gap-2 rounded-lg border px-4 py-2 ${getSentimentColor(overallSentiment.score)}`}
-              >
-                <span className='text-3xl font-bold'>
-                  {overallSentiment.score}
-                </span>
-                <span className='text-xl'>/10</span>
-              </div>
-              <Badge
-                variant={getConfidenceBadgeVariant(overallSentiment.confidence)}
-              >
-                {overallSentiment.confidence} confidence
-              </Badge>
-            </div>
-          </div>
-
-          {/* Sentiment reasoning */}
-          <Card>
-            <CardHeader className='pb-3'>
-              <CardTitle className='text-lg'>
-                Public Sentiment Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className='text-muted-foreground'>
-                {overallSentiment.reasoning}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Strengths & Weaknesses */}
-          <div className='grid gap-6 md:grid-cols-2'>
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='flex items-center gap-2 text-lg'>
-                  <CheckCircle className='h-5 w-5 text-green-600' />
-                  Strengths
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className='space-y-3'>
-                  {strengths.slice(0, 5).map((strength, i) => (
-                    <li
-                      key={i}
-                      className='flex items-start gap-2 text-sm text-muted-foreground'
-                    >
-                      <span className='mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-green-500' />
-                      <span className='flex-1'>
-                        {strength.claim}
-                        <Citation
-                          refs={strength.refs}
-                          clusterMap={clusterMap}
-                        />
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='flex items-center gap-2 text-lg'>
-                  <AlertTriangle className='h-5 w-5 text-amber-600' />
-                  Weaknesses
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className='space-y-3'>
-                  {weaknesses.slice(0, 5).map((weakness, i) => (
-                    <li
-                      key={i}
-                      className='flex items-start gap-2 text-sm text-muted-foreground'
-                    >
-                      <span className='mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500' />
-                      <span className='flex-1'>
-                        {weakness.claim}
-                        <Citation
-                          refs={weakness.refs}
-                          clusterMap={clusterMap}
-                        />
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Key Themes */}
-          <Card>
-            <CardHeader className='pb-3'>
-              <CardTitle className='flex items-center gap-2 text-lg'>
-                <MessageSquareQuote className='h-5 w-5' />
-                Key Themes from Community
-              </CardTitle>
-              <CardDescription>
-                Common topics and sentiments from public discussions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='space-y-4'>
-                {keyThemes.slice(0, 5).map((theme, i) => (
-                  <div
-                    key={i}
-                    className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'
-                  >
-                    <div className='mb-2 flex items-center justify-between'>
-                      <h4 className='font-medium'>{theme.theme}</h4>
-                      <div className='flex items-center gap-2'>
-                        <Badge
-                          variant='outline'
-                          className={
-                            theme.sentiment === 'positive'
-                              ? 'border-green-300 bg-green-50 text-green-700'
-                              : theme.sentiment === 'negative'
-                                ? 'border-red-300 bg-red-50 text-red-700'
-                                : 'border-yellow-300 bg-yellow-50 text-yellow-700'
-                          }
-                        >
-                          {theme.sentiment}
-                        </Badge>
-                        <Badge variant='secondary'>{theme.frequency}</Badge>
-                      </div>
-                    </div>
-                    {theme.exampleQuotes.length > 0 && (
-                      <blockquote className='border-l-2 border-gray-300 pl-3 text-sm italic text-muted-foreground'>
-                        "{theme.exampleQuotes[0].quote}"
-                        <Citation
-                          refs={[theme.exampleQuotes[0].ref]}
-                          clusterMap={clusterMap}
-                        />
-                      </blockquote>
-                    )}
-                    {theme.taskRelevance.length > 0 && (
-                      <div className='mt-2 flex flex-wrap gap-1'>
-                        {theme.taskRelevance.map((task, j) => (
-                          <Badge key={j} variant='outline' className='text-xs'>
-                            {task}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Task-specific insights */}
-          <Card>
-            <CardHeader className='pb-3'>
-              <CardTitle className='flex items-center gap-2 text-lg'>
-                <Info className='h-5 w-5' />
-                Task-Specific Insights
-              </CardTitle>
-              <CardDescription>
-                How users rate this model for different academic tasks
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <dl className='space-y-4'>
-                {Object.entries(taskSpecificInsights).map(([task, insight]) => (
-                  <div
-                    key={task}
-                    className='border-b border-gray-100 pb-3 last:border-0 last:pb-0 dark:border-gray-800'
-                  >
-                    <dt className='mb-1 font-medium capitalize'>
-                      {task.replace(/([A-Z])/g, ' $1').trim()}
-                    </dt>
-                    <dd className='text-sm text-muted-foreground'>
-                      {insight.summary}
-                      <Citation refs={insight.refs} clusterMap={clusterMap} />
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </CardContent>
-          </Card>
-
-          {/* Comparative Mentions */}
-          {comparativeMentions.length > 0 && (
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='flex items-center gap-2 text-lg'>
-                  <GitCompare className='h-5 w-5' />
-                  Compared to Other Models
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='space-y-3'>
-                  {comparativeMentions.map((comparison, i) => (
-                    <div
-                      key={i}
-                      className='flex items-start justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800'
-                    >
-                      <div>
-                        <span className='font-medium'>
-                          vs {comparison.comparedTo}
-                        </span>
-                        <p className='text-sm text-muted-foreground'>
-                          {comparison.context}
-                          <Citation
-                            refs={comparison.refs}
-                            clusterMap={clusterMap}
-                          />
-                        </p>
-                      </div>
-                      <Badge
-                        variant='outline'
-                        className={
-                          comparison.comparisonResult === 'better'
-                            ? 'border-green-300 bg-green-50 text-green-700'
-                            : comparison.comparisonResult === 'worse'
-                              ? 'border-red-300 bg-red-50 text-red-700'
-                              : 'border-yellow-300 bg-yellow-50 text-yellow-700'
-                        }
-                      >
-                        {comparison.comparisonResult}
-                      </Badge>
-                    </div>
-                  ))}
+          {!hasPublicFeedback ? (
+            <>
+              <div className='flex items-start justify-between'>
+                <div>
+                  <h1 className='text-3xl font-bold tracking-tight'>
+                    {modelCard.name}
+                  </h1>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              <Card>
+                <CardContent className='py-8 text-center'>
+                  <Info className='mx-auto mb-3 h-8 w-8 text-muted-foreground' />
+                  <p className='text-muted-foreground'>
+                    Data is being collected for this model.
+                  </p>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    Check back soon for community insights, strengths, and
+                    comparisons.
+                  </p>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <>
+              {/* Sentiment score header */}
+              <div className='flex items-start justify-between'>
+                <div>
+                  <h1 className='text-3xl font-bold tracking-tight'>
+                    {modelCard.name}
+                  </h1>
+                  <p className='mt-1 text-muted-foreground'>
+                    {metadata!.sourcesAnalyzed} sources analyzed · {dateRange}
+                  </p>
+                </div>
+                <div className='flex flex-col items-end gap-2'>
+                  <div
+                    className={`flex items-center gap-2 rounded-lg border px-4 py-2 ${getSentimentColor(overallSentiment!.score)}`}
+                  >
+                    <span className='text-3xl font-bold'>
+                      {overallSentiment!.score}
+                    </span>
+                    <span className='text-xl'>/10</span>
+                  </div>
+                  <Badge
+                    variant={getConfidenceBadgeVariant(
+                      overallSentiment!.confidence
+                    )}
+                  >
+                    {overallSentiment!.confidence} confidence
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Sentiment reasoning */}
+              <Card>
+                <CardHeader className='pb-3'>
+                  <CardTitle className='text-lg'>
+                    Public Sentiment Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className='text-muted-foreground'>
+                    {overallSentiment!.reasoning}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Strengths & Weaknesses */}
+              <div className='grid gap-6 md:grid-cols-2'>
+                <Card>
+                  <CardHeader className='pb-3'>
+                    <CardTitle className='flex items-center gap-2 text-lg'>
+                      <CheckCircle className='h-5 w-5 text-green-600' />
+                      Strengths
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className='space-y-3'>
+                      {strengths.slice(0, 5).map((strength, i) => (
+                        <li
+                          key={i}
+                          className='flex items-start gap-2 text-sm text-muted-foreground'
+                        >
+                          <span className='mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-green-500' />
+                          <span className='flex-1'>
+                            {strength.claim}
+                            <Citation
+                              refs={strength.refs}
+                              clusterMap={clusterMap}
+                            />
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className='pb-3'>
+                    <CardTitle className='flex items-center gap-2 text-lg'>
+                      <AlertTriangle className='h-5 w-5 text-amber-600' />
+                      Weaknesses
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className='space-y-3'>
+                      {weaknesses.slice(0, 5).map((weakness, i) => (
+                        <li
+                          key={i}
+                          className='flex items-start gap-2 text-sm text-muted-foreground'
+                        >
+                          <span className='mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500' />
+                          <span className='flex-1'>
+                            {weakness.claim}
+                            <Citation
+                              refs={weakness.refs}
+                              clusterMap={clusterMap}
+                            />
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Key Themes */}
+              <Card>
+                <CardHeader className='pb-3'>
+                  <CardTitle className='flex items-center gap-2 text-lg'>
+                    <MessageSquareQuote className='h-5 w-5' />
+                    Key Themes from Community
+                  </CardTitle>
+                  <CardDescription>
+                    Common topics and sentiments from public discussions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className='space-y-4'>
+                    {keyThemes.slice(0, 5).map((theme, i) => (
+                      <div
+                        key={i}
+                        className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'
+                      >
+                        <div className='mb-2 flex items-center justify-between'>
+                          <h4 className='font-medium'>{theme.theme}</h4>
+                          <div className='flex items-center gap-2'>
+                            <Badge
+                              variant='outline'
+                              className={
+                                theme.sentiment === 'positive'
+                                  ? 'border-green-300 bg-green-50 text-green-700'
+                                  : theme.sentiment === 'negative'
+                                    ? 'border-red-300 bg-red-50 text-red-700'
+                                    : 'border-yellow-300 bg-yellow-50 text-yellow-700'
+                              }
+                            >
+                              {theme.sentiment}
+                            </Badge>
+                            <Badge variant='secondary'>{theme.frequency}</Badge>
+                          </div>
+                        </div>
+                        {theme.exampleQuotes.length > 0 && (
+                          <blockquote className='border-l-2 border-gray-300 pl-3 text-sm italic text-muted-foreground'>
+                            "{theme.exampleQuotes[0].quote}"
+                            <Citation
+                              refs={[theme.exampleQuotes[0].ref]}
+                              clusterMap={clusterMap}
+                            />
+                          </blockquote>
+                        )}
+                        {theme.taskRelevance.length > 0 && (
+                          <div className='mt-2 flex flex-wrap gap-1'>
+                            {theme.taskRelevance.map((task, j) => (
+                              <Badge
+                                key={j}
+                                variant='outline'
+                                className='text-xs'
+                              >
+                                {task}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Task-specific insights */}
+              <Card>
+                <CardHeader className='pb-3'>
+                  <CardTitle className='flex items-center gap-2 text-lg'>
+                    <Info className='h-5 w-5' />
+                    Task-Specific Insights
+                  </CardTitle>
+                  <CardDescription>
+                    How users rate this model for different academic tasks
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <dl className='space-y-4'>
+                    {Object.entries(taskSpecificInsights).map(
+                      ([task, insight]) => (
+                        <div
+                          key={task}
+                          className='border-b border-gray-100 pb-3 last:border-0 last:pb-0 dark:border-gray-800'
+                        >
+                          <dt className='mb-1 font-medium capitalize'>
+                            {task.replace(/([A-Z])/g, ' $1').trim()}
+                          </dt>
+                          <dd className='text-sm text-muted-foreground'>
+                            {insight.summary}
+                            <Citation
+                              refs={insight.refs}
+                              clusterMap={clusterMap}
+                            />
+                          </dd>
+                        </div>
+                      )
+                    )}
+                  </dl>
+                </CardContent>
+              </Card>
+
+              {/* Comparative Mentions */}
+              {comparativeMentions.length > 0 && (
+                <Card>
+                  <CardHeader className='pb-3'>
+                    <CardTitle className='flex items-center gap-2 text-lg'>
+                      <GitCompare className='h-5 w-5' />
+                      Compared to Other Models
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='space-y-3'>
+                      {comparativeMentions.map((comparison, i) => (
+                        <div
+                          key={i}
+                          className='flex items-start justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800'
+                        >
+                          <div>
+                            <span className='font-medium'>
+                              vs {comparison.comparedTo}
+                            </span>
+                            <p className='text-sm text-muted-foreground'>
+                              {comparison.context}
+                              <Citation
+                                refs={comparison.refs}
+                                clusterMap={clusterMap}
+                              />
+                            </p>
+                          </div>
+                          <Badge
+                            variant='outline'
+                            className={
+                              comparison.comparisonResult === 'better'
+                                ? 'border-green-300 bg-green-50 text-green-700'
+                                : comparison.comparisonResult === 'worse'
+                                  ? 'border-red-300 bg-red-50 text-red-700'
+                                  : 'border-yellow-300 bg-yellow-50 text-yellow-700'
+                            }
+                          >
+                            {comparison.comparisonResult}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
 
           {/* References */}
@@ -422,21 +475,23 @@ const ModelCards = () => {
           />
 
           {/* Sources footer */}
-          <div className='rounded-lg border border-blue-100 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30'>
-            <h3 className='mb-2 font-medium text-blue-800 dark:text-blue-300'>
-              About This Data
-            </h3>
-            <p className='text-sm text-blue-700 dark:text-blue-400'>
-              This model card aggregates public feedback from{' '}
-              {metadata.primarySources.join(', ')}. Analysis performed on{' '}
-              {new Date(analysisDate).toLocaleDateString()}.
-            </p>
-            {metadata.confidenceNotes && (
-              <p className='mt-2 text-xs text-blue-600 dark:text-blue-500'>
-                Note: {metadata.confidenceNotes}
+          {hasPublicFeedback && metadata && (
+            <div className='rounded-lg border border-blue-100 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30'>
+              <h3 className='mb-2 font-medium text-blue-800 dark:text-blue-300'>
+                About This Data
+              </h3>
+              <p className='text-sm text-blue-700 dark:text-blue-400'>
+                This model card aggregates public feedback from{' '}
+                {metadata.primarySources.join(', ')}. Analysis performed on{' '}
+                {new Date(analysisDate!).toLocaleDateString()}.
               </p>
-            )}
-          </div>
+              {metadata.confidenceNotes && (
+                <p className='mt-2 text-xs text-blue-600 dark:text-blue-500'>
+                  Note: {metadata.confidenceNotes}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </ScrollArea>
     </div>
