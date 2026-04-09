@@ -151,8 +151,7 @@ const SharingDialog: React.FC = () => {
         toast.error(result.failed[0]?.reason || 'Failed to share item.')
       }
     } catch (error) {
-      const msg = typeof error === 'string' ? error : (error as Error).message
-      toast.error(msg || 'Failed to share item.')
+      toast.error((error as Error).message || 'Failed to share item.')
     }
   }
 
@@ -169,8 +168,7 @@ const SharingDialog: React.FC = () => {
       toast.success('Shared with your access code group.')
       dispatch(fetchRecipients({ type: entity.type, objectId: entity.id }))
     } catch (error) {
-      const msg = typeof error === 'string' ? error : (error as Error).message
-      toast.error(msg || 'Failed to share with group.')
+      toast.error((error as Error).message || 'Failed to share with group.')
     }
   }
 
@@ -182,8 +180,7 @@ const SharingDialog: React.FC = () => {
         `${entityLabel} is now ${!entity.isPublished ? 'Public' : 'Private'}`
       )
     } catch (error) {
-      const msg = typeof error === 'string' ? error : (error as Error).message
-      toast.error(msg || 'Failed to update visibility')
+      toast.error((error as Error).message || 'Failed to update visibility')
     }
   }
 

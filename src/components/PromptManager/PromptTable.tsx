@@ -286,15 +286,16 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                           <EyeIcon className='h-4 w-4' />
                           <span>View Versions</span>
                         </DropdownMenuItem>
-                        {features.enableSharing && (
-                          <DropdownMenuItem
-                            onClick={() => handleSharing(prompt)}
-                            className='cursor-pointer'
-                          >
-                            <Share2 className='h-4 w-4' />
-                            <span>Sharing</span>
-                          </DropdownMenuItem>
-                        )}
+                        {features.enableSharing &&
+                          prompt.canShare !== false && (
+                            <DropdownMenuItem
+                              onClick={() => handleSharing(prompt)}
+                              className='cursor-pointer'
+                            >
+                              <Share2 className='h-4 w-4' />
+                              <span>Sharing</span>
+                            </DropdownMenuItem>
+                          )}
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() =>
