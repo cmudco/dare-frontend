@@ -38,6 +38,7 @@ export interface Conversation {
   imageGenerationEnabled?: boolean
   audioTranscriptionEnabled?: boolean
   artifactsEnabled?: boolean
+  memoryEnabled?: boolean
   selectedModel?: number | null
   selectedMediaIds?: number[]
   prompt?: Prompt | null
@@ -64,6 +65,12 @@ export interface Conversation {
   fileOwnerId?: number | null // Original file owner's user ID for forked conversations
 }
 
+export interface MemoryContextItem {
+  content: string
+  memoryType: string
+  categories: string[]
+}
+
 export interface Message {
   id: string
   message: string
@@ -76,6 +83,7 @@ export interface Message {
   streaming?: boolean
   snippets?: Snippet[]
   webSearchSources?: WebSearchSource[]
+  memoryContextData?: MemoryContextItem[]
   feedbackType?: FeedbackType | null
   feedbackText?: string
   feedbackSource?: string
@@ -242,6 +250,7 @@ export interface ConversationState {
   selectedMediaFiles: MyFile[] // NEW: Persistent media files (images/videos)
   selectedTags: Tag[]
   selectedFolders: MyFolder[]
+  memoryEnabled: boolean
   selectedConversations: string[]
   referencedConversations: Conversation[]
   referencedConversationHistoryLimit: number

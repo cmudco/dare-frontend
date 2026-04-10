@@ -655,6 +655,53 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                     </CardContent>
                   </Card>
                 )}
+
+              {/* Memory Context Information */}
+              {message.memoryContextData &&
+                message.memoryContextData.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className='flex items-center gap-2 text-lg'>
+                        <Brain className='h-5 w-5 text-purple-500' />
+                        Memory Context ({message.memoryContextData.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className='space-y-3'>
+                        {message.memoryContextData.map((item, index) => (
+                          <div
+                            key={index}
+                            className='rounded-lg border bg-gray-50 p-3'
+                          >
+                            <div className='flex items-start justify-between gap-2'>
+                              <p className='flex-1 text-sm text-gray-900'>
+                                {item.content}
+                              </p>
+                              {item.memoryType && (
+                                <Badge className='flex-shrink-0 bg-purple-100 text-xs text-purple-700'>
+                                  {item.memoryType}
+                                </Badge>
+                              )}
+                            </div>
+                            {item.categories && item.categories.length > 0 && (
+                              <div className='mt-2 flex flex-wrap gap-1'>
+                                {item.categories.map((cat) => (
+                                  <Badge
+                                    key={cat}
+                                    variant='outline'
+                                    className='text-xs'
+                                  >
+                                    {cat}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
             </div>
           </div>
         </ScrollArea>

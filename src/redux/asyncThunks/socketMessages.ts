@@ -40,6 +40,7 @@ export const sendSocketMessage = createAsyncThunk<
       selectedMediaFiles,
       selectedTags,
       selectedFolders,
+      memoryEnabled,
       referencedConversations,
       referencedConversationHistoryLimit,
       referencedSummaries,
@@ -75,6 +76,7 @@ export const sendSocketMessage = createAsyncThunk<
       media_ids: selectedMediaFiles.map((file) => file.id),
       tag_ids: selectedTags.map((tag) => tag.id),
       folder_ids: selectedFolders.map((folder) => folder.id),
+      use_memory: memoryEnabled,
       referenced_conversation_ids: referencedConversations.map(
         (conv) => conv.conversationId
       ),

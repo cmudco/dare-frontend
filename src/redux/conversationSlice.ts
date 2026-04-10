@@ -63,6 +63,7 @@ export const conversationSlice = createSlice({
         state.audioTranscriptionEnabled =
           action.payload.audioTranscriptionEnabled ?? false
         state.artifactsEnabled = action.payload.artifactsEnabled ?? false
+        state.memoryEnabled = action.payload.memoryEnabled ?? false
 
         // Sync available models based on enabled mode
         // Priority: audio transcription > image generation > regular
@@ -129,6 +130,9 @@ export const conversationSlice = createSlice({
     },
     updateSelectedFolders(state, action: PayloadAction<MyFolder[]>) {
       state.selectedFolders = action.payload
+    },
+    updateMemoryEnabled(state, action: PayloadAction<boolean>) {
+      state.memoryEnabled = action.payload
     },
     updateReferencedConversations(
       state,
@@ -367,6 +371,7 @@ export const conversationSlice = createSlice({
       state.selectedEmbeddings = []
       state.selectedTags = []
       state.selectedFolders = []
+      state.memoryEnabled = false
       state.conversationInput = ''
       state.referencedConversations = []
 
@@ -1079,6 +1084,7 @@ export const {
   updateSelectedMediaFiles,
   updateSelectedTags,
   updateSelectedFolders,
+  updateMemoryEnabled,
   updateTemperature,
   updateMaxTokens,
   updateHistoryLimit,
