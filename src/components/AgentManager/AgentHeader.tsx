@@ -26,7 +26,10 @@ const AgentHeader: React.FC<AgentHeaderProps> = ({ onSearch }) => {
 
   return (
     <div className='flex items-center justify-between px-2.5'>
-      <div className='relative flex h-[40px] w-[300px] items-center'>
+      <div
+        data-tour='agents-search'
+        className='relative flex h-[40px] w-[300px] items-center'
+      >
         <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-gray-500' />
         <Input
           type='text'
@@ -38,6 +41,7 @@ const AgentHeader: React.FC<AgentHeaderProps> = ({ onSearch }) => {
       </div>
 
       <Button
+        data-tour='agents-create'
         variant='default'
         className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
         onClick={handleCreateAgent}

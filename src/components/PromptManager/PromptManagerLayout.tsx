@@ -47,7 +47,10 @@ const PromptManagerLayout = () => {
                   }
                 }}
               >
-                <TabsList className='mb-4 grid w-full max-w-md grid-cols-3'>
+                <TabsList
+                  data-tour='prompts-tabs'
+                  className='mb-4 grid w-full max-w-md grid-cols-3'
+                >
                   <TabsTrigger value='my-prompts'>My Prompts</TabsTrigger>
                   <TabsTrigger value='library'>Library</TabsTrigger>
                   <TabsTrigger value='shared-with-me'>

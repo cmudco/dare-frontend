@@ -48,7 +48,10 @@ const WorkflowManagerLayout = () => {
           <div className='px-0' placeholder=''>
             <WorkflowHeader onSearch={handleSearch} />
             {features.enableSharing && (
-              <div className='mt-4 flex gap-1 border-b border-border'>
+              <div
+                data-tour='workflows-tabs'
+                className='mt-4 flex gap-1 border-b border-border'
+              >
                 <button
                   className={`px-4 py-2 text-sm font-medium transition-colors ${
                     activeTab === 'my'

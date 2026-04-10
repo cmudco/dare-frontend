@@ -4,11 +4,15 @@ import { Sparkles, X } from 'lucide-react'
 interface ConversationTourWelcomeProps {
   onStart: () => void
   onSkip: () => void
+  title?: string
+  subtitle?: string
 }
 
 export default function ConversationTourWelcome({
   onStart,
   onSkip,
+  title,
+  subtitle,
 }: ConversationTourWelcomeProps) {
   return (
     <motion.div
@@ -45,10 +49,10 @@ export default function ConversationTourWelcome({
             <Sparkles className='h-5 w-5 text-white' />
           </div>
           <h2 className='text-xl font-bold tracking-tight text-white'>
-            Welcome to DARE Chat
+            {title || 'Welcome to DARE Chat'}
           </h2>
           <p className='mt-1.5 text-sm leading-relaxed text-white/75'>
-            A quick 60-second tour of your AI workspace
+            {subtitle || 'A quick 60-second tour of your AI workspace'}
           </p>
         </motion.div>
       </div>

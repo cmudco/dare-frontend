@@ -27,7 +27,7 @@ const ApiKeysManagement: React.FC = () => {
 
   return (
     <TooltipProvider>
-      <Card className='border-border bg-card p-6'>
+      <Card data-tour='settings-api-keys' className='border-border bg-card p-6'>
         <div className='space-y-6'>
           {/* Header */}
           <div>
