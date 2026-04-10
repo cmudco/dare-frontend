@@ -161,7 +161,7 @@ const Dashboard = () => {
                 Overview of your activity and usage statistics.
               </p>
             </div>
-            <TabsList>
+            <TabsList data-tour='dashboard-tabs'>
               <TabsTrigger value='overview'>Overview</TabsTrigger>
               <TabsTrigger value='energy'>Environmental Impact</TabsTrigger>
             </TabsList>
@@ -186,7 +186,10 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+              <div
+                data-tour='dashboard-stats'
+                className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              >
                 {statCards.map((card, index) => (
                   <motion.div
                     key={card.title}
@@ -257,7 +260,10 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.6 }}
             >
-              <Card className='group relative overflow-hidden border-none bg-white/50 shadow-lg backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/50'>
+              <Card
+                data-tour='dashboard-activity'
+                className='group relative overflow-hidden border-none bg-white/50 shadow-lg backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/50'
+              >
                 <div className='pointer-events-none absolute right-0 top-0 p-8 opacity-[0.03] transition-opacity group-hover:opacity-[0.05]'>
                   <TrendingUp className='h-32 w-32' />
                 </div>

@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 import { initializeTheme } from './redux/themeSlice'
 import { Toaster } from '@/components/ui/toaster'
 import SharingDialog from '@/components/shared/SharingDialog'
+import PageTourOverlay from '@/components/ConversationTour/PageTourOverlay'
 import { tokenExpirationService } from '@/services/tokenExpirationService'
 import { clearOldDrafts } from './redux/conversationSlice'
 import { useSocketConnection } from './hooks/useSocketConnection'
@@ -93,6 +94,7 @@ function App() {
       <AppRoutes />
       <Toaster />
       <SharingDialog />
+      <PageTourOverlay />
     </>
   )
 }

@@ -37,7 +37,10 @@ const ConversationSettingsForm: React.FC = () => {
   }
 
   return (
-    <Card className='border-border bg-card p-6'>
+    <Card
+      data-tour='settings-conversation'
+      className='border-border bg-card p-6'
+    >
       <div className='space-y-6'>
         <div>
           <h3 className='text-lg font-semibold text-card-foreground'>
