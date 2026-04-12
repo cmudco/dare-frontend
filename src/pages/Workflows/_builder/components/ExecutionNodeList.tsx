@@ -20,15 +20,19 @@ export function ExecutionNodeList({
 }: ExecutionNodeListProps) {
   const nodes = useAppSelector(selectNodes)
 
-  const labelByNodeId = useMemo(() => {
-    const map = new Map<string, string>()
+  const { labelByNodeId, typeByNodeId } = useMemo(() => {
+    const labels = new Map<string, string>()
+    const types = new Map<string, string>()
     for (const node of nodes) {
       const label = (node.data as { label?: string })?.label
       if (label) {
-        map.set(node.id, label)
+        labels.set(node.id, label)
+      }
+      if (node.type) {
+        types.set(node.id, node.type)
       }
     }
-    return map
+    return { labelByNodeId: labels, typeByNodeId: types }
   }, [nodes])
 
   const getNodeName = (nodeId: string) => labelByNodeId.get(nodeId) ?? nodeId
@@ -78,7 +82,7 @@ export function ExecutionNodeList({
           nodeId={nodeId}
           nodeName={getNodeName(nodeId)}
           label={labelByNodeId.get(nodeId)}
-          nodeType={nodes.find((n) => n.id === nodeId)?.type}
+          nodeType={typeByNodeId.get(nodeId)}
           content={state.response || ''}
           isActive={displayActiveNodeId === nodeId}
           snippets={state.snippets}
