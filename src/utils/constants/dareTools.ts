@@ -61,4 +61,5 @@ export enum ServerSlug {
 export enum DareToolName {
   CREATE_CHART = 'create_chart',
   CREATE_DIAGRAM = 'create_diagram',
+  CREATE_DOCX = 'create_docx',
 }

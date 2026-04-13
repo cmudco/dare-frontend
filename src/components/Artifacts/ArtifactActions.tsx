@@ -8,6 +8,9 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip'
 import type { ArtifactType } from '@/redux/types/artifact'
+import { generateDocxBlob } from './renderers/DocxRenderer'
+import type { DocxDocumentConfig } from '@/redux/types/dareToolResults'
+import { toast } from '@/utils/toast'
 
 interface ArtifactActionsProps {
   content: string
@@ -40,12 +43,37 @@ const ArtifactActions: React.FC<ArtifactActionsProps> = ({
     }
   }
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (disabled || !content) return
 
     // Determine file extension based on artifact type
     let extension = 'md'
     let mimeType = 'text/markdown'
+
+    if (artifactType === 'docx') {
+      try {
+        const config = JSON.parse(content) as DocxDocumentConfig
+        const blob = await generateDocxBlob(config)
+        const sanitizedTitle =
+          title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '') || 'artifact'
+
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${sanitizedTitle}.docx`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error('Failed to download docx artifact:', error)
+        toast.error('Failed to generate document. Please try again.')
+      }
+      return
+    }
 
     if (artifactType === 'code' && language) {
       const languageExtensions: Record<string, string> = {
@@ -104,27 +132,29 @@ const ArtifactActions: React.FC<ArtifactActionsProps> = ({
       )}
 
       <TooltipProvider>
-        {/* Copy button */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={handleCopy}
-              disabled={disabled || !content}
-              className='h-8 w-8 p-0'
-            >
-              {copied ? (
-                <Check className='h-4 w-4 text-green-500' />
-              ) : (
-                <Copy className='h-4 w-4' />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{copied ? 'Copied!' : 'Copy to clipboard'}</p>
-          </TooltipContent>
-        </Tooltip>
+        {/* Copy button — hidden for docx since raw JSON is not useful */}
+        {artifactType !== 'docx' && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={handleCopy}
+                disabled={disabled || !content}
+                className='h-8 w-8 p-0'
+              >
+                {copied ? (
+                  <Check className='h-4 w-4 text-green-500' />
+                ) : (
+                  <Copy className='h-4 w-4' />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{copied ? 'Copied!' : 'Copy to clipboard'}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         {/* Download button */}
         <Tooltip>
@@ -132,7 +162,7 @@ const ArtifactActions: React.FC<ArtifactActionsProps> = ({
             <Button
               variant='ghost'
               size='sm'
-              onClick={handleDownload}
+              onClick={() => void handleDownload()}
               disabled={disabled || !content}
               className='h-8 w-8 p-0'
             >

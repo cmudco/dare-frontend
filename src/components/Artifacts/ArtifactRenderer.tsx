@@ -1,6 +1,11 @@
 import React from 'react'
 import type { Artifact } from '@/redux/types/artifact'
-import { ChartRenderer, MermaidRenderer, SandpackRenderer } from './renderers'
+import {
+  ChartRenderer,
+  DocxRenderer,
+  MermaidRenderer,
+  SandpackRenderer,
+} from './renderers'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import ReactMarkdown from 'react-markdown'
@@ -31,6 +36,15 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
 
     case 'diagram':
       return <MermaidRenderer code={artifact.content} />
+
+    case 'docx':
+      try {
+        const config = JSON.parse(artifact.content)
+        return <DocxRenderer config={config} />
+      } catch (e) {
+        console.error('Failed to parse docx config:', e)
+        return <ErrorDisplay message='Failed to render document' />
+      }
 
     case 'react':
       return <SandpackRenderer code={artifact.content} title={artifact.title} />
