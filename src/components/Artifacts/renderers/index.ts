@@ -6,5 +6,6 @@
  */
 
 export { ChartRenderer } from './ChartRenderer'
+export { DocxRenderer } from './DocxRenderer'
 export { MermaidRenderer } from './MermaidRenderer'
 export { SandpackRenderer } from './SandpackRenderer'

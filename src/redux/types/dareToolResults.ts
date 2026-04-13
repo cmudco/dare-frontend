@@ -41,11 +41,62 @@ export interface ChartConfig {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Docx Types
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Block types for structured Word documents
+ */
+export interface DocxHeadingBlock {
+  type: 'heading'
+  level: 1 | 2 | 3 | 4
+  text: string
+}
+
+export interface DocxParagraphBlock {
+  type: 'paragraph'
+  text: string
+  alignment?: 'left' | 'center' | 'right'
+}
+
+export interface DocxListBlock {
+  type: 'list'
+  ordered?: boolean
+  items: string[]
+}
+
+export interface DocxTableBlock {
+  type: 'table'
+  headers: string[]
+  rows: string[][]
+}
+
+export interface DocxBlockquoteBlock {
+  type: 'blockquote'
+  text: string
+}
+
+export type DocxBlock =
+  | DocxHeadingBlock
+  | DocxParagraphBlock
+  | DocxListBlock
+  | DocxTableBlock
+  | DocxBlockquoteBlock
+
+/**
+ * Document configuration returned by create_docx tool
+ */
+export interface DocxDocumentConfig {
+  title: string
+  blocks: DocxBlock[]
+}
+
+// ─────────────────────────────────────────────────────────────
 // DARE Tool Result
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Result from DARE tool execution (create_chart, create_diagram)
+ * Result from DARE tool execution (create_chart, create_diagram, create_docx)
  *
  * BE sends this as a properly camelCased object.
  * Used when serverSlug === 'dare'
@@ -54,6 +105,7 @@ export interface DareToolResult {
   success: boolean
   chartConfig?: ChartConfig
   mermaidCode?: string
+  docConfig?: DocxDocumentConfig
   error?: string
 }
 
