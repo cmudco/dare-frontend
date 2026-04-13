@@ -8,7 +8,7 @@
  * - Web search sources with citations
  */
 
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import {
   Loader2,
   CheckCircle,
@@ -46,7 +46,7 @@ export interface StepResponseCardProps {
   webSearchSources?: WorkflowStepWebSearchSource[]
 }
 
-export function StepResponseCard({
+export const StepResponseCard = memo(function StepResponseCard({
   nodeName,
   label,
   nodeType,
@@ -105,7 +105,9 @@ export function StepResponseCard({
           <div className='prose prose-sm max-w-full text-gray-700 dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-pre:bg-transparent prose-pre:p-0'>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight, rehypeRaw]}
+              rehypePlugins={
+                isActive ? [rehypeRaw] : [rehypeHighlight, rehypeRaw]
+              }
               components={{
                 table({ children, ...props }) {
                   return (
@@ -129,6 +131,13 @@ export function StepResponseCard({
                 code({ className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '')
                   if (match && match[1] === 'mermaid') {
+                    if (isActive) {
+                      return (
+                        <div className='not-prose my-4 text-xs text-muted-foreground'>
+                          Loading diagram...
+                        </div>
+                      )
+                    }
                     return (
                       <MermaidBlock
                         code={String(children).trim()}
@@ -253,4 +262,4 @@ export function StepResponseCard({
       )}
     </div>
   )
-}
+})

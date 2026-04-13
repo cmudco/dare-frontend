@@ -76,6 +76,7 @@ export default function ChatOutputNodeConfig({
   const error = nodeState?.error || null
   const snippets = nodeState?.snippets ?? []
   const webSearchSources = nodeState?.webSearchSources ?? []
+  const isStreaming = status === WorkflowRunStepStatus.Running
 
   // Get available versions for this node
   const nodeVersionRuns = availableRuns.filter((run) => {
@@ -192,7 +193,11 @@ export default function ChatOutputNodeConfig({
             <div className='prose prose-sm max-w-full text-foreground dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-pre:bg-transparent prose-pre:p-0'>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
+                rehypePlugins={
+                  isStreaming
+                    ? [rehypeKatex, rehypeRaw]
+                    : [rehypeKatex, rehypeHighlight, rehypeRaw]
+                }
                 components={{
                   table({ children, ...props }) {
                     return (
@@ -216,6 +221,13 @@ export default function ChatOutputNodeConfig({
                   code({ className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || '')
                     if (match && match[1] === 'mermaid') {
+                      if (isStreaming) {
+                        return (
+                          <div className='not-prose my-4 text-sm text-muted-foreground'>
+                            Loading diagram...
+                          </div>
+                        )
+                      }
                       return (
                         <MermaidBlock
                           code={String(children).trim()}
