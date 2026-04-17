@@ -109,7 +109,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-2'>
           {onToggleView && (
-            <div className='mr-4 flex gap-2'>
+            <div data-tour='files-view-toggle' className='mr-4 flex gap-2'>
               <Button
                 variant={currentView === 'files' ? 'default' : 'outline'}
                 size='sm'
@@ -133,7 +133,10 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
               </Button>
             </div>
           )}
-          <div className='relative flex h-[40px] w-[300px] items-center'>
+          <div
+            data-tour='files-search'
+            className='relative flex h-[40px] w-[300px] items-center'
+          >
             <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-gray-500' />
             <Input
               type='text'
@@ -144,6 +147,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
             />
           </div>
           <Button
+            data-tour='files-filter-tags'
             variant='outline'
             className='flex items-center gap-2'
             onClick={() => setShowTagFilter(!showTagFilter)}
@@ -178,6 +182,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
             </Button>
           )}
           <Button
+            data-tour='files-upload'
             className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
             variant='default'
             size='default'

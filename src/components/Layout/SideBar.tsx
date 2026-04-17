@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   RectangleGroupIcon,
@@ -7,10 +7,17 @@ import {
   QuestionMarkCircleIcon,
   Cog8ToothIcon,
   CreditCardIcon,
+  AcademicCapIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
 import { features } from '@/config/environment'
+import { useAppDispatch } from '@/redux/hooks'
+import {
+  openConversationTour,
+  openPageTour,
+} from '@/redux/conversationTourSlice'
+import { getTourPageKeyFromPath } from '@/components/ConversationTour/pageTourSteps'
 
 const PromptsIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -106,7 +113,20 @@ const MemoryIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const Sidebar = () => {
   const location = useLocation()
+  const dispatch = useAppDispatch()
   const [isCollapsed, setIsCollapsed] = useState(false)
+
+  const handleStartTutorial = useCallback(() => {
+    const pageKey = getTourPageKeyFromPath(location.pathname)
+    if (!pageKey) return
+
+    if (pageKey === 'conversation') {
+      // Conversation tour uses its own overlay inside ConversationLayout
+      dispatch(openConversationTour())
+    } else {
+      dispatch(openPageTour(pageKey))
+    }
+  }, [location.pathname, dispatch])
 
   useEffect(() => {
     const handleResize = () => {
@@ -228,6 +248,25 @@ const Sidebar = () => {
           })}
 
           <div className='sticky bottom-0 z-10 mt-auto bg-white dark:bg-dark-bg'>
+            {/* Tutorial button */}
+            <button
+              onClick={handleStartTutorial}
+              className='flex w-full items-center rounded-lg p-3 text-start leading-tight outline-none transition-all hover:bg-blue-50 hover:text-blue-900 focus:bg-blue-50 focus:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10'
+            >
+              <div className={`${isCollapsed ? 'mx-auto' : 'mr-4'} relative`}>
+                <AcademicCapIcon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
+              </div>
+              <span
+                className={`whitespace-nowrap transition-all duration-300 ${
+                  isCollapsed
+                    ? 'w-0 overflow-hidden opacity-0'
+                    : 'w-auto opacity-100'
+                }`}
+              >
+                Tutorial
+              </span>
+            </button>
+
             {bottomItems.map((item) => {
               const isActive = location.pathname === item.path
               return (

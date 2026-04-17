@@ -203,7 +203,7 @@ const ConversationFileSelect: React.FC = () => {
   }
 
   return (
-    <div className='left-3 flex h-full items-center'>
+    <div data-tour='file-select' className='left-3 flex h-full items-center'>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button

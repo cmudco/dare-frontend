@@ -9,7 +9,8 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FileSpreadsheet } from 'lucide-react'
+import { FileSpreadsheet, CreditCard } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { useExportToCSV } from '@/utils/billingExportUtils'
 import { WalletBalanceCard, TransactionTabs } from './components'
 import { TransactionTab } from '@/utils/constants/billing'
@@ -53,14 +54,30 @@ const BillingScreen = () => {
   return (
     <TooltipProvider>
       <div className='container mx-auto space-y-6 p-6'>
-        <div className='flex flex-col space-y-2'>
-          <h1 className='text-3xl font-bold tracking-tight'>Cost Tracking</h1>
-          <p className='text-muted-foreground'>
-            View your wallet balance and transaction history.
-          </p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className='flex flex-col space-y-1'
+        >
+          <div className='flex items-center gap-3'>
+            <div className='rounded-lg bg-teal-50 p-2 dark:bg-teal-900/20'>
+              <CreditCard className='h-6 w-6 text-teal-600 dark:text-teal-400' />
+            </div>
+            <div>
+              <h1 className='text-3xl font-bold tracking-tight'>
+                Cost Tracking
+              </h1>
+              <p className='text-sm text-muted-foreground'>
+                View your wallet balance and transaction history.
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
-        <WalletBalanceCard wallet={wallet} loading={loading} />
+        <div data-tour='billing-overview'>
+          <WalletBalanceCard wallet={wallet} loading={loading} />
+        </div>
 
         <Card className='overflow-hidden'>
           <CardHeader>

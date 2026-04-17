@@ -21,6 +21,7 @@ import memoryReducer from './memorySlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
 import sharingReducer from './sharingSlice'
+import conversationTourReducer from './conversationTourSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
@@ -52,6 +53,7 @@ export const store = configureStore({
     dareTools: dareToolsReducer,
     memory: memoryReducer,
     sharing: sharingReducer,
+    conversationTour: conversationTourReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware

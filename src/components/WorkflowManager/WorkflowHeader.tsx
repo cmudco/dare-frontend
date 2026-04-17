@@ -33,7 +33,10 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
 
   return (
     <div className='flex items-center justify-between px-2.5'>
-      <div className='relative flex h-[40px] w-[300px] items-center'>
+      <div
+        data-tour='workflows-search'
+        className='relative flex h-[40px] w-[300px] items-center'
+      >
         <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-muted-foreground' />
         <Input
           type='text'
@@ -45,6 +48,7 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
       </div>
 
       <Button
+        data-tour='workflows-create'
         variant='default'
         className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
         onClick={handleCreateWorkflow}
