@@ -143,7 +143,7 @@ const ConversationReferenceSelect: React.FC = () => {
   }, [activeTab, dispatch, open])
 
   return (
-    <div className='flex items-center gap-1'>
+    <div data-tour='reference-select' className='flex items-center gap-1'>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button

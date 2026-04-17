@@ -164,7 +164,7 @@ const AvatarSettings: React.FC = () => {
   const isLoading = loading || uploadLoading
 
   return (
-    <Card className='p-6'>
+    <Card data-tour='settings-avatar' className='p-6'>
       <div className='space-y-6'>
         <div>
           <h3 className='text-lg font-semibold text-foreground'>Avatar</h3>

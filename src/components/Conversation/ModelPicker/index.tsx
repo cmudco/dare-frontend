@@ -156,6 +156,7 @@ const ModelPicker: React.FC = () => {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <motion.button
+          data-tour='model-picker'
           layout
           whileTap={{ scale: 0.98 }}
           className={`group flex h-9 items-center gap-2 rounded-full px-4 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-background ${open ? 'bg-accent/50 ring-2 ring-primary' : 'bg-accent/30 hover:bg-accent/60 dark:bg-accent/20 dark:hover:bg-accent/40'} ${selectedTierColors ? `${selectedTierColors.border} border shadow-sm` : 'border border-transparent'} `}

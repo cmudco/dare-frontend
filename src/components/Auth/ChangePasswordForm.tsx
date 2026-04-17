@@ -50,7 +50,7 @@ export const ChangePasswordForm: React.FC = () => {
   })
 
   return (
-    <Card className='p-6'>
+    <Card data-tour='settings-password' className='p-6'>
       <div className='space-y-6'>
         <div>
           <h3 className='text-lg font-semibold'>Change Password</h3>

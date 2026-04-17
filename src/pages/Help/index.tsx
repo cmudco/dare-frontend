@@ -111,7 +111,7 @@ const Help = () => {
         </p>
       </div>
       <ScrollArea className='h-full'>
-        <Card className='overflow-hidden shadow-md'>
+        <Card data-tour='help-docs' className='overflow-hidden shadow-md'>
           <CardHeader>
             <CardTitle className='flex items-center text-xl'>
               <FileText className='mr-2 h-5 w-5' />
@@ -147,7 +147,10 @@ const Help = () => {
         </Card>
 
         {/* Learning Modules Section */}
-        <Card className='mt-6 overflow-hidden shadow-md'>
+        <Card
+          data-tour='help-learning'
+          className='mt-6 overflow-hidden shadow-md'
+        >
           <CardHeader>
             <CardTitle className='flex items-center text-xl'>
               <FileText className='mr-2 h-5 w-5' />
@@ -199,7 +202,10 @@ const Help = () => {
         ) : (
           <>
             {/* Tier filter pills */}
-            <div className='flex flex-wrap items-center gap-2'>
+            <div
+              data-tour='help-model-filters'
+              className='flex flex-wrap items-center gap-2'
+            >
               <button
                 onClick={() => setActiveTier(null)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
