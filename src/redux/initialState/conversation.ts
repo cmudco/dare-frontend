@@ -20,6 +20,7 @@ export const initialState: ConversationState = {
   selectedMediaFiles: [] as MyFile[], // NEW: Persistent media files
   selectedTags: [] as Tag[],
   selectedFolders: [] as MyFolder[],
+  memoryEnabled: false,
   selectedConversations: [],
   referencedConversations: [],
   referencedConversationHistoryLimit: 10,
