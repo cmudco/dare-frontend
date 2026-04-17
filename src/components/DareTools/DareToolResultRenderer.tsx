@@ -1,4 +1,5 @@
 import React from 'react'
+import { FileText } from 'lucide-react'
 import { ChartRenderer, MermaidRenderer } from '../Artifacts/renderers'
 import { debugLog } from '@/utils/debugLogger'
 import type { DareToolResult } from '@/redux/types/dareToolResults'
@@ -14,6 +15,7 @@ interface DareToolResultRendererProps {
  * Handles:
  * - create_chart: Renders chart using ChartRenderer
  * - create_diagram: Renders Mermaid diagram using MermaidRenderer
+ * - create_docx: Renders compact document card
  */
 export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
   toolName,
@@ -57,6 +59,20 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
     return (
       <div className='not-prose my-4 h-80'>
         <MermaidRenderer code={result.mermaidCode} />
+      </div>
+    )
+  }
+
+  // Handle docx results
+  if (toolName === 'create_docx' && result.docConfig) {
+    const blockCount = result.docConfig.blocks.length
+    return (
+      <div className='not-prose my-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300'>
+        <FileText className='h-5 w-5 shrink-0 text-slate-500' />
+        <span>
+          {result.docConfig.title} &middot; {blockCount} block
+          {blockCount !== 1 ? 's' : ''}
+        </span>
       </div>
     )
   }

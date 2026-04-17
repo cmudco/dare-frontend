@@ -44,6 +44,8 @@ const ArtifactSidecar: React.FC = () => {
         return <BarChart2 className='h-5 w-5' />
       case 'diagram':
         return <GitBranch className='h-5 w-5' />
+      case 'docx':
+        return <FileText className='h-5 w-5' />
       case 'code':
         return <Code className='h-5 w-5' />
       case 'image':
