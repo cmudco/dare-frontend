@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
+  Brain,
   Check,
   FileText,
   MessageSquare,
@@ -13,9 +14,14 @@ import {
   updateReferencedConversations,
   updateReferencedConversationHistoryLimit,
   updateReferencedSummaries,
+  updateMemoryEnabled,
 } from '@/redux/conversationSlice'
-import { fetchConversationSummaries } from '@/redux/asyncThunks/conversation'
+import {
+  fetchConversationSummaries,
+  updateConversation,
+} from '@/redux/asyncThunks/conversation'
 import type { Conversation } from '@/redux/types/conversation'
+import { features } from '@/config/environment'
 
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -25,6 +31,7 @@ import {
   PopoverContent as SettingsPopoverContent,
   PopoverTrigger as SettingsPopoverTrigger,
 } from '../ui/popover'
+import { Switch } from '../ui/switch'
 import { Slider } from '../ui/slider'
 import { Badge } from '../ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
@@ -46,6 +53,11 @@ const ConversationReferenceSelect: React.FC = () => {
   )
   const referencedSummaries = useSelector(
     (state: RootState) => state.conversation.referencedSummaries
+  )
+
+  const memoryEnabled = useSelector(
+    (state: RootState) =>
+      activeConversation?.memoryEnabled ?? state.conversation.memoryEnabled
   )
 
   const [open, setOpen] = useState(false)
@@ -100,6 +112,18 @@ const ConversationReferenceSelect: React.FC = () => {
     dispatch(updateReferencedConversationHistoryLimit(values[0]))
   }
 
+  const handleMemoryToggle = (checked: boolean) => {
+    dispatch(updateMemoryEnabled(checked))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { memoryEnabled: checked },
+        })
+      )
+    }
+  }
+
   const getConversationTitle = (conversation: Conversation) => {
     return conversation.title || 'New Chat'
   }
@@ -144,6 +168,18 @@ const ConversationReferenceSelect: React.FC = () => {
                 Conversation Context
               </h3>
               <div className='flex items-center gap-2'>
+                {features.enableMemory && (
+                  <div className='flex items-center gap-1.5'>
+                    <Brain className='h-3.5 w-3.5 text-muted-foreground' />
+                    <span className='text-xs font-medium text-muted-foreground'>
+                      Memory
+                    </span>
+                    <Switch
+                      checked={memoryEnabled}
+                      onCheckedChange={handleMemoryToggle}
+                    />
+                  </div>
+                )}
                 {activeTab === 'references' &&
                   referencedConversations.length > 0 && (
                     <Button

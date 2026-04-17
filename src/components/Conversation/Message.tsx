@@ -41,6 +41,7 @@ import { regenerateSocketResponse } from '@/redux/asyncThunks/socketMessages'
 import FeedbackModal from './FeedbackModal'
 import MessageMetadata from './MessageMetadata'
 import WebSearchSources from './WebSearchSources'
+import MemoryContextSources from './MemoryContextSources'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
 import { ToolCallIndicator } from '../MCP/ToolCallIndicator'
@@ -740,6 +741,14 @@ const Message: React.FC<MessageProps> = ({
         message.webSearchSources &&
         message.webSearchSources.length > 0 && (
           <WebSearchSources sources={message.webSearchSources} />
+        )}
+
+      {/* Memory Context Sources */}
+      {!isSenderMessage(message) &&
+        !message.streaming &&
+        message.memoryContextData &&
+        message.memoryContextData.length > 0 && (
+          <MemoryContextSources items={message.memoryContextData} />
         )}
 
       {/* MCP Tool Calls - Show tool usage indicator for AI messages */}
