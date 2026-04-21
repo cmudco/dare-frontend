@@ -276,6 +276,118 @@ const blocksToDocxChildren = (blocks: DocxBlock[]) => {
   return children
 }
 
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+export const generateDocxHtml = (config: DocxDocumentConfig): string => {
+  const parts: string[] = []
+  parts.push(`<h1>${escapeHtml(config.title)}</h1>`)
+
+  config.blocks.forEach((block) => {
+    switch (block.type) {
+      case 'heading':
+        parts.push(
+          `<h${block.level + 1}>${escapeHtml(block.text)}</h${block.level + 1}>`
+        )
+        return
+      case 'paragraph': {
+        const alignment = block.alignment || 'left'
+        parts.push(
+          `<p style="text-align:${alignment};">${escapeHtml(block.text)}</p>`
+        )
+        return
+      }
+      case 'list': {
+        const tag = block.ordered ? 'ol' : 'ul'
+        const items = block.items
+          .map((item) => `<li>${escapeHtml(item)}</li>`)
+          .join('')
+        parts.push(`<${tag}>${items}</${tag}>`)
+        return
+      }
+      case 'blockquote':
+        parts.push(
+          `<blockquote><em>${escapeHtml(block.text)}</em></blockquote>`
+        )
+        return
+      case 'table': {
+        const head = block.headers
+          .map((header) => `<th>${escapeHtml(header)}</th>`)
+          .join('')
+        const body = block.rows
+          .map(
+            (row) =>
+              `<tr>${row
+                .map((cell) => `<td>${escapeHtml(cell)}</td>`)
+                .join('')}</tr>`
+          )
+          .join('')
+        parts.push(
+          `<table border="1" cellspacing="0" cellpadding="4"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`
+        )
+      }
+    }
+  })
+
+  return parts.join('\n')
+}
+
+export const generateDocxPlainText = (config: DocxDocumentConfig): string => {
+  const lines: string[] = []
+  lines.push(config.title)
+  lines.push('='.repeat(Math.max(config.title.length, 3)))
+  lines.push('')
+
+  config.blocks.forEach((block) => {
+    switch (block.type) {
+      case 'heading':
+        lines.push(`${'#'.repeat(block.level)} ${block.text}`)
+        lines.push('')
+        return
+      case 'paragraph':
+        lines.push(block.text)
+        lines.push('')
+        return
+      case 'list':
+        block.items.forEach((item, index) => {
+          const prefix = block.ordered ? `${index + 1}. ` : '- '
+          lines.push(`${prefix}${item}`)
+        })
+        lines.push('')
+        return
+      case 'blockquote':
+        block.text.split('\n').forEach((line) => lines.push(`> ${line}`))
+        lines.push('')
+        return
+      case 'table': {
+        const widths = block.headers.map((header, columnIndex) =>
+          Math.max(
+            header.length,
+            ...block.rows.map((row) => (row[columnIndex] ?? '').length)
+          )
+        )
+        const formatRow = (cells: string[]) =>
+          `| ${cells
+            .map((cell, index) => (cell ?? '').padEnd(widths[index] ?? 0))
+            .join(' | ')} |`
+        lines.push(formatRow(block.headers))
+        lines.push(
+          `|${widths.map((width) => '-'.repeat(width + 2)).join('|')}|`
+        )
+        block.rows.forEach((row) => lines.push(formatRow(row)))
+        lines.push('')
+      }
+    }
+  })
+
+  return lines.join('\n').trimEnd()
+}
+
 export const generateDocxBlob = async (
   config: DocxDocumentConfig
 ): Promise<Blob> => {
