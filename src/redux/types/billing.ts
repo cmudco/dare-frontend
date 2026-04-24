@@ -1,4 +1,5 @@
 import { LLMModel } from './conversation'
+import { PolicySource } from '@/utils/constants/groupWallet'
 
 export interface BillingState {
   wallet: Wallet | null
@@ -14,18 +15,109 @@ export interface BillingState {
   energyStats: EnergyStatsResponse | null
   energyStatsLoading: boolean
   energyStatsPeriod: string
+  ownedGroups: OwnedGroupResponse[]
+  ownedGroupsLoading: boolean
+  ownedGroupsLoaded: boolean
+  groupActionLoading: boolean
 }
 
 export interface Wallet {
   displayBalance: string
+  lastRefillAt: string | null
   createdAt: string
   updatedAt: string
+}
+
+// ─────────────────────────────────────────────────────────────
+// Group wallet types (owner-facing)
+// ─────────────────────────────────────────────────────────────
+
+export interface EffectivePolicy {
+  amount: string
+  periodDays: number
+  amountSource: PolicySource
+  periodSource: PolicySource
+}
+
+export interface UserRefillOverride {
+  refillAmount: string | null
+  refillPeriodDays: number | null
+  reason: string
+  updatedAt: string
+}
+
+export interface GroupWallet {
+  id: number
+  budgetBalance: string
+  displayBudget: string
+  refillAmount: string | null
+  refillPeriodDays: number | null
+  isActive: boolean
+  memberCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OwnedGroupMember {
+  id: number
+  email: string
+  firstName: string
+  lastName: string
+  displayBalance: string
+  effectivePolicy: EffectivePolicy
+  override: UserRefillOverride | null
+}
+
+export interface OwnedGroupResponse {
+  id: number
+  accessCode: string
+  notes: string | null
+  isActive: boolean
+  groupWallet: GroupWallet | null
+  members: OwnedGroupMember[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AllocateToMemberPayload {
+  recipientUserId: number
+  amount: string
+  note?: string
+}
+
+export interface UpdateGroupPolicyPayload {
+  refillAmount?: string
+  refillPeriodDays?: number
+  isActive?: boolean
+  clearAmount?: boolean
+  clearPeriod?: boolean
+}
+
+export interface UpsertUserOverridePayload {
+  refillAmount?: string | null
+  refillPeriodDays?: number | null
+  reason?: string
+  clearAmount?: boolean
+  clearPeriod?: boolean
+}
+
+export interface AllocateResponse {
+  groupWallet: GroupWallet
+  transaction: Transaction
+  recipient: OwnedGroupMember
+}
+
+export interface UpsertUserOverrideResponse {
+  override: UserRefillOverride | null
+  member: OwnedGroupMember
 }
 
 export interface Transaction {
   id: number
   displayAmount: string
   type: string
+  source?: string
+  relatedGroupCode?: string | null
   message: string
   llm: LLMModel
   llmName: string

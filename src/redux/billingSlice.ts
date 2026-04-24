@@ -6,12 +6,23 @@ import {
   getWallet,
   getBillingModelStats,
   getEnergyStats,
+  fetchOwnedGroups,
+  refreshGroupMembers,
+  updateGroupPolicy,
+  allocateToMember,
+  upsertUserOverride,
+  clearUserOverride,
 } from './asyncThunks/billing'
 import {
-  Transaction,
-  Wallet,
+  AllocateResponse,
   BillingModelStatsResponse,
   EnergyStatsResponse,
+  GroupWallet,
+  OwnedGroupMember,
+  OwnedGroupResponse,
+  Transaction,
+  UpsertUserOverrideResponse,
+  Wallet,
 } from './types/billing'
 
 const billingSlice = createSlice({
@@ -88,6 +99,153 @@ const billingSlice = createSlice({
       )
       .addCase(getEnergyStats.rejected, (state, action) => {
         state.energyStatsLoading = false
+        state.error = action.payload as string
+      })
+      // Owned groups ─────────────────────────────────────────
+      .addCase(fetchOwnedGroups.pending, (state) => {
+        state.ownedGroupsLoading = true
+        state.error = null
+      })
+      .addCase(
+        fetchOwnedGroups.fulfilled,
+        (state, action: PayloadAction<OwnedGroupResponse[]>) => {
+          state.ownedGroupsLoading = false
+          state.ownedGroupsLoaded = true
+          state.ownedGroups = action.payload
+        }
+      )
+      .addCase(fetchOwnedGroups.rejected, (state, action) => {
+        state.ownedGroupsLoading = false
+        state.ownedGroupsLoaded = true
+        state.error = action.payload as string
+      })
+      .addCase(
+        refreshGroupMembers.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            groupWalletId: number
+            members: OwnedGroupMember[]
+          }>
+        ) => {
+          const group = state.ownedGroups.find(
+            (g) => g.groupWallet?.id === action.payload.groupWalletId
+          )
+          if (group) {
+            group.members = action.payload.members
+          }
+        }
+      )
+      .addCase(updateGroupPolicy.pending, (state) => {
+        state.groupActionLoading = true
+      })
+      .addCase(
+        updateGroupPolicy.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            groupWalletId: number
+            groupWallet: GroupWallet
+          }>
+        ) => {
+          state.groupActionLoading = false
+          const group = state.ownedGroups.find(
+            (g) => g.groupWallet?.id === action.payload.groupWalletId
+          )
+          if (group) {
+            group.groupWallet = action.payload.groupWallet
+          }
+        }
+      )
+      .addCase(updateGroupPolicy.rejected, (state, action) => {
+        state.groupActionLoading = false
+        state.error = action.payload as string
+      })
+      .addCase(allocateToMember.pending, (state) => {
+        state.groupActionLoading = true
+      })
+      .addCase(
+        allocateToMember.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            groupWalletId: number
+            response: AllocateResponse
+          }>
+        ) => {
+          state.groupActionLoading = false
+          const group = state.ownedGroups.find(
+            (g) => g.groupWallet?.id === action.payload.groupWalletId
+          )
+          if (!group) return
+          group.groupWallet = action.payload.response.groupWallet
+          const recipient = action.payload.response.recipient
+          const idx = group.members.findIndex((m) => m.id === recipient.id)
+          if (idx >= 0) {
+            group.members[idx] = recipient
+          }
+        }
+      )
+      .addCase(allocateToMember.rejected, (state, action) => {
+        state.groupActionLoading = false
+        state.error = action.payload as string
+      })
+      .addCase(upsertUserOverride.pending, (state) => {
+        state.groupActionLoading = true
+      })
+      .addCase(
+        upsertUserOverride.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            groupWalletId: number
+            userId: number
+            response: UpsertUserOverrideResponse
+          }>
+        ) => {
+          state.groupActionLoading = false
+          const group = state.ownedGroups.find(
+            (g) => g.groupWallet?.id === action.payload.groupWalletId
+          )
+          if (!group) return
+          const idx = group.members.findIndex(
+            (m) => m.id === action.payload.userId
+          )
+          if (idx >= 0) {
+            group.members[idx] = action.payload.response.member
+          }
+        }
+      )
+      .addCase(upsertUserOverride.rejected, (state, action) => {
+        state.groupActionLoading = false
+        state.error = action.payload as string
+      })
+      .addCase(clearUserOverride.pending, (state) => {
+        state.groupActionLoading = true
+      })
+      .addCase(
+        clearUserOverride.fulfilled,
+        (
+          state,
+          action: PayloadAction<{ groupWalletId: number; userId: number }>
+        ) => {
+          state.groupActionLoading = false
+          const group = state.ownedGroups.find(
+            (g) => g.groupWallet?.id === action.payload.groupWalletId
+          )
+          if (!group) return
+          const member = group.members.find(
+            (m) => m.id === action.payload.userId
+          )
+          if (member) {
+            member.override = null
+          }
+          // Effective-policy badge needs a backend recompute — refreshGroupMembers
+          // is dispatched from the page on success.
+        }
+      )
+      .addCase(clearUserOverride.rejected, (state, action) => {
+        state.groupActionLoading = false
         state.error = action.payload as string
       })
   },
