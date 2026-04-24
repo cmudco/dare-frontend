@@ -23,6 +23,7 @@ import Workflows from '@/pages/Workflows/index.tsx'
 import WorkflowEditPage from '@/pages/Workflows/WorkflowEditPage.tsx'
 import ProfileScreen from '@/pages/ProfileScreen/index.tsx'
 import BillingScreen from '@/pages/Billing/index.tsx'
+import GroupWalletManager from '@/pages/GroupWalletManager/index.tsx'
 import OnboardingScreen from '@/pages/Onboarding/index.tsx'
 import WorkflowCreatePage from '@/pages/Workflows/WorkflowCreatePage.tsx'
 import Agents from '@/pages/Agents/index.tsx'
@@ -119,6 +120,7 @@ const AppRoutes = () => {
               <Route path='/memory' element={<MemoryScreen />} />
             )}
             <Route path='/billing/' element={<BillingScreen />} />
+            <Route path='/group-wallet' element={<GroupWalletManager />} />
           </Route>
           <Route path='/models/:slug' element={<ModelCards />} />
           <Route path='*' element={<div>404 - Page Not Found</div>} />

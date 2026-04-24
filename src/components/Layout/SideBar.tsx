@@ -12,11 +12,12 @@ import {
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
 import { features } from '@/config/environment'
-import { useAppDispatch } from '@/redux/hooks'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   openConversationTour,
   openPageTour,
 } from '@/redux/conversationTourSlice'
+import { UsersIcon } from '@heroicons/react/24/outline'
 import { getTourPageKeyFromPath } from '@/components/ConversationTour/pageTourSteps'
 
 const PromptsIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -115,6 +116,9 @@ const Sidebar = () => {
   const location = useLocation()
   const dispatch = useAppDispatch()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const hasOwnedGroups = useAppSelector(
+    (state) => state.billing.ownedGroups.length > 0
+  )
 
   const handleStartTutorial = useCallback(() => {
     const pageKey = getTourPageKeyFromPath(location.pathname)
@@ -166,6 +170,9 @@ const Sidebar = () => {
 
   const bottomItems = [
     { name: 'Cost Tracking', icon: CreditCardIcon, path: '/billing/' },
+    ...(hasOwnedGroups
+      ? [{ name: 'Group Wallet', icon: UsersIcon, path: '/group-wallet' }]
+      : []),
     { name: 'Help', icon: QuestionMarkCircleIcon, path: '/help' },
     { name: 'Settings', icon: Cog8ToothIcon, path: '/settings' },
   ]
