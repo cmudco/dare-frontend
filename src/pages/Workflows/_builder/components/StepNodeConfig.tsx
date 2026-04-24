@@ -1,4 +1,4 @@
-import { FileText, Database, Globe, Type, Bot, Tag } from 'lucide-react'
+import { FileText, Database, Globe, Type, Bot, Tag, Link2 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
@@ -36,6 +36,7 @@ export interface StepNodeData {
   documentSimilarityThreshold?: number
   textInput?: string
   enableWebSearch?: boolean
+  usePreviousContext?: boolean
 }
 
 interface StepNodeConfigProps {
@@ -362,6 +363,26 @@ export default function StepNodeConfig({
             checked={nodeData?.enableWebSearch || false}
             onCheckedChange={(checked) => {
               updateNodeData({ enableWebSearch: checked })
+            }}
+            className='ml-2'
+          />
+        </div>
+
+        <div className='flex items-center justify-between rounded-md border border-muted bg-muted/20 p-3'>
+          <div className='flex-1'>
+            <Label className='flex cursor-pointer items-center gap-2 text-xs font-medium'>
+              <Link2 className='h-3 w-3' />
+              Pass Previous Step Context
+            </Label>
+            <p className='mt-0.5 text-xs text-muted-foreground'>
+              Include upstream step outputs in this step&apos;s prompt as
+              structured context.
+            </p>
+          </div>
+          <Switch
+            checked={nodeData?.usePreviousContext ?? true}
+            onCheckedChange={(checked) => {
+              updateNodeData({ usePreviousContext: checked })
             }}
             className='ml-2'
           />

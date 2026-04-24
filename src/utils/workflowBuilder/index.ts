@@ -4,6 +4,7 @@ export { createNode } from './createNode'
 export { removeNodeById } from './removeNodeById'
 export { updateNodeData } from './updateNodeData'
 export { isValidConnection, getStartNode, getMode } from './isValidConnection'
+export { wouldCreateCycle } from './detectCycle'
 export { handleConnection } from './handleConnection'
 export { serializeWorkflow } from './serializeWorkflow'
 
