@@ -1,7 +1,6 @@
 import { BillingState } from '../types/billing'
 
 export const initialBillingState: BillingState = {
-  wallet: null,
   transactions: [],
   transactionCount: 0,
   nextPage: null,
@@ -18,4 +17,8 @@ export const initialBillingState: BillingState = {
   ownedGroupsLoading: false,
   ownedGroupsLoaded: false,
   groupActionLoading: false,
+  wallets: [],
+  activeWallet: { type: 'DARE', refId: null },
+  byoEnabled: false,
+  walletsLoading: false,
 }
