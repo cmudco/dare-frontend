@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { getWallet, getTransactions } from '@/redux/asyncThunks/billing'
+import { getWallets, getTransactions } from '@/redux/asyncThunks/billing'
 import {
   Card,
   CardHeader,
@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button'
 import { FileSpreadsheet, CreditCard } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useExportToCSV } from '@/utils/billingExportUtils'
-import { WalletBalanceCard, TransactionTabs } from './components'
+import { TransactionTabs } from './components'
+import { WalletSection } from './components/WalletSection'
 import { TransactionTab } from '@/utils/constants/billing'
 import {
   Tooltip,
@@ -24,19 +25,13 @@ import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
 
 const BillingScreen = () => {
   const dispatch = useAppDispatch()
-  const {
-    wallet,
-    transactions,
-    transactionCount,
-    nextPage,
-    previousPage,
-    loading,
-  } = useAppSelector((state) => state.billing)
+  const { transactions, transactionCount, nextPage, previousPage, loading } =
+    useAppSelector((state) => state.billing)
 
   const [activeTab, setActiveTab] = useState<TransactionTab>(TransactionTab.ALL)
 
   useEffect(() => {
-    dispatch(getWallet())
+    dispatch(getWallets())
     dispatch(getTransactions(1))
   }, [dispatch])
 
@@ -76,7 +71,7 @@ const BillingScreen = () => {
         </motion.div>
 
         <div data-tour='billing-overview'>
-          <WalletBalanceCard wallet={wallet} loading={loading} />
+          <WalletSection />
         </div>
 
         <Card className='overflow-hidden'>
