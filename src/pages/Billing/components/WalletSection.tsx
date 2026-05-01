@@ -31,7 +31,7 @@ export const WalletSection: React.FC = () => {
 
   return (
     <Card className='overflow-hidden'>
-      <CardHeader className='border-b bg-gradient-to-r from-[#023572] to-[#EE183C] p-5 text-white'>
+      <CardHeader className='border-b bg-dare-gradient p-5 text-white'>
         <div className='flex flex-wrap items-start justify-between gap-3'>
           <div className='min-w-0'>
             <div className='flex items-center gap-2'>

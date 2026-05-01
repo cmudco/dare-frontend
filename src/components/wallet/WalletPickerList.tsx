@@ -36,7 +36,7 @@ const AddRow: React.FC<AddRowProps> = ({
     type='button'
     onClick={onClick}
     className={cn(
-      'group flex w-full items-center gap-3 rounded-lg border border-dashed border-[#023572]/30 bg-gradient-to-r from-[#023572]/[0.03] to-[#EE183C]/[0.03] px-3 py-2 text-left transition-colors hover:border-[#023572]/60 hover:from-[#023572]/[0.06] hover:to-[#EE183C]/[0.06] dark:border-[#EE183C]/30 dark:from-[#023572]/10 dark:to-[#EE183C]/10',
+      'group flex w-full items-center gap-3 rounded-lg border border-dashed border-[#023572]/30 bg-gradient-to-r from-[#EE183C]/[0.03] to-[#023572]/[0.03] px-3 py-2 text-left transition-colors hover:border-[#023572]/60 hover:from-[#EE183C]/[0.06] hover:to-[#023572]/[0.06] dark:border-[#EE183C]/30 dark:from-[#EE183C]/10 dark:to-[#023572]/10',
       compact ? 'text-sm' : 'text-base'
     )}
   >

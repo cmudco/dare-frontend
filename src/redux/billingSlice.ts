@@ -24,6 +24,7 @@ import {
   OwnedGroupMember,
   OwnedGroupResponse,
   Transaction,
+  TransactionSummary,
   UpsertUserOverrideResponse,
   WalletsListResponse,
 } from './types/billing'
@@ -61,11 +62,13 @@ const billingSlice = createSlice({
             next: string | null
             previous: string | null
             results: Transaction[]
+            summary: TransactionSummary
           }>
         ) => {
           state.loading = false
           state.transactions = action.payload.results
           state.transactionCount = action.payload.count
+          state.transactionSummary = action.payload.summary
           state.nextPage = action.payload.next
           state.previousPage = action.payload.previous
         }

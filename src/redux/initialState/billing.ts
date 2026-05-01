@@ -3,6 +3,7 @@ import { BillingState } from '../types/billing'
 export const initialBillingState: BillingState = {
   transactions: [],
   transactionCount: 0,
+  transactionSummary: { all: 0, wallet: 0, ownApi: 0 },
   nextPage: null,
   previousPage: null,
   loading: false,
