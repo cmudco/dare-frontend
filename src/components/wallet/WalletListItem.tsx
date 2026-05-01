@@ -26,9 +26,12 @@ import {
   CheckCircle2,
   MoreVertical,
   Pencil,
+  Plug,
   Trash2,
   Clock,
 } from 'lucide-react'
+import { testLiteLLMSavedAPI } from '@/api/billing'
+import { toast } from '@/utils/toast'
 
 interface WalletListItemProps {
   wallet: UnifiedWallet
@@ -78,6 +81,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
   const [renaming, setRenaming] = useState(false)
   const [draftLabel, setDraftLabel] = useState(wallet.label)
   const [showDelete, setShowDelete] = useState(false)
+  const [testing, setTesting] = useState(false)
 
   const Icon = ICON_FOR_TYPE[wallet.type]
   const adminIssued = isAdminIssued(wallet)
@@ -116,7 +120,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
         'group flex items-center gap-3 rounded-lg border bg-card px-3 py-2 transition-colors',
         compact ? 'text-sm' : 'text-base',
         wallet.isActive
-          ? 'cursor-default border-[#023572]/40 bg-gradient-to-r from-[#023572]/5 to-[#EE183C]/5 dark:border-[#EE183C]/40 dark:from-[#023572]/10 dark:to-[#EE183C]/10'
+          ? 'cursor-default border-[#023572]/40 bg-gradient-to-r from-[#EE183C]/5 to-[#023572]/5 dark:border-[#EE183C]/40 dark:from-[#EE183C]/10 dark:to-[#023572]/10'
           : 'cursor-pointer border-border hover:border-[#023572]/30 hover:bg-accent/40'
       )}
       data-wallet-type={wallet.type}
@@ -159,7 +163,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
                   <>
                     <Badge
                       variant='secondary'
-                      className='border-0 bg-gradient-to-r from-[#023572]/15 to-[#EE183C]/15 text-[10px] font-semibold uppercase tracking-wide text-[#023572] dark:text-[#EE183C]'
+                      className='border-0 bg-gradient-to-r from-[#EE183C]/15 to-[#023572]/15 text-[10px] font-semibold uppercase tracking-wide text-[#023572] dark:text-[#EE183C]'
                     >
                       {providers.length}{' '}
                       {providers.length === 1 ? 'key' : 'keys'} configured
@@ -216,7 +220,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
       </div>
 
       {wallet.isActive && (
-        <span className='inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#023572] to-[#EE183C] px-2 py-0.5 text-xs font-medium text-white'>
+        <span className='inline-flex items-center gap-1 rounded-full bg-dare-gradient px-2 py-0.5 text-xs font-medium text-white'>
           <CheckCircle2 className='h-3 w-3' aria-label='active' />
           Active
         </span>
@@ -235,6 +239,36 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end' onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem
+              disabled={testing || !wallet.refId}
+              onClick={async () => {
+                if (!wallet.refId) return
+                setTesting(true)
+                try {
+                  const res = await testLiteLLMSavedAPI(wallet.refId)
+                  if (res.ok) {
+                    toast.success(
+                      `Connection OK — ${res.models.length} ${
+                        res.models.length === 1 ? 'model' : 'models'
+                      } available.`
+                    )
+                  } else {
+                    toast.error(
+                      res.error || 'Connection failed — check the proxy.'
+                    )
+                  }
+                } catch (err) {
+                  toast.error(
+                    err instanceof Error ? err.message : 'Test request failed.'
+                  )
+                } finally {
+                  setTesting(false)
+                }
+              }}
+            >
+              <Plug className='mr-2 h-3.5 w-3.5' />
+              Test connection
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
                 setRenaming(true)

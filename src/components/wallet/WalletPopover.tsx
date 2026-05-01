@@ -63,7 +63,7 @@ export const WalletPopover: React.FC = () => {
             aria-label={`Wallet: ${triggerLabel} (${triggerSecondary})`}
             className='group inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#023572]/15 bg-background py-0.5 pl-0.5 pr-3 text-sm font-medium text-foreground shadow-sm transition-all hover:border-[#023572]/40 hover:shadow-md dark:border-[#EE183C]/20 dark:hover:border-[#EE183C]/50'
           >
-            <span className='flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#023572] to-[#EE183C] text-white shadow-inner'>
+            <span className='flex h-7 w-7 items-center justify-center rounded-full bg-dare-gradient text-white shadow-inner'>
               <CreditCardIcon className='h-3.5 w-3.5' />
             </span>
             <span className='font-semibold tabular-nums text-foreground'>
@@ -79,7 +79,7 @@ export const WalletPopover: React.FC = () => {
 
         <PopoverContent align='end' className='w-[380px] overflow-hidden p-0'>
           {/* Active wallet header — DARE gradient */}
-          <div className='relative bg-gradient-to-r from-[#023572] to-[#EE183C] px-5 py-4 text-white'>
+          <div className='relative bg-dare-gradient px-5 py-4 text-white'>
             <div className='flex items-start justify-between gap-3'>
               <div className='min-w-0'>
                 <p className='text-[10px] font-semibold uppercase tracking-wider text-white/80'>

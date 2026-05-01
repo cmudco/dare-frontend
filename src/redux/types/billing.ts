@@ -1,9 +1,16 @@
 import { LLMModel } from './conversation'
 import { PolicySource } from '@/utils/constants/groupWallet'
 
+export interface TransactionSummary {
+  all: number
+  wallet: number
+  ownApi: number
+}
+
 export interface BillingState {
   transactions: Transaction[]
   transactionCount: number
+  transactionSummary: TransactionSummary
   nextPage: string | null
   previousPage: string | null
   loading: boolean
@@ -90,6 +97,12 @@ export interface LiteLLMKeyResponse {
 
 export interface SetActiveWalletResponse {
   activeWallet: ActiveWalletRef
+}
+
+export interface LiteLLMTestResponse {
+  ok: boolean
+  models: string[]
+  error: string
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -188,6 +201,7 @@ export interface Transaction {
   inputTokens: number
   outputTokens: number
   billingMode: string
+  platform: string
   createdAt: string
   updatedAt: string
 }

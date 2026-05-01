@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   getTransactionsAPI,
+  GetTransactionsOptions,
   getBillingModelStatsAPI,
   getEnergyStatsAPI,
   getWalletsAPI,
@@ -36,9 +37,9 @@ import {
 
 export const getTransactions = createAsyncThunk(
   'billing/getTransactions',
-  async (page: number = 1, thunkAPI) => {
+  async (options: GetTransactionsOptions = {}, thunkAPI) => {
     try {
-      const response = await getTransactionsAPI(page)
+      const response = await getTransactionsAPI(options)
       return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)

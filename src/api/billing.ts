@@ -1,31 +1,49 @@
 import {
   Transaction,
+  TransactionSummary,
   BillingModelStatsResponse,
   EnergyStatsResponse,
   WalletsListResponse,
   WalletType,
   FeatureFlagsResponse,
   LiteLLMKeyResponse,
+  LiteLLMTestResponse,
   SetActiveWalletResponse,
 } from '@/redux/types/billing'
+import { PlatformFilter } from '@/utils/constants/billing'
 import { METHOD } from '@/utils/constants/requests'
 import { baseRequest } from '@/utils/requests'
 
-export const getTransactionsAPI = async (
-  page: number = 1
-): Promise<{
+export interface TransactionsResponse {
   count: number
   next: string | null
   previous: string | null
   results: Transaction[]
-}> => {
-  return await baseRequest<{
-    count: number
-    next: string | null
-    previous: string | null
-    results: Transaction[]
-  }>({
-    url: `api/billing/transactions/?page=${page}`,
+  summary: TransactionSummary
+}
+
+export interface GetTransactionsOptions {
+  page?: number
+  platform?: PlatformFilter
+  billingMode?: 'wallet' | 'own_api' | null
+}
+
+export const getTransactionsAPI = async (
+  options: GetTransactionsOptions = {}
+): Promise<TransactionsResponse> => {
+  const {
+    page = 1,
+    platform = PlatformFilter.ALL,
+    billingMode = null,
+  } = options
+  const params = new URLSearchParams({
+    page: String(page),
+    platform,
+  })
+  if (billingMode) params.append('billing_mode', billingMode)
+
+  return await baseRequest<TransactionsResponse>({
+    url: `api/billing/transactions/?${params.toString()}`,
     method: METHOD.GET,
   })
 }
@@ -103,5 +121,25 @@ export const deleteLiteLLMKeyAPI = async (id: string): Promise<void> => {
   return await baseRequest<void>({
     url: `api/billing/wallets/litellm/${id}/`,
     method: METHOD.DELETE,
+  })
+}
+
+export const testLiteLLMUnsavedAPI = async (
+  baseUrl: string,
+  apiKey: string
+): Promise<LiteLLMTestResponse> => {
+  return await baseRequest<LiteLLMTestResponse>({
+    url: 'api/billing/wallets/litellm/test/',
+    method: METHOD.POST,
+    data: { base_url: baseUrl, api_key: apiKey },
+  })
+}
+
+export const testLiteLLMSavedAPI = async (
+  id: string
+): Promise<LiteLLMTestResponse> => {
+  return await baseRequest<LiteLLMTestResponse>({
+    url: `api/billing/wallets/litellm/${id}/test/`,
+    method: METHOD.POST,
   })
 }
