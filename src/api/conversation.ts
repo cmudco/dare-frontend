@@ -6,6 +6,7 @@ import {
   LLMModel,
   Message,
   MessageReaction,
+  PickerModel,
   WalletMeta,
 } from '../redux/types/conversation'
 import { baseRequest } from '@/utils/requests'
@@ -54,16 +55,16 @@ export const deleteConversationAPI = async (
   })
 }
 
-// When `walletScope` is supplied (typically `'active'`), the BE returns the
-// catalog filtered for the user's active wallet as `{models, wallet}` —
-// every model has the same flat shape with an opaque string `id`. Without
-// the scope, the legacy paginated `{ results }` is returned (no LiteLLM,
-// no wallet metadata).
+// When `walletScope` is supplied (typically `'active'`), the BE returns
+// `{models, wallet}` — wallet-aware picker entries with opaque string ids
+// (LiteLLM-routed entries co-exist with DB-LLMs). Without the scope, the
+// legacy paginated `{ results }` is returned — those rows are
+// `LLMModel`-shaped (numeric PK) since LiteLLM doesn't apply.
 export const getModelsAPI = async (
   walletScope?: 'active' | string
 ): Promise<{
   results?: LLMModel[]
-  models?: LLMModel[]
+  models?: PickerModel[]
   wallet?: WalletMeta
 }> => {
   const url = walletScope
@@ -71,7 +72,7 @@ export const getModelsAPI = async (
     : 'api/llms/'
   return await baseRequest<{
     results?: LLMModel[]
-    models?: LLMModel[]
+    models?: PickerModel[]
     wallet?: WalletMeta
   }>({ url, method: METHOD.GET })
 }

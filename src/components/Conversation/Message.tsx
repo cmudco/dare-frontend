@@ -670,20 +670,22 @@ const Message: React.FC<MessageProps> = ({
         </div>
       )}
 
-      {!isSenderMessage(message) && !message.streaming && message.llm && (
-        <div
-          className={`mt-1 text-xs text-muted-foreground ${
-            isSenderMessage(message) ? 'text-right' : 'pl-10 text-left'
-          }`}
-        >
-          <span>{llmName}</span>
-          {message.cost && (
-            <span className='ml-2 font-medium text-green-600'>
-              ${parseFloat(message.cost).toFixed(4)}
-            </span>
-          )}
-        </div>
-      )}
+      {!isSenderMessage(message) &&
+        !message.streaming &&
+        (message.llm || message.litellmModelName) && (
+          <div
+            className={`mt-1 text-xs text-muted-foreground ${
+              isSenderMessage(message) ? 'text-right' : 'pl-10 text-left'
+            }`}
+          >
+            <span>{llmName}</span>
+            {message.cost && (
+              <span className='ml-2 font-medium text-green-600'>
+                ${parseFloat(message.cost).toFixed(4)}
+              </span>
+            )}
+          </div>
+        )}
 
       {!isSenderMessage(message) &&
         !message.streaming &&

@@ -83,9 +83,10 @@ export interface Message {
   tags?: Tag[]
   // FK to the real DB-backed LLM that handled the message (numeric pk).
   // Null for user messages and for messages dispatched through LiteLLM —
-  // the LiteLLM provenance lives in `litellmKey` + `litellmModelName`.
+  // for those, `litellmModelName` carries the model identifier shown in
+  // the metadata panel. The LiteLLMKey FK is BE-only audit; the key UUID
+  // is never wire-exposed.
   llm?: number | null
-  litellmKey?: string | null
   litellmModelName?: string | null
   streaming?: boolean
   snippets?: Snippet[]
@@ -187,11 +188,30 @@ export interface MessageProps {
   shouldShowAutoFeedback?: boolean
 }
 
-// Uniform picker entry. `id` is opaque to the FE — the BE picker endpoint
-// emits either a stringified PK (for DB-backed LLMs) or
-// `litellm:<key_pk>:<model_name>` (for LiteLLM-routed models). The FE just
-// renders & echoes back; the BE inverts the encoding on dispatch.
+// DB-backed LLM row — `id` is the integer PK (matches Message.llm and the
+// numeric FKs everywhere else). Used for `allModels`, agents, workflows,
+// and any place that looks up an LLM by its true PK.
 export interface LLMModel {
+  id: number
+  name: string
+  identifier?: string
+  provider: string
+  description: string | null
+  isReasoning: boolean
+  isImageGenerator?: boolean
+  isAudioTranscriber?: boolean
+  inputTokenRatePerMillion: number | null
+  outputTokenRatePerMillion: number | null
+  tier: string | null
+}
+
+// Chat-picker entry — `id` is opaque to the FE because LiteLLM-routed
+// entries need to encode (key_pk + model_name) into a single dispatch
+// reference. The BE emits either a stringified LLM PK ("42") or
+// `litellm:<key_pk>:<model_name>`; the FE renders & echoes back; the BE
+// inverts the encoding via `parse_model_id` on dispatch. All other fields
+// match `LLMModel`.
+export interface PickerModel {
   id: string
   name: string
   identifier?: string
@@ -275,7 +295,7 @@ export interface ConversationState {
   selectedModel: string | null
   // Picker catalog (uniform flat shape) plus the wallet metadata block for
   // capability toggles.
-  pickerEntries: LLMModel[]
+  pickerEntries: PickerModel[]
   activeWalletMeta: WalletMeta | null
   selectedFiles: MyFile[]
   selectedEmbeddings: MyFile[]

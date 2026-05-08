@@ -1,14 +1,14 @@
 import React from 'react'
 import { Check } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { LLMModel } from '@/redux/types/conversation'
+import { PickerModel } from '@/redux/types/conversation'
 import { ModelTier, ModelTierColors } from '@/utils/constants/model'
 import { getProviderBrand } from '@/utils/providerColors'
 import { categorizeEntry } from '@/utils/modelGroupingUtils'
 import TierEmoji from './TierEmoji'
 
 interface ModelItemProps {
-  entry: LLMModel
+  entry: PickerModel
   isSelected: boolean
   onClick: () => void
   showProvider?: boolean

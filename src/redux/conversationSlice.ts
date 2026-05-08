@@ -27,6 +27,7 @@ import {
   Conversation,
   ConversationSummary,
   LLMModel,
+  PickerModel,
   ImageGenerationSettings,
   AudioTranscriptionSettings,
   ToolCallStatus,
@@ -513,7 +514,7 @@ export const conversationSlice = createSlice({
         (
           state,
           action: PayloadAction<{
-            models: LLMModel[]
+            models: PickerModel[]
             wallet: WalletMeta | null
           }>
         ) => {

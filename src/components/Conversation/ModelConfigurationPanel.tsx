@@ -138,7 +138,7 @@ const ModelConfigurationPanel: React.FC = () => {
         )
 
       if (dalleModel) {
-        dispatch(updateSelectedModel(dalleModel.id))
+        dispatch(updateSelectedModel(String(dalleModel.id)))
       }
     }
 
@@ -165,7 +165,7 @@ const ModelConfigurationPanel: React.FC = () => {
         ) || allModels.find((model) => model.isAudioTranscriber)
 
       if (transcriberModel) {
-        dispatch(updateSelectedModel(transcriberModel.id))
+        dispatch(updateSelectedModel(String(transcriberModel.id)))
       }
     }
 
