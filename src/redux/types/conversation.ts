@@ -39,6 +39,8 @@ export interface Conversation {
   audioTranscriptionEnabled?: boolean
   artifactsEnabled?: boolean
   memoryEnabled?: boolean
+  // Conversation persists the *real* LLM FK only — LiteLLM-routed models are
+  // never persisted at conversation level (they're per-message audit fields).
   selectedModel?: number | null
   selectedMediaIds?: number[]
   prompt?: Prompt | null
@@ -79,7 +81,12 @@ export interface Message {
   createdAt: string
   files?: MyFile[]
   tags?: Tag[]
+  // FK to the real DB-backed LLM that handled the message (numeric pk).
+  // Null for user messages and for messages dispatched through LiteLLM —
+  // the LiteLLM provenance lives in `litellmKey` + `litellmModelName`.
   llm?: number | null
+  litellmKey?: string | null
+  litellmModelName?: string | null
   streaming?: boolean
   snippets?: Snippet[]
   webSearchSources?: WebSearchSource[]
@@ -180,8 +187,12 @@ export interface MessageProps {
   shouldShowAutoFeedback?: boolean
 }
 
+// Uniform picker entry. `id` is opaque to the FE — the BE picker endpoint
+// emits either a stringified PK (for DB-backed LLMs) or
+// `litellm:<key_pk>:<model_name>` (for LiteLLM-routed models). The FE just
+// renders & echoes back; the BE inverts the encoding on dispatch.
 export interface LLMModel {
-  id: number
+  id: string
   name: string
   identifier?: string
   provider: string
@@ -189,9 +200,25 @@ export interface LLMModel {
   isReasoning: boolean
   isImageGenerator?: boolean
   isAudioTranscriber?: boolean
-  inputTokenRatePerMillion: number
-  outputTokenRatePerMillion: number
-  tier: string
+  inputTokenRatePerMillion: number | null
+  outputTokenRatePerMillion: number | null
+  tier: string | null
+}
+
+export interface WalletMeta {
+  type: 'DARE' | 'BYO' | 'LITELLM'
+  providers: string[]
+  isEmpty: boolean
+  emptyReason: string | null
+  staleProbe: boolean
+  // Capability flags drive which chat toggles the picker shows. LiteLLM
+  // proxies don't transparently forward web-search / structured-output /
+  // DALL-E / Whisper, so the FE hides those toggles when the active
+  // wallet is LITELLM. Tools/MCP stay enabled (LiteLLM forwards them).
+  supportsWebSearch: boolean
+  supportsImageGeneration: boolean
+  supportsAudioTranscription: boolean
+  supportsStructuredOutput: boolean
 }
 
 export interface Snippet {
@@ -244,7 +271,12 @@ export interface ConversationState {
   error: string | null
   searchQuery: string
   activeConversationMessages: Message[]
-  selectedModel: number | null
+  // Opaque dispatch id from the picker — echoed back to the BE on send.
+  selectedModel: string | null
+  // Picker catalog (uniform flat shape) plus the wallet metadata block for
+  // capability toggles.
+  pickerEntries: LLMModel[]
+  activeWalletMeta: WalletMeta | null
   selectedFiles: MyFile[]
   selectedEmbeddings: MyFile[]
   selectedMediaFiles: MyFile[] // NEW: Persistent media files (images/videos)
@@ -258,7 +290,8 @@ export interface ConversationState {
   showDropdown: boolean
   hoveredModel: string | null
   conversationInput: string
-  availableModels: LLMModel[]
+  // Full catalog of DB-backed LLMs, used by configurator surfaces (Agents,
+  // Workflows, ModelCards). Populated from `/api/llms/all_models/`.
   allModels: LLMModel[]
   conversationDrafts: ConversationDraft[]
   autoSaveEnabled: boolean

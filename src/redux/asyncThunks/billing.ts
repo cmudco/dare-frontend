@@ -11,6 +11,7 @@ import {
   renameLiteLLMKeyAPI,
   deleteLiteLLMKeyAPI,
 } from '../../api/billing'
+import { getAvailableModels } from './conversation'
 import {
   allocateToMemberAPI,
   clearUserOverrideAPI,
@@ -180,10 +181,16 @@ export const setActiveWallet = createAsyncThunk<
     const response = await setActiveWalletAPI(type, refId)
     // Re-pull authoritative wallet list so inactive rows reflect the change.
     thunkAPI.dispatch(getWallets())
+    // The model picker is wallet-scoped (LITELLM exposes synthetic entries,
+    // BYO filters by configured providers, DARE returns the full catalog),
+    // so refresh it whenever the active wallet changes — otherwise the user
+    // sees a stale list until they reopen the picker.
+    thunkAPI.dispatch(getAvailableModels())
     return response
   } catch (error) {
     // Rollback optimistic update by re-fetching.
     thunkAPI.dispatch(getWallets())
+    thunkAPI.dispatch(getAvailableModels())
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })

@@ -63,8 +63,10 @@ const Help = () => {
     dispatch(getAllModels())
   }, [dispatch])
 
-  const formatCurrency = (value: string | number | undefined): string => {
-    if (value === undefined) return '-'
+  const formatCurrency = (
+    value: string | number | null | undefined
+  ): string => {
+    if (value === undefined || value === null) return '-'
     const numValue =
       typeof value === 'string' ? parseFloat(value) : Number(value)
     return isNaN(numValue) ? '-' : `$${numValue.toFixed(2)}`

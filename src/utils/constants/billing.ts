@@ -1,12 +1,14 @@
 export enum BillingMode {
   WALLET = 'Use Wallet Credits',
   OWN_API = 'Use Own API Keys',
+  LITELLM = 'Use LiteLLM Proxy Key',
 }
 
 export enum TransactionTab {
   ALL = 'all',
   WALLET = 'wallet',
   OWN_API = 'own-api',
+  LITELLM = 'litellm',
 }
 
 export enum PlatformFilter {
@@ -27,6 +29,8 @@ export const getBillingModeLabel = (mode: BillingMode): string => {
       return 'Wallet'
     case BillingMode.OWN_API:
       return 'Own API'
+    case BillingMode.LITELLM:
+      return 'LiteLLM'
     default:
       return 'Unknown'
   }
@@ -38,12 +42,14 @@ export const getBillingModeLabel = (mode: BillingMode): string => {
  */
 export const tabToBillingModeParam = (
   tab: TransactionTab
-): 'wallet' | 'own_api' | null => {
+): 'wallet' | 'own_api' | 'litellm' | null => {
   switch (tab) {
     case TransactionTab.WALLET:
       return 'wallet'
     case TransactionTab.OWN_API:
       return 'own_api'
+    case TransactionTab.LITELLM:
+      return 'litellm'
     default:
       return null
   }

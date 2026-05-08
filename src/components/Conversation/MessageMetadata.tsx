@@ -66,10 +66,18 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
     (state: RootState) => state.conversation.allModels
   )
 
-  const getLLMName = (llmId?: number | null) => {
-    if (!llmId) return 'N/A'
-    const llm = allModels.find((model) => model.id === llmId)
-    return llm ? llm.name : `Model ${llmId}`
+  // Resolve the dispatch model's display name from the message's persisted
+  // FKs. Real LLM dispatches set `message.llm` (numeric pk); LiteLLM
+  // dispatches leave that null and persist `message.litellmModelName`.
+  const getDisplayedModelName = (
+    llmId: number | null | undefined,
+    litellmModelName: string | null | undefined
+  ): string => {
+    if (llmId != null) {
+      const llm = allModels.find((model) => model.id === llmId)
+      return llm ? llm.name : `Model ${llmId}`
+    }
+    return litellmModelName ?? 'N/A'
   }
 
   const formatCost = (cost?: string | null) => {
@@ -214,7 +222,12 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                       <label className='text-sm font-medium text-gray-600'>
                         Model
                       </label>
-                      <p className='text-sm'>{getLLMName(message.llm)}</p>
+                      <p className='text-sm'>
+                        {getDisplayedModelName(
+                          message.llm,
+                          message.litellmModelName
+                        )}
+                      </p>
                     </div>
 
                     {(message.inputTokens || message.outputTokens) && (
