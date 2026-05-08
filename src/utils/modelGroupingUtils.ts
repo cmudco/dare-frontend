@@ -1,11 +1,11 @@
-import { LLMModel } from '@/redux/types/conversation'
+import { PickerModel } from '@/redux/types/conversation'
 import { ModelTier } from './constants/model'
 
 export type ModelGroupType = 'Premium' | 'Advanced' | 'Flash' | 'Other'
 
 export interface ModelGroup {
   type: ModelGroupType
-  entries: LLMModel[]
+  entries: PickerModel[]
 }
 
 export interface ProviderGroup {
@@ -35,12 +35,12 @@ const TYPE_ORDER: Record<ModelGroupType, number> = {
 
 /** Categorize by tier — entries without a tier (e.g. LiteLLM-routed) fall
  *  into "Advanced" so they stay in the user's main list. */
-export const categorizeEntry = (entry: LLMModel): ModelGroupType =>
-  (entry.tier && tierToGroupType[entry.tier]) ?? 'Advanced'
+export const categorizeEntry = (entry: PickerModel): ModelGroupType =>
+  (entry.tier ? tierToGroupType[entry.tier] : undefined) ?? 'Advanced'
 
 /** Group entries by provider, then by tier. */
-export const groupModels = (entries: LLMModel[]): ProviderGroup[] => {
-  const providerMap: Record<string, Record<ModelGroupType, LLMModel[]>> = {}
+export const groupModels = (entries: PickerModel[]): ProviderGroup[] => {
+  const providerMap: Record<string, Record<ModelGroupType, PickerModel[]>> = {}
 
   entries.forEach((entry) => {
     const provider = entry.provider
@@ -61,7 +61,7 @@ export const groupModels = (entries: LLMModel[]): ProviderGroup[] => {
   return Object.entries(providerMap)
     .map(([provider, typeGroups]) => {
       const groups: ModelGroup[] = (
-        Object.entries(typeGroups) as [ModelGroupType, LLMModel[]][]
+        Object.entries(typeGroups) as [ModelGroupType, PickerModel[]][]
       )
         .filter(([, list]) => list.length > 0)
         .map(([type, list]) => ({
@@ -81,8 +81,8 @@ export const groupModels = (entries: LLMModel[]): ProviderGroup[] => {
 }
 
 /** Group entries globally by tier (cost). */
-export const groupModelsByCost = (entries: LLMModel[]): ModelGroup[] => {
-  const typeMap: Record<ModelGroupType, LLMModel[]> = {
+export const groupModelsByCost = (entries: PickerModel[]): ModelGroup[] => {
+  const typeMap: Record<ModelGroupType, PickerModel[]> = {
     Premium: [],
     Advanced: [],
     Flash: [],
@@ -93,7 +93,7 @@ export const groupModelsByCost = (entries: LLMModel[]): ModelGroup[] => {
     typeMap[categorizeEntry(entry)].push(entry)
   })
 
-  return (Object.entries(typeMap) as [ModelGroupType, LLMModel[]][])
+  return (Object.entries(typeMap) as [ModelGroupType, PickerModel[]][])
     .filter(([, list]) => list.length > 0)
     .map(([type, list]) => ({
       type,

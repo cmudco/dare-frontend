@@ -23,7 +23,7 @@ import {
   getAvailableModels,
   getAllModels,
 } from '@/redux/asyncThunks/conversation'
-import { LLMModel } from '@/redux/types/conversation'
+import { PickerModel } from '@/redux/types/conversation'
 import { ModelTier, ModelTierColors } from '@/utils/constants/model'
 import { getProviderBrand } from '@/utils/providerColors'
 import {
@@ -99,7 +99,7 @@ const ModelPicker: React.FC = () => {
     }
   }, [pickerEntries, groupingMode, selectedModel])
 
-  const handleModelSelect = (entry: LLMModel) => {
+  const handleModelSelect = (entry: PickerModel) => {
     dispatch(updateSelectedModel(entry.id))
     setOpen(false)
   }
@@ -279,7 +279,7 @@ const ModelPicker: React.FC = () => {
 
                   {(groupingMode === 'all' || groupingMode === 'latest') && (
                     <div className='grid grid-cols-1 gap-1'>
-                      {(groupedData as LLMModel[]).map((entry) => (
+                      {(groupedData as PickerModel[]).map((entry) => (
                         <ModelItem
                           key={entry.id}
                           entry={entry}

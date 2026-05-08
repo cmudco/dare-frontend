@@ -10,23 +10,23 @@
  * the encoding — it just compares ids by equality.
  */
 
-import { LLMModel } from '../types/conversation'
+import { PickerModel } from '../types/conversation'
 
-const isImageOrAudioModel = (m: LLMModel): boolean =>
+const isImageOrAudioModel = (m: PickerModel): boolean =>
   Boolean(m.isImageGenerator || m.isAudioTranscriber)
 
 export const filterPickerEntriesByImageGeneration = (
-  entries: LLMModel[],
+  entries: PickerModel[],
   isImageGeneration: boolean
-): LLMModel[] =>
+): PickerModel[] =>
   entries.filter((m) =>
     isImageGeneration ? m.isImageGenerator === true : !isImageOrAudioModel(m)
   )
 
 export const filterPickerEntriesByAudioTranscription = (
-  entries: LLMModel[],
+  entries: PickerModel[],
   isAudioTranscription: boolean
-): LLMModel[] =>
+): PickerModel[] =>
   entries.filter((m) =>
     isAudioTranscription ? m.isAudioTranscriber === true : !m.isAudioTranscriber
   )
@@ -44,14 +44,14 @@ export const filterModelsByAudioTranscription =
  */
 export const selectAppropriateModel = (
   desired: string | null | undefined,
-  entries: LLMModel[]
+  entries: PickerModel[]
 ): string | null => {
   if (desired && entries.some((e) => e.id === desired)) return desired
   return entries[0]?.id ?? null
 }
 
 export const syncModelsWithImageGenerationState = <
-  T extends { pickerEntries: LLMModel[]; selectedModel: string | null },
+  T extends { pickerEntries: PickerModel[]; selectedModel: string | null },
 >(
   state: T,
   imageGenerationEnabled: boolean,
@@ -66,7 +66,7 @@ export const syncModelsWithImageGenerationState = <
 }
 
 export const syncModelsWithAudioTranscriptionState = <
-  T extends { pickerEntries: LLMModel[]; selectedModel: string | null },
+  T extends { pickerEntries: PickerModel[]; selectedModel: string | null },
 >(
   state: T,
   audioTranscriptionEnabled: boolean,

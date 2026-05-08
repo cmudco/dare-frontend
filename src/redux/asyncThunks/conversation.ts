@@ -30,10 +30,10 @@ import { AppDispatch, RootState } from '../store'
 import { sendWebSocketMessage } from './websocket'
 import { sendSocketMessage } from './socketMessages'
 import { config } from '@/config/environment'
-import { LLMModel, WalletMeta } from '../types/conversation'
+import { LLMModel, PickerModel, WalletMeta } from '../types/conversation'
 
 interface PickerModelsPayload {
-  models: LLMModel[]
+  models: PickerModel[]
   wallet: WalletMeta | null
 }
 

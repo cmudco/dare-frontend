@@ -1,7 +1,7 @@
 import React from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LLMModel } from '@/redux/types/conversation'
+import { PickerModel } from '@/redux/types/conversation'
 import { ModelGroup } from '@/utils/modelGroupingUtils'
 import ModelItem from './ModelItem'
 import TypeIcon from './TypeIcon'
@@ -11,7 +11,7 @@ interface CostSectionProps {
   isExpanded: boolean
   onToggle: () => void
   selectedId: string | null
-  onSelect: (entry: LLMModel) => void
+  onSelect: (entry: PickerModel) => void
 }
 
 const CostSection: React.FC<CostSectionProps> = ({

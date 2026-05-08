@@ -25,7 +25,7 @@ export interface TransactionsResponse {
 export interface GetTransactionsOptions {
   page?: number
   platform?: PlatformFilter
-  billingMode?: 'wallet' | 'own_api' | null
+  billingMode?: 'wallet' | 'own_api' | 'litellm' | null
 }
 
 export const getTransactionsAPI = async (
