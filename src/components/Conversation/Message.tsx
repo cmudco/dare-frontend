@@ -122,8 +122,13 @@ const Message: React.FC<MessageProps> = ({
 
   if (!message) return null
 
-  const llm = llms.find((model) => model.id === message.llm)
-  const llmName = llm ? llm.name : 'Unknown LLM'
+  // Real DB-backed LLM messages carry a numeric `message.llm` FK; LiteLLM
+  // dispatches leave that null and stamp `litellmModelName` instead.
+  const llm =
+    message.llm != null
+      ? llms.find((model) => model.id === message.llm)
+      : undefined
+  const llmName = llm ? llm.name : (message.litellmModelName ?? 'Unknown LLM')
   const userInitial = user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'
 
   const toggleSnippets = () => setIsSnippetsOpen(!isSnippetsOpen)
@@ -665,20 +670,22 @@ const Message: React.FC<MessageProps> = ({
         </div>
       )}
 
-      {!isSenderMessage(message) && !message.streaming && message.llm && (
-        <div
-          className={`mt-1 text-xs text-muted-foreground ${
-            isSenderMessage(message) ? 'text-right' : 'pl-10 text-left'
-          }`}
-        >
-          <span>{llmName}</span>
-          {message.cost && (
-            <span className='ml-2 font-medium text-green-600'>
-              ${parseFloat(message.cost).toFixed(4)}
-            </span>
-          )}
-        </div>
-      )}
+      {!isSenderMessage(message) &&
+        !message.streaming &&
+        (message.llm || message.litellmModelName) && (
+          <div
+            className={`mt-1 text-xs text-muted-foreground ${
+              isSenderMessage(message) ? 'text-right' : 'pl-10 text-left'
+            }`}
+          >
+            <span>{llmName}</span>
+            {message.cost && (
+              <span className='ml-2 font-medium text-green-600'>
+                ${parseFloat(message.cost).toFixed(4)}
+              </span>
+            )}
+          </div>
+        )}
 
       {!isSenderMessage(message) &&
         !message.streaming &&

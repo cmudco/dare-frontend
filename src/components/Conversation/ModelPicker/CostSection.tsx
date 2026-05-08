@@ -1,6 +1,7 @@
 import React from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { PickerModel } from '@/redux/types/conversation'
 import { ModelGroup } from '@/utils/modelGroupingUtils'
 import ModelItem from './ModelItem'
 import TypeIcon from './TypeIcon'
@@ -9,15 +10,15 @@ interface CostSectionProps {
   group: ModelGroup
   isExpanded: boolean
   onToggle: () => void
-  selectedModelId: number | null | undefined
-  onSelect: (id: number) => void
+  selectedId: string | null
+  onSelect: (entry: PickerModel) => void
 }
 
 const CostSection: React.FC<CostSectionProps> = ({
   group,
   isExpanded,
   onToggle,
-  selectedModelId,
+  selectedId,
   onSelect,
 }) => {
   return (
@@ -49,12 +50,12 @@ const CostSection: React.FC<CostSectionProps> = ({
             className='overflow-hidden'
           >
             <div className='grid grid-cols-1 gap-1 p-3 pt-0'>
-              {group.models.map((model) => (
+              {group.entries.map((entry) => (
                 <ModelItem
-                  key={model.id}
-                  model={model}
-                  isSelected={model.id === selectedModelId}
-                  onClick={() => onSelect(model.id)}
+                  key={entry.id}
+                  entry={entry}
+                  isSelected={entry.id === selectedId}
+                  onClick={() => onSelect(entry)}
                   showProvider
                 />
               ))}

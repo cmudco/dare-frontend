@@ -12,7 +12,7 @@ import { Message } from '../types/conversation'
 import { AppDispatch, RootState } from '../store'
 import { setConnectionStatus, setCreditError } from '../websocketSlice'
 import { WEBSOCKET_URL } from '../../api/config'
-import { getWallet } from './billing'
+import { getWallets } from './billing'
 
 let socket: WebSocket | null = null
 
@@ -96,10 +96,10 @@ export const connectWebSocket = createAsyncThunk<
                 streaming: false,
               })
             )
-            dispatch(getWallet())
+            dispatch(getWallets())
           } else {
             dispatch(addMessage(data as Message))
-            dispatch(getWallet())
+            dispatch(getWallets())
           }
           break
 
@@ -186,7 +186,7 @@ export const sendWebSocketMessage = createAsyncThunk<
       (conv) => conv.conversationId
     ),
     referenced_conversation_history_limit: referencedConversationHistoryLimit,
-    llm_id: selectedModel,
+    model_id: selectedModel,
     prompt_id: activeConversation?.prompt?.id,
     temperature: activeConversation?.temperature,
     max_tokens: activeConversation?.maxTokens,
@@ -294,7 +294,7 @@ export const regenerateResponse = createAsyncThunk<
         JSON.stringify({
           action: 'regenerate_response',
           message_id: messageId,
-          llm_id: state.conversation.selectedModel,
+          model_id: state.conversation.selectedModel,
           file_ids: fileIds,
           embedding_ids: embeddingIds,
           media_ids: mediaIds,

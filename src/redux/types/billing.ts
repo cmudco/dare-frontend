@@ -1,10 +1,17 @@
 import { LLMModel } from './conversation'
 import { PolicySource } from '@/utils/constants/groupWallet'
 
+export interface TransactionSummary {
+  all: number
+  wallet: number
+  ownApi: number
+  litellm: number
+}
+
 export interface BillingState {
-  wallet: Wallet | null
   transactions: Transaction[]
   transactionCount: number
+  transactionSummary: TransactionSummary
   nextPage: string | null
   previousPage: string | null
   loading: boolean
@@ -19,13 +26,84 @@ export interface BillingState {
   ownedGroupsLoading: boolean
   ownedGroupsLoaded: boolean
   groupActionLoading: boolean
+  wallets: UnifiedWallet[]
+  activeWallet: ActiveWalletRef
+  byoEnabled: boolean
+  walletsLoading: boolean
 }
 
-export interface Wallet {
-  displayBalance: string
+// ─────────────────────────────────────────────────────────────
+// Multi-wallet (popover + Billing page) types
+// ─────────────────────────────────────────────────────────────
+
+export type WalletType = 'DARE' | 'BYO' | 'LITELLM'
+export type LiteLLMSource = 'USER' | 'ADMIN_USER' | 'ADMIN_GROUP'
+
+export interface WalletStatusBalance {
+  kind: 'BALANCE'
+  balance: string
   lastRefillAt: string | null
+}
+
+export interface WalletStatusExternal {
+  kind: 'EXTERNAL'
+}
+
+/**
+ * Unified row in the wallet picker. Per the workspace `data-schema-contract`
+ * rule, type-specific fields are individually optional rather than emitted as
+ * a wire-level union — components narrow by `type` first, then by `status.kind`.
+ */
+export interface UnifiedWallet {
+  type: WalletType
+  refId: string | null
+  label: string
+  isDefault: boolean
+  isActive: boolean
+  status: WalletStatusBalance | WalletStatusExternal
+  // BYO only:
+  provider?: string
+  // LITELLM only:
+  source?: LiteLLMSource
+  groupName?: string | null
+  expiresAt?: string | null
+  baseUrl?: string
+}
+
+export interface ActiveWalletRef {
+  type: WalletType
+  refId: string | null
+}
+
+export interface WalletsListResponse {
+  activeWallet: ActiveWalletRef
+  byoEnabled: boolean
+  wallets: UnifiedWallet[]
+}
+
+export interface FeatureFlagsResponse {
+  byoEnabled: boolean
+}
+
+export interface LiteLLMKeyResponse {
+  id: string
+  label: string
+  baseUrl: string
+  source: LiteLLMSource
+  groupName: string | null
+  expiresAt: string | null
   createdAt: string
   updatedAt: string
+}
+
+export interface SetActiveWalletResponse {
+  activeWallet: ActiveWalletRef
+}
+
+export interface LiteLLMTestResponse {
+  ok: boolean
+  models: string[]
+  error: string
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -124,6 +202,7 @@ export interface Transaction {
   inputTokens: number
   outputTokens: number
   billingMode: string
+  platform: string
   createdAt: string
   updatedAt: string
 }
