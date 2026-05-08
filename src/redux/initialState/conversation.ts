@@ -15,6 +15,8 @@ export const initialState: ConversationState = {
   searchQuery: '',
   activeConversationMessages: [],
   selectedModel: null,
+  pickerEntries: [],
+  activeWalletMeta: null,
   selectedFiles: [] as MyFile[],
   selectedEmbeddings: [] as MyFile[],
   selectedMediaFiles: [] as MyFile[], // NEW: Persistent media files
@@ -28,7 +30,6 @@ export const initialState: ConversationState = {
   showDropdown: false,
   hoveredModel: null,
   conversationInput: '',
-  availableModels: [],
   allModels: [],
   conversationDrafts: loadDraftsFromLocalStorage(),
   autoSaveEnabled: true,

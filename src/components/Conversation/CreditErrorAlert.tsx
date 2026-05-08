@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { clearCreditError } from '@/redux/slices/socketSlice'
-import { getWallet } from '@/redux/asyncThunks/billing'
+import { getWallets } from '@/redux/asyncThunks/billing'
 import { XCircle } from 'lucide-react'
 
 const CreditErrorAlert: React.FC = () => {
@@ -10,7 +10,7 @@ const CreditErrorAlert: React.FC = () => {
 
   useEffect(() => {
     if (creditError) {
-      dispatch(getWallet())
+      dispatch(getWallets())
     }
   }, [creditError, dispatch])
 

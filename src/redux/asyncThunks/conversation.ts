@@ -30,16 +30,26 @@ import { AppDispatch, RootState } from '../store'
 import { sendWebSocketMessage } from './websocket'
 import { sendSocketMessage } from './socketMessages'
 import { config } from '@/config/environment'
-import { LLMModel } from '../types/conversation'
+import { LLMModel, PickerModel, WalletMeta } from '../types/conversation'
 
+interface PickerModelsPayload {
+  models: PickerModel[]
+  wallet: WalletMeta | null
+}
+
+// Fetch the chat model picker — wallet-scoped, returns the flat models list
+// (every entry has an opaque string `id`) plus the wallet capability block.
 export const getAvailableModels = createAsyncThunk<
-  LLMModel[],
+  PickerModelsPayload,
   void,
   { rejectValue: string }
 >('conversation/getAvailableModels', async (_, thunkAPI) => {
   try {
-    const response = await getModelsAPI()
-    return response.results || []
+    const response = await getModelsAPI('active')
+    return {
+      models: response.models ?? [],
+      wallet: response.wallet ?? null,
+    }
   } catch (error) {
     console.error('Error fetching models:', error)
     return thunkAPI.rejectWithValue((error as Error).message)

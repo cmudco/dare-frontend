@@ -1,10 +1,17 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
-  getWalletAPI,
   getTransactionsAPI,
+  GetTransactionsOptions,
   getBillingModelStatsAPI,
   getEnergyStatsAPI,
+  getWalletsAPI,
+  setActiveWalletAPI,
+  getFeatureFlagsAPI,
+  createLiteLLMKeyAPI,
+  renameLiteLLMKeyAPI,
+  deleteLiteLLMKeyAPI,
 } from '../../api/billing'
+import { getAvailableModels } from './conversation'
 import {
   allocateToMemberAPI,
   clearUserOverrideAPI,
@@ -16,31 +23,24 @@ import {
 import {
   AllocateResponse,
   AllocateToMemberPayload,
+  FeatureFlagsResponse,
   GroupWallet,
+  LiteLLMKeyResponse,
   OwnedGroupMember,
   OwnedGroupResponse,
+  SetActiveWalletResponse,
   UpdateGroupPolicyPayload,
   UpsertUserOverridePayload,
   UpsertUserOverrideResponse,
+  WalletType,
+  WalletsListResponse,
 } from '../types/billing'
-
-export const getWallet = createAsyncThunk(
-  'billing/getWallet',
-  async (_, thunkAPI) => {
-    try {
-      const response = await getWalletAPI()
-      return response
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message)
-    }
-  }
-)
 
 export const getTransactions = createAsyncThunk(
   'billing/getTransactions',
-  async (page: number = 1, thunkAPI) => {
+  async (options: GetTransactionsOptions = {}, thunkAPI) => {
     try {
-      const response = await getTransactionsAPI(page)
+      const response = await getTransactionsAPI(options)
       return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
@@ -157,3 +157,90 @@ export const clearUserOverride = createAsyncThunk<
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })
+
+// ─────────────────────────────────────────────────────────────
+// Multi-wallet thunks
+// ─────────────────────────────────────────────────────────────
+
+export const getWallets = createAsyncThunk<WalletsListResponse>(
+  'billing/getWallets',
+  async (_, thunkAPI) => {
+    try {
+      return await getWalletsAPI()
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const setActiveWallet = createAsyncThunk<
+  SetActiveWalletResponse,
+  { type: WalletType; refId: string | null }
+>('billing/setActiveWallet', async ({ type, refId }, thunkAPI) => {
+  try {
+    const response = await setActiveWalletAPI(type, refId)
+    // Re-pull authoritative wallet list so inactive rows reflect the change.
+    thunkAPI.dispatch(getWallets())
+    // The model picker is wallet-scoped (LITELLM exposes synthetic entries,
+    // BYO filters by configured providers, DARE returns the full catalog),
+    // so refresh it whenever the active wallet changes — otherwise the user
+    // sees a stale list until they reopen the picker.
+    thunkAPI.dispatch(getAvailableModels())
+    return response
+  } catch (error) {
+    // Rollback optimistic update by re-fetching.
+    thunkAPI.dispatch(getWallets())
+    thunkAPI.dispatch(getAvailableModels())
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const getFeatureFlags = createAsyncThunk<FeatureFlagsResponse>(
+  'billing/getFeatureFlags',
+  async (_, thunkAPI) => {
+    try {
+      return await getFeatureFlagsAPI()
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const addLiteLLMKey = createAsyncThunk<
+  LiteLLMKeyResponse,
+  { label: string; baseUrl: string; apiKey: string }
+>('billing/addLiteLLMKey', async ({ label, baseUrl, apiKey }, thunkAPI) => {
+  try {
+    const created = await createLiteLLMKeyAPI(label, baseUrl, apiKey)
+    thunkAPI.dispatch(getWallets())
+    return created
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const renameLiteLLMKey = createAsyncThunk<
+  LiteLLMKeyResponse,
+  { id: string; label: string }
+>('billing/renameLiteLLMKey', async ({ id, label }, thunkAPI) => {
+  try {
+    const updated = await renameLiteLLMKeyAPI(id, label)
+    thunkAPI.dispatch(getWallets())
+    return updated
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const removeLiteLLMKey = createAsyncThunk<string, string>(
+  'billing/removeLiteLLMKey',
+  async (id, thunkAPI) => {
+    try {
+      await deleteLiteLLMKeyAPI(id)
+      thunkAPI.dispatch(getWallets())
+      return id
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)

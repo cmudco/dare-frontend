@@ -1,147 +1,81 @@
 /**
  * Model Sync Helpers
  *
- * Utilities for synchronizing available models and selected model
- * with the image generation and audio transcription toggle states.
+ * Filters the chat picker by mode (image-generation / audio-transcription)
+ * and reconciles the current `selectedModel` (an opaque string id) when the
+ * filtered set changes.
  *
- * These helpers ensure that:
- * - Only appropriate models are shown in the picker (text, image, or audio)
- * - The selected model matches the current mode
- * - State stays consistent across conversation switches and page refreshes
+ * The id is opaque: for DB-backed LLMs it's the stringified PK; for
+ * LiteLLM-routed entries it's `litellm:<key>:<model>`. The FE never inspects
+ * the encoding — it just compares ids by equality.
  */
 
-import { LLMModel } from '../types/conversation'
+import { PickerModel } from '../types/conversation'
 
-/**
- * Filter models by image generation capability
- *
- * @param allModels - Complete list of available models
- * @param isImageGeneration - Whether image generation mode is active
- * @returns Filtered list of models matching the current mode
- */
-export const filterModelsByImageGeneration = (
-  allModels: LLMModel[],
+const isImageOrAudioModel = (m: PickerModel): boolean =>
+  Boolean(m.isImageGenerator || m.isAudioTranscriber)
+
+export const filterPickerEntriesByImageGeneration = (
+  entries: PickerModel[],
   isImageGeneration: boolean
-): LLMModel[] => {
-  return allModels.filter((model) =>
-    isImageGeneration
-      ? model.isImageGenerator === true
-      : !model.isImageGenerator && !model.isAudioTranscriber
+): PickerModel[] =>
+  entries.filter((m) =>
+    isImageGeneration ? m.isImageGenerator === true : !isImageOrAudioModel(m)
   )
-}
+
+export const filterPickerEntriesByAudioTranscription = (
+  entries: PickerModel[],
+  isAudioTranscription: boolean
+): PickerModel[] =>
+  entries.filter((m) =>
+    isAudioTranscription ? m.isAudioTranscriber === true : !m.isAudioTranscriber
+  )
+
+// Legacy aliases used by non-picker surfaces (Agents, Workflows, config).
+export const filterModelsByImageGeneration =
+  filterPickerEntriesByImageGeneration
+export const filterModelsByAudioTranscription =
+  filterPickerEntriesByAudioTranscription
 
 /**
- * Select appropriate model based on conversation state and available models
- *
- * @param conversationModel - Model ID saved in conversation (may be null/undefined)
- * @param availableModels - List of models available for current mode
- * @returns Model ID to select (conversation's model if valid, otherwise first available)
+ * Pick a dispatch id for the current mode: keep the desired one if it's
+ * still in the filtered entries, otherwise fall back to the first available,
+ * otherwise null.
  */
 export const selectAppropriateModel = (
-  conversationModel: number | null | undefined,
-  availableModels: LLMModel[]
-): number | null => {
-  // Only restore when conversation has an explicit model ID saved
-  if (typeof conversationModel === 'number') {
-    const isModelAvailable = availableModels.some(
-      (m) => m.id === conversationModel
-    )
-    // Return saved model if available, fallback to first if model was removed
-    return isModelAvailable
-      ? conversationModel
-      : (availableModels[0]?.id ?? null)
-  }
-
-  // null / undefined — no model saved, user must pick
-  return null
+  desired: string | null | undefined,
+  entries: PickerModel[]
+): string | null => {
+  if (desired && entries.some((e) => e.id === desired)) return desired
+  return entries[0]?.id ?? null
 }
 
-/**
- * Filter models by audio transcription capability
- *
- * @param allModels - Complete list of available models
- * @param isAudioTranscription - Whether audio transcription mode is active
- * @returns Filtered list of models matching the current mode
- */
-export const filterModelsByAudioTranscription = (
-  allModels: LLMModel[],
-  isAudioTranscription: boolean
-): LLMModel[] => {
-  return allModels.filter((model) =>
-    isAudioTranscription
-      ? model.isAudioTranscriber === true
-      : !model.isAudioTranscriber
-  )
-}
-
-/**
- * Update model list and selection based on image generation state
- *
- * This is the main synchronization function that:
- * 1. Filters available models to match the current mode (text/image)
- * 2. Selects an appropriate model (conversation's saved model or first available)
- *
- * @param state - Redux conversation state
- * @param imageGenerationEnabled - Whether image generation is currently enabled
- * @param conversationModel - Optional model ID from conversation
- */
 export const syncModelsWithImageGenerationState = <
-  T extends {
-    allModels: LLMModel[]
-    availableModels: LLMModel[]
-    selectedModel: number | null
-  },
+  T extends { pickerEntries: PickerModel[]; selectedModel: string | null },
 >(
   state: T,
   imageGenerationEnabled: boolean,
-  conversationModel?: number | null
+  desired?: string | null
 ): void => {
-  // Filter models based on image generation state
-  const filteredModels = filterModelsByImageGeneration(
-    state.allModels,
+  const filtered = filterPickerEntriesByImageGeneration(
+    state.pickerEntries,
     imageGenerationEnabled
   )
-  state.availableModels = filteredModels
-
-  // Select appropriate model
-  state.selectedModel = selectAppropriateModel(
-    conversationModel,
-    filteredModels
-  )
+  state.pickerEntries = filtered
+  state.selectedModel = selectAppropriateModel(desired, filtered)
 }
 
-/**
- * Update model list and selection based on audio transcription state
- *
- * This is the main synchronization function that:
- * 1. Filters available models to match the current mode (text/audio)
- * 2. Selects an appropriate model (conversation's saved model or first available)
- *
- * @param state - Redux conversation state
- * @param audioTranscriptionEnabled - Whether audio transcription is currently enabled
- * @param conversationModel - Optional model ID from conversation
- */
 export const syncModelsWithAudioTranscriptionState = <
-  T extends {
-    allModels: LLMModel[]
-    availableModels: LLMModel[]
-    selectedModel: number | null
-  },
+  T extends { pickerEntries: PickerModel[]; selectedModel: string | null },
 >(
   state: T,
   audioTranscriptionEnabled: boolean,
-  conversationModel?: number | null
+  desired?: string | null
 ): void => {
-  // Filter models based on audio transcription state
-  const filteredModels = filterModelsByAudioTranscription(
-    state.allModels,
+  const filtered = filterPickerEntriesByAudioTranscription(
+    state.pickerEntries,
     audioTranscriptionEnabled
   )
-  state.availableModels = filteredModels
-
-  // Select appropriate model
-  state.selectedModel = selectAppropriateModel(
-    conversationModel,
-    filteredModels
-  )
+  state.pickerEntries = filtered
+  state.selectedModel = selectAppropriateModel(desired, filtered)
 }

@@ -1,6 +1,7 @@
 import React from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { PickerModel } from '@/redux/types/conversation'
 import { ProviderGroup } from '@/utils/modelGroupingUtils'
 import { getProviderBrand } from '@/utils/providerColors'
 import ModelItem from './ModelItem'
@@ -9,15 +10,15 @@ interface ProviderSectionProps {
   providerGroup: ProviderGroup
   isExpanded: boolean
   onToggle: () => void
-  selectedModelId: number | null | undefined
-  onSelect: (id: number) => void
+  selectedId: string | null
+  onSelect: (entry: PickerModel) => void
 }
 
 const ProviderSection: React.FC<ProviderSectionProps> = ({
   providerGroup,
   isExpanded,
   onToggle,
-  selectedModelId,
+  selectedId,
   onSelect,
 }) => {
   const brand = getProviderBrand(providerGroup.provider)
@@ -68,12 +69,12 @@ const ProviderSection: React.FC<ProviderSectionProps> = ({
               {providerGroup.groups.map((group) => (
                 <div key={group.type} className='space-y-2'>
                   <div className='grid grid-cols-1 gap-1'>
-                    {group.models.map((model) => (
+                    {group.entries.map((entry) => (
                       <ModelItem
-                        key={model.id}
-                        model={model}
-                        isSelected={model.id === selectedModelId}
-                        onClick={() => onSelect(model.id)}
+                        key={entry.id}
+                        entry={entry}
+                        isSelected={entry.id === selectedId}
+                        onClick={() => onSelect(entry)}
                       />
                     ))}
                   </div>

@@ -1,14 +1,13 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { CreditCardIcon } from '@heroicons/react/24/solid'
 import { useNavigate } from 'react-router-dom'
 import { AppDispatch, RootState } from '../../redux/store'
 import { userLogout } from '../../redux/asyncThunks/user'
-import { getWallet } from '../../redux/asyncThunks/billing'
 import { Sun, Moon } from 'lucide-react'
 import { toggleDarkMode } from '../../redux/themeSlice'
 import NotificationPopover from './NotificationPopover'
 import { Avatar } from './Avatar'
+import { WalletPopover } from '@/components/wallet/WalletPopover'
 
 import {
   DropdownMenu,
@@ -22,11 +21,8 @@ const Header: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const user = useSelector((state: RootState) => state.user.user)
-  const wallet = useSelector((state: RootState) => state.billing.wallet)
 
-  useEffect(() => {
-    dispatch(getWallet())
-  }, [dispatch])
+  // Wallet state is fetched once by <WalletPopover /> on mount.
 
   const handleLogout = async () => {
     try {
@@ -49,15 +45,7 @@ const Header: React.FC = () => {
       </div>
 
       <div className='mr-3 flex items-center gap-4'>
-        {wallet && (
-          <div
-            className='flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-1.5 text-sm font-medium text-foreground shadow-sm transition-opacity hover:opacity-80 dark:from-purple-900/30 dark:to-pink-900/30'
-            onClick={() => navigate('/billing')}
-          >
-            <CreditCardIcon className='h-4 w-4 text-pink-500' />
-            <span>{wallet.displayBalance}</span>
-          </div>
-        )}
+        <WalletPopover />
 
         <NotificationPopover />
 

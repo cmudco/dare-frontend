@@ -12,6 +12,8 @@ export const useExportToCSV = () => {
       'LLM',
       'Input Tokens',
       'Output Tokens',
+      'Billing Mode',
+      'Platform',
       'Date',
     ]
 
@@ -21,6 +23,8 @@ export const useExportToCSV = () => {
       transaction.llm?.name || 'N/A',
       transaction.inputTokens?.toString() || 'N/A',
       transaction.outputTokens?.toString() || 'N/A',
+      transaction.billingMode || 'N/A',
+      transaction.platform || 'N/A',
       new Date(transaction.createdAt).toLocaleDateString(),
     ])
 

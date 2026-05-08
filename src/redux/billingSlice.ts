@@ -3,7 +3,6 @@ import { initialBillingState } from './initialState/billing'
 
 import {
   getTransactions,
-  getWallet,
   getBillingModelStats,
   getEnergyStats,
   fetchOwnedGroups,
@@ -12,37 +11,44 @@ import {
   allocateToMember,
   upsertUserOverride,
   clearUserOverride,
+  getWallets,
+  getFeatureFlags,
 } from './asyncThunks/billing'
 import {
+  ActiveWalletRef,
   AllocateResponse,
   BillingModelStatsResponse,
   EnergyStatsResponse,
+  FeatureFlagsResponse,
   GroupWallet,
   OwnedGroupMember,
   OwnedGroupResponse,
   Transaction,
+  TransactionSummary,
   UpsertUserOverrideResponse,
-  Wallet,
+  WalletsListResponse,
 } from './types/billing'
 
 const billingSlice = createSlice({
   name: 'billing',
   initialState: initialBillingState,
-  reducers: {},
+  reducers: {
+    /**
+     * Optimistically flip the active wallet pointer the moment the user clicks
+     * a row in the picker. The thunk then PUTs and re-fetches; rollback is the
+     * `getWallets` dispatch in the rejected branch of `setActiveWallet`.
+     */
+    setActiveWalletOptimistic(state, action: PayloadAction<ActiveWalletRef>) {
+      state.activeWallet = action.payload
+      state.wallets = state.wallets.map((w) => ({
+        ...w,
+        isActive:
+          w.type === action.payload.type && w.refId === action.payload.refId,
+      }))
+    },
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(getWallet.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(getWallet.fulfilled, (state, action: PayloadAction<Wallet>) => {
-        state.loading = false
-        state.wallet = action.payload
-      })
-      .addCase(getWallet.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload as string
-      })
       .addCase(getTransactions.pending, (state) => {
         state.loading = true
         state.error = null
@@ -56,11 +62,13 @@ const billingSlice = createSlice({
             next: string | null
             previous: string | null
             results: Transaction[]
+            summary: TransactionSummary
           }>
         ) => {
           state.loading = false
           state.transactions = action.payload.results
           state.transactionCount = action.payload.count
+          state.transactionSummary = action.payload.summary
           state.nextPage = action.payload.next
           state.previousPage = action.payload.previous
         }
@@ -248,7 +256,30 @@ const billingSlice = createSlice({
         state.groupActionLoading = false
         state.error = action.payload as string
       })
+      .addCase(getWallets.pending, (state) => {
+        state.walletsLoading = true
+      })
+      .addCase(
+        getWallets.fulfilled,
+        (state, action: PayloadAction<WalletsListResponse>) => {
+          state.walletsLoading = false
+          state.wallets = action.payload.wallets
+          state.activeWallet = action.payload.activeWallet
+          state.byoEnabled = action.payload.byoEnabled
+        }
+      )
+      .addCase(getWallets.rejected, (state) => {
+        state.walletsLoading = false
+      })
+      .addCase(
+        getFeatureFlags.fulfilled,
+        (state, action: PayloadAction<FeatureFlagsResponse>) => {
+          state.byoEnabled = action.payload.byoEnabled
+        }
+      )
   },
 })
+
+export const { setActiveWalletOptimistic } = billingSlice.actions
 
 export default billingSlice.reducer

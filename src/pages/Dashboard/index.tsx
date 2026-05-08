@@ -7,7 +7,7 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getWallet } from '@/redux/asyncThunks/billing'
+import { getWallets } from '@/redux/asyncThunks/billing'
 import { getUserStats } from '@/redux/asyncThunks/user'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
@@ -42,9 +42,14 @@ const Dashboard = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { stats, loading: userLoading } = useAppSelector((state) => state.user)
-  const { wallet, loading: billingLoading } = useAppSelector(
+  const { wallets, walletsLoading: billingLoading } = useAppSelector(
     (state) => state.billing
   )
+  const dareWallet = wallets.find((w) => w.type === 'DARE')
+  const dareBalance =
+    dareWallet?.status.kind === 'BALANCE'
+      ? `$${parseFloat(dareWallet.status.balance).toFixed(2)}`
+      : '$0.00'
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedTokenType, setSelectedTokenType] = useState<
     'input' | 'output' | 'total'
@@ -52,7 +57,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     dispatch(getUserStats())
-    dispatch(getWallet())
+    dispatch(getWallets())
   }, [dispatch])
 
   const formatNumber = (num: number | string) => {
@@ -141,7 +146,7 @@ const Dashboard = () => {
     },
     {
       title: 'Wallet Balance',
-      value: wallet?.displayBalance || '$0.00',
+      value: dareBalance,
       icon: <WalletIcon className='h-5 w-5 text-teal-600' />,
       description: 'Current wallet balance',
       iconBg: 'bg-teal-600/10 border-teal-600/20 group-hover:bg-teal-600/20',
