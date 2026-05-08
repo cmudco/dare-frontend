@@ -10,7 +10,7 @@ import clsx from 'clsx'
 import { useVoiceRecording } from '@/hooks/useVoiceRecording'
 import { AppDispatch, RootState } from '@/redux/store'
 import { socketSendVoiceMessage } from '@/redux/middleware/socketMiddleware'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 const VoiceModeButton: React.FC<{ disabled?: boolean }> = ({
   disabled = false,
@@ -22,6 +22,7 @@ const VoiceModeButton: React.FC<{ disabled?: boolean }> = ({
 
   const { isRecording, startRecording, stopRecording } = useVoiceRecording()
   const [isProcessing, setIsProcessing] = useState(false)
+  const enableVoiceInput = useFeatureFlag('enableVoiceInput')
 
   const handleClick = async () => {
     if (disabled || isProcessing) return
@@ -42,7 +43,7 @@ const VoiceModeButton: React.FC<{ disabled?: boolean }> = ({
     }
   }
 
-  if (!features.enableVoiceInput) return null
+  if (!enableVoiceInput) return null
 
   const showLoader = isProcessing && !isRecording
 

@@ -4,6 +4,7 @@ import { RootState } from '@/redux/store'
 import { WalletListItem } from './WalletListItem'
 import { Plus, KeyRound, Network } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 interface WalletPickerListProps {
   /** Compact rendering for the popover; the Billing page uses the larger variant. */
@@ -66,7 +67,7 @@ export const WalletPickerList: React.FC<WalletPickerListProps> = ({
   onAddBYO,
 }) => {
   const wallets = useSelector((s: RootState) => s.billing.wallets)
-  const byoEnabled = useSelector((s: RootState) => s.billing.byoEnabled)
+  const byoEnabled = useFeatureFlag('enableByok')
   const loading = useSelector((s: RootState) => s.billing.walletsLoading)
 
   const hasLitellm = wallets.some((w) => w.type === 'LITELLM')
@@ -90,6 +91,12 @@ export const WalletPickerList: React.FC<WalletPickerListProps> = ({
         />
       ))}
 
+      {/*
+        Note: the onAddLiteLLM callback is gated by enableLitellmWallet at the
+        parent surface (popover / Billing page). When the flag is off, the
+        callback is undefined and this row is suppressed automatically — same
+        pattern as BYO above.
+      */}
       {!hasLitellm && onAddLiteLLM && (
         <AddRow
           label='Add LiteLLM Key'

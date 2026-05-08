@@ -45,7 +45,7 @@ import MemoryContextSources from './MemoryContextSources'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
 import { ToolCallIndicator } from '../MCP/ToolCallIndicator'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { debugLog } from '@/utils/debugLogger'
 
 mermaid.initialize({
@@ -63,6 +63,7 @@ const Message: React.FC<MessageProps> = ({
   const dispatch = useDispatch<AppDispatch>()
   const llms = useSelector((state: RootState) => state.conversation.allModels)
   const user = useSelector((state: RootState) => state.user.user)
+  const enableArtifacts = useFeatureFlag('enableArtifacts')
   const conversationSettings = useSelector(
     (state: RootState) => state.user.conversationSettings
   )
@@ -541,7 +542,7 @@ const Message: React.FC<MessageProps> = ({
               })()}
 
               {/* Artifact Card - Show when message has associated artifact */}
-              {features.enableArtifacts && message.artifactId && (
+              {enableArtifacts && message.artifactId && (
                 <ArtifactCard artifactId={message.artifactId} />
               )}
             </div>

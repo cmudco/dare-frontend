@@ -27,7 +27,7 @@ import { updateConversation } from '@/redux/asyncThunks/conversation'
 import { useAppSelector } from '@/redux/hooks'
 import { getPromptsLibrary } from '@/redux/asyncThunks/promptsLibrary'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 const RichTextPreview = ({ content }: { content: string }) => {
   const truncateHtml = (html: string, maxLength: number = 150): string => {
@@ -52,6 +52,7 @@ const RichTextPreview = ({ content }: { content: string }) => {
 
 const PromptTabContent = () => {
   const dispatch = useDispatch<AppDispatch>()
+  const enableSharing = useFeatureFlag('enableSharing')
   const prompts = useAppSelector((state) => state.prompt.prompts)
   const { publishedPrompts } = useAppSelector((state) => state.promptsLibrary)
   const currentUserEmail = useAppSelector((state) => state.user.user?.email)
@@ -317,7 +318,7 @@ const PromptTabContent = () => {
         </Button>
       </div>
 
-      {features.enableSharing ? (
+      {enableSharing ? (
         <Tabs defaultValue='my-prompts' className='w-full'>
           <TabsList className='mb-4 grid w-full grid-cols-2'>
             <TabsTrigger value='my-prompts'>My Prompts</TabsTrigger>

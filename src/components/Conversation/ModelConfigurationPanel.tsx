@@ -18,7 +18,7 @@ import { Switch } from '../ui/switch'
 import { Settings, Info } from 'lucide-react'
 import { MODEL_CONFIG } from '../../config/modelConfig'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import {
   Tooltip,
   TooltipContent,
@@ -32,6 +32,9 @@ const ModelConfigurationPanel: React.FC = () => {
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
+  const enableImageGeneration = useFeatureFlag('enableImageGeneration')
+  const enableAudioTranscription = useFeatureFlag('enableAudioTranscription')
+  const enableArtifacts = useFeatureFlag('enableArtifacts')
 
   const temperature =
     activeConversation?.temperature ?? MODEL_CONFIG.temperature
@@ -288,7 +291,7 @@ const ModelConfigurationPanel: React.FC = () => {
               )}
 
               {/* Image Generation Toggle - Only show in Georgia Tech and Development */}
-              {features.enableImageGeneration && showImageGeneration && (
+              {enableImageGeneration && showImageGeneration && (
                 <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>
@@ -333,7 +336,7 @@ const ModelConfigurationPanel: React.FC = () => {
               )}
 
               {/* Audio Transcription Toggle - Only show when feature enabled */}
-              {features.enableAudioTranscription && showAudioTranscription && (
+              {enableAudioTranscription && showAudioTranscription && (
                 <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>
@@ -376,7 +379,7 @@ const ModelConfigurationPanel: React.FC = () => {
               )}
 
               {/* Artifacts Toggle - Only show when feature enabled */}
-              {features.enableArtifacts && (
+              {enableArtifacts && (
                 <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>

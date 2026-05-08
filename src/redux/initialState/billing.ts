@@ -20,6 +20,5 @@ export const initialBillingState: BillingState = {
   groupActionLoading: false,
   wallets: [],
   activeWallet: { type: 'DARE', refId: null },
-  byoEnabled: false,
   walletsLoading: false,
 }

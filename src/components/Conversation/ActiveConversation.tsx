@@ -16,7 +16,7 @@ import {
 import { useSocketSubscription } from '@/hooks/useSocketSubscription'
 import { useImageDragAndDrop } from '../../hooks/useImageDragAndDrop'
 import { FEEDBACK_AUTO_TRIGGER_CONFIG } from '@/config/feedback'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { Conversation, isSenderMessage } from '@/redux/types/conversation'
 import { Card } from '../ui/card'
 import ConversationPill from './ConversationPill'
@@ -83,6 +83,8 @@ const ActiveConversation: React.FC = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>()
   const { id } = useParams<{ id: string }>()
+  const enableSharing = useFeatureFlag('enableSharing')
+  const enableArtifacts = useFeatureFlag('enableArtifacts')
 
   // Redux state
   const activeConversation = useSelector(
@@ -337,7 +339,7 @@ const ActiveConversation: React.FC = () => {
             )}
             <div className='flex flex-col items-center justify-center'>
               {/* Read-only banner for shared conversations */}
-              {features.enableSharing &&
+              {enableSharing &&
                 activeConversation &&
                 activeConversation.isOwner === false && (
                   <div className='mb-2 flex w-full max-w-3xl items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 dark:border-amber-800 dark:bg-amber-950/30'>
@@ -362,7 +364,7 @@ const ActiveConversation: React.FC = () => {
             </div>
           </div>
         </Card>
-        {features.enableArtifacts && <ArtifactSidecar />}
+        {enableArtifacts && <ArtifactSidecar />}
       </div>
 
       <ForkConfirmDialog

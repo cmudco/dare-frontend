@@ -6,7 +6,6 @@ import {
   getEnergyStatsAPI,
   getWalletsAPI,
   setActiveWalletAPI,
-  getFeatureFlagsAPI,
   createLiteLLMKeyAPI,
   renameLiteLLMKeyAPI,
   deleteLiteLLMKeyAPI,
@@ -23,7 +22,6 @@ import {
 import {
   AllocateResponse,
   AllocateToMemberPayload,
-  FeatureFlagsResponse,
   GroupWallet,
   LiteLLMKeyResponse,
   OwnedGroupMember,
@@ -194,17 +192,6 @@ export const setActiveWallet = createAsyncThunk<
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })
-
-export const getFeatureFlags = createAsyncThunk<FeatureFlagsResponse>(
-  'billing/getFeatureFlags',
-  async (_, thunkAPI) => {
-    try {
-      return await getFeatureFlagsAPI()
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message)
-    }
-  }
-)
 
 export const addLiteLLMKey = createAsyncThunk<
   LiteLLMKeyResponse,
