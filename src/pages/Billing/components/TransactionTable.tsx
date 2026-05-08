@@ -7,13 +7,7 @@ import {
   TableRow,
 } from '@/components/ui/Table'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Wallet as WalletIcon,
-  Key,
-  GraduationCap,
-  Sparkles,
-  Network,
-} from 'lucide-react'
+import { Wallet as WalletIcon, Key, Network } from 'lucide-react'
 import { Transaction } from '@/redux/types/billing'
 import { BillingMode, PlatformFilter } from '@/utils/constants/billing'
 
@@ -124,12 +118,10 @@ export const TransactionTable = ({
                   <div className='flex items-center gap-1'>
                     {transaction.platform === PlatformFilter.SOCRATIC_BOTS ? (
                       <>
-                        <GraduationCap size={14} className='text-amber-500' />
-                        <span className='text-xs'>Socratic Books</span>
+                        <span className='text-xs'>Socratic Bots</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles size={14} className='text-sky-500' />
                         <span className='text-xs'>DARE</span>
                       </>
                     )}
