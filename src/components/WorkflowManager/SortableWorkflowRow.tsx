@@ -21,7 +21,7 @@ import {
   getStepCount,
   createDragStyle,
 } from '@/utils/workflowUtils'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 interface SortableWorkflowRowProps {
   workflow: Workflow
@@ -47,6 +47,7 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
     isDragging,
   } = useSortable({ id: workflow.id })
 
+  const enableSharing = useFeatureFlag('enableSharing')
   const style = createDragStyle(transform, transition, isDragging)
 
   return (
@@ -69,12 +70,12 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
           <h3 className='font-medium text-foreground'>
             {workflow.title || 'Untitled'}
           </h3>
-          {features.enableSharing && workflow.isPublished && (
+          {enableSharing && workflow.isPublished && (
             <span className='inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400'>
               Published
             </span>
           )}
-          {features.enableSharing && workflow.isForked && (
+          {enableSharing && workflow.isForked && (
             <span className='inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'>
               Forked
             </span>
@@ -121,7 +122,7 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
               <span>Delete</span>
             </DropdownMenuItem>
             {/* Sharing consolidated option */}
-            {features.enableSharing && !workflow.isForked && (
+            {enableSharing && !workflow.isForked && (
               <DropdownMenuItem
                 onClick={() => onSharing?.(workflow)}
                 className='cursor-pointer'

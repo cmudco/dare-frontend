@@ -12,14 +12,12 @@ import {
   upsertUserOverride,
   clearUserOverride,
   getWallets,
-  getFeatureFlags,
 } from './asyncThunks/billing'
 import {
   ActiveWalletRef,
   AllocateResponse,
   BillingModelStatsResponse,
   EnergyStatsResponse,
-  FeatureFlagsResponse,
   GroupWallet,
   OwnedGroupMember,
   OwnedGroupResponse,
@@ -265,18 +263,11 @@ const billingSlice = createSlice({
           state.walletsLoading = false
           state.wallets = action.payload.wallets
           state.activeWallet = action.payload.activeWallet
-          state.byoEnabled = action.payload.byoEnabled
         }
       )
       .addCase(getWallets.rejected, (state) => {
         state.walletsLoading = false
       })
-      .addCase(
-        getFeatureFlags.fulfilled,
-        (state, action: PayloadAction<FeatureFlagsResponse>) => {
-          state.byoEnabled = action.payload.byoEnabled
-        }
-      )
   },
 })
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { AppDispatch, RootState } from '@/redux/store'
-import { getWallets, getFeatureFlags } from '@/redux/asyncThunks/billing'
+import { getWallets } from '@/redux/asyncThunks/billing'
 import {
   Popover,
   PopoverContent,
@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { WalletPickerList } from './WalletPickerList'
 import { AddLiteLLMKeyModal } from './AddLiteLLMKeyModal'
 import { AddBYOKeyModal } from './AddBYOKeyModal'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import {
   CreditCard as CreditCardIcon,
   ChevronDown,
@@ -36,7 +37,8 @@ export const WalletPopover: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const wallets = useSelector((s: RootState) => s.billing.wallets)
-  const byoEnabled = useSelector((s: RootState) => s.billing.byoEnabled)
+  const byoEnabled = useFeatureFlag('enableByok')
+  const litellmEnabled = useFeatureFlag('enableLitellmWallet')
   const [open, setOpen] = useState(false)
   const [showLite, setShowLite] = useState(false)
   const [showByo, setShowByo] = useState(false)
@@ -45,7 +47,6 @@ export const WalletPopover: React.FC = () => {
 
   useEffect(() => {
     dispatch(getWallets())
-    dispatch(getFeatureFlags())
   }, [dispatch])
 
   const triggerLabel = active?.label ?? 'DARE Wallet'
@@ -112,7 +113,9 @@ export const WalletPopover: React.FC = () => {
             </p>
             <WalletPickerList
               compact
-              onAddLiteLLM={() => setShowLite(true)}
+              onAddLiteLLM={
+                litellmEnabled ? () => setShowLite(true) : undefined
+              }
               onAddBYO={byoEnabled ? () => setShowByo(true) : undefined}
             />
           </div>
@@ -123,17 +126,19 @@ export const WalletPopover: React.FC = () => {
               can add additional keys (e.g. a second LiteLLM key) without
               having to scroll past existing rows. */}
           <div className='flex flex-wrap gap-2 px-3 py-3'>
-            <Button
-              type='button'
-              size='sm'
-              variant='outline'
-              className='flex-1 border-[#023572]/30 text-[#023572] hover:bg-[#023572]/5 dark:border-[#EE183C]/30 dark:text-[#EE183C] dark:hover:bg-[#EE183C]/10'
-              onClick={() => setShowLite(true)}
-            >
-              <Network className='mr-1 h-3.5 w-3.5' />
-              <Plus className='mr-1 h-3 w-3' />
-              LiteLLM Key
-            </Button>
+            {litellmEnabled && (
+              <Button
+                type='button'
+                size='sm'
+                variant='outline'
+                className='flex-1 border-[#023572]/30 text-[#023572] hover:bg-[#023572]/5 dark:border-[#EE183C]/30 dark:text-[#EE183C] dark:hover:bg-[#EE183C]/10'
+                onClick={() => setShowLite(true)}
+              >
+                <Network className='mr-1 h-3.5 w-3.5' />
+                <Plus className='mr-1 h-3 w-3' />
+                LiteLLM Key
+              </Button>
+            )}
             {byoEnabled && (
               <Button
                 type='button'

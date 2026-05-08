@@ -2,7 +2,7 @@ import { ChangePasswordForm } from '@/components/Auth/ChangePasswordForm'
 import ConversationSettingsForm from '@/components/Auth/ConversationSettingsForm'
 import ApiKeysManagement from '@/components/Settings/ApiKeysManagement'
 import AvatarSettings from '@/components/Settings/AvatarSettings'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { motion } from 'framer-motion'
 import { Settings as SettingsIcon } from 'lucide-react'
 import { ReactNode } from 'react'
@@ -17,9 +17,10 @@ const sectionVariants = {
 }
 
 const Settings = () => {
+  const enableByok = useFeatureFlag('enableByok')
   const sections: { key: string; component: ReactNode }[] = [
     { key: 'avatar', component: <AvatarSettings /> },
-    ...(features.enableBYOK
+    ...(enableByok
       ? [{ key: 'apikeys', component: <ApiKeysManagement /> }]
       : []),
     { key: 'conversation', component: <ConversationSettingsForm /> },

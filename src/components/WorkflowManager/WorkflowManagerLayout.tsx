@@ -6,7 +6,7 @@ import { useAppDispatch } from '@/redux/hooks'
 import { getFiles } from '@/redux/asyncThunks/file'
 import { getAvailableModels } from '@/redux/asyncThunks/conversation'
 import { getWorkflows, getSharedWorkflows } from '@/redux/asyncThunks/workflow'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { fetchSharedWithMe } from '@/redux/asyncThunks/sharing'
 import { ShareableEntityType } from '@/redux/types/sharing'
 
@@ -16,6 +16,7 @@ const WorkflowManagerLayout = () => {
   const [activeTab, setActiveTab] = useState<
     'my' | 'library' | 'shared-with-me'
   >('my')
+  const enableSharing = useFeatureFlag('enableSharing')
 
   useEffect(() => {
     dispatch(getWorkflows())
@@ -47,7 +48,7 @@ const WorkflowManagerLayout = () => {
         >
           <div className='px-0' placeholder=''>
             <WorkflowHeader onSearch={handleSearch} />
-            {features.enableSharing && (
+            {enableSharing && (
               <div
                 data-tour='workflows-tabs'
                 className='mt-4 flex gap-1 border-b border-border'
