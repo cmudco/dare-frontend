@@ -5,7 +5,7 @@ import {
   openConversationTour,
   CONVERSATION_TOUR_COMPLETED_KEY,
 } from '@/redux/conversationTourSlice'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import {
   buildConversationTourSteps,
   type TargetRect,
@@ -19,11 +19,11 @@ export default function useConversationTour() {
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null)
   const [skipAnimation, setSkipAnimation] = useState(false)
   const rafRef = useRef<number>(0)
+  const enableMcp = useFeatureFlag('enableMcp')
 
-  // Build steps once — feature flags are compile-time constants
   const tourSteps = useMemo(
-    () => buildConversationTourSteps(features.enableMcp),
-    []
+    () => buildConversationTourSteps(enableMcp),
+    [enableMcp]
   )
 
   const step = tourSteps[currentStepIndex]

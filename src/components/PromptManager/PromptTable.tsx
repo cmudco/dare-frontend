@@ -51,13 +51,14 @@ import {
   sortPromptGroups,
 } from '@/utils/sortUtils'
 import { SortDirectionEnum } from '@/utils/constants/sort'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { openSharing } from '@/redux/sharingSlice'
 import { ShareableEntityType } from '@/redux/types/sharing'
 
 const PromptTable = ({ searchQuery }: PromptTableProps) => {
   const dispatch = useDispatch<AppDispatch>()
   const { prompts, loading } = useSelector((state: RootState) => state.prompt)
+  const enableSharing = useFeatureFlag('enableSharing')
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -245,7 +246,7 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                         <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'>
                           v{prompt.version || 1}
                         </span>
-                        {features.enableSharing && prompt.isPublished && (
+                        {enableSharing && prompt.isPublished && (
                           <span className='inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400'>
                             Published
                           </span>
@@ -286,16 +287,15 @@ const PromptTable = ({ searchQuery }: PromptTableProps) => {
                           <EyeIcon className='h-4 w-4' />
                           <span>View Versions</span>
                         </DropdownMenuItem>
-                        {features.enableSharing &&
-                          prompt.canShare !== false && (
-                            <DropdownMenuItem
-                              onClick={() => handleSharing(prompt)}
-                              className='cursor-pointer'
-                            >
-                              <Share2 className='h-4 w-4' />
-                              <span>Sharing</span>
-                            </DropdownMenuItem>
-                          )}
+                        {enableSharing && prompt.canShare !== false && (
+                          <DropdownMenuItem
+                            onClick={() => handleSharing(prompt)}
+                            className='cursor-pointer'
+                          >
+                            <Share2 className='h-4 w-4' />
+                            <span>Sharing</span>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() =>

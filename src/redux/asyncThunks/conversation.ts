@@ -27,9 +27,7 @@ import {
   getConversationMessagesAPI,
 } from '../../api/conversation'
 import { AppDispatch, RootState } from '../store'
-import { sendWebSocketMessage } from './websocket'
 import { sendSocketMessage } from './socketMessages'
-import { config } from '@/config/environment'
 import { LLMModel, PickerModel, WalletMeta } from '../types/conversation'
 
 interface PickerModelsPayload {
@@ -188,11 +186,7 @@ export const sendMessage = createAsyncThunk<
   'conversation/sendMessage',
   async (message, { dispatch, rejectWithValue }) => {
     try {
-      if (config.features.enableSocketIO) {
-        dispatch(sendSocketMessage(message))
-      } else {
-        dispatch(sendWebSocketMessage(message))
-      }
+      dispatch(sendSocketMessage(message))
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }

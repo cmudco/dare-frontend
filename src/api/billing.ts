@@ -5,7 +5,6 @@ import {
   EnergyStatsResponse,
   WalletsListResponse,
   WalletType,
-  FeatureFlagsResponse,
   LiteLLMKeyResponse,
   LiteLLMTestResponse,
   SetActiveWalletResponse,
@@ -84,13 +83,6 @@ export const setActiveWalletAPI = async (
     url: 'api/billing/wallets/active/',
     method: METHOD.PUT,
     data: { type, refId },
-  })
-}
-
-export const getFeatureFlagsAPI = async (): Promise<FeatureFlagsResponse> => {
-  return await baseRequest<FeatureFlagsResponse>({
-    url: 'api/billing/feature-flags/',
-    method: METHOD.GET,
   })
 }
 

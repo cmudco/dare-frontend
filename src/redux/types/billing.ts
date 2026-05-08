@@ -28,7 +28,6 @@ export interface BillingState {
   groupActionLoading: boolean
   wallets: UnifiedWallet[]
   activeWallet: ActiveWalletRef
-  byoEnabled: boolean
   walletsLoading: boolean
 }
 
@@ -77,12 +76,7 @@ export interface ActiveWalletRef {
 
 export interface WalletsListResponse {
   activeWallet: ActiveWalletRef
-  byoEnabled: boolean
   wallets: UnifiedWallet[]
-}
-
-export interface FeatureFlagsResponse {
-  byoEnabled: boolean
 }
 
 export interface LiteLLMKeyResponse {

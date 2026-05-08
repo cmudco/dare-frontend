@@ -11,7 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   openConversationTour,
@@ -119,6 +119,8 @@ const Sidebar = () => {
   const hasOwnedGroups = useAppSelector(
     (state) => state.billing.ownedGroups.length > 0
   )
+  const enableMcp = useFeatureFlag('enableMcp')
+  const enableMemory = useFeatureFlag('enableMemory')
 
   const handleStartTutorial = useCallback(() => {
     const pageKey = getTourPageKeyFromPath(location.pathname)
@@ -160,10 +162,10 @@ const Sidebar = () => {
     { name: 'Prompts', icon: PromptsIcon, path: '/prompts' },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
     { name: 'Agents', icon: AgentsIcon, path: '/agents' },
-    ...(features.enableMcp
+    ...(enableMcp
       ? [{ name: 'Integrations', icon: IntegrationsIcon, path: '/mcp' }]
       : []),
-    ...(features.enableMemory
+    ...(enableMemory
       ? [{ name: 'Memory', icon: MemoryIcon, path: '/memory' }]
       : []),
   ]

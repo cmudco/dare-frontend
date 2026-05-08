@@ -1,59 +1,61 @@
 /**
  * Debug Logger Utility
  *
- * Provides environment-aware logging that only outputs in local/staging environments.
- * Uses the enableDebugLogs feature flag from environment config.
+ * Verbose console output gated by the ``enableDebugLogs`` feature flag,
+ * which is fetched from the backend on app boot. Errors are always logged.
  *
  * Usage:
  *   import { debugLog, debugWarn, debugError } from '@/utils/debugLogger'
  *   debugLog('🔌 Socket connected')
- *   debugLog('📡 Event received:', data)
+ *
+ * The flag is read via a registered accessor (set by store.ts after
+ * configureStore returns) so this module does NOT import the store —
+ * importing it would create a circular dependency that leaves store
+ * exports in TDZ during module evaluation.
  */
 
-import { features } from '@/config/environment'
+type FlagAccessor = () => boolean
 
-/**
- * Log debug messages only when enableDebugLogs is true
- */
+let isEnabled: FlagAccessor = () => false
+
+export const setDebugLogsAccessor = (accessor: FlagAccessor): void => {
+  isEnabled = accessor
+}
+
+function safeIsEnabled(): boolean {
+  try {
+    return isEnabled() === true
+  } catch {
+    return false
+  }
+}
+
 export const debugLog = (...args: unknown[]): void => {
-  if (features.enableDebugLogs) {
+  if (safeIsEnabled()) {
     console.log(...args)
   }
 }
 
-/**
- * Log warning messages only when enableDebugLogs is true
- */
 export const debugWarn = (...args: unknown[]): void => {
-  if (features.enableDebugLogs) {
+  if (safeIsEnabled()) {
     console.warn(...args)
   }
 }
 
-/**
- * Log error messages - always shown regardless of environment
- * Errors should always be visible for debugging critical issues
- */
 export const debugError = (...args: unknown[]): void => {
   console.error(...args)
 }
 
-/**
- * Log grouped debug messages only when enableDebugLogs is true
- */
 export const debugGroup = (label: string, ...args: unknown[]): void => {
-  if (features.enableDebugLogs) {
+  if (safeIsEnabled()) {
     console.group(label)
     args.forEach((arg) => console.log(arg))
     console.groupEnd()
   }
 }
 
-/**
- * Log table data only when enableDebugLogs is true
- */
 export const debugTable = (data: unknown): void => {
-  if (features.enableDebugLogs) {
+  if (safeIsEnabled()) {
     console.table(data)
   }
 }

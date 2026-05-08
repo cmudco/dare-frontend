@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/redux/store'
-import { getWallets, getFeatureFlags } from '@/redux/asyncThunks/billing'
+import { getWallets } from '@/redux/asyncThunks/billing'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Wallet as WalletIcon, KeyRound, Network } from 'lucide-react'
 import { WalletPickerList } from '@/components/wallet/WalletPickerList'
 import { AddLiteLLMKeyModal } from '@/components/wallet/AddLiteLLMKeyModal'
 import { AddBYOKeyModal } from '@/components/wallet/AddBYOKeyModal'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 /**
  * Top-of-Billing-page section that surfaces every configured wallet, the
@@ -18,13 +19,13 @@ import { AddBYOKeyModal } from '@/components/wallet/AddBYOKeyModal'
 export const WalletSection: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const wallets = useSelector((s: RootState) => s.billing.wallets)
-  const byoEnabled = useSelector((s: RootState) => s.billing.byoEnabled)
+  const byoEnabled = useFeatureFlag('enableByok')
+  const litellmEnabled = useFeatureFlag('enableLitellmWallet')
   const [showLite, setShowLite] = useState(false)
   const [showByo, setShowByo] = useState(false)
 
   useEffect(() => {
     dispatch(getWallets())
-    dispatch(getFeatureFlags())
   }, [dispatch])
 
   const active = wallets.find((w) => w.isActive)
@@ -62,17 +63,19 @@ export const WalletSection: React.FC = () => {
             </p>
           </div>
           <div className='flex flex-wrap gap-2'>
-            <Button
-              type='button'
-              size='sm'
-              variant='secondary'
-              className='bg-white/15 text-white shadow-none backdrop-blur-sm hover:bg-white/25'
-              onClick={() => setShowLite(true)}
-            >
-              <Network className='mr-1 h-3.5 w-3.5' />
-              <Plus className='mr-1 h-3 w-3' />
-              LiteLLM Key
-            </Button>
+            {litellmEnabled && (
+              <Button
+                type='button'
+                size='sm'
+                variant='secondary'
+                className='bg-white/15 text-white shadow-none backdrop-blur-sm hover:bg-white/25'
+                onClick={() => setShowLite(true)}
+              >
+                <Network className='mr-1 h-3.5 w-3.5' />
+                <Plus className='mr-1 h-3 w-3' />
+                LiteLLM Key
+              </Button>
+            )}
             {byoEnabled && (
               <Button
                 type='button'
@@ -92,7 +95,7 @@ export const WalletSection: React.FC = () => {
 
       <CardContent className='pt-4'>
         <WalletPickerList
-          onAddLiteLLM={() => setShowLite(true)}
+          onAddLiteLLM={litellmEnabled ? () => setShowLite(true) : undefined}
           onAddBYO={byoEnabled ? () => setShowByo(true) : undefined}
         />
       </CardContent>

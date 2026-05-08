@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/redux/store'
 import { getProviderStatus, getBillingMode } from '@/redux/asyncThunks/apiKeys'
-import { getFeatureFlags } from '@/redux/asyncThunks/billing'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { Card } from '@/components/ui/card'
 import { AlertCircle, Info, Lock } from 'lucide-react'
 import { ApiKeyInput, BillingModeSelector } from './components'
@@ -20,12 +20,11 @@ const ApiKeysManagement: React.FC = () => {
   const { loading, updateError } = useSelector(
     (state: RootState) => state.apiKeys
   )
-  const byoEnabled = useSelector((state: RootState) => state.billing.byoEnabled)
+  const byoEnabled = useFeatureFlag('enableByok')
 
   useEffect(() => {
     dispatch(getProviderStatus())
     dispatch(getBillingMode())
-    dispatch(getFeatureFlags())
   }, [dispatch])
 
   return (

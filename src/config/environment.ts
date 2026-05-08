@@ -1,24 +1,26 @@
 /**
  * Environment Configuration
  *
- * This module handles environment-specific configuration and feature flags.
- * The VITE_APP_ENVIRONMENT variable determines which environment is active.
+ * Provides build-time, environment-tier configuration: which backend to talk to,
+ * which WebSocket URL to use, and whether the app is running locally vs. in
+ * staging/production.
  *
- * Supported environments:
- * - local: Local development
- * - dare-staging: DARE staging environment
- * - dare-production: DARE production deployment
- * - gt-production: Georgia Tech production deployment
+ * Feature flags used to live here. They now come from the backend — see
+ * ``src/api/featureFlags.ts``, ``src/redux/featureFlagsSlice.ts``, and
+ * ``src/hooks/useFeatureFlag.ts``. The admin manages flag values in Django
+ * admin (``/admin/feature_flags/featureflag/``) at three levels: app default,
+ * per-AccessCodeGroup override, per-user override.
+ *
+ * The ``VITE_APP_ENVIRONMENT`` variable still selects between deployment tiers
+ * for URLs and other build-time concerns.
  */
 
-// Environment types
 export type AppEnvironment =
   | 'local'
   | 'dare-staging'
   | 'dare-production'
   | 'gt-production'
 
-// Environment configuration interface
 export interface EnvironmentConfig {
   environment: AppEnvironment
   isLocal: boolean
@@ -28,40 +30,11 @@ export interface EnvironmentConfig {
   apiUrl: string
   websocketUrl: string
   socraticBooksUrl?: string
-  features: FeatureFlags
 }
 
-// Feature flags interface
-export interface FeatureFlags {
-  // BYOK = Bring Your Own Key (Settings page)
-  enableBYOK: boolean
-  // Image Generation in chat configuration panel
-  enableImageGeneration: boolean
-  // Artifacts - long-form document generation with sidecar panel
-  enableArtifacts: boolean
-  // Audio Transcription - convert audio to text with Whisper/Gemini
-  enableAudioTranscription: boolean
-  // Socket.IO - new WebSocket implementation with single persistent connection
-  enableSocketIO: boolean
-  // Voice Input - push-to-talk voice input mode (V1)
-  enableVoiceInput: boolean
-  // Debug Logs - show console.log debug statements (local/staging only)
-  enableDebugLogs: boolean
-  // MCP - Model Context Protocol server integration for external tools
-  enableMcp: boolean
-  // Memory - conversation memory feature
-  enableMemory: boolean
-  // Sharing - prompt/conversation/workflow publishing and sharing features
-  enableSharing: boolean
-}
-
-/**
- * Get the current environment from environment variables
- */
 function getEnvironment(): AppEnvironment {
   const env = import.meta.env.VITE_APP_ENVIRONMENT as AppEnvironment | undefined
 
-  // Default to local if not specified
   if (
     !env ||
     !['local', 'dare-staging', 'dare-production', 'gt-production'].includes(env)
@@ -75,86 +48,6 @@ function getEnvironment(): AppEnvironment {
   return env
 }
 
-/**
- * Get feature flags based on environment
- */
-function getFeatureFlags(environment: AppEnvironment): FeatureFlags {
-  switch (environment) {
-    case 'local':
-      return {
-        enableBYOK: true,
-        enableImageGeneration: true,
-        enableArtifacts: true,
-        enableAudioTranscription: true,
-        enableSocketIO: true, // Test Socket.IO in local
-        enableVoiceInput: true, // Voice input enabled for local testing
-        enableDebugLogs: true, // Debug logs enabled for local
-        enableMcp: true, // MCP enabled for local development
-        enableMemory: true, // Memory enabled for local development
-        enableSharing: true, // Sharing disabled
-      }
-
-    case 'dare-staging':
-      return {
-        enableBYOK: true, // DARE Staging: HAS BYOK
-        enableImageGeneration: true, // DARE Staging: HAS Image Generation
-        enableArtifacts: true, // DARE Staging: HAS Artifacts
-        enableAudioTranscription: true, // DARE Staging: HAS Audio Transcription
-        enableSocketIO: true, // Test Socket.IO in staging
-        enableVoiceInput: true, // Voice input enabled for staging testing
-        enableDebugLogs: true, // Debug logs enabled for staging
-        enableMcp: true, // MCP enabled for staging testing
-        enableMemory: true, // Memory enabled for staging testing
-        enableSharing: true, // Sharing disabled
-      }
-
-    case 'dare-production':
-      return {
-        enableBYOK: false, // DARE Production: NO BYOK
-        enableImageGeneration: true, // DARE Production: has Image Generation
-        enableArtifacts: false, // DARE Production: NO Artifacts (beta)
-        enableAudioTranscription: false, // DARE Production: NO Audio Transcription (beta)
-        enableSocketIO: true, // Socket.IO enabled for production
-        enableVoiceInput: false, // Voice input disabled in production (beta)
-        enableDebugLogs: false, // Debug logs disabled in production
-        enableMcp: false, // MCP disabled in production (beta)
-        enableMemory: false, // Memory disabled in production (beta)
-        enableSharing: false, // Sharing disabled
-      }
-
-    case 'gt-production':
-      return {
-        enableBYOK: true, // Georgia Tech: HAS BYOK
-        enableImageGeneration: true, // Georgia Tech: HAS Image Generation
-        enableArtifacts: true, // Georgia Tech: HAS Artifacts
-        enableAudioTranscription: true, // Georgia Tech: HAS Audio Transcription
-        enableSocketIO: true, // Disable Socket.IO in production until validated
-        enableVoiceInput: false, // Voice input disabled in production (beta)
-        enableDebugLogs: false, // Debug logs disabled in production
-        enableMcp: true, // MCP enabled for Georgia Tech
-        enableMemory: true, // Memory enabled for Georgia Tech
-        enableSharing: false, // Sharing disabled
-      }
-
-    default:
-      return {
-        enableBYOK: true,
-        enableImageGeneration: true,
-        enableArtifacts: true,
-        enableAudioTranscription: true,
-        enableSocketIO: true, // Default off for safety
-        enableVoiceInput: false, // Default off for safety
-        enableDebugLogs: false, // Default off for safety
-        enableMcp: false, // Default off for safety
-        enableMemory: false, // Default off for safety
-        enableSharing: false, // Default off for safety
-      }
-  }
-}
-
-/**
- * Build the complete environment configuration
- */
 function buildEnvironmentConfig(): EnvironmentConfig {
   const environment = getEnvironment()
 
@@ -168,29 +61,21 @@ function buildEnvironmentConfig(): EnvironmentConfig {
     websocketUrl:
       import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8000/ws',
     socraticBooksUrl: import.meta.env.VITE_SOCRATIC_BOOKS_URL,
-    features: getFeatureFlags(environment),
   }
 }
 
-// Export the configuration object
 export const config: EnvironmentConfig = buildEnvironmentConfig()
 
-// Helper functions for common checks
 export const isLocal = config.isLocal
 export const isDareStaging = config.isDareStaging
 export const isDareProduction = config.isDareProduction
 export const isGtProduction = config.isGtProduction
 
-// Feature flag helpers
-export const features = config.features
-
-// Log environment on initialization (local only)
 if (config.isLocal) {
   console.log('🚀 DARE Environment Configuration:', {
     environment: config.environment,
     apiUrl: config.apiUrl,
     websocketUrl: config.websocketUrl,
-    features: config.features,
   })
 }
 

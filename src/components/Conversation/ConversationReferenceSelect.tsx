@@ -21,7 +21,7 @@ import {
   updateConversation,
 } from '@/redux/asyncThunks/conversation'
 import type { Conversation } from '@/redux/types/conversation'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -39,6 +39,7 @@ import ConversationSummarySelect from './ConversationSummarySelect'
 
 const ConversationReferenceSelect: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
+  const enableMemory = useFeatureFlag('enableMemory')
   const conversations = useSelector(
     (state: RootState) => state.conversation.conversations
   )
@@ -168,7 +169,7 @@ const ConversationReferenceSelect: React.FC = () => {
                 Conversation Context
               </h3>
               <div className='flex items-center gap-2'>
-                {features.enableMemory && (
+                {enableMemory && (
                   <div className='flex items-center gap-1.5'>
                     <Brain className='h-3.5 w-3.5 text-muted-foreground' />
                     <span className='text-xs font-medium text-muted-foreground'>

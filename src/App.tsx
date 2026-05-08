@@ -11,6 +11,7 @@ import PageTourOverlay from '@/components/ConversationTour/PageTourOverlay'
 import { tokenExpirationService } from '@/services/tokenExpirationService'
 import { clearOldDrafts } from './redux/conversationSlice'
 import { useSocketConnection } from './hooks/useSocketConnection'
+import { fetchFeatureFlags, clearFeatureFlags } from './redux/featureFlagsSlice'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -54,8 +55,10 @@ function App() {
 
     if (isAuthenticated && user) {
       tokenExpirationService.startMonitoring(handleTokenExpiration)
+      dispatch(fetchFeatureFlags())
     } else {
       tokenExpirationService.stopMonitoring()
+      dispatch(clearFeatureFlags())
     }
 
     return () => {
