@@ -30,6 +30,7 @@ import {
   ImageGenerationSettings,
   AudioTranscriptionSettings,
   ToolCallStatus,
+  WalletMeta,
 } from './types/conversation'
 import { ServerSlug } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
@@ -37,6 +38,7 @@ import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { Prompt } from './types/prompt'
 import {
+  selectAppropriateModel,
   syncModelsWithImageGenerationState,
   syncModelsWithAudioTranscriptionState,
 } from './utils/modelSyncHelpers'
@@ -65,27 +67,21 @@ export const conversationSlice = createSlice({
         state.artifactsEnabled = action.payload.artifactsEnabled ?? false
         state.memoryEnabled = action.payload.memoryEnabled ?? false
 
-        // Sync available models based on enabled mode
-        // Priority: audio transcription > image generation > regular
+        // Conversation persists only the DB-backed LLM PK (integer);
+        // stringify to match the picker's opaque-id shape.
+        const desired =
+          action.payload.selectedModel != null
+            ? String(action.payload.selectedModel)
+            : null
+
+        // Sync picker entries based on the active mode (priority: audio >
+        // image > text).
         if (action.payload.audioTranscriptionEnabled) {
-          syncModelsWithAudioTranscriptionState(
-            state,
-            true,
-            action.payload.selectedModel
-          )
+          syncModelsWithAudioTranscriptionState(state, true, desired)
         } else if (action.payload.imageGenerationEnabled) {
-          syncModelsWithImageGenerationState(
-            state,
-            true,
-            action.payload.selectedModel
-          )
+          syncModelsWithImageGenerationState(state, true, desired)
         } else {
-          // Regular mode - filter out both image and audio models
-          syncModelsWithImageGenerationState(
-            state,
-            false,
-            action.payload.selectedModel
-          )
+          syncModelsWithImageGenerationState(state, false, desired)
         }
       }
     },
@@ -113,7 +109,7 @@ export const conversationSlice = createSlice({
         )
       }
     },
-    updateSelectedModel(state, action: PayloadAction<number>) {
+    updateSelectedModel(state, action: PayloadAction<string | null>) {
       state.selectedModel = action.payload
     },
     updateSelectedFiles(state, action: PayloadAction<MyFile[]>) {
@@ -247,7 +243,9 @@ export const conversationSlice = createSlice({
       action: PayloadAction<{
         agentId: number
         agentName: string
-        llm?: number
+        // Agent.llm is a numeric FK to a real DB-backed LLM — agents can't
+        // route through LiteLLM today, so we just stringify the PK.
+        llm?: number | null
         temperature: number
         maxTokens: number
         maxContextSnippets: number
@@ -273,8 +271,8 @@ export const conversationSlice = createSlice({
       state.activeConversation.selectedAgentName = agentName
 
       // Apply all settings atomically
-      if (llm) {
-        state.selectedModel = llm
+      if (llm != null) {
+        state.selectedModel = String(llm)
       }
       state.activeConversation.temperature = temperature
       state.activeConversation.maxTokens = maxTokens
@@ -334,9 +332,6 @@ export const conversationSlice = createSlice({
           message: `${action.payload.message}`,
         }
       }
-    },
-    setAvailableModels(state, action: PayloadAction<LLMModel[]>) {
-      state.availableModels = action.payload
     },
     setAllModels(state, action: PayloadAction<LLMModel[]>) {
       state.allModels = action.payload
@@ -515,13 +510,29 @@ export const conversationSlice = createSlice({
       })
       .addCase(
         getAvailableModels.fulfilled,
-        (state, action: PayloadAction<LLMModel[]>) => {
+        (
+          state,
+          action: PayloadAction<{
+            models: LLMModel[]
+            wallet: WalletMeta | null
+          }>
+        ) => {
           state.loading = false
-          // Filter out image generation and audio transcription models by default
-          const regularModels = action.payload.filter(
-            (model) => !model.isImageGenerator && !model.isAudioTranscriber
+          // Strip image-gen / audio-transcription models from the chat
+          // picker (they belong on dedicated toggles). LiteLLM entries
+          // already have those flags forced to false on the BE.
+          state.pickerEntries = action.payload.models.filter(
+            (m) => !m.isImageGenerator && !m.isAudioTranscriber
           )
-          state.availableModels = regularModels
+          state.activeWalletMeta = action.payload.wallet
+          // Reconcile selectedModel: if the previously selected id is no
+          // longer in the wallet's catalog (e.g. user just toggled wallet),
+          // fall back to the first available so the next chat send uses a
+          // model the active wallet actually serves.
+          state.selectedModel = selectAppropriateModel(
+            state.selectedModel,
+            state.pickerEntries
+          )
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
@@ -1103,7 +1114,6 @@ export const {
   addMessage,
   clearConversation,
   updateMessage,
-  setAvailableModels,
   setAllModels,
   updateConversationTitle,
   updateConversationHistory,

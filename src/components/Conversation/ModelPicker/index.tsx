@@ -31,7 +31,7 @@ import {
   groupModelsByCost,
   ProviderGroup,
   ModelGroup,
-  categorizeModel,
+  categorizeEntry,
 } from '@/utils/modelGroupingUtils'
 
 import ModeButton from './ModeButton'
@@ -66,11 +66,9 @@ const Spinner = ({ className }: { className?: string }) => (
 
 const ModelPicker: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const {
-    availableModels: models,
-    loading,
-    selectedModel,
-  } = useSelector((state: RootState) => state.conversation)
+  const { pickerEntries, loading, selectedModel } = useSelector(
+    (state: RootState) => state.conversation
+  )
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [groupingMode, setGroupingMode] = useState<
@@ -85,57 +83,60 @@ const ModelPicker: React.FC = () => {
     dispatch(getAvailableModels())
   }, [dispatch])
 
-  // Initialize expanded states: only expand the group containing the selected model
+  // Initialize expanded states: only expand the group containing the selected entry
   useEffect(() => {
-    if (models.length > 0) {
+    if (pickerEntries.length > 0) {
       const initial: Record<string, boolean> = {}
-      const selectedModelData = models.find((m) => m.id === selectedModel)
-
-      if (selectedModelData) {
+      const selectedEntry = pickerEntries.find((e) => e.id === selectedModel)
+      if (selectedEntry) {
         if (groupingMode === 'provider') {
-          initial[selectedModelData.provider] = true
+          initial[selectedEntry.provider] = true
         } else if (groupingMode === 'cost') {
-          initial[categorizeModel(selectedModelData)] = true
+          initial[categorizeEntry(selectedEntry)] = true
         }
       }
       setExpandedGroups(initial)
     }
-  }, [models, groupingMode, selectedModel])
+  }, [pickerEntries, groupingMode, selectedModel])
 
-  const handleModelSelect = (llmId: number) => {
-    dispatch(updateSelectedModel(llmId))
+  const handleModelSelect = (entry: LLMModel) => {
+    dispatch(updateSelectedModel(entry.id))
     setOpen(false)
   }
 
-  const filteredModels = useMemo(() => {
-    if (!searchQuery) return models
+  const filteredEntries = useMemo(() => {
+    if (!searchQuery) return pickerEntries
     const query = searchQuery.toLowerCase()
-    return models.filter(
-      (m: LLMModel) =>
-        m.name.toLowerCase().includes(query) ||
-        m.provider.toLowerCase().includes(query) ||
-        m.description?.toLowerCase().includes(query)
+    return pickerEntries.filter(
+      (e) =>
+        e.name.toLowerCase().includes(query) ||
+        e.provider.toLowerCase().includes(query) ||
+        (e.description !== null && e.description.toLowerCase().includes(query))
     )
-  }, [models, searchQuery])
+  }, [pickerEntries, searchQuery])
 
   const groupedData = useMemo(() => {
     switch (groupingMode) {
       case 'provider':
-        return groupModels(filteredModels)
+        return groupModels(filteredEntries)
       case 'cost':
-        return groupModelsByCost(filteredModels)
+        return groupModelsByCost(filteredEntries)
       case 'all':
-        return filteredModels
+        return filteredEntries
           .slice()
-          .sort((a: LLMModel, b: LLMModel) => a.name.localeCompare(b.name))
+          .sort((a, b) => a.name.localeCompare(b.name))
       case 'latest':
-        return filteredModels
-          .slice()
-          .sort((a: LLMModel, b: LLMModel) => b.id - a.id)
+        // Newer DB-backed LLMs (higher pk) first; LiteLLM entries (whose id
+        // doesn't parse to int) sort to the end with -Infinity.
+        return filteredEntries.slice().sort((a, b) => {
+          const aId = Number.isNaN(Number(a.id)) ? -Infinity : Number(a.id)
+          const bId = Number.isNaN(Number(b.id)) ? -Infinity : Number(b.id)
+          return bId - aId
+        })
       default:
-        return filteredModels
+        return filteredEntries
     }
-  }, [filteredModels, groupingMode])
+  }, [filteredEntries, groupingMode])
 
   const toggleGroup = (key: string) => {
     setExpandedGroups((prev) => ({
@@ -144,12 +145,12 @@ const ModelPicker: React.FC = () => {
     }))
   }
 
-  const selectedModelData = models.find((m) => m.id === selectedModel)
-  const selectedBrand = selectedModelData
-    ? getProviderBrand(selectedModelData.provider)
+  const selectedEntry = pickerEntries.find((e) => e.id === selectedModel)
+  const selectedBrand = selectedEntry
+    ? getProviderBrand(selectedEntry.provider)
     : null
-  const selectedTierColors = selectedModelData
-    ? ModelTierColors[selectedModelData.tier as ModelTier]
+  const selectedTierColors = selectedEntry?.tier
+    ? ModelTierColors[selectedEntry.tier as ModelTier]
     : null
 
   return (
@@ -169,18 +170,14 @@ const ModelPicker: React.FC = () => {
             />
           ) : (
             <TypeIcon
-              type={
-                selectedModelData
-                  ? categorizeModel(selectedModelData)
-                  : 'Premium'
-              }
+              type={selectedEntry ? categorizeEntry(selectedEntry) : 'Premium'}
               className={`h-4 w-4 ${selectedTierColors ? selectedTierColors.icon : 'text-muted-foreground transition-colors group-hover:text-foreground dark:text-muted-foreground dark:group-hover:text-white'}`}
             />
           )}
           <span
             className={`max-w-[140px] truncate text-sm transition-colors ${selectedTierColors ? selectedTierColors.text : 'text-muted-foreground group-hover:text-foreground dark:text-muted-foreground dark:group-hover:text-white'}`}
           >
-            {selectedModelData?.name || 'Select Model'}
+            {selectedEntry ? selectedEntry.name : 'Select Model'}
           </span>
         </motion.button>
       </PopoverTrigger>
@@ -239,9 +236,9 @@ const ModelPicker: React.FC = () => {
 
           {/* Dynamic Content */}
           <div className='custom-scrollbar min-h-[300px] flex-1 overflow-y-auto px-2 pb-4 pt-2'>
-            {loading && models.length === 0 ? (
+            {loading && pickerEntries.length === 0 ? (
               <ModelSkeleton />
-            ) : filteredModels.length === 0 ? (
+            ) : filteredEntries.length === 0 ? (
               <div className='flex flex-col items-center justify-center py-10 text-center text-muted-foreground'>
                 <Box className='mb-2 h-10 w-10 opacity-20' />
                 <p className='text-sm font-medium'>No models found</p>
@@ -263,7 +260,7 @@ const ModelPicker: React.FC = () => {
                         providerGroup={pg}
                         isExpanded={!!expandedGroups[pg.provider]}
                         onToggle={() => toggleGroup(pg.provider)}
-                        selectedModelId={selectedModel}
+                        selectedId={selectedModel}
                         onSelect={handleModelSelect}
                       />
                     ))}
@@ -275,19 +272,19 @@ const ModelPicker: React.FC = () => {
                         group={cg}
                         isExpanded={!!expandedGroups[cg.type]}
                         onToggle={() => toggleGroup(cg.type)}
-                        selectedModelId={selectedModel}
+                        selectedId={selectedModel}
                         onSelect={handleModelSelect}
                       />
                     ))}
 
                   {(groupingMode === 'all' || groupingMode === 'latest') && (
                     <div className='grid grid-cols-1 gap-1'>
-                      {(groupedData as LLMModel[]).map((model) => (
+                      {(groupedData as LLMModel[]).map((entry) => (
                         <ModelItem
-                          key={model.id}
-                          model={model}
-                          isSelected={model.id === selectedModel}
-                          onClick={() => handleModelSelect(model.id)}
+                          key={entry.id}
+                          entry={entry}
+                          isSelected={entry.id === selectedModel}
+                          onClick={() => handleModelSelect(entry)}
                           showProvider
                         />
                       ))}
@@ -296,7 +293,7 @@ const ModelPicker: React.FC = () => {
                 </motion.div>
               </AnimatePresence>
             )}
-            {loading && models.length > 0 && (
+            {loading && pickerEntries.length > 0 && (
               <div className='absolute right-2 top-2 rounded-full border border-accent/20 bg-background/50 p-1 shadow-sm backdrop-blur-sm'>
                 <Spinner className='h-3 w-3 animate-spin text-primary' />
               </div>

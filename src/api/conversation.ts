@@ -6,6 +6,7 @@ import {
   LLMModel,
   Message,
   MessageReaction,
+  WalletMeta,
 } from '../redux/types/conversation'
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
@@ -53,11 +54,26 @@ export const deleteConversationAPI = async (
   })
 }
 
-export const getModelsAPI = async (): Promise<{ results: LLMModel[] }> => {
-  return await baseRequest<{ results: LLMModel[] }>({
-    url: 'api/llms/',
-    method: METHOD.GET,
-  })
+// When `walletScope` is supplied (typically `'active'`), the BE returns the
+// catalog filtered for the user's active wallet as `{models, wallet}` —
+// every model has the same flat shape with an opaque string `id`. Without
+// the scope, the legacy paginated `{ results }` is returned (no LiteLLM,
+// no wallet metadata).
+export const getModelsAPI = async (
+  walletScope?: 'active' | string
+): Promise<{
+  results?: LLMModel[]
+  models?: LLMModel[]
+  wallet?: WalletMeta
+}> => {
+  const url = walletScope
+    ? `api/llms/?wallet_scope=${encodeURIComponent(walletScope)}`
+    : 'api/llms/'
+  return await baseRequest<{
+    results?: LLMModel[]
+    models?: LLMModel[]
+    wallet?: WalletMeta
+  }>({ url, method: METHOD.GET })
 }
 
 export const getAllModelsAPI = async (): Promise<LLMModel[]> => {

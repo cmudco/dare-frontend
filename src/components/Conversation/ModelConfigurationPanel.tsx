@@ -61,6 +61,16 @@ const ModelConfigurationPanel: React.FC = () => {
   const allModels = useSelector(
     (state: RootState) => state.conversation.allModels
   )
+  // Wallet capability flags. The BE returns `null` for legacy callers (no
+  // wallet_scope param); treat that as "all features supported" so DARE /
+  // BYO users see every toggle as before. LITELLM users see only tools/MCP
+  // since the proxy doesn't transparently forward provider-native features.
+  const walletMeta = useSelector(
+    (state: RootState) => state.conversation.activeWalletMeta
+  )
+  const showWebSearch = walletMeta?.supportsWebSearch ?? true
+  const showImageGeneration = walletMeta?.supportsImageGeneration ?? true
+  const showAudioTranscription = walletMeta?.supportsAudioTranscription ?? true
 
   const handleTemperatureChange = (values: number[]) => {
     dispatch(updateTemperature(values[0]))
@@ -237,41 +247,48 @@ const ModelConfigurationPanel: React.FC = () => {
 
             <div className='space-y-4'>
               {/* Web Search Toggle */}
-              <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
-                <div className='flex flex-col gap-1'>
-                  <div className='flex items-center gap-2'>
-                    <h4 className='font-medium dark:text-white'>Web Search</h4>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                      </TooltipTrigger>
-                      <TooltipContent className='max-w-xs'>
-                        <div className='space-y-2'>
-                          <p className='font-semibold'>
-                            {TOOLTIP_CONTENT.modelConfig.webSearch.title}
-                          </p>
-                          <p className='text-sm'>
-                            {TOOLTIP_CONTENT.modelConfig.webSearch.description}
-                          </p>
-                          <p className='text-xs text-muted-foreground'>
-                            💡 {TOOLTIP_CONTENT.modelConfig.webSearch.tip}
-                          </p>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
+              {showWebSearch && (
+                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                  <div className='flex flex-col gap-1'>
+                    <div className='flex items-center gap-2'>
+                      <h4 className='font-medium dark:text-white'>
+                        Web Search
+                      </h4>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-xs'>
+                          <div className='space-y-2'>
+                            <p className='font-semibold'>
+                              {TOOLTIP_CONTENT.modelConfig.webSearch.title}
+                            </p>
+                            <p className='text-sm'>
+                              {
+                                TOOLTIP_CONTENT.modelConfig.webSearch
+                                  .description
+                              }
+                            </p>
+                            <p className='text-xs text-muted-foreground'>
+                              💡 {TOOLTIP_CONTENT.modelConfig.webSearch.tip}
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <p className='text-xs text-gray-500 dark:text-gray-400'>
+                      Enable real-time web search for up-to-date information
+                    </p>
                   </div>
-                  <p className='text-xs text-gray-500 dark:text-gray-400'>
-                    Enable real-time web search for up-to-date information
-                  </p>
+                  <Switch
+                    checked={webSearchEnabled}
+                    onCheckedChange={handleWebSearchToggle}
+                  />
                 </div>
-                <Switch
-                  checked={webSearchEnabled}
-                  onCheckedChange={handleWebSearchToggle}
-                />
-              </div>
+              )}
 
               {/* Image Generation Toggle - Only show in Georgia Tech and Development */}
-              {features.enableImageGeneration && (
+              {features.enableImageGeneration && showImageGeneration && (
                 <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>
@@ -316,7 +333,7 @@ const ModelConfigurationPanel: React.FC = () => {
               )}
 
               {/* Audio Transcription Toggle - Only show when feature enabled */}
-              {features.enableAudioTranscription && (
+              {features.enableAudioTranscription && showAudioTranscription && (
                 <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>

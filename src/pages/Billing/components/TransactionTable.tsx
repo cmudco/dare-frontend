@@ -12,6 +12,7 @@ import {
   Key,
   GraduationCap,
   Sparkles,
+  Network,
 } from 'lucide-react'
 import { Transaction } from '@/redux/types/billing'
 import { BillingMode, PlatformFilter } from '@/utils/constants/billing'
@@ -97,15 +98,22 @@ export const TransactionTable = ({
               {showBillingMode && (
                 <TableCell>
                   <div className='flex items-center gap-1'>
-                    {transaction.billingMode === BillingMode.WALLET ? (
+                    {transaction.billingMode === BillingMode.WALLET && (
                       <>
                         <WalletIcon size={14} className='text-teal-500' />
                         <span className='text-xs'>Wallet</span>
                       </>
-                    ) : (
+                    )}
+                    {transaction.billingMode === BillingMode.OWN_API && (
                       <>
                         <Key size={14} className='text-purple-500' />
                         <span className='text-xs'>Own API</span>
+                      </>
+                    )}
+                    {transaction.billingMode === BillingMode.LITELLM && (
+                      <>
+                        <Network size={14} className='text-indigo-500' />
+                        <span className='text-xs'>LiteLLM</span>
                       </>
                     )}
                   </div>

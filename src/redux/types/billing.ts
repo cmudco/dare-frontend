@@ -5,6 +5,7 @@ export interface TransactionSummary {
   all: number
   wallet: number
   ownApi: number
+  litellm: number
 }
 
 export interface BillingState {
