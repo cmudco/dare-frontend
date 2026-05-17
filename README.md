@@ -1,94 +1,152 @@
 # DARE Frontend
 
-React/TypeScript frontend for the DARE AI-powered research and conversation platform. Provides real-time chat with multiple LLM providers, file management with RAG, workflow automation, and a prompt template system.
+React/TypeScript frontend for the **DARE (Distributed AI Research Engine)** platform. Provides real-time chat with multiple LLM providers, file management with RAG, a visual workflow builder, and a prompt-template system.
 
-## Tech Stack
+## Purpose
 
-- **React 18** with TypeScript
-- **Vite** for build tooling and dev server
-- **Redux Toolkit** for state management
-- **React Router v6** for client-side routing
-- **Tailwind CSS** with Shadcn/ui component library (Radix UI primitives)
-- **Socket.IO Client** for real-time chat and workflow streaming
-- **Formik + Yup** for form validation
+The DARE frontend is the primary user interface for the DARE platform. It connects to the [DARE backend](../dare-backend/) over REST and Socket.IO and gives users:
+
+- **Multi-LLM chat** — streaming conversations with OpenAI, Anthropic, Google, and self-hosted LLaMA models
+- **File-grounded RAG** — upload documents and reference them in chat
+- **Visual workflow builder** — design and run multi-step AI workflows as a DAG
+- **Prompt templates** — reusable, parameterized prompts
+- **Artifacts** — rich rendering for code, diagrams, and documents emitted by the model
+- **MCP integration** — connect to Model Context Protocol servers for tool use
+
+## Architecture Overview
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                  DARE Frontend (React 18)                 │
+│                                                           │
+│  ┌──────────────────────────────────────────────────┐    │
+│  │   Pages / Routes (React Router v6)               │    │
+│  └──────────────────────────────────────────────────┘    │
+│  ┌──────────────────────────────────────────────────┐    │
+│  │   Feature Components (Conversation, Workflow,    │    │
+│  │   FileManager, Artifacts, Layout, Auth, …)       │    │
+│  │   Built on Shadcn/ui (Radix + Tailwind)          │    │
+│  └──────────────────────────────────────────────────┘    │
+│  ┌──────────────────────────────────────────────────┐    │
+│  │   Redux Toolkit Store                            │    │
+│  │   • slices (per-domain state)                    │    │
+│  │   • asyncThunks (REST integration)               │    │
+│  │   • middleware/socketMiddleware (chat)           │    │
+│  │   • middleware/workflowSocketMiddleware (DAG)    │    │
+│  └──────────────────────────────────────────────────┘    │
+│  ┌──────────────────────────────────────────────────┐    │
+│  │   API Layer (axios) — one file per domain        │    │
+│  └──────────────────────────────────────────────────┘    │
+└──────────────────────┬───────────────────────────────────┘
+                       │ REST + Socket.IO
+┌──────────────────────▼───────────────────────────────────┐
+│                       DARE Backend                        │
+└──────────────────────────────────────────────────────────┘
+```
+
+See [docs/architecture.md](docs/architecture.md) for the full diagram and component breakdown.
+
+## Quick Start (Docker)
+
+The frontend is a static SPA — for production you build it once and serve the bundle from any static host (Nginx, S3+CloudFront, etc.). For local development, use the Vite dev server.
+
+```bash
+# 1. Clone (or pull) the repo
+git clone <repo-url> dare-frontend && cd dare-frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Configure environment
+cp .env.example .env
+# Edit .env — point VITE_DJANGO_BACKEND_URL and VITE_WEBSOCKET_URL at your backend.
+# Defaults assume backend on http://localhost:8000.
+
+# 4. Run the dev server (Vite, port 5173)
+npm run dev
+```
+
+Then open http://localhost:5173. The dev server hot-reloads on changes.
+
+For a production build:
+
+```bash
+npm run build       # produces ./dist
+npm run preview     # serves ./dist locally for verification
+```
+
+A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 
 ## Prerequisites
 
 - Node.js 18+
-- [dare-backend](../dare-backend/) running on port 8000
-
-## Getting Started
-
-```bash
-# Install dependencies
-npm install
-
-# Create environment file
-cp .env.example .env
-# Edit .env with your backend URLs:
-#   VITE_DJANGO_BACKEND_URL=http://localhost:8000
-#   VITE_WEBSOCKET_URL=http://localhost:8000
-
-# Start dev server (runs on port 5173)
-npm run dev
-```
+- A running [DARE backend](../dare-backend/) (default `http://localhost:8000`)
 
 ## Available Scripts
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start development server (port 5173) |
-| `npm run build` | Production build |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
+| `npm run dev` | Start the Vite dev server on port 5173 |
+| `npm run build` | Produce a production bundle in `dist/` |
+| `npm run preview` | Serve the production bundle locally |
+| `npm run lint` | Run ESLint over `src/` |
 | `npm run format` | Run Prettier |
+
+## Documentation
+
+| Doc | What's in it |
+|---|---|
+| [INSTALL.md](INSTALL.md) | Full deployment guide — Docker and bare-metal static hosting |
+| [docs/configuration.md](docs/configuration.md) | Every Vite environment variable, with type, default, and description |
+| [docs/architecture.md](docs/architecture.md) | Component diagram, state management, Socket.IO integration |
+| [docs/contributing.md](docs/contributing.md) | Issues, pull requests, coding standards |
+| [docs/RULES.md](docs/RULES.md) | Project-specific conventions and constraints |
+| [CHANGELOG.md](CHANGELOG.md) | Release notes |
+| [SECURITY.md](SECURITY.md) | Vulnerability disclosure process |
 
 ## Project Structure
 
 ```
 src/
-├── api/                # API layer (one file per domain)
-├── components/         # UI components organized by feature
-│   ├── ui/             # Shadcn/ui primitives (Button, Dialog, etc.)
-│   ├── Conversation/   # Chat interface
-│   ├── WorkflowBuilder/# Visual workflow editor
-│   ├── FileManager/    # File upload and management
-│   ├── Artifacts/      # Artifact display and rendering
-│   ├── Layout/         # App layout and navigation
-│   └── ...
-├── config/             # Feature flags and environment config
-├── pages/              # Route-level page components
+├── api/                  # API layer (one file per domain)
+├── components/           # UI components, organized by feature
+│   ├── ui/               # Shadcn/ui primitives (Button, Dialog, etc.)
+│   ├── Conversation/     # Chat interface
+│   ├── WorkflowBuilder/  # Visual workflow editor
+│   ├── FileManager/      # File upload and management
+│   ├── Artifacts/        # Artifact rendering
+│   └── Layout/           # App shell and navigation
+├── config/               # Feature flags and runtime config
+├── pages/                # Route-level pages
 ├── redux/
-│   ├── slices/         # Redux state slices
-│   ├── asyncThunks/    # Async operations by domain
-│   ├── middleware/      # Socket.IO middleware (chat + workflow)
-│   ├── types/          # TypeScript interfaces for API shapes
-│   └── workflowBuilder/ # Workflow canvas state management
-├── routes/             # Route definitions and guards
-├── schemas/            # Zod validation schemas (Socket.IO events)
-└── utils/              # Shared utilities and constants
+│   ├── slices/           # Redux state slices
+│   ├── asyncThunks/      # createAsyncThunk wrappers per domain
+│   ├── middleware/       # Socket.IO middleware (chat + workflow)
+│   ├── types/            # TypeScript interfaces for API shapes
+│   └── workflowBuilder/  # Workflow canvas state
+├── routes/               # Route definitions and guards
+├── schemas/              # Zod schemas for Socket.IO event validation
+└── utils/                # Shared utilities
 ```
 
-## Key Features
+## Tech Stack
 
-- **Multi-LLM Chat**: Real-time streaming conversations with OpenAI, Claude, Gemini, and LLaMA models
-- **Workflow Builder**: Visual DAG editor for multi-step AI workflows with manual/auto execution modes
-- **File Management**: Upload, process, and use files as RAG context in conversations
-- **Prompt Templates**: Create, manage, and share reusable prompt templates
-- **MCP Integration**: Connect to Model Context Protocol servers for extended tool use
-- **Artifact System**: Rich content rendering (code, diagrams, documents) from AI responses
+- **React 18** + **TypeScript**
+- **Vite** for build and dev server
+- **Redux Toolkit** for state management
+- **React Router v6**
+- **Tailwind CSS** + **Shadcn/ui** (Radix UI primitives)
+- **Socket.IO Client** for real-time chat and workflow streaming
+- **Formik + Yup** for forms
+- **Zod** for runtime validation of Socket.IO events
+- **Axios** for HTTP
 
-## Environment Variables
+## Related
 
-| Variable | Description | Default |
-|---|---|---|
-| `VITE_DJANGO_BACKEND_URL` | DARE backend URL | `http://localhost:8000` |
-| `VITE_WEBSOCKET_URL` | Socket.IO server URL | `http://localhost:8000` |
-| `VITE_ENABLE_MCP` | Enable MCP feature | `false` |
-| `VITE_ENABLE_MEMORY` | Enable Memory feature | `false` |
+- [dare-backend](../dare-backend/) — Django REST + Socket.IO backend
+- [socraticbooks-backend](../../socraticbooks/socraticbooks-backend/) — Educational platform that proxies to DARE
+- [socraticbooks-react](../../socraticbooks/socraticbooks-react/) — Educational platform frontend
 
-## Related Projects
+## License
 
-- [dare-backend](../dare-backend/) - Django REST + Socket.IO backend
-- [socraticbooks-backend](../socraticbooks-backend/) - Educational platform backend
-- [socraticbooks-react](../socraticbooks-react/) - Educational platform frontend
+See [LICENSE](LICENSE) if present, or contact the maintainers.
