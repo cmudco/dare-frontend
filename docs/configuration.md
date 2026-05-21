@@ -19,7 +19,7 @@ A working template lives at `.env.example` — copy it to `.env` and edit.
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `VITE_DJANGO_BACKEND_URL` | url | `http://localhost:8000` | Base URL of the DARE REST API. Must be reachable from the browser. |
-| `VITE_WEBSOCKET_URL` | url | `ws://localhost:8000` | Socket.IO server URL for chat and workflow streaming. Use `wss://` when the page is served over HTTPS. |
+| `VITE_WEBSOCKET_URL` | url | `ws://localhost:8000` | Socket.IO server origin for chat and workflow streaming. Use `wss://` when the page is served over HTTPS. The Socket.IO client adds namespaces such as `/chat` and `/workflow`. |
 
 ## Feature Flags
 
@@ -33,11 +33,8 @@ A working template lives at `.env.example` — copy it to `.env` and edit.
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `VITE_SENTRY_DSN` | string | *(none)* | Sentry DSN. Empty disables client-side Sentry. |
-| `VITE_SENTRY_ORG` | string | *(none)* | Sentry organization slug — used by the Vite Sentry plugin to upload source maps. |
-| `VITE_SENTRY_PROJECT` | string | *(none)* | Sentry project slug. |
-| `VITE_SENTRY_AUTH_TOKEN` | string | *(none)* | Sentry auth token for source-map upload. **Build-time only** — never expose in `.env` checked into git. |
 
-> Source maps are uploaded by the Vite Sentry plugin during `npm run build` if all four Sentry vars are set. Set them in CI, not in committed `.env` files.
+> Do not put Sentry auth tokens in `VITE_*` variables. Values prefixed with `VITE_` are exposed to the browser bundle. If source-map upload is added later, use non-`VITE_` CI secrets.
 
 ---
 

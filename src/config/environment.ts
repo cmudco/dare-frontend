@@ -58,8 +58,7 @@ function buildEnvironmentConfig(): EnvironmentConfig {
     isDareProduction: environment === 'dare-production',
     isGtProduction: environment === 'gt-production',
     apiUrl: import.meta.env.VITE_DJANGO_BACKEND_URL || 'http://localhost:8000',
-    websocketUrl:
-      import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8000/ws',
+    websocketUrl: import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8000',
     socraticBooksUrl: import.meta.env.VITE_SOCRATIC_BOOKS_URL,
   }
 }

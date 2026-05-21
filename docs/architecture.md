@@ -165,7 +165,7 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 
 - **Vite** for dev server and production builds.
 - **Path alias** `@/` → `src/`.
-- **Source maps** uploaded to Sentry during CI builds when Sentry envs are set.
+- **Client error reporting** via Sentry when `VITE_SENTRY_DSN` is configured.
 
 ## Further reading
 

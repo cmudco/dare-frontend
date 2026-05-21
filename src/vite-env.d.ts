@@ -20,8 +20,8 @@ interface ImportMetaEnv {
 
   /**
    * WebSocket connection URL
-   * @example 'ws://localhost:8000/ws'
-   * @example 'wss://daretools.com/ws'
+   * @example 'ws://localhost:8000'
+   * @example 'wss://daretools.com'
    */
   readonly VITE_WEBSOCKET_URL: string
 
@@ -35,21 +35,6 @@ interface ImportMetaEnv {
    * Sentry DSN for error tracking (optional)
    */
   readonly VITE_SENTRY_DSN?: string
-
-  /**
-   * Sentry organization name (optional)
-   */
-  readonly VITE_SENTRY_ORG?: string
-
-  /**
-   * Sentry project name (optional)
-   */
-  readonly VITE_SENTRY_PROJECT?: string
-
-  /**
-   * Sentry auth token (optional)
-   */
-  readonly VITE_SENTRY_AUTH_TOKEN?: string
 }
 
 interface ImportMeta {
