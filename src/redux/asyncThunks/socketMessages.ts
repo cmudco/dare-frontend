@@ -40,6 +40,7 @@ export const sendSocketMessage = createAsyncThunk<
       selectedMediaFiles,
       selectedTags,
       selectedFolders,
+      memoryEnabled,
       referencedConversations,
       referencedConversationHistoryLimit,
       referencedSummaries,
@@ -75,12 +76,15 @@ export const sendSocketMessage = createAsyncThunk<
       media_ids: selectedMediaFiles.map((file) => file.id),
       tag_ids: selectedTags.map((tag) => tag.id),
       folder_ids: selectedFolders.map((folder) => folder.id),
+      use_memory: memoryEnabled,
       referenced_conversation_ids: referencedConversations.map(
         (conv) => conv.conversationId
       ),
       referenced_conversation_history_limit: referencedConversationHistoryLimit,
       referenced_summary_ids: referencedSummaries.map((s) => s.id),
-      llm_id: selectedModel,
+      // Opaque dispatch id — the BE inverts the encoding in
+      // `parse_model_id` (DB-PK string or `litellm:<key>:<model>`).
+      model_id: selectedModel,
       prompt_id: activeConversation.prompt?.id,
       temperature: activeConversation.temperature,
       max_tokens: activeConversation.maxTokens,
@@ -183,7 +187,9 @@ export const regenerateSocketResponse = createAsyncThunk<
       file_ids: selectedFiles.map((file) => file.id),
       embedding_ids: selectedEmbeddings.map((file) => file.id),
       media_ids: selectedMediaFiles.map((file) => file.id),
-      llm_id: selectedModel,
+      // Opaque dispatch id — the BE inverts the encoding in
+      // `parse_model_id` (DB-PK string or `litellm:<key>:<model>`).
+      model_id: selectedModel,
       prompt_id: activeConversation.prompt?.id,
       temperature: activeConversation.temperature,
       max_tokens: activeConversation.maxTokens,

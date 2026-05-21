@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
 import { createOrUpdateAgent } from '../../redux/asyncThunks/agent'
 import { getPrompts } from '../../redux/asyncThunks/prompt'
-import { getAvailableModels } from '../../redux/asyncThunks/conversation'
+import { getAllModels } from '../../redux/asyncThunks/conversation'
 import { clearSelectedAgent, closeModal } from '../../redux/agentSlice'
 import {
   Dialog,
@@ -63,7 +63,9 @@ const AgentModal: React.FC = () => {
     (state: RootState) => state.agent
   )
   const { prompts } = useSelector((state: RootState) => state.prompt)
-  const { availableModels } = useSelector(
+  // Agents only support DB-backed LLMs (no LiteLLM-routed dispatch yet) →
+  // pull the full catalog rather than the wallet-scoped chat picker.
+  const { allModels: availableModels } = useSelector(
     (state: RootState) => state.conversation
   )
   const { files } = useSelector((state: RootState) => state.files)
@@ -76,7 +78,7 @@ const AgentModal: React.FC = () => {
         dispatch(getPrompts())
       }
       if (availableModels.length === 0) {
-        dispatch(getAvailableModels())
+        dispatch(getAllModels())
       }
       if (files.length === 0) {
         dispatch(getFiles())

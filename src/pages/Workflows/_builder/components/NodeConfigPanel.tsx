@@ -29,7 +29,10 @@ export default function NodeConfigPanel({
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
   const tags = useAppSelector((s) => s.tags.tags)
-  const availableModels = useAppSelector((s) => s.conversation.availableModels)
+  // Workflow steps only target DB-backed LLMs (LiteLLM dispatch isn't
+  // wired into workflow execution yet), so we use the full catalog rather
+  // than the wallet-scoped chat picker.
+  const availableModels = useAppSelector((s) => s.conversation.allModels)
   const agents = useAppSelector((s) => s.agent.agents)
 
   const nodeType = selectedNode.type

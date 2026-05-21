@@ -23,6 +23,7 @@ import Workflows from '@/pages/Workflows/index.tsx'
 import WorkflowEditPage from '@/pages/Workflows/WorkflowEditPage.tsx'
 import ProfileScreen from '@/pages/ProfileScreen/index.tsx'
 import BillingScreen from '@/pages/Billing/index.tsx'
+import GroupWalletManager from '@/pages/GroupWalletManager/index.tsx'
 import OnboardingScreen from '@/pages/Onboarding/index.tsx'
 import WorkflowCreatePage from '@/pages/Workflows/WorkflowCreatePage.tsx'
 import Agents from '@/pages/Agents/index.tsx'
@@ -33,10 +34,12 @@ import MCPServerDetail from '@/pages/MCP/MCPServerDetail.tsx'
 import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
 import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
 import MemoryScreen from '@/pages/Memory'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 const AppRoutes = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.user)
+  const enableMcp = useFeatureFlag('enableMcp')
+  const enableMemory = useFeatureFlag('enableMemory')
 
   return (
     <BrowserRouter>
@@ -103,7 +106,7 @@ const AppRoutes = () => {
             <Route path='/workflows' element={<Workflows />} />
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
-            {features.enableMcp && (
+            {enableMcp && (
               <Route path='/mcp' element={<MCPLayout />}>
                 <Route index element={<MCPServerList />} />
                 <Route path=':serverSlug' element={<MCPServerDetail />} />
@@ -115,10 +118,11 @@ const AppRoutes = () => {
               </Route>
             )}
             <Route path='/profile' element={<ProfileScreen />} />
-            {features.enableMemory && (
+            {enableMemory && (
               <Route path='/memory' element={<MemoryScreen />} />
             )}
             <Route path='/billing/' element={<BillingScreen />} />
+            <Route path='/group-wallet' element={<GroupWalletManager />} />
           </Route>
           <Route path='/models/:slug' element={<ModelCards />} />
           <Route path='*' element={<div>404 - Page Not Found</div>} />

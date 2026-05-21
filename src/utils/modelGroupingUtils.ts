@@ -1,11 +1,11 @@
-import { LLMModel } from '@/redux/types/conversation'
+import { PickerModel } from '@/redux/types/conversation'
 import { ModelTier } from './constants/model'
 
 export type ModelGroupType = 'Premium' | 'Advanced' | 'Flash' | 'Other'
 
 export interface ModelGroup {
   type: ModelGroupType
-  models: LLMModel[]
+  entries: PickerModel[]
 }
 
 export interface ProviderGroup {
@@ -19,22 +19,32 @@ const tierToGroupType: Record<string, ModelGroupType> = {
   [ModelTier.Flash]: 'Flash',
 }
 
-/**
- * Categorize a model into a group type based on its backend tier.
- */
-export const categorizeModel = (model: LLMModel): ModelGroupType => {
-  return tierToGroupType[model.tier] ?? 'Advanced'
+const PROVIDER_PRIORITY: Record<string, number> = {
+  CLAUDE: 1,
+  OPENAI: 2,
+  GEMINI: 3,
+  LLAMA: 4,
 }
 
-/**
- * Group models by Provider and then by Type
- */
-export const groupModels = (models: LLMModel[]): ProviderGroup[] => {
-  const providerMap: Record<string, Record<ModelGroupType, LLMModel[]>> = {}
+const TYPE_ORDER: Record<ModelGroupType, number> = {
+  Premium: 0,
+  Advanced: 1,
+  Flash: 2,
+  Other: 3,
+}
 
-  models.forEach((model) => {
-    const provider = model.provider
-    const type = categorizeModel(model)
+/** Categorize by tier — entries without a tier (e.g. LiteLLM-routed) fall
+ *  into "Advanced" so they stay in the user's main list. */
+export const categorizeEntry = (entry: PickerModel): ModelGroupType =>
+  (entry.tier ? tierToGroupType[entry.tier] : undefined) ?? 'Advanced'
+
+/** Group entries by provider, then by tier. */
+export const groupModels = (entries: PickerModel[]): ProviderGroup[] => {
+  const providerMap: Record<string, Record<ModelGroupType, PickerModel[]>> = {}
+
+  entries.forEach((entry) => {
+    const provider = entry.provider
+    const type = categorizeEntry(entry)
 
     if (!providerMap[provider]) {
       providerMap[provider] = {
@@ -45,67 +55,49 @@ export const groupModels = (models: LLMModel[]): ProviderGroup[] => {
       }
     }
 
-    providerMap[provider][type].push(model)
+    providerMap[provider][type].push(entry)
   })
 
-  // Convert to array of ProviderGroup
   return Object.entries(providerMap)
     .map(([provider, typeGroups]) => {
       const groups: ModelGroup[] = (
-        Object.entries(typeGroups) as [ModelGroupType, LLMModel[]][]
+        Object.entries(typeGroups) as [ModelGroupType, PickerModel[]][]
       )
-        .filter(([, models]) => models.length > 0)
-        .map(([type, models]) => ({
+        .filter(([, list]) => list.length > 0)
+        .map(([type, list]) => ({
           type,
-          models: models.sort((a, b) => a.name.localeCompare(b.name)),
+          entries: list.sort((a, b) => a.name.localeCompare(b.name)),
         }))
-        // Sort groups: Premium -> Advanced -> Flash
-        .sort((a, b) => {
-          const order = { Premium: 0, Advanced: 1, Flash: 2, Other: 3 }
-          return order[a.type] - order[b.type]
-        })
+        .sort((a, b) => TYPE_ORDER[a.type] - TYPE_ORDER[b.type])
 
       return { provider, groups }
     })
     .sort((a, b) => {
-      const priority: Record<string, number> = {
-        CLAUDE: 1,
-        OPENAI: 2,
-        GEMINI: 3,
-        LLAMA: 4,
-      }
-      const aPrio = priority[a.provider.toUpperCase()] || 99
-      const bPrio = priority[b.provider.toUpperCase()] || 99
-
+      const aPrio = PROVIDER_PRIORITY[a.provider.toUpperCase()] || 99
+      const bPrio = PROVIDER_PRIORITY[b.provider.toUpperCase()] || 99
       if (aPrio !== bPrio) return aPrio - bPrio
       return a.provider.localeCompare(b.provider)
     })
 }
 
-/**
- * Group models globally by Type (Cost/Tier)
- */
-export const groupModelsByCost = (models: LLMModel[]): ModelGroup[] => {
-  const typeMap: Record<ModelGroupType, LLMModel[]> = {
+/** Group entries globally by tier (cost). */
+export const groupModelsByCost = (entries: PickerModel[]): ModelGroup[] => {
+  const typeMap: Record<ModelGroupType, PickerModel[]> = {
     Premium: [],
     Advanced: [],
     Flash: [],
     Other: [],
   }
 
-  models.forEach((model) => {
-    const type = categorizeModel(model)
-    typeMap[type].push(model)
+  entries.forEach((entry) => {
+    typeMap[categorizeEntry(entry)].push(entry)
   })
 
-  return (Object.entries(typeMap) as [ModelGroupType, LLMModel[]][])
-    .filter(([, models]) => models.length > 0)
-    .map(([type, models]) => ({
+  return (Object.entries(typeMap) as [ModelGroupType, PickerModel[]][])
+    .filter(([, list]) => list.length > 0)
+    .map(([type, list]) => ({
       type,
-      models: models.sort((a, b) => a.name.localeCompare(b.name)),
+      entries: list.sort((a, b) => a.name.localeCompare(b.name)),
     }))
-    .sort((a, b) => {
-      const order = { Premium: 0, Advanced: 1, Flash: 2, Other: 3 }
-      return order[a.type] - order[b.type]
-    })
+    .sort((a, b) => TYPE_ORDER[a.type] - TYPE_ORDER[b.type])
 }

@@ -7,9 +7,11 @@ import { useEffect } from 'react'
 import { initializeTheme } from './redux/themeSlice'
 import { Toaster } from '@/components/ui/toaster'
 import SharingDialog from '@/components/shared/SharingDialog'
+import PageTourOverlay from '@/components/ConversationTour/PageTourOverlay'
 import { tokenExpirationService } from '@/services/tokenExpirationService'
 import { clearOldDrafts } from './redux/conversationSlice'
 import { useSocketConnection } from './hooks/useSocketConnection'
+import { fetchFeatureFlags, clearFeatureFlags } from './redux/featureFlagsSlice'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -53,8 +55,10 @@ function App() {
 
     if (isAuthenticated && user) {
       tokenExpirationService.startMonitoring(handleTokenExpiration)
+      dispatch(fetchFeatureFlags())
     } else {
       tokenExpirationService.stopMonitoring()
+      dispatch(clearFeatureFlags())
     }
 
     return () => {
@@ -93,6 +97,7 @@ function App() {
       <AppRoutes />
       <Toaster />
       <SharingDialog />
+      <PageTourOverlay />
     </>
   )
 }

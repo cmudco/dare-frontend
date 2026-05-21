@@ -66,10 +66,18 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
     (state: RootState) => state.conversation.allModels
   )
 
-  const getLLMName = (llmId?: number | null) => {
-    if (!llmId) return 'N/A'
-    const llm = allModels.find((model) => model.id === llmId)
-    return llm ? llm.name : `Model ${llmId}`
+  // Resolve the dispatch model's display name from the message's persisted
+  // FKs. Real LLM dispatches set `message.llm` (numeric pk); LiteLLM
+  // dispatches leave that null and persist `message.litellmModelName`.
+  const getDisplayedModelName = (
+    llmId: number | null | undefined,
+    litellmModelName: string | null | undefined
+  ): string => {
+    if (llmId != null) {
+      const llm = allModels.find((model) => model.id === llmId)
+      return llm ? llm.name : `Model ${llmId}`
+    }
+    return litellmModelName ?? 'N/A'
   }
 
   const formatCost = (cost?: string | null) => {
@@ -214,7 +222,12 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                       <label className='text-sm font-medium text-gray-600'>
                         Model
                       </label>
-                      <p className='text-sm'>{getLLMName(message.llm)}</p>
+                      <p className='text-sm'>
+                        {getDisplayedModelName(
+                          message.llm,
+                          message.litellmModelName
+                        )}
+                      </p>
                     </div>
 
                     {(message.inputTokens || message.outputTokens) && (
@@ -651,6 +664,53 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                             </div>
                           )
                         })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+              {/* Memory Context Information */}
+              {message.memoryContextData &&
+                message.memoryContextData.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className='flex items-center gap-2 text-lg'>
+                        <Brain className='h-5 w-5 text-purple-500' />
+                        Memory Context ({message.memoryContextData.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className='space-y-3'>
+                        {message.memoryContextData.map((item, index) => (
+                          <div
+                            key={index}
+                            className='rounded-lg border bg-gray-50 p-3'
+                          >
+                            <div className='flex items-start justify-between gap-2'>
+                              <p className='flex-1 text-sm text-gray-900'>
+                                {item.content}
+                              </p>
+                              {item.memoryType && (
+                                <Badge className='flex-shrink-0 bg-purple-100 text-xs text-purple-700'>
+                                  {item.memoryType}
+                                </Badge>
+                              )}
+                            </div>
+                            {item.categories && item.categories.length > 0 && (
+                              <div className='mt-2 flex flex-wrap gap-1'>
+                                {item.categories.map((cat) => (
+                                  <Badge
+                                    key={cat}
+                                    variant='outline'
+                                    className='text-xs'
+                                  >
+                                    {cat}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </CardContent>
                   </Card>

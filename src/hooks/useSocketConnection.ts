@@ -16,7 +16,6 @@ import {
   workflowSocketConnect,
   workflowSocketDisconnect,
 } from '@/redux/middleware/workflowSocketMiddleware'
-import { config } from '@/config/environment'
 
 export function useSocketConnection() {
   const dispatch = useDispatch<AppDispatch>()
@@ -31,8 +30,6 @@ export function useSocketConnection() {
   )
 
   useEffect(() => {
-    if (!config.features.enableSocketIO) return
-
     const token = localStorage.getItem('token')
 
     if (isAuthenticated && user && token) {

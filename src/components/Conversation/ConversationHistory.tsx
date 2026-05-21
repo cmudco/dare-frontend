@@ -21,7 +21,7 @@ import { AppDispatch, RootState } from '../../redux/store'
 import ConversationList from './ConversationList'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../ui/button'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { ConversationTab } from '@/utils/constants/conversation'
 import { fetchSharedWithMe } from '@/redux/asyncThunks/sharing'
 import { ShareableEntityType, SharedItem } from '@/redux/types/sharing'
@@ -32,6 +32,8 @@ import { toast } from '@/utils/toast'
 const ConversationHistory = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
+  const enableArtifacts = useFeatureFlag('enableArtifacts')
+  const enableSharing = useFeatureFlag('enableSharing')
   const [forkConversationItem, setForkConversationItem] =
     useState<SharedItem | null>(null)
   const isCollapsed = useSelector(
@@ -136,12 +138,13 @@ const ConversationHistory = () => {
   }
 
   // Hide conversation history when artifact sidecar is open
-  if (sidecarOpen && features.enableArtifacts) {
+  if (sidecarOpen && enableArtifacts) {
     return null
   }
 
   return (
     <div
+      data-tour='conversation-history'
       className={`relative flex h-full flex-col border border-pink-50 bg-white bg-clip-border text-gray-700 transition-all duration-300 dark:border-slate-800 dark:bg-dark-bg dark:text-white ${
         isCollapsed
           ? 'w-12 min-w-12 items-center border-l-0 p-2'
@@ -178,6 +181,7 @@ const ConversationHistory = () => {
             </div>
             {activeTab === ConversationTab.MINE && (
               <Button
+                data-tour='new-conversation'
                 onClick={handleCreateConversation}
                 className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl'
               >
@@ -187,7 +191,7 @@ const ConversationHistory = () => {
           </div>
           <hr className='mx-1 mb-2 shrink-0 border-gray-200' />
           {/* Tab switcher */}
-          {features.enableSharing && (
+          {enableSharing && (
             <div className='mx-1 mb-2 flex shrink-0 rounded-lg bg-gray-100 p-0.5 dark:bg-slate-800'>
               <button
                 onClick={() => handleTabChange(ConversationTab.MINE)}

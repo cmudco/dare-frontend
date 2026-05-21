@@ -31,7 +31,7 @@ import VoiceModeButton from './VoiceModeButton'
 import { AlertCircle, ArrowUp, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { MCPServerSelector } from '@/components/MCP/MCPServerSelector'
 import { DareToolSelector } from '@/components/DareTools/DareToolSelector'
 
@@ -50,6 +50,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const conversationInput = useSelector(
     (state: RootState) => state.conversation.conversationInput
   )
+  const enableMcp = useFeatureFlag('enableMcp')
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
@@ -339,7 +340,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <ConversationReferenceSelect />
 
             <ModelPicker />
-            {features.enableMcp && (
+            {enableMcp && (
               <MCPServerSelector
                 selectedIds={activeConversation?.selectedMcpServerIds || []}
                 onChange={(serverIds) => {
@@ -356,7 +357,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
                 disabled={!activeConversation}
               />
             )}
-            {features.enableMcp && (
+            {enableMcp && (
               <DareToolSelector
                 selectedSlugs={activeConversation?.selectedDareToolSlugs || []}
                 onChange={(slugs) => {

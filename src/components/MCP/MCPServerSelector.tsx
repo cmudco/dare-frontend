@@ -86,6 +86,7 @@ export const MCPServerSelector = ({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          data-tour='mcp-servers'
           variant='ghost'
           size='sm'
           disabled={disabled}

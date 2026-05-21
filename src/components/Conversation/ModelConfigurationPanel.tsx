@@ -18,7 +18,7 @@ import { Switch } from '../ui/switch'
 import { Settings, Info } from 'lucide-react'
 import { MODEL_CONFIG } from '../../config/modelConfig'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import {
   Tooltip,
   TooltipContent,
@@ -32,6 +32,9 @@ const ModelConfigurationPanel: React.FC = () => {
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
+  const enableImageGeneration = useFeatureFlag('enableImageGeneration')
+  const enableAudioTranscription = useFeatureFlag('enableAudioTranscription')
+  const enableArtifacts = useFeatureFlag('enableArtifacts')
 
   const temperature =
     activeConversation?.temperature ?? MODEL_CONFIG.temperature
@@ -61,6 +64,16 @@ const ModelConfigurationPanel: React.FC = () => {
   const allModels = useSelector(
     (state: RootState) => state.conversation.allModels
   )
+  // Wallet capability flags. The BE returns `null` for legacy callers (no
+  // wallet_scope param); treat that as "all features supported" so DARE /
+  // BYO users see every toggle as before. LITELLM users see only tools/MCP
+  // since the proxy doesn't transparently forward provider-native features.
+  const walletMeta = useSelector(
+    (state: RootState) => state.conversation.activeWalletMeta
+  )
+  const showWebSearch = walletMeta?.supportsWebSearch ?? true
+  const showImageGeneration = walletMeta?.supportsImageGeneration ?? true
+  const showAudioTranscription = walletMeta?.supportsAudioTranscription ?? true
 
   const handleTemperatureChange = (values: number[]) => {
     dispatch(updateTemperature(values[0]))
@@ -128,7 +141,7 @@ const ModelConfigurationPanel: React.FC = () => {
         )
 
       if (dalleModel) {
-        dispatch(updateSelectedModel(dalleModel.id))
+        dispatch(updateSelectedModel(String(dalleModel.id)))
       }
     }
 
@@ -155,7 +168,7 @@ const ModelConfigurationPanel: React.FC = () => {
         ) || allModels.find((model) => model.isAudioTranscriber)
 
       if (transcriberModel) {
-        dispatch(updateSelectedModel(transcriberModel.id))
+        dispatch(updateSelectedModel(String(transcriberModel.id)))
       }
     }
 
@@ -213,6 +226,7 @@ const ModelConfigurationPanel: React.FC = () => {
       <Popover>
         <PopoverTrigger asChild>
           <Button
+            data-tour='model-config'
             variant='ghost'
             className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
           >
@@ -236,41 +250,48 @@ const ModelConfigurationPanel: React.FC = () => {
 
             <div className='space-y-4'>
               {/* Web Search Toggle */}
-              <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
-                <div className='flex flex-col gap-1'>
-                  <div className='flex items-center gap-2'>
-                    <h4 className='font-medium dark:text-white'>Web Search</h4>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                      </TooltipTrigger>
-                      <TooltipContent className='max-w-xs'>
-                        <div className='space-y-2'>
-                          <p className='font-semibold'>
-                            {TOOLTIP_CONTENT.modelConfig.webSearch.title}
-                          </p>
-                          <p className='text-sm'>
-                            {TOOLTIP_CONTENT.modelConfig.webSearch.description}
-                          </p>
-                          <p className='text-xs text-muted-foreground'>
-                            💡 {TOOLTIP_CONTENT.modelConfig.webSearch.tip}
-                          </p>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
+              {showWebSearch && (
+                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                  <div className='flex flex-col gap-1'>
+                    <div className='flex items-center gap-2'>
+                      <h4 className='font-medium dark:text-white'>
+                        Web Search
+                      </h4>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-xs'>
+                          <div className='space-y-2'>
+                            <p className='font-semibold'>
+                              {TOOLTIP_CONTENT.modelConfig.webSearch.title}
+                            </p>
+                            <p className='text-sm'>
+                              {
+                                TOOLTIP_CONTENT.modelConfig.webSearch
+                                  .description
+                              }
+                            </p>
+                            <p className='text-xs text-muted-foreground'>
+                              💡 {TOOLTIP_CONTENT.modelConfig.webSearch.tip}
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <p className='text-xs text-gray-500 dark:text-gray-400'>
+                      Enable real-time web search for up-to-date information
+                    </p>
                   </div>
-                  <p className='text-xs text-gray-500 dark:text-gray-400'>
-                    Enable real-time web search for up-to-date information
-                  </p>
+                  <Switch
+                    checked={webSearchEnabled}
+                    onCheckedChange={handleWebSearchToggle}
+                  />
                 </div>
-                <Switch
-                  checked={webSearchEnabled}
-                  onCheckedChange={handleWebSearchToggle}
-                />
-              </div>
+              )}
 
               {/* Image Generation Toggle - Only show in Georgia Tech and Development */}
-              {features.enableImageGeneration && (
+              {enableImageGeneration && showImageGeneration && (
                 <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>
@@ -315,7 +336,7 @@ const ModelConfigurationPanel: React.FC = () => {
               )}
 
               {/* Audio Transcription Toggle - Only show when feature enabled */}
-              {features.enableAudioTranscription && (
+              {enableAudioTranscription && showAudioTranscription && (
                 <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>
@@ -358,7 +379,7 @@ const ModelConfigurationPanel: React.FC = () => {
               )}
 
               {/* Artifacts Toggle - Only show when feature enabled */}
-              {features.enableArtifacts && (
+              {enableArtifacts && (
                 <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>

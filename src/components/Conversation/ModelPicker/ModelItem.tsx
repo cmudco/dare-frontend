@@ -1,29 +1,29 @@
 import React from 'react'
 import { Check } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { LLMModel } from '@/redux/types/conversation'
+import { PickerModel } from '@/redux/types/conversation'
 import { ModelTier, ModelTierColors } from '@/utils/constants/model'
 import { getProviderBrand } from '@/utils/providerColors'
-import { categorizeModel } from '@/utils/modelGroupingUtils'
+import { categorizeEntry } from '@/utils/modelGroupingUtils'
 import TierEmoji from './TierEmoji'
 
 interface ModelItemProps {
-  model: LLMModel
+  entry: PickerModel
   isSelected: boolean
   onClick: () => void
   showProvider?: boolean
 }
 
 const ModelItem: React.FC<ModelItemProps> = ({
-  model,
+  entry,
   isSelected,
   onClick,
   showProvider,
 }) => {
-  const colors =
-    ModelTierColors[model.tier as ModelTier] ??
-    ModelTierColors[ModelTier.Advanced]
-  const brand = getProviderBrand(model.provider)
+  const tier = (entry.tier as ModelTier) ?? ModelTier.Advanced
+  const colors = ModelTierColors[tier] ?? ModelTierColors[ModelTier.Advanced]
+  const brand = getProviderBrand(entry.provider)
+  const isLiteLLM = entry.id.startsWith('litellm:')
 
   return (
     <motion.button
@@ -53,16 +53,21 @@ const ModelItem: React.FC<ModelItemProps> = ({
           <span
             className={`truncate text-sm font-semibold ${isSelected ? colors.text : 'text-foreground'}`}
           >
-            {model.name}
+            {entry.name}
           </span>
-          <TierEmoji type={categorizeModel(model)} />
-          {model.isReasoning && (
+          <TierEmoji type={categorizeEntry(entry)} />
+          {entry.isReasoning && (
             <div className='h-1.5 w-1.5 animate-pulse rounded-full bg-purple-500' />
           )}
+          {isLiteLLM && (
+            <span className='ml-1 rounded-full bg-accent/40 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground'>
+              LiteLLM
+            </span>
+          )}
         </div>
-        {model.description && (
+        {entry.description && (
           <span className='truncate text-[10px] text-muted-foreground'>
-            {model.description}
+            {entry.description}
           </span>
         )}
       </motion.div>

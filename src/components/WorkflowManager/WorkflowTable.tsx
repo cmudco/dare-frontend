@@ -62,7 +62,7 @@ import {
 import { WorkflowTableProps } from '@/redux/types/workflow'
 import { SortDirectionEnum } from '@/utils/constants/sort'
 import { Workflow } from '@/redux/types/workflow'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { openSharing } from '@/redux/sharingSlice'
 import { ShareableEntityType } from '@/redux/types/sharing'
 
@@ -94,6 +94,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
   const [forkWorkflowTitle, setForkWorkflowTitle] = useState<string>('')
   const [activeId, setActiveId] = useState<number | null>(null)
   const sensors = useDragSensors()
+  const enableSharing = useFeatureFlag('enableSharing')
 
   const isLibrary = activeTab === 'library'
   const sourceWorkflows = isLibrary ? sharedWorkflows : workflows
@@ -229,7 +230,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
   }
 
   // Library view — simple table without drag-and-drop (only when sharing is enabled)
-  if (isLibrary && features.enableSharing) {
+  if (isLibrary && enableSharing) {
     return (
       <div className='overflow-auto'>
         <Table className='mt-4 w-full min-w-max bg-background text-left'>

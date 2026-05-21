@@ -10,6 +10,7 @@ export type ArtifactType =
   | 'chart'
   | 'diagram'
   | 'code'
+  | 'docx'
   | 'document'
   | 'image'
   | 'file'

@@ -9,13 +9,14 @@ import PromptModal from './PromptModal'
 import PromptsLibraryTable from './PromptsLibraryTable'
 import SharedPromptsTable from './SharedPromptsTable'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
-import { features } from '@/config/environment'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { fetchSharedWithMe } from '@/redux/asyncThunks/sharing'
 import { ShareableEntityType } from '@/redux/types/sharing'
 
 const PromptManagerLayout = () => {
   const dispatch = useDispatch<AppDispatch>()
   const [searchQuery, setSearchQuery] = useState('')
+  const enableSharing = useFeatureFlag('enableSharing')
 
   useEffect(() => {
     dispatch(getPrompts())
@@ -37,7 +38,7 @@ const PromptManagerLayout = () => {
           <div className='px-0' placeholder=''>
             <PromptHeader onSearch={handleSearch} />
 
-            {features.enableSharing ? (
+            {enableSharing ? (
               <Tabs
                 defaultValue='my-prompts'
                 className='mt-6 w-full'
@@ -47,7 +48,10 @@ const PromptManagerLayout = () => {
                   }
                 }}
               >
-                <TabsList className='mb-4 grid w-full max-w-md grid-cols-3'>
+                <TabsList
+                  data-tour='prompts-tabs'
+                  className='mb-4 grid w-full max-w-md grid-cols-3'
+                >
                   <TabsTrigger value='my-prompts'>My Prompts</TabsTrigger>
                   <TabsTrigger value='library'>Library</TabsTrigger>
                   <TabsTrigger value='shared-with-me'>

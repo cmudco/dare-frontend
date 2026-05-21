@@ -44,6 +44,8 @@ const ArtifactSidecar: React.FC = () => {
         return <BarChart2 className='h-5 w-5' />
       case 'diagram':
         return <GitBranch className='h-5 w-5' />
+      case 'docx':
+        return <FileText className='h-5 w-5' />
       case 'code':
         return <Code className='h-5 w-5' />
       case 'image':
@@ -85,15 +87,22 @@ const ArtifactSidecar: React.FC = () => {
             </span>
           </div>
         </div>
-        <Button
-          variant='ghost'
-          size='icon'
-          onClick={handleClose}
-          className='h-8 w-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-          title='Close'
-        >
-          <X className='h-4 w-4' />
-        </Button>
+        <div className='flex items-center gap-1'>
+          <ArtifactActions
+            content={activeArtifact.content}
+            title={activeArtifact.title}
+            artifactType={activeArtifact.artifactType}
+          />
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={handleClose}
+            className='h-8 w-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+            title='Close'
+          >
+            <X className='h-4 w-4' />
+          </Button>
+        </div>
       </div>
 
       {/* Content */}
@@ -109,16 +118,6 @@ const ArtifactSidecar: React.FC = () => {
           </p>
         </div>
       )}
-
-      {/* Footer Actions */}
-      <div className='flex items-center justify-end border-t border-gray-200 px-4 py-3 dark:border-gray-700'>
-        <ArtifactActions
-          content={activeArtifact.content}
-          title={activeArtifact.title}
-          artifactType={activeArtifact.artifactType}
-          language={activeArtifact.metadata?.language as string | undefined}
-        />
-      </div>
     </div>
   )
 }

@@ -12,6 +12,7 @@ import {
   ChevronDown,
   GitBranch,
   BarChart3,
+  FileText,
   Check,
   Loader2,
 } from 'lucide-react'
@@ -34,6 +35,7 @@ interface DareToolSelectorProps {
 const TOOL_ICONS: Record<string, React.ReactNode> = {
   diagram: <GitBranch className='h-4 w-4 text-primary' />,
   chart: <BarChart3 className='h-4 w-4 text-primary' />,
+  'file-text': <FileText className='h-4 w-4 text-primary' />,
 }
 
 export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
@@ -85,6 +87,7 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          data-tour='dare-tools'
           variant='ghost'
           size='sm'
           disabled={disabled}

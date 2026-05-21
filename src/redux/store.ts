@@ -6,7 +6,6 @@ import conversationReducer from './conversationSlice'
 import promptReducer from './promptSlice'
 import promptsLibraryReducer from './promptsLibrarySlice'
 import agentReducer from './agentSlice'
-import websocketReducer from './websocketSlice'
 import tagsReducer from './tagslice'
 import workflowReducer from './workflowSlice'
 import workflowBuilderReducer from './workflowBuilder'
@@ -21,11 +20,12 @@ import memoryReducer from './memorySlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
 import sharingReducer from './sharingSlice'
+import conversationTourReducer from './conversationTourSlice'
+import featureFlagsReducer from './featureFlagsSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
-import { config } from '@/config/environment'
-import { debugLog } from '@/utils/debugLogger'
+import { debugLog, setDebugLogsAccessor } from '@/utils/debugLogger'
 
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({})
 
@@ -37,7 +37,6 @@ export const store = configureStore({
     prompt: promptReducer,
     promptsLibrary: promptsLibraryReducer,
     agent: agentReducer,
-    websocket: websocketReducer,
     tags: tagsReducer,
     workflow: workflowReducer,
     workflowBuilder: workflowBuilderReducer,
@@ -52,6 +51,8 @@ export const store = configureStore({
     dareTools: dareToolsReducer,
     memory: memoryReducer,
     sharing: sharingReducer,
+    conversationTour: conversationTourReducer,
+    featureFlags: featureFlagsReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware
@@ -83,15 +84,8 @@ export const store = configureStore({
       },
     }).concat(draftPersistenceMiddleware)
 
-    // Add Socket.IO middleware if enabled
-    if (config.features.enableSocketIO) {
-      debugLog('🔌 Socket.IO middleware enabled')
-      return middlewares
-        .concat(socketMiddleware)
-        .concat(workflowSocketMiddleware)
-    }
-
-    return middlewares
+    debugLog('🔌 Socket.IO middleware registered')
+    return middlewares.concat(socketMiddleware).concat(workflowSocketMiddleware)
   },
   enhancers: (getDefaultEnhancers) =>
     getDefaultEnhancers().concat(sentryReduxEnhancer),
@@ -99,3 +93,10 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
+
+// Wire debugLogger to the store now that it's fully initialized. Doing this
+// here (rather than via a circular import inside debugLogger.ts) keeps store
+// exports out of TDZ during module evaluation.
+setDebugLogsAccessor(
+  () => store.getState().featureFlags.flags.enableDebugLogs === true
+)

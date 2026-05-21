@@ -20,6 +20,9 @@ import {
   setSelectedNodeId,
 } from '@/redux/workflowBuilder'
 import { isValidConnection } from '@/utils/workflowBuilder/isValidConnection'
+import { wouldCreateCycle } from '@/utils/workflowBuilder/detectCycle'
+import { toast } from '@/utils/toast'
+import type { Connection } from '@xyflow/react'
 import {
   WORKFLOW_NODE_TYPES,
   WORKFLOW_EDGE_TYPES,
@@ -136,6 +139,19 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
     dispatch(setSelectedNodeId(null))
   }, [dispatch])
 
+  // Reject connections that would create a cycle; the execution engine
+  // requires a DAG (backend enforces the same rule via WorkflowValidator).
+  const handleConnect = useCallback(
+    (connection: Connection) => {
+      if (wouldCreateCycle(connection, edges)) {
+        toast.error('Connection rejected: would create a loop in the workflow.')
+        return
+      }
+      dispatch(onConnect(connection))
+    },
+    [dispatch, edges]
+  )
+
   // Get the selected node data for config panel
   const selectedNode = selectedNodeId
     ? nodes.find((n) => n.id === selectedNodeId)
@@ -150,7 +166,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
         edges={edges}
         onNodesChange={(changes) => dispatch(onNodesChange(changes))}
         onEdgesChange={(changes) => dispatch(onEdgesChange(changes))}
-        onConnect={(connection) => dispatch(onConnect(connection))}
+        onConnect={handleConnect}
         isValidConnection={(connection) =>
           isValidConnection(connection, nodes, edges)
         }

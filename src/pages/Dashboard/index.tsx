@@ -7,7 +7,7 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getWallet } from '@/redux/asyncThunks/billing'
+import { getWallets } from '@/redux/asyncThunks/billing'
 import { getUserStats } from '@/redux/asyncThunks/user'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
@@ -42,9 +42,14 @@ const Dashboard = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { stats, loading: userLoading } = useAppSelector((state) => state.user)
-  const { wallet, loading: billingLoading } = useAppSelector(
+  const { wallets, walletsLoading: billingLoading } = useAppSelector(
     (state) => state.billing
   )
+  const dareWallet = wallets.find((w) => w.type === 'DARE')
+  const dareBalance =
+    dareWallet?.status.kind === 'BALANCE'
+      ? `$${parseFloat(dareWallet.status.balance).toFixed(2)}`
+      : '$0.00'
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedTokenType, setSelectedTokenType] = useState<
     'input' | 'output' | 'total'
@@ -52,7 +57,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     dispatch(getUserStats())
-    dispatch(getWallet())
+    dispatch(getWallets())
   }, [dispatch])
 
   const formatNumber = (num: number | string) => {
@@ -141,7 +146,7 @@ const Dashboard = () => {
     },
     {
       title: 'Wallet Balance',
-      value: wallet?.displayBalance || '$0.00',
+      value: dareBalance,
       icon: <WalletIcon className='h-5 w-5 text-teal-600' />,
       description: 'Current wallet balance',
       iconBg: 'bg-teal-600/10 border-teal-600/20 group-hover:bg-teal-600/20',
@@ -161,7 +166,7 @@ const Dashboard = () => {
                 Overview of your activity and usage statistics.
               </p>
             </div>
-            <TabsList>
+            <TabsList data-tour='dashboard-tabs'>
               <TabsTrigger value='overview'>Overview</TabsTrigger>
               <TabsTrigger value='energy'>Environmental Impact</TabsTrigger>
             </TabsList>
@@ -186,7 +191,10 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+              <div
+                data-tour='dashboard-stats'
+                className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              >
                 {statCards.map((card, index) => (
                   <motion.div
                     key={card.title}
@@ -257,7 +265,10 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.6 }}
             >
-              <Card className='group relative overflow-hidden border-none bg-white/50 shadow-lg backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/50'>
+              <Card
+                data-tour='dashboard-activity'
+                className='group relative overflow-hidden border-none bg-white/50 shadow-lg backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/50'
+              >
                 <div className='pointer-events-none absolute right-0 top-0 p-8 opacity-[0.03] transition-opacity group-hover:opacity-[0.05]'>
                   <TrendingUp className='h-32 w-32' />
                 </div>

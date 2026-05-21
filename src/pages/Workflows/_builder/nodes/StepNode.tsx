@@ -1,5 +1,5 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { Brain, Settings, Trash2, Play } from 'lucide-react'
+import { Brain, Settings, Trash2, Play, Link2 } from 'lucide-react'
 import { useCallback } from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks'
 import {
@@ -29,6 +29,7 @@ export type StepNodeData = {
   apiId?: number
   usePreviousStepFiles?: boolean
   usePreviousStepEmbeddings?: boolean
+  usePreviousContext?: boolean
   textInput?: string
   enableWebSearch?: boolean
   id?: string
@@ -148,6 +149,16 @@ export default function StepNode({ id, data, selected }: NodeProps) {
           />
           <div className='node-subtitle'>{getSubtitle()}</div>
         </div>
+        {(stepData?.usePreviousContext ?? true) &&
+          connectedInputEdges.length > 0 && (
+            <div
+              className='flex shrink-0 items-center gap-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-medium text-blue-600'
+              title="This step includes upstream nodes' outputs in its prompt"
+            >
+              <Link2 size={10} />
+              Context
+            </div>
+          )}
       </div>
 
       {/* Input handles - 5 fixed colorful handles for all connections */}

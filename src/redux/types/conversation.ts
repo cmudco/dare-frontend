@@ -38,6 +38,9 @@ export interface Conversation {
   imageGenerationEnabled?: boolean
   audioTranscriptionEnabled?: boolean
   artifactsEnabled?: boolean
+  memoryEnabled?: boolean
+  // Conversation persists the *real* LLM FK only — LiteLLM-routed models are
+  // never persisted at conversation level (they're per-message audit fields).
   selectedModel?: number | null
   selectedMediaIds?: number[]
   prompt?: Prompt | null
@@ -64,6 +67,12 @@ export interface Conversation {
   fileOwnerId?: number | null // Original file owner's user ID for forked conversations
 }
 
+export interface MemoryContextItem {
+  content: string
+  memoryType: string
+  categories: string[]
+}
+
 export interface Message {
   id: string
   message: string
@@ -72,10 +81,17 @@ export interface Message {
   createdAt: string
   files?: MyFile[]
   tags?: Tag[]
+  // FK to the real DB-backed LLM that handled the message (numeric pk).
+  // Null for user messages and for messages dispatched through LiteLLM —
+  // for those, `litellmModelName` carries the model identifier shown in
+  // the metadata panel. The LiteLLMKey FK is BE-only audit; the key UUID
+  // is never wire-exposed.
   llm?: number | null
+  litellmModelName?: string | null
   streaming?: boolean
   snippets?: Snippet[]
   webSearchSources?: WebSearchSource[]
+  memoryContextData?: MemoryContextItem[]
   feedbackType?: FeedbackType | null
   feedbackText?: string
   feedbackSource?: string
@@ -172,6 +188,9 @@ export interface MessageProps {
   shouldShowAutoFeedback?: boolean
 }
 
+// DB-backed LLM row — `id` is the integer PK (matches Message.llm and the
+// numeric FKs everywhere else). Used for `allModels`, agents, workflows,
+// and any place that looks up an LLM by its true PK.
 export interface LLMModel {
   id: number
   name: string
@@ -181,9 +200,45 @@ export interface LLMModel {
   isReasoning: boolean
   isImageGenerator?: boolean
   isAudioTranscriber?: boolean
-  inputTokenRatePerMillion: number
-  outputTokenRatePerMillion: number
-  tier: string
+  inputTokenRatePerMillion: number | null
+  outputTokenRatePerMillion: number | null
+  tier: string | null
+}
+
+// Chat-picker entry — `id` is opaque to the FE because LiteLLM-routed
+// entries need to encode (key_pk + model_name) into a single dispatch
+// reference. The BE emits either a stringified LLM PK ("42") or
+// `litellm:<key_pk>:<model_name>`; the FE renders & echoes back; the BE
+// inverts the encoding via `parse_model_id` on dispatch. All other fields
+// match `LLMModel`.
+export interface PickerModel {
+  id: string
+  name: string
+  identifier?: string
+  provider: string
+  description: string | null
+  isReasoning: boolean
+  isImageGenerator?: boolean
+  isAudioTranscriber?: boolean
+  inputTokenRatePerMillion: number | null
+  outputTokenRatePerMillion: number | null
+  tier: string | null
+}
+
+export interface WalletMeta {
+  type: 'DARE' | 'BYO' | 'LITELLM'
+  providers: string[]
+  isEmpty: boolean
+  emptyReason: string | null
+  staleProbe: boolean
+  // Capability flags drive which chat toggles the picker shows. LiteLLM
+  // proxies don't transparently forward web-search / structured-output /
+  // DALL-E / Whisper, so the FE hides those toggles when the active
+  // wallet is LITELLM. Tools/MCP stay enabled (LiteLLM forwards them).
+  supportsWebSearch: boolean
+  supportsImageGeneration: boolean
+  supportsAudioTranscription: boolean
+  supportsStructuredOutput: boolean
 }
 
 export interface Snippet {
@@ -236,12 +291,18 @@ export interface ConversationState {
   error: string | null
   searchQuery: string
   activeConversationMessages: Message[]
-  selectedModel: number | null
+  // Opaque dispatch id from the picker — echoed back to the BE on send.
+  selectedModel: string | null
+  // Picker catalog (uniform flat shape) plus the wallet metadata block for
+  // capability toggles.
+  pickerEntries: PickerModel[]
+  activeWalletMeta: WalletMeta | null
   selectedFiles: MyFile[]
   selectedEmbeddings: MyFile[]
   selectedMediaFiles: MyFile[] // NEW: Persistent media files (images/videos)
   selectedTags: Tag[]
   selectedFolders: MyFolder[]
+  memoryEnabled: boolean
   selectedConversations: string[]
   referencedConversations: Conversation[]
   referencedConversationHistoryLimit: number
@@ -249,7 +310,8 @@ export interface ConversationState {
   showDropdown: boolean
   hoveredModel: string | null
   conversationInput: string
-  availableModels: LLMModel[]
+  // Full catalog of DB-backed LLMs, used by configurator surfaces (Agents,
+  // Workflows, ModelCards). Populated from `/api/llms/all_models/`.
   allModels: LLMModel[]
   conversationDrafts: ConversationDraft[]
   autoSaveEnabled: boolean

@@ -1,0 +1,102 @@
+# Configuration Reference
+
+The DARE frontend reads configuration from `.env` files at build time via Vite. All variables exposed to the browser must be prefixed `VITE_`.
+
+A working template lives at `.env.example` — copy it to `.env` and edit.
+
+> **Important:** Vite **inlines** `VITE_*` values into the bundle at build time. Changing them after `npm run build` requires rebuilding and redeploying. For per-environment configuration, pass values as Docker build args or set them in your CI environment before `npm run build`.
+
+---
+
+## Core
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `VITE_APP_ENVIRONMENT` | string | `development` | Free-form label (`development`, `staging`, `production`). Used for runtime gating and Sentry release tagging. |
+
+## Backend Connection
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `VITE_DJANGO_BACKEND_URL` | url | `http://localhost:8000` | Base URL of the DARE REST API. Must be reachable from the browser. |
+| `VITE_WEBSOCKET_URL` | url | `ws://localhost:8000` | Socket.IO server URL for chat and workflow streaming. Use `wss://` when the page is served over HTTPS. |
+
+## Feature Flags
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `VITE_ENABLE_MCP` | bool | `false` | Enables the Model Context Protocol panel in the UI. Requires the backend's MCP integration to be configured. |
+| `VITE_ENABLE_MEMORY` | bool | `false` | Enables the long-term memory feature in conversations. |
+
+## Observability (Sentry)
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `VITE_SENTRY_DSN` | string | *(none)* | Sentry DSN. Empty disables client-side Sentry. |
+| `VITE_SENTRY_ORG` | string | *(none)* | Sentry organization slug — used by the Vite Sentry plugin to upload source maps. |
+| `VITE_SENTRY_PROJECT` | string | *(none)* | Sentry project slug. |
+| `VITE_SENTRY_AUTH_TOKEN` | string | *(none)* | Sentry auth token for source-map upload. **Build-time only** — never expose in `.env` checked into git. |
+
+> Source maps are uploaded by the Vite Sentry plugin during `npm run build` if all four Sentry vars are set. Set them in CI, not in committed `.env` files.
+
+---
+
+## Per-environment configuration
+
+Vite supports mode-specific env files:
+
+| File | Loaded for |
+|---|---|
+| `.env` | always |
+| `.env.local` | always; gitignored — overrides `.env` |
+| `.env.development` | `npm run dev` |
+| `.env.production` | `npm run build` |
+
+A common setup:
+
+- Commit `.env.example` (the template).
+- Commit `.env.development` (safe, points at localhost).
+- Do **not** commit `.env`, `.env.local`, or production `.env` files.
+- Set production vars via your CI / deploy environment.
+
+---
+
+## Adding a new variable
+
+1. Add it to `.env.example` with a placeholder.
+2. Read it via `import.meta.env.VITE_MY_VAR` in the code (no extra wiring required).
+3. If it's a feature flag, prefer adding it to `src/config/` so call sites can import a typed `featureFlags` object rather than reaching into `import.meta.env` directly.
+4. Document it in this file.
+
+Example:
+
+```ts
+// src/config/featureFlags.ts
+export const featureFlags = {
+  mcp: import.meta.env.VITE_ENABLE_MCP === 'true',
+  memory: import.meta.env.VITE_ENABLE_MEMORY === 'true',
+}
+```
+
+## Validating configuration
+
+After editing `.env`, run:
+
+```bash
+npm run build       # confirm there are no missing-env warnings
+npm run preview     # confirm the build runs locally
+```
+
+In the browser console of a running build:
+
+```js
+// All inlined VITE_* values are visible on import.meta.env at runtime.
+// (Visible to anyone using the app — never put secrets here.)
+```
+
+---
+
+## Security notes
+
+- **No secrets in `VITE_*` variables.** Anything prefixed `VITE_` is shipped to the browser in plain text. API keys, internal hostnames, and similar belong on the backend.
+- **Auth tokens** are stored in browser storage by the auth flow — they are not configured via env vars.
