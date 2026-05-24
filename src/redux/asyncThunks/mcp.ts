@@ -6,6 +6,7 @@ import {
   deleteMcpConnectionAPI,
   testMcpConnectionAPI,
   getMcpToolsAPI,
+  startMcpOAuthAPI,
   executeMcpToolAPI,
   getMcpExecutionsAPI,
 } from '../../api/mcp'
@@ -95,6 +96,21 @@ export const getMcpTools = createAsyncThunk(
     try {
       const response = await getMcpToolsAPI(serverSlug)
       return { serverSlug, tools: response.tools }
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Start OAuth for a remote MCP server
+ */
+export const startMcpOAuth = createAsyncThunk(
+  'mcp/startMcpOAuth',
+  async (serverSlug: string, thunkAPI) => {
+    try {
+      const response = await startMcpOAuthAPI(serverSlug)
+      return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

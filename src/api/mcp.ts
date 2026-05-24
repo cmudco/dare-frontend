@@ -6,6 +6,7 @@ import {
   ExecuteMcpToolResponse,
   TestMcpConnectionResponse,
   GetMcpToolsResponse,
+  StartMcpOAuthResponse,
 } from '@/redux/types/mcp'
 import { METHOD } from '@/utils/constants/requests'
 import { baseRequest } from '@/utils/requests'
@@ -88,6 +89,18 @@ export const getMcpToolsAPI = async (
   return await baseRequest<GetMcpToolsResponse>({
     url: `mcp/api/servers/${serverSlug}/tools/`,
     method: METHOD.GET,
+  })
+}
+
+/**
+ * Start OAuth for a remote MCP server
+ */
+export const startMcpOAuthAPI = async (
+  serverSlug: string
+): Promise<StartMcpOAuthResponse> => {
+  return await baseRequest<StartMcpOAuthResponse>({
+    url: `mcp/api/servers/${serverSlug}/oauth/start/`,
+    method: METHOD.POST,
   })
 }
 

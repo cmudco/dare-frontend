@@ -7,6 +7,7 @@ import {
   deleteMcpConnection,
   testMcpConnection,
   getMcpTools,
+  startMcpOAuth,
   executeMcpTool,
   getMcpExecutions,
 } from './asyncThunks/mcp'
@@ -156,6 +157,19 @@ const mcpSlice = createSlice({
       .addCase(getMcpTools.rejected, (state, action) => {
         const serverSlug = action.meta.arg
         state.toolsLoading[serverSlug] = false
+        state.error = action.payload as string
+      })
+
+      // Start MCP OAuth
+      .addCase(startMcpOAuth.pending, (state) => {
+        state.connectionsLoading = true
+        state.error = null
+      })
+      .addCase(startMcpOAuth.fulfilled, (state) => {
+        state.connectionsLoading = false
+      })
+      .addCase(startMcpOAuth.rejected, (state, action) => {
+        state.connectionsLoading = false
         state.error = action.payload as string
       })
 

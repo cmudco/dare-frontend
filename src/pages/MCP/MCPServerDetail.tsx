@@ -9,6 +9,7 @@ import {
   getMcpTools,
   createMcpConnection,
   testMcpConnection,
+  startMcpOAuth,
 } from '@/redux/asyncThunks/mcp'
 import { clearTestResult } from '@/redux/mcpSlice'
 import { CredentialSchema } from '@/redux/types/mcp'
@@ -27,7 +28,7 @@ import {
   ExternalLink,
   ArrowLeft,
 } from 'lucide-react'
-import { McpCatalogSlug } from '@/utils/constants/mcp'
+import { McpAuthType, McpCatalogSlug } from '@/utils/constants/mcp'
 
 /**
  * MCPServerDetail - Server detail page with connection management and tools list
@@ -54,6 +55,10 @@ const MCPServerDetail = () => {
   const server = servers.find((s) => s.slug === serverSlug)
   const connection = connections.find((c) => c.server.slug === serverSlug)
   const isSyftboxServer = serverSlug === McpCatalogSlug.SYFTBOX
+  const isOAuthServer = server?.authType === McpAuthType.OAUTH2
+  const isCredentialServer =
+    server?.authType === McpAuthType.CREDENTIALS ||
+    server?.authType === McpAuthType.BEARER
   const isConnected =
     Boolean(connection?.hasCredentials) ||
     (isSyftboxServer && Boolean(user?.isSyftboxFileStorage))
@@ -111,6 +116,14 @@ const MCPServerDetail = () => {
     )
     if (createMcpConnection.fulfilled.match(result)) {
       dispatch(getMcpConnections())
+    }
+  }
+
+  const handleOAuthConnect = async () => {
+    if (!server) return
+    const result = await dispatch(startMcpOAuth(server.slug))
+    if (startMcpOAuth.fulfilled.match(result)) {
+      window.location.assign(result.payload.authorizationUrl)
     }
   }
 
@@ -206,35 +219,60 @@ const MCPServerDetail = () => {
 
           {server.slug === McpCatalogSlug.SYFTBOX ? (
             <SyftBoxOtpConnect serverName={server.name} />
+          ) : isOAuthServer ? (
+            <div className='space-y-4'>
+              <p className='text-sm text-muted-foreground'>
+                This hosted MCP uses provider OAuth. You will be redirected to
+                {` ${server.name}`} to approve DARE access, then returned here.
+              </p>
+              <Button
+                onClick={handleOAuthConnect}
+                disabled={connectionsLoading}
+              >
+                {connectionsLoading ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <ExternalLink className='mr-2 h-4 w-4' />
+                    Connect with {server.name}
+                  </>
+                )}
+              </Button>
+            </div>
           ) : (
             <>
               {/* Credential Form */}
-              <div className='space-y-4'>
-                {server.requiredCredentials.map((cred: CredentialSchema) => (
-                  <div key={cred.key} className='space-y-2'>
-                    <Label htmlFor={cred.key}>
-                      {cred.label}
-                      {cred.required && (
-                        <span className='ml-1 text-red-500'>*</span>
+              {isCredentialServer && (
+                <div className='space-y-4'>
+                  {server.requiredCredentials.map((cred: CredentialSchema) => (
+                    <div key={cred.key} className='space-y-2'>
+                      <Label htmlFor={cred.key}>
+                        {cred.label}
+                        {cred.required && (
+                          <span className='ml-1 text-red-500'>*</span>
+                        )}
+                      </Label>
+                      <Input
+                        id={cred.key}
+                        type={cred.type === 'password' ? 'password' : 'text'}
+                        placeholder={cred.placeholder}
+                        value={credentials[cred.key] || ''}
+                        onChange={(e) =>
+                          handleCredentialChange(cred.key, e.target.value)
+                        }
+                      />
+                      {cred.helpText && (
+                        <p className='text-xs text-muted-foreground'>
+                          {cred.helpText}
+                        </p>
                       )}
-                    </Label>
-                    <Input
-                      id={cred.key}
-                      type={cred.type === 'password' ? 'password' : 'text'}
-                      placeholder={cred.placeholder}
-                      value={credentials[cred.key] || ''}
-                      onChange={(e) =>
-                        handleCredentialChange(cred.key, e.target.value)
-                      }
-                    />
-                    {cred.helpText && (
-                      <p className='text-xs text-muted-foreground'>
-                        {cred.helpText}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Test Result */}
               {testResult && (
@@ -260,6 +298,7 @@ const MCPServerDetail = () => {
                   variant='secondary'
                   onClick={handleTestConnection}
                   disabled={
+                    !isCredentialServer ||
                     !allRequiredFilled ||
                     testingConnection ||
                     connectionsLoading

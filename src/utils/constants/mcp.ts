@@ -10,6 +10,18 @@ export enum McpCatalogSlug {
   SYFTBOX = 'syftbox',
 }
 
+export enum McpTransport {
+  STDIO = 'stdio',
+  STREAMABLE_HTTP = 'streamable_http',
+}
+
+export enum McpAuthType {
+  CREDENTIALS = 'credentials',
+  NONE = 'none',
+  BEARER = 'bearer',
+  OAUTH2 = 'oauth2',
+}
+
 /**
  * Execution status for MCP tool calls
  */
