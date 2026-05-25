@@ -11,6 +11,7 @@ export type ArtifactType =
   | 'diagram'
   | 'code'
   | 'docx'
+  | 'pptx'
   | 'document'
   | 'image'
   | 'file'
@@ -96,6 +97,8 @@ export interface ArtifactState {
   artifacts: Record<string, Artifact> // Map of String(artifactId) -> Artifact
   activeArtifactId: number | null
   sidecarOpen: boolean
+  sidecarWidth: number
+  sidecarFullscreen: boolean
   artifactsEnabled: boolean // Toggle in chat input
 }
 
@@ -103,6 +106,8 @@ export const initialArtifactState: ArtifactState = {
   artifacts: {},
   activeArtifactId: null,
   sidecarOpen: false,
+  sidecarWidth: 720,
+  sidecarFullscreen: false,
   artifactsEnabled: false,
 }
 

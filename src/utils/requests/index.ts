@@ -67,11 +67,21 @@ export async function baseRequest<T>({
 
     if (responseType === 'blob') {
       const contentDisposition = response.headers['content-disposition']
-      let filename = 'download.pdf'
+      let filename = ''
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+)"/)
-        if (filenameMatch) {
-          filename = filenameMatch[1]
+        const encodedFilenameMatch = contentDisposition.match(
+          /filename\*=UTF-8''([^;]+)/i
+        )
+        const quotedFilenameMatch =
+          contentDisposition.match(/filename="([^"]+)"/i)
+        const plainFilenameMatch = contentDisposition.match(/filename=([^;]+)/i)
+
+        if (encodedFilenameMatch?.[1]) {
+          filename = decodeURIComponent(encodedFilenameMatch[1])
+        } else if (quotedFilenameMatch?.[1]) {
+          filename = quotedFilenameMatch[1]
+        } else if (plainFilenameMatch?.[1]) {
+          filename = plainFilenameMatch[1].trim()
         }
       }
 

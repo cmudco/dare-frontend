@@ -5,6 +5,7 @@ import type {
   ArtifactDetailResponse,
   ArtifactStatus,
 } from '@/redux/types/artifact'
+import { ArtifactDownloadFormat } from '@/utils/constants/artifactDownloads'
 
 export interface ArtifactStatusResponse {
   id: number
@@ -97,5 +98,23 @@ export const updateArtifactContentAPI = async (
     url: `api/artifacts/${artifactId}/content/`,
     method: METHOD.PATCH,
     data: { content },
+  })
+}
+
+/**
+ * Download generated binary artifact content
+ */
+export const downloadArtifactAPI = async (
+  artifactId: number | string,
+  format: ArtifactDownloadFormat.PPTX | ArtifactDownloadFormat.PDF,
+  conversationId?: string
+): Promise<{ blob: Blob; filename: string }> => {
+  return await baseRequest({
+    url: conversationId
+      ? `api/conversations/${conversationId}/artifacts/${artifactId}/download/`
+      : `api/artifacts/${artifactId}/download/`,
+    method: METHOD.GET,
+    params: { format },
+    responseType: 'blob',
   })
 }
