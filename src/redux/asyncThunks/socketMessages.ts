@@ -93,6 +93,9 @@ export const sendSocketMessage = createAsyncThunk<
         activeConversation.documentSimilarityThreshold,
       history_limit: activeConversation.historyLimit,
       web_search_enabled: webSearchEnabled,
+      web_fetch_enabled:
+        activeConversation.webFetchEnabled ??
+        state.conversation.webFetchEnabled,
       image_generation_enabled: imageGenerationEnabled,
       image_generation_settings: {
         size: imageGenerationSettings.size,

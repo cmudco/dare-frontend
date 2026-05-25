@@ -65,11 +65,6 @@ const ModelItem: React.FC<ModelItemProps> = ({
             </span>
           )}
         </div>
-        {entry.description && (
-          <span className='truncate text-[10px] text-muted-foreground'>
-            {entry.description}
-          </span>
-        )}
       </motion.div>
 
       <div className='flex items-center gap-2 pl-2'>

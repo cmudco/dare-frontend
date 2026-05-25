@@ -2,13 +2,16 @@ import React, { useState } from 'react'
 import {
   ChevronDown,
   ChevronRight,
+  ExternalLink,
+  FileText,
   Loader2,
   CheckCircle,
   XCircle,
   Wrench,
 } from 'lucide-react'
-import { ToolCallStatus } from '@/utils/constants/dareTools'
+import { ServerSlug, ToolCallStatus } from '@/utils/constants/dareTools'
 import type { ToolCall } from '@/redux/types/conversation'
+import type { ProviderToolResult } from '@/redux/types/dareToolResults'
 import { MCPServerLogo } from './MCPServerLogo'
 
 interface ToolCallIndicatorProps {
@@ -63,6 +66,60 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
     return 'Tools'
   }
 
+  const formatContentSize = (size?: number) => {
+    if (!size) return null
+    return `${size.toLocaleString()} chars`
+  }
+
+  const renderProviderResult = (result: ProviderToolResult) => {
+    const contentSize = formatContentSize(result.contentSize)
+
+    return (
+      <div className='mt-2 space-y-2 rounded bg-gray-50 p-2 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300'>
+        <div className='flex items-start gap-2'>
+          <FileText className='mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400' />
+          <div className='min-w-0 flex-1'>
+            {result.url ? (
+              <a
+                href={result.url}
+                target='_blank'
+                rel='noreferrer'
+                className='inline-flex max-w-full items-center gap-1 font-medium text-blue-600 hover:underline dark:text-blue-400'
+              >
+                <span className='truncate'>{result.title || result.url}</span>
+                <ExternalLink className='h-3 w-3 shrink-0' />
+              </a>
+            ) : (
+              <span className='font-medium text-gray-700 dark:text-gray-200'>
+                {result.title || 'Fetched content'}
+              </span>
+            )}
+            <div className='mt-1 flex flex-wrap gap-x-3 gap-y-1 text-gray-500 dark:text-gray-400'>
+              {result.mediaType && <span>{result.mediaType}</span>}
+              {contentSize && <span>{contentSize}</span>}
+              {result.retrievedAt && <span>{result.retrievedAt}</span>}
+              {result.truncated && <span>truncated preview</span>}
+            </div>
+          </div>
+        </div>
+
+        {result.errorCode && (
+          <div className='rounded bg-red-50 p-2 text-red-500 dark:bg-red-900/20'>
+            {result.errorCode}
+          </div>
+        )}
+
+        {result.contentPreview && (
+          <div className='max-h-60 overflow-auto rounded bg-white p-2 dark:bg-gray-900'>
+            <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed'>
+              {result.contentPreview}
+            </pre>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       className={`my-2 overflow-hidden rounded-lg bg-gray-50 text-sm dark:bg-gray-800 ${className}`}
@@ -90,7 +147,9 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
         <div className='space-y-1.5 border-t border-gray-200 p-2 dark:border-gray-700'>
           {toolCalls.map((tc) => {
             const result =
-              tc.serverSlug === 'dare' ? tc.dareResult : tc.mcpResult
+              tc.serverSlug === ServerSlug.DARE
+                ? tc.dareResult
+                : tc.providerResult || tc.mcpResult
 
             return (
               <div
@@ -112,13 +171,20 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
                 </div>
 
                 {/* Result JSON - no truncation, with scroll */}
-                {tc.status === ToolCallStatus.COMPLETED && result && (
-                  <div className='mt-2 max-h-80 overflow-auto rounded bg-gray-50 p-2 dark:bg-gray-800'>
-                    <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-600 dark:text-gray-300'>
-                      {JSON.stringify(result, null, 2)}
-                    </pre>
-                  </div>
-                )}
+                {tc.status === ToolCallStatus.COMPLETED &&
+                  tc.serverSlug === ServerSlug.ANTHROPIC &&
+                  tc.providerResult &&
+                  renderProviderResult(tc.providerResult)}
+
+                {tc.status === ToolCallStatus.COMPLETED &&
+                  result &&
+                  tc.serverSlug !== ServerSlug.ANTHROPIC && (
+                    <div className='mt-2 max-h-80 overflow-auto rounded bg-gray-50 p-2 dark:bg-gray-800'>
+                      <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-600 dark:text-gray-300'>
+                        {JSON.stringify(result, null, 2)}
+                      </pre>
+                    </div>
+                  )}
 
                 {/* Error display */}
                 {tc.status === ToolCallStatus.FAILED && tc.error && (

@@ -35,6 +35,7 @@ export interface Conversation {
   maxTokens: number
   historyLimit: number
   webSearchEnabled?: boolean
+  webFetchEnabled?: boolean
   imageGenerationEnabled?: boolean
   audioTranscriptionEnabled?: boolean
   artifactsEnabled?: boolean
@@ -132,6 +133,7 @@ export { ToolCallStatus }
  * Use serverSlug to determine which result field to read:
  *
  *   - serverSlug === 'dare'  → read `dareResult`
+ *   - provider server slug    → read `providerResult`
  *   - serverSlug !== 'dare'  → read `mcpResult`
  */
 export interface ToolCall {
@@ -152,6 +154,9 @@ export interface ToolCall {
 
   /** Result from MCP external tools (when serverSlug !== 'dare') */
   mcpResult?: import('@/redux/types/dareToolResults').McpToolResult
+
+  /** Result from provider-native tools (for example Anthropic web_fetch) */
+  providerResult?: import('@/redux/types/dareToolResults').ProviderToolResult
 
   /** Error message if execution failed */
   error?: string
@@ -317,6 +322,7 @@ export interface ConversationState {
   autoSaveEnabled: boolean
   attachedImages: AttachedImage[]
   webSearchEnabled: boolean
+  webFetchEnabled: boolean
   imageGenerationEnabled: boolean
   audioTranscriptionEnabled: boolean
   artifactsEnabled: boolean

@@ -131,3 +131,26 @@ export interface McpToolResult {
   content?: McpToolContent[]
   isError?: boolean
 }
+
+// ─────────────────────────────────────────────────────────────
+// Provider-Native Tool Result
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Result from provider-native server tools, such as Anthropic web_fetch.
+ * Used when serverSlug identifies a model provider rather than DARE/MCP.
+ */
+export interface ProviderToolResult {
+  type?: string
+  url?: string
+  title?: string
+  retrievedAt?: string
+  errorCode?: string
+  resultContentType?: string
+  contentType?: string
+  sourceType?: string
+  mediaType?: string
+  contentSize?: number
+  contentPreview?: string
+  truncated?: boolean
+}

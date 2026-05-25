@@ -61,6 +61,7 @@ export const conversationSlice = createSlice({
       if (action.payload) {
         // Update toggle states from conversation
         state.webSearchEnabled = action.payload.webSearchEnabled ?? false
+        state.webFetchEnabled = action.payload.webFetchEnabled ?? false
         state.imageGenerationEnabled =
           action.payload.imageGenerationEnabled ?? false
         state.audioTranscriptionEnabled =
@@ -190,6 +191,12 @@ export const conversationSlice = createSlice({
       state.webSearchEnabled = action.payload
       if (state.activeConversation) {
         state.activeConversation.webSearchEnabled = action.payload
+      }
+    },
+    updateWebFetchEnabled(state, action: PayloadAction<boolean>) {
+      state.webFetchEnabled = action.payload
+      if (state.activeConversation) {
+        state.activeConversation.webFetchEnabled = action.payload
       }
     },
     updateImageGenerationEnabled(state, action: PayloadAction<boolean>) {
@@ -375,6 +382,7 @@ export const conversationSlice = createSlice({
       state.imageGenerationEnabled = false
       state.audioTranscriptionEnabled = false
       state.webSearchEnabled = false
+      state.webFetchEnabled = false
       state.artifactsEnabled = false
 
       // Reset to text models — no auto-select (conversationModel is undefined → null)
@@ -991,8 +999,13 @@ export const conversationSlice = createSlice({
                   ? ToolCallStatus.COMPLETED
                   : ToolCallStatus.FAILED
               if (result) {
-                // Store as mcpResult (MCP tools use this field)
-                toolCall.mcpResult = result
+                if (toolCall.serverSlug === ServerSlug.ANTHROPIC) {
+                  toolCall.providerResult =
+                    result as import('@/redux/types/dareToolResults').ProviderToolResult
+                } else {
+                  // Store as mcpResult (MCP tools use this field)
+                  toolCall.mcpResult = result
+                }
               }
               if (error) {
                 toolCall.error = error
@@ -1106,6 +1119,7 @@ export const {
   updateMaxTokens,
   updateHistoryLimit,
   updateWebSearchEnabled,
+  updateWebFetchEnabled,
   updateImageGenerationEnabled,
   updateAudioTranscriptionEnabled,
   updateArtifactsEnabled,
