@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   getMcpServersAPI,
+  createMcpServerAPI,
   getMcpConnectionsAPI,
   createMcpConnectionAPI,
   deleteMcpConnectionAPI,
@@ -10,7 +11,10 @@ import {
   executeMcpToolAPI,
   getMcpExecutionsAPI,
 } from '../../api/mcp'
-import { CreateMcpConnectionRequest } from '../types/mcp'
+import {
+  CreateMcpConnectionRequest,
+  CreateMcpServerRequest,
+} from '../types/mcp'
 
 /**
  * Fetch all available MCP servers
@@ -20,6 +24,21 @@ export const getMcpServers = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await getMcpServersAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Staff-only: create a hosted remote MCP server
+ */
+export const createMcpServer = createAsyncThunk(
+  'mcp/createMcpServer',
+  async (data: CreateMcpServerRequest, thunkAPI) => {
+    try {
+      const response = await createMcpServerAPI(data)
       return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)

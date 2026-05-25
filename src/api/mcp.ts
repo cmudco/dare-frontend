@@ -3,6 +3,7 @@ import {
   McpConnection,
   McpToolExecution,
   CreateMcpConnectionRequest,
+  CreateMcpServerRequest,
   ExecuteMcpToolResponse,
   TestMcpConnectionResponse,
   GetMcpToolsResponse,
@@ -30,6 +31,19 @@ export const getMcpServersAPI = async (): Promise<McpServer[]> => {
     method: METHOD.GET,
   })
   return response.results
+}
+
+/**
+ * Staff-only: add a hosted remote MCP server to the curated catalog
+ */
+export const createMcpServerAPI = async (
+  data: CreateMcpServerRequest
+): Promise<McpServer> => {
+  return await baseRequest<McpServer>({
+    url: 'mcp/api/servers/',
+    method: METHOD.POST,
+    data,
+  })
 }
 
 /**
