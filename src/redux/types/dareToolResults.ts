@@ -99,7 +99,7 @@ export interface DocxDocumentConfig {
  * Result from DARE tool execution (create_chart, create_diagram, create_docx)
  *
  * BE sends this as a properly camelCased object.
- * Used when serverSlug === 'dare'
+ * Used when tool call origin is DARE.
  */
 export interface DareToolResult {
   success: boolean
@@ -125,9 +125,32 @@ export interface McpToolContent {
  * Result from MCP tool execution (external tools like Slack, GitHub)
  *
  * MCP tools return content arrays with text/image responses.
- * Used when serverSlug !== 'dare'
+ * Used when tool call origin is MCP.
  */
 export interface McpToolResult {
   content?: McpToolContent[]
   isError?: boolean
+}
+
+// ─────────────────────────────────────────────────────────────
+// Provider-Native Tool Result
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Result from provider-native server tools, such as Anthropic web_fetch.
+ * Used when tool call origin is provider-native.
+ */
+export interface ProviderToolResult {
+  type?: string
+  url?: string
+  title?: string
+  retrievedAt?: string
+  errorCode?: string
+  resultContentType?: string
+  contentType?: string
+  sourceType?: string
+  mediaType?: string
+  contentSize?: number
+  contentPreview?: string
+  truncated?: boolean
 }

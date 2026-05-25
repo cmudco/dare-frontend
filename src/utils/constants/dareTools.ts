@@ -53,6 +53,16 @@ export enum ChartType {
  */
 export enum ServerSlug {
   DARE = 'dare',
+  ANTHROPIC = 'anthropic',
+}
+
+/**
+ * Tool call execution origin.
+ */
+export enum ToolCallOrigin {
+  DARE = 'dare',
+  MCP = 'mcp',
+  PROVIDER = 'provider',
 }
 
 /**
