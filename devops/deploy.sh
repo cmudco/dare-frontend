@@ -10,8 +10,7 @@ echo "Pulling latest changes..."
 git pull origin main
 
 echo "Installing dependencies..."
-npm install --frozen-lockfile
-npm --prefix docs-site install
+npm install --frozen-lockfile --no-audit --no-fund
 
 echo "Building the project..."
 npm run build
