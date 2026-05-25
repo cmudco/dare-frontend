@@ -10,7 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-docs-site/.next
+.next/
 docs-site/.source
 docs-site/out
 docs-site/node_modules
