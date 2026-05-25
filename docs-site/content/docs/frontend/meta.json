@@ -1,0 +1,12 @@
+{
+  "title": "Frontend",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "install",
+    "configuration",
+    "architecture",
+    "contributing",
+    "rules"
+  ]
+}

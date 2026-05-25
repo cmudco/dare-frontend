@@ -126,6 +126,20 @@ const Help = () => {
           <CardContent>
             <div className='space-y-4'>
               <div className='rounded-lg border border-gray-200 p-4 transition-all hover:border-blue-300 hover:shadow-md'>
+                <a href='/docs/' className='flex items-start justify-between'>
+                  <div>
+                    <h3 className='font-medium text-foreground'>
+                      DARE Documentation
+                    </h3>
+                    <p className='mt-1 text-sm text-muted-foreground'>
+                      Product guides, frontend documentation, backend
+                      architecture, deployment notes, and API references.
+                    </p>
+                  </div>
+                  <FileText className='h-5 w-5 flex-shrink-0 text-blue-500' />
+                </a>
+              </div>
+              <div className='rounded-lg border border-gray-200 p-4 transition-all hover:border-blue-300 hover:shadow-md'>
                 <a
                   href='https://docs.google.com/document/d/12t1EinvBwM4MsSSjvlWpNvav1dWW32zo1A9FhY8BfLM/edit?tab=t.0#heading=h.h5z6kf1kmw3f'
                   target='_blank'
@@ -134,11 +148,11 @@ const Help = () => {
                 >
                   <div>
                     <h3 className='font-medium text-foreground'>
-                      DARE LLM Gateway User Guide
+                      Legacy DARE LLM Gateway User Guide
                     </h3>
                     <p className='mt-1 text-sm text-muted-foreground'>
-                      Comprehensive guide to using the DARE platform, including
-                      features, workflows, and best practices.
+                      Previous Google Docs guide retained while the new docs
+                      portal becomes the primary documentation home.
                     </p>
                   </div>
                   <ExternalLink className='h-5 w-5 flex-shrink-0 text-blue-500' />

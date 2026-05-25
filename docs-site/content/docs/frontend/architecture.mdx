@@ -1,6 +1,8 @@
-# DARE Frontend — Architecture
-
-This document is the entry point for understanding how the frontend is structured. For the backend's view of the same system, see [dare-backend/docs/architecture.md](../../dare-backend/docs/architecture.md).
+---
+title: "Frontend Architecture"
+description: "Component structure, routing, Redux, API layer, and Socket.IO integration."
+---
+This document is the entry point for understanding how the frontend is structured. For the backend's view of the same system, see [dare-backend/docs/architecture.md](/docs/backend/architecture).
 
 ## Component Diagram
 
@@ -58,7 +60,7 @@ src/redux/
 
 - All slices use `createSlice` with reducers.
 - Async operations use `createAsyncThunk`, never inline `dispatch(fn)`.
-- Type-safe hooks via `useSelector<RootState>` and `useDispatch<AppDispatch>`.
+- Type-safe hooks via `useSelector&lt;RootState&gt;` and `useDispatch&lt;AppDispatch&gt;`.
 - Middleware owns Socket.IO lifecycle — connect, reconnect, dispatch on event.
 
 ## Socket.IO Integration
@@ -70,9 +72,9 @@ Two namespaces, two middleware files, one connection lifecycle each.
 | `/chat` | `socketMiddleware.ts` | Streaming completions, artifact emission, message acks |
 | `/workflow` | `workflowSocketMiddleware.ts` | DAG execution, per-step progress, batch run updates |
 
-**Validation rule:** All incoming `/workflow` events are validated with Zod schemas in [`src/schemas/workflowSocket.ts`](../src/schemas/workflowSocket.ts) before being dispatched to Redux. This catches backend-side schema drift early and surfaces a typed error instead of a silently broken UI.
+**Validation rule:** All incoming `/workflow` events are validated with Zod schemas in `src/schemas/workflowSocket.ts` before being dispatched to Redux. This catches backend-side schema drift early and surfaces a typed error instead of a silently broken UI.
 
-For the full event contract — payload shapes, directions, error codes — see the backend's [Socket.IO event reference](../../dare-backend/docs/architecture/socketio-events.md).
+For the full event contract — payload shapes, directions, error codes — see the backend's [Socket.IO event reference](/docs/backend/socketio-events).
 
 ## API Layer
 
@@ -128,7 +130,7 @@ Feature folders follow the same internal layout: `index.tsx`, sub-components, ho
 
 - **Tailwind** as the base utility system.
 - **Shadcn/ui** for accessible component primitives, customized via Tailwind tokens.
-- **CSS custom properties** drive light/dark theming — toggling adds/removes the `dark` class on `<html>`.
+- **CSS custom properties** drive light/dark theming — toggling adds/removes the `dark` class on `&lt;html&gt;`.
 - Brand colors and the DARE gradient live in `tailwind.config.ts`.
 - Class merging via the `cn()` helper (`clsx` + `tailwind-merge`).
 
@@ -147,7 +149,7 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 - Route-level code splitting (`React.lazy` + `Suspense`).
 - `useMemo` / `useCallback` for expensive renders or stable references passed to memoized children.
 - Virtualization (`react-virtual` or similar) for long lists where applicable.
-- Vite's default asset fingerprinting + immutable cache headers in production (see [INSTALL.md](../INSTALL.md)).
+- Vite's default asset fingerprinting + immutable cache headers in production (see [INSTALL.md](/docs/frontend/install)).
 
 ## Build & Bundle
 
@@ -157,7 +159,7 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 
 ## Further reading
 
-- [docs/configuration.md](configuration.md) — Vite environment variables
-- [docs/contributing.md](contributing.md) — coding standards and PR process
-- [docs/RULES.md](RULES.md) — project-specific conventions
-- [dare-backend/docs/architecture/socketio-events.md](../../dare-backend/docs/architecture/socketio-events.md) — full event contract
+- [docs/configuration.md](/docs/frontend/configuration) — Vite environment variables
+- [docs/contributing.md](/docs/frontend/contributing) — coding standards and PR process
+- [docs/RULES.md](/docs/frontend/rules) — project-specific conventions
+- [dare-backend/docs/architecture/socketio-events.md](/docs/backend/socketio-events) — full event contract

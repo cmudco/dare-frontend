@@ -1,0 +1,20 @@
+{
+  "title": "Backend",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "readme",
+    "install",
+    "admin-guide",
+    "configuration",
+    "architecture",
+    "architecture-overview",
+    "data-flows",
+    "socketio-events",
+    "serialization",
+    "deployment-infrastructure",
+    "deployment-procedures",
+    "code-standards",
+    "api-reference"
+  ]
+}

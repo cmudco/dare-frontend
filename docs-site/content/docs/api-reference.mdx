@@ -1,0 +1,28 @@
+---
+title: "API Reference"
+description: "Human-maintained API entrypoint with links to the backend's interactive OpenAPI tools."
+---
+
+The docs portal does not use OpenAPI as the foundation. The first version keeps the API reference human-readable and points to the backend's existing interactive tools when the backend is running.
+
+## Interactive API tools
+
+- Swagger UI: [/api/docs/](/api/docs/)
+- Redoc: [/api/redoc/](/api/redoc/)
+- Raw OpenAPI schema: [/api/schema/](/api/schema/)
+
+## API overview
+
+Use the backend API reference for authentication, major endpoint groups, and documentation improvement notes:
+
+<Cards>
+  <Card title="Backend API Reference" href="/docs/backend/api-reference">
+    REST API overview maintained from the backend documentation.
+  </Card>
+  <Card title="Serialization Contract" href="/docs/backend/serialization">
+    camelCase and snake_case boundaries between REST responses and Python internals.
+  </Card>
+  <Card title="Socket.IO Event Contract" href="/docs/backend/socketio-events">
+    Real-time events are documented separately from REST endpoints.
+  </Card>
+</Cards>
