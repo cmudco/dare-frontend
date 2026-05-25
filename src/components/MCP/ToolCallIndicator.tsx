@@ -71,8 +71,14 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
     return `${size.toLocaleString()} chars`
   }
 
+  const formatRetrievalStatus = (status?: string) => {
+    if (!status) return null
+    return status.replace(/^URL_RETRIEVAL_STATUS_/, '').toLowerCase()
+  }
+
   const renderProviderResult = (result: ProviderToolResult) => {
     const contentSize = formatContentSize(result.contentSize)
+    const retrievalStatus = formatRetrievalStatus(result.retrievalStatus)
 
     return (
       <div className='mt-2 space-y-2 rounded bg-gray-50 p-2 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300'>
@@ -96,6 +102,7 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
             )}
             <div className='mt-1 flex flex-wrap gap-x-3 gap-y-1 text-gray-500 dark:text-gray-400'>
               {result.mediaType && <span>{result.mediaType}</span>}
+              {retrievalStatus && <span>{retrievalStatus}</span>}
               {contentSize && <span>{contentSize}</span>}
               {result.retrievedAt && <span>{result.retrievedAt}</span>}
               {result.truncated && <span>truncated preview</span>}
