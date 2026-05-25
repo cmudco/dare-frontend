@@ -45,6 +45,12 @@ const DEFAULT_REMOTE_FORM = {
   setupGuide: '',
 }
 
+const MCP_SERVER_MANAGER_ROLES = new Set([
+  'SUPERADMIN',
+  'SUPERVISOR',
+  'RESEARCHER',
+])
+
 const slugify = (value: string) =>
   value
     .toLowerCase()
@@ -64,7 +70,9 @@ const MCPServerList = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [form, setForm] = useState(DEFAULT_REMOTE_FORM)
 
-  const canManageServers = Boolean(user?.is_staff)
+  const canManageServers = Boolean(
+    user?.platformRole && MCP_SERVER_MANAGER_ROLES.has(user.platformRole)
+  )
   const isCreating = serversLoading && isCreateOpen
   const requiresOAuthDetails = form.authType === McpAuthType.OAUTH2
   const canSubmit = useMemo(
