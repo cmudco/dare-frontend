@@ -1,0 +1,37 @@
+{
+  "name": "dare-docs-site",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build --webpack",
+    "sync-content": "node scripts/sync-content.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@orama/orama": "3.1.18",
+    "@types/mdx": "2.0.13",
+    "fumadocs-core": "16.9.1",
+    "fumadocs-mdx": "15.0.8",
+    "fumadocs-ui": "16.9.1",
+    "lucide-react": "1.16.0",
+    "mermaid": "11.15.0",
+    "next": "16.2.6",
+    "next-themes": "0.4.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.0",
+    "@types/node": "25.9.1",
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3",
+    "postcss": "8.5.15",
+    "tailwindcss": "4.3.0",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

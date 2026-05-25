@@ -11,6 +11,7 @@ git pull origin main
 
 echo "Installing dependencies..."
 npm install --frozen-lockfile
+npm --prefix docs-site install
 
 echo "Building the project..."
 npm run build

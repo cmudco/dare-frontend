@@ -1,10 +1,12 @@
-# DARE Frontend
-
+---
+title: "Frontend Overview"
+description: "React, TypeScript, routing, state, and UI structure for the Dare frontend."
+---
 React/TypeScript frontend for the **DARE (Dietrich Analysis Research Education Platform)**. Provides real-time chat with multiple LLM providers, file management with RAG, a visual workflow builder, and a prompt-template system.
 
 ## Purpose
 
-The DARE frontend is the primary user interface for the DARE platform. It connects to the [DARE backend](../dare-backend/) over REST and Socket.IO and gives users:
+The DARE frontend is the primary user interface for the DARE platform. It connects to the `DARE backend` over REST and Socket.IO and gives users:
 
 - **Multi-LLM chat** — streaming conversations with OpenAI, Anthropic, Google, and self-hosted LLaMA models
 - **File-grounded RAG** — upload documents and reference them in chat
@@ -40,7 +42,7 @@ flowchart TB
     sockets <-->|Socket.IO| backend
 ```
 
-See [docs/architecture.md](docs/architecture.md) for the full diagram and component breakdown.
+See [docs/architecture.md](/docs/frontend/architecture) for the full diagram and component breakdown.
 
 ## Quick Start (Docker)
 
@@ -71,12 +73,12 @@ npm run build       # produces ./dist
 npm run preview     # serves ./dist locally for verification
 ```
 
-A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
+A minimal Docker recipe is in [INSTALL.md](/docs/frontend/install).
 
 ## Prerequisites
 
 - Node.js 18+
-- A running [DARE backend](../dare-backend/) (default `http://localhost:8000`)
+- A running `DARE backend` (default `http://localhost:8000`)
 
 ## Available Scripts
 
@@ -92,13 +94,13 @@ A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 
 | Doc | What's in it |
 |---|---|
-| [INSTALL.md](INSTALL.md) | Full deployment guide — Docker and bare-metal static hosting |
-| [docs/configuration.md](docs/configuration.md) | Every Vite environment variable, with type, default, and description |
-| [docs/architecture.md](docs/architecture.md) | Component diagram, state management, Socket.IO integration |
-| [docs/contributing.md](docs/contributing.md) | Issues, pull requests, coding standards |
-| [docs/RULES.md](docs/RULES.md) | Project-specific conventions and constraints |
-| [CHANGELOG.md](CHANGELOG.md) | Release notes |
-| [SECURITY.md](SECURITY.md) | Vulnerability disclosure process |
+| [INSTALL.md](/docs/frontend/install) | Full deployment guide — Docker and bare-metal static hosting |
+| [docs/configuration.md](/docs/frontend/configuration) | Every Vite environment variable, with type, default, and description |
+| [docs/architecture.md](/docs/frontend/architecture) | Component diagram, state management, Socket.IO integration |
+| [docs/contributing.md](/docs/frontend/contributing) | Issues, pull requests, coding standards |
+| [docs/RULES.md](/docs/frontend/rules) | Project-specific conventions and constraints |
+| [CHANGELOG.md](/docs/reference/changelog) | Release notes |
+| [SECURITY.md](/docs/reference/security) | Vulnerability disclosure process |
 
 ## Project Structure
 
@@ -139,10 +141,10 @@ src/
 
 ## Related
 
-- [dare-backend](../dare-backend/) — Django REST + Socket.IO backend
-- [socraticbooks-backend](../../socraticbooks/socraticbooks-backend/) — Educational platform that proxies to DARE
-- [socraticbooks-react](../../socraticbooks/socraticbooks-react/) — Educational platform frontend
+- `dare-backend` — Django REST + Socket.IO backend
+- `socraticbooks-backend` — Educational platform that proxies to DARE
+- `socraticbooks-react` — Educational platform frontend
 
 ## License
 
-See [LICENSE](LICENSE) if present, or contact the maintainers.
+See `LICENSE` if present, or contact the maintainers.

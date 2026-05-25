@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+:root {
+  --dare-red: #ee183c;
+  --dare-navy: #023572;
+  --dare-ink: #011227;
+  --dare-gradient: linear-gradient(92.18deg, var(--dare-navy) -38.97%, var(--dare-red) 132.6%);
+}
+
+body {
+  font-feature-settings:
+    'rlig' 1,
+    'calt' 1;
+}
+
+.dare-gradient-text {
+  color: var(--dare-navy);
+}
+
+.dare-hero-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--dare-navy) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--dare-navy) 7%, transparent) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(to bottom, black, transparent 76%);
+}
+
+.dark .dare-hero-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, white 9%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--dare-red) 12%, transparent) 1px, transparent 1px);
+}
+
+.dark .dare-gradient-text {
+  color: var(--dare-red);
+}
+
+a {
+  text-underline-offset: 3px;
+}
