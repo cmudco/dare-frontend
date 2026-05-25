@@ -38,9 +38,6 @@ sudo chown -R www-data:www-data /var/www/dare-frontend
 sudo chmod -R 755 /var/www/dare-frontend
 
 echo "Restarting Nginx..."
-sudo grep -RIl 'try_files \$uri /index.html;' /etc/nginx/sites-enabled /etc/nginx/sites-available /etc/nginx/conf.d 2>/dev/null \
-  | xargs -r sudo sed -i 's#try_files \$uri /index.html;#try_files \$uri \$uri/ /index.html;#g'
-sudo nginx -t
 sudo systemctl restart nginx
 
 echo "Frontend deployment successful!"
