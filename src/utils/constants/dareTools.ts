@@ -57,6 +57,15 @@ export enum ServerSlug {
 }
 
 /**
+ * Tool call execution origin.
+ */
+export enum ToolCallOrigin {
+  DARE = 'dare',
+  MCP = 'mcp',
+  PROVIDER = 'provider',
+}
+
+/**
  * DARE tool function names
  */
 export enum DareToolName {

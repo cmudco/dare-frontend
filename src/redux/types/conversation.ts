@@ -129,12 +129,10 @@ export { ToolCallStatus }
 /**
  * Tool Call - tracks tool execution within a message
  *
- * Supports both MCP external tools and DARE internal tools.
- * Use serverSlug to determine which result field to read:
- *
- *   - serverSlug === 'dare'  → read `dareResult`
- *   - provider server slug    → read `providerResult`
- *   - serverSlug !== 'dare'  → read `mcpResult`
+ * Origin determines which typed result field to read:
+ *   - origin === 'dare'     → read `dareResult`
+ *   - origin === 'mcp'      → read `mcpResult`
+ *   - origin === 'provider' → read `providerResult`
  */
 export interface ToolCall {
   /** Unique ID from the LLM */
@@ -146,13 +144,16 @@ export interface ToolCall {
   /** Server identifier ('dare' for internal, or MCP server slug) */
   serverSlug: string
 
+  /** Execution origin: DARE internal, MCP external, or provider-native */
+  origin: import('@/utils/constants/dareTools').ToolCallOrigin
+
   /** Current execution status */
   status: ToolCallStatus
 
-  /** Result from DARE internal tools (when serverSlug === 'dare') */
+  /** Result from DARE internal tools */
   dareResult?: import('@/redux/types/dareToolResults').DareToolResult
 
-  /** Result from MCP external tools (when serverSlug !== 'dare') */
+  /** Result from MCP external tools */
   mcpResult?: import('@/redux/types/dareToolResults').McpToolResult
 
   /** Result from provider-native tools (for example Anthropic web_fetch) */

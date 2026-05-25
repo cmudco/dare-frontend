@@ -9,7 +9,7 @@ import {
   XCircle,
   Wrench,
 } from 'lucide-react'
-import { ServerSlug, ToolCallStatus } from '@/utils/constants/dareTools'
+import { ToolCallOrigin, ToolCallStatus } from '@/utils/constants/dareTools'
 import type { ToolCall } from '@/redux/types/conversation'
 import type { ProviderToolResult } from '@/redux/types/dareToolResults'
 import { MCPServerLogo } from './MCPServerLogo'
@@ -147,7 +147,7 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
         <div className='space-y-1.5 border-t border-gray-200 p-2 dark:border-gray-700'>
           {toolCalls.map((tc) => {
             const result =
-              tc.serverSlug === ServerSlug.DARE
+              tc.origin === ToolCallOrigin.DARE
                 ? tc.dareResult
                 : tc.providerResult || tc.mcpResult
 
@@ -172,13 +172,13 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
 
                 {/* Result JSON - no truncation, with scroll */}
                 {tc.status === ToolCallStatus.COMPLETED &&
-                  tc.serverSlug === ServerSlug.ANTHROPIC &&
+                  tc.origin === ToolCallOrigin.PROVIDER &&
                   tc.providerResult &&
                   renderProviderResult(tc.providerResult)}
 
                 {tc.status === ToolCallStatus.COMPLETED &&
                   result &&
-                  tc.serverSlug !== ServerSlug.ANTHROPIC && (
+                  tc.origin !== ToolCallOrigin.PROVIDER && (
                     <div className='mt-2 max-h-80 overflow-auto rounded bg-gray-50 p-2 dark:bg-gray-800'>
                       <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-600 dark:text-gray-300'>
                         {JSON.stringify(result, null, 2)}

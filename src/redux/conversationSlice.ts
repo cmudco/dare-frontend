@@ -33,7 +33,7 @@ import {
   ToolCallStatus,
   WalletMeta,
 } from './types/conversation'
-import { ServerSlug } from '@/utils/constants/dareTools'
+import { ServerSlug, ToolCallOrigin } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
@@ -932,7 +932,7 @@ export const conversationSlice = createSlice({
           }
         }
       )
-      // MCP Tool Call - tool starts executing
+      // Tool Call - external MCP or provider-native tool starts executing
       .addMatcher(
         (
           action
@@ -943,12 +943,26 @@ export const conversationSlice = createSlice({
             toolCallId: string
             toolName: string
             serverSlug: string
+            origin?: ToolCallOrigin
             status: ToolCallStatus
           }
-        } => action.type === 'socket/mcp_tool_call',
+        } =>
+          action.type === 'socket/mcp_tool_call' ||
+          action.type === 'socket/tool_call',
         (state, action) => {
-          const { messageId, toolCallId, toolName, serverSlug, status } =
-            action.payload
+          const {
+            messageId,
+            toolCallId,
+            toolName,
+            serverSlug,
+            status,
+            origin,
+          } = action.payload
+          const toolOrigin =
+            origin ??
+            (action.type === 'socket/tool_call'
+              ? ToolCallOrigin.PROVIDER
+              : ToolCallOrigin.MCP)
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
@@ -962,12 +976,13 @@ export const conversationSlice = createSlice({
               id: toolCallId,
               toolName,
               serverSlug,
+              origin: toolOrigin,
               status,
             })
           }
         }
       )
-      // MCP Tool Result - tool completes (success or error)
+      // Tool Result - external MCP or provider-native tool completes
       .addMatcher(
         (
           action
@@ -978,13 +993,16 @@ export const conversationSlice = createSlice({
             toolCallId: string
             toolName: string
             serverSlug: string
+            origin?: ToolCallOrigin
             status: 'success' | 'error'
             result?: unknown
             error?: string
           }
-        } => action.type === 'socket/mcp_tool_result',
+        } =>
+          action.type === 'socket/mcp_tool_result' ||
+          action.type === 'socket/tool_result',
         (state, action) => {
-          const { messageId, toolCallId, status, result, error } =
+          const { messageId, toolCallId, status, result, error, origin } =
             action.payload
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
@@ -999,7 +1017,9 @@ export const conversationSlice = createSlice({
                   ? ToolCallStatus.COMPLETED
                   : ToolCallStatus.FAILED
               if (result) {
-                if (toolCall.serverSlug === ServerSlug.ANTHROPIC) {
+                const toolOrigin =
+                  origin ?? toolCall.origin ?? ToolCallOrigin.MCP
+                if (toolOrigin === ToolCallOrigin.PROVIDER) {
                   toolCall.providerResult =
                     result as import('@/redux/types/dareToolResults').ProviderToolResult
                 } else {
@@ -1027,6 +1047,7 @@ export const conversationSlice = createSlice({
               toolName: string
               toolSlug: string
               serverSlug: string
+              origin?: ToolCallOrigin
               status: ToolCallStatus
               arguments?: Record<string, unknown>
             }
@@ -1047,6 +1068,7 @@ export const conversationSlice = createSlice({
               id: toolCall.id,
               toolName: toolCall.toolName,
               serverSlug: toolCall.serverSlug || ServerSlug.DARE,
+              origin: toolCall.origin || ToolCallOrigin.DARE,
               status: toolCall.status,
             })
           }
@@ -1065,6 +1087,7 @@ export const conversationSlice = createSlice({
               toolName: string
               toolSlug: string
               serverSlug: string
+              origin?: ToolCallOrigin
               status: 'completed' | 'failed'
               result?: Record<string, unknown>
               arguments?: Record<string, unknown>
