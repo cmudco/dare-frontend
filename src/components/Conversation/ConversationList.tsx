@@ -155,6 +155,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
       dispatch(toggleConversationSelection(conversation.conversationId))
     } else {
       dispatch(updateActiveConversation(conversation))
+      dispatch(fetchConversationMessages(conversation.conversationId))
       dispatch(clearSelectedConversations())
     }
   }

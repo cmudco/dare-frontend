@@ -2,11 +2,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialMcpState } from './initialState/mcp'
 import {
   getMcpServers,
+  createMcpServer,
   getMcpConnections,
   createMcpConnection,
   deleteMcpConnection,
   testMcpConnection,
   getMcpTools,
+  startMcpOAuth,
   executeMcpTool,
   getMcpExecutions,
 } from './asyncThunks/mcp'
@@ -48,6 +50,30 @@ const mcpSlice = createSlice({
         }
       )
       .addCase(getMcpServers.rejected, (state, action) => {
+        state.serversLoading = false
+        state.error = action.payload as string
+      })
+
+      // Create MCP Server
+      .addCase(createMcpServer.pending, (state) => {
+        state.serversLoading = true
+        state.error = null
+      })
+      .addCase(
+        createMcpServer.fulfilled,
+        (state, action: PayloadAction<McpServer>) => {
+          state.serversLoading = false
+          const index = state.servers.findIndex(
+            (server) => server.slug === action.payload.slug
+          )
+          if (index !== -1) {
+            state.servers[index] = action.payload
+          } else {
+            state.servers.push(action.payload)
+          }
+        }
+      )
+      .addCase(createMcpServer.rejected, (state, action) => {
         state.serversLoading = false
         state.error = action.payload as string
       })
@@ -156,6 +182,19 @@ const mcpSlice = createSlice({
       .addCase(getMcpTools.rejected, (state, action) => {
         const serverSlug = action.meta.arg
         state.toolsLoading[serverSlug] = false
+        state.error = action.payload as string
+      })
+
+      // Start MCP OAuth
+      .addCase(startMcpOAuth.pending, (state) => {
+        state.connectionsLoading = true
+        state.error = null
+      })
+      .addCase(startMcpOAuth.fulfilled, (state) => {
+        state.connectionsLoading = false
+      })
+      .addCase(startMcpOAuth.rejected, (state, action) => {
+        state.connectionsLoading = false
         state.error = action.payload as string
       })
 

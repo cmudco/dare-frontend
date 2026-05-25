@@ -3,9 +3,11 @@ import {
   McpConnection,
   McpToolExecution,
   CreateMcpConnectionRequest,
+  CreateMcpServerRequest,
   ExecuteMcpToolResponse,
   TestMcpConnectionResponse,
   GetMcpToolsResponse,
+  StartMcpOAuthResponse,
 } from '@/redux/types/mcp'
 import { METHOD } from '@/utils/constants/requests'
 import { baseRequest } from '@/utils/requests'
@@ -29,6 +31,19 @@ export const getMcpServersAPI = async (): Promise<McpServer[]> => {
     method: METHOD.GET,
   })
   return response.results
+}
+
+/**
+ * Staff-only: add a hosted remote MCP server to the curated catalog
+ */
+export const createMcpServerAPI = async (
+  data: CreateMcpServerRequest
+): Promise<McpServer> => {
+  return await baseRequest<McpServer>({
+    url: 'mcp/api/servers/',
+    method: METHOD.POST,
+    data,
+  })
 }
 
 /**
@@ -88,6 +103,18 @@ export const getMcpToolsAPI = async (
   return await baseRequest<GetMcpToolsResponse>({
     url: `mcp/api/servers/${serverSlug}/tools/`,
     method: METHOD.GET,
+  })
+}
+
+/**
+ * Start OAuth for a remote MCP server
+ */
+export const startMcpOAuthAPI = async (
+  serverSlug: string
+): Promise<StartMcpOAuthResponse> => {
+  return await baseRequest<StartMcpOAuthResponse>({
+    url: `mcp/api/servers/${serverSlug}/oauth/start/`,
+    method: METHOD.POST,
   })
 }
 

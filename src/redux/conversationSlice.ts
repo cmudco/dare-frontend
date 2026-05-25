@@ -821,7 +821,12 @@ export const conversationSlice = createSlice({
           payload: { conversationHistory: Message[] }
         } => action.type === 'socket/conversation_history',
         (state, action) => {
-          if (action.payload.conversationHistory) {
+          // Authenticated conversations are loaded through the REST messages API.
+          // Socket history remains a fallback for public/auto-subscribed sessions.
+          if (
+            action.payload.conversationHistory &&
+            state.activeConversationMessages.length === 0
+          ) {
             state.activeConversationMessages =
               action.payload.conversationHistory
           }

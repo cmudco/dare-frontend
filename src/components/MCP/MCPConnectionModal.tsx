@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { createMcpConnection, testMcpConnection } from '@/redux/asyncThunks/mcp'
+import {
+  createMcpConnection,
+  startMcpOAuth,
+  testMcpConnection,
+} from '@/redux/asyncThunks/mcp'
 import { clearTestResult } from '@/redux/mcpSlice'
 import { McpServer, CredentialSchema } from '@/redux/types/mcp'
 import {
@@ -25,6 +29,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react'
+import { McpAuthType } from '@/utils/constants/mcp'
 
 interface MCPConnectionModalProps {
   server: McpServer | null
@@ -45,6 +50,10 @@ export const MCPConnectionModal = ({
 
   const [credentials, setCredentials] = useState<Record<string, string>>({})
   const [showSetupGuide, setShowSetupGuide] = useState(false)
+  const isOAuthServer = server?.authType === McpAuthType.OAUTH2
+  const isCredentialServer =
+    server?.authType === McpAuthType.CREDENTIALS ||
+    server?.authType === McpAuthType.BEARER
 
   // Get existing connection if any
   const existingConnection = connections.find(
@@ -95,6 +104,15 @@ export const MCPConnectionModal = ({
     if (createMcpConnection.fulfilled.match(result)) {
       onSuccess?.()
       onClose()
+    }
+  }
+
+  const handleOAuthConnect = async () => {
+    if (!server) return
+
+    const result = await dispatch(startMcpOAuth(server.slug))
+    if (startMcpOAuth.fulfilled.match(result)) {
+      window.location.assign(result.payload.authorizationUrl)
     }
   }
 
@@ -162,27 +180,39 @@ export const MCPConnectionModal = ({
             </div>
           )}
 
+          {isOAuthServer && (
+            <p className='text-sm text-muted-foreground'>
+              This hosted MCP uses provider OAuth. You will be redirected to
+              {` ${server.name}`} to approve DARE access, then returned here.
+            </p>
+          )}
+
           {/* Credential fields */}
-          {server.requiredCredentials.map((cred: CredentialSchema) => (
-            <div key={cred.key} className='space-y-2'>
-              <Label htmlFor={cred.key}>
-                {cred.label}
-                {cred.required && <span className='ml-1 text-red-500'>*</span>}
-              </Label>
-              <Input
-                id={cred.key}
-                type={cred.type === 'password' ? 'password' : 'text'}
-                placeholder={cred.placeholder}
-                value={credentials[cred.key] || ''}
-                onChange={(e) =>
-                  handleCredentialChange(cred.key, e.target.value)
-                }
-              />
-              {cred.helpText && (
-                <p className='text-xs text-muted-foreground'>{cred.helpText}</p>
-              )}
-            </div>
-          ))}
+          {isCredentialServer &&
+            server.requiredCredentials.map((cred: CredentialSchema) => (
+              <div key={cred.key} className='space-y-2'>
+                <Label htmlFor={cred.key}>
+                  {cred.label}
+                  {cred.required && (
+                    <span className='ml-1 text-red-500'>*</span>
+                  )}
+                </Label>
+                <Input
+                  id={cred.key}
+                  type={cred.type === 'password' ? 'password' : 'text'}
+                  placeholder={cred.placeholder}
+                  value={credentials[cred.key] || ''}
+                  onChange={(e) =>
+                    handleCredentialChange(cred.key, e.target.value)
+                  }
+                />
+                {cred.helpText && (
+                  <p className='text-xs text-muted-foreground'>
+                    {cred.helpText}
+                  </p>
+                )}
+              </div>
+            ))}
 
           {/* Test result */}
           {testResult && (
@@ -219,7 +249,10 @@ export const MCPConnectionModal = ({
             variant='secondary'
             onClick={handleTestConnection}
             disabled={
-              !allRequiredFilled || testingConnection || connectionsLoading
+              !isCredentialServer ||
+              !allRequiredFilled ||
+              testingConnection ||
+              connectionsLoading
             }
           >
             {testingConnection ? (
@@ -232,13 +265,18 @@ export const MCPConnectionModal = ({
             )}
           </Button>
           <Button
-            onClick={handleConnect}
+            onClick={isOAuthServer ? handleOAuthConnect : handleConnect}
             disabled={!allRequiredFilled || connectionsLoading}
           >
             {connectionsLoading ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 Connecting...
+              </>
+            ) : isOAuthServer ? (
+              <>
+                <ExternalLink className='mr-2 h-4 w-4' />
+                Connect with {server.name}
               </>
             ) : (
               'Connect'

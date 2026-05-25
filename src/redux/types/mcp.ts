@@ -2,7 +2,11 @@
  * MCP (Model Context Protocol) types for Redux state management
  */
 
-import { ExecutionStatus } from '@/utils/constants/mcp'
+import {
+  ExecutionStatus,
+  McpAuthType,
+  McpTransport,
+} from '@/utils/constants/mcp'
 
 /**
  * Credential schema for connection form
@@ -25,6 +29,9 @@ export interface McpServer {
   slug: string
   description: string
   icon: string
+  transport: McpTransport
+  authType: McpAuthType
+  remoteUrl: string
   requiredCredentials: CredentialSchema[]
   credentialsHelpUrl: string
   setupGuide: string
@@ -40,10 +47,18 @@ export interface McpConnection {
   server: McpServer
   maskedCredentials: Record<string, string | null>
   hasCredentials: boolean
+  authMetadata: McpAuthMetadata
   isActive: boolean
   lastUsedAt: string | null
   createdAt: string
   updatedAt: string
+}
+
+export interface McpAuthMetadata {
+  authType?: McpAuthType
+  expiresAt?: number | null
+  scope?: string
+  tokenType?: string
 }
 
 /**
@@ -98,6 +113,26 @@ export interface CreateMcpConnectionRequest {
   credentials: Record<string, string>
 }
 
+export interface CreateMcpServerRequest {
+  name: string
+  slug: string
+  description: string
+  icon: string
+  transport: McpTransport
+  authType: McpAuthType
+  remoteUrl: string
+  remoteHeaders: Record<string, string>
+  oauthAuthorizeUrl: string
+  oauthTokenUrl: string
+  oauthRegistrationUrl: string
+  oauthScope: string
+  oauthClientId: string
+  requiredCredentials: CredentialSchema[]
+  credentialsHelpUrl: string
+  setupGuide: string
+  isActive: boolean
+}
+
 /**
  * Request payload for executing a tool
  */
@@ -131,6 +166,11 @@ export interface GetMcpToolsResponse {
   tools: McpTool[]
   count: number
   cached: boolean
+}
+
+export interface StartMcpOAuthResponse {
+  authorizationUrl: string
+  state: string
 }
 
 /**
