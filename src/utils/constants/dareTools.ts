@@ -54,6 +54,7 @@ export enum ChartType {
 export enum ServerSlug {
   DARE = 'dare',
   ANTHROPIC = 'anthropic',
+  GEMINI = 'gemini',
 }
 
 /**

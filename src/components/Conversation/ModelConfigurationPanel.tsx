@@ -84,8 +84,10 @@ const ModelConfigurationPanel: React.FC = () => {
       (entry) => entry.id === state.conversation.selectedModel
     )
   )
+  const selectedProvider = selectedEntry?.provider?.toLowerCase()
   const showWebFetch =
-    showWebSearch && selectedEntry?.provider?.toLowerCase() === 'claude'
+    showWebSearch &&
+    (selectedProvider === 'claude' || selectedProvider === 'gemini')
 
   const handleTemperatureChange = (values: number[]) => {
     dispatch(updateTemperature(values[0]))
@@ -313,7 +315,7 @@ const ModelConfigurationPanel: React.FC = () => {
                 </div>
               )}
 
-              {/* Web Fetch Toggle - Claude provider-native URL/PDF fetch */}
+              {/* Web Fetch Toggle - provider-native URL/PDF fetch */}
               {showWebFetch && (
                 <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
                   <div className='flex flex-col gap-1'>
@@ -325,10 +327,10 @@ const ModelConfigurationPanel: React.FC = () => {
                         </TooltipTrigger>
                         <TooltipContent className='max-w-xs'>
                           <div className='space-y-2'>
-                            <p className='font-semibold'>Claude Web Fetch</p>
+                            <p className='font-semibold'>Web Fetch</p>
                             <p className='text-sm'>
-                              Let Claude fetch explicit URLs and PDFs from the
-                              conversation.
+                              Let the selected provider fetch explicit URLs and
+                              PDFs from the conversation.
                             </p>
                             <p className='text-xs text-muted-foreground'>
                               Use for research papers, arXiv links, and source

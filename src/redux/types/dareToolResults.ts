@@ -137,7 +137,8 @@ export interface McpToolResult {
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Result from provider-native server tools, such as Anthropic web_fetch.
+ * Result from provider-native server tools, such as Anthropic web_fetch or
+ * Gemini url_context.
  * Used when tool call origin is provider-native.
  */
 export interface ProviderToolResult {
@@ -148,6 +149,7 @@ export interface ProviderToolResult {
   errorCode?: string
   resultContentType?: string
   contentType?: string
+  retrievalStatus?: string
   sourceType?: string
   mediaType?: string
   contentSize?: number
