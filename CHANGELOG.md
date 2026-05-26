@@ -64,7 +64,7 @@ First public release of the DARE frontend. Pairs with DARE backend `0.1.0`.
 - Tool-call surfacing inside conversations.
 
 #### Observability
-- Sentry integration with source-map upload during build.
+- Sentry client integration.
 - Toast notifications for user-facing success/error states.
 
 #### Tooling

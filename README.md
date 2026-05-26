@@ -42,9 +42,9 @@ flowchart TB
 
 See [docs/architecture.md](docs/architecture.md) for the full diagram and component breakdown.
 
-## Quick Start (Docker)
+## Quick Start (Local Development)
 
-The frontend is a static SPA — for production you build it once and serve the bundle from any static host (Nginx, S3+CloudFront, etc.). For local development, use the Vite dev server.
+The frontend is a static SPA. For local development, use the Vite dev server. For production, build once and serve the generated `dist/` bundle from any static host.
 
 ```bash
 # 1. Clone (or pull) the repo
@@ -140,9 +140,9 @@ src/
 ## Related
 
 - [dare-backend](../dare-backend/) — Django REST + Socket.IO backend
-- [socraticbooks-backend](../../socraticbooks/socraticbooks-backend/) — Educational platform that proxies to DARE
-- [socraticbooks-react](../../socraticbooks/socraticbooks-react/) — Educational platform frontend
+- [socraticbooks-backend](../socraticbooks-backend/) — Educational platform that proxies to DARE
+- [socraticbooks-react](../socraticbooks-react/) — Educational platform frontend
 
 ## License
 
-See [LICENSE](LICENSE) if present, or contact the maintainers.
+No open-source license has been selected in this repository yet. Add a `LICENSE` file before public release.
