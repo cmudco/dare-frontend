@@ -66,6 +66,7 @@
     "jspdf": "^4.2.1",
     "lucide-react": "^0.479.0",
     "mermaid": "^10.9.3",
+    "pptxgenjs": "^3.12.0",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-diff-viewer-continued": "^3.4.0",

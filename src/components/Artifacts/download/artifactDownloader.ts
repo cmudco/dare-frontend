@@ -10,6 +10,7 @@ import { generateChartSvg } from './chartExport'
 import { generateMermaidSvg } from './diagramExport'
 import { triggerBrowserDownload } from './fileDownload'
 import { convertImageToBlob, getOriginalImageBlob } from './imageExport'
+import { generatePptxFromSvgArtifact } from './pptxExport'
 import {
   convertSvgToImageBlob,
   generateRasterPdfFromSvg,
@@ -122,6 +123,9 @@ async function downloadDiagramArtifact(
       new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
       `${sanitizedTitle}.svg`
     )
+  } else if (format === ArtifactDownloadFormat.PPTX) {
+    const blob = await generatePptxFromSvgArtifact(svg, sanitizedTitle)
+    triggerBrowserDownload(blob, `${sanitizedTitle}.pptx`)
   } else if (format === ArtifactDownloadFormat.PDF) {
     const blob = await generateRasterPdfFromSvg(svg)
     triggerBrowserDownload(blob, `${sanitizedTitle}.pdf`)
@@ -173,6 +177,9 @@ async function downloadChartArtifact(
       new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
       `${sanitizedTitle}.svg`
     )
+  } else if (format === ArtifactDownloadFormat.PPTX) {
+    const blob = await generatePptxFromSvgArtifact(svg, sanitizedTitle)
+    triggerBrowserDownload(blob, `${sanitizedTitle}.pptx`)
   } else if (format === ArtifactDownloadFormat.PDF) {
     const blob = await generateSvgPdfBlob(svg)
     triggerBrowserDownload(blob, `${sanitizedTitle}.pdf`)

@@ -11,6 +11,14 @@ export async function convertSvgToImageBlob(
   return await canvasToBlob(canvas, format)
 }
 
+export async function convertSvgToPngDataUrl(
+  svg: string,
+  scale = 2
+): Promise<string> {
+  const canvas = await renderSvgToCanvas(svg, scale)
+  return canvas.toDataURL('image/png')
+}
+
 export async function generateRasterPdfFromSvg(svg: string): Promise<Blob> {
   const canvas = await renderSvgToCanvas(svg, 2)
   const { width, height } = getSvgDimensionsFromSource(svg)
@@ -121,7 +129,7 @@ function normalizeSvgForRaster(svg: string) {
   return new XMLSerializer().serializeToString(svgElement)
 }
 
-function getSvgDimensionsFromSource(svg: string) {
+export function getSvgDimensionsFromSource(svg: string) {
   const parser = new DOMParser()
   const document = parser.parseFromString(svg, 'image/svg+xml')
   return getSvgDimensions(document.documentElement as unknown as SVGSVGElement)

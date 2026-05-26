@@ -22,6 +22,7 @@ export function getDownloadOptions(
     case 'diagram':
       return [
         { format: ArtifactDownloadFormat.SVG, label: 'SVG (.svg)' },
+        { format: ArtifactDownloadFormat.PPTX, label: 'PowerPoint (.pptx)' },
         { format: ArtifactDownloadFormat.PNG, label: 'PNG (.png)' },
         { format: ArtifactDownloadFormat.JPEG, label: 'JPEG (.jpg)' },
         { format: ArtifactDownloadFormat.PDF, label: 'PDF (.pdf)' },
@@ -29,6 +30,7 @@ export function getDownloadOptions(
       ]
     case 'chart':
       return [
+        { format: ArtifactDownloadFormat.PPTX, label: 'PowerPoint (.pptx)' },
         { format: ArtifactDownloadFormat.PNG, label: 'PNG (.png)' },
         { format: ArtifactDownloadFormat.JPEG, label: 'JPEG (.jpg)' },
         { format: ArtifactDownloadFormat.SVG, label: 'SVG (.svg)' },
