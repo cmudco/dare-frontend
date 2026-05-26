@@ -99,27 +99,35 @@ const BASE_STEPS: ConversationTourStep[] = [
   },
 ]
 
-// Steps shown only when MCP feature is enabled
-const MCP_STEPS: ConversationTourStep[] = [
-  {
-    id: 'mcp-servers',
-    target: '[data-tour="mcp-servers"]',
-    title: 'MCP Server Integrations',
-    description:
-      'Connect external tools and data sources via Model Context Protocol servers — extend AI capabilities beyond the chat.',
-    icon: Server,
-    placement: 'top',
-  },
-  {
-    id: 'dare-tools',
-    target: '[data-tour="dare-tools"]',
-    title: 'DARE Tools',
-    description:
-      'Built-in power tools for diagrams, data analysis, and structured outputs — let the AI generate rich content.',
-    icon: Wrench,
-    placement: 'top',
-  },
-]
+const MCP_STEP: ConversationTourStep = {
+  id: 'mcp-servers',
+  target: '[data-tour="mcp-servers"]',
+  title: 'MCP Server Integrations',
+  description:
+    'Connect external tools and data sources via Model Context Protocol servers — extend AI capabilities beyond the chat.',
+  icon: Server,
+  placement: 'top',
+}
+
+const DARE_TOOLS_STEP: ConversationTourStep = {
+  id: 'dare-tools',
+  target: '[data-tour="dare-tools"]',
+  title: 'DARE Tools',
+  description:
+    'Built-in power tools for diagrams, data analysis, and structured outputs — let the AI generate rich content.',
+  icon: Wrench,
+  placement: 'top',
+}
+
+function getFeatureSteps(
+  enableMcp: boolean,
+  enableArtifacts: boolean
+): ConversationTourStep[] {
+  return [
+    ...(enableMcp ? [MCP_STEP] : []),
+    ...(enableArtifacts ? [DARE_TOOLS_STEP] : []),
+  ]
+}
 
 // Last step — always shown
 const CONFIG_STEP: ConversationTourStep = {
@@ -133,9 +141,12 @@ const CONFIG_STEP: ConversationTourStep = {
 }
 
 export function buildConversationTourSteps(
-  enableMcp: boolean
+  enableMcp: boolean,
+  enableArtifacts: boolean
 ): ConversationTourStep[] {
-  return enableMcp
-    ? [...BASE_STEPS, ...MCP_STEPS, CONFIG_STEP]
-    : [...BASE_STEPS, CONFIG_STEP]
+  return [
+    ...BASE_STEPS,
+    ...getFeatureSteps(enableMcp, enableArtifacts),
+    CONFIG_STEP,
+  ]
 }
