@@ -4,6 +4,7 @@ import {
   ChartRenderer,
   DocxRenderer,
   MermaidRenderer,
+  PptxRenderer,
   SandpackRenderer,
 } from './renderers'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -44,6 +45,15 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
       } catch (e) {
         console.error('Failed to parse docx config:', e)
         return <ErrorDisplay message='Failed to render document' />
+      }
+
+    case 'pptx':
+      try {
+        const config = JSON.parse(artifact.content)
+        return <PptxRenderer config={config} />
+      } catch (e) {
+        console.error('Failed to parse pptx config:', e)
+        return <ErrorDisplay message='Failed to render presentation' />
       }
 
     case 'react':

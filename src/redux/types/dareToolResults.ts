@@ -92,6 +92,52 @@ export interface DocxDocumentConfig {
 }
 
 // ─────────────────────────────────────────────────────────────
+// PPTX Types
+// ─────────────────────────────────────────────────────────────
+
+export type PptxSlideLayout =
+  | 'title'
+  | 'section'
+  | 'bullets'
+  | 'twoColumn'
+  | 'table'
+  | 'quote'
+  | 'summary'
+
+export interface PptxTheme {
+  primaryColor?: string
+  accentColor?: string
+  backgroundColor?: string
+  textColor?: string
+  mutedTextColor?: string
+  fontFamily?: string
+}
+
+export interface PptxSlideConfig {
+  layout: PptxSlideLayout
+  title?: string
+  subtitle?: string
+  body?: string
+  bullets?: string[]
+  leftTitle?: string
+  leftBullets?: string[]
+  rightTitle?: string
+  rightBullets?: string[]
+  headers?: string[]
+  rows?: string[][]
+  quote?: string
+  attribution?: string
+  speakerNotes?: string
+}
+
+export interface PptxPresentationConfig {
+  title: string
+  subtitle?: string
+  theme?: PptxTheme
+  slides: PptxSlideConfig[]
+}
+
+// ─────────────────────────────────────────────────────────────
 // DARE Tool Result
 // ─────────────────────────────────────────────────────────────
 
@@ -106,6 +152,7 @@ export interface DareToolResult {
   chartConfig?: ChartConfig
   mermaidCode?: string
   docConfig?: DocxDocumentConfig
+  pptConfig?: PptxPresentationConfig
   error?: string
 }
 
