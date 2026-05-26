@@ -8,6 +8,7 @@ import {
   GitBranch,
   Code,
   ExternalLink,
+  Presentation,
 } from 'lucide-react'
 
 interface ArtifactReferenceCardProps {
@@ -38,6 +39,8 @@ export const ArtifactReferenceCard: React.FC<ArtifactReferenceCardProps> = ({
         return <GitBranch className='h-4 w-4' />
       case 'code':
         return <Code className='h-4 w-4' />
+      case 'pptx':
+        return <Presentation className='h-4 w-4' />
       default:
         return <FileText className='h-4 w-4' />
     }
@@ -51,6 +54,8 @@ export const ArtifactReferenceCard: React.FC<ArtifactReferenceCardProps> = ({
         return 'Diagram'
       case 'code':
         return 'Code'
+      case 'pptx':
+        return 'PowerPoint'
       default:
         return 'Document'
     }

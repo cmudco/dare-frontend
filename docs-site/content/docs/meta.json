@@ -1,0 +1,15 @@
+{
+  "title": "DARE Docs",
+  "pages": [
+    "index",
+    "---Start Here---",
+    "getting-started",
+    "platform-overview",
+    "api-reference",
+    "---Technical Docs---",
+    "frontend",
+    "backend",
+    "---Reference---",
+    "reference"
+  ]
+}

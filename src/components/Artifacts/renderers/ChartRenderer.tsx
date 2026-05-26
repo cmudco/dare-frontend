@@ -24,12 +24,19 @@ interface ChartConfig {
   chart_type?: 'bar' | 'line' | 'pie' | 'area'
   type?: 'bar' | 'line' | 'pie' | 'area' // Alternative key name
   title?: string
-  data: Record<string, unknown>[]
+  data: ChartDataPoint[]
   dataKeys: string[]
   xAxisKey: string
   colors?: string[]
   xAxisLabel?: string
   yAxisLabel?: string
+}
+
+interface ChartDataPoint {
+  label?: string
+  value?: number
+  color?: string
+  [key: string]: string | number | undefined
 }
 
 interface ChartRendererProps {
@@ -269,7 +276,7 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
   }
 
   return (
-    <div className='flex h-full flex-col p-4'>
+    <div className='flex h-full flex-col p-4' data-artifact-chart-export>
       {title && (
         <h3 className='mb-4 text-center text-lg font-semibold text-gray-900 dark:text-white'>
           {title}

@@ -12,6 +12,7 @@ import {
 import {
   updateConversationFeedbackTracking,
   forkConversation,
+  fetchConversationMessages,
 } from '@/redux/asyncThunks/conversation'
 import { useSocketSubscription } from '@/hooks/useSocketSubscription'
 import { useImageDragAndDrop } from '../../hooks/useImageDragAndDrop'
@@ -140,6 +141,7 @@ const ActiveConversation: React.FC = () => {
       const conversation = conversations.find((c) => c.conversationId === id)
       if (!activeConversation && conversation) {
         dispatch(updateActiveConversation(conversation))
+        dispatch(fetchConversationMessages(conversation.conversationId))
       }
     } else {
       dispatch(updateActiveConversation(null))

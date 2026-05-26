@@ -8,4 +8,5 @@
 export { ChartRenderer } from './ChartRenderer'
 export { DocxRenderer } from './DocxRenderer'
 export { MermaidRenderer } from './MermaidRenderer'
+export { PptxRenderer } from './PptxRenderer'
 export { SandpackRenderer } from './SandpackRenderer'

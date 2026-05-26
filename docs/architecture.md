@@ -4,41 +4,29 @@ This document is the entry point for understanding how the frontend is structure
 
 ## Component Diagram
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                      Browser (DARE Frontend)                    │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │   React Router v6                                        │  │
-│  │   Routes → Pages → Feature Components                    │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                 │
-│  ┌─────────────────────────┐  ┌─────────────────────────────┐  │
-│  │   Feature Components    │  │   UI Primitives             │  │
-│  │   • Conversation        │  │   • Shadcn/ui (Radix)       │  │
-│  │   • WorkflowBuilder     │  │   • Tailwind utility classes│  │
-│  │   • FileManager         │  │   • Brand tokens            │  │
-│  │   • Artifacts           │  │                             │  │
-│  │   • Auth, Layout, …     │  │                             │  │
-│  └─────────────────────────┘  └─────────────────────────────┘  │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │   Redux Toolkit Store                                    │  │
-│  │   ┌──────────┐ ┌──────────┐ ┌──────────────────────────┐ │  │
-│  │   │ Slices   │ │ Async    │ │ Socket.IO Middleware     │ │  │
-│  │   │ per      │ │ Thunks   │ │ • /chat namespace        │ │  │
-│  │   │ domain   │ │          │ │ • /workflow namespace    │ │  │
-│  │   └──────────┘ └──────────┘ └──────────────────────────┘ │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │   API Layer (axios) + Schemas (Zod for WS validation)    │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└──────────────┬───────────────────────────┬─────────────────────┘
-               │ REST (HTTPS)              │ Socket.IO (WSS)
-┌──────────────▼───────────────────────────▼─────────────────────┐
-│                       DARE Backend                              │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    browser["Browser"]
+
+    subgraph frontend["DARE Frontend"]
+        router["React Router v6\nRoutes -> Pages -> Feature Components"]
+        features["Feature Components\nConversation, WorkflowBuilder, FileManager, Artifacts, Auth, Layout"]
+        ui["UI Primitives\nRadix, Tailwind, brand tokens"]
+        redux["Redux Toolkit Store\nDomain slices + async thunks"]
+        middleware["Socket.IO Middleware\n/chat namespace\n/workflow namespace"]
+        api["API Layer\nAxios + Zod validation"]
+    end
+
+    backend["DARE Backend"]
+
+    browser --> frontend
+    router --> features
+    features --> ui
+    features --> redux
+    redux --> api
+    redux --> middleware
+    api <-->|REST over HTTPS| backend
+    middleware <-->|Socket.IO over WSS| backend
 ```
 
 ## State Management
@@ -165,7 +153,7 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 
 - **Vite** for dev server and production builds.
 - **Path alias** `@/` → `src/`.
-- **Source maps** uploaded to Sentry during CI builds when Sentry envs are set.
+- **Client error reporting** via Sentry when `VITE_SENTRY_DSN` is configured.
 
 ## Further reading
 

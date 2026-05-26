@@ -23,10 +23,26 @@ export const artifactSlice = createSlice({
 
     closeSidecar(state) {
       state.sidecarOpen = false
+      state.sidecarFullscreen = false
     },
 
     toggleSidecar(state) {
       state.sidecarOpen = !state.sidecarOpen
+      if (!state.sidecarOpen) {
+        state.sidecarFullscreen = false
+      }
+    },
+
+    setSidecarWidth(state, action: PayloadAction<number>) {
+      state.sidecarWidth = Math.min(Math.max(action.payload, 520), 1200)
+    },
+
+    setSidecarFullscreen(state, action: PayloadAction<boolean>) {
+      state.sidecarFullscreen = action.payload
+    },
+
+    toggleSidecarFullscreen(state) {
+      state.sidecarFullscreen = !state.sidecarFullscreen
     },
 
     setActiveArtifact(state, action: PayloadAction<number | null>) {
@@ -83,6 +99,7 @@ export const artifactSlice = createSlice({
       if (state.activeArtifactId === action.payload) {
         state.activeArtifactId = null
         state.sidecarOpen = false
+        state.sidecarFullscreen = false
       }
     },
 
@@ -90,6 +107,7 @@ export const artifactSlice = createSlice({
       state.artifacts = {}
       state.activeArtifactId = null
       state.sidecarOpen = false
+      state.sidecarFullscreen = false
     },
 
     resetArtifactState() {
@@ -220,6 +238,9 @@ export const {
   openSidecar,
   closeSidecar,
   toggleSidecar,
+  setSidecarWidth,
+  setSidecarFullscreen,
+  toggleSidecarFullscreen,
   setActiveArtifact,
   setArtifactsEnabled,
   toggleArtifactsEnabled,

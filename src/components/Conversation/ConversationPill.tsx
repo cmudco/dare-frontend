@@ -51,6 +51,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     (state: RootState) => state.conversation.conversationInput
   )
   const enableMcp = useFeatureFlag('enableMcp')
+  const enableArtifacts = useFeatureFlag('enableArtifacts')
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
@@ -357,7 +358,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
                 disabled={!activeConversation}
               />
             )}
-            {enableMcp && (
+            {enableArtifacts && (
               <DareToolSelector
                 selectedSlugs={activeConversation?.selectedDareToolSlugs || []}
                 onChange={(slugs) => {

@@ -53,6 +53,17 @@ export enum ChartType {
  */
 export enum ServerSlug {
   DARE = 'dare',
+  ANTHROPIC = 'anthropic',
+  GEMINI = 'gemini',
+}
+
+/**
+ * Tool call execution origin.
+ */
+export enum ToolCallOrigin {
+  DARE = 'dare',
+  MCP = 'mcp',
+  PROVIDER = 'provider',
 }
 
 /**
@@ -62,4 +73,5 @@ export enum DareToolName {
   CREATE_CHART = 'create_chart',
   CREATE_DIAGRAM = 'create_diagram',
   CREATE_DOCX = 'create_docx',
+  CREATE_PPTX = 'create_pptx',
 }

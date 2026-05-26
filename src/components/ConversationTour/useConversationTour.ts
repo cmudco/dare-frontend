@@ -20,10 +20,11 @@ export default function useConversationTour() {
   const [skipAnimation, setSkipAnimation] = useState(false)
   const rafRef = useRef<number>(0)
   const enableMcp = useFeatureFlag('enableMcp')
+  const enableArtifacts = useFeatureFlag('enableArtifacts')
 
   const tourSteps = useMemo(
-    () => buildConversationTourSteps(enableMcp),
-    [enableMcp]
+    () => buildConversationTourSteps(enableMcp, enableArtifacts),
+    [enableMcp, enableArtifacts]
   )
 
   const step = tourSteps[currentStepIndex]

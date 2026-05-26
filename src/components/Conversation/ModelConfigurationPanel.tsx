@@ -8,6 +8,7 @@ import {
   updateMaxTokens,
   updateHistoryLimit,
   updateWebSearchEnabled,
+  updateWebFetchEnabled,
   updateImageGenerationEnabled,
   updateAudioTranscriptionEnabled,
   updateArtifactsEnabled,
@@ -46,6 +47,10 @@ const ModelConfigurationPanel: React.FC = () => {
       activeConversation?.webSearchEnabled ??
       state.conversation.webSearchEnabled
   )
+  const webFetchEnabled = useSelector(
+    (state: RootState) =>
+      activeConversation?.webFetchEnabled ?? state.conversation.webFetchEnabled
+  )
   const imageGenerationEnabled = useSelector(
     (state: RootState) =>
       activeConversation?.imageGenerationEnabled ??
@@ -74,6 +79,15 @@ const ModelConfigurationPanel: React.FC = () => {
   const showWebSearch = walletMeta?.supportsWebSearch ?? true
   const showImageGeneration = walletMeta?.supportsImageGeneration ?? true
   const showAudioTranscription = walletMeta?.supportsAudioTranscription ?? true
+  const selectedEntry = useSelector((state: RootState) =>
+    state.conversation.pickerEntries.find(
+      (entry) => entry.id === state.conversation.selectedModel
+    )
+  )
+  const selectedProvider = selectedEntry?.provider?.toLowerCase()
+  const showWebFetch =
+    showWebSearch &&
+    (selectedProvider === 'claude' || selectedProvider === 'gemini')
 
   const handleTemperatureChange = (values: number[]) => {
     dispatch(updateTemperature(values[0]))
@@ -118,6 +132,18 @@ const ModelConfigurationPanel: React.FC = () => {
         updateConversation({
           conversationId: activeConversation.conversationId,
           updates: { webSearchEnabled: checked },
+        })
+      )
+    }
+  }
+
+  const handleWebFetchToggle = (checked: boolean) => {
+    dispatch(updateWebFetchEnabled(checked))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { webFetchEnabled: checked },
         })
       )
     }
@@ -200,6 +226,7 @@ const ModelConfigurationPanel: React.FC = () => {
       dispatch(updateMaxTokens(MODEL_CONFIG.maxTokens))
       dispatch(updateHistoryLimit(MODEL_CONFIG.historyLimit))
       dispatch(updateWebSearchEnabled(false))
+      dispatch(updateWebFetchEnabled(false))
       dispatch(updateImageGenerationEnabled(false))
       dispatch(updateAudioTranscriptionEnabled(false))
       dispatch(updateArtifactsEnabled(false))
@@ -212,6 +239,7 @@ const ModelConfigurationPanel: React.FC = () => {
             maxTokens: MODEL_CONFIG.maxTokens,
             historyLimit: MODEL_CONFIG.historyLimit,
             webSearchEnabled: false,
+            webFetchEnabled: false,
             imageGenerationEnabled: false,
             audioTranscriptionEnabled: false,
             artifactsEnabled: false,
@@ -279,13 +307,43 @@ const ModelConfigurationPanel: React.FC = () => {
                         </TooltipContent>
                       </Tooltip>
                     </div>
-                    <p className='text-xs text-gray-500 dark:text-gray-400'>
-                      Enable real-time web search for up-to-date information
-                    </p>
                   </div>
                   <Switch
                     checked={webSearchEnabled}
                     onCheckedChange={handleWebSearchToggle}
+                  />
+                </div>
+              )}
+
+              {/* Web Fetch Toggle - provider-native URL/PDF fetch */}
+              {showWebFetch && (
+                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                  <div className='flex flex-col gap-1'>
+                    <div className='flex items-center gap-2'>
+                      <h4 className='font-medium dark:text-white'>Web Fetch</h4>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-xs'>
+                          <div className='space-y-2'>
+                            <p className='font-semibold'>Web Fetch</p>
+                            <p className='text-sm'>
+                              Let the selected provider fetch explicit URLs and
+                              PDFs from the conversation.
+                            </p>
+                            <p className='text-xs text-muted-foreground'>
+                              Use for research papers, arXiv links, and source
+                              pages you paste into the prompt.
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={webFetchEnabled}
+                    onCheckedChange={handleWebFetchToggle}
                   />
                 </div>
               )}
@@ -324,9 +382,6 @@ const ModelConfigurationPanel: React.FC = () => {
                         </TooltipContent>
                       </Tooltip>
                     </div>
-                    <p className='text-xs text-gray-500 dark:text-gray-400'>
-                      Enable AI image generation with DALL-E models
-                    </p>
                   </div>
                   <Switch
                     checked={imageGenerationEnabled}
@@ -367,9 +422,6 @@ const ModelConfigurationPanel: React.FC = () => {
                         </TooltipContent>
                       </Tooltip>
                     </div>
-                    <p className='text-xs text-gray-500 dark:text-gray-400'>
-                      Enable audio-to-text transcription with Whisper/Gemini
-                    </p>
                   </div>
                   <Switch
                     checked={audioTranscriptionEnabled}

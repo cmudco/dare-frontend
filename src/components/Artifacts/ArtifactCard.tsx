@@ -13,6 +13,7 @@ import {
   BarChart2,
   ExternalLink,
   Loader2,
+  Presentation,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getArtifactAPI } from '@/api/artifacts'
@@ -93,6 +94,8 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifactId }) => {
         return <GitBranch className='h-5 w-5' />
       case 'chart':
         return <BarChart2 className='h-5 w-5' />
+      case 'pptx':
+        return <Presentation className='h-5 w-5' />
       default:
         return <FileText className='h-5 w-5' />
     }

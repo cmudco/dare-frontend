@@ -35,6 +35,7 @@ export const initialState: ConversationState = {
   autoSaveEnabled: true,
   attachedImages: [],
   webSearchEnabled: false,
+  webFetchEnabled: false,
   imageGenerationEnabled: false,
   audioTranscriptionEnabled: false,
   artifactsEnabled: false,

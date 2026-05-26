@@ -92,6 +92,52 @@ export interface DocxDocumentConfig {
 }
 
 // ─────────────────────────────────────────────────────────────
+// PPTX Types
+// ─────────────────────────────────────────────────────────────
+
+export type PptxSlideLayout =
+  | 'title'
+  | 'section'
+  | 'bullets'
+  | 'twoColumn'
+  | 'table'
+  | 'quote'
+  | 'summary'
+
+export interface PptxTheme {
+  primaryColor?: string
+  accentColor?: string
+  backgroundColor?: string
+  textColor?: string
+  mutedTextColor?: string
+  fontFamily?: string
+}
+
+export interface PptxSlideConfig {
+  layout: PptxSlideLayout
+  title?: string
+  subtitle?: string
+  body?: string
+  bullets?: string[]
+  leftTitle?: string
+  leftBullets?: string[]
+  rightTitle?: string
+  rightBullets?: string[]
+  headers?: string[]
+  rows?: string[][]
+  quote?: string
+  attribution?: string
+  speakerNotes?: string
+}
+
+export interface PptxPresentationConfig {
+  title: string
+  subtitle?: string
+  theme?: PptxTheme
+  slides: PptxSlideConfig[]
+}
+
+// ─────────────────────────────────────────────────────────────
 // DARE Tool Result
 // ─────────────────────────────────────────────────────────────
 
@@ -99,13 +145,14 @@ export interface DocxDocumentConfig {
  * Result from DARE tool execution (create_chart, create_diagram, create_docx)
  *
  * BE sends this as a properly camelCased object.
- * Used when serverSlug === 'dare'
+ * Used when tool call origin is DARE.
  */
 export interface DareToolResult {
   success: boolean
   chartConfig?: ChartConfig
   mermaidCode?: string
   docConfig?: DocxDocumentConfig
+  pptConfig?: PptxPresentationConfig
   error?: string
 }
 
@@ -125,9 +172,34 @@ export interface McpToolContent {
  * Result from MCP tool execution (external tools like Slack, GitHub)
  *
  * MCP tools return content arrays with text/image responses.
- * Used when serverSlug !== 'dare'
+ * Used when tool call origin is MCP.
  */
 export interface McpToolResult {
   content?: McpToolContent[]
   isError?: boolean
+}
+
+// ─────────────────────────────────────────────────────────────
+// Provider-Native Tool Result
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Result from provider-native server tools, such as Anthropic web_fetch or
+ * Gemini url_context.
+ * Used when tool call origin is provider-native.
+ */
+export interface ProviderToolResult {
+  type?: string
+  url?: string
+  title?: string
+  retrievedAt?: string
+  errorCode?: string
+  resultContentType?: string
+  contentType?: string
+  retrievalStatus?: string
+  sourceType?: string
+  mediaType?: string
+  contentSize?: number
+  contentPreview?: string
+  truncated?: boolean
 }

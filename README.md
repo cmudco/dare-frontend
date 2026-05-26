@@ -1,6 +1,6 @@
 # DARE Frontend
 
-React/TypeScript frontend for the **DARE (Distributed AI Research Engine)** platform. Provides real-time chat with multiple LLM providers, file management with RAG, a visual workflow builder, and a prompt-template system.
+React/TypeScript frontend for the **DARE (Dietrich Analysis Research Education Platform)**. Provides real-time chat with multiple LLM providers, file management with RAG, a visual workflow builder, and a prompt-template system.
 
 ## Purpose
 
@@ -15,40 +15,36 @@ The DARE frontend is the primary user interface for the DARE platform. It connec
 
 ## Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                  DARE Frontend (React 18)                 │
-│                                                           │
-│  ┌──────────────────────────────────────────────────┐    │
-│  │   Pages / Routes (React Router v6)               │    │
-│  └──────────────────────────────────────────────────┘    │
-│  ┌──────────────────────────────────────────────────┐    │
-│  │   Feature Components (Conversation, Workflow,    │    │
-│  │   FileManager, Artifacts, Layout, Auth, …)       │    │
-│  │   Built on Shadcn/ui (Radix + Tailwind)          │    │
-│  └──────────────────────────────────────────────────┘    │
-│  ┌──────────────────────────────────────────────────┐    │
-│  │   Redux Toolkit Store                            │    │
-│  │   • slices (per-domain state)                    │    │
-│  │   • asyncThunks (REST integration)               │    │
-│  │   • middleware/socketMiddleware (chat)           │    │
-│  │   • middleware/workflowSocketMiddleware (DAG)    │    │
-│  └──────────────────────────────────────────────────┘    │
-│  ┌──────────────────────────────────────────────────┐    │
-│  │   API Layer (axios) — one file per domain        │    │
-│  └──────────────────────────────────────────────────┘    │
-└──────────────────────┬───────────────────────────────────┘
-                       │ REST + Socket.IO
-┌──────────────────────▼───────────────────────────────────┐
-│                       DARE Backend                        │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    browser["Browser"]
+
+    subgraph frontend["DARE Frontend (React 18)"]
+        routes["React Router v6\nRoutes -> Pages"]
+        components["Feature Components\nConversation, Workflows, Files, Artifacts"]
+        primitives["UI Primitives\nRadix + Tailwind"]
+        store["Redux Toolkit Store\nSlices + async thunks"]
+        sockets["Socket.IO Middleware\n/chat + /workflow"]
+        api["API Layer\nAxios clients by domain"]
+    end
+
+    backend["DARE Backend"]
+
+    browser --> frontend
+    routes --> components
+    components --> primitives
+    components --> store
+    store --> api
+    store --> sockets
+    api <-->|REST| backend
+    sockets <-->|Socket.IO| backend
 ```
 
 See [docs/architecture.md](docs/architecture.md) for the full diagram and component breakdown.
 
-## Quick Start (Docker)
+## Quick Start (Local Development)
 
-The frontend is a static SPA — for production you build it once and serve the bundle from any static host (Nginx, S3+CloudFront, etc.). For local development, use the Vite dev server.
+The frontend is a static SPA. For local development, use the Vite dev server. For production, build once and serve the generated `dist/` bundle from any static host.
 
 ```bash
 # 1. Clone (or pull) the repo
@@ -144,9 +140,9 @@ src/
 ## Related
 
 - [dare-backend](../dare-backend/) — Django REST + Socket.IO backend
-- [socraticbooks-backend](../../socraticbooks/socraticbooks-backend/) — Educational platform that proxies to DARE
-- [socraticbooks-react](../../socraticbooks/socraticbooks-react/) — Educational platform frontend
+- [socraticbooks-backend](../socraticbooks-backend/) — Educational platform that proxies to DARE
+- [socraticbooks-react](../socraticbooks-react/) — Educational platform frontend
 
 ## License
 
-See [LICENSE](LICENSE) if present, or contact the maintainers.
+No open-source license has been selected in this repository yet. Add a `LICENSE` file before public release.
