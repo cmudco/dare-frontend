@@ -14,7 +14,7 @@ const AUDIENCES = [
   {
     icon: Code2,
     role: 'For developers',
-    body: 'DARE is open source under GPL-2.0, actively maintained by CMU Dietrich Computing & Operations. The platform is built to be extended — additional tools deploy as bolt-on modules against the API gateway.',
+    body: 'DARE is open source under AGPL 3.0, actively maintained by CMU Dietrich Computing & Operations. The platform is built to be extended — additional tools deploy as bolt-on modules against the API gateway.',
     note: 'We welcome contributors who share the mission.',
     links: [
       { label: 'View the repository', href: LINKS.repository, external: true },

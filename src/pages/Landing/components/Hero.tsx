@@ -70,7 +70,7 @@ export const Hero: React.FC = () => {
           </div>
 
           <div className='mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground'>
-            <span>Open source · GPL-2.0</span>
+            <span>Open source · AGPL 3.0</span>
             <span className='hidden h-3 w-px bg-border sm:inline' />
             <span>Self-hosted via Docker</span>
             <span className='hidden h-3 w-px bg-border sm:inline' />
