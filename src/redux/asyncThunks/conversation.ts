@@ -68,6 +68,20 @@ export const getAllModels = createAsyncThunk<
   }
 })
 
+export const getActiveModels = createAsyncThunk<
+  LLMModel[],
+  void,
+  { rejectValue: string }
+>('conversation/getActiveModels', async (_, thunkAPI) => {
+  try {
+    const response = await getModelsAPI()
+    return response.results || []
+  } catch (error) {
+    console.error('Error fetching active models:', error)
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
 export const getConversations = createAsyncThunk(
   'conversation/getConversations',
   async (_, thunkAPI) => {

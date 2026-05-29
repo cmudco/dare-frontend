@@ -4,6 +4,22 @@ export enum ModelTier {
   Flash = 'flash',
 }
 
+export enum EffortLevel {
+  Low = 'low',
+  Medium = 'medium',
+  High = 'high',
+  XHigh = 'xhigh',
+  Max = 'max',
+}
+
+export const EffortLevelLabels = {
+  [EffortLevel.Low]: 'Low',
+  [EffortLevel.Medium]: 'Medium',
+  [EffortLevel.High]: 'High',
+  [EffortLevel.XHigh]: 'XHigh',
+  [EffortLevel.Max]: 'Max',
+}
+
 export const ModelTierLabels = {
   [ModelTier.Premium]: 'Premium',
   [ModelTier.Advanced]: 'Advanced',
