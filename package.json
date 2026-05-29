@@ -126,5 +126,5 @@
   "main": "eslint.config.js",
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "AGPL-3.0-only"
 }
