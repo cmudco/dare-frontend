@@ -145,4 +145,6 @@ src/
 
 ## License
 
-No open-source license has been selected in this repository yet. Add a `LICENSE` file before public release.
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).
+
+See the [LICENSE](LICENSE) file for the full license text, or visit <https://www.gnu.org/licenses/agpl-3.0.en.html>.
