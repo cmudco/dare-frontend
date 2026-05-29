@@ -34,6 +34,7 @@ import MCPServerDetail from '@/pages/MCP/MCPServerDetail.tsx'
 import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
 import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
 import MemoryScreen from '@/pages/Memory'
+import LandingPage from '../pages/Landing/LandingPage'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 const AppRoutes = () => {
@@ -88,15 +89,17 @@ const AppRoutes = () => {
             }
           />
 
+          {/* Public marketing landing page */}
+          <Route path='/' element={<LandingPage />} />
+
+          {/* Protected console — pathless layout route wrapping the app */}
           <Route
-            path='/'
             element={
               <ProtectedRoute>
                 <UserView />
               </ProtectedRoute>
             }
           >
-            <Route index element={<Dashboard />} />
             <Route path='/conversation' element={<CoversationScreen />} />
             <Route path='/conversation/:id' element={<CoversationScreen />} />
             <Route path='/dashboard' element={<Dashboard />} />

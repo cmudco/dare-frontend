@@ -5,6 +5,7 @@ import {
   fetchConversationById,
   getAvailableModels,
   getAllModels,
+  getActiveModels,
   createConversation,
   deleteConversation,
   updateConversation,
@@ -43,6 +44,7 @@ import {
   syncModelsWithImageGenerationState,
   syncModelsWithAudioTranscriptionState,
 } from './utils/modelSyncHelpers'
+import { EffortLevel } from '@/utils/constants/model'
 
 export const conversationSlice = createSlice({
   name: 'conversation',
@@ -113,6 +115,16 @@ export const conversationSlice = createSlice({
     },
     updateSelectedModel(state, action: PayloadAction<string | null>) {
       state.selectedModel = action.payload
+      const selectedEntry = state.pickerEntries.find(
+        (entry) => entry.id === action.payload
+      )
+      if (
+        selectedEntry?.supportsEffort &&
+        state.activeConversation &&
+        state.activeConversation.effort == null
+      ) {
+        state.activeConversation.effort = selectedEntry.defaultEffort
+      }
     },
     updateSelectedFiles(state, action: PayloadAction<MyFile[]>) {
       state.selectedFiles = action.payload
@@ -165,6 +177,11 @@ export const conversationSlice = createSlice({
     updateTemperature(state, action: PayloadAction<number>) {
       if (state.activeConversation) {
         state.activeConversation.temperature = action.payload
+      }
+    },
+    updateEffort(state, action: PayloadAction<EffortLevel | null>) {
+      if (state.activeConversation) {
+        state.activeConversation.effort = action.payload
       }
     },
     updateMaxTokens(state, action: PayloadAction<number>) {
@@ -542,6 +559,16 @@ export const conversationSlice = createSlice({
             state.selectedModel,
             state.pickerEntries
           )
+          const selectedEntry = state.pickerEntries.find(
+            (entry) => entry.id === state.selectedModel
+          )
+          if (
+            selectedEntry?.supportsEffort &&
+            state.activeConversation &&
+            state.activeConversation.effort == null
+          ) {
+            state.activeConversation.effort = selectedEntry.defaultEffort
+          }
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
@@ -707,6 +734,15 @@ export const conversationSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
         console.error('Failed to load all models:', action.payload)
+      })
+      .addCase(
+        getActiveModels.fulfilled,
+        (state, action: PayloadAction<LLMModel[]>) => {
+          state.activeModels = action.payload
+        }
+      )
+      .addCase(getActiveModels.rejected, (_state, action) => {
+        console.error('Failed to load active models:', action.payload)
       })
       .addCase(updateConversationSelectedIds.pending, (state) => {
         state.loading = true
@@ -1139,6 +1175,7 @@ export const {
   updateSelectedFolders,
   updateMemoryEnabled,
   updateTemperature,
+  updateEffort,
   updateMaxTokens,
   updateHistoryLimit,
   updateWebSearchEnabled,

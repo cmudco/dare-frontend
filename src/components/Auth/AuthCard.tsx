@@ -6,6 +6,7 @@ import { RootState } from '../../redux/store'
 import { useSelector } from 'react-redux'
 import Loader from '../Loader'
 import { Button } from '../ui/button'
+import { Logo } from '@/components/Logo'
 
 interface InputField {
   name: string
@@ -64,15 +65,8 @@ const AuthCard = <T extends FormikValues>({
           </div>
         )}
 
-        <div className='relative -top-10 h-[60px]'>
-          <div className='flex flex-col items-center gap-2'>
-            <img src='/icons/Logo.png' alt='company icon' className='w-14' />
-            <img
-              src='/icons/TextLogo.svg'
-              alt='company icon'
-              className='w-16'
-            />
-          </div>
+        <div className='relative -top-10 flex h-[60px] items-center'>
+          <Logo size='lg' orientation='vertical' showTagline />
         </div>
 
         <h1 className='text-center text-2xl font-black text-foreground'>

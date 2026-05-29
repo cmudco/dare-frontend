@@ -31,6 +31,7 @@ export const initialState: ConversationState = {
   hoveredModel: null,
   conversationInput: '',
   allModels: [],
+  activeModels: [],
   conversationDrafts: loadDraftsFromLocalStorage(),
   autoSaveEnabled: true,
   attachedImages: [],
