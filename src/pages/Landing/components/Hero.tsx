@@ -39,7 +39,7 @@ export const Hero: React.FC = () => {
 
           <h1 className='mt-7 font-serif text-[2.75rem] font-semibold leading-[1.04] tracking-tight text-foreground sm:text-6xl lg:text-[4.25rem]'>
             AI infrastructure built for{' '}
-            <span className='text-dare'>education</span>.
+            <span className='text-dare'>academia and non-profits</span>.
           </h1>
 
           <p className='mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground'>
