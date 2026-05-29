@@ -87,6 +87,7 @@ export const sendSocketMessage = createAsyncThunk<
       model_id: selectedModel,
       prompt_id: activeConversation.prompt?.id,
       temperature: activeConversation.temperature,
+      effort: activeConversation.effort,
       max_tokens: activeConversation.maxTokens,
       max_context_snippets: activeConversation.maxContextSnippets,
       document_similarity_threshold:
@@ -195,6 +196,7 @@ export const regenerateSocketResponse = createAsyncThunk<
       model_id: selectedModel,
       prompt_id: activeConversation.prompt?.id,
       temperature: activeConversation.temperature,
+      effort: activeConversation.effort,
       max_tokens: activeConversation.maxTokens,
       max_context_snippets: activeConversation.maxContextSnippets,
       document_similarity_threshold:

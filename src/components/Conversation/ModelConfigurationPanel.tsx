@@ -5,6 +5,7 @@ import { Button } from '../ui/button'
 import { AppDispatch, RootState } from '../../redux/store'
 import {
   updateTemperature,
+  updateEffort,
   updateMaxTokens,
   updateHistoryLimit,
   updateWebSearchEnabled,
@@ -18,7 +19,10 @@ import { Slider } from '../ui/slider'
 import { Switch } from '../ui/switch'
 import { Settings, Info } from 'lucide-react'
 import { MODEL_CONFIG } from '../../config/modelConfig'
-import { updateConversation } from '@/redux/asyncThunks/conversation'
+import {
+  getActiveModels,
+  updateConversation,
+} from '@/redux/asyncThunks/conversation'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import {
   Tooltip,
@@ -27,6 +31,7 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip'
 import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
+import { EffortLevel, EffortLevelLabels } from '@/utils/constants/model'
 
 const ModelConfigurationPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -67,7 +72,7 @@ const ModelConfigurationPanel: React.FC = () => {
       state.conversation.artifactsEnabled
   )
   const allModels = useSelector(
-    (state: RootState) => state.conversation.allModels
+    (state: RootState) => state.conversation.activeModels
   )
   // Wallet capability flags. The BE returns `null` for legacy callers (no
   // wallet_scope param); treat that as "all features supported" so DARE /
@@ -76,6 +81,12 @@ const ModelConfigurationPanel: React.FC = () => {
   const walletMeta = useSelector(
     (state: RootState) => state.conversation.activeWalletMeta
   )
+
+  React.useEffect(() => {
+    if (allModels.length === 0) {
+      dispatch(getActiveModels())
+    }
+  }, [allModels.length, dispatch])
   const showWebSearch = walletMeta?.supportsWebSearch ?? true
   const showImageGeneration = walletMeta?.supportsImageGeneration ?? true
   const showAudioTranscription = walletMeta?.supportsAudioTranscription ?? true
@@ -84,6 +95,12 @@ const ModelConfigurationPanel: React.FC = () => {
       (entry) => entry.id === state.conversation.selectedModel
     )
   )
+  const showTemperature = selectedEntry?.supportsTemperature ?? true
+  const showEffort = selectedEntry?.supportsEffort ?? false
+  const effort =
+    activeConversation?.effort ??
+    selectedEntry?.defaultEffort ??
+    EffortLevel.High
   const selectedProvider = selectedEntry?.provider?.toLowerCase()
   const showWebFetch =
     showWebSearch &&
@@ -96,6 +113,18 @@ const ModelConfigurationPanel: React.FC = () => {
         updateConversation({
           conversationId: activeConversation.conversationId,
           updates: { temperature: values[0] },
+        })
+      )
+    }
+  }
+
+  const handleEffortChange = (value: EffortLevel) => {
+    dispatch(updateEffort(value))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { effort: value },
         })
       )
     }
@@ -223,6 +252,7 @@ const ModelConfigurationPanel: React.FC = () => {
   const resetToDefaults = () => {
     if (activeConversation) {
       dispatch(updateTemperature(MODEL_CONFIG.temperature))
+      dispatch(updateEffort(null))
       dispatch(updateMaxTokens(MODEL_CONFIG.maxTokens))
       dispatch(updateHistoryLimit(MODEL_CONFIG.historyLimit))
       dispatch(updateWebSearchEnabled(false))
@@ -236,6 +266,7 @@ const ModelConfigurationPanel: React.FC = () => {
           conversationId: activeConversation.conversationId,
           updates: {
             temperature: MODEL_CONFIG.temperature,
+            effort: null,
             maxTokens: MODEL_CONFIG.maxTokens,
             historyLimit: MODEL_CONFIG.historyLimit,
             webSearchEnabled: false,
@@ -475,49 +506,95 @@ const ModelConfigurationPanel: React.FC = () => {
               )}
             </div>
 
-            <div className='space-y-4'>
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center gap-2'>
-                  <h4 className='font-medium dark:text-white'>Temperature</h4>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                    </TooltipTrigger>
-                    <TooltipContent className='max-w-xs'>
-                      <div className='space-y-2'>
-                        <p className='font-semibold'>
-                          {TOOLTIP_CONTENT.modelConfig.temperature.title}
-                        </p>
-                        <p className='text-sm'>
-                          {TOOLTIP_CONTENT.modelConfig.temperature.description}
-                        </p>
-                        <p className='text-xs text-muted-foreground'>
-                          💡 {TOOLTIP_CONTENT.modelConfig.temperature.tip}
-                        </p>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
+            {showEffort && (
+              <div className='space-y-3 border-t pt-2 dark:border-dark-icon-unselected'>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <h4 className='font-medium dark:text-white'>Effort</h4>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                      </TooltipTrigger>
+                      <TooltipContent className='max-w-xs'>
+                        <div className='space-y-2'>
+                          <p className='font-semibold'>Effort</p>
+                          <p className='text-sm'>
+                            Controls reasoning depth for models that support
+                            provider-native effort settings.
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
+                    {EffortLevelLabels[effort]}
+                  </span>
                 </div>
-                <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
-                  {temperature.toFixed(1)}
-                </span>
+                <div className='grid grid-cols-5 gap-1'>
+                  {Object.values(EffortLevel).map((value) => (
+                    <Button
+                      key={value}
+                      type='button'
+                      size='sm'
+                      variant={effort === value ? 'default' : 'outline'}
+                      className='h-8 px-1 text-xs'
+                      onClick={() => handleEffortChange(value)}
+                    >
+                      {EffortLevelLabels[value]}
+                    </Button>
+                  ))}
+                </div>
               </div>
+            )}
 
-              <Slider
-                value={[temperature]}
-                min={0}
-                max={1}
-                step={0.1}
-                onValueChange={handleTemperatureChange}
-                className='my-4 cursor-pointer'
-              />
+            {showTemperature && (
+              <div className='space-y-4'>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <h4 className='font-medium dark:text-white'>Temperature</h4>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                      </TooltipTrigger>
+                      <TooltipContent className='max-w-xs'>
+                        <div className='space-y-2'>
+                          <p className='font-semibold'>
+                            {TOOLTIP_CONTENT.modelConfig.temperature.title}
+                          </p>
+                          <p className='text-sm'>
+                            {
+                              TOOLTIP_CONTENT.modelConfig.temperature
+                                .description
+                            }
+                          </p>
+                          <p className='text-xs text-muted-foreground'>
+                            💡 {TOOLTIP_CONTENT.modelConfig.temperature.tip}
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
+                    {temperature.toFixed(1)}
+                  </span>
+                </div>
 
-              <div className='flex justify-between px-1 text-xs text-gray-500 dark:text-gray-400'>
-                <span>Precise</span>
-                <span>Balanced</span>
-                <span>Creative</span>
+                <Slider
+                  value={[temperature]}
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  onValueChange={handleTemperatureChange}
+                  className='my-4 cursor-pointer'
+                />
+
+                <div className='flex justify-between px-1 text-xs text-gray-500 dark:text-gray-400'>
+                  <span>Precise</span>
+                  <span>Balanced</span>
+                  <span>Creative</span>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
               <div className='flex items-center justify-between'>

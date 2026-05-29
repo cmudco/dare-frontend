@@ -14,6 +14,7 @@ import type { LanguageCode } from '@/utils/constants/audioTranscription'
 import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
+import { EffortLevel } from '@/utils/constants/model'
 
 /**
  * Voice recording state enum for push-to-talk voice input
@@ -32,6 +33,7 @@ export interface Conversation {
   maxContextSnippets: number
   documentSimilarityThreshold: number
   temperature: number
+  effort?: EffortLevel | null
   maxTokens: number
   historyLimit: number
   webSearchEnabled?: boolean
@@ -203,7 +205,13 @@ export interface LLMModel {
   identifier?: string
   provider: string
   description: string | null
+  isActive: boolean
   isReasoning: boolean
+  supportsTemperature: boolean
+  supportsEffort: boolean
+  supportsAdaptiveThinking: boolean
+  defaultEffort: EffortLevel
+  defaultAdaptiveThinkingEnabled: boolean
   isImageGenerator?: boolean
   isAudioTranscriber?: boolean
   inputTokenRatePerMillion: number | null
@@ -223,7 +231,13 @@ export interface PickerModel {
   identifier?: string
   provider: string
   description: string | null
+  isActive: boolean
   isReasoning: boolean
+  supportsTemperature: boolean
+  supportsEffort: boolean
+  supportsAdaptiveThinking: boolean
+  defaultEffort: EffortLevel
+  defaultAdaptiveThinkingEnabled: boolean
   isImageGenerator?: boolean
   isAudioTranscriber?: boolean
   inputTokenRatePerMillion: number | null
@@ -317,8 +331,11 @@ export interface ConversationState {
   hoveredModel: string | null
   conversationInput: string
   // Full catalog of DB-backed LLMs, used by configurator surfaces (Agents,
-  // Workflows, ModelCards). Populated from `/api/llms/all_models/`.
+  // ModelCards). Populated from `/api/llms/all_models/`.
   allModels: LLMModel[]
+  // Active DB-backed LLMs only. Populated from `/api/llms/`, which applies
+  // server-side active/model-group filtering for new selections.
+  activeModels: LLMModel[]
   conversationDrafts: ConversationDraft[]
   autoSaveEnabled: boolean
   attachedImages: AttachedImage[]

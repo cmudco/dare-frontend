@@ -3,7 +3,8 @@ import type { Node } from '@xyflow/react'
 import { Button } from '@/components/ui/button'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { updateNodeDataById, setSelectedNodeId } from '@/redux/workflowBuilder'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
+import { getActiveModels } from '@/redux/asyncThunks/conversation'
 
 // Import node-specific config components
 import StartNodeConfig, { type StartNodeData } from './StartNodeConfig'
@@ -29,11 +30,14 @@ export default function NodeConfigPanel({
   const prompts = useAppSelector((s) => s.prompt.prompts)
   const files = useAppSelector((s) => s.files.files)
   const tags = useAppSelector((s) => s.tags.tags)
-  // Workflow steps only target DB-backed LLMs (LiteLLM dispatch isn't
-  // wired into workflow execution yet), so we use the full catalog rather
-  // than the wallet-scoped chat picker.
-  const availableModels = useAppSelector((s) => s.conversation.allModels)
+  const availableModels = useAppSelector((s) => s.conversation.activeModels)
   const agents = useAppSelector((s) => s.agent.agents)
+
+  useEffect(() => {
+    if (availableModels.length === 0) {
+      dispatch(getActiveModels())
+    }
+  }, [availableModels.length, dispatch])
 
   const nodeType = selectedNode.type
   const nodeId = selectedNode.id
