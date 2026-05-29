@@ -4,7 +4,7 @@ import { Container, Eyebrow } from './primitives'
 import { LINKS } from '../links'
 
 const STATS = [
-  { value: '2,000+', label: 'students served at CMU' },
+  { value: '2,000+', label: 'students served' },
   { value: 'Multi-school', label: 'collaborations underway' },
   { value: 'US & intl.', label: 'partner institutions piloting' },
 ]

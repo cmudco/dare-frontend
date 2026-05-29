@@ -85,8 +85,8 @@ export const Footer: React.FC = () => {
 
         <div className='mt-14 flex flex-col gap-4 border-t border-border pt-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between'>
           <p>
-            Released under GPL-2.0 · © Carnegie Mellon University. The DARE name
-            and marks are governed by the DARE Brand Usage Policy.
+            Released under AGPL 3.0 · © Carnegie Mellon University. The DARE
+            name and marks are governed by the DARE Brand Usage Policy.
           </p>
           <p className='font-mono uppercase tracking-[0.16em]'>
             Open Forum for AI · CMU Dietrich
