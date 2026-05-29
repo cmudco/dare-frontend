@@ -148,11 +148,11 @@ const Help = () => {
                 >
                   <div>
                     <h3 className='font-medium text-foreground'>
-                      Legacy DARE LLM Gateway User Guide
+                      DARE LLM Gateway User Guide (Printed)
                     </h3>
                     <p className='mt-1 text-sm text-muted-foreground'>
-                      Previous Google Docs guide retained while the new docs
-                      portal becomes the primary documentation home.
+                      Comprehensive guide to using the DARE platform, including
+                      features, workflows, and best practices.
                     </p>
                   </div>
                   <ExternalLink className='h-5 w-5 flex-shrink-0 text-blue-500' />
