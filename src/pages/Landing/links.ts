@@ -8,7 +8,7 @@
  */
 export const LINKS = {
   console: '/dashboard',
-  deploymentGuide: '/docs/backend/deployment-procedures',
+  deploymentGuide: '/docs/',
   architecture: '/docs/backend/architecture',
   contributing: '/docs/getting-started',
   repository: 'https://github.com/cmudco',
