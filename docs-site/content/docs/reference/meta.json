@@ -2,6 +2,7 @@
   "title": "Reference",
   "defaultOpen": true,
   "pages": [
+    "license",
     "brand",
     "security",
     "changelog"

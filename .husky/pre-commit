@@ -1,1 +1,3 @@
+npm run docs:sync
+git add docs-site/content/docs
 npx lint-staged
