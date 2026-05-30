@@ -149,6 +149,13 @@ const pages = [
     description: 'DARE brand and trademark usage policy.',
   },
   {
+    from: path.join(frontendRoot, 'LICENSE'),
+    to: 'reference/license.mdx',
+    title: 'License',
+    description: 'Full GNU Affero General Public License v3.0 text for DARE.',
+    format: 'license',
+  },
+  {
     from: path.join(frontendRoot, 'SECURITY.md'),
     to: 'reference/security.mdx',
     title: 'Security Policy',
@@ -167,6 +174,7 @@ for (const page of pages) {
   const targetPath = path.resolve(page.from);
   sourceToUrl.set(targetPath, `/docs/${page.to.replace(/(^|\/)index\.mdx$/, '$1').replace(/\.mdx$/, '')}`.replace(/\/$/, ''));
 }
+sourceToUrl.set(path.resolve(backendRoot, 'LICENSE'), '/docs/reference/license');
 
 function frontmatter(page) {
   return [
@@ -235,6 +243,7 @@ function cleanMarkdown(markdown, currentSource) {
   return escapeMdxAngles(
     rewriteLinks(stripFirstHeading(markdown), currentSource)
   )
+    .replace(/\]\((?:\.\/|\.\.\/)?LICENSE\)/g, '](/docs/reference/license)')
     .replaceAll('http://localhost:8000/api/docs/', '/api/docs/')
     .replaceAll('http://localhost:8000/api/redoc/', '/api/redoc/')
     .replaceAll('http://localhost:8000/api/schema/', '/api/schema/')
@@ -247,7 +256,19 @@ function cleanMarkdown(markdown, currentSource) {
 
 async function writePage(page) {
   const input = await readFile(page.from, 'utf8');
-  const output = `${frontmatter(page)}${cleanMarkdown(input, page.from)}\n`;
+  const body =
+    page.format === 'license'
+      ? [
+          'The DARE frontend and backend are licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only).',
+          '',
+          '## Full license text',
+          '',
+          '```text',
+          input.trim(),
+          '```',
+        ].join('\n')
+      : cleanMarkdown(input, page.from);
+  const output = `${frontmatter(page)}${body}\n`;
   const destination = path.join(contentRoot, page.to);
 
   await mkdir(path.dirname(destination), { recursive: true });
@@ -415,7 +436,7 @@ async function writeMeta() {
       {
         title: 'Reference',
         defaultOpen: true,
-        pages: ['brand', 'security', 'changelog'],
+        pages: ['license', 'brand', 'security', 'changelog'],
       },
       null,
       2
