@@ -80,25 +80,25 @@ A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 
 ## Available Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start the Vite dev server on port 5173 |
-| `npm run build` | Produce a production bundle in `dist/` |
-| `npm run preview` | Serve the production bundle locally |
-| `npm run lint` | Run ESLint over `src/` |
-| `npm run format` | Run Prettier |
+| Command           | Description                            |
+| ----------------- | -------------------------------------- |
+| `npm run dev`     | Start the Vite dev server on port 5173 |
+| `npm run build`   | Produce a production bundle in `dist/` |
+| `npm run preview` | Serve the production bundle locally    |
+| `npm run lint`    | Run ESLint over `src/`                 |
+| `npm run format`  | Run Prettier                           |
 
 ## Documentation
 
-| Doc | What's in it |
-|---|---|
-| [INSTALL.md](INSTALL.md) | Full deployment guide — Docker and bare-metal static hosting |
+| Doc                                            | What's in it                                                         |
+| ---------------------------------------------- | -------------------------------------------------------------------- |
+| [INSTALL.md](INSTALL.md)                       | Full deployment guide — Docker and bare-metal static hosting         |
 | [docs/configuration.md](docs/configuration.md) | Every Vite environment variable, with type, default, and description |
-| [docs/architecture.md](docs/architecture.md) | Component diagram, state management, Socket.IO integration |
-| [docs/contributing.md](docs/contributing.md) | Issues, pull requests, coding standards |
-| [docs/RULES.md](docs/RULES.md) | Project-specific conventions and constraints |
-| [CHANGELOG.md](CHANGELOG.md) | Release notes |
-| [SECURITY.md](SECURITY.md) | Vulnerability disclosure process |
+| [docs/architecture.md](docs/architecture.md)   | Component diagram, state management, Socket.IO integration           |
+| [CONTRIBUTING.md](CONTRIBUTING.md)             | Issues, pull requests, coding standards                              |
+| [docs/RULES.md](docs/RULES.md)                 | Project-specific conventions and constraints                         |
+| [CHANGELOG.md](CHANGELOG.md)                   | Release notes                                                        |
+| [SECURITY.md](SECURITY.md)                     | Vulnerability disclosure process                                     |
 
 ## Project Structure
 

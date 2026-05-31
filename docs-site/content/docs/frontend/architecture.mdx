@@ -67,10 +67,10 @@ src/redux/
 
 Two namespaces, two middleware files, one connection lifecycle each.
 
-| Namespace | Middleware | Used by |
-|---|---|---|
-| `/chat` | `socketMiddleware.ts` | Streaming completions, artifact emission, message acks |
-| `/workflow` | `workflowSocketMiddleware.ts` | DAG execution, per-step progress, batch run updates |
+| Namespace   | Middleware                    | Used by                                                |
+| ----------- | ----------------------------- | ------------------------------------------------------ |
+| `/chat`     | `socketMiddleware.ts`         | Streaming completions, artifact emission, message acks |
+| `/workflow` | `workflowSocketMiddleware.ts` | DAG execution, per-step progress, batch run updates    |
 
 **Validation rule:** All incoming `/workflow` events are validated with Zod schemas in `src/schemas/workflowSocket.ts` before being dispatched to Redux. This catches backend-side schema drift early and surfaces a typed error instead of a silently broken UI.
 
@@ -160,6 +160,6 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 ## Further reading
 
 - [docs/configuration.md](/docs/frontend/configuration) — Vite environment variables
-- [docs/contributing.md](/docs/frontend/contributing) — coding standards and PR process
+- [CONTRIBUTING.md](/docs/frontend/contributing) — coding standards and PR process
 - [docs/RULES.md](/docs/frontend/rules) — project-specific conventions
 - [dare-backend/docs/architecture/socketio-events.md](/docs/backend/socketio-events) — full event contract

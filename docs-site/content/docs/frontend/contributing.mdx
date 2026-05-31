@@ -9,7 +9,7 @@ Thanks for your interest in contributing. This guide covers issues, pull request
 Before opening an issue:
 
 1. Search the repository's existing issues to avoid duplicates.
-2. Verify the bug reproduces against the latest `main`.
+2. Verify the bug reproduces against the latest `dev`.
 3. Try to isolate whether the problem is frontend, backend, or integration — check the browser's network and console panels.
 
 ### Bug reports
@@ -41,9 +41,11 @@ Frame them as user problems first, implementation second:
 
 ### Before opening a PR
 
-1. Fork and create a feature branch:
+1. Fork the repository, sync the latest `dev`, and create a feature branch from `dev`:
 
    ```bash
+   git checkout dev
+   git pull --ff-only origin dev
    git checkout -b your-name/feature/short-description
    ```
 
@@ -103,7 +105,7 @@ Each PR should include:
 
 ### Socket.IO
 
-- All inbound `/workflow` events are validated with Zod schemas in `src/schemas/`. New event types must add a schema *before* dispatch.
+- All inbound `/workflow` events are validated with Zod schemas in `src/schemas/`. New event types must add a schema _before_ dispatch.
 - Connection lifecycle stays inside the middleware. Components dispatch intents (`emit:foo`); they don't talk to the socket directly.
 
 ### Styling
@@ -129,7 +131,7 @@ Each PR should include:
 ### Comments
 
 - Default to no comments — names should carry meaning.
-- Comment the *why* when behaviour is non-obvious: a workaround for a specific bug, an invariant a future reader might miss, an intentional deviation from the obvious approach.
+- Comment the _why_ when behaviour is non-obvious: a workaround for a specific bug, an invariant a future reader might miss, an intentional deviation from the obvious approach.
 - Don't comment what the code does. Don't reference the PR number or task ID.
 
 ### Linting and formatting
