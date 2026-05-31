@@ -84,6 +84,12 @@ const pages = [
       'Backend installation paths, service dependencies, deployment, and troubleshooting.',
   },
   {
+    from: path.join(backendRoot, 'CONTRIBUTING.md'),
+    to: 'backend/contributing.mdx',
+    title: 'Backend Contributing',
+    description: 'Backend issue, pull request, and coding standards.',
+  },
+  {
     from: path.join(backendRoot, 'docs', 'admin-guide.md'),
     to: 'backend/admin-guide.mdx',
     title: 'Administrator Guide',
@@ -443,6 +449,7 @@ async function writeMeta() {
           'index',
           'readme',
           'install',
+          'contributing',
           'admin-guide',
           'configuration',
           'architecture',
