@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Check, Pencil, Sparkles, X } from 'lucide-react'
+import { BrainCircuit, Check, Pencil, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Container, Eyebrow, Section, SectionTitle } from './primitives'
 
@@ -228,8 +228,8 @@ export const ActionFramework: React.FC = () => {
               <div className='p-4 sm:p-5'>
                 <div className='rounded-xl border border-dare/20 bg-background p-4 shadow-sm'>
                   <div className='flex items-start gap-3'>
-                    <span className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-dare/20 bg-dare/10 text-dare'>
-                      <Sparkles className='h-4 w-4' />
+                    <span className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-dare/25 bg-dare-gradient text-white shadow-sm shadow-dare/20'>
+                      <BrainCircuit className='h-4 w-4' />
                     </span>
                     <div>
                       <p className='font-mono text-[0.62rem] uppercase tracking-[0.16em] text-dare'>
