@@ -11,11 +11,11 @@ For environment variable reference, see [docs/configuration.md](docs/configurati
 
 ## Prerequisites
 
-| Requirement | Version | Notes |
-|---|---|---|
-| Node.js | 18+ | 20 LTS recommended |
-| npm | 9+ | (or `pnpm` / `yarn` if you adapt scripts) |
-| A running [DARE backend](../dare-backend/) | — | Reachable from the browser via the configured URLs |
+| Requirement                                | Version | Notes                                              |
+| ------------------------------------------ | ------- | -------------------------------------------------- |
+| Node.js                                    | 18+     | 20 LTS recommended                                 |
+| npm                                        | 9+      | (or `pnpm` / `yarn` if you adapt scripts)          |
+| A running [DARE backend](../dare-backend/) | —       | Reachable from the browser via the configured URLs |
 
 ---
 
@@ -182,13 +182,13 @@ For Docker-based deployments, rebuild the image with the appropriate build args 
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| White screen, console error about asset 404s | Server not serving SPA fallback (deep links 404) | Configure `try_files $uri /index.html` or equivalent |
-| `Network Error` on every request | Wrong `VITE_DJANGO_BACKEND_URL`, or CORS not allowed by backend | Verify URL; add origin to backend `CORS_ALLOWED_ORIGINS` |
-| Chat connects but no streamed tokens | Socket.IO URL or auth issue | Check `VITE_WEBSOCKET_URL`; inspect WS frames in dev tools |
-| Build fails with TS errors | Type drift after backend API changes | Update `redux/types/`; run `npx tsc --noEmit` for full report |
-| Old code shipped after deploy | CDN or browser cache | Ensure `index.html` is `Cache-Control: no-cache`; assets fingerprinted (Vite default) |
-| `VITE_*` env var ignored at runtime | Vite inlines at build time | Rebuild with the desired value |
+| Symptom                                      | Likely cause                                                    | Fix                                                                                   |
+| -------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| White screen, console error about asset 404s | Server not serving SPA fallback (deep links 404)                | Configure `try_files $uri /index.html` or equivalent                                  |
+| `Network Error` on every request             | Wrong `VITE_DJANGO_BACKEND_URL`, or CORS not allowed by backend | Verify URL; add origin to backend `CORS_ALLOWED_ORIGINS`                              |
+| Chat connects but no streamed tokens         | Socket.IO URL or auth issue                                     | Check `VITE_WEBSOCKET_URL`; inspect WS frames in dev tools                            |
+| Build fails with TS errors                   | Type drift after backend API changes                            | Update `redux/types/`; run `npx tsc --noEmit` for full report                         |
+| Old code shipped after deploy                | CDN or browser cache                                            | Ensure `index.html` is `Cache-Control: no-cache`; assets fingerprinted (Vite default) |
+| `VITE_*` env var ignored at runtime          | Vite inlines at build time                                      | Rebuild with the desired value                                                        |
 
-For more, see [docs/contributing.md](docs/contributing.md).
+For more, see [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -1,12 +1,12 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const docsSite = path.resolve(here, '..');
-const frontendRoot = path.resolve(docsSite, '..');
-const backendRoot = path.resolve(frontendRoot, '..', 'dare-backend');
-const contentRoot = path.join(docsSite, 'content', 'docs');
+const here = path.dirname(fileURLToPath(import.meta.url))
+const docsSite = path.resolve(here, '..')
+const frontendRoot = path.resolve(docsSite, '..')
+const backendRoot = path.resolve(frontendRoot, '..', 'dare-backend')
+const contentRoot = path.join(docsSite, 'content', 'docs')
 
 const pages = [
   {
@@ -26,28 +26,32 @@ const pages = [
     from: path.join(frontendRoot, 'README.md'),
     to: 'frontend/index.mdx',
     title: 'Frontend Overview',
-    description: 'React, TypeScript, routing, state, and UI structure for the Dare frontend.',
+    description:
+      'React, TypeScript, routing, state, and UI structure for the Dare frontend.',
   },
   {
     from: path.join(frontendRoot, 'INSTALL.md'),
     to: 'frontend/install.mdx',
     title: 'Frontend Installation',
-    description: 'Install, configure, build, and serve the frontend application.',
+    description:
+      'Install, configure, build, and serve the frontend application.',
   },
   {
     from: path.join(frontendRoot, 'docs', 'configuration.md'),
     to: 'frontend/configuration.mdx',
     title: 'Frontend Configuration',
-    description: 'Vite environment variables and per-environment frontend settings.',
+    description:
+      'Vite environment variables and per-environment frontend settings.',
   },
   {
     from: path.join(frontendRoot, 'docs', 'architecture.md'),
     to: 'frontend/architecture.mdx',
     title: 'Frontend Architecture',
-    description: 'Component structure, routing, Redux, API layer, and Socket.IO integration.',
+    description:
+      'Component structure, routing, Redux, API layer, and Socket.IO integration.',
   },
   {
-    from: path.join(frontendRoot, 'docs', 'contributing.md'),
+    from: path.join(frontendRoot, 'CONTRIBUTING.md'),
     to: 'frontend/contributing.mdx',
     title: 'Frontend Contributing',
     description: 'Frontend issue, pull request, and coding standards.',
@@ -56,13 +60,15 @@ const pages = [
     from: path.join(frontendRoot, 'docs', 'RULES.md'),
     to: 'frontend/rules.mdx',
     title: 'Frontend Rules',
-    description: 'Project-specific frontend development rules and API contract conventions.',
+    description:
+      'Project-specific frontend development rules and API contract conventions.',
   },
   {
     from: path.join(backendRoot, 'docs', 'index.md'),
     to: 'backend/index.mdx',
     title: 'Backend Overview',
-    description: 'Backend documentation index for API, architecture, operations, and standards.',
+    description:
+      'Backend documentation index for API, architecture, operations, and standards.',
   },
   {
     from: path.join(backendRoot, 'README.md'),
@@ -74,19 +80,22 @@ const pages = [
     from: path.join(backendRoot, 'INSTALL.md'),
     to: 'backend/install.mdx',
     title: 'Backend Installation',
-    description: 'Backend installation paths, service dependencies, deployment, and troubleshooting.',
+    description:
+      'Backend installation paths, service dependencies, deployment, and troubleshooting.',
   },
   {
     from: path.join(backendRoot, 'docs', 'admin-guide.md'),
     to: 'backend/admin-guide.mdx',
     title: 'Administrator Guide',
-    description: 'User management, access codes, model access, analytics, and operational tasks.',
+    description:
+      'User management, access codes, model access, analytics, and operational tasks.',
   },
   {
     from: path.join(backendRoot, 'docs', 'configuration.md'),
     to: 'backend/configuration.mdx',
     title: 'Backend Configuration',
-    description: 'Django, Redis, database, provider key, MCP, and observability settings.',
+    description:
+      'Django, Redis, database, provider key, MCP, and observability settings.',
   },
   {
     from: path.join(backendRoot, 'docs', 'architecture.md'),
@@ -98,13 +107,15 @@ const pages = [
     from: path.join(backendRoot, 'docs', 'architecture', 'overview.md'),
     to: 'backend/architecture-overview.mdx',
     title: 'System Architecture',
-    description: 'System diagrams, service responsibilities, real-time architecture, and data flows.',
+    description:
+      'System diagrams, service responsibilities, real-time architecture, and data flows.',
   },
   {
     from: path.join(backendRoot, 'docs', 'architecture', 'data-flows.md'),
     to: 'backend/data-flows.mdx',
     title: 'Data Flows',
-    description: 'Chat, file upload, workflow execution, authentication, and artifact flow diagrams.',
+    description:
+      'Chat, file upload, workflow execution, authentication, and artifact flow diagrams.',
   },
   {
     from: path.join(backendRoot, 'docs', 'architecture', 'socketio-events.md'),
@@ -116,19 +127,22 @@ const pages = [
     from: path.join(backendRoot, 'docs', 'serialization.md'),
     to: 'backend/serialization.mdx',
     title: 'Serialization Contract',
-    description: 'camelCase and snake_case conversion rules for frontend/backend boundaries.',
+    description:
+      'camelCase and snake_case conversion rules for frontend/backend boundaries.',
   },
   {
     from: path.join(backendRoot, 'docs', 'deployment', 'infrastructure.md'),
     to: 'backend/deployment-infrastructure.mdx',
     title: 'Deployment Infrastructure',
-    description: 'Production infrastructure notes and existing deployment scripts.',
+    description:
+      'Production infrastructure notes and existing deployment scripts.',
   },
   {
     from: path.join(backendRoot, 'docs', 'deployment', 'procedures.md'),
     to: 'backend/deployment-procedures.mdx',
     title: 'Deployment Procedures',
-    description: 'Deployment order and procedures for the DARE and SocraticBooks services.',
+    description:
+      'Deployment order and procedures for the DARE and SocraticBooks services.',
   },
   {
     from: path.join(backendRoot, 'docs', 'code-standards.md'),
@@ -140,7 +154,8 @@ const pages = [
     from: path.join(backendRoot, 'docs', 'api', 'dare-backend.md'),
     to: 'backend/api-reference.mdx',
     title: 'Backend API Reference',
-    description: 'Human-readable REST API overview and links to interactive Swagger and Redoc.',
+    description:
+      'Human-readable REST API overview and links to interactive Swagger and Redoc.',
   },
   {
     from: path.join(backendRoot, 'BRAND.md'),
@@ -159,7 +174,8 @@ const pages = [
     from: path.join(frontendRoot, 'SECURITY.md'),
     to: 'reference/security.mdx',
     title: 'Security Policy',
-    description: 'Supported versions, vulnerability reporting, safe harbor, and operator hardening.',
+    description:
+      'Supported versions, vulnerability reporting, safe harbor, and operator hardening.',
   },
   {
     from: path.join(frontendRoot, 'CHANGELOG.md'),
@@ -167,14 +183,20 @@ const pages = [
     title: 'Frontend Changelog',
     description: 'Frontend release notes and documentation changes.',
   },
-];
+]
 
-const sourceToUrl = new Map();
+const sourceToUrl = new Map()
 for (const page of pages) {
-  const targetPath = path.resolve(page.from);
-  sourceToUrl.set(targetPath, `/docs/${page.to.replace(/(^|\/)index\.mdx$/, '$1').replace(/\.mdx$/, '')}`.replace(/\/$/, ''));
+  const targetPath = path.resolve(page.from)
+  sourceToUrl.set(
+    targetPath,
+    `/docs/${page.to.replace(/(^|\/)index\.mdx$/, '$1').replace(/\.mdx$/, '')}`.replace(
+      /\/$/,
+      ''
+    )
+  )
 }
-sourceToUrl.set(path.resolve(backendRoot, 'LICENSE'), '/docs/reference/license');
+sourceToUrl.set(path.resolve(backendRoot, 'LICENSE'), '/docs/reference/license')
 
 function frontmatter(page) {
   return [
@@ -183,60 +205,63 @@ function frontmatter(page) {
     `description: ${JSON.stringify(page.description)}`,
     '---',
     '',
-  ].join('\n');
+  ].join('\n')
 }
 
 function stripFirstHeading(markdown) {
-  return markdown.replace(/^# .+\n+/, '');
+  return markdown.replace(/^# .+\n+/, '')
 }
 
 function resolveMarkdownLink(currentSource, target) {
-  const [rawPath, hash = ''] = target.split('#');
-  if (!rawPath) return target;
+  const [rawPath, hash = ''] = target.split('#')
+  if (!rawPath) return target
 
-  const resolved = path.resolve(path.dirname(currentSource), rawPath);
+  const resolved = path.resolve(path.dirname(currentSource), rawPath)
   const candidates = [
     resolved,
     resolved.endsWith('.md') ? resolved : `${resolved}.md`,
     path.join(resolved, 'index.md'),
-  ];
+  ]
 
   for (const candidate of candidates) {
-    const url = sourceToUrl.get(candidate);
-    if (url) return `${url}${hash ? `#${hash}` : ''}`;
+    const url = sourceToUrl.get(candidate)
+    if (url) return `${url}${hash ? `#${hash}` : ''}`
   }
 
-  return null;
+  return null
 }
 
 function rewriteLinks(markdown, currentSource) {
-  return markdown.replace(/(!?)\[([^\]]+)\]\(([^)]+)\)/g, (match, bang, label, target) => {
-    if (bang) return match;
-    if (/^(https?:|mailto:|#|\/)/.test(target)) return match;
+  return markdown.replace(
+    /(!?)\[([^\]]+)\]\(([^)]+)\)/g,
+    (match, bang, label, target) => {
+      if (bang) return match
+      if (/^(https?:|mailto:|#|\/)/.test(target)) return match
 
-    const rewritten = resolveMarkdownLink(currentSource, target);
-    if (rewritten) return `[${label}](${rewritten})`;
+      const rewritten = resolveMarkdownLink(currentSource, target)
+      if (rewritten) return `[${label}](${rewritten})`
 
-    return `\`${label.replace(/`/g, '')}\``;
-  });
+      return `\`${label.replace(/`/g, '')}\``
+    }
+  )
 }
 
 function escapeMdxAngles(markdown) {
-  let inFence = false;
+  let inFence = false
 
   return markdown
     .split('\n')
     .map((line) => {
       if (/^\s*```/.test(line)) {
-        inFence = !inFence;
-        return line;
+        inFence = !inFence
+        return line
       }
 
-      if (inFence) return line;
+      if (inFence) return line
 
-      return line.replace(/<([^>\n]+)>/g, (_, value) => `&lt;${value}&gt;`);
+      return line.replace(/<([^>\n]+)>/g, (_, value) => `&lt;${value}&gt;`)
     })
-    .join('\n');
+    .join('\n')
 }
 
 function cleanMarkdown(markdown, currentSource) {
@@ -251,11 +276,11 @@ function cleanMarkdown(markdown, currentSource) {
       /SocraticBooks-DARE Proxy Contract/g,
       'SocraticBooks-DARE Proxy Contract (planned)'
     )
-    .trim();
+    .trim()
 }
 
 async function writePage(page) {
-  const input = await readFile(page.from, 'utf8');
+  const input = await readFile(page.from, 'utf8')
   const body =
     page.format === 'license'
       ? [
@@ -267,12 +292,12 @@ async function writePage(page) {
           input.trim(),
           '```',
         ].join('\n')
-      : cleanMarkdown(input, page.from);
-  const output = `${frontmatter(page)}${body}\n`;
-  const destination = path.join(contentRoot, page.to);
+      : cleanMarkdown(input, page.from)
+  const output = `${frontmatter(page)}${body}\n`
+  const destination = path.join(contentRoot, page.to)
 
-  await mkdir(path.dirname(destination), { recursive: true });
-  await writeFile(destination, output);
+  await mkdir(path.dirname(destination), { recursive: true })
+  await writeFile(destination, output)
 }
 
 async function writeStaticPages() {
@@ -326,7 +351,7 @@ description: "Client guides and technical references for the Dietrich Analysis R
   </Card>
 </Cards>
 `
-  );
+  )
 
   await writeFile(
     path.join(contentRoot, 'api-reference.mdx'),
@@ -359,7 +384,7 @@ Use the backend API reference for authentication, major endpoint groups, and doc
   </Card>
 </Cards>
 `
-  );
+  )
 }
 
 async function writeMeta() {
@@ -384,23 +409,30 @@ async function writeMeta() {
       null,
       2
     )}\n`
-  );
+  )
 
-  await mkdir(path.join(contentRoot, 'frontend'), { recursive: true });
+  await mkdir(path.join(contentRoot, 'frontend'), { recursive: true })
   await writeFile(
     path.join(contentRoot, 'frontend', 'meta.json'),
     `${JSON.stringify(
       {
         title: 'Frontend',
         defaultOpen: true,
-        pages: ['index', 'install', 'configuration', 'architecture', 'contributing', 'rules'],
+        pages: [
+          'index',
+          'install',
+          'configuration',
+          'architecture',
+          'contributing',
+          'rules',
+        ],
       },
       null,
       2
     )}\n`
-  );
+  )
 
-  await mkdir(path.join(contentRoot, 'backend'), { recursive: true });
+  await mkdir(path.join(contentRoot, 'backend'), { recursive: true })
   await writeFile(
     path.join(contentRoot, 'backend', 'meta.json'),
     `${JSON.stringify(
@@ -427,9 +459,9 @@ async function writeMeta() {
       null,
       2
     )}\n`
-  );
+  )
 
-  await mkdir(path.join(contentRoot, 'reference'), { recursive: true });
+  await mkdir(path.join(contentRoot, 'reference'), { recursive: true })
   await writeFile(
     path.join(contentRoot, 'reference', 'meta.json'),
     `${JSON.stringify(
@@ -441,14 +473,14 @@ async function writeMeta() {
       null,
       2
     )}\n`
-  );
+  )
 }
 
-await rm(contentRoot, { recursive: true, force: true });
-await mkdir(contentRoot, { recursive: true });
+await rm(contentRoot, { recursive: true, force: true })
+await mkdir(contentRoot, { recursive: true })
 
-await writeStaticPages();
-await Promise.all(pages.map(writePage));
-await writeMeta();
+await writeStaticPages()
+await Promise.all(pages.map(writePage))
+await writeMeta()
 
-console.log(`Synced ${pages.length + 2} docs pages into ${contentRoot}`);
+console.log(`Synced ${pages.length + 2} docs pages into ${contentRoot}`)
