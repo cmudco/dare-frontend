@@ -9,7 +9,10 @@ const AUDIENCES = [
     role: 'For faculty',
     body: 'A course-level AI environment you actually control. Set system prompts, restrict models, design RAG workflows from your own materials, and deploy tools that challenge students rather than answer for them.',
     note: 'In active use across Dietrich courses in history, psychology, philosophy, statistics, and writing.',
-    links: [{ label: 'Launch console', href: LINKS.console }],
+    links: [
+      { label: 'Launch console', href: LINKS.console },
+      { label: 'Request a pilot account', href: LINKS.pilotAccount },
+    ],
   },
   {
     icon: Code2,
