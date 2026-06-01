@@ -38,7 +38,7 @@ const WebSearchSources: React.FC<WebSearchSourcesProps> = ({ sources }) => {
   }
 
   return (
-    <div className='mt-2 w-full max-w-[95%] pl-10'>
+    <div className='mt-2 w-full min-w-0 max-w-[95%] pl-0 sm:pl-10'>
       <button
         onClick={toggleOpen}
         className='flex items-center text-sm text-muted-foreground hover:text-foreground'
@@ -59,7 +59,7 @@ const WebSearchSources: React.FC<WebSearchSourcesProps> = ({ sources }) => {
               key={source.id}
               className='rounded-lg border border-border bg-muted/50 p-3'
             >
-              <div className='flex items-start justify-between gap-2'>
+              <div className='flex min-w-0 flex-wrap items-start justify-between gap-2'>
                 <div className='min-w-0 flex-1'>
                   <a
                     href={source.url}
@@ -77,7 +77,7 @@ const WebSearchSources: React.FC<WebSearchSourcesProps> = ({ sources }) => {
                   </p>
                 </div>
 
-                <div className='flex flex-shrink-0 items-center gap-2'>
+                <div className='flex flex-shrink-0 flex-wrap items-center gap-2'>
                   {source.pageAge && (
                     <span className='text-xs text-muted-foreground'>
                       {source.pageAge}

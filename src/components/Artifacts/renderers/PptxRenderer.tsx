@@ -66,8 +66,8 @@ export const PptxRenderer: React.FC<PptxRendererProps> = ({ config }) => {
   }
 
   return (
-    <div className='flex h-full bg-slate-100 dark:bg-slate-950'>
-      <aside className='w-32 shrink-0 overflow-auto border-r border-slate-200 p-3 dark:border-slate-800'>
+    <div className='flex h-full min-w-0 bg-slate-100 dark:bg-slate-950'>
+      <aside className='w-24 shrink-0 overflow-auto border-r border-slate-200 p-2 dark:border-slate-800 sm:w-32 sm:p-3'>
         <div className='space-y-2'>
           {slides.map((slide, index) => (
             <button
@@ -89,12 +89,15 @@ export const PptxRenderer: React.FC<PptxRendererProps> = ({ config }) => {
 
       <main className='flex min-w-0 flex-1 flex-col'>
         <div className='flex items-center justify-between border-b border-slate-200 px-4 py-2 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400'>
-          <span>{config.title}</span>
-          <span>
+          <span className='min-w-0 truncate'>{config.title}</span>
+          <span className='shrink-0 pl-2'>
             Slide {activeIndex + 1} of {slides.length}
           </span>
         </div>
-        <div ref={previewRef} className='flex-1 overflow-auto p-6'>
+        <div
+          ref={previewRef}
+          className='min-h-0 flex-1 overflow-auto p-3 sm:p-6'
+        >
           <div className='flex min-h-full min-w-full items-center justify-center'>
             <div
               style={{

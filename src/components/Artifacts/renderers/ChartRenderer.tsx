@@ -276,13 +276,16 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
   }
 
   return (
-    <div className='flex h-full flex-col p-4' data-artifact-chart-export>
+    <div
+      className='flex h-full min-w-0 flex-col p-4'
+      data-artifact-chart-export
+    >
       {title && (
         <h3 className='mb-4 text-center text-lg font-semibold text-gray-900 dark:text-white'>
           {title}
         </h3>
       )}
-      <div className='flex-1'>
+      <div className='min-h-0 min-w-0 flex-1'>
         <ResponsiveContainer width='100%' height='100%'>
           {renderChart()}
         </ResponsiveContainer>

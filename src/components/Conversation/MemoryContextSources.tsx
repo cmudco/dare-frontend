@@ -14,7 +14,7 @@ const MemoryContextSources: React.FC<MemoryContextSourcesProps> = ({
   if (!items || items.length === 0) return null
 
   return (
-    <div className='mt-2 w-full max-w-[95%] pl-10'>
+    <div className='mt-2 w-full min-w-0 max-w-[95%] pl-0 sm:pl-10'>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className='flex items-center text-sm text-muted-foreground hover:text-foreground'
@@ -35,8 +35,8 @@ const MemoryContextSources: React.FC<MemoryContextSourcesProps> = ({
               key={index}
               className='rounded-lg border border-border bg-muted/50 p-3'
             >
-              <div className='flex items-start justify-between gap-2'>
-                <p className='line-clamp-3 flex-1 text-sm text-foreground'>
+              <div className='flex min-w-0 flex-wrap items-start justify-between gap-2'>
+                <p className='line-clamp-3 min-w-0 flex-1 text-sm text-foreground'>
                   {item.content}
                 </p>
                 {item.memoryType && (

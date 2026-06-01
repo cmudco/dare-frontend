@@ -214,7 +214,7 @@ const ConversationFileSelect: React.FC = () => {
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className='w-[500px] border border-border bg-popover p-4'
+          className='w-[min(500px,calc(100vw-2rem))] border border-border bg-popover p-4'
           align='start'
           side='top'
           sideOffset={8}

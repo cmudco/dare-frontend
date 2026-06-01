@@ -44,7 +44,7 @@ export const SandpackRenderer: React.FC<SandpackRendererProps> = ({
   title: _title, // eslint-disable-line @typescript-eslint/no-unused-vars
 }) => {
   return (
-    <div className='relative h-full w-full' style={{ minHeight: '100%' }}>
+    <div className='relative h-full min-w-0' style={{ minHeight: '100%' }}>
       <style>{`
         .sp-wrapper { height: 100% !important; }
         .sp-layout { height: 100% !important; border: none !important; }
@@ -72,7 +72,7 @@ export const SandpackRenderer: React.FC<SandpackRendererProps> = ({
         }}
       >
         <LoadingOverlay />
-        <div className='h-full w-full'>
+        <div className='h-full min-w-0'>
           <SandpackPreview
             showNavigator={false}
             showOpenInCodeSandbox={false}
