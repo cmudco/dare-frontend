@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/redux/store'
 import { FeedbackWidget } from '@/components/Feedback'
@@ -35,6 +35,7 @@ import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
 import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
 import MemoryScreen from '@/pages/Memory'
 import LandingPage from '../pages/Landing/LandingPage'
+import AboutPage from '../pages/About/AboutPage'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 const AppRoutes = () => {
@@ -91,6 +92,15 @@ const AppRoutes = () => {
 
           {/* Public marketing landing page */}
           <Route path='/' element={<LandingPage />} />
+
+          {/* Public unified about page (mission + repositories + team) */}
+          <Route path='/about' element={<AboutPage />} />
+
+          {/* Repositories now live in a section of the about page */}
+          <Route
+            path='/repositories'
+            element={<Navigate to='/about#repositories' replace />}
+          />
 
           {/* Protected console — pathless layout route wrapping the app */}
           <Route
