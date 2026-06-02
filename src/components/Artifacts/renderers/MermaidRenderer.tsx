@@ -129,7 +129,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
   return (
     <div
       ref={containerRef}
-      className='group relative h-full overflow-hidden bg-white dark:bg-gray-900'
+      className='group relative h-full min-w-0 overflow-hidden bg-white dark:bg-gray-900'
     >
       <TransformWrapper
         initialScale={1}

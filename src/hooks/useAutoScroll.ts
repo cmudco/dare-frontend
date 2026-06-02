@@ -85,17 +85,25 @@ export function useAutoScroll(): UseAutoScrollReturn {
     [isAtBottom]
   )
 
-  // Attach wheel event listener
+  const handleScroll = useCallback(() => {
+    const atBottom = isAtBottom()
+    userScrolledUpRef.current = !atBottom
+    setShowScrollButton(!atBottom)
+  }, [isAtBottom])
+
+  // Attach scroll listeners
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
     container.addEventListener('wheel', handleWheel, { passive: true })
+    container.addEventListener('scroll', handleScroll, { passive: true })
 
     return () => {
       container.removeEventListener('wheel', handleWheel)
+      container.removeEventListener('scroll', handleScroll)
     }
-  }, [handleWheel])
+  }, [handleScroll, handleWheel])
 
   return {
     containerRef,

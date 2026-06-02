@@ -162,7 +162,7 @@ const ConversationReferenceSelect: React.FC = () => {
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className='w-[430px] border border-border bg-popover p-4'>
+        <PopoverContent className='w-[min(430px,calc(100vw-2rem))] border border-border bg-popover p-4'>
           <div className='space-y-4'>
             <div className='flex items-center justify-between'>
               <h3 className='text-lg font-semibold text-foreground'>

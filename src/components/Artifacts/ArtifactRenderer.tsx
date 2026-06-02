@@ -61,7 +61,7 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
 
     case 'code':
       return (
-        <div className='h-full overflow-auto p-4'>
+        <div className='h-full min-w-0 overflow-auto p-4'>
           <SyntaxHighlighter
             language={(artifact.metadata?.language as string) || 'text'}
             style={oneDark}
@@ -80,8 +80,8 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
 
     case 'document':
       return (
-        <div className='h-full overflow-auto p-6'>
-          <div className='prose prose-sm max-w-none dark:prose-invert'>
+        <div className='h-full min-w-0 overflow-auto p-4 sm:p-6'>
+          <div className='prose prose-sm max-w-none break-words dark:prose-invert prose-table:block prose-table:overflow-x-auto'>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {artifact.content}
             </ReactMarkdown>
@@ -91,7 +91,7 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
 
     case 'image':
       return (
-        <div className='flex h-full items-center justify-center p-4'>
+        <div className='flex h-full min-w-0 items-center justify-center overflow-auto p-4'>
           <img
             src={artifact.content}
             alt={artifact.title}

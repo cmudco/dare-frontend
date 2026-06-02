@@ -233,12 +233,12 @@ const Message: React.FC<MessageProps> = ({
 
   return (
     <div
-      className={`flex flex-col px-5 ${
+      className={`flex min-w-0 flex-col px-3 sm:px-5 ${
         isSenderMessage(message) ? 'items-end' : 'items-start'
       } group mb-4`}
     >
       <div
-        className={`flex w-full max-w-[100%] ${
+        className={`flex w-full min-w-0 max-w-[100%] ${
           isSenderMessage(message) ? 'justify-end' : 'justify-start'
         } items-start`}
       >
@@ -249,7 +249,7 @@ const Message: React.FC<MessageProps> = ({
         )}
 
         {isSenderMessage(message) && !message.streaming && !isReadOnly && (
-          <div className='mr-2 mt-2 flex flex-shrink-0 items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
+          <div className='mr-2 mt-2 hidden flex-shrink-0 flex-wrap items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 sm:flex'>
             <button
               className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
                 copiedUserMessage
@@ -314,7 +314,7 @@ const Message: React.FC<MessageProps> = ({
         )}
 
         <div
-          className={`relative mb-2 max-w-[95%] text-wrap rounded-xl px-5 py-3 ${
+          className={`relative mb-2 min-w-0 max-w-[95%] text-wrap rounded-xl px-4 py-3 sm:px-5 ${
             isSenderMessage(message)
               ? 'border border-blue-200 bg-blue-50 dark:border-blue-800/30 dark:bg-blue-900/20'
               : 'border border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-800'
@@ -559,7 +559,7 @@ const Message: React.FC<MessageProps> = ({
       </div>
 
       {!isSenderMessage(message) && !message.streaming && !isReadOnly && (
-        <div className='flex w-full max-w-[95%] pl-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
+        <div className='flex w-full max-w-[95%] flex-wrap gap-x-1 pl-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100 sm:pl-10'>
           <button
             className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
             onClick={handleRegenerate}
@@ -674,11 +674,7 @@ const Message: React.FC<MessageProps> = ({
       {!isSenderMessage(message) &&
         !message.streaming &&
         (message.llm || message.litellmModelName) && (
-          <div
-            className={`mt-1 text-xs text-muted-foreground ${
-              isSenderMessage(message) ? 'text-right' : 'pl-10 text-left'
-            }`}
-          >
+          <div className='mt-1 pl-0 text-left text-xs text-muted-foreground sm:pl-10'>
             <span>{llmName}</span>
             {message.cost && (
               <span className='ml-2 font-medium text-green-600'>
@@ -692,7 +688,7 @@ const Message: React.FC<MessageProps> = ({
         !message.streaming &&
         message.snippets &&
         message.snippets.length > 0 && (
-          <div className='mt-2 w-full max-w-[95%] pl-10'>
+          <div className='mt-2 w-full min-w-0 max-w-[95%] pl-0 sm:pl-10'>
             <button
               onClick={toggleSnippets}
               className='flex items-center text-sm text-muted-foreground hover:text-foreground'
@@ -715,12 +711,12 @@ const Message: React.FC<MessageProps> = ({
                       key={snippet.id}
                       className='rounded-r-lg border-l-4 border-border bg-muted p-3 pl-4'
                     >
-                      <div className='mb-1 flex items-center justify-between'>
-                        <span className='text-sm font-medium text-foreground'>
+                      <div className='mb-1 flex flex-wrap items-center justify-between gap-1'>
+                        <span className='min-w-0 break-words text-sm font-medium text-foreground'>
                           From {snippet.file.name} (Score:{' '}
                           {snippet.similarityScore.toFixed(2)})
                         </span>
-                        <span className='text-xs text-muted-foreground'>
+                        <span className='shrink-0 text-xs text-muted-foreground'>
                           {snippet.vectorDbSource ? (
                             <>
                               <span className='font-medium'>
@@ -764,7 +760,7 @@ const Message: React.FC<MessageProps> = ({
         !message.streaming &&
         message.mcpToolCalls &&
         message.mcpToolCalls.length > 0 && (
-          <div className='mt-2 max-w-[95%] pl-10'>
+          <div className='mt-2 w-full min-w-0 max-w-[95%] pl-0 sm:pl-10'>
             <ToolCallIndicator toolCalls={message.mcpToolCalls} />
           </div>
         )}

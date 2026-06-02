@@ -317,7 +317,7 @@ const ActiveConversation: React.FC = () => {
   return (
     <>
       <CreditErrorAlert />
-      <div className='flex h-full min-h-0 min-w-0 flex-1'>
+      <div className='relative flex h-full min-h-0 min-w-0 flex-1 overflow-hidden'>
         <Card
           className='dark:bg-dark-gradient relative flex min-h-0 min-w-0 flex-1 flex-col justify-end rounded-none border-none'
           onDragEnter={handleDragEnter}
@@ -326,7 +326,7 @@ const ActiveConversation: React.FC = () => {
           onDrop={handleDrop}
         >
           <ImageDropOverlay isVisible={isDragging} />
-          <div className='flex min-h-0 flex-1 flex-col justify-between'>
+          <div className='flex min-h-0 min-w-0 flex-1 flex-col justify-between'>
             {!activeConversation && <NewConversation />}
             {activeConversation && conversationHistory.length === 0 && (
               <EmptyConversation />
@@ -339,7 +339,7 @@ const ActiveConversation: React.FC = () => {
                 userJustSentMessage={userJustSentMessage}
               />
             )}
-            <div className='flex flex-col items-center justify-center'>
+            <div className='flex w-full shrink-0 flex-col items-center justify-center px-3 pb-2 sm:px-4'>
               {/* Read-only banner for shared conversations */}
               {enableSharing &&
                 activeConversation &&

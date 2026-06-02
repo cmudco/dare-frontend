@@ -85,7 +85,7 @@ const renderPreviewBlock = (
       return (
         <p
           key={`docx-paragraph-${index}`}
-          className={`${previewAlignmentClassNames[alignment]} leading-7 ${textSecondary}`}
+          className={`${previewAlignmentClassNames[alignment]} break-words leading-7 ${textSecondary}`}
         >
           {block.text}
         </p>
@@ -127,9 +127,9 @@ const renderPreviewBlock = (
       return (
         <div
           key={`docx-table-${index}`}
-          className={`overflow-hidden rounded-lg border ${borderLight}`}
+          className={`overflow-x-auto rounded-lg border ${borderLight}`}
         >
-          <table className='w-full border-collapse text-left text-sm'>
+          <table className='min-w-full border-collapse text-left text-sm'>
             <thead className={bgSubtle}>
               <tr>
                 {block.headers.map((header, headerIndex) => (
@@ -426,10 +426,10 @@ export const generateDocxBlob = async (
 
 export const DocxRenderer: React.FC<DocxRendererProps> = ({ config }) => {
   return (
-    <div className='h-full overflow-auto bg-slate-100 p-6 dark:bg-slate-900'>
-      <div className='mx-auto flex max-w-3xl flex-col gap-5 rounded-sm bg-white p-10 shadow-lg dark:bg-slate-800 dark:shadow-slate-950/50'>
+    <div className='h-full min-w-0 overflow-auto bg-slate-100 p-3 dark:bg-slate-900 sm:p-6'>
+      <div className='mx-auto flex max-w-3xl flex-col gap-5 rounded-sm bg-white p-5 shadow-lg dark:bg-slate-800 dark:shadow-slate-950/50 sm:p-10'>
         <h1
-          className={`border-b pb-4 text-4xl font-bold ${borderLight} ${textPrimary}`}
+          className={`break-words border-b pb-4 text-2xl font-bold sm:text-4xl ${borderLight} ${textPrimary}`}
         >
           {config.title}
         </h1>

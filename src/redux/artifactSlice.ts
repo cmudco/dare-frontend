@@ -1,4 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import {
+  ARTIFACT_SIDECAR_MAX_WIDTH,
+  ARTIFACT_SIDECAR_MIN_WIDTH,
+} from '@/utils/constants/layout'
 import type { Artifact, ArtifactType } from './types/artifact'
 import { initialArtifactState } from './types/artifact'
 
@@ -34,7 +38,10 @@ export const artifactSlice = createSlice({
     },
 
     setSidecarWidth(state, action: PayloadAction<number>) {
-      state.sidecarWidth = Math.min(Math.max(action.payload, 520), 1200)
+      state.sidecarWidth = Math.min(
+        Math.max(action.payload, ARTIFACT_SIDECAR_MIN_WIDTH),
+        ARTIFACT_SIDECAR_MAX_WIDTH
+      )
     },
 
     setSidecarFullscreen(state, action: PayloadAction<boolean>) {

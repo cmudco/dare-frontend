@@ -4,7 +4,6 @@ import { ChevronDown } from 'lucide-react'
 import { RootState } from '../../redux/store'
 import Message from './Message'
 import { useAutoScroll } from '../../hooks/useAutoScroll'
-import { cn } from '@/lib/utils'
 
 interface MessageListProps {
   onEditMessage?: (id: string, content: string) => void
@@ -21,9 +20,6 @@ const MessageList = ({
 }: MessageListProps) => {
   const messages = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages
-  )
-  const historySidebarCollapsed = useSelector(
-    (state: RootState) => state.conversation.historySidebarCollapsed
   )
 
   const {
@@ -70,37 +66,36 @@ const MessageList = ({
   }, [scrollToBottom, isStreaming])
 
   return (
-    <div
-      ref={containerRef}
-      className='flex max-h-[90%] flex-col gap-2 overflow-y-auto pt-2'
-    >
-      {messages.map((message, idx) => {
-        const isLastMessage = idx === messages.length - 1
+    <div className='relative min-h-0 flex-1'>
+      <div
+        ref={containerRef}
+        className='flex h-full min-w-0 flex-col gap-2 overflow-y-auto pt-2'
+      >
+        {messages.map((message, idx) => {
+          const isLastMessage = idx === messages.length - 1
 
-        return (
-          message && (
-            <Message
-              key={message.id || idx}
-              message={message}
-              onEditMessage={onEditMessage}
-              onContentRendered={handleContentRendered}
-              shouldShowAutoFeedback={
-                shouldShowAutoFeedbackModal && isLastMessage
-              }
-            />
+          return (
+            message && (
+              <Message
+                key={message.id || idx}
+                message={message}
+                onEditMessage={onEditMessage}
+                onContentRendered={handleContentRendered}
+                shouldShowAutoFeedback={
+                  shouldShowAutoFeedbackModal && isLastMessage
+                }
+              />
+            )
           )
-        )
-      })}
-      <div ref={anchorRef} />
+        })}
+        <div ref={anchorRef} />
+      </div>
 
       {/* Scroll to bottom button */}
       {showScrollButton && (
         <button
           onClick={handleScrollToBottomClick}
-          className={cn(
-            'fixed bottom-32 z-50 h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl',
-            historySidebarCollapsed ? 'right-20' : 'right-[300px]'
-          )}
+          className='absolute bottom-4 right-4 z-30 h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl'
           aria-label='Scroll to bottom'
         >
           <ChevronDown className='mx-auto h-5 w-5' />

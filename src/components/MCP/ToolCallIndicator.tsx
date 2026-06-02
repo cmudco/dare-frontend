@@ -163,15 +163,15 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
                 key={tc.id}
                 className='rounded-md bg-white p-2 dark:bg-gray-900'
               >
-                <div className='flex items-center gap-2'>
+                <div className='flex min-w-0 flex-wrap items-center gap-2'>
                   {getStatusIcon(tc.status)}
-                  <span className='flex items-center gap-1.5'>
+                  <span className='flex min-w-0 flex-wrap items-center gap-1.5'>
                     <MCPServerLogo slug={tc.serverSlug} size={16} />
                     <span className='font-medium text-primary'>
                       {tc.serverSlug}
                     </span>
                     <span className='text-gray-400'>→</span>
-                    <span className='font-mono text-gray-700 dark:text-gray-200'>
+                    <span className='min-w-0 break-all font-mono text-gray-700 dark:text-gray-200'>
                       {tc.toolName}
                     </span>
                   </span>
