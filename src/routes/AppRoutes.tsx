@@ -36,6 +36,9 @@ import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
 import MemoryScreen from '@/pages/Memory'
 import LandingPage from '../pages/Landing/LandingPage'
 import AboutPage from '../pages/About/AboutPage'
+import ResearchProjects from '../pages/Research/ResearchProjects'
+import ResearchWorkspace from '../pages/Research/ResearchWorkspace'
+import CreateProject from '../pages/Research/CreateProject'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 const AppRoutes = () => {
@@ -102,6 +105,34 @@ const AppRoutes = () => {
             element={<Navigate to='/about#repositories' replace />}
           />
 
+          {/* Research project create/edit wizard — full canvas */}
+          <Route
+            path='/research/new'
+            element={
+              <ProtectedRoute>
+                <CreateProject />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/research/:projectId/edit'
+            element={
+              <ProtectedRoute>
+                <CreateProject />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Research workspace detail — full canvas (no header/sidebar) */}
+          <Route
+            path='/research/:projectId'
+            element={
+              <ProtectedRoute>
+                <ResearchWorkspace />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Protected console — pathless layout route wrapping the app */}
           <Route
             element={
@@ -116,6 +147,7 @@ const AppRoutes = () => {
             <Route path='/files' element={<Files />} />
             <Route path='/prompts' element={<Prompt />} />
             <Route path='/agents' element={<Agents />} />
+            <Route path='/research' element={<ResearchProjects />} />
             <Route path='/workflows' element={<Workflows />} />
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />

@@ -8,10 +8,12 @@ import {
   Cog8ToothIcon,
   CreditCardIcon,
   AcademicCapIcon,
+  BeakerIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
+import { useCanAccessResearch } from '@/hooks/useCanAccessResearch'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   openConversationTour,
@@ -121,6 +123,7 @@ const Sidebar = () => {
   )
   const enableMcp = useFeatureFlag('enableMcp')
   const enableMemory = useFeatureFlag('enableMemory')
+  const canAccessResearch = useCanAccessResearch()
 
   const handleStartTutorial = useCallback(() => {
     const pageKey = getTourPageKeyFromPath(location.pathname)
@@ -162,6 +165,9 @@ const Sidebar = () => {
     { name: 'Prompts', icon: PromptsIcon, path: '/prompts' },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
     { name: 'Agents', icon: AgentsIcon, path: '/agents' },
+    ...(canAccessResearch
+      ? [{ name: 'Research', icon: BeakerIcon, path: '/research' }]
+      : []),
     ...(enableMcp
       ? [{ name: 'Integrations', icon: IntegrationsIcon, path: '/mcp' }]
       : []),
