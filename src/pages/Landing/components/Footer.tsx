@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { Logo } from '@/components/Logo'
 import { Container } from './primitives'
 import { LINKS } from '../links'
@@ -16,7 +17,8 @@ const COLUMNS = [
   {
     heading: 'Build',
     links: [
-      { label: 'Repository', href: LINKS.repository, external: true },
+      { label: 'Repositories', href: '/about#repositories', internal: true },
+      { label: 'GitHub org', href: LINKS.repository, external: true },
       { label: 'Deployment guide', href: LINKS.deploymentGuide },
       { label: 'Architecture', href: LINKS.architecture },
       { label: 'Contributing', href: LINKS.contributing },
@@ -25,6 +27,7 @@ const COLUMNS = [
   {
     heading: 'OFAI',
     links: [
+      { label: 'About', href: '/about', internal: true },
       { label: 'Become a partner', href: LINKS.partner },
       { label: 'Contact us', href: LINKS.contact },
     ],
@@ -61,20 +64,29 @@ export const Footer: React.FC = () => {
                 <ul className='mt-4 space-y-3'>
                   {col.links.map((l) => (
                     <li key={l.label}>
-                      <a
-                        href={l.href}
-                        target={
-                          'external' in l && l.external ? '_blank' : undefined
-                        }
-                        rel={
-                          'external' in l && l.external
-                            ? 'noreferrer'
-                            : undefined
-                        }
-                        className='text-sm text-foreground/80 transition-colors hover:text-dare'
-                      >
-                        {l.label}
-                      </a>
+                      {'internal' in l && l.internal ? (
+                        <Link
+                          to={l.href}
+                          className='text-sm text-foreground/80 transition-colors hover:text-dare'
+                        >
+                          {l.label}
+                        </Link>
+                      ) : (
+                        <a
+                          href={l.href}
+                          target={
+                            'external' in l && l.external ? '_blank' : undefined
+                          }
+                          rel={
+                            'external' in l && l.external
+                              ? 'noreferrer'
+                              : undefined
+                          }
+                          className='text-sm text-foreground/80 transition-colors hover:text-dare'
+                        >
+                          {l.label}
+                        </a>
+                      )}
                     </li>
                   ))}
                 </ul>

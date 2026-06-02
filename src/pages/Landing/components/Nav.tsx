@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Moon, Sun, Menu, X, Github } from 'lucide-react'
 import { AppDispatch, RootState } from '@/redux/store'
 import { toggleDarkMode } from '@/redux/themeSlice'
@@ -10,10 +10,8 @@ import { Container } from './primitives'
 import { LINKS } from '../links'
 
 const NAV_LINKS = [
-  { label: 'Principles', href: '#principles' },
-  { label: 'Platform', href: '#platform' },
-  { label: 'Audiences', href: '#audiences' },
-  { label: 'Adoption', href: '#adoption' },
+  { label: 'Home', to: '/' },
+  { label: 'About', to: '/about' },
 ]
 
 export const Nav: React.FC = () => {
@@ -41,20 +39,20 @@ export const Nav: React.FC = () => {
     >
       <Container className='flex h-16 items-center justify-between'>
         {/* Brand lockup */}
-        <a href='#top' className='flex items-center' aria-label='DARE — home'>
+        <Link to='/' className='flex items-center' aria-label='DARE — home'>
           <Logo size='sm' showTagline />
-        </a>
+        </Link>
 
         {/* Desktop nav */}
         <nav className='hidden items-center gap-9 md:flex'>
           {NAV_LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
+            <Link
+              key={l.to}
+              to={l.to}
               className='text-sm font-medium text-muted-foreground transition-colors hover:text-foreground'
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -108,14 +106,14 @@ export const Nav: React.FC = () => {
         <div className='border-t border-border bg-background md:hidden'>
           <Container className='flex flex-col gap-1 py-4'>
             {NAV_LINKS.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
+              <Link
+                key={l.to}
+                to={l.to}
                 onClick={() => setMobileOpen(false)}
                 className='rounded-lg px-2 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
               >
                 {l.label}
-              </a>
+              </Link>
             ))}
             <button
               onClick={() => {
