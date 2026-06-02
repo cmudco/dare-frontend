@@ -51,6 +51,7 @@ export const TEAM_GROUPS: TeamGroup[] = [
   {
     label: 'Team',
     members: [
+      { name: 'Sayeed Choudhury', role: 'Contributor', socials: [] },
       { name: 'Muhammad Abdurrehman', role: 'Team Lead', socials: [] },
       { name: 'Brian Wingenroth', role: 'Developer', socials: [] },
       { name: 'Farhat Abbas', role: 'Developer', socials: [] },
