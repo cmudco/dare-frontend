@@ -1,9 +1,26 @@
 import { useState } from 'react'
 import { ChevronRight, FileText, ScrollText } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ACTIVE_TOOLS, MEMORY, PROJECT, SOUL_FILE } from '../mockData'
+import { RESEARCH_TOOLS, ResearchTool } from '@/utils/constants/research'
 
-const ContextPanel = () => {
+interface ContextPanelProps {
+  projectQuestion?: string
+  enabledTools: ResearchTool[]
+  sourceCount: number
+  activeSoulFileTitle?: string
+  activeSoulFileVersionNumber?: number | null
+}
+
+const toolName = (key: ResearchTool): string =>
+  RESEARCH_TOOLS.find((tool) => tool.key === key)?.name ?? key
+
+const ContextPanel = ({
+  projectQuestion,
+  enabledTools,
+  sourceCount,
+  activeSoulFileTitle,
+  activeSoulFileVersionNumber,
+}: ContextPanelProps) => {
   const [open, setOpen] = useState(true)
 
   return (
@@ -31,34 +48,31 @@ const ContextPanel = () => {
           <div className='space-y-5 border-t border-border p-4'>
             <Block label='Active question'>
               <p className='text-sm leading-relaxed text-foreground/80'>
-                {PROJECT.question}
+                {projectQuestion || 'No research question loaded yet.'}
               </p>
             </Block>
 
             <Block label='Active tools'>
               <div className='flex flex-wrap gap-1.5'>
-                {ACTIVE_TOOLS.map((t) => (
+                {enabledTools.map((tool) => (
                   <span
-                    key={t}
+                    key={tool}
                     className='inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-xs'
                   >
                     <span className='h-1.5 w-1.5 rounded-full bg-green-500' />
-                    {t}
+                    {toolName(tool)}
                   </span>
                 ))}
               </div>
             </Block>
 
-            <Block label='Active memory'>
-              <div className='space-y-2'>
-                {MEMORY.map((m) => (
-                  <div key={m.id} className='rounded-lg bg-muted/40 p-2.5'>
-                    <p className='text-xs font-medium'>{m.label}</p>
-                    <p className='mt-0.5 text-xs text-muted-foreground'>
-                      {m.detail}
-                    </p>
-                  </div>
-                ))}
+            <Block label='Project sources'>
+              <div className='rounded-lg bg-muted/40 p-2.5'>
+                <p className='text-xs font-medium'>{sourceCount} records</p>
+                <p className='mt-0.5 text-xs text-muted-foreground'>
+                  Source records are persisted now. File content ingestion and
+                  agent-readable context come later.
+                </p>
               </div>
             </Block>
 
@@ -70,25 +84,18 @@ const ContextPanel = () => {
                 <div className='mb-2 flex items-center justify-between'>
                   <span className='text-xs font-medium'>Soul file</span>
                   <span className='rounded bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground'>
-                    {SOUL_FILE.version} · {SOUL_FILE.updated}
+                    {activeSoulFileVersionNumber
+                      ? `v${activeSoulFileVersionNumber}`
+                      : 'Not selected'}
                   </span>
                 </div>
-                <ul className='space-y-1.5'>
-                  {SOUL_FILE.virtues.map((v) => (
-                    <li key={v.rank} className='flex gap-2 text-xs'>
-                      <span className='text-muted-foreground'>{v.rank}.</span>
-                      <span>
-                        <span className='font-medium'>{v.label}</span>
-                        <span className='block text-muted-foreground'>
-                          {v.note}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <button className='mt-3 flex items-center gap-1 text-xs text-primary hover:underline'>
-                  <FileText className='h-3 w-3' /> View full soul file
-                </button>
+                <p className='text-xs text-muted-foreground'>
+                  {activeSoulFileTitle ||
+                    'Create or select a soul file from Memory / Context.'}
+                </p>
+                <span className='mt-3 flex items-center gap-1 text-xs text-muted-foreground'>
+                  <FileText className='h-3 w-3' /> Versioned standards active
+                </span>
               </div>
             </Block>
           </div>

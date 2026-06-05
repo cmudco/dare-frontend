@@ -4,15 +4,21 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
-  addResearchProject,
-  updateResearchProject,
-} from '@/redux/researchSlice'
+  createResearchProjectWithSources,
+  getResearchProjects,
+  updateResearchProjectWithSources,
+} from '@/redux/asyncThunks/research'
 import {
-  ResearchProjectStatus,
+  ResearchSourceKind,
   ResearchTool,
   StandardsTemplate,
 } from '@/utils/constants/research'
-import type { ProjectDraft, ResearchProject } from '@/redux/types/research'
+import type {
+  ProjectDraft,
+  ProjectDraftFile,
+  ResearchProject,
+  ResearchSourceDraft,
+} from '@/redux/types/research'
 import DefineStep from './DefineStep'
 import SourcesStep from './SourcesStep'
 import ToolsStep from './ToolsStep'
@@ -42,29 +48,61 @@ const buildInitialDraft = (project?: ResearchProject): ProjectDraft => ({
     project?.standardsTemplate ?? StandardsTemplate.RESEARCH_ETHICS,
 })
 
+const buildSourceDrafts = (files: ProjectDraftFile[]): ResearchSourceDraft[] =>
+  files.map((file) => ({
+    kind: ResearchSourceKind.FILE,
+    title: file.name,
+    notes: `Added during project setup as ${file.kind} (${file.sizeLabel}).`,
+  }))
+
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error)
+
 const CreateProject = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { projectId } = useParams<{ projectId: string }>()
-  const isEditing = Boolean(projectId)
+  const parsedProjectId = projectId ? Number(projectId) : undefined
+  const projectIdNumber =
+    typeof parsedProjectId === 'number' && Number.isFinite(parsedProjectId)
+      ? parsedProjectId
+      : undefined
+  const isEditing = typeof projectIdNumber === 'number'
   const editingProject = useAppSelector((state) =>
-    projectId
-      ? state.research.projects.find((p) => p.id === projectId)
+    typeof projectIdNumber === 'number'
+      ? state.research.projects.find((p) => p.id === projectIdNumber)
       : undefined
   )
+  const hasLoadedProjects = useAppSelector(
+    (state) => state.research.hasLoadedProjects
+  )
+  const isSaving = useAppSelector((state) => state.research.isSaving)
 
   const [draft, setDraft] = useState<ProjectDraft>(() =>
     buildInitialDraft(editingProject)
   )
   const [activeIndex, setActiveIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!hasLoadedProjects) {
+      dispatch(getResearchProjects())
+    }
+  }, [dispatch, hasLoadedProjects])
+
+  useEffect(() => {
+    if (editingProject) {
+      setDraft(buildInitialDraft(editingProject))
+    }
+  }, [editingProject])
 
   // Editing an unknown project id → return to the list.
   useEffect(() => {
-    if (isEditing && !editingProject) {
+    if (isEditing && hasLoadedProjects && !editingProject) {
       navigate('/research', { replace: true })
     }
-  }, [isEditing, editingProject, navigate])
+  }, [isEditing, hasLoadedProjects, editingProject, navigate])
 
   const patch = (p: Partial<ProjectDraft>) =>
     setDraft((prev) => ({ ...prev, ...p }))
@@ -77,41 +115,41 @@ const CreateProject = () => {
     setFurthestIndex((furthest) => Math.max(furthest, index))
   }
 
-  const handleSubmit = () => {
-    if (isEditing && editingProject) {
-      dispatch(
-        updateResearchProject({
-          ...editingProject,
-          title: draft.title.trim(),
-          question: draft.question.trim(),
-          field: draft.field.trim(),
-          enabledTools: draft.enabledTools,
-          standardsTemplate: draft.standardsTemplate,
-          sourceCount: editingProject.sourceCount + draft.files.length,
-          updatedAt: 'Updated just now',
-        })
-      )
-      navigate(`/research/${editingProject.id}`)
-      return
-    }
-
-    const id = crypto.randomUUID()
-    const project: ResearchProject = {
-      id,
+  const handleSubmit = async () => {
+    setSubmitError(null)
+    const project = {
       title: draft.title.trim(),
       question: draft.question.trim(),
       field: draft.field.trim(),
-      status: ResearchProjectStatus.ACTIVE,
       enabledTools: draft.enabledTools,
       standardsTemplate: draft.standardsTemplate,
-      pendingReviewCount: 0,
-      approvedCount: 0,
-      sourceCount: draft.files.length,
-      updatedAt: 'Created just now',
-      createdAt: 'Created just now',
     }
-    dispatch(addResearchProject(project))
-    navigate(`/research/${id}`)
+    const sources = buildSourceDrafts(draft.files)
+
+    if (isEditing && editingProject) {
+      try {
+        const response = await dispatch(
+          updateResearchProjectWithSources({
+            id: editingProject.id,
+            project,
+            sources,
+          })
+        ).unwrap()
+        navigate(`/research/${response.project.id}`)
+      } catch (error) {
+        setSubmitError(errorMessage(error))
+      }
+      return
+    }
+
+    try {
+      const response = await dispatch(
+        createResearchProjectWithSources({ project, sources })
+      ).unwrap()
+      navigate(`/research/${response.project.id}`)
+    } catch (error) {
+      setSubmitError(errorMessage(error))
+    }
   }
 
   const handleContinue = () => {
@@ -199,16 +237,28 @@ const CreateProject = () => {
             <span className='text-xs text-muted-foreground'>
               Step {activeIndex + 1} of {STEPS.length}
             </span>
-            <Button onClick={handleContinue} disabled={!canContinue}>
+            <Button
+              onClick={handleContinue}
+              disabled={!canContinue || isSaving}
+            >
               {isLast
                 ? isEditing
-                  ? 'Save changes'
-                  : 'Create project'
+                  ? isSaving
+                    ? 'Saving...'
+                    : 'Save changes'
+                  : isSaving
+                    ? 'Creating...'
+                    : 'Create project'
                 : 'Continue'}
               {!isLast && <ArrowRight className='h-4 w-4' />}
             </Button>
           </div>
         </div>
+        {submitError && (
+          <p className='mx-auto w-full max-w-5xl px-6 pb-3 text-sm text-destructive lg:px-8'>
+            {submitError}
+          </p>
+        )}
       </footer>
     </div>
   )

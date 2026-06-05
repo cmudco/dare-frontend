@@ -1,14 +1,14 @@
 import {
   ArrowLeft,
+  Activity,
   BookMarked,
-  Brain,
   Compass,
   Inbox,
   Library,
+  ScrollText,
   Shapes,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { PROJECT } from '../mockData'
 import type { NavSection } from '../types'
 
 interface NavDef {
@@ -22,7 +22,8 @@ const NAV: NavDef[] = [
   { key: 'review', label: 'Review Inbox', icon: Inbox },
   { key: 'knowledge', label: 'Project Knowledge', icon: BookMarked },
   { key: 'sources', label: 'Sources', icon: Library },
-  { key: 'memory', label: 'Memory / Context', icon: Brain },
+  { key: 'runs', label: 'Run Logs', icon: Activity },
+  { key: 'memory', label: 'Soul Files', icon: ScrollText },
   { key: 'artifacts', label: 'Artifacts', icon: Shapes },
 ]
 
@@ -31,6 +32,7 @@ interface Props {
   onNavigate: (s: NavSection) => void
   pendingCount: number
   approvedCount: number
+  activeRunCount: number
   center: React.ReactNode
   context: React.ReactNode
   /** Overrides the demo project title (falls back to the mock project). */
@@ -46,6 +48,7 @@ const WorkspaceShell = ({
   onNavigate,
   pendingCount,
   approvedCount,
+  activeRunCount,
   center,
   context,
   projectTitle,
@@ -74,16 +77,20 @@ const WorkspaceShell = ({
               <span>Research Workspace</span>
             </div>
             <h1 className='mt-0.5 truncate text-lg font-semibold tracking-tight'>
-              {projectTitle ?? PROJECT.title}
+              {projectTitle ?? 'Research project'}
             </h1>
             <p className='truncate text-xs text-muted-foreground'>
-              {projectMeta ?? `${PROJECT.scholar} · ${PROJECT.field}`}
+              {projectMeta || 'Project details loading'}
             </p>
           </div>
 
           {/* Quiet status indicators — not a metrics wall */}
           <div className='flex items-center gap-5 text-sm'>
-            <Stat value='4' label='AI helpers' tone='neutral' />
+            <Stat
+              value={String(activeRunCount)}
+              label='live agents'
+              tone={activeRunCount > 0 ? 'attention' : 'neutral'}
+            />
             <Stat
               value={String(pendingCount)}
               label='to review'

@@ -1,10 +1,14 @@
 import { BookMarked, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import type { KnowledgeItem } from '../types'
-import { signalMeta, toolMeta } from './signals'
+import type { ResearchKnowledgeItem } from '@/redux/types/research'
+import { getSignalMeta, getToolLabel } from './signals'
 
-const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
+const displayYear = (year: number | null): string => {
+  return year ? String(year) : 'Year unknown'
+}
+
+const ProjectKnowledge = ({ items }: { items: ResearchKnowledgeItem[] }) => {
   return (
     <div className='space-y-6'>
       <header>
@@ -12,8 +16,8 @@ const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
           Project Knowledge
         </h2>
         <p className='mt-1 text-sm text-muted-foreground'>
-          Sources you have approved. Their rationale, confidence and provenance
-          travel with them.
+          Sources and claims you have approved. Their rationale, confidence and
+          provenance travel with them.
         </p>
       </header>
 
@@ -24,14 +28,14 @@ const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
           </div>
           <p className='text-sm font-medium'>Nothing approved yet</p>
           <p className='mt-1 max-w-xs text-sm text-muted-foreground'>
-            Approve a finding in the Review Inbox and it will become durable
-            knowledge here.
+            Approve a staged item in the Review Inbox and it will become durable
+            project knowledge here.
           </p>
         </div>
       ) : (
         <div className='space-y-3'>
           {items.map((item) => {
-            const signal = signalMeta[item.citationSignal]
+            const signal = getSignalMeta(item.evidenceLabel)
             return (
               <div
                 key={item.id}
@@ -46,35 +50,38 @@ const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
                   </Badge>
                   <span className='text-xs text-muted-foreground'>
                     {item.confidence}% confidence · via{' '}
-                    {toolMeta[item.toolSource]}
+                    {getToolLabel(item.provenance.tool)}
                   </span>
                 </div>
                 <h3 className='text-[15px] font-semibold leading-snug tracking-tight'>
                   {item.title}
                 </h3>
                 <p className='mt-0.5 text-xs text-muted-foreground'>
-                  {item.authors} · {item.venue} · {item.year}
+                  {item.authors || 'Unknown author'} ·{' '}
+                  {item.venue || 'Unknown venue'} · {displayYear(item.year)}
                 </p>
                 <p className='mt-2 text-sm text-foreground/80'>
-                  {item.rationale}
+                  {item.rationale || item.content || 'No rationale recorded.'}
                 </p>
                 <div className='mt-3 flex flex-wrap items-center gap-2'>
-                  {item.usedIn?.map((section) => (
-                    <span
-                      key={section}
-                      className='rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground'
-                    >
-                      {section}
+                  <span className='rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground'>
+                    Approved {new Date(item.approvedAt).toLocaleDateString()}
+                  </span>
+                  {item.soulFileTitle && (
+                    <span className='rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground'>
+                      {item.soulFileTitle} v{item.soulFileVersionNumber ?? 1}
                     </span>
-                  ))}
-                  <a
-                    href={item.url}
-                    target='_blank'
-                    rel='noreferrer'
-                    className='ml-auto inline-flex items-center gap-1 text-xs text-primary hover:underline'
-                  >
-                    Open <ExternalLink className='h-3 w-3' />
-                  </a>
+                  )}
+                  {item.url && (
+                    <a
+                      href={item.url}
+                      target='_blank'
+                      rel='noreferrer'
+                      className='ml-auto inline-flex items-center gap-1 text-xs text-primary hover:underline'
+                    >
+                      Open <ExternalLink className='h-3 w-3' />
+                    </a>
+                  )}
                 </div>
               </div>
             )

@@ -1,22 +1,29 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import ContextPanel from './components/ContextPanel'
 import OverviewPanel from './components/OverviewPanel'
 import ProjectKnowledge from './components/ProjectKnowledge'
 import ReviewInbox from './components/ReviewInbox'
-import {
-  ArtifactsView,
-  MemoryView,
-  SourcesView,
-} from './components/SecondaryViews'
+import RunLogsView from './components/RunLogsView'
+import { ArtifactsView, SourcesView } from './components/SecondaryViews'
+import SoulFilesView from './components/SoulFilesView'
 import WorkspaceShell from './components/WorkspaceShell'
-import { SCOUT_CANDIDATES, SEED_KNOWLEDGE } from './mockData'
-import { ResearchTool } from '@/utils/constants/research'
+import {
+  ResearchAgentRunStatus,
+  ResearchReviewStatus,
+  ResearchTool,
+} from '@/utils/constants/research'
 import type {
-  CriticVerdict,
-  KnowledgeItem,
-  NavSection,
-  ReviewItem,
-} from './types'
+  ResearchAgentRun,
+  ResearchKnowledgeItem,
+  ResearchProject,
+  ResearchSoulFile,
+  ResearchSoulFileDraft,
+  ResearchSoulFileTemplateMetadata,
+  ResearchSoulFileVersion,
+  ResearchSource,
+  ResearchStagingItem,
+} from '@/redux/types/research'
+import type { NavSection } from './types'
 
 const DEFAULT_TOOLS: ResearchTool[] = [
   ResearchTool.PUBMED,
@@ -29,83 +36,106 @@ interface ResearchWorkspaceViewProps {
   projectTitle?: string
   /** Secondary line under the title (e.g. the field of study). */
   projectMeta?: string
+  /** The project's current research question. */
+  projectQuestion?: string
+  pendingReviewCount?: number
+  approvedCount?: number
+  sourceCount?: number
   /** Tools the Scout composer offers (defaults to the demo set). */
   enabledTools?: ResearchTool[]
+  sources?: ResearchSource[]
+  stagingItems?: ResearchStagingItem[]
+  knowledgeItems?: ResearchKnowledgeItem[]
+  agentRuns?: ResearchAgentRun[]
+  soulFiles?: ResearchSoulFile[]
+  soulFileVersions?: ResearchSoulFileVersion[]
+  soulFileTemplates?: ResearchSoulFileTemplateMetadata[]
+  project?: ResearchProject
+  isReviewing?: boolean
+  isLoadingRuns?: boolean
+  isSavingSoulFile?: boolean
+  onStageSource?: (source: ResearchSource) => void
+  onRefreshAgentRuns?: () => void
+  onApproveStagingItem?: (id: number) => void
+  onRejectStagingItem?: (id: number) => void
+  onMarkStagingItemLater?: (id: number) => void
+  onRestoreStagingItem?: (id: number) => void
+  onCreateSoulFile?: (draft: ResearchSoulFileDraft) => void
+  onUpdateSoulFile?: (id: number, draft: ResearchSoulFileDraft) => void
+  onSelectSoulFile?: (soulFileId: number) => void
+  onLoadSoulFileVersions?: (soulFileId: number) => void
   /** When provided, the header shows a "back to projects" affordance. */
   onBack?: () => void
 }
 
-const criticFor = (item: ReviewItem): CriticVerdict =>
-  item.citationSignal === 'disputing'
-    ? {
-        outcome: 'flag',
-        reasoning:
-          'This source argues against your thesis. It is worth keeping to engage directly, but do not cite it as support.',
-      }
-    : item.confidence < 75
-      ? {
-          outcome: 'flag',
-          reasoning:
-            'Relevant but adjacent. Confirm it actually bears on your claim before relying on it.',
-        }
-      : {
-          outcome: 'pass',
-          reasoning:
-            'The cited passage genuinely supports the claim you would use it for. No overstatement detected.',
-        }
-
 const ResearchWorkspaceView = ({
   projectTitle,
   projectMeta,
+  projectQuestion,
+  pendingReviewCount = 0,
+  approvedCount = 0,
+  sourceCount = 0,
   enabledTools = DEFAULT_TOOLS,
+  sources = [],
+  stagingItems = [],
+  knowledgeItems = [],
+  agentRuns = [],
+  soulFiles = [],
+  soulFileVersions = [],
+  soulFileTemplates = [],
+  project,
+  isReviewing = false,
+  isLoadingRuns = false,
+  isSavingSoulFile = false,
+  onStageSource,
+  onRefreshAgentRuns,
+  onApproveStagingItem,
+  onRejectStagingItem,
+  onMarkStagingItemLater,
+  onRestoreStagingItem,
+  onCreateSoulFile,
+  onUpdateSoulFile,
+  onSelectSoulFile,
+  onLoadSoulFileVersions,
   onBack,
 }: ResearchWorkspaceViewProps) => {
   const [section, setSection] = useState<NavSection>('overview')
-  const [items, setItems] = useState<ReviewItem[]>([])
-  const [scoutRunning, setScoutRunning] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const pending = useMemo(
-    () => items.filter((i) => i.status === 'pending'),
-    [items]
+    () =>
+      stagingItems.filter(
+        (item) => item.status === ResearchReviewStatus.PENDING
+      ),
+    [stagingItems]
   )
   const later = useMemo(
-    () => items.filter((i) => i.status === 'later'),
-    [items]
+    () =>
+      stagingItems.filter((item) => item.status === ResearchReviewStatus.LATER),
+    [stagingItems]
   )
-  const knowledge: KnowledgeItem[] = useMemo(
-    () => [...items.filter((i) => i.status === 'approved'), ...SEED_KNOWLEDGE],
-    [items]
-  )
-
-  const setStatus = useCallback(
-    (id: string, status: ReviewItem['status']) =>
-      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i))),
-    []
-  )
-
-  const runScout = useCallback(() => {
-    if (scoutRunning) return
-    setScoutRunning(true)
-    // Simulate Scout doing bounded work, then staging its findings.
-    timer.current = setTimeout(() => {
-      setItems((prev) => {
-        const existing = new Set(prev.map((i) => i.id))
-        const fresh = SCOUT_CANDIDATES.filter((c) => !existing.has(c.id)).map(
-          (c) => ({ ...c, status: 'pending' as const })
-        )
-        return [...prev, ...fresh]
-      })
-      setScoutRunning(false)
-    }, 1600)
-  }, [scoutRunning])
-
-  const askCritic = useCallback(
-    (id: string) =>
-      setItems((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, critic: criticFor(i) } : i))
+  const rejected = useMemo(
+    () =>
+      stagingItems.filter(
+        (item) => item.status === ResearchReviewStatus.REJECTED
       ),
-    []
+    [stagingItems]
+  )
+  const stagedSourceIds = useMemo(
+    () =>
+      new Set(
+        stagingItems
+          .map((item) => item.source)
+          .filter((sourceId): sourceId is number => sourceId !== null)
+      ),
+    [stagingItems]
+  )
+  const activeRunCount = useMemo(
+    () =>
+      agentRuns.filter(
+        (run) =>
+          run.status === ResearchAgentRunStatus.QUEUED ||
+          run.status === ResearchAgentRunStatus.RUNNING
+      ).length,
+    [agentRuns]
   )
 
   const center = () => {
@@ -113,11 +143,13 @@ const ResearchWorkspaceView = ({
       case 'overview':
         return (
           <OverviewPanel
-            scoutRunning={scoutRunning}
-            pendingCount={pending.length}
-            approvedCount={knowledge.length}
+            projectQuestion={projectQuestion}
+            scoutRunning={false}
+            pendingCount={pendingReviewCount}
+            approvedCount={approvedCount}
             tools={enabledTools}
-            onRunScout={runScout}
+            isScoutAvailable={false}
+            onRunScout={() => undefined}
             onGoToReview={() => setSection('review')}
           />
         )
@@ -126,19 +158,47 @@ const ResearchWorkspaceView = ({
           <ReviewInbox
             pending={pending}
             later={later}
-            onApprove={(id) => setStatus(id, 'approved')}
-            onReject={(id) => setStatus(id, 'rejected')}
-            onLater={(id) => setStatus(id, 'later')}
-            onAskCritic={askCritic}
+            rejected={rejected}
+            onApprove={onApproveStagingItem ?? (() => undefined)}
+            onReject={onRejectStagingItem ?? (() => undefined)}
+            onLater={onMarkStagingItemLater ?? (() => undefined)}
+            onRestore={onRestoreStagingItem ?? (() => undefined)}
             onGoToOverview={() => setSection('overview')}
           />
         )
       case 'knowledge':
-        return <ProjectKnowledge items={knowledge} />
+        return <ProjectKnowledge items={knowledgeItems} />
       case 'sources':
-        return <SourcesView />
+        return (
+          <SourcesView
+            sources={sources}
+            stagedSourceIds={stagedSourceIds}
+            isReviewing={isReviewing}
+            onStageSource={onStageSource}
+          />
+        )
+      case 'runs':
+        return (
+          <RunLogsView
+            runs={agentRuns}
+            isLoading={isLoadingRuns}
+            onRefresh={onRefreshAgentRuns}
+          />
+        )
       case 'memory':
-        return <MemoryView />
+        return (
+          <SoulFilesView
+            project={project}
+            soulFiles={soulFiles}
+            soulFileVersions={soulFileVersions}
+            templates={soulFileTemplates}
+            isSaving={isSavingSoulFile}
+            onCreate={onCreateSoulFile ?? (() => undefined)}
+            onUpdate={onUpdateSoulFile ?? (() => undefined)}
+            onSelect={onSelectSoulFile ?? (() => undefined)}
+            onLoadVersions={onLoadSoulFileVersions ?? (() => undefined)}
+          />
+        )
       case 'artifacts':
         return <ArtifactsView />
     }
@@ -148,10 +208,19 @@ const ResearchWorkspaceView = ({
     <WorkspaceShell
       active={section}
       onNavigate={setSection}
-      pendingCount={pending.length}
-      approvedCount={knowledge.length}
+      pendingCount={pendingReviewCount}
+      approvedCount={approvedCount}
+      activeRunCount={activeRunCount}
       center={center()}
-      context={<ContextPanel />}
+      context={
+        <ContextPanel
+          projectQuestion={projectQuestion}
+          enabledTools={enabledTools}
+          sourceCount={sourceCount}
+          activeSoulFileTitle={project?.activeSoulFileTitle}
+          activeSoulFileVersionNumber={project?.activeSoulFileVersionNumber}
+        />
+      }
       projectTitle={projectTitle}
       projectMeta={projectMeta}
       onBack={onBack}

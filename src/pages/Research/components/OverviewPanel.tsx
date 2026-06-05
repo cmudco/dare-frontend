@@ -1,19 +1,20 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Check, Loader2, Sparkles } from 'lucide-react'
+import { ArrowRight, Check, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { RESEARCH_TOOLS, ResearchTool } from '@/utils/constants/research'
-import { PROJECT } from '../mockData'
 
 type ScoutDepth = 'quick' | 'deep'
 
 interface Props {
+  projectQuestion?: string
   scoutRunning: boolean
   pendingCount: number
   approvedCount: number
   tools: ResearchTool[]
+  isScoutAvailable: boolean
   onRunScout: () => void
   onGoToReview: () => void
 }
@@ -29,10 +30,12 @@ const toolName = (key: ResearchTool): string =>
   RESEARCH_TOOLS.find((t) => t.key === key)?.name ?? key
 
 const OverviewPanel = ({
+  projectQuestion,
   scoutRunning,
   pendingCount,
   approvedCount,
   tools,
+  isScoutAvailable,
   onRunScout,
   onGoToReview,
 }: Props) => {
@@ -68,7 +71,7 @@ const OverviewPanel = ({
           Research question
         </p>
         <h2 className='mt-2 max-w-2xl text-2xl font-semibold leading-snug tracking-tight'>
-          {PROJECT.question}
+          {projectQuestion || 'Open this project after it finishes loading.'}
         </h2>
       </header>
 
@@ -115,7 +118,6 @@ const OverviewPanel = ({
               className='space-y-2'
             >
               <p className='flex items-center gap-2 text-sm font-medium'>
-                <Loader2 className='h-4 w-4 animate-spin' />
                 Scout is searching {selectedNames || 'your sources'}…
               </p>
               {query.trim() && (
@@ -131,9 +133,16 @@ const OverviewPanel = ({
           ) : (
             <div className='space-y-4'>
               <div className='space-y-1.5'>
-                <label htmlFor='scout-query' className='text-sm font-medium'>
-                  Ask Scout
-                </label>
+                <div className='flex items-center justify-between gap-3'>
+                  <label htmlFor='scout-query' className='text-sm font-medium'>
+                    Ask Scout
+                  </label>
+                  {!isScoutAvailable && (
+                    <span className='rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground'>
+                      Hermes integration planned
+                    </span>
+                  )}
+                </div>
                 <Textarea
                   id='scout-query'
                   value={query}
@@ -185,12 +194,19 @@ const OverviewPanel = ({
 
                 <Button
                   onClick={onRunScout}
-                  disabled={!canRun}
+                  disabled={!canRun || !isScoutAvailable}
                   className='ml-auto shrink-0'
                 >
                   <Sparkles className='h-4 w-4' /> Run Scout
                 </Button>
               </div>
+              {!isScoutAvailable && (
+                <p className='text-xs text-muted-foreground'>
+                  Delegated Scout is not connected yet. Projects, sources and
+                  manual review staging are persisted; Scout output starts
+                  entering staging in a later phase.
+                </p>
+              )}
             </div>
           )}
         </div>

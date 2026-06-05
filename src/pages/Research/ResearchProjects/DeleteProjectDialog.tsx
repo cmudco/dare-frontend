@@ -23,8 +23,8 @@ const DeleteProjectDialog = ({ project, onOpenChange, onConfirm }: Props) => {
         <DialogHeader>
           <DialogTitle>Delete this project?</DialogTitle>
           <DialogDescription>
-            “{project?.title}” and its staged review items will be removed. This
-            cannot be undone.
+            “{project?.title}” and its source records will be removed from your
+            project list. This cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

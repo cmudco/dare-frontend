@@ -13,6 +13,66 @@ export enum ResearchTool {
   WEB = 'web',
 }
 
+export enum ResearchSourceKind {
+  FILE = 'file',
+  URL = 'url',
+  DOI = 'doi',
+  MANUAL = 'manual',
+}
+
+export enum ResearchReviewStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  LATER = 'later',
+}
+
+export enum ResearchEvidenceLabel {
+  SUPPORTING = 'supporting',
+  DISPUTING = 'disputing',
+  PARTIAL = 'partial',
+  TANGENTIAL = 'tangential',
+  WEAK = 'weak',
+  UNVERIFIABLE = 'unverifiable',
+}
+
+export enum ResearchStagingItemType {
+  SOURCE_CANDIDATE = 'source_candidate',
+  CLAIM = 'claim',
+  NOTE = 'note',
+}
+
+export enum ResearchAgentRole {
+  MAIN_ASSISTANT = 'main_assistant',
+  SCOUT = 'scout',
+  LIBRARIAN = 'librarian',
+  PAPER_ASSISTANT = 'paper_assistant',
+  CRITIC = 'critic',
+  PRESENTATION_ASSISTANT = 'presentation_assistant',
+}
+
+export enum ResearchAgentRunStatus {
+  QUEUED = 'queued',
+  RUNNING = 'running',
+  SUCCEEDED = 'succeeded',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled',
+}
+
+export enum ResearchAgentOutputDestination {
+  RUN_LOG = 'run_log',
+  STAGING = 'staging',
+  REVIEW_METADATA = 'review_metadata',
+  MEMORY_PROPOSALS = 'memory_proposals',
+  ARTIFACT_PROPOSALS = 'artifact_proposals',
+}
+
+export enum ResearchAgentToolCallStatus {
+  SUCCEEDED = 'succeeded',
+  FAILED = 'failed',
+  SKIPPED = 'skipped',
+}
+
 export interface ResearchToolMeta {
   key: ResearchTool
   name: string

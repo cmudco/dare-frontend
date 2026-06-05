@@ -1,4 +1,12 @@
-import { BookMarked, FileText, Inbox, Pencil, Trash2 } from 'lucide-react'
+import {
+  Archive,
+  BookMarked,
+  FileText,
+  Inbox,
+  Pencil,
+  RotateCcw,
+  Trash2,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ResearchProjectStatus } from '@/utils/constants/research'
 import type { ResearchProject } from '@/redux/types/research'
@@ -7,10 +15,25 @@ interface Props {
   project: ResearchProject
   onOpen: (project: ResearchProject) => void
   onEdit: (project: ResearchProject) => void
+  onArchive: (project: ResearchProject) => void
+  onRestore: (project: ResearchProject) => void
   onDelete: (project: ResearchProject) => void
 }
 
-const ResearchProjectCard = ({ project, onOpen, onEdit, onDelete }: Props) => {
+const formatUpdatedAt = (updatedAt: string): string => {
+  const date = new Date(updatedAt)
+  if (Number.isNaN(date.getTime())) return updatedAt
+  return `Updated ${date.toLocaleDateString()}`
+}
+
+const ResearchProjectCard = ({
+  project,
+  onOpen,
+  onEdit,
+  onArchive,
+  onRestore,
+  onDelete,
+}: Props) => {
   const isArchived = project.status === ResearchProjectStatus.ARCHIVED
 
   return (
@@ -40,6 +63,24 @@ const ResearchProjectCard = ({ project, onOpen, onEdit, onDelete }: Props) => {
             className='rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground'
           >
             <Pencil className='h-4 w-4' />
+          </button>
+          <button
+            aria-label={isArchived ? 'Restore project' : 'Archive project'}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (isArchived) {
+                onRestore(project)
+                return
+              }
+              onArchive(project)
+            }}
+            className='rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground'
+          >
+            {isArchived ? (
+              <RotateCcw className='h-4 w-4' />
+            ) : (
+              <Archive className='h-4 w-4' />
+            )}
           </button>
           <button
             aria-label='Delete project'
@@ -74,7 +115,7 @@ const ResearchProjectCard = ({ project, onOpen, onEdit, onDelete }: Props) => {
           <FileText className='h-3.5 w-3.5' />
           {project.sourceCount} sources
         </span>
-        <span className='ml-auto'>{project.updatedAt}</span>
+        <span className='ml-auto'>{formatUpdatedAt(project.updatedAt)}</span>
       </div>
     </div>
   )

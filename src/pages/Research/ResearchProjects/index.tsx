@@ -1,10 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FlaskConical, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { deleteResearchProject } from '@/redux/researchSlice'
+import {
+  archiveResearchProject,
+  deleteResearchProject,
+  getResearchMetadata,
+  getResearchProjects,
+  restoreResearchProject,
+} from '@/redux/asyncThunks/research'
 import type { ResearchProject } from '@/redux/types/research'
 import ResearchProjectCard from './ResearchProjectCard'
 import DeleteProjectDialog from './DeleteProjectDialog'
@@ -13,9 +19,16 @@ const ResearchProjects = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const projects = useAppSelector((state) => state.research.projects)
+  const isLoading = useAppSelector((state) => state.research.isLoading)
+  const error = useAppSelector((state) => state.research.error)
 
   const [deletingProject, setDeletingProject] =
     useState<ResearchProject | null>(null)
+
+  useEffect(() => {
+    dispatch(getResearchProjects())
+    dispatch(getResearchMetadata())
+  }, [dispatch])
 
   const handleConfirmDelete = () => {
     if (deletingProject) {
@@ -49,7 +62,15 @@ const ResearchProjects = () => {
       </motion.div>
 
       <div className='px-6 pb-10 pt-6'>
-        {projects.length === 0 ? (
+        {isLoading ? (
+          <div className='rounded-xl border border-border bg-card px-6 py-10 text-sm text-muted-foreground'>
+            Loading research projects...
+          </div>
+        ) : error ? (
+          <div className='rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-5 text-sm text-destructive'>
+            {error}
+          </div>
+        ) : projects.length === 0 ? (
           <div className='flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-20 text-center'>
             <div className='mb-4 rounded-full bg-muted p-3'>
               <FlaskConical className='h-6 w-6 text-muted-foreground' />
@@ -76,6 +97,8 @@ const ResearchProjects = () => {
                 project={project}
                 onOpen={(p) => navigate(`/research/${p.id}`)}
                 onEdit={(p) => navigate(`/research/${p.id}/edit`)}
+                onArchive={(p) => dispatch(archiveResearchProject(p.id))}
+                onRestore={(p) => dispatch(restoreResearchProject(p.id))}
                 onDelete={setDeletingProject}
               />
             ))}

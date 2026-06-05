@@ -1,39 +1,29 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import {
-  Check,
-  ChevronDown,
-  Clock,
-  ExternalLink,
-  MessageCircleQuestion,
-  ShieldCheck,
-  ShieldAlert,
-  X,
-} from 'lucide-react'
+import { Check, ChevronDown, Clock, ExternalLink, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { ReviewItem } from '../types'
+import type { ResearchStagingItem } from '@/redux/types/research'
 import ConfidenceBar from './ConfidenceBar'
-import { signalMeta, toolMeta } from './signals'
+import { getSignalMeta, getToolLabel } from './signals'
 
 interface Props {
-  item: ReviewItem
-  onApprove: (id: string) => void
-  onReject: (id: string) => void
-  onLater: (id: string) => void
-  onAskCritic: (id: string) => void
+  item: ResearchStagingItem
+  onApprove: (id: number) => void
+  onReject: (id: number) => void
+  onLater: (id: number) => void
 }
 
-const ReviewItemCard = ({
-  item,
-  onApprove,
-  onReject,
-  onLater,
-  onAskCritic,
-}: Props) => {
+const displayYear = (year: number | null): string => {
+  return year ? String(year) : 'Year unknown'
+}
+
+const ReviewItemCard = ({ item, onApprove, onReject, onLater }: Props) => {
   const [expanded, setExpanded] = useState(false)
-  const signal = signalMeta[item.citationSignal]
+  const signal = getSignalMeta(item.evidenceLabel)
+  const toolLabel = getToolLabel(item.provenance.tool)
+  const summary = item.content || item.rationale || 'No summary provided yet.'
 
   return (
     <motion.div
@@ -44,9 +34,8 @@ const ReviewItemCard = ({
       transition={{ duration: 0.25 }}
       className='rounded-xl border border-border bg-card text-card-foreground shadow-sm'
     >
-      {/* Collapsed summary — the only thing shown at rest */}
       <button
-        onClick={() => setExpanded((v) => !v)}
+        onClick={() => setExpanded((value) => !value)}
         className='flex w-full items-start gap-3 px-5 pt-5 text-left'
       >
         <div className='min-w-0 flex-1'>
@@ -56,17 +45,18 @@ const ReviewItemCard = ({
               {signal.label}
             </Badge>
             <span className='text-xs text-muted-foreground'>
-              via {toolMeta[item.toolSource]}
+              via {toolLabel}
             </span>
           </div>
           <h3 className='truncate text-[15px] font-semibold leading-snug tracking-tight'>
             {item.title}
           </h3>
           <p className='mt-0.5 truncate text-xs text-muted-foreground'>
-            {item.authors} · {item.venue} · {item.year}
+            {item.authors || 'Unknown author'} · {item.venue || 'Unknown venue'}{' '}
+            · {displayYear(item.year)}
           </p>
           <p className='mt-2 line-clamp-1 text-sm text-foreground/80'>
-            {item.whyItMatters}
+            {summary}
           </p>
         </div>
         <ChevronDown
@@ -77,12 +67,10 @@ const ReviewItemCard = ({
         />
       </button>
 
-      {/* Confidence sits with the summary so judgement is never hidden */}
       <div className='px-5 pt-3'>
         <ConfidenceBar value={item.confidence} />
       </div>
 
-      {/* Progressive disclosure — rationale, context, provenance */}
       {expanded && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -90,58 +78,58 @@ const ReviewItemCard = ({
           className='overflow-hidden px-5'
         >
           <div className='mt-4 space-y-4 border-t border-border pt-4 text-sm'>
-            <Field label='Why it matters'>{item.rationale}</Field>
+            <Field label='Rationale'>
+              {item.rationale || 'No rationale yet.'}
+            </Field>
             <Field label='Confidence rationale'>
-              {item.confidenceRationale}
+              {item.confidenceRationale || 'No confidence rationale yet.'}
             </Field>
-            <Field label='Citation context'>
-              <span className='italic text-foreground/80'>
-                {item.citationContext}
-              </span>
-            </Field>
+            {item.citationContext && (
+              <Field label='Citation context'>
+                <span className='italic text-foreground/80'>
+                  {item.citationContext}
+                </span>
+              </Field>
+            )}
             <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground'>
-              <span>Source: {toolMeta[item.toolSource]}</span>
-              <span>·</span>
-              <span>{item.provenance.retrievalDepth}</span>
-              <span>·</span>
-              <span>{item.provenance.retrievedAt}</span>
-              <span>·</span>
-              <span>Standards: {item.provenance.soulFileVersion}</span>
-              <a
-                href={item.url}
-                target='_blank'
-                rel='noreferrer'
-                onClick={(e) => e.stopPropagation()}
-                className='inline-flex items-center gap-1 text-primary hover:underline'
-              >
-                Open <ExternalLink className='h-3 w-3' />
-              </a>
+              <span>Source: {toolLabel}</span>
+              {item.provenance.retrievalDepth && (
+                <>
+                  <span>·</span>
+                  <span>{item.provenance.retrievalDepth}</span>
+                </>
+              )}
+              {item.provenance.retrievedAt && (
+                <>
+                  <span>·</span>
+                  <span>{item.provenance.retrievedAt}</span>
+                </>
+              )}
+              {item.soulFileTitle && (
+                <>
+                  <span>·</span>
+                  <span>
+                    Standards: {item.soulFileTitle} v
+                    {item.soulFileVersionNumber ?? 1}
+                  </span>
+                </>
+              )}
+              {item.url && (
+                <a
+                  href={item.url}
+                  target='_blank'
+                  rel='noreferrer'
+                  onClick={(event) => event.stopPropagation()}
+                  className='inline-flex items-center gap-1 text-primary hover:underline'
+                >
+                  Open <ExternalLink className='h-3 w-3' />
+                </a>
+              )}
             </div>
           </div>
         </motion.div>
       )}
 
-      {/* Critic verdict, once requested */}
-      {item.critic && (
-        <div className='mx-5 mt-4 rounded-lg border border-border bg-muted/40 p-3'>
-          <div className='flex items-center gap-2 text-sm font-medium'>
-            {item.critic.outcome === 'pass' ? (
-              <ShieldCheck className='h-4 w-4 text-green-600 dark:text-green-400' />
-            ) : (
-              <ShieldAlert className='h-4 w-4 text-amber-600 dark:text-amber-400' />
-            )}
-            Critic ·{' '}
-            {item.critic.outcome === 'pass'
-              ? 'Holds up'
-              : 'Worth a second look'}
-          </div>
-          <p className='mt-1 text-sm text-muted-foreground'>
-            {item.critic.reasoning}
-          </p>
-        </div>
-      )}
-
-      {/* Actions — approval is the deliberate, human act */}
       <div className='flex flex-wrap items-center gap-2 p-5 pt-4'>
         <Button size='sm' onClick={() => onApprove(item.id)}>
           <Check className='h-4 w-4' /> Approve
@@ -152,16 +140,9 @@ const ReviewItemCard = ({
         <Button size='sm' variant='ghost' onClick={() => onLater(item.id)}>
           <Clock className='h-4 w-4' /> Later
         </Button>
-        <Button
-          size='sm'
-          variant='ghost'
-          className='ml-auto'
-          disabled={!!item.critic}
-          onClick={() => onAskCritic(item.id)}
-        >
-          <MessageCircleQuestion className='h-4 w-4' />
-          {item.critic ? 'Critic asked' : 'Ask Critic'}
-        </Button>
+        <span className='ml-auto text-xs text-muted-foreground'>
+          Critic arrives in Phase 6
+        </span>
       </div>
     </motion.div>
   )
