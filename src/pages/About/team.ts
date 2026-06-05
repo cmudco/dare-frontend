@@ -28,7 +28,6 @@ export const TEAM_GROUPS: TeamGroup[] = [
   {
     label: 'Creators',
     members: [
-      { name: 'Sayeed Choudhury', role: 'Creator', socials: [] },
       {
         name: 'Vincent Sha',
         role: 'Creator',
@@ -39,6 +38,12 @@ export const TEAM_GROUPS: TeamGroup[] = [
         name: 'George Cann',
         role: 'Creator',
         avatar: '/team/george.png',
+        socials: [],
+      },
+      {
+        name: 'Sayeed Choudhury',
+        role: 'Creator',
+        avatar: '/team/sayeed.png',
         socials: [],
       },
     ],
