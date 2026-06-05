@@ -1,11 +1,14 @@
 import {
+  Activity,
   ArrowLeft,
   BookMarked,
   Brain,
   Compass,
   Inbox,
   Library,
+  MessagesSquare,
   Shapes,
+  Telescope,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PROJECT } from '../mockData'
@@ -19,11 +22,14 @@ interface NavDef {
 
 const NAV: NavDef[] = [
   { key: 'overview', label: 'Overview', icon: Compass },
+  { key: 'scout', label: 'Ask Scout', icon: Telescope },
+  { key: 'chat', label: 'Chat', icon: MessagesSquare },
   { key: 'review', label: 'Review Inbox', icon: Inbox },
   { key: 'knowledge', label: 'Project Knowledge', icon: BookMarked },
   { key: 'sources', label: 'Sources', icon: Library },
   { key: 'memory', label: 'Memory / Context', icon: Brain },
   { key: 'artifacts', label: 'Artifacts', icon: Shapes },
+  { key: 'runs', label: 'Runs', icon: Activity },
 ]
 
 interface Props {

@@ -1,65 +1,53 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowRight, Check, Loader2, Sparkles } from 'lucide-react'
+import {
+  Activity,
+  ArrowRight,
+  BookMarked,
+  Check,
+  FileText,
+  Inbox,
+  MessagesSquare,
+  Telescope,
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import { RESEARCH_TOOLS, ResearchTool } from '@/utils/constants/research'
-import { PROJECT } from '../mockData'
-
-type ScoutDepth = 'quick' | 'deep'
+import { AGENT_RUNS, PROJECT, SOURCE_FILES } from '../mockData'
+import type { RunStatus } from '../types'
 
 interface Props {
-  scoutRunning: boolean
   pendingCount: number
   approvedCount: number
-  tools: ResearchTool[]
-  onRunScout: () => void
+  onGoToScout: () => void
+  onGoToChat: () => void
   onGoToReview: () => void
+  onGoToRuns: () => void
 }
 
 type StepState = 'done' | 'active' | 'todo'
 
-const DEPTHS: { key: ScoutDepth; label: string }[] = [
-  { key: 'quick', label: 'Quick' },
-  { key: 'deep', label: 'Deep' },
-]
-
-const toolName = (key: ResearchTool): string =>
-  RESEARCH_TOOLS.find((t) => t.key === key)?.name ?? key
+const STATUS_BADGE: Record<
+  RunStatus,
+  { variant: 'green' | 'yellow' | 'red'; label: string }
+> = {
+  completed: { variant: 'green', label: 'Completed' },
+  running: { variant: 'yellow', label: 'Running' },
+  failed: { variant: 'red', label: 'Failed' },
+}
 
 const OverviewPanel = ({
-  scoutRunning,
   pendingCount,
   approvedCount,
-  tools,
-  onRunScout,
+  onGoToScout,
+  onGoToChat,
   onGoToReview,
+  onGoToRuns,
 }: Props) => {
-  const [query, setQuery] = useState('')
-  const [selectedTools, setSelectedTools] = useState<ResearchTool[]>(tools)
-  const [depth, setDepth] = useState<ScoutDepth>('deep')
-
-  const toggleTool = (key: ResearchTool) =>
-    setSelectedTools((prev) =>
-      prev.includes(key) ? prev.filter((t) => t !== key) : [...prev, key]
-    )
-
-  const selectedNames = tools
-    .filter((t) => selectedTools.includes(t))
-    .map(toolName)
-    .join(' · ')
-
-  const canRun = query.trim().length > 0 && selectedTools.length > 0
-
-  // Derive which step of the loop the researcher is on.
-  const askState: StepState = scoutRunning
-    ? 'active'
-    : pendingCount > 0 || approvedCount > 0
-      ? 'done'
-      : 'active'
+  const askState: StepState =
+    pendingCount > 0 || approvedCount > 0 ? 'done' : 'active'
   const reviewState: StepState = pendingCount > 0 ? 'active' : 'todo'
   const approveState: StepState = approvedCount > 0 ? 'done' : 'todo'
+
+  const recentRuns = AGENT_RUNS.slice(0, 3)
 
   return (
     <div className='space-y-8'>
@@ -72,6 +60,38 @@ const OverviewPanel = ({
         </h2>
       </header>
 
+      {/* Quiet status — at a glance, not a metrics wall */}
+      <div className='grid grid-cols-2 gap-3 sm:grid-cols-4'>
+        <StatTile
+          icon={Inbox}
+          label='To review'
+          value={pendingCount}
+          tone={pendingCount > 0 ? 'attention' : 'muted'}
+          onClick={onGoToReview}
+        />
+        <StatTile
+          icon={BookMarked}
+          label='Approved'
+          value={approvedCount}
+          tone='good'
+          onClick={onGoToReview}
+        />
+        <StatTile
+          icon={FileText}
+          label='Sources'
+          value={SOURCE_FILES.length}
+          tone='muted'
+        />
+        <StatTile
+          icon={Activity}
+          label='Runs'
+          value={AGENT_RUNS.length}
+          tone='muted'
+          onClick={onGoToRuns}
+        />
+      </div>
+
+      {/* The loop + the two ways to work */}
       <div className='rounded-2xl border border-border bg-card p-6'>
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center'>
           <Step
@@ -96,105 +116,63 @@ const OverviewPanel = ({
           />
         </div>
 
-        <div className='mt-6 border-t border-border pt-6'>
-          {pendingCount > 0 ? (
-            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-              <p className='max-w-md text-sm text-muted-foreground'>
-                Scout has returned {pendingCount} source
-                {pendingCount > 1 ? 's' : ''} waiting for your review.
-              </p>
-              <Button onClick={onGoToReview} className='shrink-0'>
-                Review {pendingCount} finding{pendingCount > 1 ? 's' : ''}
-                <ArrowRight className='h-4 w-4' />
-              </Button>
-            </div>
-          ) : scoutRunning ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className='space-y-2'
-            >
-              <p className='flex items-center gap-2 text-sm font-medium'>
-                <Loader2 className='h-4 w-4 animate-spin' />
-                Scout is searching {selectedNames || 'your sources'}…
-              </p>
-              {query.trim() && (
-                <p className='text-sm italic text-muted-foreground'>
-                  “{query.trim()}”
-                </p>
-              )}
-              <p className='text-xs text-muted-foreground'>
-                Findings will arrive in your Review Inbox — you can keep
-                working.
-              </p>
-            </motion.div>
-          ) : (
-            <div className='space-y-4'>
-              <div className='space-y-1.5'>
-                <label htmlFor='scout-query' className='text-sm font-medium'>
-                  Ask Scout
-                </label>
-                <Textarea
-                  id='scout-query'
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder='What should Scout look for? e.g. empirical studies on IRB authority after model deployment'
-                  rows={2}
-                />
-              </div>
-
-              <div className='flex flex-wrap items-center gap-x-4 gap-y-3'>
-                <div className='flex flex-wrap items-center gap-1.5'>
-                  {tools.map((key) => {
-                    const isOn = selectedTools.includes(key)
-                    return (
-                      <button
-                        key={key}
-                        type='button'
-                        onClick={() => toggleTool(key)}
-                        className={cn(
-                          'rounded-full border px-2.5 py-1 text-xs transition-colors',
-                          isOn
-                            ? 'border-foreground/30 bg-muted text-foreground'
-                            : 'border-border text-muted-foreground hover:text-foreground'
-                        )}
-                      >
-                        {toolName(key)}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <div className='flex items-center gap-0.5 rounded-lg border border-border p-0.5'>
-                  {DEPTHS.map((d) => (
-                    <button
-                      key={d.key}
-                      type='button'
-                      onClick={() => setDepth(d.key)}
-                      className={cn(
-                        'rounded-md px-2.5 py-1 text-xs transition-colors',
-                        depth === d.key
-                          ? 'bg-muted font-medium text-foreground'
-                          : 'text-muted-foreground hover:text-foreground'
-                      )}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-
-                <Button
-                  onClick={onRunScout}
-                  disabled={!canRun}
-                  className='ml-auto shrink-0'
-                >
-                  <Sparkles className='h-4 w-4' /> Run Scout
-                </Button>
-              </div>
-            </div>
+        <div className='mt-6 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center'>
+          {pendingCount > 0 && (
+            <Button onClick={onGoToReview} className='shrink-0'>
+              Review {pendingCount} finding{pendingCount > 1 ? 's' : ''}
+              <ArrowRight className='h-4 w-4' />
+            </Button>
           )}
+          <Button
+            variant={pendingCount > 0 ? 'outline' : 'default'}
+            onClick={onGoToScout}
+            className='shrink-0'
+          >
+            <Telescope className='h-4 w-4' /> Ask Scout
+          </Button>
+          <Button variant='outline' onClick={onGoToChat} className='shrink-0'>
+            <MessagesSquare className='h-4 w-4' /> Open chat
+          </Button>
+          <p className='text-xs text-muted-foreground sm:ml-auto'>
+            Delegate a task, or think live — same agent, same standards.
+          </p>
         </div>
       </div>
+
+      {/* Recent activity */}
+      <section>
+        <div className='mb-3 flex items-center justify-between'>
+          <h3 className='text-sm font-medium'>Recent activity</h3>
+          <button
+            onClick={onGoToRuns}
+            className='text-xs text-primary hover:underline'
+          >
+            View all runs
+          </button>
+        </div>
+        <div className='space-y-2'>
+          {recentRuns.map((run) => {
+            const badge = STATUS_BADGE[run.status]
+            return (
+              <div
+                key={run.id}
+                className='flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3'
+              >
+                <span className='shrink-0 text-xs font-medium text-muted-foreground'>
+                  {run.role}
+                </span>
+                <p className='min-w-0 flex-1 truncate text-sm'>{run.task}</p>
+                <span className='shrink-0 text-xs text-muted-foreground'>
+                  {run.ranAt}
+                </span>
+                <Badge variant={badge.variant} className='shrink-0'>
+                  {badge.label}
+                </Badge>
+              </div>
+            )
+          })}
+        </div>
+      </section>
 
       <p className='max-w-2xl text-sm leading-relaxed text-muted-foreground'>
         This workspace keeps orchestration with you. AI helpers do bounded work
@@ -203,6 +181,43 @@ const OverviewPanel = ({
         by design.
       </p>
     </div>
+  )
+}
+
+const StatTile = ({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  onClick,
+}: {
+  icon: React.ElementType
+  label: string
+  value: number
+  tone: 'muted' | 'attention' | 'good'
+  onClick?: () => void
+}) => {
+  const Comp = onClick ? 'button' : 'div'
+  return (
+    <Comp
+      onClick={onClick}
+      className={cn(
+        'rounded-xl border border-border bg-card p-4 text-left transition-colors',
+        onClick && 'hover:border-foreground/20'
+      )}
+    >
+      <Icon className='h-4 w-4 text-muted-foreground' />
+      <div
+        className={cn(
+          'mt-2 text-2xl font-semibold tabular-nums leading-none',
+          tone === 'attention' && 'text-amber-600 dark:text-amber-400',
+          tone === 'good' && 'text-green-600 dark:text-green-400'
+        )}
+      >
+        {value}
+      </div>
+      <div className='mt-1 text-xs text-muted-foreground'>{label}</div>
+    </Comp>
   )
 }
 

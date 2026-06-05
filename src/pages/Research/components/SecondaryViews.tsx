@@ -1,5 +1,17 @@
-import { Brain, FileText, Shapes } from 'lucide-react'
-import { MEMORY, SOURCE_FILES } from '../mockData'
+import { useState } from 'react'
+import {
+  BookMarked,
+  Brain,
+  Check,
+  Cpu,
+  FileText,
+  ScrollText,
+  Shapes,
+  X,
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import { MEMORY, MEMORY_PROPOSALS, SOURCE_FILES } from '../mockData'
 
 // Deliberately sparse views — present, but not competing for attention.
 
@@ -32,28 +44,152 @@ export const SourcesView = () => (
   </div>
 )
 
-export const MemoryView = () => (
-  <div className='space-y-6'>
-    <header>
-      <h2 className='text-xl font-semibold tracking-tight'>Memory / Context</h2>
-      <p className='mt-1 text-sm text-muted-foreground'>
-        What the workspace remembers about this project between sessions.
-      </p>
-    </header>
-    <div className='space-y-3'>
-      {MEMORY.map((m) => (
-        <div key={m.id} className='rounded-xl border border-border bg-card p-5'>
-          <div className='flex items-center gap-2'>
-            <Brain className='h-4 w-4 text-muted-foreground' />
-            <p className='text-sm font-medium'>{m.label}</p>
-          </div>
-          <p className='mt-2 text-sm text-foreground/80'>{m.detail}</p>
-          <p className='mt-2 text-xs text-muted-foreground'>{m.capturedAt}</p>
+const STORES = [
+  {
+    icon: BookMarked,
+    title: 'Durable Knowledge',
+    owner: 'DARE',
+    badge: 'On demand',
+    tone: 'green' as const,
+    desc: 'Approved sources and claims. Changes only when you approve.',
+  },
+  {
+    icon: ScrollText,
+    title: 'Standards & Memory',
+    owner: 'DARE',
+    badge: 'On demand · versioned',
+    tone: 'blue' as const,
+    desc: 'Your soul file plus working thesis, decisions and open questions.',
+  },
+  {
+    icon: Cpu,
+    title: 'Agent Memory',
+    owner: 'Hermes',
+    badge: 'Auto',
+    tone: 'yellow' as const,
+    desc: 'How the agent works for you. Hermes updates this itself — never your record.',
+  },
+]
+
+export const MemoryView = () => {
+  const [proposals, setProposals] = useState(MEMORY_PROPOSALS)
+  const resolve = (id: string) =>
+    setProposals((prev) => prev.filter((p) => p.id !== id))
+
+  return (
+    <div className='space-y-8'>
+      <header>
+        <h2 className='text-xl font-semibold tracking-tight'>
+          Memory / Context
+        </h2>
+        <p className='mt-1 text-sm text-muted-foreground'>
+          What persists between sessions — and who is allowed to change it.
+        </p>
+      </header>
+
+      {/* The three stores, and who controls each */}
+      <div className='grid gap-3 md:grid-cols-3'>
+        {STORES.map((store) => {
+          const Icon = store.icon
+          return (
+            <div
+              key={store.title}
+              className='rounded-xl border border-border bg-card p-4'
+            >
+              <div className='mb-2 flex items-center justify-between'>
+                <div className='rounded-lg bg-muted p-2'>
+                  <Icon className='h-4 w-4 text-muted-foreground' />
+                </div>
+                <Badge variant={store.tone}>{store.badge}</Badge>
+              </div>
+              <p className='text-sm font-medium'>{store.title}</p>
+              <p className='text-xs text-muted-foreground'>{store.owner}</p>
+              <p className='mt-2 text-xs leading-relaxed text-muted-foreground'>
+                {store.desc}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Current project memory (lives in the DARE-owned store) */}
+      <section>
+        <h3 className='mb-3 text-sm font-medium'>Project memory</h3>
+        <div className='space-y-3'>
+          {MEMORY.map((m) => (
+            <div
+              key={m.id}
+              className='rounded-xl border border-border bg-card p-5'
+            >
+              <div className='flex items-center gap-2'>
+                <Brain className='h-4 w-4 text-muted-foreground' />
+                <p className='text-sm font-medium'>{m.label}</p>
+              </div>
+              <p className='mt-2 text-sm text-foreground/80'>{m.detail}</p>
+              <p className='mt-2 text-xs text-muted-foreground'>
+                {m.capturedAt}
+              </p>
+            </div>
+          ))}
         </div>
-      ))}
+      </section>
+
+      {/* Pending proposals — the agent proposes, the scholar decides */}
+      <section>
+        <h3 className='mb-1 text-sm font-medium'>
+          Pending from the agent · {proposals.length}
+        </h3>
+        <p className='mb-3 text-xs text-muted-foreground'>
+          Hermes proposes; you decide. Nothing here is remembered until you
+          accept it.
+        </p>
+        {proposals.length === 0 ? (
+          <p className='rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground'>
+            No pending proposals.
+          </p>
+        ) : (
+          <div className='space-y-2'>
+            {proposals.map((p) => (
+              <div
+                key={p.id}
+                className='flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3'
+              >
+                <Badge variant='gray' className='mt-0.5 shrink-0'>
+                  {p.role}
+                </Badge>
+                <div className='min-w-0 flex-1'>
+                  <p className='text-sm'>{p.content}</p>
+                  <p className='mt-1 text-xs text-muted-foreground'>
+                    {p.proposedAt}
+                  </p>
+                </div>
+                <div className='flex shrink-0 items-center gap-1'>
+                  <button
+                    aria-label='Accept'
+                    onClick={() => resolve(p.id)}
+                    className={cn(
+                      'rounded-md p-1.5 text-muted-foreground',
+                      'hover:bg-muted hover:text-green-600 dark:hover:text-green-400'
+                    )}
+                  >
+                    <Check className='h-4 w-4' />
+                  </button>
+                  <button
+                    aria-label='Dismiss'
+                    onClick={() => resolve(p.id)}
+                    className='rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground'
+                  >
+                    <X className='h-4 w-4' />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
-  </div>
-)
+  )
+}
 
 export const ArtifactsView = () => (
   <div className='space-y-6'>

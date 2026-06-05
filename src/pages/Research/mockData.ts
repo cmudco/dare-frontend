@@ -1,8 +1,11 @@
 // Illustrative mock data for the Research Workspace prototype.
-// Citations and findings below are fictional placeholders for demo purposes.
+// Topic: "What makes the Nordic model work?" — citations and findings below
+// are fictional placeholders for demo purposes.
 
 import type {
+  AgentRun,
   KnowledgeItem,
+  MemoryProposal,
   MemorySnapshot,
   ReviewItem,
   SoulVirtue,
@@ -10,38 +13,38 @@ import type {
 } from './types'
 
 export const PROJECT = {
-  title: 'Distributed Governance in AI Research',
+  title: 'What Makes the Nordic Model Work',
   question:
-    'When does institutional oversight strengthen rather than compromise researcher autonomy in AI-enabled studies?',
-  scholar: 'Alex London',
-  field: 'Philosophy · Bioethics · AI & Research Ethics',
+    'When does the Nordic high-tax, high-trust model produce strong outcomes — and which parts actually transfer to other economies?',
+  scholar: 'Farhat Abbas',
+  field: 'Political Economy · Comparative Public Policy',
 }
 
-export const ACTIVE_TOOLS = ['PubMed', 'Scite', 'Consensus'] as const
+export const ACTIVE_TOOLS = ['Consensus', 'Scite', 'Web search'] as const
 
 export const SOUL_FILE = {
-  version: 'Alex v3',
+  version: 'v3',
   updated: '2 days ago',
   virtues: [
     {
       rank: 1,
       label: 'Never fabricate',
-      note: 'Structural rule — agents cannot route around it.',
+      note: 'Every statistic and citation must be real and checkable.',
     },
     {
       rank: 2,
       label: 'Signal uncertainty honestly',
-      note: 'Flag what genuinely needs checking, not everything.',
+      note: 'Separate what the data shows from what it merely suggests.',
     },
     {
       rank: 3,
       label: 'Do not overstate sources',
-      note: 'A source that partially supports a claim is labelled as such.',
+      note: 'A cross-country correlation is not proof of cause or transfer.',
     },
     {
       rank: 4,
-      label: 'Preserve ethical nuance',
-      note: 'Respect for persons · beneficence · justice held in view.',
+      label: 'Separate values from evidence',
+      note: 'Flag normative/ideological claims distinctly from empirical findings.',
     },
   ] satisfies SoulVirtue[],
 }
@@ -51,14 +54,14 @@ export const MEMORY: MemorySnapshot[] = [
     id: 'm1',
     label: 'Working thesis',
     detail:
-      'Oversight is autonomy-enhancing when it is participatory and reduces downstream coercion.',
+      'Nordic outcomes come from a bundle — high social trust + universal services + "flexicurity" labour markets — not high tax rates alone.',
     capturedAt: 'Captured last session',
   },
   {
     id: 'm2',
     label: 'Open question',
     detail:
-      'Need to pin down the scope of IRB authority over post-deployment model monitoring.',
+      'How much of the success is causal policy vs. pre-existing trust and homogeneity — and does the bundle transfer to large, diverse economies?',
     capturedAt: 'Flagged 3 days ago',
   },
 ]
@@ -66,23 +69,23 @@ export const MEMORY: MemorySnapshot[] = [
 export const SOURCE_FILES: SourceFile[] = [
   {
     id: 'f1',
-    name: 'London_2023_Collaborative_Governance.pdf',
-    kind: 'Journal article',
-    pages: 24,
+    name: 'Esping-Andersen_Three_Worlds_of_Welfare_Capitalism.pdf',
+    kind: 'Book chapter',
+    pages: 38,
     addedAt: 'Added last week',
   },
   {
     id: 'f2',
-    name: 'NASEM_Research_Oversight_Report.pdf',
+    name: 'OECD_Survey_Nordic_Labour_Markets.pdf',
     kind: 'Report',
-    pages: 188,
+    pages: 142,
     addedAt: 'Added last week',
   },
   {
     id: 'f3',
-    name: 'Belmont_Report_annotated.pdf',
-    kind: 'Primary source',
-    pages: 10,
+    name: 'Flexicurity_Denmark_case_study.pdf',
+    kind: 'Working paper',
+    pages: 27,
     addedAt: 'Added this month',
   },
 ]
@@ -92,30 +95,29 @@ export const SOURCE_FILES: SourceFile[] = [
 export const SEED_KNOWLEDGE: KnowledgeItem[] = [
   {
     id: 'k1',
-    title:
-      'Participatory Oversight and the Preservation of Researcher Autonomy',
-    authors: 'London, A.',
-    venue: 'Journal of Research Ethics',
-    year: 2023,
-    url: 'https://doi.org/10.0000/jre.2023.0142',
+    title: 'The Three Worlds of Welfare Capitalism: A Comparative Frame',
+    authors: 'Esping-Andersen, G.',
+    venue: 'Princeton University Press',
+    year: 1990,
+    url: 'https://doi.org/10.0000/twwc.1990.001',
     toolSource: 'Library',
     whyItMatters:
-      'Grounds the core claim that participatory oversight is autonomy-enhancing.',
+      'Gives the typology that frames why the Nordic "social-democratic" regime differs in kind, not just degree.',
     rationale:
-      'Directly argues that oversight mechanisms designed with researcher participation tend to strengthen, rather than erode, autonomy — the central tension of this project.',
-    confidence: 94,
-    confidenceRationale: 'Author match + cited in your prior work.',
+      'Establishes the comparative welfare-regime framework this project argues within — the baseline for distinguishing the Nordic bundle from liberal and conservative regimes.',
+    confidence: 93,
+    confidenceRationale: 'Foundational text; cited across the field.',
     citationSignal: 'supporting',
     citationContext:
-      '"...governance that is co-designed with investigators expands rather than constrains the space of responsible choice."',
+      '"...regimes differ not merely in spending but in how they decommodify welfare and structure social solidarity."',
     provenance: {
       tool: 'Library',
       retrievedAt: 'Approved last week',
       retrievalDepth: 'Full text',
-      soulFileVersion: 'Alex v3',
+      soulFileVersion: 'v3',
     },
     status: 'approved',
-    usedIn: ['Section 2.1 — Framing', 'Section 4 — Argument'],
+    usedIn: ['Section 1 — Framing', 'Section 3 — Typology'],
   },
 ]
 
@@ -123,105 +125,193 @@ export const SEED_KNOWLEDGE: KnowledgeItem[] = [
 export const SCOUT_CANDIDATES: ReviewItem[] = [
   {
     id: 's1',
-    title: 'Institutional Review and Investigator Discretion: A Reassessment',
-    authors: 'Mensah, R.; Alvarez, P.',
-    venue: 'Bioethics Quarterly',
+    title: 'Social Trust and Intergenerational Mobility Across OECD Economies',
+    authors: 'Lindqvist, E.; Hassan, R.',
+    venue: 'Journal of Comparative Economics',
     year: 2024,
-    url: 'https://doi.org/10.0000/bq.2024.0091',
-    toolSource: 'PubMed',
+    url: 'https://doi.org/10.0000/jce.2024.0142',
+    toolSource: 'Consensus',
     whyItMatters:
-      'Empirical evidence that well-scoped review boards increase, not reduce, investigator discretion.',
+      'Links high social trust + universal services to stronger mobility — the core "what works" mechanism.',
     rationale:
-      'Surveys 340 investigators and finds that clarity of oversight scope correlates with a stronger felt sense of autonomy. Provides the empirical leg your largely conceptual argument currently lacks.',
-    confidence: 91,
+      'Panel across 28 OECD economies finds universal-service provision and social trust jointly predict mobility, beyond tax level alone. Supports the bundle thesis over the "high taxes" caricature.',
+    confidence: 90,
     confidenceRationale:
-      'Strong topical overlap; co-cited with London (2023) in 6 papers.',
+      'Strong topical match; isolates mechanism rather than aggregate spend.',
     citationSignal: 'supporting',
     citationContext:
-      '"Investigators reported greater confidence in their own judgement where the boundaries of review were explicit and predictable."',
+      '"Mobility gains track universal access and trust, not marginal tax rates per se."',
     provenance: {
-      tool: 'PubMed',
+      tool: 'Consensus',
       retrievedAt: 'Just now',
       retrievalDepth: 'Title + abstract + full-text snippet',
-      soulFileVersion: 'Alex v3',
+      soulFileVersion: 'v3',
     },
     status: 'pending',
   },
   {
     id: 's2',
-    title: 'The Bureaucratic Drag of Ethics Review',
-    authors: 'Okonkwo, T.',
-    venue: 'Science & Society',
-    year: 2022,
-    url: 'https://doi.org/10.0000/ss.2022.0210',
+    title: 'Was It the Welfare State? Pre-1950 Roots of Nordic Equality',
+    authors: 'Bjørnsson, K.',
+    venue: 'Scandinavian Economic History Review',
+    year: 2023,
+    url: 'https://doi.org/10.0000/sehr.2023.0210',
     toolSource: 'Scite',
     whyItMatters:
-      'Argues the opposite — that oversight systematically erodes autonomy. Worth engaging directly.',
+      'Argues the equality/trust predate the welfare state — so it may be culture/history, not policy. The strongest counter-position.',
     rationale:
-      'Presents the strongest version of the counter-position. Engaging it head-on would harden your argument rather than letting a reviewer raise it later.',
-    confidence: 78,
+      'Contends Nordic equality and trust were largely in place before the modern welfare state, implying limited transferability. Engaging it head-on hardens the argument against a reviewer raising it later.',
+    confidence: 76,
     confidenceRationale:
-      'High relevance but opposing stance; Scite shows mostly disputing citations.',
+      'High relevance but opposing causal story; Scite shows mostly disputing citations.',
     citationSignal: 'disputing',
     citationContext:
-      '"Each layer of review displaces a decision the researcher was once trusted to make alone."',
+      '"The institutions arrived after the equality they are credited with producing."',
     provenance: {
       tool: 'Scite',
       retrievedAt: 'Just now',
       retrievalDepth: 'Title + abstract + citation context',
-      soulFileVersion: 'Alex v3',
+      soulFileVersion: 'v3',
     },
     status: 'pending',
   },
   {
     id: 's3',
-    title: 'Post-Deployment Monitoring of Clinical AI: Who Holds Authority?',
-    authors: 'Reyes, M.; Two, K.; Halvorsen, J.',
-    venue: 'npj Digital Medicine',
-    year: 2025,
-    url: 'https://doi.org/10.0000/npjdm.2025.0033',
-    toolSource: 'Consensus',
+    title: 'Tax Morale and Administrative Capacity in High-Tax States',
+    authors: 'Okonkwo, T.; Sætre, M.',
+    venue: 'Public Administration Review',
+    year: 2022,
+    url: 'https://doi.org/10.0000/par.2022.0091',
+    toolSource: 'Library',
     whyItMatters:
-      'Speaks to your open question on the scope of IRB authority after deployment.',
+      'Explains why high taxes are compliable in the Nordics — relevant to transfer, but descriptive.',
     rationale:
-      'Maps current ambiguity in who governs models once they are in clinical use. Relevant to your flagged open question, though it is descriptive rather than normative.',
-    confidence: 69,
+      'Maps the administrative capacity and tax-morale conditions that make high taxation sustainable. Useful background on the transfer question, though it is descriptive rather than causal.',
+    confidence: 68,
     confidenceRationale:
-      'Adjacent topic; Consensus rates the field consensus as "emerging / mixed".',
+      'Adjacent topic; informs feasibility, not the core causal claim.',
     citationSignal: 'tangential',
     citationContext:
-      '"Authority over a deployed model is presently shared, contested, and rarely specified in advance."',
+      '"Compliance rests on perceived fairness and state capacity, not rates alone."',
     provenance: {
-      tool: 'Consensus',
+      tool: 'Library',
       retrievedAt: 'Just now',
       retrievalDepth: 'Title + abstract',
-      soulFileVersion: 'Alex v3',
+      soulFileVersion: 'v3',
     },
     status: 'pending',
   },
   {
     id: 's4',
-    title: 'Co-Designing Governance: Lessons from Multi-Site Research Networks',
-    authors: 'Bianchi, L.; Osei, D.',
-    venue: 'Research Policy',
+    title: 'Flexicurity: Reconciling Labour-Market Flexibility and Security',
+    authors: 'Madsen, P. K.',
+    venue: 'Work, Employment and Society',
     year: 2023,
-    url: 'https://doi.org/10.0000/rp.2023.0457',
-    toolSource: 'PubMed',
+    url: 'https://doi.org/10.0000/wes.2023.0457',
+    toolSource: 'Consensus',
     whyItMatters:
-      'Concrete cases where investigators helped design the oversight they work under.',
+      'A concrete, transferable mechanism — Denmark’s flexicurity raised both employment and security.',
     rationale:
-      'Three case studies of participatory governance design. Gives you grounded examples to anchor an otherwise abstract claim about co-design.',
+      'Case evidence that the flexicurity model decouples job security from employment security, a component that could plausibly transfer independently of culture.',
     confidence: 85,
-    confidenceRationale: 'Direct match on "co-design" + "governance" framing.',
+    confidenceRationale: 'Direct match on a named, exportable mechanism.',
     citationSignal: 'supporting',
     citationContext:
-      '"Where networks invited investigators into rule-making, compliance and trust rose together."',
+      '"Security is attached to the worker, not the job — and employment held up through downturns."',
     provenance: {
-      tool: 'PubMed',
+      tool: 'Consensus',
       retrievedAt: 'Just now',
       retrievalDepth: 'Title + abstract + full-text snippet',
-      soulFileVersion: 'Alex v3',
+      soulFileVersion: 'v3',
     },
     status: 'pending',
+  },
+]
+
+// Delegated runs sent to the Hermes harness — the visible audit trail.
+export const AGENT_RUNS: AgentRun[] = [
+  {
+    id: 'run_3',
+    role: 'Scout',
+    task: 'Mechanisms behind Nordic intergenerational mobility',
+    status: 'running',
+    soulFileVersion: 'v3',
+    tools: ['Consensus', 'Scite'],
+    stagedCount: 0,
+    durationLabel: '—',
+    costLabel: '—',
+    ranAt: 'Just now',
+    toolCalls: [
+      {
+        tool: 'Consensus',
+        query: 'social trust universal services intergenerational mobility',
+        durationLabel: '1.6s',
+        status: 'success',
+      },
+    ],
+  },
+  {
+    id: 'run_2',
+    role: 'Critic',
+    task: 'Pressure-test "high taxes cause Nordic growth" (claim in draft §2)',
+    status: 'completed',
+    soulFileVersion: 'v3',
+    tools: ['Scite'],
+    stagedCount: 1,
+    durationLabel: '26s',
+    costLabel: '$0.03',
+    ranAt: '2 hours ago',
+    toolCalls: [
+      {
+        tool: 'Scite',
+        query: 'tax rate causal growth Nordic — supporting vs disputing',
+        durationLabel: '2.2s',
+        status: 'success',
+      },
+    ],
+  },
+  {
+    id: 'run_1',
+    role: 'Scout',
+    task: 'Flexicurity labour-market evidence and transferability',
+    status: 'completed',
+    soulFileVersion: 'v3',
+    tools: ['Consensus', 'Library'],
+    stagedCount: 4,
+    durationLabel: '1m 08s',
+    costLabel: '$0.10',
+    ranAt: 'Yesterday',
+    toolCalls: [
+      {
+        tool: 'Consensus',
+        query: 'flexicurity Denmark employment security outcomes',
+        durationLabel: '1.9s',
+        status: 'success',
+      },
+      {
+        tool: 'Library',
+        query: 'OECD labour market security index Nordic',
+        durationLabel: '2.5s',
+        status: 'success',
+      },
+    ],
+  },
+]
+
+// What the agent proposes to remember — propose-only; the scholar accepts.
+export const MEMORY_PROPOSALS: MemoryProposal[] = [
+  {
+    id: 'mp_1',
+    role: 'Scout',
+    content:
+      'For this scholar, prioritise sources that isolate the mechanism (trust, flexicurity) over aggregate tax-rate comparisons.',
+    proposedAt: 'From run · yesterday',
+  },
+  {
+    id: 'mp_2',
+    role: 'Paper Assistant',
+    content:
+      'Track the open question on causal-vs-cultural origins as a recurring claim to resolve.',
+    proposedAt: 'From run · yesterday',
   },
 ]

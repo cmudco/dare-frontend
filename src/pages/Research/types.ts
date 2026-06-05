@@ -3,11 +3,14 @@
 
 export type NavSection =
   | 'overview'
+  | 'scout'
+  | 'chat'
   | 'review'
   | 'knowledge'
   | 'sources'
   | 'memory'
   | 'artifacts'
+  | 'runs'
 
 export type CitationSignal = 'supporting' | 'disputing' | 'tangential'
 
@@ -69,4 +72,39 @@ export interface SourceFile {
   kind: string
   pages: number
   addedAt: string
+}
+
+// --- Agent runs (the visible communication with the Hermes harness) ---
+
+export type RunStatus = 'completed' | 'running' | 'failed'
+
+export type AgentRole = 'Scout' | 'Critic' | 'Librarian' | 'Paper Assistant'
+
+export interface AgentRunToolCall {
+  tool: ToolSource
+  query: string
+  durationLabel: string
+  status: 'success' | 'error'
+}
+
+export interface AgentRun {
+  id: string
+  role: AgentRole
+  task: string
+  status: RunStatus
+  soulFileVersion: string
+  tools: ToolSource[]
+  stagedCount: number
+  durationLabel: string
+  costLabel: string
+  ranAt: string
+  toolCalls: AgentRunToolCall[]
+}
+
+// A memory the agent proposes to keep. Propose-only — the scholar accepts it.
+export interface MemoryProposal {
+  id: string
+  role: AgentRole
+  content: string
+  proposedAt: string
 }

@@ -8,6 +8,9 @@ import {
   MemoryView,
   SourcesView,
 } from './components/SecondaryViews'
+import AskScoutView from './components/AskScoutView'
+import HandsOnChat from './components/HandsOnChat'
+import RunsView from './components/RunsView'
 import WorkspaceShell from './components/WorkspaceShell'
 import { SCOUT_CANDIDATES, SEED_KNOWLEDGE } from './mockData'
 import { ResearchTool } from '@/utils/constants/research'
@@ -113,14 +116,26 @@ const ResearchWorkspaceView = ({
       case 'overview':
         return (
           <OverviewPanel
-            scoutRunning={scoutRunning}
             pendingCount={pending.length}
             approvedCount={knowledge.length}
+            onGoToScout={() => setSection('scout')}
+            onGoToChat={() => setSection('chat')}
+            onGoToReview={() => setSection('review')}
+            onGoToRuns={() => setSection('runs')}
+          />
+        )
+      case 'scout':
+        return (
+          <AskScoutView
             tools={enabledTools}
+            scoutRunning={scoutRunning}
+            pendingCount={pending.length}
             onRunScout={runScout}
             onGoToReview={() => setSection('review')}
           />
         )
+      case 'chat':
+        return <HandsOnChat />
       case 'review':
         return (
           <ReviewInbox
@@ -141,6 +156,8 @@ const ResearchWorkspaceView = ({
         return <MemoryView />
       case 'artifacts':
         return <ArtifactsView />
+      case 'runs':
+        return <RunsView />
     }
   }
 
