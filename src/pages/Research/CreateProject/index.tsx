@@ -3,15 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import {
-  addResearchProject,
-  updateResearchProject,
-} from '@/redux/researchSlice'
-import {
-  ResearchProjectStatus,
-  ResearchTool,
-  StandardsTemplate,
-} from '@/utils/constants/research'
+import { updateResearchProject } from '@/redux/researchSlice'
+import { createResearchProject } from '@/redux/asyncThunks/research'
+import { StandardsTemplate } from '@/utils/constants/research'
 import type { ProjectDraft, ResearchProject } from '@/redux/types/research'
 import DefineStep from './DefineStep'
 import SourcesStep from './SourcesStep'
@@ -33,11 +27,8 @@ const buildInitialDraft = (project?: ResearchProject): ProjectDraft => ({
   question: project?.question ?? '',
   field: project?.field ?? '',
   files: [],
-  enabledTools: project?.enabledTools ?? [
-    ResearchTool.PUBMED,
-    ResearchTool.SCITE,
-    ResearchTool.CONSENSUS,
-  ],
+  // Opt-in by design — the scholar enables tools explicitly in the Tools step.
+  enabledTools: project?.enabledTools ?? [],
   standardsTemplate:
     project?.standardsTemplate ?? StandardsTemplate.RESEARCH_ETHICS,
 })
@@ -49,7 +40,7 @@ const CreateProject = () => {
   const isEditing = Boolean(projectId)
   const editingProject = useAppSelector((state) =>
     projectId
-      ? state.research.projects.find((p) => p.id === projectId)
+      ? state.research.projects.find((p) => String(p.id) === projectId)
       : undefined
   )
 
@@ -58,6 +49,7 @@ const CreateProject = () => {
   )
   const [activeIndex, setActiveIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
 
   // Editing an unknown project id → return to the list.
   useEffect(() => {
@@ -77,7 +69,7 @@ const CreateProject = () => {
     setFurthestIndex((furthest) => Math.max(furthest, index))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (isEditing && editingProject) {
       dispatch(
         updateResearchProject({
@@ -88,36 +80,33 @@ const CreateProject = () => {
           enabledTools: draft.enabledTools,
           standardsTemplate: draft.standardsTemplate,
           sourceCount: editingProject.sourceCount + draft.files.length,
-          updatedAt: 'Updated just now',
+          updatedAt: new Date().toISOString(),
         })
       )
       navigate(`/research/${editingProject.id}`)
       return
     }
 
-    const id = crypto.randomUUID()
-    const project: ResearchProject = {
-      id,
-      title: draft.title.trim(),
-      question: draft.question.trim(),
-      field: draft.field.trim(),
-      status: ResearchProjectStatus.ACTIVE,
-      enabledTools: draft.enabledTools,
-      standardsTemplate: draft.standardsTemplate,
-      pendingReviewCount: 0,
-      approvedCount: 0,
-      sourceCount: draft.files.length,
-      updatedAt: 'Created just now',
-      createdAt: 'Created just now',
+    setSubmitting(true)
+    const result = await dispatch(
+      createResearchProject({
+        title: draft.title.trim(),
+        question: draft.question.trim(),
+        field: draft.field.trim(),
+        enabledTools: draft.enabledTools,
+        standardsTemplate: draft.standardsTemplate,
+      })
+    )
+    setSubmitting(false)
+    if (createResearchProject.fulfilled.match(result)) {
+      navigate(`/research/${result.payload.id}`)
     }
-    dispatch(addResearchProject(project))
-    navigate(`/research/${id}`)
   }
 
   const handleContinue = () => {
-    if (!canContinue) return
+    if (!canContinue || submitting) return
     if (isLast) {
-      handleSubmit()
+      void handleSubmit()
       return
     }
     goTo(activeIndex + 1)
@@ -199,11 +188,16 @@ const CreateProject = () => {
             <span className='text-xs text-muted-foreground'>
               Step {activeIndex + 1} of {STEPS.length}
             </span>
-            <Button onClick={handleContinue} disabled={!canContinue}>
+            <Button
+              onClick={handleContinue}
+              disabled={!canContinue || submitting}
+            >
               {isLast
                 ? isEditing
                   ? 'Save changes'
-                  : 'Create project'
+                  : submitting
+                    ? 'Creating…'
+                    : 'Create project'
                 : 'Continue'}
               {!isLast && <ArrowRight className='h-4 w-4' />}
             </Button>

@@ -1,6 +1,7 @@
 import { BookOpen, FileText, ScrollText, Wrench } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { RESEARCH_TOOLS, STANDARDS_PRESETS } from '@/utils/constants/research'
+import { useAppSelector } from '@/redux/hooks'
+import { resolveToolMeta, STANDARDS_PRESETS } from '@/utils/constants/research'
 import type { ProjectDraft } from '@/redux/types/research'
 import StepHeading from './StepHeading'
 
@@ -9,7 +10,10 @@ interface Props {
 }
 
 const ReviewStep = ({ draft }: Props) => {
-  const tools = RESEARCH_TOOLS.filter((t) => draft.enabledTools.includes(t.key))
+  const connections = useAppSelector((state) => state.mcp.connections)
+  const tools = draft.enabledTools.map((slug) =>
+    resolveToolMeta(slug, connections)
+  )
   const standards = STANDARDS_PRESETS.find(
     (p) => p.key === draft.standardsTemplate
   )
@@ -51,7 +55,7 @@ const ReviewStep = ({ draft }: Props) => {
           {tools.length > 0 ? (
             <div className='flex flex-wrap gap-1.5'>
               {tools.map((tool) => (
-                <Badge key={tool.key} variant='blue'>
+                <Badge key={tool.slug} variant='blue'>
                   {tool.name}
                 </Badge>
               ))}

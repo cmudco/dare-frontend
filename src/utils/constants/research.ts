@@ -1,46 +1,67 @@
 // Finite option sets + presentation metadata for the Research Workspace.
 
+import type { McpConnection } from '@/redux/types/mcp'
+
 export enum ResearchProjectStatus {
   ACTIVE = 'active',
   ARCHIVED = 'archived',
 }
 
-/** Tools Scout can be pointed at when gathering sources. */
-export enum ResearchTool {
-  PUBMED = 'pubmed',
-  SCITE = 'scite',
-  CONSENSUS = 'consensus',
-  WEB = 'web',
-}
-
+/**
+ * The tools Scout may search are dynamic: they come from the MCP integrations
+ * the user has connected (see `state.mcp.connections`), plus a small set of
+ * built-ins below. A project's `enabledTools` therefore stores tool *slugs*
+ * (MCP server slugs, or a built-in slug), not a fixed enum.
+ */
 export interface ResearchToolMeta {
-  key: ResearchTool
+  slug: string
   name: string
   description: string
 }
 
-export const RESEARCH_TOOLS: ResearchToolMeta[] = [
+/** Reserved slug for web search — handled by Hermes for now, not an MCP connection. */
+export const WEB_SEARCH_TOOL_SLUG = 'web'
+
+/** Tools always available regardless of the user's MCP connections. */
+export const BUILTIN_RESEARCH_TOOLS: ResearchToolMeta[] = [
   {
-    key: ResearchTool.PUBMED,
-    name: 'PubMed',
-    description: 'Biomedical and life-sciences literature.',
-  },
-  {
-    key: ResearchTool.SCITE,
-    name: 'Scite',
-    description: 'Citation context — supporting vs. disputing signals.',
-  },
-  {
-    key: ResearchTool.CONSENSUS,
-    name: 'Consensus',
-    description: 'Evidence-weighted answers synthesised across papers.',
-  },
-  {
-    key: ResearchTool.WEB,
+    slug: WEB_SEARCH_TOOL_SLUG,
     name: 'Web search',
-    description: 'Open-web fallback for grey literature and preprints.',
+    description: 'Open-web search & fetch — handled by Hermes for now.',
   },
 ]
+
+/** Map an active MCP connection to a selectable research tool. */
+export const connectionToolMeta = (
+  connection: McpConnection
+): ResearchToolMeta => ({
+  slug: connection.server.slug,
+  name: connection.server.name,
+  description: connection.server.description,
+})
+
+/**
+ * Every tool the user may enable for a project: the built-ins plus their active
+ * MCP connections.
+ */
+export const availableResearchTools = (
+  connections: McpConnection[]
+): ResearchToolMeta[] => [
+  ...BUILTIN_RESEARCH_TOOLS,
+  ...connections.filter((c) => c.isActive).map(connectionToolMeta),
+]
+
+/** Resolve a stored tool slug to display metadata, given the user's connections. */
+export const resolveToolMeta = (
+  slug: string,
+  connections: McpConnection[]
+): ResearchToolMeta => {
+  const builtin = BUILTIN_RESEARCH_TOOLS.find((t) => t.slug === slug)
+  if (builtin) return builtin
+  const connection = connections.find((c) => c.server.slug === slug)
+  if (connection) return connectionToolMeta(connection)
+  return { slug, name: slug, description: '' }
+}
 
 /** Research-standards presets — the starting point for a project's soul file. */
 export enum StandardsTemplate {
@@ -89,11 +110,32 @@ export const STANDARDS_PRESETS: StandardsPreset[] = [
   },
 ]
 
-/** Accepted source file extensions for a project. */
+/**
+ * Accepted source file extensions for a project. Kept deliberately broad —
+ * documents, slides, spreadsheets, web/markup and data files. The backend
+ * source pipeline is the authoritative gate on what can actually be ingested.
+ */
 export const ACCEPTED_SOURCE_EXTENSIONS = [
+  // Documents
   'pdf',
   'doc',
   'docx',
+  'rtf',
+  'odt',
   'txt',
   'md',
+  // Slides
+  'ppt',
+  'pptx',
+  // Spreadsheets / data
+  'csv',
+  'tsv',
+  'xls',
+  'xlsx',
+  'json',
+  // Web / markup
+  'html',
+  'htm',
+  // E-books
+  'epub',
 ] as const

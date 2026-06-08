@@ -13,6 +13,10 @@ const formatBytes = (bytes: number): string => {
 const extensionOf = (name: string): string =>
   name.split('.').pop()?.toLowerCase() ?? ''
 
+// Single source of truth for the input's `accept` filter — derived from the
+// shared allowlist so the two can't drift apart.
+const ACCEPT_ATTR = ACCEPTED_SOURCE_EXTENSIONS.map((ext) => `.${ext}`).join(',')
+
 interface Props {
   onAdd: (files: ProjectDraftFile[]) => void
 }
@@ -66,13 +70,14 @@ const FileDropzone = ({ onAdd }: Props) => {
         </button>
       </p>
       <p className='mt-1 text-xs text-muted-foreground'>
-        PDF, DOCX, TXT or Markdown · up to 50&nbsp;MB each
+        Documents, slides, spreadsheets, web &amp; data files · up to 50&nbsp;MB
+        each
       </p>
       <input
         ref={inputRef}
         type='file'
         multiple
-        accept='.pdf,.doc,.docx,.txt,.md'
+        accept={ACCEPT_ATTR}
         className='hidden'
         onChange={(e) => {
           handleFiles(e.target.files)

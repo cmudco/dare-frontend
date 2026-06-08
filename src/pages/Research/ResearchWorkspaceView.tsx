@@ -13,7 +13,7 @@ import HandsOnChat from './components/HandsOnChat'
 import RunsView from './components/RunsView'
 import WorkspaceShell from './components/WorkspaceShell'
 import { SCOUT_CANDIDATES, SEED_KNOWLEDGE } from './mockData'
-import { ResearchTool } from '@/utils/constants/research'
+import { WEB_SEARCH_TOOL_SLUG } from '@/utils/constants/research'
 import type {
   CriticVerdict,
   KnowledgeItem,
@@ -21,19 +21,15 @@ import type {
   ReviewItem,
 } from './types'
 
-const DEFAULT_TOOLS: ResearchTool[] = [
-  ResearchTool.PUBMED,
-  ResearchTool.SCITE,
-  ResearchTool.CONSENSUS,
-]
+const DEFAULT_TOOLS: string[] = [WEB_SEARCH_TOOL_SLUG]
 
 interface ResearchWorkspaceViewProps {
   /** Title shown in the workspace header (defaults to the mock project). */
   projectTitle?: string
   /** Secondary line under the title (e.g. the field of study). */
   projectMeta?: string
-  /** Tools the Scout composer offers (defaults to the demo set). */
-  enabledTools?: ResearchTool[]
+  /** Tool slugs the Scout composer offers (defaults to the web built-in). */
+  enabledTools?: string[]
   /** When provided, the header shows a "back to projects" affordance. */
   onBack?: () => void
 }

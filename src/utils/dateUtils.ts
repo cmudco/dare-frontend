@@ -11,3 +11,7 @@ export const formatNotificationDate = (dateString: string): string => {
     return 'Unknown time'
   }
 }
+
+/** Relative time for an ISO 8601 timestamp, e.g. "2 days ago". */
+export const formatRelativeDate = (dateString: string): string =>
+  formatNotificationDate(dateString)

@@ -1,6 +1,7 @@
 import { BookMarked, FileText, Inbox, Pencil, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ResearchProjectStatus } from '@/utils/constants/research'
+import { formatRelativeDate } from '@/utils/dateUtils'
 import type { ResearchProject } from '@/redux/types/research'
 
 interface Props {
@@ -74,7 +75,9 @@ const ResearchProjectCard = ({ project, onOpen, onEdit, onDelete }: Props) => {
           <FileText className='h-3.5 w-3.5' />
           {project.sourceCount} sources
         </span>
-        <span className='ml-auto'>{project.updatedAt}</span>
+        <span className='ml-auto'>
+          Updated {formatRelativeDate(project.updatedAt)}
+        </span>
       </div>
     </div>
   )

@@ -4,7 +4,8 @@ import { Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import { RESEARCH_TOOLS, ResearchTool } from '@/utils/constants/research'
+import { useAppSelector } from '@/redux/hooks'
+import { resolveToolMeta } from '@/utils/constants/research'
 
 type ScoutDepth = 'quick' | 'deep'
 
@@ -13,12 +14,9 @@ const DEPTHS: { key: ScoutDepth; label: string }[] = [
   { key: 'deep', label: 'Deep' },
 ]
 
-const toolName = (key: ResearchTool): string =>
-  RESEARCH_TOOLS.find((t) => t.key === key)?.name ?? key
-
 interface Props {
-  /** Tools offered for this run (from the project's enabled set). */
-  tools: ResearchTool[]
+  /** Tool slugs offered for this run (from the project's enabled set). */
+  tools: string[]
   /** When true, the composer shows the async "working" state instead. */
   running: boolean
   onRun: () => void
@@ -26,18 +24,22 @@ interface Props {
 
 // The Scout query composer — shared by the Overview and the Ask Scout view.
 const ScoutComposer = ({ tools, running, onRun }: Props) => {
+  const connections = useAppSelector((state) => state.mcp.connections)
+  const nameOf = (slug: string): string =>
+    resolveToolMeta(slug, connections).name
+
   const [query, setQuery] = useState('')
-  const [selectedTools, setSelectedTools] = useState<ResearchTool[]>(tools)
+  const [selectedTools, setSelectedTools] = useState<string[]>(tools)
   const [depth, setDepth] = useState<ScoutDepth>('deep')
 
-  const toggleTool = (key: ResearchTool) =>
+  const toggleTool = (slug: string) =>
     setSelectedTools((prev) =>
-      prev.includes(key) ? prev.filter((t) => t !== key) : [...prev, key]
+      prev.includes(slug) ? prev.filter((t) => t !== slug) : [...prev, slug]
     )
 
   const selectedNames = tools
     .filter((t) => selectedTools.includes(t))
-    .map(toolName)
+    .map(nameOf)
     .join(' · ')
 
   const canRun = query.trim().length > 0 && selectedTools.length > 0
@@ -82,13 +84,13 @@ const ScoutComposer = ({ tools, running, onRun }: Props) => {
 
       <div className='flex flex-wrap items-center gap-x-4 gap-y-3'>
         <div className='flex flex-wrap items-center gap-1.5'>
-          {tools.map((key) => {
-            const isOn = selectedTools.includes(key)
+          {tools.map((slug) => {
+            const isOn = selectedTools.includes(slug)
             return (
               <button
-                key={key}
+                key={slug}
                 type='button'
-                onClick={() => toggleTool(key)}
+                onClick={() => toggleTool(slug)}
                 className={cn(
                   'rounded-full border px-2.5 py-1 text-xs transition-colors',
                   isOn
@@ -96,7 +98,7 @@ const ScoutComposer = ({ tools, running, onRun }: Props) => {
                     : 'border-border text-muted-foreground hover:text-foreground'
                 )}
               >
-                {toolName(key)}
+                {nameOf(slug)}
               </button>
             )
           })}

@@ -1,13 +1,12 @@
 import { ArrowRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ResearchTool } from '@/utils/constants/research'
 import { AGENT_RUNS } from '../mockData'
 import type { RunStatus } from '../types'
 import ScoutComposer from './ScoutComposer'
 
 interface Props {
-  tools: ResearchTool[]
+  tools: string[]
   scoutRunning: boolean
   pendingCount: number
   onRunScout: () => void
