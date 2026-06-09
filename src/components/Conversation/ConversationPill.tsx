@@ -253,7 +253,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     <>
       <div
         className={clsx(
-          'flex w-[90%] flex-col justify-end rounded-2xl transition-all duration-300',
+          'flex w-full max-w-4xl flex-col justify-end rounded-2xl transition-all duration-300',
           imageGenerationEnabled || artifactsEnabled
             ? 'gradient-border'
             : 'border-2 border-gray-200 dark:border-dark-icon-unselected',
@@ -330,14 +330,14 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
 
         <div
           className={clsx(
-            'relative mb-1 flex w-full items-center justify-between px-4',
+            'relative mb-1 flex w-full flex-col gap-2 px-4 sm:flex-row sm:items-center sm:justify-between',
             disabled && 'pointer-events-none opacity-50'
           )}
         >
-          <div className='flex w-full items-center gap-2'>
+          <div className='flex min-w-0 flex-1 flex-wrap items-center gap-1.5 overflow-x-auto py-1 sm:flex-nowrap'>
             <ConversationFileSelect />
             <PromptSet />
-            <div className='h-8 w-[2px] rounded-lg bg-gray-300'></div>
+            <div className='h-8 w-[2px] shrink-0 rounded-lg bg-gray-300'></div>
             <ConversationReferenceSelect />
 
             <ModelPicker />
@@ -376,7 +376,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
               />
             )}
           </div>
-          <div className='flex items-center gap-3'>
+          <div className='flex shrink-0 items-center justify-end gap-2 self-end sm:gap-3 sm:self-auto'>
             <div className={clsx(!imageGenerationEnabled && 'hidden')}>
               <ImageGenerationPanel />
             </div>

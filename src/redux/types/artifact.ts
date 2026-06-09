@@ -106,7 +106,7 @@ export const initialArtifactState: ArtifactState = {
   artifacts: {},
   activeArtifactId: null,
   sidecarOpen: false,
-  sidecarWidth: 720,
+  sidecarWidth: 640,
   sidecarFullscreen: false,
   artifactsEnabled: false,
 }

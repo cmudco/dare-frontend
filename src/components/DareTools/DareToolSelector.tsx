@@ -91,20 +91,20 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
           variant='ghost'
           size='sm'
           disabled={disabled}
-          className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm transition-all ${
+          className={`flex min-w-0 max-w-[140px] items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm transition-all sm:max-w-[180px] ${
             selectedCount > 0
               ? 'bg-primary/15 text-primary'
               : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10'
           } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
           title='DARE Tools'
         >
-          <Wrench className='h-4 w-4' />
-          <span>{displayLabel}</span>
-          <ChevronDown className='h-3 w-3 opacity-60' />
+          <Wrench className='h-4 w-4 shrink-0' />
+          <span className='truncate'>{displayLabel}</span>
+          <ChevronDown className='h-3 w-3 shrink-0 opacity-60' />
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className='w-80 rounded-xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-white/10 dark:bg-[#1e1e2e]'
+        className='w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-white/10 dark:bg-[#1e1e2e]'
         align='start'
       >
         <div className='mb-1.5 flex items-center gap-2'>

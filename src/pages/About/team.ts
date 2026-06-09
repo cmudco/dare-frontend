@@ -1,5 +1,5 @@
 /**
- * The people shown on the About page, grouped by tier (Founders / Team).
+ * The people shown on the About page, grouped by tier (Creators / Team).
  *
  * `avatar` may be a remote URL (e.g. a GitHub avatar) or a path under /public;
  * if omitted the card falls back to the person's initials. `role`, `bio` and
@@ -26,24 +26,24 @@ export interface TeamGroup {
 
 export const TEAM_GROUPS: TeamGroup[] = [
   {
-    label: 'Founders',
+    label: 'Creators',
     members: [
       {
         name: 'Vincent Sha',
-        role: 'Founder',
+        role: 'Creator',
         avatar: '/team/vince.png',
         socials: [],
       },
       {
         name: 'George Cann',
-        role: 'Founder',
+        role: 'Creator',
         avatar: '/team/george.png',
         socials: [],
       },
       {
-        name: 'Carl Skipper',
-        role: 'Founder',
-        avatar: '/team/carl.png',
+        name: 'Sayeed Choudhury',
+        role: 'Creator',
+        avatar: '/team/sayeed.png',
         socials: [],
       },
     ],
@@ -51,7 +51,12 @@ export const TEAM_GROUPS: TeamGroup[] = [
   {
     label: 'Team',
     members: [
-      { name: 'Sayeed Choudhury', role: 'Contributor', socials: [] },
+      {
+        name: 'Carl Skipper',
+        role: 'Contributor',
+        avatar: '/team/carl.png',
+        socials: [],
+      },
       { name: 'Muhammad Abdurrehman', role: 'Team Lead', socials: [] },
       { name: 'Brian Wingenroth', role: 'Developer', socials: [] },
       { name: 'Farhat Abbas', role: 'Developer', socials: [] },
