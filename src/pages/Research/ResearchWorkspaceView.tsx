@@ -125,7 +125,13 @@ const ResearchWorkspaceView = ({
           return
         }
       } catch {
-        // transient — keep polling
+        if (cancelled) return
+        // The run is gone or unreachable — stop the spinner and resync from the
+        // server. A still-live run gets re-adopted; a deleted one stays cleared.
+        setRunningRunId(null)
+        setScoutStatus('')
+        refresh()
+        return
       }
       if (!cancelled) timer = setTimeout(tick, 3000)
     }
