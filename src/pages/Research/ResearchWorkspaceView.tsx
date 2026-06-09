@@ -1,7 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppDispatch } from '@/redux/hooks'
 import { getResearchProject } from '@/redux/asyncThunks/research'
-import { reviewStagingItemAPI, runScoutAPI } from '@/api/research'
+import {
+  getAgentRunAPI,
+  reviewStagingItemAPI,
+  runScoutAPI,
+} from '@/api/research'
 import { WEB_SEARCH_TOOL_SLUG } from '@/utils/constants/research'
 import ContextPanel from './components/ContextPanel'
 import OverviewPanel from './components/OverviewPanel'
@@ -79,7 +83,8 @@ const ResearchWorkspaceView = ({
 }: ResearchWorkspaceViewProps) => {
   const dispatch = useAppDispatch()
   const [section, setSection] = useState<NavSection>('overview')
-  const [scoutRunning, setScoutRunning] = useState(false)
+  const [runningRunId, setRunningRunId] = useState<number | null>(null)
+  const [scoutStatus, setScoutStatus] = useState('')
 
   const pending = reviewItems.filter((i) => i.status === 'staged')
   const later = reviewItems.filter((i) => i.status === 'later')
@@ -88,16 +93,61 @@ const ResearchWorkspaceView = ({
     if (projectId) dispatch(getResearchProject(projectId))
   }
 
+  // Adopt an in-flight Scout run from server state, so the running indicator
+  // survives leaving the page and full reloads (the run lives on the backend).
+  useEffect(() => {
+    if (runningRunId) return
+    const live = runs.find(
+      (r) =>
+        r.role === 'scout' &&
+        ['queued', 'started', 'running'].includes(r.status)
+    )
+    if (live) {
+      setRunningRunId(live.id)
+      setScoutStatus(live.statusDetail || '')
+    }
+  }, [runs, runningRunId])
+
+  // Poll the running Scout run until it finishes, then refresh the project.
+  useEffect(() => {
+    if (!runningRunId) return
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout>
+    const tick = async () => {
+      try {
+        const run = await getAgentRunAPI(runningRunId)
+        if (cancelled) return
+        setScoutStatus(run.statusDetail || '')
+        if (run.status === 'completed' || run.status === 'failed') {
+          setRunningRunId(null)
+          setScoutStatus('')
+          refresh()
+          return
+        }
+      } catch {
+        // transient — keep polling
+      }
+      if (!cancelled) timer = setTimeout(tick, 3000)
+    }
+    timer = setTimeout(tick, 1500)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runningRunId])
+
+  const scoutRunning = runningRunId !== null
+
   const runScout = async (query: string) => {
-    if (!projectId || !query || scoutRunning) return
-    setScoutRunning(true)
+    if (!projectId || !query || runningRunId) return
     setSection('scout')
     try {
-      await runScoutAPI(projectId, query)
-      refresh()
-      setSection('review')
-    } finally {
-      setScoutRunning(false)
+      const { runId } = await runScoutAPI(projectId, query)
+      setRunningRunId(runId)
+      setScoutStatus('Queued…')
+    } catch {
+      // leaving runningRunId null keeps the composer ready to retry
     }
   }
 
@@ -131,6 +181,7 @@ const ResearchWorkspaceView = ({
             tools={enabledTools}
             runs={runs}
             scoutRunning={scoutRunning}
+            scoutStatus={scoutStatus}
             pendingCount={pending.length}
             onRunScout={runScout}
             onGoToReview={() => setSection('review')}

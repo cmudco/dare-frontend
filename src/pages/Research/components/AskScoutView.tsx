@@ -1,14 +1,17 @@
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatRanAt, runStatusBadge } from '../runFormat'
 import type { AgentRun } from '../types'
 import ScoutComposer from './ScoutComposer'
 
+const IN_FLIGHT = ['running', 'queued', 'started']
+
 interface Props {
   tools: string[]
   runs: AgentRun[]
   scoutRunning: boolean
+  scoutStatus: string
   pendingCount: number
   onRunScout: (query: string) => void
   onGoToReview: () => void
@@ -18,6 +21,7 @@ const AskScoutView = ({
   tools,
   runs,
   scoutRunning,
+  scoutStatus,
   pendingCount,
   onRunScout,
   onGoToReview,
@@ -50,6 +54,7 @@ const AskScoutView = ({
         <ScoutComposer
           tools={tools}
           running={scoutRunning}
+          status={scoutStatus}
           onRun={onRunScout}
         />
       </div>
@@ -62,6 +67,7 @@ const AskScoutView = ({
           )}
           {recentRuns.map((run) => {
             const badge = runStatusBadge(run.status)
+            const inFlight = IN_FLIGHT.includes(run.status)
             return (
               <div
                 key={run.id}
@@ -69,10 +75,17 @@ const AskScoutView = ({
               >
                 <div className='min-w-0 flex-1'>
                   <p className='truncate text-sm'>{run.task}</p>
-                  <p className='text-xs text-muted-foreground'>
-                    {run.tools.join(' · ')} · {run.stagedCount} staged ·{' '}
-                    {formatRanAt(run.ranAt)}
-                  </p>
+                  {inFlight ? (
+                    <p className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+                      <Loader2 className='h-3 w-3 animate-spin' />
+                      {run.statusDetail || 'Working…'}
+                    </p>
+                  ) : (
+                    <p className='text-xs text-muted-foreground'>
+                      {run.tools.join(' · ')} · {run.stagedCount} staged ·{' '}
+                      {formatRanAt(run.ranAt)}
+                    </p>
+                  )}
                 </div>
                 <Badge variant={badge.variant} className='shrink-0'>
                   {badge.label}

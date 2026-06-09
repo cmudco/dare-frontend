@@ -178,6 +178,7 @@ export interface AgentRun {
   mode: string // 'scout' | 'chat'
   task: string
   status: string // started | running | queued | completed | failed
+  statusDetail: string // live progress line, e.g. 'Searching the web…'
   soulFileVersion: string
   tools: string[]
   stagedCount: number

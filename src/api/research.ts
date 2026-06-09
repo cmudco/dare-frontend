@@ -2,6 +2,7 @@ import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import { config } from '@/config/environment'
 import type {
+  AgentRun,
   ChatMessage,
   CreateResearchProjectPayload,
   ResearchProject,
@@ -38,10 +39,10 @@ export const createResearchProjectAPI = async (
 
 export interface ScoutResult {
   runId: number
-  stagedCount: number
+  status: string
 }
 
-/** Run delegated Scout discovery (long-running; resolves when staging is done). */
+/** Kick off a delegated Scout run (returns immediately; poll the run for status). */
 export const runScoutAPI = async (
   projectId: number,
   task: string
@@ -50,6 +51,14 @@ export const runScoutAPI = async (
     url: `api/research/projects/${projectId}/scout/`,
     method: METHOD.POST,
     data: { task },
+  })
+}
+
+/** Poll a single agent run's live status (for the Scout progress UI). */
+export const getAgentRunAPI = async (runId: number): Promise<AgentRun> => {
+  return await baseRequest<AgentRun>({
+    url: `api/research/agent-runs/${runId}/`,
+    method: METHOD.GET,
   })
 }
 

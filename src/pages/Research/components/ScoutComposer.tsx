@@ -19,11 +19,13 @@ interface Props {
   tools: string[]
   /** When true, the composer shows the async "working" state instead. */
   running: boolean
+  /** Live status line from the running run (e.g. 'Searching the web…'). */
+  status?: string
   onRun: (query: string) => void
 }
 
 // The Scout query composer — shared by the Overview and the Ask Scout view.
-const ScoutComposer = ({ tools, running, onRun }: Props) => {
+const ScoutComposer = ({ tools, running, status, onRun }: Props) => {
   const connections = useAppSelector((state) => state.mcp.connections)
   const nameOf = (slug: string): string =>
     resolveToolMeta(slug, connections).name
@@ -55,7 +57,7 @@ const ScoutComposer = ({ tools, running, onRun }: Props) => {
       >
         <p className='flex items-center gap-2 text-sm font-medium'>
           <Loader2 className='h-4 w-4 animate-spin' />
-          Scout is searching {selectedNames || 'your sources'}…
+          {status || `Scout is searching ${selectedNames || 'your sources'}…`}
         </p>
         {query.trim() && (
           <p className='text-sm italic text-muted-foreground'>
@@ -63,7 +65,8 @@ const ScoutComposer = ({ tools, running, onRun }: Props) => {
           </p>
         )}
         <p className='text-xs text-muted-foreground'>
-          Findings will arrive in your Review Inbox — you can keep working.
+          Findings will arrive in your Review Inbox — you can keep working,
+          switch pages, even reload.
         </p>
       </motion.div>
     )
