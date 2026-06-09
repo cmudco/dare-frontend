@@ -229,70 +229,87 @@ export const SCOUT_CANDIDATES: ReviewItem[] = [
 ]
 
 // Delegated runs sent to the Hermes harness — the visible audit trail.
+// Preview-only fallback in the canonical (API) shape; timestamps are relative to
+// load time so the relative labels stay sensible.
+const NOW = Date.now()
+const ago = (ms: number): string => new Date(NOW - ms).toISOString()
+const SECOND = 1000
+const HOUR = 3_600_000
+const DAY = 86_400_000
+
 export const AGENT_RUNS: AgentRun[] = [
   {
-    id: 'run_3',
-    role: 'Scout',
+    id: 3,
+    role: 'scout',
+    mode: 'scout',
     task: 'Mechanisms behind Nordic intergenerational mobility',
     status: 'running',
     soulFileVersion: 'v3',
-    tools: ['Consensus', 'Scite'],
+    tools: ['consensus', 'scite'],
     stagedCount: 0,
-    durationLabel: '—',
-    costLabel: '—',
-    ranAt: 'Just now',
+    cost: 0,
+    startedAt: ago(0),
+    completedAt: null,
+    ranAt: ago(0),
+    hermesRunId: '',
     toolCalls: [
       {
-        tool: 'Consensus',
+        tool: 'consensus',
         query: 'social trust universal services intergenerational mobility',
-        durationLabel: '1.6s',
         status: 'success',
+        durationMs: 1600,
       },
     ],
   },
   {
-    id: 'run_2',
-    role: 'Critic',
+    id: 2,
+    role: 'critic',
+    mode: 'scout',
     task: 'Pressure-test "high taxes cause Nordic growth" (claim in draft §2)',
     status: 'completed',
     soulFileVersion: 'v3',
-    tools: ['Scite'],
+    tools: ['scite'],
     stagedCount: 1,
-    durationLabel: '26s',
-    costLabel: '$0.03',
-    ranAt: '2 hours ago',
+    cost: 0.03,
+    startedAt: ago(2 * HOUR + 26 * SECOND),
+    completedAt: ago(2 * HOUR),
+    ranAt: ago(2 * HOUR),
+    hermesRunId: '',
     toolCalls: [
       {
-        tool: 'Scite',
+        tool: 'scite',
         query: 'tax rate causal growth Nordic — supporting vs disputing',
-        durationLabel: '2.2s',
         status: 'success',
+        durationMs: 2200,
       },
     ],
   },
   {
-    id: 'run_1',
-    role: 'Scout',
+    id: 1,
+    role: 'scout',
+    mode: 'scout',
     task: 'Flexicurity labour-market evidence and transferability',
     status: 'completed',
     soulFileVersion: 'v3',
-    tools: ['Consensus', 'Library'],
+    tools: ['consensus', 'web'],
     stagedCount: 4,
-    durationLabel: '1m 08s',
-    costLabel: '$0.10',
-    ranAt: 'Yesterday',
+    cost: 0.1,
+    startedAt: ago(DAY + 68 * SECOND),
+    completedAt: ago(DAY),
+    ranAt: ago(DAY),
+    hermesRunId: '',
     toolCalls: [
       {
-        tool: 'Consensus',
+        tool: 'consensus',
         query: 'flexicurity Denmark employment security outcomes',
-        durationLabel: '1.9s',
         status: 'success',
+        durationMs: 1900,
       },
       {
-        tool: 'Library',
+        tool: 'web',
         query: 'OECD labour market security index Nordic',
-        durationLabel: '2.5s',
         status: 'success',
+        durationMs: 2500,
       },
     ],
   },

@@ -9,10 +9,17 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { AGENT_RUNS } from '../mockData'
+import {
+  formatCost,
+  formatRanAt,
+  formatRunDuration,
+  formatToolCallDuration,
+  roleLabel,
+  runStatusBadge,
+} from '../runFormat'
 import type { AgentRun } from '../types'
 
-const RunsView = () => (
+const RunsView = ({ runs }: { runs: AgentRun[] }) => (
   <div className='space-y-6'>
     <header>
       <h2 className='text-xl font-semibold tracking-tight'>Runs</h2>
@@ -22,16 +29,23 @@ const RunsView = () => (
       </p>
     </header>
 
-    <div className='space-y-3'>
-      {AGENT_RUNS.map((run) => (
-        <RunCard key={run.id} run={run} />
-      ))}
-    </div>
+    {runs.length === 0 ? (
+      <div className='rounded-xl border border-dashed border-border px-6 py-16 text-center text-sm text-muted-foreground'>
+        No runs yet. Delegated tasks you send to Scout will appear here.
+      </div>
+    ) : (
+      <div className='space-y-3'>
+        {runs.map((run) => (
+          <RunCard key={run.id} run={run} />
+        ))}
+      </div>
+    )}
   </div>
 )
 
 const RunCard = ({ run }: { run: AgentRun }) => {
   const [expanded, setExpanded] = useState(false)
+  const badge = runStatusBadge(run.status)
 
   return (
     <div className='rounded-xl border border-border bg-card'>
@@ -43,27 +57,29 @@ const RunCard = ({ run }: { run: AgentRun }) => {
         <div className='min-w-0 flex-1'>
           <div className='mb-1 flex flex-wrap items-center gap-2'>
             <span className='inline-flex items-center gap-1.5 text-sm font-medium'>
-              {run.role === 'Critic' ? (
+              {run.role === 'critic' ? (
                 <MessageCircleQuestion className='h-4 w-4 text-muted-foreground' />
               ) : (
                 <Search className='h-4 w-4 text-muted-foreground' />
               )}
-              {run.role}
+              {roleLabel(run.role)}
             </span>
-            <StatusBadge status={run.status} />
-            <span className='text-xs text-muted-foreground'>{run.ranAt}</span>
+            <Badge variant={badge.variant}>{badge.label}</Badge>
+            <span className='text-xs text-muted-foreground'>
+              {formatRanAt(run.ranAt)}
+            </span>
           </div>
           <p className='truncate text-sm text-foreground/80'>{run.task}</p>
           <div className='mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
-            <span>{run.tools.join(' · ')}</span>
+            <span>{run.tools.join(' · ') || 'no tools'}</span>
             <span>·</span>
             <span>{run.stagedCount} staged</span>
             <span>·</span>
-            <span>{run.durationLabel}</span>
+            <span>{formatRunDuration(run.startedAt, run.completedAt)}</span>
             <span>·</span>
-            <span>{run.costLabel}</span>
+            <span>{formatCost(run.cost)}</span>
             <span>·</span>
-            <span>Standards: {run.soulFileVersion}</span>
+            <span>Standards: {run.soulFileVersion || '—'}</span>
           </div>
         </div>
         <ChevronDown
@@ -74,7 +90,7 @@ const RunCard = ({ run }: { run: AgentRun }) => {
         />
       </button>
 
-      {expanded && (
+      {expanded && run.toolCalls.length > 0 && (
         <div className='border-t border-border px-5 py-4'>
           <p className='mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
             Tool calls
@@ -97,7 +113,7 @@ const RunCard = ({ run }: { run: AgentRun }) => {
                   {call.query}
                 </span>
                 <span className='shrink-0 text-xs tabular-nums text-muted-foreground'>
-                  {call.durationLabel}
+                  {formatToolCallDuration(call.durationMs)}
                 </span>
               </div>
             ))}
@@ -108,8 +124,8 @@ const RunCard = ({ run }: { run: AgentRun }) => {
   )
 }
 
-const StatusDot = ({ status }: { status: AgentRun['status'] }) => {
-  if (status === 'running') {
+const StatusDot = ({ status }: { status: string }) => {
+  if (status === 'running' || status === 'started') {
     return (
       <Loader2 className='mt-0.5 h-4 w-4 shrink-0 animate-spin text-amber-500' />
     )
@@ -118,20 +134,14 @@ const StatusDot = ({ status }: { status: AgentRun['status'] }) => {
     <span
       className={cn(
         'mt-1.5 h-2 w-2 shrink-0 rounded-full',
-        status === 'completed' ? 'bg-green-500' : 'bg-red-500'
+        status === 'completed'
+          ? 'bg-green-500'
+          : status === 'failed'
+            ? 'bg-red-500'
+            : 'bg-muted-foreground'
       )}
     />
   )
-}
-
-const StatusBadge = ({ status }: { status: AgentRun['status'] }) => {
-  const map = {
-    completed: { variant: 'green' as const, label: 'Completed' },
-    running: { variant: 'yellow' as const, label: 'Running' },
-    failed: { variant: 'red' as const, label: 'Failed' },
-  }
-  const { variant, label } = map[status]
-  return <Badge variant={variant}>{label}</Badge>
 }
 
 export default RunsView

@@ -13,6 +13,7 @@ import HandsOnChat from './components/HandsOnChat'
 import RunsView from './components/RunsView'
 import WorkspaceShell from './components/WorkspaceShell'
 import {
+  AGENT_RUNS,
   PROJECT,
   SCOUT_CANDIDATES,
   SEED_KNOWLEDGE,
@@ -20,6 +21,7 @@ import {
 } from './mockData'
 import { WEB_SEARCH_TOOL_SLUG } from '@/utils/constants/research'
 import type {
+  AgentRun,
   CriticVerdict,
   KnowledgeItem,
   NavSection,
@@ -39,6 +41,8 @@ interface ResearchWorkspaceViewProps {
   sourceCount?: number
   /** Tool slugs the Scout composer offers (defaults to the web built-in). */
   enabledTools?: string[]
+  /** Agent runs for this project (defaults to the mock preview runs). */
+  runs?: AgentRun[]
   /** When provided, the header shows a "back to projects" affordance. */
   onBack?: () => void
 }
@@ -68,6 +72,7 @@ const ResearchWorkspaceView = ({
   question = PROJECT.question,
   sourceCount = SOURCE_FILES.length,
   enabledTools = DEFAULT_TOOLS,
+  runs = AGENT_RUNS,
   onBack,
 }: ResearchWorkspaceViewProps) => {
   const [section, setSection] = useState<NavSection>('overview')
@@ -125,6 +130,7 @@ const ResearchWorkspaceView = ({
           <OverviewPanel
             question={question}
             sourceCount={sourceCount}
+            runs={runs}
             pendingCount={pending.length}
             approvedCount={knowledge.length}
             onGoToScout={() => setSection('scout')}
@@ -137,6 +143,7 @@ const ResearchWorkspaceView = ({
         return (
           <AskScoutView
             tools={enabledTools}
+            runs={runs}
             scoutRunning={scoutRunning}
             pendingCount={pending.length}
             onRunScout={runScout}
@@ -166,7 +173,7 @@ const ResearchWorkspaceView = ({
       case 'artifacts':
         return <ArtifactsView />
       case 'runs':
-        return <RunsView />
+        return <RunsView runs={runs} />
     }
   }
 

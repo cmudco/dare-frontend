@@ -11,12 +11,13 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { AGENT_RUNS } from '../mockData'
-import type { RunStatus } from '../types'
+import { formatRanAt, roleLabel, runStatusBadge } from '../runFormat'
+import type { AgentRun } from '../types'
 
 interface Props {
   question: string
   sourceCount: number
+  runs: AgentRun[]
   pendingCount: number
   approvedCount: number
   onGoToScout: () => void
@@ -27,18 +28,10 @@ interface Props {
 
 type StepState = 'done' | 'active' | 'todo'
 
-const STATUS_BADGE: Record<
-  RunStatus,
-  { variant: 'green' | 'yellow' | 'red'; label: string }
-> = {
-  completed: { variant: 'green', label: 'Completed' },
-  running: { variant: 'yellow', label: 'Running' },
-  failed: { variant: 'red', label: 'Failed' },
-}
-
 const OverviewPanel = ({
   question,
   sourceCount,
+  runs,
   pendingCount,
   approvedCount,
   onGoToScout,
@@ -51,7 +44,7 @@ const OverviewPanel = ({
   const reviewState: StepState = pendingCount > 0 ? 'active' : 'todo'
   const approveState: StepState = approvedCount > 0 ? 'done' : 'todo'
 
-  const recentRuns = AGENT_RUNS.slice(0, 3)
+  const recentRuns = runs.slice(0, 3)
 
   return (
     <div className='space-y-8'>
@@ -89,7 +82,7 @@ const OverviewPanel = ({
         <StatTile
           icon={Activity}
           label='Runs'
-          value={AGENT_RUNS.length}
+          value={runs.length}
           tone='muted'
           onClick={onGoToRuns}
         />
@@ -155,19 +148,24 @@ const OverviewPanel = ({
           </button>
         </div>
         <div className='space-y-2'>
+          {recentRuns.length === 0 && (
+            <p className='text-sm text-muted-foreground'>
+              No runs yet — ask Scout to gather sources.
+            </p>
+          )}
           {recentRuns.map((run) => {
-            const badge = STATUS_BADGE[run.status]
+            const badge = runStatusBadge(run.status)
             return (
               <div
                 key={run.id}
                 className='flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3'
               >
                 <span className='shrink-0 text-xs font-medium text-muted-foreground'>
-                  {run.role}
+                  {roleLabel(run.role)}
                 </span>
                 <p className='min-w-0 flex-1 truncate text-sm'>{run.task}</p>
                 <span className='shrink-0 text-xs text-muted-foreground'>
-                  {run.ranAt}
+                  {formatRanAt(run.ranAt)}
                 </span>
                 <Badge variant={badge.variant} className='shrink-0'>
                   {badge.label}

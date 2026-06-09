@@ -1,35 +1,28 @@
 import { ArrowRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { AGENT_RUNS } from '../mockData'
-import type { RunStatus } from '../types'
+import { formatRanAt, runStatusBadge } from '../runFormat'
+import type { AgentRun } from '../types'
 import ScoutComposer from './ScoutComposer'
 
 interface Props {
   tools: string[]
+  runs: AgentRun[]
   scoutRunning: boolean
   pendingCount: number
   onRunScout: () => void
   onGoToReview: () => void
 }
 
-const STATUS_BADGE: Record<
-  RunStatus,
-  { variant: 'green' | 'yellow' | 'red'; label: string }
-> = {
-  completed: { variant: 'green', label: 'Completed' },
-  running: { variant: 'yellow', label: 'Running' },
-  failed: { variant: 'red', label: 'Failed' },
-}
-
 const AskScoutView = ({
   tools,
+  runs,
   scoutRunning,
   pendingCount,
   onRunScout,
   onGoToReview,
 }: Props) => {
-  const recentRuns = AGENT_RUNS.filter((r) => r.role === 'Scout')
+  const recentRuns = runs.filter((r) => r.role === 'scout')
 
   return (
     <div className='space-y-6'>
@@ -64,8 +57,11 @@ const AskScoutView = ({
       <section>
         <h3 className='mb-3 text-sm font-medium'>Recent Scout runs</h3>
         <div className='space-y-2'>
+          {recentRuns.length === 0 && (
+            <p className='text-sm text-muted-foreground'>No Scout runs yet.</p>
+          )}
           {recentRuns.map((run) => {
-            const badge = STATUS_BADGE[run.status]
+            const badge = runStatusBadge(run.status)
             return (
               <div
                 key={run.id}
@@ -75,7 +71,7 @@ const AskScoutView = ({
                   <p className='truncate text-sm'>{run.task}</p>
                   <p className='text-xs text-muted-foreground'>
                     {run.tools.join(' · ')} · {run.stagedCount} staged ·{' '}
-                    {run.ranAt}
+                    {formatRanAt(run.ranAt)}
                   </p>
                 </div>
                 <Badge variant={badge.variant} className='shrink-0'>

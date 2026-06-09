@@ -32,6 +32,35 @@ export interface ResearchProject {
   updatedAt: string
   /** ISO 8601 timestamp from the backend; formatted for display in the UI. */
   createdAt: string
+  /** Agent runs — present only in the single-project detail payload. */
+  runs?: AgentRun[]
+}
+
+/** A single tool invocation within a run (from the run audit). */
+export interface AgentRunToolCall {
+  tool: string
+  query: string
+  status: string // 'success' | 'error'
+  durationMs: number | null
+  resultSummary?: string
+}
+
+/** One delegated run from DARE to Hermes — the Runs/activity record. */
+export interface AgentRun {
+  id: number
+  role: string // slug, e.g. 'scout' | 'critic'
+  mode: string // 'scout' | 'chat'
+  task: string
+  status: string // started | running | queued | completed | failed
+  soulFileVersion: string
+  tools: string[]
+  stagedCount: number
+  cost: number
+  startedAt: string | null
+  completedAt: string | null
+  ranAt: string
+  hermesRunId: string
+  toolCalls: AgentRunToolCall[]
 }
 
 /** Working state for the create/edit wizard before it becomes a project. */

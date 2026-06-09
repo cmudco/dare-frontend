@@ -32,6 +32,7 @@ const ResearchWorkspace = () => {
       question={project?.question}
       sourceCount={project?.sourceCount}
       enabledTools={project?.enabledTools}
+      runs={project?.runs ?? []}
       onBack={() => navigate('/research')}
     />
   )
