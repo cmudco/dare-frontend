@@ -184,6 +184,13 @@ export interface AgentRunToolCall {
   resultSummary?: string
 }
 
+/** Token usage the agent runtime reported for a run. */
+export interface AgentRunUsage {
+  inputTokens?: number
+  outputTokens?: number
+  totalTokens?: number
+}
+
 /** One delegated run from DARE to Hermes — the Runs/activity record. */
 export interface AgentRun {
   id: number
@@ -196,6 +203,7 @@ export interface AgentRun {
   tools: string[]
   stagedCount: number
   cost: number
+  usage: AgentRunUsage
   startedAt: string | null
   completedAt: string | null
   ranAt: string

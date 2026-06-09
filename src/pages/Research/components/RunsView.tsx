@@ -10,9 +10,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
-  formatCost,
   formatRanAt,
   formatRunDuration,
+  formatTokens,
   formatToolCallDuration,
   roleLabel,
   runStatusBadge,
@@ -77,7 +77,7 @@ const RunCard = ({ run }: { run: AgentRun }) => {
             <span>·</span>
             <span>{formatRunDuration(run.startedAt, run.completedAt)}</span>
             <span>·</span>
-            <span>{formatCost(run.cost)}</span>
+            <span>{formatTokens(run.usage?.totalTokens)}</span>
             <span>·</span>
             <span>Standards: {run.soulFileVersion || '—'}</span>
           </div>

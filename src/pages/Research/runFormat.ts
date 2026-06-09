@@ -46,6 +46,14 @@ export const formatRunDuration = (
 export const formatCost = (cost: number): string =>
   cost > 0 ? `$${cost.toFixed(2)}` : '—'
 
+/** Total tokens a run consumed, e.g. "14.6k tokens". */
+export const formatTokens = (totalTokens?: number | null): string => {
+  if (!totalTokens) return '—'
+  return totalTokens < 1000
+    ? `${totalTokens} tokens`
+    : `${(totalTokens / 1000).toFixed(1)}k tokens`
+}
+
 export const formatToolCallDuration = (durationMs: number | null): string => {
   if (durationMs == null) return '—'
   return durationMs < 1000
