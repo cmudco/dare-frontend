@@ -1,8 +1,6 @@
 import {
   Activity,
   ArrowLeft,
-  BookMarked,
-  Brain,
   Compass,
   Inbox,
   Library,
@@ -25,9 +23,7 @@ const NAV: NavDef[] = [
   { key: 'scout', label: 'Ask Scout', icon: Telescope },
   { key: 'chat', label: 'Chat', icon: MessagesSquare },
   { key: 'review', label: 'Review Inbox', icon: Inbox },
-  { key: 'knowledge', label: 'Project Knowledge', icon: BookMarked },
-  { key: 'sources', label: 'Sources', icon: Library },
-  { key: 'memory', label: 'Memory / Context', icon: Brain },
+  { key: 'memory', label: 'Context', icon: Library },
   { key: 'artifacts', label: 'Artifacts', icon: Shapes },
   { key: 'runs', label: 'Runs', icon: Activity },
 ]

@@ -4,15 +4,11 @@ import { getResearchProject } from '@/redux/asyncThunks/research'
 import { askCriticAPI, reviewStagingItemAPI, runScoutAPI } from '@/api/research'
 import { WEB_SEARCH_TOOL_SLUG } from '@/utils/constants/research'
 import { usePolledRun } from './usePolledRun'
+import ContextHub from './components/ContextHub'
 import ContextPanel from './components/ContextPanel'
 import OverviewPanel from './components/OverviewPanel'
-import ProjectKnowledge from './components/ProjectKnowledge'
 import ReviewInbox from './components/ReviewInbox'
-import {
-  ArtifactsView,
-  MemoryView,
-  SourcesView,
-} from './components/SecondaryViews'
+import { ArtifactsView } from './components/SecondaryViews'
 import AskScoutView from './components/AskScoutView'
 import HandsOnChat from './components/HandsOnChat'
 import RunsView from './components/RunsView'
@@ -210,13 +206,12 @@ const ResearchWorkspaceView = ({
             onGoToOverview={() => setSection('overview')}
           />
         )
-      case 'knowledge':
-        return <ProjectKnowledge items={knowledgeItems} />
-      case 'sources':
-        return <SourcesView sources={sources} />
       case 'memory':
         return (
-          <MemoryView
+          <ContextHub
+            knowledgeItems={knowledgeItems}
+            sources={sources}
+            soulFile={soulFile}
             projectMemory={projectMemory}
             memoryProposals={memoryProposals}
           />

@@ -5,8 +5,6 @@ export type NavSection =
   | 'scout'
   | 'chat'
   | 'review'
-  | 'knowledge'
-  | 'sources'
   | 'memory'
   | 'artifacts'
   | 'runs'
