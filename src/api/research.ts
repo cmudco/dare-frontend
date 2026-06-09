@@ -8,6 +8,7 @@ import type {
   ResearchProject,
   ResearchProjectsResponse,
   ReviewItem,
+  UpdateResearchProjectPayload,
 } from '@/redux/types/research'
 
 export const getResearchProjectsAPI =
@@ -33,6 +34,17 @@ export const createResearchProjectAPI = async (
   return await baseRequest<ResearchProject>({
     url: 'api/research/projects/',
     method: METHOD.POST,
+    data: payload,
+  })
+}
+
+export const updateResearchProjectAPI = async (
+  id: number,
+  payload: UpdateResearchProjectPayload
+): Promise<ResearchProject> => {
+  return await baseRequest<ResearchProject>({
+    url: `api/research/projects/${id}/`,
+    method: METHOD.PATCH,
     data: payload,
   })
 }

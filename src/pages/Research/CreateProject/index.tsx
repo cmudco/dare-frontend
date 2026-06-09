@@ -3,8 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { updateResearchProject } from '@/redux/researchSlice'
-import { createResearchProject } from '@/redux/asyncThunks/research'
+import {
+  createResearchProject,
+  updateResearchProject,
+} from '@/redux/asyncThunks/research'
 import { StandardsTemplate } from '@/utils/constants/research'
 import type { ProjectDraft, ResearchProject } from '@/redux/types/research'
 import DefineStep from './DefineStep'
@@ -71,19 +73,23 @@ const CreateProject = () => {
 
   const handleSubmit = async () => {
     if (isEditing && editingProject) {
-      dispatch(
+      setSubmitting(true)
+      const result = await dispatch(
         updateResearchProject({
-          ...editingProject,
-          title: draft.title.trim(),
-          question: draft.question.trim(),
-          field: draft.field.trim(),
-          enabledTools: draft.enabledTools,
-          standardsTemplate: draft.standardsTemplate,
-          sourceCount: editingProject.sourceCount + draft.files.length,
-          updatedAt: new Date().toISOString(),
+          id: editingProject.id,
+          changes: {
+            title: draft.title.trim(),
+            question: draft.question.trim(),
+            field: draft.field.trim(),
+            enabledTools: draft.enabledTools,
+            standardsTemplate: draft.standardsTemplate,
+          },
         })
       )
-      navigate(`/research/${editingProject.id}`)
+      setSubmitting(false)
+      if (updateResearchProject.fulfilled.match(result)) {
+        navigate(`/research/${editingProject.id}`)
+      }
       return
     }
 
@@ -199,7 +205,9 @@ const CreateProject = () => {
             >
               {isLast
                 ? isEditing
-                  ? 'Save changes'
+                  ? submitting
+                    ? 'Saving…'
+                    : 'Save changes'
                   : submitting
                     ? 'Creating…'
                     : 'Create project'

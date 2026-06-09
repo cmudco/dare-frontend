@@ -232,6 +232,11 @@ export interface CreateResearchProjectPayload {
   sources?: CreateProjectSourceInput[]
 }
 
+/** Editable project fields for `PATCH /api/research/projects/{id}/`. */
+export type UpdateResearchProjectPayload = Partial<
+  Omit<CreateResearchProjectPayload, 'sources'>
+>
+
 /** Paginated list response from `GET /api/research/projects/`. */
 export interface ResearchProjectsResponse {
   count: number

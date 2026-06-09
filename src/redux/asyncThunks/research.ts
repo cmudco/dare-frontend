@@ -4,8 +4,12 @@ import {
   createResearchProjectAPI,
   getResearchProjectAPI,
   getResearchProjectsAPI,
+  updateResearchProjectAPI,
 } from '@/api/research'
-import type { CreateResearchProjectPayload } from '@/redux/types/research'
+import type {
+  CreateResearchProjectPayload,
+  UpdateResearchProjectPayload,
+} from '@/redux/types/research'
 
 export const getResearchProjects = createAsyncThunk(
   'research/getResearchProjects',
@@ -35,6 +39,20 @@ export const createResearchProject = createAsyncThunk(
   async (payload: CreateResearchProjectPayload, { rejectWithValue }) => {
     try {
       return await createResearchProjectAPI(payload)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateResearchProject = createAsyncThunk(
+  'research/updateResearchProject',
+  async (
+    { id, changes }: { id: number; changes: UpdateResearchProjectPayload },
+    { rejectWithValue }
+  ) => {
+    try {
+      return await updateResearchProjectAPI(id, changes)
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }
