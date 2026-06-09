@@ -75,8 +75,12 @@ export interface SourceFile {
 }
 
 // --- Agent runs (the visible communication with the Hermes harness) ---
-// Canonical run shapes come from the API; re-exported here for the workspace.
-export type { AgentRun, AgentRunToolCall } from '@/redux/types/research'
+// Canonical API shapes; re-exported here for the workspace.
+export type {
+  AgentRun,
+  AgentRunToolCall,
+  ResearchSource,
+} from '@/redux/types/research'
 
 export type AgentRole = 'Scout' | 'Critic' | 'Librarian' | 'Paper Assistant'
 

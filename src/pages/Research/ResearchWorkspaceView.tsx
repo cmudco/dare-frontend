@@ -17,7 +17,6 @@ import {
   PROJECT,
   SCOUT_CANDIDATES,
   SEED_KNOWLEDGE,
-  SOURCE_FILES,
 } from './mockData'
 import { WEB_SEARCH_TOOL_SLUG } from '@/utils/constants/research'
 import type {
@@ -25,6 +24,7 @@ import type {
   CriticVerdict,
   KnowledgeItem,
   NavSection,
+  ResearchSource,
   ReviewItem,
 } from './types'
 
@@ -43,6 +43,8 @@ interface ResearchWorkspaceViewProps {
   enabledTools?: string[]
   /** Agent runs for this project (defaults to the mock preview runs). */
   runs?: AgentRun[]
+  /** Sources in the project's library. */
+  sources?: ResearchSource[]
   /** When provided, the header shows a "back to projects" affordance. */
   onBack?: () => void
 }
@@ -70,9 +72,10 @@ const ResearchWorkspaceView = ({
   projectTitle,
   projectMeta,
   question = PROJECT.question,
-  sourceCount = SOURCE_FILES.length,
+  sourceCount = 0,
   enabledTools = DEFAULT_TOOLS,
   runs = AGENT_RUNS,
+  sources = [],
   onBack,
 }: ResearchWorkspaceViewProps) => {
   const [section, setSection] = useState<NavSection>('overview')
@@ -167,7 +170,7 @@ const ResearchWorkspaceView = ({
       case 'knowledge':
         return <ProjectKnowledge items={knowledge} />
       case 'sources':
-        return <SourcesView />
+        return <SourcesView sources={sources} />
       case 'memory':
         return <MemoryView />
       case 'artifacts':

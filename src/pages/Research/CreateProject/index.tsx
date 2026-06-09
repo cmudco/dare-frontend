@@ -95,6 +95,11 @@ const CreateProject = () => {
         field: draft.field.trim(),
         enabledTools: draft.enabledTools,
         standardsTemplate: draft.standardsTemplate,
+        sources: draft.files.map((f) => ({
+          name: f.name,
+          kind: f.kind,
+          sizeLabel: f.sizeLabel,
+        })),
       })
     )
     setSubmitting(false)

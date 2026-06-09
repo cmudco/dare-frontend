@@ -34,6 +34,32 @@ export interface ResearchProject {
   createdAt: string
   /** Agent runs — present only in the single-project detail payload. */
   runs?: AgentRun[]
+  /** Sources — present only in the single-project detail payload. */
+  sources?: ResearchSource[]
+}
+
+/** A source in the project's library (uploaded file or discovered record). */
+export interface ResearchSource {
+  id: number
+  name: string
+  kind: string
+  sizeLabel: string
+  pageCount: number | null
+  sourceType: string
+  title: string
+  authors: string
+  year: number | null
+  venue: string
+  doi: string
+  url: string
+  createdAt: string
+}
+
+/** File metadata attached on project create (from the wizard). */
+export interface CreateProjectSourceInput {
+  name: string
+  kind: string
+  sizeLabel: string
 }
 
 /** A single tool invocation within a run (from the run audit). */
@@ -73,13 +99,15 @@ export interface ProjectDraft {
   standardsTemplate: StandardsTemplate
 }
 
-/** Payload sent to the backend to create a project (files are uploaded separately). */
+/** Payload sent to the backend to create a project. */
 export interface CreateResearchProjectPayload {
   title: string
   question: string
   field: string
   enabledTools: string[]
   standardsTemplate: StandardsTemplate
+  /** Source-file metadata to attach on create. */
+  sources?: CreateProjectSourceInput[]
 }
 
 /** Paginated list response from `GET /api/research/projects/`. */

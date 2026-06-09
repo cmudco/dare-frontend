@@ -29,10 +29,11 @@ const ResearchWorkspace = () => {
     <ResearchWorkspaceView
       projectTitle={project?.title}
       projectMeta={project?.field}
-      question={project?.question}
-      sourceCount={project?.sourceCount}
-      enabledTools={project?.enabledTools}
+      question={project?.question ?? ''}
+      sourceCount={project?.sourceCount ?? 0}
+      enabledTools={project?.enabledTools ?? []}
       runs={project?.runs ?? []}
+      sources={project?.sources ?? []}
       onBack={() => navigate('/research')}
     />
   )
