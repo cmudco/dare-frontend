@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { getChatHistoryAPI, streamChatMessage } from '@/api/research'
 import type { ChatMessage, SoulFile } from '../types'
+import ChatMarkdown from './ChatMarkdown'
 
 interface Props {
   projectId?: number
@@ -32,12 +33,18 @@ const Bubble = ({
       </p>
       <div className='rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-3 text-sm leading-relaxed'>
         {content ? (
-          <span className='whitespace-pre-wrap'>{content}</span>
+          // While streaming, show raw text (diagrams can't render half-written);
+          // once settled, render markdown so Mermaid/code/tables come alive.
+          streaming ? (
+            <span className='whitespace-pre-wrap'>
+              {content}
+              <span className='ml-0.5 inline-block animate-pulse'>▍</span>
+            </span>
+          ) : (
+            <ChatMarkdown content={content} />
+          )
         ) : (
           streaming && <span className='text-muted-foreground'>Thinking…</span>
-        )}
-        {streaming && content && (
-          <span className='ml-0.5 inline-block animate-pulse'>▍</span>
         )}
       </div>
     </div>
