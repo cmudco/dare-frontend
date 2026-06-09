@@ -107,15 +107,24 @@ const ResearchWorkspaceView = ({
     }
   }, [runs, runningRunId])
 
-  usePolledRun(runningRunId, setScoutStatus, () => {
-    setRunningRunId(null)
-    setScoutStatus('')
-    refresh()
-  })
+  // Poll the live run and refetch the project each tick, so the run and its live
+  // status show across every tab (Recent runs, Overview, Runs) — not only here.
+  usePolledRun(
+    runningRunId,
+    (detail) => {
+      setScoutStatus(detail)
+      refresh()
+    },
+    () => {
+      setRunningRunId(null)
+      setScoutStatus('')
+      refresh()
+    }
+  )
 
   usePolledRun(
     criticRunId,
-    () => {},
+    () => refresh(),
     () => {
       setCriticRunId(null)
       setCriticItemId(null)
@@ -132,6 +141,7 @@ const ResearchWorkspaceView = ({
       const { runId } = await runScoutAPI(projectId, query)
       setRunningRunId(runId)
       setScoutStatus('Queued…')
+      refresh() // surface the run immediately — no manual reload
     } catch {
       // leaving runningRunId null keeps the composer ready to retry
     }
@@ -151,6 +161,7 @@ const ResearchWorkspaceView = ({
     try {
       const { runId } = await askCriticAPI(itemId)
       setCriticRunId(runId)
+      refresh() // surface the critic run immediately
     } catch {
       setCriticItemId(null)
     }
