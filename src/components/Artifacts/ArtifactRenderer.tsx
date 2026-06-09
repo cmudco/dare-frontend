@@ -49,10 +49,12 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
       )
 
     case 'svg':
+      // Wrap so the SVG scales to fit + centers, instead of rendering at its
+      // intrinsic size in the corner.
       return (
         <iframe
           title={artifact.title || 'SVG figure'}
-          srcDoc={artifact.content}
+          srcDoc={`<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%}body{display:grid;place-items:center;background:#fff}svg{max-width:100%;max-height:100%;height:auto}</style>${artifact.content}`}
           sandbox=''
           className='h-full min-h-[320px] w-full rounded-lg border border-border bg-white'
         />
