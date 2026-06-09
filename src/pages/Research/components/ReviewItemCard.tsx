@@ -1,6 +1,17 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, ChevronDown, Clock, ExternalLink, X } from 'lucide-react'
+import {
+  Check,
+  ChevronDown,
+  Clock,
+  ExternalLink,
+  Loader2,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldQuestion,
+  ShieldX,
+  X,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -11,16 +22,60 @@ import { evidenceMeta, toolLabel } from './signals'
 
 interface Props {
   item: ReviewItem
+  /** True while the Critic is assessing this item. */
+  critiquing: boolean
   onApprove: (id: number) => void
   onReject: (id: number) => void
   onLater: (id: number) => void
+  onAskCritic: (id: number) => void
 }
 
-const ReviewItemCard = ({ item, onApprove, onReject, onLater }: Props) => {
+interface CriticVerdict {
+  verdict?: string
+  reasoning?: string
+  concerns?: string[]
+}
+
+const CRITIC_META: Record<
+  string,
+  { label: string; tone: string; Icon: typeof ShieldCheck }
+> = {
+  holds: {
+    label: 'Holds up',
+    tone: 'text-green-600 dark:text-green-400',
+    Icon: ShieldCheck,
+  },
+  overstated: {
+    label: 'Overstated',
+    tone: 'text-amber-600 dark:text-amber-400',
+    Icon: ShieldAlert,
+  },
+  unsupported: {
+    label: 'Unsupported',
+    tone: 'text-red-600 dark:text-red-400',
+    Icon: ShieldX,
+  },
+  inconclusive: {
+    label: 'Inconclusive',
+    tone: 'text-muted-foreground',
+    Icon: ShieldQuestion,
+  },
+}
+
+const ReviewItemCard = ({
+  item,
+  critiquing,
+  onApprove,
+  onReject,
+  onLater,
+  onAskCritic,
+}: Props) => {
   const [expanded, setExpanded] = useState(false)
   const signal = evidenceMeta(item.evidenceLabel)
   const confidence = Math.round((item.confidence ?? 0) * 100)
   const tool = toolLabel(item.provenance?.tool ?? '')
+  const critic = item.criticMetadata as CriticVerdict | undefined
+  const verdict = critic?.verdict ? CRITIC_META[critic.verdict] : undefined
 
   return (
     <motion.div
@@ -121,6 +176,33 @@ const ReviewItemCard = ({ item, onApprove, onReject, onLater }: Props) => {
         </motion.div>
       )}
 
+      {/* Critic verdict — the adversarial check, once run */}
+      {verdict && (
+        <div className='mx-5 mt-4 rounded-lg border border-border bg-muted/40 p-3'>
+          <div
+            className={cn(
+              'flex items-center gap-2 text-sm font-medium',
+              verdict.tone
+            )}
+          >
+            <verdict.Icon className='h-4 w-4' />
+            Critic · {verdict.label}
+          </div>
+          {critic?.reasoning && (
+            <p className='mt-1 text-sm text-muted-foreground'>
+              {critic.reasoning}
+            </p>
+          )}
+          {!!critic?.concerns?.length && (
+            <ul className='mt-2 list-disc space-y-0.5 pl-4 text-sm text-muted-foreground'>
+              {critic.concerns.map((c, i) => (
+                <li key={i}>{c}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       <div className='flex flex-wrap items-center gap-2 p-5 pt-4'>
         <Button size='sm' onClick={() => onApprove(item.id)}>
           <Check className='h-4 w-4' /> Approve
@@ -130,6 +212,24 @@ const ReviewItemCard = ({ item, onApprove, onReject, onLater }: Props) => {
         </Button>
         <Button size='sm' variant='ghost' onClick={() => onLater(item.id)}>
           <Clock className='h-4 w-4' /> Later
+        </Button>
+        <Button
+          size='sm'
+          variant='ghost'
+          className='ml-auto'
+          disabled={critiquing}
+          onClick={() => onAskCritic(item.id)}
+        >
+          {critiquing ? (
+            <>
+              <Loader2 className='h-4 w-4 animate-spin' /> Assessing…
+            </>
+          ) : (
+            <>
+              <ShieldQuestion className='h-4 w-4' />
+              {verdict ? 'Re-run Critic' : 'Ask Critic'}
+            </>
+          )}
         </Button>
       </div>
     </motion.div>

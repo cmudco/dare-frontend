@@ -7,18 +7,23 @@ import ReviewItemCard from './ReviewItemCard'
 interface Props {
   pending: ReviewItem[]
   later: ReviewItem[]
+  /** The item currently being assessed by the Critic, if any. */
+  criticItemId: number | null
   onApprove: (id: number) => void
   onReject: (id: number) => void
   onLater: (id: number) => void
+  onAskCritic: (id: number) => void
   onGoToOverview: () => void
 }
 
 const ReviewInbox = ({
   pending,
   later,
+  criticItemId,
   onApprove,
   onReject,
   onLater,
+  onAskCritic,
   onGoToOverview,
 }: Props) => {
   return (
@@ -56,9 +61,11 @@ const ReviewInbox = ({
               <ReviewItemCard
                 key={item.id}
                 item={item}
+                critiquing={criticItemId === item.id}
                 onApprove={onApprove}
                 onReject={onReject}
                 onLater={onLater}
+                onAskCritic={onAskCritic}
               />
             ))}
           </AnimatePresence>

@@ -54,7 +54,15 @@ export const runScoutAPI = async (
   })
 }
 
-/** Poll a single agent run's live status (for the Scout progress UI). */
+/** Kick off a Critic run that pressure-tests a staged source (poll the run). */
+export const askCriticAPI = async (itemId: number): Promise<ScoutResult> => {
+  return await baseRequest<ScoutResult>({
+    url: `api/research/staging-items/${itemId}/critic/`,
+    method: METHOD.POST,
+  })
+}
+
+/** Poll a single agent run's live status (for Scout/Critic progress). */
 export const getAgentRunAPI = async (runId: number): Promise<AgentRun> => {
   return await baseRequest<AgentRun>({
     url: `api/research/agent-runs/${runId}/`,

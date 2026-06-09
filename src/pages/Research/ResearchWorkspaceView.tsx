@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useAppDispatch } from '@/redux/hooks'
 import { getResearchProject } from '@/redux/asyncThunks/research'
-import {
-  getAgentRunAPI,
-  reviewStagingItemAPI,
-  runScoutAPI,
-} from '@/api/research'
+import { askCriticAPI, reviewStagingItemAPI, runScoutAPI } from '@/api/research'
 import { WEB_SEARCH_TOOL_SLUG } from '@/utils/constants/research'
+import { usePolledRun } from './usePolledRun'
 import ContextPanel from './components/ContextPanel'
 import OverviewPanel from './components/OverviewPanel'
 import ProjectKnowledge from './components/ProjectKnowledge'
@@ -85,6 +82,8 @@ const ResearchWorkspaceView = ({
   const [section, setSection] = useState<NavSection>('overview')
   const [runningRunId, setRunningRunId] = useState<number | null>(null)
   const [scoutStatus, setScoutStatus] = useState('')
+  const [criticRunId, setCriticRunId] = useState<number | null>(null)
+  const [criticItemId, setCriticItemId] = useState<number | null>(null)
 
   const pending = reviewItems.filter((i) => i.status === 'staged')
   const later = reviewItems.filter((i) => i.status === 'later')
@@ -108,40 +107,21 @@ const ResearchWorkspaceView = ({
     }
   }, [runs, runningRunId])
 
-  // Poll the running Scout run until it finishes, then refresh the project.
-  useEffect(() => {
-    if (!runningRunId) return
-    let cancelled = false
-    let timer: ReturnType<typeof setTimeout>
-    const tick = async () => {
-      try {
-        const run = await getAgentRunAPI(runningRunId)
-        if (cancelled) return
-        setScoutStatus(run.statusDetail || '')
-        if (run.status === 'completed' || run.status === 'failed') {
-          setRunningRunId(null)
-          setScoutStatus('')
-          refresh()
-          return
-        }
-      } catch {
-        if (cancelled) return
-        // The run is gone or unreachable — stop the spinner and resync from the
-        // server. A still-live run gets re-adopted; a deleted one stays cleared.
-        setRunningRunId(null)
-        setScoutStatus('')
-        refresh()
-        return
-      }
-      if (!cancelled) timer = setTimeout(tick, 3000)
+  usePolledRun(runningRunId, setScoutStatus, () => {
+    setRunningRunId(null)
+    setScoutStatus('')
+    refresh()
+  })
+
+  usePolledRun(
+    criticRunId,
+    () => {},
+    () => {
+      setCriticRunId(null)
+      setCriticItemId(null)
+      refresh()
     }
-    timer = setTimeout(tick, 1500)
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runningRunId])
+  )
 
   const scoutRunning = runningRunId !== null
 
@@ -163,6 +143,17 @@ const ResearchWorkspaceView = ({
   ) => {
     await reviewStagingItemAPI(id, decision)
     refresh()
+  }
+
+  const askCritic = async (itemId: number) => {
+    if (criticRunId) return
+    setCriticItemId(itemId)
+    try {
+      const { runId } = await askCriticAPI(itemId)
+      setCriticRunId(runId)
+    } catch {
+      setCriticItemId(null)
+    }
   }
 
   const center = () => {
@@ -200,9 +191,11 @@ const ResearchWorkspaceView = ({
           <ReviewInbox
             pending={pending}
             later={later}
+            criticItemId={criticItemId}
             onApprove={(id) => review(id, 'approve')}
             onReject={(id) => review(id, 'reject')}
             onLater={(id) => review(id, 'later')}
+            onAskCritic={askCritic}
             onGoToOverview={() => setSection('overview')}
           />
         )
