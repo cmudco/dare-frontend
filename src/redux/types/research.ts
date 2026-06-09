@@ -63,6 +63,14 @@ export interface MemoryProposal {
   proposedAt: string
 }
 
+/** One message in the hands-on chat transcript. */
+export interface ChatMessage {
+  id: number
+  role: string // 'user' | 'assistant'
+  content: string
+  createdAt: string
+}
+
 /** The current version of a project's soul file (standards document). */
 export interface SoulFile {
   id: number

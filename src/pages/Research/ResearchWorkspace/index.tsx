@@ -27,6 +27,7 @@ const ResearchWorkspace = () => {
 
   return (
     <ResearchWorkspaceView
+      projectId={project?.id}
       projectTitle={project?.title}
       projectMeta={project?.field}
       question={project?.question ?? ''}

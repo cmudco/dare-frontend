@@ -64,6 +64,7 @@ export interface SoulVirtue {
 export type {
   AgentRun,
   AgentRunToolCall,
+  ChatMessage,
   MemoryProposal,
   ProjectMemory,
   ResearchSource,

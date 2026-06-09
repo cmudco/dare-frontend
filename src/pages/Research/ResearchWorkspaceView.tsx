@@ -34,6 +34,8 @@ import type {
 const DEFAULT_TOOLS: string[] = [WEB_SEARCH_TOOL_SLUG]
 
 interface ResearchWorkspaceViewProps {
+  /** The project's id (enables backend-backed views like chat). */
+  projectId?: number
   /** Title shown in the workspace header (defaults to the mock project). */
   projectTitle?: string
   /** Secondary line under the title (e.g. the field of study). */
@@ -78,6 +80,7 @@ const criticFor = (item: ReviewItem): CriticVerdict =>
         }
 
 const ResearchWorkspaceView = ({
+  projectId,
   projectTitle,
   projectMeta,
   question = PROJECT.question,
@@ -166,7 +169,7 @@ const ResearchWorkspaceView = ({
           />
         )
       case 'chat':
-        return <HandsOnChat />
+        return <HandsOnChat projectId={projectId} soulFile={soulFile} />
       case 'review':
         return (
           <ReviewInbox
