@@ -10,7 +10,7 @@ interface Props {
   runs: AgentRun[]
   scoutRunning: boolean
   pendingCount: number
-  onRunScout: () => void
+  onRunScout: (query: string) => void
   onGoToReview: () => void
 }
 

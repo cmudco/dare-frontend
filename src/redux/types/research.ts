@@ -42,6 +42,64 @@ export interface ResearchProject {
   projectMemory?: ProjectMemory[]
   /** Pending agent memory proposals — present only in the detail payload. */
   memoryProposals?: MemoryProposal[]
+  /** Staged review candidates — present only in the detail payload. */
+  reviewItems?: ReviewItem[]
+  /** Approved durable knowledge — present only in the detail payload. */
+  knowledgeItems?: KnowledgeItem[]
+}
+
+/** Where/how a staged item was retrieved (the §11 provenance contract). */
+export interface Provenance {
+  tool: string
+  query?: string
+  retrievedAt?: string
+  soulFileId?: number | null
+  soulFileVersion?: number | null
+  role?: string
+  runId?: number
+}
+
+/** A staged review candidate (the canonical §11 shape). */
+export interface ReviewItem {
+  id: number
+  title: string
+  authors: string
+  year: number | null
+  venue: string
+  doi: string
+  url: string
+  abstract: string
+  rationale: string
+  confidence: number | null // 0.0–1.0
+  confidenceRationale: string
+  evidenceLabel: string // supporting|disputing|partial|tangential|unverifiable
+  citationContext: string
+  provenance: Provenance
+  status: string // staged|approved|rejected|later
+  rejectionReason: string
+  laterReason: string
+  criticMetadata: Record<string, unknown>
+  reviewMetadata: Record<string, unknown>
+  createdAt: string
+}
+
+/** Approved durable knowledge (display fields read from the source staging item). */
+export interface KnowledgeItem {
+  id: number
+  title: string
+  authors: string
+  year: number | null
+  venue: string
+  url: string
+  rationale: string
+  confidence: number | null
+  evidenceLabel: string
+  citationContext: string
+  provenance: Provenance
+  soulFileVersion: string
+  usedIn: string[]
+  approvedAt: string | null
+  createdAt: string
 }
 
 /** A durable project-memory snapshot (working thesis, open question, …). */

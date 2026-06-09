@@ -2,7 +2,7 @@ import { BookMarked, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { KnowledgeItem } from '../types'
-import { signalMeta, toolMeta } from './signals'
+import { evidenceMeta, toolLabel } from './signals'
 
 const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
   return (
@@ -31,7 +31,8 @@ const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
       ) : (
         <div className='space-y-3'>
           {items.map((item) => {
-            const signal = signalMeta[item.citationSignal]
+            const signal = evidenceMeta(item.evidenceLabel)
+            const confidence = Math.round((item.confidence ?? 0) * 100)
             return (
               <div
                 key={item.id}
@@ -45,15 +46,17 @@ const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
                     {signal.label}
                   </Badge>
                   <span className='text-xs text-muted-foreground'>
-                    {item.confidence}% confidence · via{' '}
-                    {toolMeta[item.toolSource]}
+                    {confidence}% confidence · via{' '}
+                    {toolLabel(item.provenance?.tool ?? '')}
                   </span>
                 </div>
                 <h3 className='text-[15px] font-semibold leading-snug tracking-tight'>
                   {item.title}
                 </h3>
                 <p className='mt-0.5 text-xs text-muted-foreground'>
-                  {item.authors} · {item.venue} · {item.year}
+                  {[item.authors, item.venue, item.year]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </p>
                 <p className='mt-2 text-sm text-foreground/80'>
                   {item.rationale}

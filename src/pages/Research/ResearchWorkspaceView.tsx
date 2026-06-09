@@ -1,4 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useState } from 'react'
+import { useAppDispatch } from '@/redux/hooks'
+import { getResearchProject } from '@/redux/asyncThunks/research'
+import { reviewStagingItemAPI, runScoutAPI } from '@/api/research'
+import { WEB_SEARCH_TOOL_SLUG } from '@/utils/constants/research'
 import ContextPanel from './components/ContextPanel'
 import OverviewPanel from './components/OverviewPanel'
 import ProjectKnowledge from './components/ProjectKnowledge'
@@ -12,16 +16,9 @@ import AskScoutView from './components/AskScoutView'
 import HandsOnChat from './components/HandsOnChat'
 import RunsView from './components/RunsView'
 import WorkspaceShell from './components/WorkspaceShell'
-import {
-  AGENT_RUNS,
-  PROJECT,
-  SCOUT_CANDIDATES,
-  SEED_KNOWLEDGE,
-} from './mockData'
-import { WEB_SEARCH_TOOL_SLUG } from '@/utils/constants/research'
+import { AGENT_RUNS, PROJECT } from './mockData'
 import type {
   AgentRun,
-  CriticVerdict,
   KnowledgeItem,
   MemoryProposal,
   NavSection,
@@ -34,7 +31,7 @@ import type {
 const DEFAULT_TOOLS: string[] = [WEB_SEARCH_TOOL_SLUG]
 
 interface ResearchWorkspaceViewProps {
-  /** The project's id (enables backend-backed views like chat). */
+  /** The project's id (enables backend-backed views like chat and scout). */
   projectId?: number
   /** Title shown in the workspace header (defaults to the mock project). */
   projectTitle?: string
@@ -56,28 +53,13 @@ interface ResearchWorkspaceViewProps {
   projectMemory?: ProjectMemory[]
   /** Pending agent memory proposals. */
   memoryProposals?: MemoryProposal[]
+  /** Staged review candidates. */
+  reviewItems?: ReviewItem[]
+  /** Approved durable knowledge. */
+  knowledgeItems?: KnowledgeItem[]
   /** When provided, the header shows a "back to projects" affordance. */
   onBack?: () => void
 }
-
-const criticFor = (item: ReviewItem): CriticVerdict =>
-  item.citationSignal === 'disputing'
-    ? {
-        outcome: 'flag',
-        reasoning:
-          'This source argues against your thesis. It is worth keeping to engage directly, but do not cite it as support.',
-      }
-    : item.confidence < 75
-      ? {
-          outcome: 'flag',
-          reasoning:
-            'Relevant but adjacent. Confirm it actually bears on your claim before relying on it.',
-        }
-      : {
-          outcome: 'pass',
-          reasoning:
-            'The cited passage genuinely supports the claim you would use it for. No overstatement detected.',
-        }
 
 const ResearchWorkspaceView = ({
   projectId,
@@ -91,55 +73,41 @@ const ResearchWorkspaceView = ({
   soulFile = null,
   projectMemory = [],
   memoryProposals = [],
+  reviewItems = [],
+  knowledgeItems = [],
   onBack,
 }: ResearchWorkspaceViewProps) => {
+  const dispatch = useAppDispatch()
   const [section, setSection] = useState<NavSection>('overview')
-  const [items, setItems] = useState<ReviewItem[]>([])
   const [scoutRunning, setScoutRunning] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const pending = useMemo(
-    () => items.filter((i) => i.status === 'pending'),
-    [items]
-  )
-  const later = useMemo(
-    () => items.filter((i) => i.status === 'later'),
-    [items]
-  )
-  const knowledge: KnowledgeItem[] = useMemo(
-    () => [...items.filter((i) => i.status === 'approved'), ...SEED_KNOWLEDGE],
-    [items]
-  )
+  const pending = reviewItems.filter((i) => i.status === 'staged')
+  const later = reviewItems.filter((i) => i.status === 'later')
 
-  const setStatus = useCallback(
-    (id: number, status: ReviewItem['status']) =>
-      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i))),
-    []
-  )
+  const refresh = () => {
+    if (projectId) dispatch(getResearchProject(projectId))
+  }
 
-  const runScout = useCallback(() => {
-    if (scoutRunning) return
+  const runScout = async (query: string) => {
+    if (!projectId || !query || scoutRunning) return
     setScoutRunning(true)
-    // Simulate Scout doing bounded work, then staging its findings.
-    timer.current = setTimeout(() => {
-      setItems((prev) => {
-        const existing = new Set(prev.map((i) => i.id))
-        const fresh = SCOUT_CANDIDATES.filter((c) => !existing.has(c.id)).map(
-          (c) => ({ ...c, status: 'pending' as const })
-        )
-        return [...prev, ...fresh]
-      })
+    setSection('scout')
+    try {
+      await runScoutAPI(projectId, query)
+      refresh()
+      setSection('review')
+    } finally {
       setScoutRunning(false)
-    }, 1600)
-  }, [scoutRunning])
+    }
+  }
 
-  const askCritic = useCallback(
-    (id: number) =>
-      setItems((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, critic: criticFor(i) } : i))
-      ),
-    []
-  )
+  const review = async (
+    id: number,
+    decision: 'approve' | 'reject' | 'later'
+  ) => {
+    await reviewStagingItemAPI(id, decision)
+    refresh()
+  }
 
   const center = () => {
     switch (section) {
@@ -150,7 +118,7 @@ const ResearchWorkspaceView = ({
             sourceCount={sourceCount}
             runs={runs}
             pendingCount={pending.length}
-            approvedCount={knowledge.length}
+            approvedCount={knowledgeItems.length}
             onGoToScout={() => setSection('scout')}
             onGoToChat={() => setSection('chat')}
             onGoToReview={() => setSection('review')}
@@ -175,15 +143,14 @@ const ResearchWorkspaceView = ({
           <ReviewInbox
             pending={pending}
             later={later}
-            onApprove={(id) => setStatus(id, 'approved')}
-            onReject={(id) => setStatus(id, 'rejected')}
-            onLater={(id) => setStatus(id, 'later')}
-            onAskCritic={askCritic}
+            onApprove={(id) => review(id, 'approve')}
+            onReject={(id) => review(id, 'reject')}
+            onLater={(id) => review(id, 'later')}
             onGoToOverview={() => setSection('overview')}
           />
         )
       case 'knowledge':
-        return <ProjectKnowledge items={knowledge} />
+        return <ProjectKnowledge items={knowledgeItems} />
       case 'sources':
         return <SourcesView sources={sources} />
       case 'memory':
@@ -205,7 +172,7 @@ const ResearchWorkspaceView = ({
       active={section}
       onNavigate={setSection}
       pendingCount={pending.length}
-      approvedCount={knowledge.length}
+      approvedCount={knowledgeItems.length}
       center={center()}
       context={
         <ContextPanel

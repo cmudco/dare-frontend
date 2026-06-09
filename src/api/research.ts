@@ -6,6 +6,7 @@ import type {
   CreateResearchProjectPayload,
   ResearchProject,
   ResearchProjectsResponse,
+  ReviewItem,
 } from '@/redux/types/research'
 
 export const getResearchProjectsAPI =
@@ -32,6 +33,36 @@ export const createResearchProjectAPI = async (
     url: 'api/research/projects/',
     method: METHOD.POST,
     data: payload,
+  })
+}
+
+export interface ScoutResult {
+  runId: number
+  stagedCount: number
+}
+
+/** Run delegated Scout discovery (long-running; resolves when staging is done). */
+export const runScoutAPI = async (
+  projectId: number,
+  task: string
+): Promise<ScoutResult> => {
+  return await baseRequest<ScoutResult>({
+    url: `api/research/projects/${projectId}/scout/`,
+    method: METHOD.POST,
+    data: { task },
+  })
+}
+
+/** Approve / reject / defer a staged review item. */
+export const reviewStagingItemAPI = async (
+  itemId: number,
+  decision: 'approve' | 'reject' | 'later',
+  reason?: string
+): Promise<ReviewItem> => {
+  return await baseRequest<ReviewItem>({
+    url: `api/research/staging-items/${itemId}/review/`,
+    method: METHOD.POST,
+    data: { decision, reason },
   })
 }
 

@@ -10,7 +10,6 @@ interface Props {
   onApprove: (id: number) => void
   onReject: (id: number) => void
   onLater: (id: number) => void
-  onAskCritic: (id: number) => void
   onGoToOverview: () => void
 }
 
@@ -20,7 +19,6 @@ const ReviewInbox = ({
   onApprove,
   onReject,
   onLater,
-  onAskCritic,
   onGoToOverview,
 }: Props) => {
   return (
@@ -61,7 +59,6 @@ const ReviewInbox = ({
                 onApprove={onApprove}
                 onReject={onReject}
                 onLater={onLater}
-                onAskCritic={onAskCritic}
               />
             ))}
           </AnimatePresence>

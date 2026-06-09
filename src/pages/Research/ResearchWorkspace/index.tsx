@@ -38,6 +38,8 @@ const ResearchWorkspace = () => {
       soulFile={project?.soulFile ?? null}
       projectMemory={project?.projectMemory ?? []}
       memoryProposals={project?.memoryProposals ?? []}
+      reviewItems={project?.reviewItems ?? []}
+      knowledgeItems={project?.knowledgeItems ?? []}
       onBack={() => navigate('/research')}
     />
   )

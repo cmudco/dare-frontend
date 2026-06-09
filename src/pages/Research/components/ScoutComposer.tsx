@@ -19,7 +19,7 @@ interface Props {
   tools: string[]
   /** When true, the composer shows the async "working" state instead. */
   running: boolean
-  onRun: () => void
+  onRun: (query: string) => void
 }
 
 // The Scout query composer — shared by the Overview and the Ask Scout view.
@@ -122,7 +122,11 @@ const ScoutComposer = ({ tools, running, onRun }: Props) => {
           ))}
         </div>
 
-        <Button onClick={onRun} disabled={!canRun} className='ml-auto shrink-0'>
+        <Button
+          onClick={() => onRun(query.trim())}
+          disabled={!canRun}
+          className='ml-auto shrink-0'
+        >
           <Sparkles className='h-4 w-4' /> Run Scout
         </Button>
       </div>
