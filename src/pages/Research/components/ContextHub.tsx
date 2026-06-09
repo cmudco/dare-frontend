@@ -232,7 +232,9 @@ const AgentMemorySection = ({
 }) => (
   <div className='space-y-6'>
     <p className='text-sm text-muted-foreground'>
-      Hermes's own files on disk — the live agent state behind every run.
+      Hermes's own files on disk — the live agent state behind every run. These
+      live in one shared agent profile today; they become per-project once each
+      project gets its own Hermes profile.
     </p>
     <FileBlock
       name='SOUL.md'
