@@ -97,24 +97,28 @@ const RunCard = ({ run }: { run: AgentRun }) => {
           </p>
           <div className='space-y-2'>
             {run.toolCalls.map((call, i) => (
-              <div
-                key={i}
-                className='flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm'
-              >
-                {call.status === 'success' ? (
-                  <Check className='h-4 w-4 shrink-0 text-green-600 dark:text-green-400' />
-                ) : (
-                  <X className='h-4 w-4 shrink-0 text-red-600 dark:text-red-400' />
+              <div key={i} className='rounded-lg bg-muted/40 px-3 py-2 text-sm'>
+                <div className='flex items-center gap-3'>
+                  {call.status === 'success' ? (
+                    <Check className='h-4 w-4 shrink-0 text-green-600 dark:text-green-400' />
+                  ) : (
+                    <X className='h-4 w-4 shrink-0 text-red-600 dark:text-red-400' />
+                  )}
+                  <Badge variant='gray' className='shrink-0'>
+                    {call.tool}
+                  </Badge>
+                  <span className='min-w-0 flex-1 truncate text-muted-foreground'>
+                    {call.query}
+                  </span>
+                  <span className='shrink-0 text-xs tabular-nums text-muted-foreground'>
+                    {formatToolCallDuration(call.durationMs)}
+                  </span>
+                </div>
+                {call.resultSummary && (
+                  <p className='ml-7 mt-1 line-clamp-2 break-all text-xs text-muted-foreground/80'>
+                    {call.resultSummary}
+                  </p>
                 )}
-                <Badge variant='gray' className='shrink-0'>
-                  {call.tool}
-                </Badge>
-                <span className='min-w-0 flex-1 truncate text-muted-foreground'>
-                  {call.query}
-                </span>
-                <span className='shrink-0 text-xs tabular-nums text-muted-foreground'>
-                  {formatToolCallDuration(call.durationMs)}
-                </span>
               </div>
             ))}
           </div>
