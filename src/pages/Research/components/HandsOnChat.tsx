@@ -107,8 +107,8 @@ const HandsOnChat = ({ projectId, soulFile }: Props) => {
     : 'no soul file yet'
 
   return (
-    <div className='space-y-6'>
-      <header>
+    <div className='flex h-[calc(100vh-11rem)] flex-col'>
+      <header className='shrink-0'>
         <h2 className='text-xl font-semibold tracking-tight'>Chat</h2>
         <p className='mt-1 text-sm text-muted-foreground'>
           Hands-on mode — think live with the agent, under your soul file.
@@ -116,35 +116,44 @@ const HandsOnChat = ({ projectId, soulFile }: Props) => {
         </p>
       </header>
 
-      <div className='space-y-4'>
-        {isEmpty && (
-          <p className='rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground'>
-            Start a conversation — ask anything, think out loud, or sanity-check
-            an idea before you run Scout.
-          </p>
+      {/* Scrolling transcript */}
+      <div className='mt-4 flex-1 overflow-y-auto pr-1'>
+        {isEmpty ? (
+          <div className='flex h-full items-center justify-center'>
+            <p className='max-w-sm text-center text-sm text-muted-foreground'>
+              Start a conversation — ask anything, think out loud, or
+              sanity-check an idea before you run Scout.
+            </p>
+          </div>
+        ) : (
+          <div className='space-y-4'>
+            {messages.map((m) => (
+              <Bubble key={m.id} role={m.role} content={m.content} />
+            ))}
+            {pendingUser !== null && (
+              <Bubble role='user' content={pendingUser} />
+            )}
+            {streamingText !== null && (
+              <Bubble role='assistant' content={streamingText} streaming />
+            )}
+            {error && <p className='text-sm text-destructive'>{error}</p>}
+            <div ref={bottomRef} />
+          </div>
         )}
-        {messages.map((m) => (
-          <Bubble key={m.id} role={m.role} content={m.content} />
-        ))}
-        {pendingUser !== null && <Bubble role='user' content={pendingUser} />}
-        {streamingText !== null && (
-          <Bubble role='assistant' content={streamingText} streaming />
-        )}
-        {error && <p className='text-sm text-destructive'>{error}</p>}
-        <div ref={bottomRef} />
       </div>
 
-      <div className='rounded-2xl border border-border bg-card p-4'>
+      {/* Composer, pinned to the bottom */}
+      <div className='mt-4 shrink-0 rounded-2xl border border-border bg-card p-4'>
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
               void send()
             }
           }}
-          placeholder='Think out loud with the agent… (⌘/Ctrl + Enter to send)'
+          placeholder='Think out loud with the agent… (Enter to send · Shift+Enter for a new line)'
           rows={2}
           disabled={sending}
         />
