@@ -3,6 +3,7 @@ import type { Artifact } from '@/redux/types/artifact'
 import {
   ChartRenderer,
   DocxRenderer,
+  ExcalidrawRenderer,
   MermaidRenderer,
   PptxRenderer,
   SandpackRenderer,
@@ -61,23 +62,7 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
       )
 
     case 'excalidraw':
-      return (
-        <div className='flex h-full flex-col items-center justify-center gap-3 p-8 text-center'>
-          <div className='text-5xl'>✏️</div>
-          <p className='text-sm font-medium'>
-            {artifact.title || 'Excalidraw scene'}
-          </p>
-          <a
-            href={`data:application/json;charset=utf-8,${encodeURIComponent(
-              artifact.content
-            )}`}
-            download={`${(artifact.title || 'scene').replace(/\s+/g, '-')}.excalidraw`}
-            className='text-sm text-primary hover:underline'
-          >
-            Download .excalidraw — open at excalidraw.com
-          </a>
-        </div>
-      )
+      return <ExcalidrawRenderer content={artifact.content} />
 
     case 'docx':
       try {
