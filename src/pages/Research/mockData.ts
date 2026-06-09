@@ -2,13 +2,7 @@
 // Topic: "What makes the Nordic model work?" — citations and findings below
 // are fictional placeholders for demo purposes.
 
-import type {
-  AgentRun,
-  KnowledgeItem,
-  ReviewItem,
-  SoulVirtue,
-  SourceFile,
-} from './types'
+import type { AgentRun, KnowledgeItem, ReviewItem, SoulVirtue } from './types'
 
 export const PROJECT = {
   title: 'What Makes the Nordic Model Work',
@@ -47,35 +41,11 @@ export const SOUL_FILE = {
   ] satisfies SoulVirtue[],
 }
 
-export const SOURCE_FILES: SourceFile[] = [
-  {
-    id: 'f1',
-    name: 'Esping-Andersen_Three_Worlds_of_Welfare_Capitalism.pdf',
-    kind: 'Book chapter',
-    pages: 38,
-    addedAt: 'Added last week',
-  },
-  {
-    id: 'f2',
-    name: 'OECD_Survey_Nordic_Labour_Markets.pdf',
-    kind: 'Report',
-    pages: 142,
-    addedAt: 'Added last week',
-  },
-  {
-    id: 'f3',
-    name: 'Flexicurity_Denmark_case_study.pdf',
-    kind: 'Working paper',
-    pages: 27,
-    addedAt: 'Added this month',
-  },
-]
-
 // Pre-seeded approved knowledge so the Project Knowledge view is not empty
 // on first load — demonstrates that rationale + confidence travel with a source.
 export const SEED_KNOWLEDGE: KnowledgeItem[] = [
   {
-    id: 'k1',
+    id: 1,
     title: 'The Three Worlds of Welfare Capitalism: A Comparative Frame',
     authors: 'Esping-Andersen, G.',
     venue: 'Princeton University Press',
@@ -105,7 +75,7 @@ export const SEED_KNOWLEDGE: KnowledgeItem[] = [
 // Candidate sources Scout "returns" when the researcher runs it.
 export const SCOUT_CANDIDATES: ReviewItem[] = [
   {
-    id: 's1',
+    id: 2,
     title: 'Social Trust and Intergenerational Mobility Across OECD Economies',
     authors: 'Lindqvist, E.; Hassan, R.',
     venue: 'Journal of Comparative Economics',
@@ -131,7 +101,7 @@ export const SCOUT_CANDIDATES: ReviewItem[] = [
     status: 'pending',
   },
   {
-    id: 's2',
+    id: 3,
     title: 'Was It the Welfare State? Pre-1950 Roots of Nordic Equality',
     authors: 'Bjørnsson, K.',
     venue: 'Scandinavian Economic History Review',
@@ -157,7 +127,7 @@ export const SCOUT_CANDIDATES: ReviewItem[] = [
     status: 'pending',
   },
   {
-    id: 's3',
+    id: 4,
     title: 'Tax Morale and Administrative Capacity in High-Tax States',
     authors: 'Okonkwo, T.; Sætre, M.',
     venue: 'Public Administration Review',
@@ -183,7 +153,7 @@ export const SCOUT_CANDIDATES: ReviewItem[] = [
     status: 'pending',
   },
   {
-    id: 's4',
+    id: 5,
     title: 'Flexicurity: Reconciling Labour-Market Flexibility and Security',
     authors: 'Madsen, P. K.',
     venue: 'Work, Employment and Society',

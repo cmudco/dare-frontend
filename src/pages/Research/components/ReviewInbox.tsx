@@ -7,10 +7,10 @@ import ReviewItemCard from './ReviewItemCard'
 interface Props {
   pending: ReviewItem[]
   later: ReviewItem[]
-  onApprove: (id: string) => void
-  onReject: (id: string) => void
-  onLater: (id: string) => void
-  onAskCritic: (id: string) => void
+  onApprove: (id: number) => void
+  onReject: (id: number) => void
+  onLater: (id: number) => void
+  onAskCritic: (id: number) => void
   onGoToOverview: () => void
 }
 

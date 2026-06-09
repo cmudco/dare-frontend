@@ -31,7 +31,7 @@ export interface CriticVerdict {
 }
 
 export interface ReviewItem {
-  id: string
+  id: number
   title: string
   authors: string
   venue: string
@@ -57,14 +57,6 @@ export interface SoulVirtue {
   rank: number
   label: string
   note: string
-}
-
-export interface SourceFile {
-  id: string
-  name: string
-  kind: string
-  pages: number
-  addedAt: string
 }
 
 // --- Agent runs, memory, sources (the visible communication with Hermes) ---

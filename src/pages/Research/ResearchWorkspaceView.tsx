@@ -109,7 +109,7 @@ const ResearchWorkspaceView = ({
   )
 
   const setStatus = useCallback(
-    (id: string, status: ReviewItem['status']) =>
+    (id: number, status: ReviewItem['status']) =>
       setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i))),
     []
   )
@@ -131,7 +131,7 @@ const ResearchWorkspaceView = ({
   }, [scoutRunning])
 
   const askCritic = useCallback(
-    (id: string) =>
+    (id: number) =>
       setItems((prev) =>
         prev.map((i) => (i.id === id ? { ...i, critic: criticFor(i) } : i))
       ),
