@@ -16,6 +16,9 @@ export type ArtifactType =
   | 'image'
   | 'file'
   | 'react'
+  | 'html'
+  | 'svg'
+  | 'excalidraw'
 
 export type ArtifactStatus = 'completed' | 'error'
 

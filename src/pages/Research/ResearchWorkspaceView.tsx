@@ -20,6 +20,7 @@ import type {
   MemoryProposal,
   NavSection,
   ProjectMemory,
+  ResearchArtifact,
   ResearchSource,
   ReviewItem,
   SoulFile,
@@ -54,6 +55,8 @@ interface ResearchWorkspaceViewProps {
   reviewItems?: ReviewItem[]
   /** Approved durable knowledge. */
   knowledgeItems?: KnowledgeItem[]
+  /** Generated artifacts. */
+  artifacts?: ResearchArtifact[]
   /** When provided, the header shows a "back to projects" affordance. */
   onBack?: () => void
 }
@@ -72,6 +75,7 @@ const ResearchWorkspaceView = ({
   memoryProposals = [],
   reviewItems = [],
   knowledgeItems = [],
+  artifacts = [],
   onBack,
 }: ResearchWorkspaceViewProps) => {
   const dispatch = useAppDispatch()
@@ -217,7 +221,7 @@ const ResearchWorkspaceView = ({
           />
         )
       case 'artifacts':
-        return <ArtifactsView />
+        return <ArtifactsView artifacts={artifacts} />
       case 'runs':
         return <RunsView runs={runs} />
     }

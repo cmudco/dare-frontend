@@ -40,6 +40,7 @@ const ResearchWorkspace = () => {
       memoryProposals={project?.memoryProposals ?? []}
       reviewItems={project?.reviewItems ?? []}
       knowledgeItems={project?.knowledgeItems ?? []}
+      artifacts={project?.artifacts ?? []}
       onBack={() => navigate('/research')}
     />
   )

@@ -46,6 +46,19 @@ export interface ResearchProject {
   reviewItems?: ReviewItem[]
   /** Approved durable knowledge — present only in the detail payload. */
   knowledgeItems?: KnowledgeItem[]
+  /** Generated artifacts — present only in the detail payload. */
+  artifacts?: ResearchArtifact[]
+}
+
+/** A renderable artifact (artifactType drives the renderer registry). */
+export interface ResearchArtifact {
+  id: number
+  artifactType: string // diagram | html | svg | excalidraw | …
+  title: string
+  content: string
+  source: string // 'hermes' | 'dare'
+  provenance: Record<string, unknown>
+  createdAt: string
 }
 
 /** Where/how a staged item was retrieved (the §11 provenance contract). */

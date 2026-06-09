@@ -38,6 +38,45 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
     case 'diagram':
       return <MermaidRenderer code={artifact.content} />
 
+    case 'html':
+      return (
+        <iframe
+          title={artifact.title || 'HTML artifact'}
+          srcDoc={artifact.content}
+          sandbox=''
+          className='h-full min-h-[360px] w-full rounded-lg border border-border bg-white'
+        />
+      )
+
+    case 'svg':
+      return (
+        <iframe
+          title={artifact.title || 'SVG figure'}
+          srcDoc={artifact.content}
+          sandbox=''
+          className='h-full min-h-[320px] w-full rounded-lg border border-border bg-white'
+        />
+      )
+
+    case 'excalidraw':
+      return (
+        <div className='flex h-full flex-col items-center justify-center gap-3 p-8 text-center'>
+          <div className='text-5xl'>✏️</div>
+          <p className='text-sm font-medium'>
+            {artifact.title || 'Excalidraw scene'}
+          </p>
+          <a
+            href={`data:application/json;charset=utf-8,${encodeURIComponent(
+              artifact.content
+            )}`}
+            download={`${(artifact.title || 'scene').replace(/\s+/g, '-')}.excalidraw`}
+            className='text-sm text-primary hover:underline'
+          >
+            Download .excalidraw — open at excalidraw.com
+          </a>
+        </div>
+      )
+
     case 'docx':
       try {
         const config = JSON.parse(artifact.content)

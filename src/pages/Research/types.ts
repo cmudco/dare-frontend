@@ -24,6 +24,7 @@ export type {
   MemoryProposal,
   ProjectMemory,
   Provenance,
+  ResearchArtifact,
   ResearchSource,
   ReviewItem,
   SoulFile,
