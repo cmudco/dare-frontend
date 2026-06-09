@@ -62,6 +62,20 @@ export const askCriticAPI = async (itemId: number): Promise<ScoutResult> => {
   })
 }
 
+export interface AgentMemory {
+  soul: string
+  memory: string
+  user: string
+}
+
+/** Read the Hermes profile's operational memory files (read-only). */
+export const getAgentMemoryAPI = async (): Promise<AgentMemory> => {
+  return await baseRequest<AgentMemory>({
+    url: 'api/research/agent-memory/',
+    method: METHOD.GET,
+  })
+}
+
 /** Poll a single agent run's live status (for Scout/Critic progress). */
 export const getAgentRunAPI = async (runId: number): Promise<AgentRun> => {
   return await baseRequest<AgentRun>({

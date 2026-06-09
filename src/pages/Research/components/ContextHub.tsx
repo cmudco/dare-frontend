@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BookMarked, Brain, Cpu, FileText, ScrollText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { formatRelativeDate } from '@/utils/dateUtils'
+import { getAgentMemoryAPI, type AgentMemory } from '@/api/research'
 import type {
   KnowledgeItem,
   MemoryProposal,
@@ -34,6 +35,13 @@ const ContextHub = ({
   memoryProposals,
 }: Props) => {
   const [card, setCard] = useState<ContextCard>('durable')
+  const [agentMemory, setAgentMemory] = useState<AgentMemory | null>(null)
+
+  useEffect(() => {
+    getAgentMemoryAPI()
+      .then(setAgentMemory)
+      .catch(() => setAgentMemory(null))
+  }, [])
 
   const cards = [
     {
@@ -131,7 +139,9 @@ const ContextHub = ({
         {card === 'standards' && (
           <StandardsSection soulFile={soulFile} projectMemory={projectMemory} />
         )}
-        {card === 'agent' && <AgentMemorySection proposals={memoryProposals} />}
+        {card === 'agent' && (
+          <AgentMemorySection files={agentMemory} proposals={memoryProposals} />
+        )}
       </div>
     </div>
   )
@@ -190,38 +200,88 @@ const StandardsSection = ({
   </div>
 )
 
-const AgentMemorySection = ({ proposals }: { proposals: MemoryProposal[] }) => (
-  <section>
-    <h3 className='mb-1 text-sm font-medium'>
-      Pending from the agent · {proposals.length}
-    </h3>
-    <p className='mb-3 text-xs text-muted-foreground'>
-      Hermes proposes; you decide. Nothing here is remembered until you accept
-      it.
+const FileBlock = ({
+  name,
+  note,
+  content,
+}: {
+  name: string
+  note: string
+  content: string
+}) => (
+  <div>
+    <p className='mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+      {name} <span className='font-normal normal-case'>· {note}</span>
     </p>
-    {proposals.length === 0 ? (
-      <EmptyLine>No pending proposals.</EmptyLine>
+    {content.trim() ? (
+      <pre className='max-h-72 overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-card p-4 font-sans text-sm leading-relaxed text-foreground/90'>
+        {content}
+      </pre>
     ) : (
-      <div className='space-y-2'>
-        {proposals.map((p) => (
-          <div
-            key={p.id}
-            className='flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3'
-          >
-            <Badge variant='gray' className='mt-0.5 shrink-0'>
-              {p.role}
-            </Badge>
-            <div className='min-w-0 flex-1'>
-              <p className='text-sm'>{p.content}</p>
-              <p className='mt-1 text-xs text-muted-foreground'>
-                Proposed {formatRelativeDate(p.proposedAt)}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+      <EmptyLine>Hermes hasn’t written this yet.</EmptyLine>
     )}
-  </section>
+  </div>
+)
+
+const AgentMemorySection = ({
+  files,
+  proposals,
+}: {
+  files: AgentMemory | null
+  proposals: MemoryProposal[]
+}) => (
+  <div className='space-y-6'>
+    <p className='text-sm text-muted-foreground'>
+      Hermes's own files on disk — the live agent state behind every run.
+    </p>
+    <FileBlock
+      name='SOUL.md'
+      note='the anchor Hermes obeys — DARE keeps it in sync with your standards'
+      content={files?.soul ?? ''}
+    />
+    <FileBlock
+      name='MEMORY.md'
+      note='what the agent has learned (Hermes writes this)'
+      content={files?.memory ?? ''}
+    />
+    <FileBlock
+      name='USER.md'
+      note='what the agent knows about you (Hermes writes this)'
+      content={files?.user ?? ''}
+    />
+
+    <section>
+      <h3 className='mb-1 text-sm font-medium'>
+        Pending from the agent · {proposals.length}
+      </h3>
+      <p className='mb-3 text-xs text-muted-foreground'>
+        Hermes proposes; you decide. Nothing here is remembered until you accept
+        it.
+      </p>
+      {proposals.length === 0 ? (
+        <EmptyLine>No pending proposals.</EmptyLine>
+      ) : (
+        <div className='space-y-2'>
+          {proposals.map((p) => (
+            <div
+              key={p.id}
+              className='flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3'
+            >
+              <Badge variant='gray' className='mt-0.5 shrink-0'>
+                {p.role}
+              </Badge>
+              <div className='min-w-0 flex-1'>
+                <p className='text-sm'>{p.content}</p>
+                <p className='mt-1 text-xs text-muted-foreground'>
+                  Proposed {formatRelativeDate(p.proposedAt)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  </div>
 )
 
 export default ContextHub
