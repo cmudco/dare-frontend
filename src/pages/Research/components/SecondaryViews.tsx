@@ -6,9 +6,14 @@ import {
   Rows3,
   Shapes,
   Workflow,
-  X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { formatRelativeDate } from '@/utils/dateUtils'
 import { ArtifactRenderer } from '@/components/Artifacts/ArtifactRenderer'
@@ -88,41 +93,29 @@ const ArtifactModal = ({
   artifact,
   onClose,
 }: {
-  artifact: ResearchArtifact
+  artifact: ResearchArtifact | null
   onClose: () => void
 }) => (
-  <div
-    className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6'
-    onClick={onClose}
-  >
-    <div
-      className='flex max-h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl'
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className='flex items-center justify-between border-b border-border px-5 py-3'>
-        <div className='min-w-0'>
-          <p className='truncate text-sm font-medium'>
-            {artifact.title || artifact.artifactType}
-          </p>
-          <p className='text-xs text-muted-foreground'>
-            {artifact.artifactType} · {artifact.source} ·{' '}
-            {formatRelativeDate(artifact.createdAt)}
-          </p>
-        </div>
-        <button
-          onClick={onClose}
-          className='rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground'
-        >
-          <X className='h-4 w-4' />
-        </button>
-      </div>
-      <div className='min-h-0 flex-1 overflow-auto p-2'>
-        <div className='h-[70vh]'>
-          <ArtifactRenderer artifact={toArtifact(artifact)} />
-        </div>
-      </div>
-    </div>
-  </div>
+  <Dialog open={!!artifact} onOpenChange={(o) => !o && onClose()}>
+    <DialogContent className='flex h-[92vh] max-w-[94vw] flex-col gap-0 overflow-hidden p-0 sm:max-w-[94vw]'>
+      {artifact && (
+        <>
+          <DialogHeader className='shrink-0 space-y-0.5 border-b border-border px-5 py-3 pr-12 text-left'>
+            <DialogTitle className='truncate text-sm'>
+              {artifact.title || artifact.artifactType}
+            </DialogTitle>
+            <p className='text-xs text-muted-foreground'>
+              {artifact.artifactType} · {artifact.source} ·{' '}
+              {formatRelativeDate(artifact.createdAt)}
+            </p>
+          </DialogHeader>
+          <div className='min-h-0 flex-1 overflow-auto'>
+            <ArtifactRenderer artifact={toArtifact(artifact)} />
+          </div>
+        </>
+      )}
+    </DialogContent>
+  </Dialog>
 )
 
 export const ArtifactsView = ({
@@ -233,7 +226,7 @@ export const ArtifactsView = ({
         </div>
       )}
 
-      {open && <ArtifactModal artifact={open} onClose={() => setOpen(null)} />}
+      <ArtifactModal artifact={open} onClose={() => setOpen(null)} />
     </div>
   )
 }

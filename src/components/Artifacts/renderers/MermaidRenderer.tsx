@@ -70,7 +70,10 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
         mermaid
           .render(id, code)
           .then(({ svg }) => {
-            if (isMounted) setSvg(svg)
+            // Mermaid stamps a small intrinsic max-width on the <svg>, which
+            // makes diagrams render zoomed-out in a large panel. Let it fill.
+            if (isMounted)
+              setSvg(svg.replace(/max-width:\s*[\d.]+px/g, 'max-width: 100%'))
           })
           .catch((err) => {
             if (isMounted)
