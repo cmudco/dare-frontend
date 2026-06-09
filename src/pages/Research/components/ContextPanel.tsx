@@ -3,14 +3,22 @@ import { ChevronRight, FileText, ScrollText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppSelector } from '@/redux/hooks'
 import { resolveToolMeta } from '@/utils/constants/research'
-import { MEMORY, SOUL_FILE } from '../mockData'
+import { formatRelativeDate } from '@/utils/dateUtils'
+import type { ProjectMemory, SoulFile } from '../types'
 
 interface Props {
   question: string
   enabledTools: string[]
+  soulFile: SoulFile | null
+  projectMemory: ProjectMemory[]
 }
 
-const ContextPanel = ({ question, enabledTools }: Props) => {
+const ContextPanel = ({
+  question,
+  enabledTools,
+  soulFile,
+  projectMemory,
+}: Props) => {
   const [open, setOpen] = useState(true)
   const connections = useAppSelector((state) => state.mcp.connections)
   const tools = enabledTools.map((slug) => resolveToolMeta(slug, connections))
@@ -65,16 +73,22 @@ const ContextPanel = ({ question, enabledTools }: Props) => {
             </Block>
 
             <Block label='Active memory'>
-              <div className='space-y-2'>
-                {MEMORY.map((m) => (
-                  <div key={m.id} className='rounded-lg bg-muted/40 p-2.5'>
-                    <p className='text-xs font-medium'>{m.label}</p>
-                    <p className='mt-0.5 text-xs text-muted-foreground'>
-                      {m.detail}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              {projectMemory.length === 0 ? (
+                <p className='text-xs text-muted-foreground'>
+                  No project memory yet.
+                </p>
+              ) : (
+                <div className='space-y-2'>
+                  {projectMemory.map((m) => (
+                    <div key={m.id} className='rounded-lg bg-muted/40 p-2.5'>
+                      <p className='text-xs font-medium'>{m.label}</p>
+                      <p className='mt-0.5 text-xs text-muted-foreground'>
+                        {m.detail}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Block>
 
             <Block
@@ -84,23 +98,22 @@ const ContextPanel = ({ question, enabledTools }: Props) => {
               <div className='rounded-lg border border-border bg-muted/30 p-3'>
                 <div className='mb-2 flex items-center justify-between'>
                   <span className='text-xs font-medium'>Soul file</span>
-                  <span className='rounded bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground'>
-                    {SOUL_FILE.version} · {SOUL_FILE.updated}
-                  </span>
+                  {soulFile && (
+                    <span className='rounded bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground'>
+                      v{soulFile.version} ·{' '}
+                      {formatRelativeDate(soulFile.updatedAt)}
+                    </span>
+                  )}
                 </div>
-                <ul className='space-y-1.5'>
-                  {SOUL_FILE.virtues.map((v) => (
-                    <li key={v.rank} className='flex gap-2 text-xs'>
-                      <span className='text-muted-foreground'>{v.rank}.</span>
-                      <span>
-                        <span className='font-medium'>{v.label}</span>
-                        <span className='block text-muted-foreground'>
-                          {v.note}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                {soulFile && soulFile.content.trim() ? (
+                  <p className='line-clamp-[8] whitespace-pre-line text-xs text-foreground/80'>
+                    {soulFile.content}
+                  </p>
+                ) : (
+                  <p className='text-xs text-muted-foreground'>
+                    No standards set yet — add them in the soul file.
+                  </p>
+                )}
                 <button className='mt-3 flex items-center gap-1 text-xs text-primary hover:underline'>
                   <FileText className='h-3 w-3' /> View full soul file
                 </button>

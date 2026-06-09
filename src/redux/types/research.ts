@@ -36,6 +36,40 @@ export interface ResearchProject {
   runs?: AgentRun[]
   /** Sources — present only in the single-project detail payload. */
   sources?: ResearchSource[]
+  /** Active soul file — present only in the single-project detail payload. */
+  soulFile?: SoulFile | null
+  /** Project memory snapshots — present only in the detail payload. */
+  projectMemory?: ProjectMemory[]
+  /** Pending agent memory proposals — present only in the detail payload. */
+  memoryProposals?: MemoryProposal[]
+}
+
+/** A durable project-memory snapshot (working thesis, open question, …). */
+export interface ProjectMemory {
+  id: number
+  label: string
+  detail: string
+  source: string
+  capturedAt: string
+}
+
+/** An agent-proposed memory awaiting the scholar's decision. */
+export interface MemoryProposal {
+  id: number
+  role: string
+  content: string
+  memoryType: string
+  status: string
+  proposedAt: string
+}
+
+/** The current version of a project's soul file (standards document). */
+export interface SoulFile {
+  id: number
+  version: number
+  content: string
+  origin: string
+  updatedAt: string
 }
 
 /** A source in the project's library (uploaded file or discovered record). */

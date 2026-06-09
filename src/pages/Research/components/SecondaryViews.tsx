@@ -1,19 +1,14 @@
-import { useState } from 'react'
 import {
   BookMarked,
   Brain,
-  Check,
   Cpu,
   FileText,
   ScrollText,
   Shapes,
-  X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import { formatRelativeDate } from '@/utils/dateUtils'
-import { MEMORY, MEMORY_PROPOSALS } from '../mockData'
-import type { ResearchSource } from '../types'
+import type { MemoryProposal, ProjectMemory, ResearchSource } from '../types'
 
 // Deliberately sparse views — present, but not competing for attention.
 
@@ -93,52 +88,58 @@ const STORES = [
   },
 ]
 
-export const MemoryView = () => {
-  const [proposals, setProposals] = useState(MEMORY_PROPOSALS)
-  const resolve = (id: string) =>
-    setProposals((prev) => prev.filter((p) => p.id !== id))
+interface MemoryViewProps {
+  projectMemory: ProjectMemory[]
+  memoryProposals: MemoryProposal[]
+}
 
-  return (
-    <div className='space-y-8'>
-      <header>
-        <h2 className='text-xl font-semibold tracking-tight'>
-          Memory / Context
-        </h2>
-        <p className='mt-1 text-sm text-muted-foreground'>
-          What persists between sessions — and who is allowed to change it.
-        </p>
-      </header>
+export const MemoryView = ({
+  projectMemory,
+  memoryProposals,
+}: MemoryViewProps) => (
+  <div className='space-y-8'>
+    <header>
+      <h2 className='text-xl font-semibold tracking-tight'>Memory / Context</h2>
+      <p className='mt-1 text-sm text-muted-foreground'>
+        What persists between sessions — and who is allowed to change it.
+      </p>
+    </header>
 
-      {/* The three stores, and who controls each */}
-      <div className='grid gap-3 md:grid-cols-3'>
-        {STORES.map((store) => {
-          const Icon = store.icon
-          return (
-            <div
-              key={store.title}
-              className='rounded-xl border border-border bg-card p-4'
-            >
-              <div className='mb-2 flex items-center justify-between'>
-                <div className='rounded-lg bg-muted p-2'>
-                  <Icon className='h-4 w-4 text-muted-foreground' />
-                </div>
-                <Badge variant={store.tone}>{store.badge}</Badge>
+    {/* The three stores, and who controls each */}
+    <div className='grid gap-3 md:grid-cols-3'>
+      {STORES.map((store) => {
+        const Icon = store.icon
+        return (
+          <div
+            key={store.title}
+            className='rounded-xl border border-border bg-card p-4'
+          >
+            <div className='mb-2 flex items-center justify-between'>
+              <div className='rounded-lg bg-muted p-2'>
+                <Icon className='h-4 w-4 text-muted-foreground' />
               </div>
-              <p className='text-sm font-medium'>{store.title}</p>
-              <p className='text-xs text-muted-foreground'>{store.owner}</p>
-              <p className='mt-2 text-xs leading-relaxed text-muted-foreground'>
-                {store.desc}
-              </p>
+              <Badge variant={store.tone}>{store.badge}</Badge>
             </div>
-          )
-        })}
-      </div>
+            <p className='text-sm font-medium'>{store.title}</p>
+            <p className='text-xs text-muted-foreground'>{store.owner}</p>
+            <p className='mt-2 text-xs leading-relaxed text-muted-foreground'>
+              {store.desc}
+            </p>
+          </div>
+        )
+      })}
+    </div>
 
-      {/* Current project memory (lives in the DARE-owned store) */}
-      <section>
-        <h3 className='mb-3 text-sm font-medium'>Project memory</h3>
+    {/* Current project memory (lives in the DARE-owned store) */}
+    <section>
+      <h3 className='mb-3 text-sm font-medium'>Project memory</h3>
+      {projectMemory.length === 0 ? (
+        <p className='rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground'>
+          No project memory yet.
+        </p>
+      ) : (
         <div className='space-y-3'>
-          {MEMORY.map((m) => (
+          {projectMemory.map((m) => (
             <div
               key={m.id}
               className='rounded-xl border border-border bg-card p-5'
@@ -149,69 +150,50 @@ export const MemoryView = () => {
               </div>
               <p className='mt-2 text-sm text-foreground/80'>{m.detail}</p>
               <p className='mt-2 text-xs text-muted-foreground'>
-                {m.capturedAt}
+                Captured {formatRelativeDate(m.capturedAt)}
               </p>
             </div>
           ))}
         </div>
-      </section>
+      )}
+    </section>
 
-      {/* Pending proposals — the agent proposes, the scholar decides */}
-      <section>
-        <h3 className='mb-1 text-sm font-medium'>
-          Pending from the agent · {proposals.length}
-        </h3>
-        <p className='mb-3 text-xs text-muted-foreground'>
-          Hermes proposes; you decide. Nothing here is remembered until you
-          accept it.
+    {/* Pending proposals — the agent proposes, the scholar decides */}
+    <section>
+      <h3 className='mb-1 text-sm font-medium'>
+        Pending from the agent · {memoryProposals.length}
+      </h3>
+      <p className='mb-3 text-xs text-muted-foreground'>
+        Hermes proposes; you decide. Nothing here is remembered until you accept
+        it.
+      </p>
+      {memoryProposals.length === 0 ? (
+        <p className='rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground'>
+          No pending proposals.
         </p>
-        {proposals.length === 0 ? (
-          <p className='rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground'>
-            No pending proposals.
-          </p>
-        ) : (
-          <div className='space-y-2'>
-            {proposals.map((p) => (
-              <div
-                key={p.id}
-                className='flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3'
-              >
-                <Badge variant='gray' className='mt-0.5 shrink-0'>
-                  {p.role}
-                </Badge>
-                <div className='min-w-0 flex-1'>
-                  <p className='text-sm'>{p.content}</p>
-                  <p className='mt-1 text-xs text-muted-foreground'>
-                    {p.proposedAt}
-                  </p>
-                </div>
-                <div className='flex shrink-0 items-center gap-1'>
-                  <button
-                    aria-label='Accept'
-                    onClick={() => resolve(p.id)}
-                    className={cn(
-                      'rounded-md p-1.5 text-muted-foreground',
-                      'hover:bg-muted hover:text-green-600 dark:hover:text-green-400'
-                    )}
-                  >
-                    <Check className='h-4 w-4' />
-                  </button>
-                  <button
-                    aria-label='Dismiss'
-                    onClick={() => resolve(p.id)}
-                    className='rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground'
-                  >
-                    <X className='h-4 w-4' />
-                  </button>
-                </div>
+      ) : (
+        <div className='space-y-2'>
+          {memoryProposals.map((p) => (
+            <div
+              key={p.id}
+              className='flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3'
+            >
+              <Badge variant='gray' className='mt-0.5 shrink-0'>
+                {p.role}
+              </Badge>
+              <div className='min-w-0 flex-1'>
+                <p className='text-sm'>{p.content}</p>
+                <p className='mt-1 text-xs text-muted-foreground'>
+                  Proposed {formatRelativeDate(p.proposedAt)}
+                </p>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
-  )
-}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  </div>
+)
 
 export const ArtifactsView = () => (
   <div className='space-y-6'>

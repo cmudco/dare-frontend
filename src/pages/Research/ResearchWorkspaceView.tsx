@@ -23,9 +23,12 @@ import type {
   AgentRun,
   CriticVerdict,
   KnowledgeItem,
+  MemoryProposal,
   NavSection,
+  ProjectMemory,
   ResearchSource,
   ReviewItem,
+  SoulFile,
 } from './types'
 
 const DEFAULT_TOOLS: string[] = [WEB_SEARCH_TOOL_SLUG]
@@ -45,6 +48,12 @@ interface ResearchWorkspaceViewProps {
   runs?: AgentRun[]
   /** Sources in the project's library. */
   sources?: ResearchSource[]
+  /** The project's active soul file (standards), or null if none. */
+  soulFile?: SoulFile | null
+  /** Durable project-memory snapshots. */
+  projectMemory?: ProjectMemory[]
+  /** Pending agent memory proposals. */
+  memoryProposals?: MemoryProposal[]
   /** When provided, the header shows a "back to projects" affordance. */
   onBack?: () => void
 }
@@ -76,6 +85,9 @@ const ResearchWorkspaceView = ({
   enabledTools = DEFAULT_TOOLS,
   runs = AGENT_RUNS,
   sources = [],
+  soulFile = null,
+  projectMemory = [],
+  memoryProposals = [],
   onBack,
 }: ResearchWorkspaceViewProps) => {
   const [section, setSection] = useState<NavSection>('overview')
@@ -172,7 +184,12 @@ const ResearchWorkspaceView = ({
       case 'sources':
         return <SourcesView sources={sources} />
       case 'memory':
-        return <MemoryView />
+        return (
+          <MemoryView
+            projectMemory={projectMemory}
+            memoryProposals={memoryProposals}
+          />
+        )
       case 'artifacts':
         return <ArtifactsView />
       case 'runs':
@@ -187,7 +204,14 @@ const ResearchWorkspaceView = ({
       pendingCount={pending.length}
       approvedCount={knowledge.length}
       center={center()}
-      context={<ContextPanel question={question} enabledTools={enabledTools} />}
+      context={
+        <ContextPanel
+          question={question}
+          enabledTools={enabledTools}
+          soulFile={soulFile}
+          projectMemory={projectMemory}
+        />
+      }
       projectTitle={projectTitle}
       projectMeta={projectMeta}
       onBack={onBack}

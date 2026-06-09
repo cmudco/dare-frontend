@@ -59,13 +59,6 @@ export interface SoulVirtue {
   note: string
 }
 
-export interface MemorySnapshot {
-  id: string
-  label: string
-  detail: string
-  capturedAt: string
-}
-
 export interface SourceFile {
   id: string
   name: string
@@ -74,20 +67,13 @@ export interface SourceFile {
   addedAt: string
 }
 
-// --- Agent runs (the visible communication with the Hermes harness) ---
+// --- Agent runs, memory, sources (the visible communication with Hermes) ---
 // Canonical API shapes; re-exported here for the workspace.
 export type {
   AgentRun,
   AgentRunToolCall,
+  MemoryProposal,
+  ProjectMemory,
   ResearchSource,
+  SoulFile,
 } from '@/redux/types/research'
-
-export type AgentRole = 'Scout' | 'Critic' | 'Librarian' | 'Paper Assistant'
-
-// A memory the agent proposes to keep. Propose-only — the scholar accepts it.
-export interface MemoryProposal {
-  id: string
-  role: AgentRole
-  content: string
-  proposedAt: string
-}

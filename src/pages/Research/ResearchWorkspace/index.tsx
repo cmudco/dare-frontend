@@ -34,6 +34,9 @@ const ResearchWorkspace = () => {
       enabledTools={project?.enabledTools ?? []}
       runs={project?.runs ?? []}
       sources={project?.sources ?? []}
+      soulFile={project?.soulFile ?? null}
+      projectMemory={project?.projectMemory ?? []}
+      memoryProposals={project?.memoryProposals ?? []}
       onBack={() => navigate('/research')}
     />
   )

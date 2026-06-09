@@ -5,8 +5,6 @@
 import type {
   AgentRun,
   KnowledgeItem,
-  MemoryProposal,
-  MemorySnapshot,
   ReviewItem,
   SoulVirtue,
   SourceFile,
@@ -48,23 +46,6 @@ export const SOUL_FILE = {
     },
   ] satisfies SoulVirtue[],
 }
-
-export const MEMORY: MemorySnapshot[] = [
-  {
-    id: 'm1',
-    label: 'Working thesis',
-    detail:
-      'Nordic outcomes come from a bundle — high social trust + universal services + "flexicurity" labour markets — not high tax rates alone.',
-    capturedAt: 'Captured last session',
-  },
-  {
-    id: 'm2',
-    label: 'Open question',
-    detail:
-      'How much of the success is causal policy vs. pre-existing trust and homogeneity — and does the bundle transfer to large, diverse economies?',
-    capturedAt: 'Flagged 3 days ago',
-  },
-]
 
 export const SOURCE_FILES: SourceFile[] = [
   {
@@ -316,19 +297,3 @@ export const AGENT_RUNS: AgentRun[] = [
 ]
 
 // What the agent proposes to remember — propose-only; the scholar accepts.
-export const MEMORY_PROPOSALS: MemoryProposal[] = [
-  {
-    id: 'mp_1',
-    role: 'Scout',
-    content:
-      'For this scholar, prioritise sources that isolate the mechanism (trust, flexicurity) over aggregate tax-rate comparisons.',
-    proposedAt: 'From run · yesterday',
-  },
-  {
-    id: 'mp_2',
-    role: 'Paper Assistant',
-    content:
-      'Track the open question on causal-vs-cultural origins as a recurring claim to resolve.',
-    proposedAt: 'From run · yesterday',
-  },
-]
