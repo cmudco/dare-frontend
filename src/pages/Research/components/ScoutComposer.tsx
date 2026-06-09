@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Check, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -42,7 +42,9 @@ const ScoutComposer = ({ tools, running, onRun }: Props) => {
     .map(nameOf)
     .join(' · ')
 
-  const canRun = query.trim().length > 0 && selectedTools.length > 0
+  // Only a query is required — tools default to the project's enabled set, and
+  // Scout searches the web today (other tools arrive with the MCP gateway).
+  const canRun = query.trim().length > 0
 
   if (running) {
     return (
@@ -91,13 +93,19 @@ const ScoutComposer = ({ tools, running, onRun }: Props) => {
                 key={slug}
                 type='button'
                 onClick={() => toggleTool(slug)}
+                aria-pressed={isOn}
                 className={cn(
-                  'rounded-full border px-2.5 py-1 text-xs transition-colors',
+                  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
                   isOn
-                    ? 'border-foreground/30 bg-muted text-foreground'
-                    : 'border-border text-muted-foreground hover:text-foreground'
+                    ? 'border-primary/60 bg-primary/10 text-foreground'
+                    : 'border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
                 )}
               >
+                {isOn ? (
+                  <Check className='h-3 w-3 text-primary' />
+                ) : (
+                  <span className='h-1.5 w-1.5 rounded-full bg-muted-foreground/40' />
+                )}
                 {nameOf(slug)}
               </button>
             )
