@@ -2,9 +2,22 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 import {
   createResearchProject,
+  getResearchProject,
   getResearchProjects,
 } from '@/redux/asyncThunks/research'
 import type { ResearchProject, ResearchState } from './types/research'
+
+const upsertProject = (
+  projects: ResearchProject[],
+  project: ResearchProject
+) => {
+  const index = projects.findIndex((p) => p.id === project.id)
+  if (index !== -1) {
+    projects[index] = project
+  } else {
+    projects.unshift(project)
+  }
+}
 
 const initialState: ResearchState = {
   projects: [],
@@ -51,6 +64,18 @@ const researchSlice = createSlice({
         state.projects.unshift(action.payload)
       })
       .addCase(createResearchProject.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(getResearchProject.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(getResearchProject.fulfilled, (state, action) => {
+        state.loading = false
+        upsertProject(state.projects, action.payload)
+      })
+      .addCase(getResearchProject.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

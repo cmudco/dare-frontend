@@ -12,7 +12,12 @@ import AskScoutView from './components/AskScoutView'
 import HandsOnChat from './components/HandsOnChat'
 import RunsView from './components/RunsView'
 import WorkspaceShell from './components/WorkspaceShell'
-import { SCOUT_CANDIDATES, SEED_KNOWLEDGE } from './mockData'
+import {
+  PROJECT,
+  SCOUT_CANDIDATES,
+  SEED_KNOWLEDGE,
+  SOURCE_FILES,
+} from './mockData'
 import { WEB_SEARCH_TOOL_SLUG } from '@/utils/constants/research'
 import type {
   CriticVerdict,
@@ -28,6 +33,10 @@ interface ResearchWorkspaceViewProps {
   projectTitle?: string
   /** Secondary line under the title (e.g. the field of study). */
   projectMeta?: string
+  /** The project's research question (defaults to the mock project). */
+  question?: string
+  /** Number of sources in the project's library. */
+  sourceCount?: number
   /** Tool slugs the Scout composer offers (defaults to the web built-in). */
   enabledTools?: string[]
   /** When provided, the header shows a "back to projects" affordance. */
@@ -56,6 +65,8 @@ const criticFor = (item: ReviewItem): CriticVerdict =>
 const ResearchWorkspaceView = ({
   projectTitle,
   projectMeta,
+  question = PROJECT.question,
+  sourceCount = SOURCE_FILES.length,
   enabledTools = DEFAULT_TOOLS,
   onBack,
 }: ResearchWorkspaceViewProps) => {
@@ -112,6 +123,8 @@ const ResearchWorkspaceView = ({
       case 'overview':
         return (
           <OverviewPanel
+            question={question}
+            sourceCount={sourceCount}
             pendingCount={pending.length}
             approvedCount={knowledge.length}
             onGoToScout={() => setSection('scout')}
@@ -164,7 +177,7 @@ const ResearchWorkspaceView = ({
       pendingCount={pending.length}
       approvedCount={knowledge.length}
       center={center()}
-      context={<ContextPanel />}
+      context={<ContextPanel question={question} enabledTools={enabledTools} />}
       projectTitle={projectTitle}
       projectMeta={projectMeta}
       onBack={onBack}

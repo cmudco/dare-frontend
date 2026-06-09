@@ -2,6 +2,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 
 import {
   createResearchProjectAPI,
+  getResearchProjectAPI,
   getResearchProjectsAPI,
 } from '@/api/research'
 import type { CreateResearchProjectPayload } from '@/redux/types/research'
@@ -12,6 +13,17 @@ export const getResearchProjects = createAsyncThunk(
     try {
       const response = await getResearchProjectsAPI()
       return response.results
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getResearchProject = createAsyncThunk(
+  'research/getResearchProject',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      return await getResearchProjectAPI(id)
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }

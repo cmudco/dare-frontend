@@ -1,10 +1,19 @@
 import { useState } from 'react'
 import { ChevronRight, FileText, ScrollText } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ACTIVE_TOOLS, MEMORY, PROJECT, SOUL_FILE } from '../mockData'
+import { useAppSelector } from '@/redux/hooks'
+import { resolveToolMeta } from '@/utils/constants/research'
+import { MEMORY, SOUL_FILE } from '../mockData'
 
-const ContextPanel = () => {
+interface Props {
+  question: string
+  enabledTools: string[]
+}
+
+const ContextPanel = ({ question, enabledTools }: Props) => {
   const [open, setOpen] = useState(true)
+  const connections = useAppSelector((state) => state.mcp.connections)
+  const tools = enabledTools.map((slug) => resolveToolMeta(slug, connections))
 
   return (
     <aside
@@ -31,22 +40,28 @@ const ContextPanel = () => {
           <div className='space-y-5 border-t border-border p-4'>
             <Block label='Active question'>
               <p className='text-sm leading-relaxed text-foreground/80'>
-                {PROJECT.question}
+                {question}
               </p>
             </Block>
 
             <Block label='Active tools'>
-              <div className='flex flex-wrap gap-1.5'>
-                {ACTIVE_TOOLS.map((t) => (
-                  <span
-                    key={t}
-                    className='inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-xs'
-                  >
-                    <span className='h-1.5 w-1.5 rounded-full bg-green-500' />
-                    {t}
-                  </span>
-                ))}
-              </div>
+              {tools.length > 0 ? (
+                <div className='flex flex-wrap gap-1.5'>
+                  {tools.map((tool) => (
+                    <span
+                      key={tool.slug}
+                      className='inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-xs'
+                    >
+                      <span className='h-1.5 w-1.5 rounded-full bg-green-500' />
+                      {tool.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className='text-xs text-muted-foreground'>
+                  No tools enabled yet.
+                </p>
+              )}
             </Block>
 
             <Block label='Active memory'>

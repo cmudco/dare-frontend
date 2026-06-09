@@ -11,10 +11,12 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { AGENT_RUNS, PROJECT, SOURCE_FILES } from '../mockData'
+import { AGENT_RUNS } from '../mockData'
 import type { RunStatus } from '../types'
 
 interface Props {
+  question: string
+  sourceCount: number
   pendingCount: number
   approvedCount: number
   onGoToScout: () => void
@@ -35,6 +37,8 @@ const STATUS_BADGE: Record<
 }
 
 const OverviewPanel = ({
+  question,
+  sourceCount,
   pendingCount,
   approvedCount,
   onGoToScout,
@@ -56,7 +60,7 @@ const OverviewPanel = ({
           Research question
         </p>
         <h2 className='mt-2 max-w-2xl text-2xl font-semibold leading-snug tracking-tight'>
-          {PROJECT.question}
+          {question}
         </h2>
       </header>
 
@@ -79,7 +83,7 @@ const OverviewPanel = ({
         <StatTile
           icon={FileText}
           label='Sources'
-          value={SOURCE_FILES.length}
+          value={sourceCount}
           tone='muted'
         />
         <StatTile

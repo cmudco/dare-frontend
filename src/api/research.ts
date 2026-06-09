@@ -14,6 +14,15 @@ export const getResearchProjectsAPI =
     })
   }
 
+export const getResearchProjectAPI = async (
+  id: number
+): Promise<ResearchProject> => {
+  return await baseRequest<ResearchProject>({
+    url: `api/research/projects/${id}/`,
+    method: METHOD.GET,
+  })
+}
+
 export const createResearchProjectAPI = async (
   payload: CreateResearchProjectPayload
 ): Promise<ResearchProject> => {
