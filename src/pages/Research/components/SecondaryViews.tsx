@@ -3,21 +3,29 @@ import {
   Code2,
   FileText,
   LayoutGrid,
+  Loader2,
   Rows3,
   Shapes,
+  Sparkles,
   Workflow,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { useAppDispatch } from '@/redux/hooks'
+import { getResearchProject } from '@/redux/asyncThunks/research'
+import { generateArtifactAPI } from '@/api/research'
 import { formatRelativeDate } from '@/utils/dateUtils'
 import { ArtifactRenderer } from '@/components/Artifacts/ArtifactRenderer'
 import type { Artifact, ArtifactType } from '@/redux/types/artifact'
+import { usePolledRun } from '../usePolledRun'
 import type { ResearchArtifact, ResearchSource } from '../types'
 
 // Deliberately sparse views — present, but not competing for attention.
@@ -118,9 +126,98 @@ const ArtifactModal = ({
   </Dialog>
 )
 
+const ARTIFACT_TYPES = [
+  { key: '', label: 'Auto' },
+  { key: 'diagram', label: 'Diagram' },
+  { key: 'svg', label: 'SVG' },
+  { key: 'html', label: 'HTML' },
+  { key: 'excalidraw', label: 'Excalidraw' },
+]
+
+const GenerateBar = ({ projectId }: { projectId?: number }) => {
+  const dispatch = useAppDispatch()
+  const [prompt, setPrompt] = useState('')
+  const [type, setType] = useState('')
+  const [runId, setRunId] = useState<number | null>(null)
+
+  usePolledRun(
+    runId,
+    () => {},
+    () => {
+      setRunId(null)
+      setPrompt('')
+      if (projectId) dispatch(getResearchProject(projectId))
+    }
+  )
+
+  const generating = runId !== null
+  const generate = async () => {
+    if (!projectId || !prompt.trim() || generating) return
+    try {
+      const { runId: id } = await generateArtifactAPI(
+        projectId,
+        prompt.trim(),
+        type
+      )
+      setRunId(id)
+    } catch {
+      // stays ready to retry
+    }
+  }
+
+  return (
+    <div className='space-y-3 rounded-2xl border border-border bg-card p-4'>
+      <Textarea
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        placeholder='Describe an artifact to generate — e.g. "a Mermaid diagram of the causal mechanisms" or "an HTML one-pager of the working thesis"'
+        rows={2}
+        disabled={generating}
+      />
+      <div className='flex flex-wrap items-center gap-x-4 gap-y-2'>
+        <div className='flex flex-wrap items-center gap-1.5'>
+          {ARTIFACT_TYPES.map((t) => (
+            <button
+              key={t.key}
+              type='button'
+              onClick={() => setType(t.key)}
+              aria-pressed={type === t.key}
+              className={cn(
+                'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                type === t.key
+                  ? 'border-primary/60 bg-primary/10 text-foreground'
+                  : 'border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <Button
+          onClick={generate}
+          disabled={!prompt.trim() || generating}
+          className='ml-auto shrink-0'
+        >
+          {generating ? (
+            <>
+              <Loader2 className='h-4 w-4 animate-spin' /> Generating…
+            </>
+          ) : (
+            <>
+              <Sparkles className='h-4 w-4' /> Generate
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 export const ArtifactsView = ({
+  projectId,
   artifacts,
 }: {
+  projectId?: number
   artifacts: ResearchArtifact[]
 }) => {
   const [mode, setMode] = useState<'grid' | 'list'>('grid')
@@ -132,8 +229,8 @@ export const ArtifactsView = ({
         <div>
           <h2 className='text-xl font-semibold tracking-tight'>Artifacts</h2>
           <p className='mt-1 text-sm text-muted-foreground'>
-            Diagrams, figures and pages the agent produced — ask for one in Chat
-            (e.g. "draw a Mermaid diagram of …") and it lands here.
+            Diagrams, figures and pages — describe one below to generate it, or
+            ask in Chat. Each lands here, rendered.
           </p>
         </div>
         {artifacts.length > 0 && (
@@ -161,15 +258,17 @@ export const ArtifactsView = ({
         )}
       </header>
 
+      <GenerateBar projectId={projectId} />
+
       {artifacts.length === 0 ? (
-        <div className='flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-16 text-center'>
+        <div className='flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-12 text-center'>
           <div className='mb-4 rounded-full bg-muted p-3'>
             <Shapes className='h-6 w-6 text-muted-foreground' />
           </div>
           <p className='text-sm font-medium'>No artifacts yet</p>
           <p className='mt-1 max-w-xs text-sm text-muted-foreground'>
-            In Chat, ask the agent for a diagram, an SVG figure, or an HTML
-            summary — it'll render here.
+            Describe one above (or ask in Chat) — a diagram, SVG figure, or HTML
+            summary — and it'll render here.
           </p>
         </div>
       ) : mode === 'grid' ? (

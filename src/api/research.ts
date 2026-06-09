@@ -54,6 +54,19 @@ export const runScoutAPI = async (
   })
 }
 
+/** Kick off a delegated run that generates a renderable artifact (poll the run). */
+export const generateArtifactAPI = async (
+  projectId: number,
+  prompt: string,
+  artifactType?: string
+): Promise<ScoutResult> => {
+  return await baseRequest<ScoutResult>({
+    url: `api/research/projects/${projectId}/artifact/`,
+    method: METHOD.POST,
+    data: { prompt, artifactType: artifactType || '' },
+  })
+}
+
 /** Kick off a Critic run that pressure-tests a staged source (poll the run). */
 export const askCriticAPI = async (itemId: number): Promise<ScoutResult> => {
   return await baseRequest<ScoutResult>({

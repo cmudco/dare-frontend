@@ -221,7 +221,7 @@ const ResearchWorkspaceView = ({
           />
         )
       case 'artifacts':
-        return <ArtifactsView artifacts={artifacts} />
+        return <ArtifactsView projectId={projectId} artifacts={artifacts} />
       case 'runs':
         return <RunsView runs={runs} />
     }
