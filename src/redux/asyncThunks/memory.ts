@@ -9,8 +9,10 @@ import {
   deleteMemoryItemAPI,
   searchMemoryAPI,
   clearAllMemoryAPI,
+  importMemoryAPI,
   seedMemoryAPI,
 } from '../../api/memory'
+import { ImportMemoryRequest } from '../types/memory'
 
 /**
  * Fetch all memory items for the authenticated user
@@ -65,6 +67,21 @@ export const clearAllMemory = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await clearAllMemoryAPI()
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Import user-provided memory items
+ */
+export const importMemory = createAsyncThunk(
+  'memory/importMemory',
+  async (request: ImportMemoryRequest, thunkAPI) => {
+    try {
+      const response = await importMemoryAPI(request)
       return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)

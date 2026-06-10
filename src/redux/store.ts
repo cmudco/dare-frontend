@@ -23,6 +23,7 @@ import sharingReducer from './sharingSlice'
 import conversationTourReducer from './conversationTourSlice'
 import featureFlagsReducer from './featureFlagsSlice'
 import researchReducer from './researchSlice'
+import dataExportReducer from './dataExportSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
@@ -55,6 +56,7 @@ export const store = configureStore({
     conversationTour: conversationTourReducer,
     featureFlags: featureFlagsReducer,
     research: researchReducer,
+    dataExport: dataExportReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware

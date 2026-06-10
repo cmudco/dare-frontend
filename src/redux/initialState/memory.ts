@@ -10,5 +10,6 @@ export const initialMemoryState: MemoryState = {
   searchLoading: false,
   seeding: false,
   clearing: false,
+  importing: false,
   error: null,
 }

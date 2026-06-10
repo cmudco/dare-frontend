@@ -5,7 +5,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Brain, Trash2, Loader2 } from 'lucide-react'
+import { Brain, Download, Trash2, Loader2 } from 'lucide-react'
 import { AppDispatch, RootState } from '@/redux/store'
 import {
   getMemoryItems,
@@ -14,11 +14,13 @@ import {
   clearAllMemory,
   seedMemory,
 } from '@/redux/asyncThunks/memory'
+import { downloadDataExport } from '@/redux/asyncThunks/dataExport'
 import { clearSearchResults } from '@/redux/memorySlice'
 import {
   MemoryList,
   MemorySearch,
   SeedMemoryButton,
+  MemoryImportDialog,
   MemoryStatsHeader,
   MemoryTypeFilter,
   MemoryCategoryCards,
@@ -26,6 +28,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
+import { DataExportScope } from '@/utils/constants/dataExport'
 
 const MemoryScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -39,8 +42,12 @@ const MemoryScreen = () => {
     searchLoading,
     seeding,
     clearing,
+    importing,
     error,
   } = useSelector((state: RootState) => state.memory)
+  const { memoriesDownloading } = useSelector(
+    (state: RootState) => state.dataExport
+  )
 
   // Fetch memories on mount
   useEffect(() => {
@@ -117,30 +124,72 @@ const MemoryScreen = () => {
     }
   }
 
+  const handleExportMemories = async () => {
+    const result = await dispatch(downloadDataExport(DataExportScope.MEMORIES))
+    if (downloadDataExport.fulfilled.match(result)) {
+      toast({
+        title: 'Export downloaded',
+        description: result.payload.filename,
+      })
+      return
+    }
+
+    toast({
+      title: 'Export failed',
+      description:
+        (result.payload as string) || 'Unable to download your memories.',
+      variant: 'destructive',
+    })
+  }
+
   return (
     <div className='min-h-screen bg-background p-6'>
       <div className='mx-auto max-w-4xl'>
         {/* Header */}
-        <div className='mb-6 flex items-center justify-between'>
-          <div className='flex items-center gap-3'>
+        <div className='mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
+          <div className='flex min-w-0 items-start gap-3'>
             <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-dare-gradient'>
               <Brain className='h-5 w-5 text-white' />
             </div>
-            <div>
+            <div className='min-w-0'>
               <h1 className='text-2xl font-bold text-foreground'>Memory</h1>
-              <p className='text-sm text-muted-foreground'>
+              <p className='mt-1 text-sm text-muted-foreground'>
                 What DARE remembers about you across conversations
               </p>
             </div>
           </div>
-          <div className='flex items-center gap-2'>
-            <SeedMemoryButton onSeed={handleSeed} isSeeding={seeding} />
+
+          <div className='flex flex-wrap items-center justify-start gap-2 lg:justify-end'>
+            <div className='flex items-center gap-2'>
+              <MemoryImportDialog
+                importing={importing}
+                triggerVariant='default'
+                triggerLabel='Import'
+                triggerSize='sm'
+                triggerClassName='h-9 shadow-sm'
+              />
+              <Button
+                variant='default'
+                size='sm'
+                onClick={handleExportMemories}
+                disabled={memoriesDownloading}
+                className='h-9 gap-2 shadow-sm'
+              >
+                {memoriesDownloading ? (
+                  <Loader2 className='h-4 w-4 animate-spin' />
+                ) : (
+                  <Download className='h-4 w-4' />
+                )}
+                Export
+              </Button>
+            </div>
             {items.length > 0 && (
               <Button
                 variant='outline'
+                size='sm'
                 onClick={handleClearAll}
                 disabled={clearing}
-                className='border-red-500/50 text-red-500 hover:border-red-500 hover:bg-red-500/10'
+                className='h-9 border-red-500/50 text-red-500 hover:border-red-500 hover:bg-red-500/10'
               >
                 {clearing ? (
                   <>
@@ -155,6 +204,12 @@ const MemoryScreen = () => {
                 )}
               </Button>
             )}
+            <SeedMemoryButton
+              onSeed={handleSeed}
+              isSeeding={seeding}
+              size='sm'
+              className='h-9'
+            />
           </div>
         </div>
 

@@ -49,6 +49,24 @@ export interface ClearMemoryResponse {
   message: string
 }
 
+/** One memory item submitted for import */
+export interface MemoryImportItem {
+  memoryType: string
+  content: string
+  categories: string[]
+}
+
+/** Request body for memory import */
+export interface ImportMemoryRequest {
+  items: MemoryImportItem[]
+}
+
+/** Response from memory import endpoint */
+export interface ImportMemoryResponse {
+  itemsCreated: number
+  message: string
+}
+
 /** Memory Redux state */
 export interface MemoryState {
   /** List of all memory items */
@@ -63,6 +81,8 @@ export interface MemoryState {
   seeding: boolean
   /** Whether clearing is in progress */
   clearing: boolean
+  /** Whether import is in progress */
+  importing: boolean
   /** Error message if any operation failed */
   error: string | null
 }

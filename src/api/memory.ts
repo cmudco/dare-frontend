@@ -5,6 +5,7 @@
  */
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
+import { ImportMemoryRequest, ImportMemoryResponse } from '@/redux/types/memory'
 
 // Types
 export interface MemoryItem {
@@ -89,6 +90,19 @@ export const clearAllMemoryAPI = async (): Promise<ClearResponse> => {
   return await baseRequest<ClearResponse>({
     url: 'api/memory/clear/',
     method: METHOD.DELETE,
+  })
+}
+
+/**
+ * Import user-provided memory items
+ */
+export const importMemoryAPI = async (
+  request: ImportMemoryRequest
+): Promise<ImportMemoryResponse> => {
+  return await baseRequest<ImportMemoryResponse>({
+    url: 'api/memory/import/',
+    method: METHOD.POST,
+    data: request,
   })
 }
 
