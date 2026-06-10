@@ -19,6 +19,39 @@ import {
 } from '../runFormat'
 import type { AgentRun } from '../types'
 
+const RunStats = ({ runs }: { runs: AgentRun[] }) => {
+  const totalTokens = runs.reduce(
+    (sum, r) => sum + (r.usage?.totalTokens ?? 0),
+    0
+  )
+  const totalCalls = runs.reduce((sum, r) => sum + r.toolCalls.length, 0)
+  const measured = runs.filter((r) => (r.usage?.totalTokens ?? 0) > 0)
+  const avgTokens = measured.length
+    ? Math.round(totalTokens / measured.length)
+    : 0
+  const stats = [
+    { label: 'Runs', value: String(runs.length) },
+    { label: 'Total tokens', value: formatTokens(totalTokens) },
+    { label: 'Tool calls', value: String(totalCalls) },
+    { label: 'Avg tokens / run', value: formatTokens(avgTokens) },
+  ]
+  return (
+    <div className='grid grid-cols-2 gap-3 sm:grid-cols-4'>
+      {stats.map((s) => (
+        <div
+          key={s.label}
+          className='rounded-xl border border-border bg-card px-4 py-3'
+        >
+          <p className='text-lg font-semibold tabular-nums tracking-tight'>
+            {s.value}
+          </p>
+          <p className='text-xs text-muted-foreground'>{s.label}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const RunsView = ({ runs }: { runs: AgentRun[] }) => (
   <div className='space-y-6'>
     <header>
@@ -28,6 +61,8 @@ const RunsView = ({ runs }: { runs: AgentRun[] }) => (
         tools it used, and what it staged. Nothing here changed your record.
       </p>
     </header>
+
+    {runs.length > 0 && <RunStats runs={runs} />}
 
     {runs.length === 0 ? (
       <div className='rounded-xl border border-dashed border-border px-6 py-16 text-center text-sm text-muted-foreground'>
