@@ -58,12 +58,13 @@ export interface ScoutResult {
 export const runScoutAPI = async (
   projectId: number,
   task: string,
-  depth: 'quick' | 'deep' = 'deep'
+  depth: 'quick' | 'deep' = 'deep',
+  tools?: string[]
 ): Promise<ScoutResult> => {
   return await baseRequest<ScoutResult>({
     url: `api/research/projects/${projectId}/scout/`,
     method: METHOD.POST,
-    data: { task, depth },
+    data: { task, depth, tools },
   })
 }
 

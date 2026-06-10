@@ -21,7 +21,7 @@ interface Props {
   running: boolean
   /** Live status line from the running run (e.g. 'Searching the web…'). */
   status?: string
-  onRun: (query: string, depth: ScoutDepth) => void
+  onRun: (query: string, depth: ScoutDepth, tools: string[]) => void
 }
 
 // The Scout query composer — shared by the Overview and the Ask Scout view.
@@ -143,7 +143,7 @@ const ScoutComposer = ({ tools, running, status, onRun }: Props) => {
         </div>
 
         <Button
-          onClick={() => onRun(query.trim(), depth)}
+          onClick={() => onRun(query.trim(), depth, selectedTools)}
           disabled={!canRun}
           className='ml-auto shrink-0'
         >

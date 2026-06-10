@@ -134,11 +134,15 @@ const ResearchWorkspaceView = ({
 
   const scoutRunning = runningRunId !== null
 
-  const runScout = async (query: string, depth: 'quick' | 'deep' = 'deep') => {
+  const runScout = async (
+    query: string,
+    depth: 'quick' | 'deep' = 'deep',
+    tools?: string[]
+  ) => {
     if (!projectId || !query || runningRunId) return
     setSection('scout')
     try {
-      const { runId } = await runScoutAPI(projectId, query, depth)
+      const { runId } = await runScoutAPI(projectId, query, depth, tools)
       setRunningRunId(runId)
       setScoutStatus('Queued…')
       refresh() // surface the run immediately — no manual reload
