@@ -133,6 +133,8 @@ const ARTIFACT_TYPES = [
   { key: 'html', label: 'HTML' },
   { key: 'excalidraw', label: 'Excalidraw' },
   { key: 'document', label: 'Document' },
+  { key: 'docx', label: 'Word' },
+  { key: 'pptx', label: 'Slides' },
 ]
 
 const GenerateBar = ({ projectId }: { projectId?: number }) => {

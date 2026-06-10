@@ -13,7 +13,7 @@ interface Props {
   scoutRunning: boolean
   scoutStatus: string
   pendingCount: number
-  onRunScout: (query: string) => void
+  onRunScout: (query: string, depth: 'quick' | 'deep') => void
   onGoToReview: () => void
 }
 

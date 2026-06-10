@@ -57,12 +57,13 @@ export interface ScoutResult {
 /** Kick off a delegated Scout run (returns immediately; poll the run for status). */
 export const runScoutAPI = async (
   projectId: number,
-  task: string
+  task: string,
+  depth: 'quick' | 'deep' = 'deep'
 ): Promise<ScoutResult> => {
   return await baseRequest<ScoutResult>({
     url: `api/research/projects/${projectId}/scout/`,
     method: METHOD.POST,
-    data: { task },
+    data: { task, depth },
   })
 }
 
