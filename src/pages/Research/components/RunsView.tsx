@@ -8,6 +8,12 @@ import {
   X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import {
   formatRanAt,
@@ -17,7 +23,61 @@ import {
   roleLabel,
   runStatusBadge,
 } from '../runFormat'
-import type { AgentRun } from '../types'
+import type { AgentRun, AgentRunToolCall } from '../types'
+
+/** Pretty-print a tool result when it's JSON; otherwise return it as-is. */
+const prettify = (text: string): string => {
+  try {
+    return JSON.stringify(JSON.parse(text), null, 2)
+  } catch {
+    return text
+  }
+}
+
+// Full input/output of one tool call — what was actually searched and what
+// actually came back, so a scholar can audit a run without trusting summaries.
+const ToolCallModal = ({
+  call,
+  onClose,
+}: {
+  call: AgentRunToolCall | null
+  onClose: () => void
+}) => (
+  <Dialog open={!!call} onOpenChange={(o) => !o && onClose()}>
+    <DialogContent className='flex max-h-[85vh] max-w-3xl flex-col gap-0 overflow-hidden p-0'>
+      {call && (
+        <>
+          <DialogHeader className='shrink-0 space-y-0.5 border-b border-border px-5 py-3 pr-12 text-left'>
+            <DialogTitle className='text-sm'>{call.tool}</DialogTitle>
+            <p className='text-xs text-muted-foreground'>
+              {call.status} · {formatToolCallDuration(call.durationMs)}
+            </p>
+          </DialogHeader>
+          <div className='min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4'>
+            <div>
+              <p className='mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+                Input
+              </p>
+              <pre className='whitespace-pre-wrap break-all rounded-lg bg-muted/40 p-3 text-xs'>
+                {call.query || '—'}
+              </pre>
+            </div>
+            <div>
+              <p className='mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+                Result
+              </p>
+              <pre className='whitespace-pre-wrap break-all rounded-lg bg-muted/40 p-3 text-xs'>
+                {call.resultSummary
+                  ? prettify(call.resultSummary)
+                  : 'Result not captured for this call — agent-side tool results stay in the agent loop; DARE-executed calls record theirs.'}
+              </pre>
+            </div>
+          </div>
+        </>
+      )}
+    </DialogContent>
+  </Dialog>
+)
 
 const RunStats = ({ runs }: { runs: AgentRun[] }) => {
   const totalTokens = runs.reduce(
@@ -80,6 +140,7 @@ const RunsView = ({ runs }: { runs: AgentRun[] }) => (
 
 const RunCard = ({ run }: { run: AgentRun }) => {
   const [expanded, setExpanded] = useState(false)
+  const [openCall, setOpenCall] = useState<AgentRunToolCall | null>(null)
   const badge = runStatusBadge(run.status)
 
   return (
@@ -132,7 +193,13 @@ const RunCard = ({ run }: { run: AgentRun }) => {
           </p>
           <div className='space-y-2'>
             {run.toolCalls.map((call, i) => (
-              <div key={i} className='rounded-lg bg-muted/40 px-3 py-2 text-sm'>
+              <button
+                key={i}
+                type='button'
+                onClick={() => setOpenCall(call)}
+                title='View full input and result'
+                className='w-full rounded-lg bg-muted/40 px-3 py-2 text-left text-sm transition-colors hover:bg-muted'
+              >
                 <div className='flex items-center gap-3'>
                   {call.status === 'success' ? (
                     <Check className='h-4 w-4 shrink-0 text-green-600 dark:text-green-400' />
@@ -154,11 +221,12 @@ const RunCard = ({ run }: { run: AgentRun }) => {
                     {call.resultSummary}
                   </p>
                 )}
-              </div>
+              </button>
             ))}
           </div>
         </div>
       )}
+      <ToolCallModal call={openCall} onClose={() => setOpenCall(null)} />
     </div>
   )
 }
