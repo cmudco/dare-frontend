@@ -44,7 +44,7 @@ const ToolCallModal = ({
   onClose: () => void
 }) => (
   <Dialog open={!!call} onOpenChange={(o) => !o && onClose()}>
-    <DialogContent className='flex max-h-[85vh] max-w-3xl flex-col gap-0 overflow-hidden p-0'>
+    <DialogContent className='flex h-[85vh] max-w-3xl flex-col gap-0 overflow-hidden p-0'>
       {call && (
         <>
           <DialogHeader className='shrink-0 space-y-0.5 border-b border-border px-5 py-3 pr-12 text-left'>
