@@ -61,6 +61,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
   const [error, setError] = useState<string | null>(null)
   const [showRaw, setShowRaw] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const diagramRef = useRef<HTMLDivElement>(null)
   const transformRef = useRef<ReactZoomPanPinchRef | null>(null)
 
   // Open perfectly framed: scale the diagram so it fills the visible panel
@@ -68,13 +69,16 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
   const fitToView = useCallback(() => {
     const api = transformRef.current
     const wrapper = containerRef.current
-    const svgEl = wrapper?.querySelector('svg')
+    // Scope to the diagram wrapper — the container also holds the zoom
+    // control icons, which are SVGs too.
+    const svgEl = diagramRef.current?.querySelector('svg')
     if (!api || !wrapper || !svgEl) return
-    const viewBox = (svgEl.getAttribute('viewBox') || '')
-      .split(/[\s,]+/)
-      .map(Number)
-    const width = viewBox[2] || svgEl.clientWidth
-    const height = viewBox[3] || svgEl.clientHeight
+    // Measure the laid-out diagram (un-zoomed): the viewBox often carries
+    // padding that would underscale the fit.
+    const currentScale = api.instance?.transformState?.scale || 1
+    const rect = svgEl.getBoundingClientRect()
+    const width = rect.width / currentScale
+    const height = rect.height / currentScale
     if (!width || !height) return
     const scale = Math.min(
       (wrapper.clientWidth - 48) / width,
@@ -101,11 +105,19 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
         mermaid
           .render(id, code)
           .then(({ svg }) => {
-            // Mermaid stamps an intrinsic max-width on the <svg>; drop it so
-            // the diagram lays out at natural size and fitToView's scale math
-            // (panel size / natural size) frames it correctly.
-            if (isMounted)
-              setSvg(svg.replace(/max-width:\s*[\d.]+px/g, 'max-width: none'))
+            // Mermaid emits width="100%" + a max-width cap. In the zoom
+            // container's shrink-to-fit content box a percentage width
+            // collapses to the 300px replaced-element default, wrecking the
+            // fit math. Pin the svg to its intrinsic (viewBox) size instead.
+            if (!isMounted) return
+            const vb =
+              /viewBox="[-\d.]+[ ,]+[-\d.]+[ ,]+([\d.]+)[ ,]+([\d.]+)"/.exec(
+                svg
+              )
+            const size = vb
+              ? `width:${vb[1]}px;height:${vb[2]}px;max-width:none`
+              : 'max-width:none'
+            setSvg(svg.replace(/max-width:\s*[\d.]+px/g, size))
           })
           .catch((err) => {
             if (isMounted)
@@ -195,7 +207,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
                 cursor: 'grab',
               }}
             >
-              <div onDoubleClick={fitToView}>
+              <div ref={diagramRef} onDoubleClick={fitToView}>
                 <div dangerouslySetInnerHTML={{ __html: svg }} />
               </div>
             </TransformComponent>
