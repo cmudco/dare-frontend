@@ -74,7 +74,7 @@ export function RoutingDecisionDisplay({
             </div>
           )}
         {aiAnalysis && (
-          <div className='rounded-md bg-white/50 p-3 dark:bg-black/20'>
+          <div className='rounded-md bg-card/50 p-3'>
             <p className='mb-1 text-xs font-medium text-green-700 dark:text-green-300'>
               {isHumanValidated ? 'AI Analysis:' : 'AI Reasoning:'}
             </p>

@@ -37,7 +37,7 @@ export function HumanValidationPrompt({
   return (
     <div className='rounded-lg border-2 border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20'>
       <div className='mb-3 flex items-start gap-3'>
-        <UserCheck className='mt-0.5 h-5 w-5 flex-shrink-0 text-purple-600 dark:text-purple-400' />
+        <UserCheck className='mt-0.5 h-5 w-5 shrink-0 text-purple-600 dark:text-purple-400' />
         <div className='flex-1'>
           <h3 className='font-semibold text-purple-900 dark:text-purple-100'>
             Human Validation Required

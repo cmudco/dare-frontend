@@ -42,7 +42,7 @@ export const ReferenceList = ({ clusters, citedRefs }: ReferenceListProps) => {
                   href={cluster.canonicalUrl}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='break-words text-blue-600 hover:text-blue-800 hover:underline'
+                  className='wrap-break-word text-blue-600 hover:text-blue-800 hover:underline'
                 >
                   {cluster.canonicalTitle}
                 </a>

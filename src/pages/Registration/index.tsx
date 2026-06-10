@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import AuthCard from '../../components/Auth/AuthCard'
 import AuthFormFooter from '../../components/Auth/AuthFormFooter'
-import { AppDispatch, RootState } from '../../redux/store'
+import { AppDispatch } from '../../redux/store'
+import { toggleMode } from '../../redux/themeSlice'
 import { userRegister } from '../../redux/asyncThunks/user'
 import {
   SignupFormValues,
@@ -17,7 +18,6 @@ import { Moon, Sun } from 'lucide-react'
 const RegistrationScreen: React.FC = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>()
-  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode)
 
   useEffect(() => {
     dispatch(resetError())
@@ -46,8 +46,7 @@ const RegistrationScreen: React.FC = () => {
   }
 
   const toggleTheme = () => {
-    const newTheme = isDarkMode ? 'light' : 'dark'
-    dispatch({ type: 'theme/setDarkMode', payload: newTheme === 'dark' })
+    dispatch(toggleMode())
   }
 
   const formikConfig = {
@@ -70,10 +69,10 @@ const RegistrationScreen: React.FC = () => {
 
   return (
     <>
-      <div className='fixed right-6 top-6 z-10'>
+      <div className='fixed top-6 right-6 z-10'>
         <Button variant='outline' size='icon' onClick={toggleTheme}>
-          <Sun className='h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0' />
-          <Moon className='absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100' />
+          <Sun className='h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90' />
+          <Moon className='absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0' />
           <span className='sr-only'>Toggle theme</span>
         </Button>
       </div>

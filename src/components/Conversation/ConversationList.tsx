@@ -43,7 +43,7 @@ import {
   forkConversation,
   fetchConversationMessages,
 } from '@/redux/asyncThunks/conversation'
-import { toggleDarkMode } from '../../redux/themeSlice'
+import { selectResolvedMode, toggleMode } from '../../redux/themeSlice'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
 import ForkConfirmDialog from '../shared/ForkConfirmDialog'
@@ -90,7 +90,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
   const selectedConversations = useSelector(
     (state: RootState) => state.conversation.selectedConversations
   )
-  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode)
+  const isDarkMode = useSelector(selectResolvedMode) === 'dark'
 
   const sensors = useDragSensors()
 
@@ -178,7 +178,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
         setIsDeleteConfirmOpen(true)
       }
     } else if (action === 'darkMode') {
-      dispatch(toggleDarkMode())
+      dispatch(toggleMode())
     }
   }
 
@@ -289,7 +289,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
   return (
     <TooltipProvider>
-      <nav className='text-blue-gray-700 flex h-full flex-col gap-1 font-sans text-base font-normal'>
+      <nav className='flex h-full flex-col gap-1 font-sans text-base font-normal text-foreground'>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -367,15 +367,15 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
           <DragOverlay>
             {activeId ? (
-              <div className='dark:bg-dark-chat-history min-h-[48px] rounded-md border border-gray-200 bg-white px-3 py-3 opacity-95 shadow-lg dark:border-dark-icon-unselected'>
+              <div className='min-h-[48px] rounded-md border border-border bg-card px-3 py-3 opacity-95 shadow-lg'>
                 {(() => {
                   const draggedConversation = conversations.find(
                     (c) => c.conversationId === activeId
                   )
                   return draggedConversation ? (
                     <div className='flex items-center'>
-                      <ChatBubbleLeftEllipsisIcon className='mr-3 h-6 w-6 text-gray-600 dark:text-white' />
-                      <span className='text-gray-900 dark:text-white'>
+                      <ChatBubbleLeftEllipsisIcon className='mr-3 h-6 w-6 text-muted-foreground' />
+                      <span className='text-foreground'>
                         {getConversationTitle(draggedConversation)}
                       </span>
                     </div>
@@ -385,7 +385,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             ) : null}
           </DragOverlay>
         </DndContext>
-        <hr className='mt-4 border-gray-200 dark:border-dark-icon-unselected' />
+        <hr className='mt-4 border-border' />
         <div className='space-y-1'>
           {bottomItems.map((item) => {
             const hasSelectedConversations = selectedConversations.length > 0
@@ -405,26 +405,22 @@ const ConversationList: React.FC<ConversationListProps> = ({
                     onClick={() =>
                       !isDisabled && handleBottomItemClick(item.action)
                     }
-                    className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight text-gray-700 outline-none transition-all dark:text-white ${
+                    className={`flex w-full items-center rounded-md p-3 text-start leading-tight font-normal text-foreground outline-hidden transition-all ${
                       location.pathname === item.name
-                        ? 'bg-pink-50 text-primary dark:bg-dark-button-primary dark:text-white'
-                        : 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-dark-icon-unselected/20 dark:hover:text-white'
+                        ? 'bg-primary/10 text-primary'
+                        : 'hover:bg-accent hover:text-accent-foreground'
                     } ${
                       isDisabled
-                        ? 'cursor-not-allowed text-gray-400 line-through opacity-50 dark:text-dark-icon-unselected'
+                        ? 'cursor-not-allowed text-muted-foreground line-through opacity-50'
                         : 'cursor-pointer'
                     }`}
                   >
                     <item.icon
                       className={`mr-4 h-5 w-5 font-bold ${
-                        isDisabled
-                          ? 'text-gray-400 dark:text-dark-icon-unselected'
-                          : 'text-gray-700 dark:text-white'
+                        isDisabled ? 'text-muted-foreground' : 'text-foreground'
                       }`}
                     />
-                    <span className='text-gray-700 dark:text-white'>
-                      {buttonText}
-                    </span>
+                    <span className='text-foreground'>{buttonText}</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent className='max-w-xs'>
@@ -450,26 +446,22 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 onClick={() =>
                   !isDisabled && handleBottomItemClick(item.action)
                 }
-                className={`flex w-full items-center rounded-md p-3 text-start font-normal leading-tight text-gray-700 outline-none transition-all dark:text-white ${
+                className={`flex w-full items-center rounded-md p-3 text-start leading-tight font-normal text-foreground outline-hidden transition-all ${
                   location.pathname === item.name
-                    ? 'bg-pink-50 text-primary dark:bg-dark-button-primary dark:text-white'
-                    : 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-dark-icon-unselected/20 dark:hover:text-white'
+                    ? 'bg-primary/10 text-primary'
+                    : 'hover:bg-accent hover:text-accent-foreground'
                 } ${
                   isDisabled
-                    ? 'cursor-not-allowed text-gray-400 line-through opacity-50 dark:text-dark-icon-unselected'
+                    ? 'cursor-not-allowed text-muted-foreground line-through opacity-50'
                     : 'cursor-pointer'
                 }`}
               >
                 <item.icon
                   className={`mr-4 h-5 w-5 font-bold ${
-                    isDisabled
-                      ? 'text-gray-400 dark:text-dark-icon-unselected'
-                      : 'text-gray-700 dark:text-white'
+                    isDisabled ? 'text-muted-foreground' : 'text-foreground'
                   }`}
                 />
-                <span className='text-gray-700 dark:text-white'>
-                  {buttonText}
-                </span>
+                <span className='text-foreground'>{buttonText}</span>
               </div>
             )
           })}

@@ -73,13 +73,11 @@ const ImageGenerationPanel: React.FC = () => {
         <Button
           variant='ghost'
           size='sm'
-          className='dark:hover:bg-dare-gradient/90 group flex h-9 items-center gap-2 rounded-md bg-sky-50 px-3 hover:bg-sky-100 dark:bg-dare-gradient'
+          className='group flex h-9 items-center gap-2 rounded-md bg-muted px-3 hover:bg-accent'
           title='Image Generation Settings'
         >
-          <Wand2 className='h-5 w-5 text-gray-700 dark:text-white' />
-          <span className='bg-dare-gradient bg-clip-text text-sm font-medium text-transparent dark:bg-none dark:text-white'>
-            Image Settings
-          </span>
+          <Wand2 className='h-5 w-5 text-foreground' />
+          <span className='text-sm font-medium text-dare'>Image Settings</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -90,10 +88,8 @@ const ImageGenerationPanel: React.FC = () => {
           {/* Header */}
           <div className='border-b border-border pb-4'>
             <h3 className='flex items-center gap-2 text-lg font-semibold'>
-              <Wand2 className='h-5 w-5 text-gray-700 dark:text-white' />
-              <span className='bg-dare-gradient bg-clip-text text-transparent dark:bg-none dark:text-white'>
-                DALL-E 3 Settings
-              </span>
+              <Wand2 className='h-5 w-5 text-foreground' />
+              <span className='text-dare'>DALL-E 3 Settings</span>
             </h3>
             <p className='mt-1 text-sm text-muted-foreground'>
               Configure image generation parameters
@@ -176,21 +172,19 @@ const ImageGenerationPanel: React.FC = () => {
           </div>
 
           {/* Cost Estimation */}
-          <div className='dark:bg-dare-gradient/10 rounded-lg border border-sky-200 bg-sky-50 p-4 dark:border-gray-700'>
+          <div className='rounded-lg border border-border bg-muted p-4'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='bg-dare-gradient bg-clip-text text-sm font-medium text-transparent dark:bg-none dark:text-white'>
-                  Estimated Cost
-                </p>
-                <p className='mt-0.5 text-xs text-gray-600 dark:text-gray-300'>
+                <p className='text-sm font-medium text-dare'>Estimated Cost</p>
+                <p className='mt-0.5 text-xs text-muted-foreground'>
                   Per image generated
                 </p>
               </div>
               <div className='text-right'>
-                <p className='bg-dare-gradient bg-clip-text text-2xl font-bold text-transparent dark:bg-none dark:text-white'>
+                <p className='text-2xl font-bold text-dare'>
                   ${cost.toFixed(2)}
                 </p>
-                <p className='text-xs text-gray-600 dark:text-gray-300'>USD</p>
+                <p className='text-xs text-muted-foreground'>USD</p>
               </div>
             </div>
           </div>

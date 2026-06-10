@@ -122,13 +122,13 @@ const SystemBanner: React.FC<SystemBannerProps> = ({ className }) => {
   }
 
   const getBannerClasses = () => {
-    const baseClasses = 'border-l-4 rounded-none shadow-sm'
+    const baseClasses = 'border-l-4 rounded-none shadow-xs'
 
     switch (bannerNotification.category) {
       case NotificationCategory.DESTRUCTIVE:
         return cn(
           baseClasses,
-          'border-red-500 bg-red-50 dark:bg-red-950/20 text-red-900 dark:text-red-200'
+          'border-destructive bg-destructive/10 text-destructive'
         )
       case NotificationCategory.WARNING:
         return cn(
@@ -146,7 +146,7 @@ const SystemBanner: React.FC<SystemBannerProps> = ({ className }) => {
           'border-blue-500 bg-blue-50 dark:bg-blue-950/20 text-blue-900 dark:text-blue-200'
         )
       default:
-        return cn(baseClasses, 'border-gray-500 bg-gray-50 dark:bg-gray-950/20')
+        return cn(baseClasses, 'border-border bg-muted text-foreground')
     }
   }
 
@@ -180,7 +180,7 @@ const SystemBanner: React.FC<SystemBannerProps> = ({ className }) => {
           <Button
             variant='ghost'
             size='sm'
-            className='ml-2 h-6 w-6 p-0 hover:bg-black/10 dark:hover:bg-white/10'
+            className='ml-2 h-6 w-6 p-0 hover:bg-foreground/10'
             onClick={goToPreviousBanner}
             aria-label='Previous banner'
           >
@@ -213,7 +213,7 @@ const SystemBanner: React.FC<SystemBannerProps> = ({ className }) => {
           <Button
             variant='ghost'
             size='sm'
-            className='ml-1 h-6 w-6 p-0 hover:bg-black/10 dark:hover:bg-white/10'
+            className='ml-1 h-6 w-6 p-0 hover:bg-foreground/10'
             onClick={goToNextBanner}
             aria-label='Next banner'
           >
@@ -224,7 +224,7 @@ const SystemBanner: React.FC<SystemBannerProps> = ({ className }) => {
         <Button
           variant='ghost'
           size='sm'
-          className='ml-2 h-6 w-6 p-0 hover:bg-black/10 dark:hover:bg-white/10'
+          className='ml-2 h-6 w-6 p-0 hover:bg-foreground/10'
           onClick={handleDismiss}
           aria-label='Dismiss notification'
         >

@@ -50,9 +50,7 @@ const ArtifactVersionDropdown: React.FC<ArtifactVersionDropdownProps> = ({
   // Don't show dropdown if only one version
   if (groupVersions.length <= 1) {
     return (
-      <span
-        className={cn('text-xs text-gray-500 dark:text-gray-400', className)}
-      >
+      <span className={cn('text-xs text-muted-foreground', className)}>
         v{artifact.version ?? 1}
       </span>
     )
@@ -69,8 +67,7 @@ const ArtifactVersionDropdown: React.FC<ArtifactVersionDropdownProps> = ({
           variant='ghost'
           size='sm'
           className={cn(
-            'h-6 gap-1 px-2 text-xs text-gray-600 hover:text-gray-900',
-            'dark:text-gray-400 dark:hover:text-gray-200',
+            'h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground',
             className
           )}
         >
@@ -85,7 +82,7 @@ const ArtifactVersionDropdown: React.FC<ArtifactVersionDropdownProps> = ({
             onClick={() => handleVersionSelect(version.id)}
             className={cn(
               'flex items-center justify-between gap-2',
-              version.id === artifact.id && 'bg-gray-100 dark:bg-gray-800'
+              version.id === artifact.id && 'bg-accent'
             )}
           >
             <span>Version {version.version ?? 1}</span>

@@ -110,11 +110,11 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifactId }) => {
         className={cn(
           'not-prose my-3 flex w-full max-w-md cursor-pointer items-start gap-3 rounded-lg border p-4 text-left transition-all',
           'hover:border-purple-300 hover:shadow-md dark:hover:border-purple-600',
-          'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800',
+          'border-border bg-card',
           isLoading && 'cursor-wait opacity-70'
         )}
       >
-        <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'>
+        <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground'>
           {isLoading ? (
             <Loader2 className='h-5 w-5 animate-spin' />
           ) : (
@@ -124,10 +124,10 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifactId }) => {
         <div className='min-w-0 flex-1'>
           <div className='flex items-start justify-between gap-2'>
             <div className='min-w-0 flex-1'>
-              <h4 className='font-medium text-gray-700 dark:text-gray-300'>
+              <h4 className='font-medium text-foreground'>
                 {isLoading ? 'Loading artifact...' : 'View Artifact'}
               </h4>
-              <p className='mt-0.5 text-xs text-gray-500 dark:text-gray-400'>
+              <p className='mt-0.5 text-xs text-muted-foreground'>
                 {error ? (
                   <span className='text-red-500'>{error}</span>
                 ) : isLoading ? (
@@ -137,7 +137,7 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifactId }) => {
                 )}
               </p>
             </div>
-            <ExternalLink className='h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500' />
+            <ExternalLink className='h-4 w-4 shrink-0 text-muted-foreground' />
           </div>
         </div>
       </button>
@@ -150,27 +150,27 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifactId }) => {
       className={cn(
         'not-prose my-3 flex w-full max-w-md cursor-pointer items-start gap-3 rounded-lg border p-4 text-left transition-all',
         'hover:shadow-md',
-        'border-gray-200 bg-white hover:border-purple-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-600'
+        'border-border bg-card hover:border-purple-300 dark:hover:border-purple-600'
       )}
     >
-      <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'>
+      <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground'>
         {getIcon(artifact.artifactType)}
       </div>
 
       <div className='min-w-0 flex-1'>
         <div className='flex items-start justify-between gap-2'>
           <div className='min-w-0 flex-1'>
-            <h4 className='truncate font-medium text-gray-900 dark:text-white'>
+            <h4 className='truncate font-medium text-foreground'>
               {artifact.title || 'Untitled Artifact'}
             </h4>
-            <p className='mt-0.5 text-xs text-gray-500 dark:text-gray-400'>
+            <p className='mt-0.5 text-xs text-muted-foreground'>
               {artifact.artifactType}
               {artifact.version &&
                 artifact.version > 1 &&
                 ` • v${artifact.version}`}
             </p>
           </div>
-          <ExternalLink className='h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500' />
+          <ExternalLink className='h-4 w-4 shrink-0 text-muted-foreground' />
         </div>
 
         {/* Status indicator */}

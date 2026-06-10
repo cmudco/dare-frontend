@@ -13,7 +13,7 @@ export function ConnectionIndicator({ status }: ConnectionIndicatorProps) {
     'h-4 w-4',
     status === 'connected' && 'text-green-500',
     status === 'connecting' && 'animate-spin text-yellow-500',
-    status === 'disconnected' && 'text-gray-400'
+    status === 'disconnected' && 'text-muted-foreground'
   )
   const label =
     status === 'connected'

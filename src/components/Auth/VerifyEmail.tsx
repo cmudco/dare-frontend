@@ -63,7 +63,7 @@ const VerifyEmailScreen = () => {
       )}
 
       {error && (
-        <div className='flex justify-center gap-2 text-sm text-red-500'>
+        <div className='flex justify-center gap-2 text-sm text-destructive'>
           {error}
         </div>
       )}

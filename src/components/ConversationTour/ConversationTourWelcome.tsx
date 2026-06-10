@@ -26,18 +26,18 @@ export default function ConversationTourWelcome({
       <button
         type='button'
         onClick={onSkip}
-        className='absolute right-3 top-3 z-10 rounded-lg p-1.5 text-white/60 opacity-70 transition-all hover:bg-white/20 hover:opacity-100'
+        className='absolute top-3 right-3 z-10 rounded-lg p-1.5 text-white/60 opacity-70 transition-all hover:bg-white/20 hover:opacity-100'
       >
         <X className='h-4 w-4' />
         <span className='sr-only'>Close</span>
       </button>
 
       {/* Gradient header band */}
-      <div className='relative overflow-hidden bg-dare-gradient px-6 pb-8 pt-7'>
+      <div className='relative overflow-hidden bg-dare-gradient px-6 pt-7 pb-8'>
         {/* Blurred orb for depth */}
         <div
           aria-hidden='true'
-          className='pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20 blur-2xl'
+          className='pointer-events-none absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/20 blur-2xl'
         />
 
         <motion.div
@@ -45,7 +45,7 @@ export default function ConversationTourWelcome({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05, duration: 0.3 }}
         >
-          <div className='mb-4 inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/20 p-2.5 backdrop-blur-sm'>
+          <div className='mb-4 inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/20 p-2.5 backdrop-blur-xs'>
             <Sparkles className='h-5 w-5 text-white' />
           </div>
           <h2 className='text-xl font-bold tracking-tight text-white'>
@@ -62,15 +62,15 @@ export default function ConversationTourWelcome({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.55, duration: 0.3 }}
-        className='flex flex-col gap-2 px-5 pb-5 pt-4'
+        className='flex flex-col gap-2 px-5 pt-4 pb-5'
       >
         <button
           type='button'
           onClick={onStart}
-          className='group relative overflow-hidden rounded-xl py-2.5 text-sm font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+          className='group relative overflow-hidden rounded-xl py-2.5 text-sm font-semibold text-white transition-all focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-hidden'
         >
           <span className='absolute inset-0 bg-dare-gradient transition-opacity group-hover:opacity-90' />
-          <span className='absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-500 group-hover:translate-x-full' />
+          <span className='absolute inset-0 -translate-x-full skew-x-12 bg-linear-to-r from-transparent via-white/15 to-transparent transition-transform duration-500 group-hover:translate-x-full' />
           <span className='relative flex items-center justify-center gap-2'>
             <Sparkles className='h-4 w-4' />
             Start Tour

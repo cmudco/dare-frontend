@@ -160,22 +160,22 @@ const ModelPicker: React.FC = () => {
           data-tour='model-picker'
           layout
           whileTap={{ scale: 0.98 }}
-          className={`group flex h-9 min-w-0 max-w-full items-center gap-2 rounded-full px-3 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-background sm:px-4 ${open ? 'bg-accent/50 ring-2 ring-primary' : 'bg-accent/30 hover:bg-accent/60 dark:bg-accent/20 dark:hover:bg-accent/40'} ${selectedTierColors ? `${selectedTierColors.border} border shadow-sm` : 'border border-transparent'} `}
+          className={`group flex h-9 min-w-0 max-w-full items-center gap-2 rounded-full px-3 font-medium transition-all focus:ring-2 focus:ring-offset-1 focus:ring-offset-background focus:outline-hidden sm:px-4 ${open ? 'bg-accent/50 ring-2 ring-primary' : 'bg-accent/30 hover:bg-accent/60'} ${selectedTierColors ? `${selectedTierColors.border} border shadow-xs` : 'border border-transparent'} `}
         >
           {selectedBrand?.logo ? (
             <img
               src={selectedBrand.logo}
               alt={selectedBrand.name}
-              className='h-4 w-4 object-contain brightness-100 dark:brightness-125'
+              className='h-4 w-4 object-contain'
             />
           ) : (
             <TypeIcon
               type={selectedEntry ? categorizeEntry(selectedEntry) : 'Premium'}
-              className={`h-4 w-4 ${selectedTierColors ? selectedTierColors.icon : 'text-muted-foreground transition-colors group-hover:text-foreground dark:text-muted-foreground dark:group-hover:text-white'}`}
+              className={`h-4 w-4 ${selectedTierColors ? selectedTierColors.icon : 'text-muted-foreground transition-colors group-hover:text-foreground'}`}
             />
           )}
           <span
-            className={`max-w-[110px] truncate text-sm transition-colors sm:max-w-[140px] ${selectedTierColors ? selectedTierColors.text : 'text-muted-foreground group-hover:text-foreground dark:text-muted-foreground dark:group-hover:text-white'}`}
+            className={`max-w-[110px] truncate text-sm transition-colors sm:max-w-[140px] ${selectedTierColors ? selectedTierColors.text : 'text-muted-foreground group-hover:text-foreground'}`}
           >
             {selectedEntry ? selectedEntry.name : 'Select Model'}
           </span>
@@ -185,7 +185,7 @@ const ModelPicker: React.FC = () => {
       <PopoverContent
         align='start'
         sideOffset={8}
-        className='w-[min(500px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/20 bg-background/90 p-0 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-background/90'
+        className='w-[min(500px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-popover/90 p-0 shadow-2xl backdrop-blur-xl'
       >
         <motion.div layout className='flex h-full max-h-[85vh] flex-col'>
           {/* Header & Modes */}
@@ -195,7 +195,7 @@ const ModelPicker: React.FC = () => {
                 Models
               </h2>
 
-              <div className='flex items-center gap-1 rounded-lg bg-accent/40 p-1 dark:bg-accent/20'>
+              <div className='flex items-center gap-1 rounded-lg bg-accent/40 p-1'>
                 <ModeButton
                   active={groupingMode === 'provider'}
                   onClick={() => setGroupingMode('provider')}
@@ -224,10 +224,10 @@ const ModelPicker: React.FC = () => {
             </div>
 
             <div className='relative'>
-              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+              <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
               <Input
                 placeholder='Search models or providers...'
-                className='h-10 border-none bg-accent/40 pl-10 focus-visible:ring-1 focus-visible:ring-primary dark:bg-accent/20'
+                className='h-10 border-none bg-accent/40 pl-10 focus-visible:ring-1 focus-visible:ring-ring'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -235,7 +235,7 @@ const ModelPicker: React.FC = () => {
           </div>
 
           {/* Dynamic Content */}
-          <div className='custom-scrollbar min-h-[300px] flex-1 overflow-y-auto px-2 pb-4 pt-2'>
+          <div className='custom-scrollbar min-h-[300px] flex-1 overflow-y-auto px-2 pt-2 pb-4'>
             {loading && pickerEntries.length === 0 ? (
               <ModelSkeleton />
             ) : filteredEntries.length === 0 ? (
@@ -294,7 +294,7 @@ const ModelPicker: React.FC = () => {
               </AnimatePresence>
             )}
             {loading && pickerEntries.length > 0 && (
-              <div className='absolute right-2 top-2 rounded-full border border-accent/20 bg-background/50 p-1 shadow-sm backdrop-blur-sm'>
+              <div className='absolute top-2 right-2 rounded-full border border-accent/20 bg-background/50 p-1 shadow-xs backdrop-blur-xs'>
                 <Spinner className='h-3 w-3 animate-spin text-primary' />
               </div>
             )}

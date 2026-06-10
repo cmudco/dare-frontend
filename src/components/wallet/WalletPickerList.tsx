@@ -37,11 +37,11 @@ const AddRow: React.FC<AddRowProps> = ({
     type='button'
     onClick={onClick}
     className={cn(
-      'group flex w-full items-center gap-3 rounded-lg border border-dashed border-[#023572]/30 bg-gradient-to-r from-[#EE183C]/[0.03] to-[#023572]/[0.03] px-3 py-2 text-left transition-colors hover:border-[#023572]/60 hover:from-[#EE183C]/[0.06] hover:to-[#023572]/[0.06] dark:border-[#EE183C]/30 dark:from-[#EE183C]/10 dark:to-[#023572]/10',
+      'group flex w-full items-center gap-3 rounded-lg border border-dashed border-dare/30 bg-dare/5 px-3 py-2 text-left transition-colors hover:border-dare/60 hover:bg-dare/10',
       compact ? 'text-sm' : 'text-base'
     )}
   >
-    <Icon className='h-4 w-4 shrink-0 text-[#023572] dark:text-[#EE183C]' />
+    <Icon className='h-4 w-4 shrink-0 text-dare' />
     <div className='min-w-0 flex-1'>
       <span className='block truncate font-medium text-foreground'>
         {label}
@@ -50,7 +50,7 @@ const AddRow: React.FC<AddRowProps> = ({
         {hint}
       </span>
     </div>
-    <Plus className='h-4 w-4 shrink-0 text-[#023572] opacity-60 transition-opacity group-hover:opacity-100 dark:text-[#EE183C]' />
+    <Plus className='h-4 w-4 shrink-0 text-dare opacity-60 transition-opacity group-hover:opacity-100' />
   </button>
 )
 

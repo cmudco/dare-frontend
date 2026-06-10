@@ -137,9 +137,9 @@ export default function WorkflowExecutionPanel() {
         : 'Ready'
 
   return (
-    <div className='absolute inset-x-0 bottom-4 top-10 z-20 ml-auto flex w-[90%] max-w-[45vw] flex-col rounded-2xl border border-border/30 bg-white/95 shadow-2xl backdrop-blur-sm'>
+    <div className='absolute inset-x-0 top-10 bottom-4 z-20 ml-auto flex w-[90%] max-w-[45vw] flex-col rounded-2xl border border-border/30 bg-card/95 shadow-2xl backdrop-blur-xs'>
       {/* Header */}
-      <div className='flex items-center justify-between rounded-t-2xl border-b border-border/50 bg-gradient-to-r from-slate-50 to-white p-4'>
+      <div className='flex items-center justify-between rounded-t-2xl border-b border-border/50 bg-muted/40 p-4'>
         <div>
           <h3 className='font-semibold text-foreground'>
             {isViewingCompletedRun ? 'Run Results' : 'Execution Preview'}
@@ -209,7 +209,7 @@ export default function WorkflowExecutionPanel() {
       {showScrollButton && (
         <button
           onClick={handleScrollToBottomClick}
-          className='absolute bottom-20 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90'
+          className='absolute right-4 bottom-20 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90'
           aria-label='Scroll to bottom'
         >
           <ChevronDown className='h-4 w-4' />
@@ -218,19 +218,19 @@ export default function WorkflowExecutionPanel() {
 
       {/* Footer */}
       {displayRun && (
-        <div className='rounded-b-2xl border-t border-border/50 bg-gradient-to-r from-slate-50 to-white p-3'>
+        <div className='rounded-b-2xl border-t border-border/50 bg-muted/40 p-3'>
           <div className='flex items-center justify-end text-xs text-muted-foreground'>
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-xs font-medium',
                 displayRun.status === WorkflowRunStepStatus.Completed &&
-                  'bg-[#023572]/10 text-[#023572]',
+                  'bg-secondary text-secondary-foreground',
                 displayRun.status === WorkflowRunStepStatus.Running &&
-                  'bg-[#EE183C]/10 text-[#EE183C]',
+                  'bg-dare/10 text-dare',
                 displayRun.status === WorkflowRunStepStatus.Failed &&
-                  'bg-red-100 text-red-700',
+                  'bg-destructive/10 text-destructive',
                 displayRun.status === WorkflowRunStepStatus.PendingHumanInput &&
-                  'bg-[#EE183C]/10 text-[#EE183C]'
+                  'bg-dare/10 text-dare'
               )}
             >
               {displayRun.status}

@@ -317,7 +317,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                       >
                         Previous
                       </Button>
-                      <span className='text-sm dark:text-white'>
+                      <span className='text-sm text-foreground'>
                         Page {currentPage} of {totalPages || 1}
                       </span>
                       <Button
@@ -373,9 +373,9 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
               {WORKFLOWS_TABLE_HEAD.map((head) => (
                 <TableHead
                   key={head}
-                  className={`cursor-pointer select-none p-4 text-sm font-semibold text-foreground transition-colors duration-150 ${
+                  className={`cursor-pointer p-4 text-sm font-semibold text-foreground transition-colors duration-150 select-none ${
                     head !== 'Action'
-                      ? 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+                      ? 'hover:bg-accent hover:text-accent-foreground'
                       : ''
                   }`}
                   onClick={() => head !== 'Action' && handleSort(head)}
@@ -447,7 +447,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                 >
                   <div className='flex w-full items-center justify-between'>
                     <div className='flex items-center gap-4'>
-                      <span className='text-sm dark:text-white'>
+                      <span className='text-sm text-foreground'>
                         Rows per page:
                       </span>
                       <Select
@@ -473,7 +473,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                       >
                         Previous
                       </Button>
-                      <span className='text-sm dark:text-white'>
+                      <span className='text-sm text-foreground'>
                         Page {currentPage} of {totalPages || 1}
                       </span>
                       <Button
@@ -496,13 +496,13 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
 
         <DragOverlay>
           {activeId ? (
-            <div className='dark:bg-dark-chat-history min-h-[48px] rounded-md border border-gray-200 bg-white px-3 py-3 opacity-95 shadow-lg dark:border-dark-icon-unselected'>
+            <div className='min-h-[48px] rounded-md border border-border bg-card px-3 py-3 opacity-95 shadow-lg'>
               {(() => {
                 const draggedWorkflow = workflows.find((w) => w.id === activeId)
                 return draggedWorkflow ? (
                   <div className='flex items-center gap-2'>
-                    <GripVertical className='h-5 w-5 text-gray-600 dark:text-white' />
-                    <span className='text-gray-900 dark:text-white'>
+                    <GripVertical className='h-5 w-5 text-foreground' />
+                    <span className='text-foreground'>
                       {getWorkflowTitle(draggedWorkflow)}
                     </span>
                   </div>

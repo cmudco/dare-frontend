@@ -65,35 +65,35 @@ export const StepResponseCard = memo(function StepResponseCard({
     <div
       className={cn(
         'rounded-lg border p-3 transition-all',
-        isActive && 'border-[#023572]/30 bg-[#023572]/5',
+        isActive && 'border-primary/30 bg-primary/5',
         !isActive &&
           content &&
-          'border-[#023572]/20 bg-gradient-to-br from-[#023572]/5 to-[#EE183C]/5'
+          'border-border bg-linear-to-br from-secondary/30 to-dare/5'
       )}
     >
       {/* Step header with number badge */}
       <div className='mb-2 flex items-center gap-2'>
         {/* Label badge */}
         {label && (
-          <div className='flex h-auto min-h-5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#023572] to-[#EE183C] px-1.5 text-[10px] font-bold text-white'>
+          <div className='flex h-auto min-h-5 shrink-0 items-center justify-center rounded-full bg-dare px-1.5 text-[10px] font-bold text-dare-foreground'>
             {label}
           </div>
         )}
         {isActive ? (
-          <Loader2 className='h-4 w-4 animate-spin text-[#023572]' />
+          <Loader2 className='h-4 w-4 animate-spin text-dare' />
         ) : (
-          <CheckCircle className='h-4 w-4 text-[#023572]' />
+          <CheckCircle className='h-4 w-4 text-green-600 dark:text-green-400' />
         )}
         <span className='text-sm font-medium'>{nodeName}</span>
         {isActive && (
-          <span className='text-xs text-[#023572]'>Streaming...</span>
+          <span className='text-xs text-muted-foreground'>Streaming...</span>
         )}
       </div>
 
       {/* Node metadata line */}
       {nodeType && (
         <div className='mb-2 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground'>
-          <span className='rounded bg-muted px-1.5 py-0.5 font-mono'>
+          <span className='rounded-sm bg-muted px-1.5 py-0.5 font-mono'>
             {nodeType}
           </span>
         </div>
@@ -101,8 +101,8 @@ export const StepResponseCard = memo(function StepResponseCard({
 
       {/* Response content with markdown */}
       {content && (
-        <div className='mt-2 rounded bg-white/80 p-2'>
-          <div className='prose prose-sm max-w-full text-gray-700 dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-pre:bg-transparent prose-pre:p-0'>
+        <div className='mt-2 rounded-sm bg-background/80 p-2'>
+          <div className='prose prose-sm max-w-full text-foreground dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-pre:bg-transparent prose-pre:p-0'>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={
@@ -121,7 +121,7 @@ export const StepResponseCard = memo(function StepResponseCard({
                 pre({ children, ...props }) {
                   return (
                     <pre
-                      className='max-w-full overflow-x-auto whitespace-pre-wrap break-words text-xs'
+                      className='max-w-full overflow-x-auto text-xs wrap-break-word whitespace-pre-wrap'
                       {...props}
                     >
                       {children}
@@ -154,7 +154,7 @@ export const StepResponseCard = memo(function StepResponseCard({
                   }
                   return (
                     <code
-                      className='not-prose break-all rounded border border-border bg-muted px-1 text-xs text-foreground'
+                      className='not-prose rounded-sm border border-border bg-muted px-1 text-xs break-all text-foreground'
                       {...props}
                     >
                       {children}
@@ -165,9 +165,7 @@ export const StepResponseCard = memo(function StepResponseCard({
             >
               {content}
             </ReactMarkdown>
-            {isActive && (
-              <span className='animate-pulse text-[#EE183C]'>|</span>
-            )}
+            {isActive && <span className='animate-pulse text-dare'>|</span>}
           </div>
         </div>
       )}
@@ -198,7 +196,7 @@ export const StepResponseCard = memo(function StepResponseCard({
                   .map((snippet) => (
                     <div
                       key={snippet.id}
-                      className='rounded-r-md border-l-2 border-border bg-white p-1.5 pl-2 text-xs'
+                      className='rounded-r-md border-l-2 border-border bg-background p-1.5 pl-2 text-xs'
                     >
                       <div className='mb-0.5 flex items-center justify-between'>
                         <span className='font-medium text-foreground'>
@@ -236,7 +234,7 @@ export const StepResponseCard = memo(function StepResponseCard({
                 {webSearchSources!.map((source) => (
                   <div
                     key={source.id}
-                    className='rounded-r-md border-l-2 border-blue-500 bg-white p-1.5 pl-2 text-xs'
+                    className='rounded-r-md border-l-2 border-blue-500 bg-background p-1.5 pl-2 text-xs'
                   >
                     <a
                       href={source.url}
@@ -249,7 +247,7 @@ export const StepResponseCard = memo(function StepResponseCard({
                       <ExternalLink className='h-2.5 w-2.5' />
                     </a>
                     {source.citedText && (
-                      <p className='mt-0.5 line-clamp-2 italic text-muted-foreground'>
+                      <p className='mt-0.5 line-clamp-2 text-muted-foreground italic'>
                         &ldquo;{source.citedText}&rdquo;
                       </p>
                     )}

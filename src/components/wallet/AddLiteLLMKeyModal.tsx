@@ -70,7 +70,7 @@ export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
           <DialogTitle>Add LiteLLM Key</DialogTitle>
           <DialogDescription>
             Route LLM calls through your LiteLLM proxy. Tip: include{' '}
-            <code className='rounded bg-muted px-1 py-0.5 text-[11px]'>
+            <code className='rounded-sm bg-muted px-1 py-0.5 text-[11px]'>
               /v1
             </code>{' '}
             in the base URL (e.g. <code>http://host:4000/v1</code>). The key is
@@ -196,7 +196,7 @@ export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
 
               {probe.kind === 'ok' && probe.models.length > 0 && (
                 <div className='rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 text-xs text-muted-foreground'>
-                  <p className='break-words'>
+                  <p className='wrap-break-word'>
                     {probe.models.slice(0, 8).join(', ')}
                     {probe.models.length > 8 &&
                       ` + ${probe.models.length - 8} more`}
@@ -205,7 +205,7 @@ export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
               )}
               {probe.kind === 'fail' && (
                 <div className='rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground'>
-                  <p className='break-words'>
+                  <p className='wrap-break-word'>
                     {probe.error || 'Unknown error.'}
                   </p>
                 </div>

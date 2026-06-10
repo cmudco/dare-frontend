@@ -11,7 +11,7 @@ const TierEmoji: React.FC<TierEmojiProps> = ({ type }) => {
       return (
         <span
           title='Premium/Power'
-          className='flex-shrink-0 text-[10px] opacity-40 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0'
+          className='shrink-0 text-[10px] opacity-40 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0'
         >
           💎
         </span>
@@ -20,7 +20,7 @@ const TierEmoji: React.FC<TierEmojiProps> = ({ type }) => {
       return (
         <span
           title='Advanced/Balanced'
-          className='flex-shrink-0 text-[10px] opacity-40 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0'
+          className='shrink-0 text-[10px] opacity-40 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0'
         >
           🪐
         </span>
@@ -29,7 +29,7 @@ const TierEmoji: React.FC<TierEmojiProps> = ({ type }) => {
       return (
         <span
           title='Flash/Speed'
-          className='flex-shrink-0 text-[10px] opacity-40 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0'
+          className='shrink-0 text-[10px] opacity-40 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0'
         >
           ⚡
         </span>

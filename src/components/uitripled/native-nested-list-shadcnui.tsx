@@ -110,7 +110,8 @@ function NestedItem({
         }}
         whileHover={{
           x: 4,
-          backgroundColor: 'hsl(var(--accent) / 0.5)',
+          backgroundColor:
+            'color-mix(in oklab, var(--accent) 50%, transparent)',
         }}
         transition={{
           type: 'spring',
@@ -149,17 +150,17 @@ function NestedItem({
                     stiffness: 300,
                     damping: 20,
                   }}
-                  className='flex-shrink-0'
+                  className='shrink-0'
                 >
                   <ChevronRight className={iconSizeVariants[size]} />
                 </motion.div>
               )}
               {showExpandIcon && !hasChildren && (
-                <div className={cn(iconSizeVariants[size], 'flex-shrink-0')} />
+                <div className={cn(iconSizeVariants[size], 'shrink-0')} />
               )}
               {item.icon && (
                 <motion.div
-                  className='flex-shrink-0'
+                  className='shrink-0'
                   whileHover={{ scale: 1.1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                 >
@@ -182,7 +183,7 @@ function NestedItem({
                 stiffness: 500,
                 damping: 30,
               }}
-              className='absolute right-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-black'
+              className='absolute top-1/2 right-2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-black'
             />
           )}
         </AnimatePresence>

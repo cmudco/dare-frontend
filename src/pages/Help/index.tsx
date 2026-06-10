@@ -125,7 +125,7 @@ const Help = () => {
           </CardHeader>
           <CardContent>
             <div className='space-y-4'>
-              <div className='rounded-lg border border-gray-200 p-4 transition-all hover:border-blue-300 hover:shadow-md'>
+              <div className='rounded-lg border border-border p-4 transition-all hover:border-blue-300 hover:shadow-md'>
                 <a href='/docs/' className='flex items-start justify-between'>
                   <div>
                     <h3 className='font-medium text-foreground'>
@@ -136,10 +136,10 @@ const Help = () => {
                       architecture, deployment notes, and API references.
                     </p>
                   </div>
-                  <FileText className='h-5 w-5 flex-shrink-0 text-blue-500' />
+                  <FileText className='h-5 w-5 shrink-0 text-blue-500' />
                 </a>
               </div>
-              <div className='rounded-lg border border-gray-200 p-4 transition-all hover:border-blue-300 hover:shadow-md'>
+              <div className='rounded-lg border border-border p-4 transition-all hover:border-blue-300 hover:shadow-md'>
                 <a
                   href='https://docs.google.com/document/d/12t1EinvBwM4MsSSjvlWpNvav1dWW32zo1A9FhY8BfLM/edit?tab=t.0#heading=h.h5z6kf1kmw3f'
                   target='_blank'
@@ -155,7 +155,7 @@ const Help = () => {
                       features, workflows, and best practices.
                     </p>
                   </div>
-                  <ExternalLink className='h-5 w-5 flex-shrink-0 text-blue-500' />
+                  <ExternalLink className='h-5 w-5 shrink-0 text-blue-500' />
                 </a>
               </div>
             </div>
@@ -179,7 +179,7 @@ const Help = () => {
           </CardHeader>
           <CardContent>
             <div className='space-y-4'>
-              <div className='rounded-lg border border-gray-200 p-4 transition-all hover:border-blue-300 hover:shadow-md'>
+              <div className='rounded-lg border border-border p-4 transition-all hover:border-blue-300 hover:shadow-md'>
                 <a
                   href='https://drive.google.com/drive/folders/137SL9lhrd1e842Q7-z0V_CwADQxznnBV'
                   target='_blank'
@@ -195,7 +195,7 @@ const Help = () => {
                       workflows, and more.
                     </p>
                   </div>
-                  <ExternalLink className='h-5 w-5 flex-shrink-0 text-blue-500' />
+                  <ExternalLink className='h-5 w-5 shrink-0 text-blue-500' />
                 </a>
               </div>
             </div>
@@ -210,8 +210,8 @@ const Help = () => {
         </div>
 
         {allModels.length === 0 ? (
-          <div className='rounded-lg border border-gray-200 bg-gray-50 p-8 text-center'>
-            <p className='text-gray-500'>
+          <div className='rounded-lg border border-border bg-muted p-8 text-center'>
+            <p className='text-muted-foreground'>
               No AI models available at the moment.
             </p>
           </div>
@@ -226,7 +226,7 @@ const Help = () => {
                 onClick={() => setActiveTier(null)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
                   activeTier === null
-                    ? 'bg-foreground text-background shadow-sm'
+                    ? 'bg-foreground text-background shadow-xs'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                 }`}
               >
@@ -248,7 +248,7 @@ const Help = () => {
                     onClick={() => setActiveTier(isActive ? null : tier)}
                     className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
                       isActive
-                        ? `${colors.bg} ${colors.text} ring-1 ${colors.ring} shadow-sm`
+                        ? `${colors.bg} ${colors.text} ring-1 ${colors.ring} shadow-xs`
                         : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                     }`}
                   >
@@ -273,7 +273,7 @@ const Help = () => {
                   >
                     {/* Tier header with gradient accent */}
                     <div
-                      className={`bg-gradient-to-r ${colors.gradient} border-b ${colors.border} px-6 py-4`}
+                      className={`bg-linear-to-r ${colors.gradient} border-b ${colors.border} px-6 py-4`}
                     >
                       <div className='flex items-center justify-between'>
                         <div className='flex items-center gap-3'>

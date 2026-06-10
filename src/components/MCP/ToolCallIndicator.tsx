@@ -47,13 +47,15 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
       case ToolCallStatus.PENDING:
       case ToolCallStatus.EXECUTING:
       case ToolCallStatus.RUNNING:
-        return <Loader2 className='h-3.5 w-3.5 animate-spin text-gray-400' />
+        return (
+          <Loader2 className='h-3.5 w-3.5 animate-spin text-muted-foreground' />
+        )
       case ToolCallStatus.COMPLETED:
         return <CheckCircle className='h-3.5 w-3.5 text-green-500' />
       case ToolCallStatus.FAILED:
-        return <XCircle className='h-3.5 w-3.5 text-red-500' />
+        return <XCircle className='h-3.5 w-3.5 text-destructive' />
       default:
-        return <Wrench className='h-3.5 w-3.5 text-gray-400' />
+        return <Wrench className='h-3.5 w-3.5 text-muted-foreground' />
     }
   }
 
@@ -81,9 +83,9 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
     const retrievalStatus = formatRetrievalStatus(result.retrievalStatus)
 
     return (
-      <div className='mt-2 space-y-2 rounded bg-gray-50 p-2 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300'>
+      <div className='mt-2 space-y-2 rounded-sm bg-muted p-2 text-xs text-muted-foreground'>
         <div className='flex items-start gap-2'>
-          <FileText className='mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400' />
+          <FileText className='mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground' />
           <div className='min-w-0 flex-1'>
             {result.url ? (
               <a
@@ -96,11 +98,11 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
                 <ExternalLink className='h-3 w-3 shrink-0' />
               </a>
             ) : (
-              <span className='font-medium text-gray-700 dark:text-gray-200'>
+              <span className='font-medium text-foreground'>
                 {result.title || 'Fetched content'}
               </span>
             )}
-            <div className='mt-1 flex flex-wrap gap-x-3 gap-y-1 text-gray-500 dark:text-gray-400'>
+            <div className='mt-1 flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground'>
               {result.mediaType && <span>{result.mediaType}</span>}
               {retrievalStatus && <span>{retrievalStatus}</span>}
               {contentSize && <span>{contentSize}</span>}
@@ -111,14 +113,14 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
         </div>
 
         {result.errorCode && (
-          <div className='rounded bg-red-50 p-2 text-red-500 dark:bg-red-900/20'>
+          <div className='rounded-sm bg-destructive/10 p-2 text-destructive'>
             {result.errorCode}
           </div>
         )}
 
         {result.contentPreview && (
-          <div className='max-h-60 overflow-auto rounded bg-white p-2 dark:bg-gray-900'>
-            <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed'>
+          <div className='max-h-60 overflow-auto rounded-sm bg-card p-2'>
+            <pre className='m-0 text-xs leading-relaxed wrap-break-word whitespace-pre-wrap'>
               {result.contentPreview}
             </pre>
           </div>
@@ -129,18 +131,18 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
 
   return (
     <div
-      className={`my-2 overflow-hidden rounded-lg bg-gray-50 text-sm dark:bg-gray-800 ${className}`}
+      className={`my-2 overflow-hidden rounded-lg bg-muted text-sm ${className}`}
     >
       {/* Compact header */}
       <button
-        className={`flex w-full cursor-pointer items-center justify-between border-none bg-transparent px-3 py-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50 ${hasExecuting ? 'text-blue-500' : ''} ${hasError ? 'text-red-500' : ''}`}
+        className={`flex w-full cursor-pointer items-center justify-between border-none bg-transparent px-3 py-2 text-muted-foreground transition-colors hover:bg-accent ${hasExecuting ? 'text-blue-500' : ''} ${hasError ? 'text-destructive' : ''}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span className='flex items-center gap-2'>
           {hasExecuting ? (
             <Loader2 className='h-3.5 w-3.5 animate-spin' />
           ) : hasError ? (
-            <XCircle className='h-3.5 w-3.5 text-red-500' />
+            <XCircle className='h-3.5 w-3.5 text-destructive' />
           ) : (
             <CheckCircle className='h-3.5 w-3.5 text-green-500' />
           )}
@@ -151,7 +153,7 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
 
       {/* Expanded details */}
       {isExpanded && (
-        <div className='space-y-1.5 border-t border-gray-200 p-2 dark:border-gray-700'>
+        <div className='space-y-1.5 border-t border-border p-2'>
           {toolCalls.map((tc) => {
             const result =
               tc.origin === ToolCallOrigin.DARE
@@ -159,10 +161,7 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
                 : tc.providerResult || tc.mcpResult
 
             return (
-              <div
-                key={tc.id}
-                className='rounded-md bg-white p-2 dark:bg-gray-900'
-              >
+              <div key={tc.id} className='rounded-md bg-card p-2'>
                 <div className='flex min-w-0 flex-wrap items-center gap-2'>
                   {getStatusIcon(tc.status)}
                   <span className='flex min-w-0 flex-wrap items-center gap-1.5'>
@@ -170,8 +169,8 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
                     <span className='font-medium text-primary'>
                       {tc.serverSlug}
                     </span>
-                    <span className='text-gray-400'>→</span>
-                    <span className='min-w-0 break-all font-mono text-gray-700 dark:text-gray-200'>
+                    <span className='text-muted-foreground'>→</span>
+                    <span className='min-w-0 break-all font-mono text-foreground'>
                       {tc.toolName}
                     </span>
                   </span>
@@ -186,8 +185,8 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
                 {tc.status === ToolCallStatus.COMPLETED &&
                   result &&
                   tc.origin !== ToolCallOrigin.PROVIDER && (
-                    <div className='mt-2 max-h-80 overflow-auto rounded bg-gray-50 p-2 dark:bg-gray-800'>
-                      <pre className='m-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-600 dark:text-gray-300'>
+                    <div className='mt-2 max-h-80 overflow-auto rounded-sm bg-muted p-2'>
+                      <pre className='m-0 text-xs leading-relaxed wrap-break-word whitespace-pre-wrap text-muted-foreground'>
                         {JSON.stringify(result, null, 2)}
                       </pre>
                     </div>
@@ -195,7 +194,7 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
 
                 {/* Error display */}
                 {tc.status === ToolCallStatus.FAILED && tc.error && (
-                  <div className='mt-2 rounded bg-red-50 p-2 text-xs text-red-500 dark:bg-red-900/20'>
+                  <div className='mt-2 rounded-sm bg-destructive/10 p-2 text-xs text-destructive'>
                     {tc.error}
                   </div>
                 )}

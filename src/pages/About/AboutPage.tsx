@@ -50,12 +50,12 @@ const REPO_ICON: Record<RepoEntry['role'], typeof Code2> = {
 const RepoCard: React.FC<{ repo: RepoEntry }> = ({ repo }) => {
   const Icon = REPO_ICON[repo.role]
   return (
-    <div className='flex flex-col rounded-2xl border border-border bg-card p-7 transition-shadow hover:shadow-lg hover:shadow-black/[0.04] dark:hover:shadow-black/20'>
+    <div className='flex flex-col rounded-2xl border border-border bg-card p-7 transition-shadow hover:shadow-lg hover:shadow-black/4 dark:hover:shadow-black/20'>
       <div className='flex items-center justify-between'>
         <span className='flex h-11 w-11 items-center justify-center rounded-xl bg-dare/10 text-dare'>
           <Icon className='h-5 w-5' />
         </span>
-        <span className='font-mono text-[0.7rem] uppercase tracking-[0.18em] text-muted-foreground'>
+        <span className='font-mono text-[0.7rem] tracking-[0.18em] text-muted-foreground uppercase'>
           {repo.role}
         </span>
       </div>
@@ -99,7 +99,7 @@ const RepoCard: React.FC<{ repo: RepoEntry }> = ({ repo }) => {
             <GitFork className='h-4 w-4' />
             View repository
           </span>
-          <ArrowUpRight className='h-4 w-4 text-muted-foreground transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-dare' />
+          <ArrowUpRight className='h-4 w-4 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-dare' />
         </a>
       </div>
     </div>
@@ -141,7 +141,7 @@ const initials = (name: string) =>
 // present, so a sparsely-filled entry in team.ts still looks intentional rather
 // than broken — fill them in incrementally as we gather links and headshots.
 const MemberCard: React.FC<{ member: TeamMember }> = ({ member }) => (
-  <div className='group flex flex-col items-center rounded-2xl border border-border bg-card p-7 text-center transition-all duration-300 hover:-translate-y-1 hover:border-dare/30 hover:shadow-xl hover:shadow-black/[0.06] dark:hover:shadow-black/30'>
+  <div className='group flex flex-col items-center rounded-2xl border border-border bg-card p-7 text-center transition-all duration-300 hover:-translate-y-1 hover:border-dare/30 hover:shadow-xl hover:shadow-black/6 dark:hover:shadow-black/30'>
     <div className='relative'>
       {/* Soft brand glow that blooms on hover */}
       <div
@@ -166,7 +166,7 @@ const MemberCard: React.FC<{ member: TeamMember }> = ({ member }) => (
       {member.name}
     </h3>
     {member.role && (
-      <p className='mt-1 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-muted-foreground'>
+      <p className='mt-1 font-mono text-[0.7rem] tracking-[0.16em] text-muted-foreground uppercase'>
         {member.role}
       </p>
     )}
@@ -312,7 +312,7 @@ export const AboutPage: React.FC = () => {
                 1 -> 2 -> 3 column grid of member cards. */}
             {TEAM_GROUPS.map((group) => (
               <div key={group.label} className='mt-14'>
-                <h3 className='font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground'>
+                <h3 className='font-mono text-xs tracking-[0.18em] text-muted-foreground uppercase'>
                   {group.label}
                 </h3>
                 <div className='mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>

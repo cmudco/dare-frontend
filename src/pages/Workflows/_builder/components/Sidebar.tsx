@@ -101,7 +101,7 @@ export default function Sidebar({ disabled }: SidebarProps) {
   }
 
   return (
-    <div className='absolute left-4 top-20 z-10 flex w-48 flex-col rounded-lg border border-border/50 bg-white/80 shadow-lg backdrop-blur-sm'>
+    <div className='absolute top-20 left-4 z-10 flex w-48 flex-col rounded-lg border border-border/50 bg-card/80 shadow-lg backdrop-blur-xs'>
       <div className='border-b border-border/50 px-3 py-2'>
         <h2 className='text-xs font-semibold text-foreground'>Components</h2>
       </div>
@@ -110,7 +110,7 @@ export default function Sidebar({ disabled }: SidebarProps) {
           {nodeComponents.map((component) => (
             <Card
               key={component.type}
-              className='cursor-pointer border-border/50 bg-white/60 transition-all hover:border-primary/30 hover:bg-white hover:shadow-md'
+              className='cursor-pointer border-border/50 bg-card/60 transition-all hover:border-primary/30 hover:bg-card hover:shadow-md'
               onClick={() => {
                 if (!isWorkflowRunning) {
                   // Notes can be added anytime (no Start node required)

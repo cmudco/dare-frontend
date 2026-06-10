@@ -46,7 +46,7 @@ const SharedWithMeList: React.FC<SharedWithMeListProps> = ({
       {filteredItems.map((item) => (
         <div
           key={item.id}
-          className={`group flex items-center gap-2 rounded-md px-3 py-2.5 transition-colors hover:bg-blue-50 dark:hover:bg-white/5 ${
+          className={`group flex items-center gap-2 rounded-md px-3 py-2.5 transition-colors hover:bg-accent ${
             onItemClick ? 'cursor-pointer' : ''
           }`}
           onClick={() => onItemClick?.(item)}
@@ -65,7 +65,7 @@ const SharedWithMeList: React.FC<SharedWithMeListProps> = ({
                 e.stopPropagation()
                 onForkClick(item)
               }}
-              className='shrink-0 rounded-md p-1.5 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-white/20'
+              className='shrink-0 rounded-md p-1.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-foreground/10'
               title={actionLabel}
             >
               <GitFork className='h-4 w-4 text-muted-foreground' />

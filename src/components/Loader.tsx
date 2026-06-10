@@ -9,7 +9,7 @@ interface LoaderProps {
 const Loader: React.FC<LoaderProps> = ({ size = 24, className }) => {
   return (
     <Loader2
-      className={cn('animate-spin text-red-500', className)}
+      className={cn('animate-spin text-dare', className)}
       width={size}
       height={size}
     />

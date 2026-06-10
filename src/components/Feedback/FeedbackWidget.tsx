@@ -101,7 +101,7 @@ export function FeedbackWidget() {
     <div
       ref={feedbackRef}
       data-feedback-widget
-      className='fixed bottom-4 right-4 z-50'
+      className='fixed right-4 bottom-4 z-50'
     >
       {/* Feedback Panel */}
       <FeedbackPanel
@@ -133,7 +133,7 @@ export function FeedbackWidget() {
         whileHover='hover'
         whileTap='tap'
         onClick={handleToggle}
-        className={`relative flex h-8 w-8 items-center justify-center rounded-full bg-dare-gradient text-white shadow-md shadow-black/25 transition-shadow duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isOpen ? 'shadow-lg shadow-primary/40' : ''} `}
+        className={`relative flex h-8 w-8 items-center justify-center rounded-full bg-dare-gradient text-white shadow-md shadow-black/25 transition-shadow duration-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isOpen ? 'shadow-lg shadow-primary/40' : ''} `}
         aria-label={isOpen ? 'Close feedback' : 'Send feedback'}
         aria-expanded={isOpen}
       >

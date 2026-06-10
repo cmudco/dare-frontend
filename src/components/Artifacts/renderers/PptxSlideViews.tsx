@@ -20,7 +20,7 @@ export const MiniSlide: React.FC<SlideViewProps> = ({ slide, theme }) => (
       {(slide.bullets || slide.leftBullets || []).slice(0, 3).map((_, i) => (
         <div
           key={`mini-bullet-${i}`}
-          className='h-0.5 rounded'
+          className='h-0.5 rounded-sm'
           style={{ backgroundColor: theme.mutedTextColor, opacity: 0.45 }}
         />
       ))}
@@ -61,12 +61,12 @@ const Shell: React.FC<{
     }}
   >
     <div
-      className='absolute left-0 top-0 h-1.5 w-full'
+      className='absolute top-0 left-0 h-1.5 w-full'
       style={{ backgroundColor: theme.primaryColor }}
     />
     {accent && (
       <div
-        className='absolute bottom-[-18%] right-[-7%] h-56 w-56 rounded-full'
+        className='absolute right-[-7%] bottom-[-18%] h-56 w-56 rounded-full'
         style={{ backgroundColor: theme.accentColor, opacity: 0.18 }}
       />
     )}
@@ -77,7 +77,7 @@ const Shell: React.FC<{
 const TitleSlide: React.FC<SlideViewProps> = ({ slide, theme }) => (
   <Shell theme={theme} accent>
     <div className='flex h-full max-w-[70%] flex-col justify-center'>
-      <h1 className='text-[56px] font-bold leading-tight'>{slide.title}</h1>
+      <h1 className='text-[56px] leading-tight font-bold'>{slide.title}</h1>
       {slide.subtitle && (
         <p
           className='mt-8 text-[28px] leading-relaxed'
@@ -93,7 +93,7 @@ const TitleSlide: React.FC<SlideViewProps> = ({ slide, theme }) => (
 const SectionSlide: React.FC<SlideViewProps> = ({ slide, theme }) => (
   <Shell theme={theme}>
     <div className='flex h-full max-w-[76%] flex-col justify-center'>
-      <h2 className='text-[48px] font-bold leading-tight'>{slide.title}</h2>
+      <h2 className='text-[48px] leading-tight font-bold'>{slide.title}</h2>
       {(slide.body || slide.subtitle) && (
         <p
           className='mt-7 text-[27px] leading-relaxed'
@@ -142,7 +142,7 @@ const TwoColumnSlide: React.FC<SlideViewProps> = ({ slide, theme }) => (
 const TableSlide: React.FC<SlideViewProps> = ({ slide, theme }) => (
   <Shell theme={theme}>
     <SlideTitle title={slide.title || 'Table'} theme={theme} />
-    <div className='overflow-hidden rounded border border-slate-200 bg-white'>
+    <div className='overflow-hidden rounded-sm border border-slate-200 bg-white'>
       <table className='w-full table-fixed text-left text-[18px]'>
         <thead
           style={{ backgroundColor: theme.primaryColor, color: '#FFFFFF' }}
@@ -183,7 +183,7 @@ const TableSlide: React.FC<SlideViewProps> = ({ slide, theme }) => (
 const QuoteSlide: React.FC<SlideViewProps> = ({ slide, theme }) => (
   <Shell theme={theme}>
     <div className='flex h-full flex-col justify-center'>
-      <blockquote className='max-w-4xl text-[43px] font-bold leading-tight'>
+      <blockquote className='max-w-4xl text-[43px] leading-tight font-bold'>
         "{slide.quote || slide.body}"
       </blockquote>
       {slide.attribution && (
@@ -202,7 +202,7 @@ const SummarySlide: React.FC<SlideViewProps> = ({ slide, theme }) => (
       {(slide.bullets || []).slice(0, 3).map((item, index) => (
         <div
           key={`summary-${index}`}
-          className='min-h-[220px] rounded border border-slate-200 bg-white p-7 shadow-sm'
+          className='min-h-[220px] rounded-sm border border-slate-200 bg-white p-7 shadow-xs'
         >
           <div
             className='mb-5 text-[19px] font-bold'
@@ -210,7 +210,7 @@ const SummarySlide: React.FC<SlideViewProps> = ({ slide, theme }) => (
           >
             {String(index + 1).padStart(2, '0')}
           </div>
-          <p className='text-[25px] font-semibold leading-snug text-slate-900'>
+          <p className='text-[25px] leading-snug font-semibold text-slate-900'>
             {item}
           </p>
         </div>
@@ -224,7 +224,7 @@ const SlideTitle: React.FC<{
   theme: Required<PptxTheme>
 }> = ({ title, theme }) => (
   <h2
-    className='mb-10 text-[42px] font-bold leading-tight'
+    className='mb-10 text-[42px] leading-tight font-bold'
     style={{ color: theme.textColor }}
   >
     {title}
@@ -259,7 +259,7 @@ const ColumnCard: React.FC<{
   items: string[]
   theme: Required<PptxTheme>
 }> = ({ title, items, theme }) => (
-  <div className='rounded border border-slate-200 bg-white p-7 shadow-sm'>
+  <div className='rounded-sm border border-slate-200 bg-white p-7 shadow-xs'>
     <h3 className='mb-6 text-[25px] font-bold text-slate-900'>{title}</h3>
     <BulletList items={items} theme={theme} compact />
   </div>

@@ -118,16 +118,16 @@ export function DetailsStep({
           onBlur={() => setIsFocused(false)}
           placeholder='Your feedback helps us improve DARE...'
           maxLength={MAX_MESSAGE_LENGTH + 100} // Allow some overflow for UX
-          className={`max-h-[150px] min-h-[80px] w-full resize-none rounded-xl bg-transparent p-3 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:outline-none`}
+          className={`max-h-[150px] min-h-[80px] w-full resize-none rounded-xl bg-transparent p-3 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden`}
           aria-label='Feedback message'
         />
 
         {/* Character counter */}
-        <div className='absolute bottom-2 right-2'>
+        <div className='absolute right-2 bottom-2'>
           <span
             className={`text-xs transition-colors ${
               isOverLimit
-                ? 'text-red-400'
+                ? 'text-destructive'
                 : charactersRemaining < 100
                   ? 'text-yellow-400'
                   : 'text-muted-foreground/50'
@@ -159,7 +159,7 @@ export function DetailsStep({
                 alt='Screenshot preview'
                 className='h-32 w-full object-cover'
               />
-              <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent' />
+              <div className='absolute inset-0 bg-linear-to-t from-black/60 to-transparent' />
               <div className='absolute bottom-2 left-2 flex items-center gap-1.5 text-xs text-white/80'>
                 <ImageIcon className='h-3.5 w-3.5' />
                 <span>Screenshot attached</span>
@@ -169,7 +169,7 @@ export function DetailsStep({
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onRemoveScreenshot}
-                className='absolute right-2 top-2 rounded-full bg-black/50 p-1.5 text-white transition-colors hover:bg-black/70'
+                className='absolute top-2 right-2 rounded-full bg-black/50 p-1.5 text-white transition-colors hover:bg-black/70'
                 aria-label='Remove screenshot'
               >
                 <X className='h-4 w-4' />
@@ -213,7 +213,7 @@ export function DetailsStep({
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         disabled={isSubmitting || isOverLimit}
-        className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-dare-gradient px-4 py-3 font-medium text-white transition-all duration-200 hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50`}
+        className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50`}
       >
         {isSubmitting ? (
           <>

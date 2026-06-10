@@ -36,7 +36,7 @@ const MemorySearch = ({
     <div className='space-y-4'>
       <form onSubmit={handleSubmit} className='flex gap-2'>
         <div className='relative flex-1'>
-          <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+          <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
             type='text'
             value={query}
@@ -48,7 +48,7 @@ const MemorySearch = ({
         <Button
           type='submit'
           disabled={!query.trim() || isLoading}
-          className='bg-dare-gradient hover:opacity-90'
+          className='bg-primary text-primary-foreground hover:bg-primary/90'
         >
           {isLoading ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Search'}
         </Button>

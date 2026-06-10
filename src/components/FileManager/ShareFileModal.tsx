@@ -150,7 +150,7 @@ const ShareFileModal = () => {
           {/* Share with everyone toggle */}
           <div className='flex items-center justify-between rounded-lg border p-4'>
             <div className='flex items-center gap-3'>
-              <Globe className='h-5 w-5 text-gray-500' />
+              <Globe className='h-5 w-5 text-muted-foreground' />
               <span className='text-sm font-medium'>Share with everyone</span>
             </div>
             <Switch
@@ -193,7 +193,7 @@ const ShareFileModal = () => {
             </div>
           ) : shares.length > 0 ? (
             <div className='flex flex-col gap-1.5'>
-              <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+              <p className='text-xs font-medium tracking-wide text-muted-foreground uppercase'>
                 Shared with
               </p>
               <div className='flex max-h-44 flex-col gap-0.5 overflow-y-auto rounded-lg border p-1.5'>
@@ -203,7 +203,7 @@ const ShareFileModal = () => {
                     className='flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted'
                   >
                     <div className='flex min-w-0 items-center gap-2'>
-                      <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-400 text-xs font-semibold text-white'>
+                      <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted-foreground text-xs font-semibold text-background'>
                         {getInitials(share)}
                       </div>
                       <div className='min-w-0'>

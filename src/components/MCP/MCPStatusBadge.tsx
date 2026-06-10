@@ -50,15 +50,13 @@ const MCPStatusBadge = ({ status }: MCPStatusBadgeProps) => {
         return {
           icon: XCircle,
           label: 'Failed',
-          className:
-            'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
+          className: 'bg-destructive/15 text-destructive',
         }
       default:
         return {
           icon: AlertCircle,
           label: 'Unknown',
-          className:
-            'bg-gray-100 text-gray-700 dark:bg-gray-900/50 dark:text-gray-300',
+          className: 'bg-muted text-muted-foreground',
         }
     }
   }

@@ -22,24 +22,24 @@ const ZoomControls: React.FC<ZoomControlsProps> = ({
   onZoomOut,
   onReset,
 }) => (
-  <div className='absolute right-4 top-4 z-10 flex gap-1 rounded-lg bg-white/90 p-1 shadow-md backdrop-blur-sm dark:bg-gray-800/90'>
+  <div className='absolute top-4 right-4 z-10 flex gap-1 rounded-lg bg-card/90 p-1 shadow-md backdrop-blur-xs'>
     <button
       onClick={onZoomIn}
-      className='rounded p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+      className='rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
       title='Zoom in'
     >
       <MagnifyingGlassPlusIcon className='h-5 w-5' />
     </button>
     <button
       onClick={onZoomOut}
-      className='rounded p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+      className='rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
       title='Zoom out'
     >
       <MagnifyingGlassMinusIcon className='h-5 w-5' />
     </button>
     <button
       onClick={onReset}
-      className='rounded p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+      className='rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
       title='Reset view'
     >
       <ArrowsPointingOutIcon className='h-5 w-5' />
@@ -139,21 +139,21 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
   if (error) {
     return (
       <div className='flex h-full flex-col p-4'>
-        <div className='rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20'>
+        <div className='rounded-lg border border-destructive/30 bg-destructive/10 p-4'>
           <div className='mb-2 flex items-center justify-between'>
-            <span className='text-sm font-medium text-red-600 dark:text-red-400'>
+            <span className='text-sm font-medium text-destructive'>
               Diagram Error
             </span>
             <button
               onClick={() => setShowRaw(!showRaw)}
-              className='text-xs text-red-500 underline hover:text-red-700'
+              className='text-xs text-destructive underline hover:text-destructive/80'
             >
               {showRaw ? 'Hide code' : 'Show code'}
             </button>
           </div>
-          <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
+          <p className='text-sm text-destructive'>{error}</p>
           {showRaw && (
-            <pre className='mt-2 max-h-40 overflow-auto rounded bg-gray-800 p-2 text-xs text-gray-200'>
+            <pre className='mt-2 max-h-40 overflow-auto rounded-sm bg-muted p-2 text-xs text-foreground'>
               {code}
             </pre>
           )}
@@ -165,8 +165,8 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
   if (!svg) {
     return (
       <div className='flex h-full items-center justify-center'>
-        <div className='flex items-center gap-2 text-gray-500'>
-          <div className='h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500' />
+        <div className='flex items-center gap-2 text-muted-foreground'>
+          <div className='h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-primary' />
           Loading diagram...
         </div>
       </div>
@@ -176,7 +176,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
   return (
     <div
       ref={containerRef}
-      className='group relative h-full min-w-0 overflow-hidden bg-white dark:bg-gray-900'
+      className='group relative h-full min-w-0 overflow-hidden bg-background'
     >
       <TransformWrapper
         ref={transformRef}
@@ -213,7 +213,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
             </TransformComponent>
 
             {/* Hint text */}
-            <div className='absolute bottom-4 left-4 rounded bg-gray-900/60 px-2 py-1 text-xs text-gray-300 opacity-0 transition-opacity group-hover:opacity-100'>
+            <div className='absolute bottom-4 left-4 rounded-sm bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100'>
               Scroll to zoom • Drag to pan • Double-click to fit
             </div>
           </>

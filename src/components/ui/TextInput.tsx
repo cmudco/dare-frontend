@@ -43,7 +43,7 @@ const TextInput: React.FC<TextInputProps> = ({
           value={value}
           onChange={onChange}
           onBlur={onBlur}
-          className={`w-full border ${error ? 'border-red-500' : 'border-border'} rounded-md bg-input px-3 py-2 text-foreground dark:text-white`}
+          className={`w-full border ${error ? 'border-red-500' : 'border-border'} rounded-md bg-input px-3 py-2 text-foreground`}
         />
         {type === 'password' && (
           <div

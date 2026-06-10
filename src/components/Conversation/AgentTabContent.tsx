@@ -160,11 +160,11 @@ const AgentTabContent: React.FC = () => {
                 className={`flex w-full items-start gap-2.5 rounded-lg border p-3 text-left transition-all ${
                   isAgentSelected
                     ? 'border-primary bg-primary/10'
-                    : 'border-border bg-background hover:border-gray-300 hover:bg-muted dark:hover:border-white/20 dark:hover:bg-white/5'
+                    : 'border-border bg-background hover:bg-accent'
                 }`}
                 onClick={() => handleSelectAgent(agent)}
               >
-                <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5'>
+                <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted'>
                   <Bot className='h-4 w-4 text-primary' />
                 </div>
                 <div className='min-w-0 flex-1'>
@@ -175,7 +175,7 @@ const AgentTabContent: React.FC = () => {
                     {agent.description || 'No description'}
                   </div>
                   {agent.llmName && (
-                    <div className='mt-1 inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600 dark:bg-white/10 dark:text-gray-400'>
+                    <div className='mt-1 inline-flex items-center rounded-sm bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>
                       {agent.llmName}
                     </div>
                   )}

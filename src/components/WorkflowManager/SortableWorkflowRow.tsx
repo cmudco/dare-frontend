@@ -96,7 +96,7 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
       </TableCell>
       <TableCell className='p-4 text-center'>
         <DropdownMenu>
-          <DropdownMenuTrigger className='rounded-md p-2 transition-colors hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'>
+          <DropdownMenuTrigger className='rounded-md p-2 transition-colors hover:bg-accent hover:text-accent-foreground'>
             <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
           </DropdownMenuTrigger>
           <DropdownMenuContent>

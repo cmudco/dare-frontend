@@ -71,7 +71,7 @@ const WorkflowCreatePage = () => {
   }, [dispatch])
 
   return (
-    <div className='relative h-screen w-screen overflow-hidden bg-gray-50'>
+    <div className='relative h-screen w-screen overflow-hidden bg-background'>
       <ToastContainer />
       {/* Full canvas workflow builder */}
       <ReactFlowProvider>
@@ -79,20 +79,20 @@ const WorkflowCreatePage = () => {
       </ReactFlowProvider>
 
       {/* Floating top toolbar */}
-      <div className='pointer-events-none absolute left-0 right-0 top-0 z-10 flex items-start justify-between p-4'>
+      <div className='pointer-events-none absolute top-0 right-0 left-0 z-10 flex items-start justify-between p-4'>
         {/* Back button */}
         <Button
           variant='outline'
           size='sm'
           onClick={() => navigate('/workflows')}
-          className='pointer-events-auto h-9 gap-2 bg-white/90 shadow-md backdrop-blur-sm'
+          className='pointer-events-auto h-9 gap-2 bg-card/90 shadow-md backdrop-blur-xs'
         >
           <ArrowLeft className='h-4 w-4' />
           Back to Workflows
         </Button>
 
         {/* Controls toolbar */}
-        <div className='pointer-events-auto flex items-center gap-2 rounded-lg border border-border bg-white/90 px-3 py-2 shadow-md backdrop-blur-sm'>
+        <div className='pointer-events-auto flex items-center gap-2 rounded-lg border border-border bg-card/90 px-3 py-2 shadow-md backdrop-blur-xs'>
           {/* Node/Edge count */}
           <div className='flex items-center gap-2 border-r border-border pr-3 text-xs text-muted-foreground'>
             <span>{nodes.length} nodes</span>

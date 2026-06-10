@@ -238,18 +238,18 @@ const Message: React.FC<MessageProps> = ({
       } group mb-4`}
     >
       <div
-        className={`flex w-full min-w-0 max-w-[100%] ${
+        className={`flex w-full min-w-0 max-w-full ${
           isSenderMessage(message) ? 'justify-end' : 'justify-start'
         } items-start`}
       >
         {!isSenderMessage(message) && (
-          <div className='mr-2 mt-1 flex-shrink-0'>
+          <div className='mt-1 mr-2 shrink-0'>
             <Bot className='h-8 w-8' />
           </div>
         )}
 
         {isSenderMessage(message) && !message.streaming && !isReadOnly && (
-          <div className='mr-2 mt-2 hidden flex-shrink-0 flex-wrap items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 sm:flex'>
+          <div className='mt-2 mr-2 hidden shrink-0 flex-wrap items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 sm:flex'>
             <button
               className={`flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 transition-colors ${
                 copiedUserMessage
@@ -283,7 +283,7 @@ const Message: React.FC<MessageProps> = ({
               <PencilIcon className='h-4 w-4' />
             </button>
             <button
-              className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-red-500'
+              className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded-sm bg-transparent p-1 text-muted-foreground transition-colors hover:text-red-500'
               onClick={() => setIsDeleteModalOpen(true)}
               aria-label='Delete message'
             >
@@ -316,17 +316,17 @@ const Message: React.FC<MessageProps> = ({
         <div
           className={`relative mb-2 min-w-0 max-w-[95%] text-wrap rounded-xl px-4 py-3 sm:px-5 ${
             isSenderMessage(message)
-              ? 'border border-blue-200 bg-blue-50 dark:border-blue-800/30 dark:bg-blue-900/20'
-              : 'border border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-800'
+              ? 'border border-border bg-muted'
+              : 'border border-border bg-card'
           } inline-block hover:z-20`}
         >
           <div
-            className={`text-wrap font-normal ${
+            className={`font-normal text-wrap ${
               message.streaming ? 'animate-pulse' : ''
             }`}
           >
             <div
-              className={`prose ${getFontSizeClasses()} max-w-full text-foreground dark:prose-invert focus:outline-none prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
+              className={`prose ${getFontSizeClasses()} max-w-full text-foreground focus:outline-hidden dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
               style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
             >
               <ReactMarkdown
@@ -351,7 +351,7 @@ const Message: React.FC<MessageProps> = ({
                   pre({ children, ...props }) {
                     return (
                       <pre
-                        className='max-w-full overflow-x-auto whitespace-pre-wrap break-words break-all'
+                        className='max-w-full overflow-x-auto wrap-break-word break-all whitespace-pre-wrap'
                         {...props}
                       >
                         {children}
@@ -362,7 +362,7 @@ const Message: React.FC<MessageProps> = ({
                   p({ children, ...props }) {
                     return (
                       <p
-                        className='break-words'
+                        className='wrap-break-word'
                         style={{
                           wordBreak: 'break-word',
                           overflowWrap: 'break-word',
@@ -423,7 +423,7 @@ const Message: React.FC<MessageProps> = ({
                     }
                     return (
                       <code
-                        className='not-prose break-all rounded border border-border bg-muted px-1 text-foreground transition-colors hover:bg-muted/80'
+                        className='not-prose rounded-sm border border-border bg-muted px-1 break-all text-foreground transition-colors hover:bg-muted/80'
                         style={{
                           wordBreak: 'break-all',
                           overflowWrap: 'break-word',
@@ -451,7 +451,7 @@ const Message: React.FC<MessageProps> = ({
                       {uploadedImages.map((file) => (
                         <div
                           key={file.id}
-                          className='relative rounded-lg border border-gray-200 dark:border-gray-700'
+                          className='relative rounded-lg border border-border'
                         >
                           <img
                             src={`${import.meta.env.VITE_DJANGO_BACKEND_URL}${file.file}`}
@@ -550,7 +550,7 @@ const Message: React.FC<MessageProps> = ({
         </div>
 
         {isSenderMessage(message) && (
-          <div className='ml-2 mt-1 flex-shrink-0'>
+          <div className='mt-1 ml-2 shrink-0'>
             <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 font-medium text-white'>
               {userInitial.toUpperCase()}
             </div>
@@ -561,7 +561,7 @@ const Message: React.FC<MessageProps> = ({
       {!isSenderMessage(message) && !message.streaming && !isReadOnly && (
         <div className='flex w-full max-w-[95%] flex-wrap gap-x-1 pl-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100 sm:pl-10'>
           <button
-            className='flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
+            className='flex h-7 min-w-[28px] items-center justify-center rounded-sm bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
             onClick={handleRegenerate}
             aria-label='Regenerate AI response'
           >
@@ -607,10 +607,13 @@ const Message: React.FC<MessageProps> = ({
             {message.feedbackType || message.feedbackText ? (
               <>
                 <span className='text-green-600'>✓</span>
-                <span className='text-gray-600'> Feedback Recorded</span>
+                <span className='text-muted-foreground'>
+                  {' '}
+                  Feedback Recorded
+                </span>
               </>
             ) : (
-              <span className='text-gray-600'>Give Feedback</span>
+              <span className='text-muted-foreground'>Give Feedback</span>
             )}
           </button>
 
@@ -634,14 +637,14 @@ const Message: React.FC<MessageProps> = ({
             )}
           </button>
           <button
-            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
+            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded-sm bg-transparent p-1 text-muted-foreground transition-colors hover:text-foreground'
             onClick={() => setIsMetadataOpen(true)}
             aria-label='View message metadata'
           >
             <Info className='h-4 w-4' />
           </button>
           <button
-            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded bg-transparent p-1 text-muted-foreground transition-colors hover:text-red-500'
+            className='mr-1 flex h-7 min-w-[28px] items-center justify-center rounded-sm bg-transparent p-1 text-muted-foreground transition-colors hover:text-red-500'
             onClick={() => setIsDeleteModalOpen(true)}
             aria-label='Delete message'
           >

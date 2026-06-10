@@ -60,7 +60,6 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   )
   const navigate = useNavigate()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode)
   const selectedModel = useSelector(
     (state: RootState) => state.conversation.selectedModel
   )
@@ -256,22 +255,21 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
           'flex w-full max-w-4xl flex-col justify-end rounded-2xl transition-all duration-300',
           imageGenerationEnabled || artifactsEnabled
             ? 'gradient-border'
-            : 'border-2 border-gray-200 dark:border-dark-icon-unselected',
-          'dark:bg-transparent',
+            : 'border-2 border-border',
           disabled && 'pointer-events-none opacity-60'
         )}
       >
         {editMessageId && (
-          <div className='mb-2 flex w-full items-center gap-2 rounded-b-sm rounded-t-2xl border-b bg-gray-100 px-6 py-3 dark:bg-dark-bg'>
-            <Pencil className='mr-1 h-4 w-4 text-gray-600 dark:text-dark-icon-unselected' />
-            <span className='flex-1 text-base font-bold text-gray-700 dark:text-white'>
+          <div className='mb-2 flex w-full items-center gap-2 rounded-t-2xl rounded-b-sm border-b bg-muted px-6 py-3'>
+            <Pencil className='mr-1 h-4 w-4 text-muted-foreground' />
+            <span className='flex-1 text-base font-bold text-foreground'>
               Editing message
             </span>
             <button
               onClick={onCancelEdit}
-              className='ml-2 rounded-full p-1 hover:bg-gray-200 dark:hover:bg-dark-icon-unselected/20'
+              className='ml-2 rounded-full p-1 hover:bg-accent'
             >
-              <X className='-mr-2 h-5 w-5 text-gray-500 dark:text-dark-icon-unselected' />
+              <X className='-mr-2 h-5 w-5 text-muted-foreground' />
             </button>
           </div>
         )}
@@ -298,13 +296,13 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             }
             disabled={disabled}
             className={clsx(
-              'h-14 w-full resize-none overflow-y-auto rounded-2xl py-4 pl-2 pr-12 text-sm font-normal focus:outline-none dark:bg-transparent dark:text-white dark:placeholder-dark-icon-unselected',
+              'h-14 w-full resize-none overflow-y-auto rounded-2xl bg-transparent py-4 pr-12 pl-2 text-sm font-normal text-foreground placeholder:text-muted-foreground focus:outline-hidden',
               disabled && 'cursor-not-allowed opacity-60'
             )}
             rows={1}
             style={{ minHeight: '3.5rem', maxHeight: '10rem' }}
           />
-          <div className='absolute right-[16px] top-1/2 flex -translate-y-1/2 items-center gap-2'>
+          <div className='absolute top-1/2 right-[16px] flex -translate-y-1/2 items-center gap-2'>
             {/* Voice Mode Button */}
             <VoiceModeButton disabled={disabled} />
             {/* Send Button */}
@@ -312,13 +310,8 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
               className={clsx(
                 'flex h-6 w-6 items-center justify-center rounded-full transition-colors',
                 disabled
-                  ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-600'
-                  : clsx(
-                      'cursor-pointer',
-                      isDarkMode
-                        ? 'bg-white/30 text-white hover:bg-white/50'
-                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                    )
+                  ? 'cursor-not-allowed bg-muted text-muted-foreground'
+                  : 'cursor-pointer bg-secondary text-secondary-foreground hover:bg-secondary/80'
               )}
               onClick={disabled ? undefined : handleSendMessage}
               aria-label='Send message'
@@ -337,7 +330,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
           <div className='flex min-w-0 flex-1 flex-wrap items-center gap-1.5 overflow-x-auto py-1 sm:flex-nowrap'>
             <ConversationFileSelect />
             <PromptSet />
-            <div className='h-8 w-[2px] shrink-0 rounded-lg bg-gray-300'></div>
+            <div className='h-8 w-[2px] shrink-0 rounded-lg bg-border'></div>
             <ConversationReferenceSelect />
 
             <ModelPicker />
@@ -396,7 +389,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
           )}
           title={isSocketConnected ? 'Socket connected' : 'Socket disconnected'}
         />
-        <p className='text-center text-sm text-gray-500'>
+        <p className='text-center text-sm text-muted-foreground'>
           {disabled
             ? 'Select a conversation to start chatting'
             : 'DARE Chat can make mistakes. Check important information.'}

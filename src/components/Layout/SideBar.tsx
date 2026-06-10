@@ -187,24 +187,15 @@ const Sidebar = () => {
 
   return (
     <TooltipProvider>
-      <svg width='0' height='0' className='absolute'>
-        <defs>
-          <linearGradient id='dare-gradient' x1='0%' y1='0%' x2='100%' y2='0%'>
-            <stop offset='0%' stopColor='#EE183C' />
-            <stop offset='100%' stopColor='#023572' />
-          </linearGradient>
-        </defs>
-      </svg>
-
       <div
         className={`relative flex shrink-0 ${
           isCollapsed ? 'w-[80px]' : 'w-[160px] md:w-[200px] lg:w-[200px]'
-        } shadow-blue-gray-900/5 h-full flex-col border border-t-0 border-pink-50 bg-white bg-clip-border text-gray-700 transition-all duration-300 dark:border-slate-800 dark:bg-dark-bg dark:text-white`}
+        } h-full flex-col border border-t-0 border-sidebar-border bg-sidebar bg-clip-border text-sidebar-foreground transition-all duration-300`}
       >
         <div className='flex items-center justify-between p-4'>
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`hover:bg-primary-dark border-border-gray dark:bg-dark-chat-history absolute -right-4 top-4 z-10 mt-1 translate-x-0 transform rounded-full border-2 bg-white p-1 transition-all dark:border-slate-600`}
+            className={`absolute top-4 -right-4 z-10 mt-1 translate-x-0 transform rounded-full border-2 border-border bg-background p-1 transition-all hover:bg-accent`}
           >
             <ChevronLeftIcon
               className={`h-5 w-5 font-bold text-primary transition-transform duration-300 ${
@@ -213,7 +204,7 @@ const Sidebar = () => {
             />
           </button>
         </div>
-        <nav className='flex flex-grow flex-col gap-1 p-2 font-sans text-base font-normal'>
+        <nav className='flex grow flex-col gap-1 p-2 font-sans text-base font-normal'>
           {menuItems.map((item) => {
             const isActive =
               item.path === '/conversation'
@@ -223,10 +214,10 @@ const Sidebar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-none transition-all ${
+                className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-hidden transition-all ${
                   isActive
-                    ? 'dark:hover:bg-dare-gradient/90 bg-sky-50 dark:bg-dare-gradient dark:text-white'
-                    : 'hover:bg-blue-50 hover:text-blue-900 focus:bg-blue-50 focus:text-blue-900 active:bg-blue-50 active:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:active:bg-white/10'
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground'
                 }`}
               >
                 <div className={`${isCollapsed ? 'mx-auto' : 'mr-2'} relative`}>
@@ -235,8 +226,8 @@ const Sidebar = () => {
                       className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
                       style={{
                         fill: 'none',
-                        stroke: 'url(#dare-gradient) dark:white',
-                        color: 'url(#dare-gradient)',
+                        stroke: 'var(--dare)',
+                        color: 'var(--dare)',
                       }}
                     />
                   ) : (
@@ -251,9 +242,7 @@ const Sidebar = () => {
                   }`}
                 >
                   {isActive ? (
-                    <span className='bg-dare-gradient bg-clip-text text-transparent dark:bg-none dark:text-white'>
-                      {item.name}
-                    </span>
+                    <span className='text-dare'>{item.name}</span>
                   ) : (
                     item.name
                   )}
@@ -262,11 +251,11 @@ const Sidebar = () => {
             )
           })}
 
-          <div className='sticky bottom-0 z-10 mt-auto bg-white dark:bg-dark-bg'>
+          <div className='sticky bottom-0 z-10 mt-auto bg-sidebar'>
             {/* Tutorial button */}
             <button
               onClick={handleStartTutorial}
-              className='flex w-full items-center rounded-lg p-3 text-start leading-tight outline-none transition-all hover:bg-blue-50 hover:text-blue-900 focus:bg-blue-50 focus:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10'
+              className='flex w-full items-center rounded-lg p-3 text-start leading-tight outline-hidden transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
             >
               <div className={`${isCollapsed ? 'mx-auto' : 'mr-4'} relative`}>
                 <AcademicCapIcon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
@@ -288,10 +277,10 @@ const Sidebar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex w-full items-center rounded-lg p-3 text-start leading-tight outline-none transition-all ${
+                  className={`flex w-full items-center rounded-lg p-3 text-start leading-tight outline-hidden transition-all ${
                     isActive
-                      ? 'dark:hover:bg-dare-gradient/90 bg-sky-50 dark:bg-dare-gradient dark:text-white'
-                      : 'hover:bg-blue-50 hover:text-blue-900 focus:bg-blue-50 focus:text-blue-900 active:bg-blue-50 active:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:active:bg-white/10'
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground'
                   }`}
                 >
                   <div
@@ -302,8 +291,8 @@ const Sidebar = () => {
                         className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
                         style={{
                           fill: 'none',
-                          stroke: 'url(#dare-gradient) dark:white',
-                          color: 'url(#dare-gradient)',
+                          stroke: 'var(--dare)',
+                          color: 'var(--dare)',
                         }}
                       />
                     ) : (
@@ -318,9 +307,7 @@ const Sidebar = () => {
                     }`}
                   >
                     {isActive ? (
-                      <span className='bg-dare-gradient bg-clip-text text-transparent dark:bg-none dark:text-white'>
-                        {item.name}
-                      </span>
+                      <span className='text-dare'>{item.name}</span>
                     ) : (
                       item.name
                     )}

@@ -18,7 +18,7 @@ const ModeButton: React.FC<ModeButtonProps> = ({
     onClick={onClick}
     className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-bold transition-all ${
       active
-        ? 'bg-background text-primary shadow-sm'
+        ? 'bg-background text-primary shadow-xs'
         : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
     }`}
   >

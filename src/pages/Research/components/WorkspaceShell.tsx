@@ -59,7 +59,7 @@ const WorkspaceShell = ({
   return (
     <div className='min-h-screen bg-background font-sans text-foreground'>
       {/* Top bar */}
-      <header className='sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur'>
+      <header className='sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur-sm'>
         <div className='mx-auto flex max-w-[1600px] flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-10'>
           <div className='min-w-0'>
             {onBack && (
@@ -70,7 +70,7 @@ const WorkspaceShell = ({
                 <ArrowLeft className='h-3.5 w-3.5' /> All projects
               </button>
             )}
-            <div className='flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+            <div className='flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase'>
               <span className='bg-dare-gradient bg-clip-text text-transparent'>
                 DARE
               </span>
@@ -112,7 +112,7 @@ const WorkspaceShell = ({
                   <button
                     onClick={() => onNavigate(item.key)}
                     className={cn(
-                      'flex w-full items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors',
+                      'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-colors',
                       isActive
                         ? 'bg-muted font-medium text-foreground'
                         : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
@@ -154,7 +154,7 @@ const Stat = ({
   <div className='text-right'>
     <div
       className={cn(
-        'text-base font-semibold tabular-nums leading-none',
+        'text-base leading-none font-semibold tabular-nums',
         tone === 'attention' && 'text-amber-600 dark:text-amber-400',
         tone === 'good' && 'text-green-600 dark:text-green-400'
       )}

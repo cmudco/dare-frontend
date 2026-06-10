@@ -25,7 +25,7 @@ const getTypeBadgeColor = (memoryType: string): string => {
     case MemoryType.EVENT:
       return 'bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30'
     default:
-      return 'bg-gray-500/20 text-gray-600 dark:text-gray-400 border-gray-500/30'
+      return 'bg-muted text-muted-foreground border-border'
   }
 }
 
@@ -74,7 +74,7 @@ const MemoryItem = ({ item, onDelete, isDeleting }: MemoryItemProps) => {
         size='icon'
         onClick={() => onDelete(item.id)}
         disabled={isDeleting}
-        className='shrink-0 opacity-0 transition-opacity hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100'
+        className='shrink-0 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-destructive/20 hover:text-destructive'
         title='Delete memory'
       >
         <Trash2 className='h-4 w-4' />

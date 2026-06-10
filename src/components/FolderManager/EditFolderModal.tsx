@@ -87,7 +87,7 @@ const EditFolderModal = ({ isOpen, onClose, folder }: EditFolderModalProps) => {
             <Button
               type='submit'
               disabled={!folderName.trim() || isSubmitting}
-              className='bg-dark-blue text-white hover:bg-dark-blue-hovered'
+              className='bg-secondary text-secondary-foreground hover:bg-secondary/80'
             >
               {isSubmitting ? 'Updating...' : 'Update Folder'}
             </Button>

@@ -94,7 +94,7 @@ export const getStatusDisplay = (status: FileStatus, errorMessage?: string) => {
 }
 
 export const getFileIcon = (fileType?: string) => {
-  if (!fileType) return <FileIcon className='h-5 w-5 text-gray-500' />
+  if (!fileType) return <FileIcon className='h-5 w-5 text-muted-foreground' />
 
   const type = fileType.toLowerCase()
 
@@ -123,6 +123,6 @@ export const getFileIcon = (fileType?: string) => {
   ) {
     return <FileArchiveIcon className='h-5 w-5 text-purple-500' />
   } else {
-    return <FileIcon className='h-5 w-5 text-gray-500' />
+    return <FileIcon className='h-5 w-5 text-muted-foreground' />
   }
 }

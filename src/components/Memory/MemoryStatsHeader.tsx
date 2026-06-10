@@ -40,11 +40,11 @@ const MemoryStatsHeader = ({
   if (isLoading) {
     return (
       <div className='flex items-center gap-4 rounded-lg border border-border bg-card/50 px-4 py-3'>
-        <div className='h-4 w-24 animate-pulse rounded bg-muted' />
-        <div className='h-4 w-1 rounded bg-border' />
-        <div className='h-4 w-28 animate-pulse rounded bg-muted' />
-        <div className='h-4 w-1 rounded bg-border' />
-        <div className='h-4 w-32 animate-pulse rounded bg-muted' />
+        <div className='h-4 w-24 animate-pulse rounded-sm bg-muted' />
+        <div className='h-4 w-1 rounded-sm bg-border' />
+        <div className='h-4 w-28 animate-pulse rounded-sm bg-muted' />
+        <div className='h-4 w-1 rounded-sm bg-border' />
+        <div className='h-4 w-32 animate-pulse rounded-sm bg-muted' />
       </div>
     )
   }

@@ -57,14 +57,14 @@ const OnboardingScreen: React.FC = () => {
   }
 
   return (
-    <div className='flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-900'>
+    <div className='flex min-h-screen items-center justify-center bg-background px-4'>
       <div className='w-full max-w-2xl'>
-        <div className='rounded-lg border bg-white p-8 shadow-sm dark:bg-gray-800'>
+        <div className='rounded-lg border bg-card p-8 shadow-xs'>
           <div className='mb-6'>
-            <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
+            <h1 className='text-2xl font-bold text-foreground'>
               Tell us about yourself
             </h1>
-            <p className='mt-2 text-sm text-gray-600 dark:text-gray-400'>
+            <p className='mt-2 text-sm text-muted-foreground'>
               Help us personalize your DARE experience
             </p>
           </div>
@@ -162,10 +162,8 @@ const OnboardingScreen: React.FC = () => {
                 </div>
 
                 {error && (
-                  <div className='rounded-md bg-red-50 p-4 dark:bg-red-900/20'>
-                    <p className='text-sm text-red-800 dark:text-red-200'>
-                      {error}
-                    </p>
+                  <div className='rounded-md bg-destructive/10 p-4'>
+                    <p className='text-sm text-destructive'>{error}</p>
                   </div>
                 )}
 

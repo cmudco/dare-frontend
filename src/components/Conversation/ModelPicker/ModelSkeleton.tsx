@@ -7,7 +7,7 @@ const ModelSkeleton: React.FC = () => (
         key={i}
         className='space-y-3 rounded-xl border border-accent/10 bg-accent/5 p-4'
       >
-        <div className='h-4 w-24 rounded bg-accent/20' />
+        <div className='h-4 w-24 rounded-sm bg-accent/20' />
         <div className='space-y-2'>
           <div className='h-10 w-full rounded-lg bg-accent/10' />
           <div className='h-10 w-full rounded-lg bg-accent/10' />

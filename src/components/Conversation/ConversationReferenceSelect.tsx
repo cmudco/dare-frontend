@@ -147,10 +147,7 @@ const ConversationReferenceSelect: React.FC = () => {
     <div data-tour='reference-select' className='flex items-center gap-1'>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant='ghost'
-            className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
-          >
+          <Button variant='ghost' className='h-9 w-9 p-0 hover:bg-accent'>
             <MessageSquare className='h-5 w-5 text-muted-foreground transition-colors hover:text-foreground' />
             {selectedCount > 0 && (
               <Badge
@@ -261,7 +258,7 @@ const ConversationReferenceSelect: React.FC = () => {
               onValueChange={setActiveTab}
               className='w-full'
             >
-              <TabsList className='grid w-full grid-cols-2 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-800/80'>
+              <TabsList className='grid w-full grid-cols-2 rounded-xl border border-border bg-muted p-1'>
                 <TabsTrigger
                   value='references'
                   className='gap-2 rounded-lg text-xs'
@@ -279,7 +276,7 @@ const ConversationReferenceSelect: React.FC = () => {
               </TabsList>
 
               <div className='relative mt-4'>
-                <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
                   placeholder={searchPlaceholder}
                   value={searchQuery}
@@ -290,8 +287,8 @@ const ConversationReferenceSelect: React.FC = () => {
 
               <TabsContent value='references' className='mt-4 space-y-4'>
                 {selectedCount > 0 && (
-                  <div className='rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/50'>
-                    <p className='text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400'>
+                  <div className='rounded-2xl border border-border bg-muted p-3'>
+                    <p className='text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
                       Referenced ({selectedCount})
                     </p>
                     <div className='mt-2 flex flex-wrap gap-1.5'>
@@ -299,9 +296,9 @@ const ConversationReferenceSelect: React.FC = () => {
                         <Badge
                           key={conversation.conversationId}
                           variant='secondary'
-                          className='flex min-w-0 max-w-[190px] items-center gap-1 px-2 py-1'
+                          className='flex max-w-[190px] min-w-0 items-center gap-1 px-2 py-1'
                         >
-                          <span className='min-w-0 max-w-[145px] truncate text-xs'>
+                          <span className='max-w-[145px] min-w-0 truncate text-xs'>
                             {getConversationTitle(conversation)}
                           </span>
                           <button
@@ -330,8 +327,8 @@ const ConversationReferenceSelect: React.FC = () => {
                         onClick={() => handleToggleConversation(conversation)}
                         className={`flex cursor-pointer items-center rounded-2xl border px-3 py-3 transition-colors ${
                           isReferenced
-                            ? 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-700 dark:bg-blue-950/40 dark:text-white'
-                            : 'border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40 dark:hover:bg-slate-900'
+                            ? 'border-primary/40 bg-primary/10'
+                            : 'border-border bg-card hover:bg-accent'
                         }`}
                       >
                         <div
@@ -377,8 +374,8 @@ const ConversationReferenceSelect: React.FC = () => {
 
               <TabsContent value='summaries' className='mt-4 space-y-4'>
                 {referencedSummaries.length > 0 && (
-                  <div className='rounded-2xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-950/30'>
-                    <p className='text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400'>
+                  <div className='rounded-2xl border border-primary/40 bg-primary/10 p-3'>
+                    <p className='text-xs font-semibold tracking-wide text-primary uppercase'>
                       Selected ({referencedSummaries.length})
                     </p>
                     <div className='mt-2 flex flex-wrap gap-1.5'>
@@ -386,9 +383,9 @@ const ConversationReferenceSelect: React.FC = () => {
                         <Badge
                           key={summary.id}
                           variant='secondary'
-                          className='flex min-w-0 max-w-[190px] items-center gap-1 bg-blue-100 px-2 py-1 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200'
+                          className='flex max-w-[190px] min-w-0 items-center gap-1 px-2 py-1'
                         >
-                          <span className='min-w-0 max-w-[145px] truncate text-xs'>
+                          <span className='max-w-[145px] min-w-0 truncate text-xs'>
                             {summary.conversationTitle || 'New Chat'}
                           </span>
                           <button
@@ -406,7 +403,7 @@ const ConversationReferenceSelect: React.FC = () => {
               </TabsContent>
             </Tabs>
 
-            <div className='border-t border-slate-200 pt-3 dark:border-slate-700'>
+            <div className='border-t border-border pt-3'>
               <p className='text-xs text-muted-foreground'>
                 {activeTab === 'references'
                   ? 'Referenced conversations provide extra context for the current chat.'

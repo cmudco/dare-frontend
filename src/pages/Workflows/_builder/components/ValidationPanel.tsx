@@ -43,10 +43,10 @@ export function ValidationPanel({
   }
 
   return (
-    <div className='mb-4 rounded-lg border border-[#EE183C]/30 bg-gradient-to-br from-[#EE183C]/5 to-[#023572]/5 p-4'>
+    <div className='mb-4 rounded-lg border border-dare/30 bg-linear-to-br from-dare/5 to-secondary/30 p-4'>
       <div className='mb-3 flex items-center gap-2'>
-        <div className='flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#EE183C] to-[#023572]'>
-          <span className='text-xs font-bold text-white'>?</span>
+        <div className='flex h-6 w-6 items-center justify-center rounded-full bg-dare'>
+          <span className='text-xs font-bold text-dare-foreground'>?</span>
         </div>
         <span className='font-medium text-foreground'>
           Human Validation Required
@@ -68,8 +68,8 @@ export function ValidationPanel({
 
       {/* AI Recommendation - show which route AI suggests */}
       {validation.aiRecommendation && (
-        <div className='mb-3 rounded-md border border-[#023572]/20 bg-[#023572]/5 p-2 text-sm'>
-          <strong className='text-[#023572]'>Recommended Route:</strong>{' '}
+        <div className='mb-3 rounded-md border border-border bg-muted/50 p-2 text-sm'>
+          <strong className='text-foreground'>Recommended Route:</strong>{' '}
           <span className='font-medium'>{validation.aiRecommendation}</span>
         </div>
       )}
@@ -82,8 +82,8 @@ export function ValidationPanel({
             className={cn(
               'w-full rounded-lg border p-3 text-left transition-all',
               selectedRoute === route.name
-                ? 'border-[#EE183C]/50 bg-gradient-to-r from-[#EE183C]/10 to-[#023572]/10'
-                : 'border-border bg-white hover:border-[#023572]/30 hover:bg-[#023572]/5'
+                ? 'border-dare/50 bg-dare/10'
+                : 'border-border bg-card hover:bg-accent'
             )}
           >
             <div className='font-medium text-foreground'>{route.name}</div>
@@ -99,7 +99,7 @@ export function ValidationPanel({
       <Button
         onClick={handleSubmit}
         disabled={!selectedRoute || isSubmitting}
-        className='w-full bg-gradient-to-r from-[#EE183C] to-[#023572] text-white hover:from-[#c41230] hover:to-[#012a5c]'
+        className='w-full bg-primary text-primary-foreground hover:bg-primary/90'
       >
         {isSubmitting ? (
           <>

@@ -199,7 +199,7 @@ const AvatarSettings: React.FC = () => {
               onClick={handleUploadClick}
               disabled={isLoading}
               className={cn(
-                'group relative flex flex-col items-center gap-1.5 rounded-lg p-2 transition-all hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                'group relative flex flex-col items-center gap-1.5 rounded-lg p-2 transition-all hover:bg-muted focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-hidden',
                 isLoading && 'cursor-not-allowed opacity-50'
               )}
               title='Upload new avatar'
@@ -222,7 +222,7 @@ const AvatarSettings: React.FC = () => {
                 onClick={handleSelectCustom}
                 disabled={isLoading}
                 className={cn(
-                  'group relative flex flex-col items-center gap-1.5 rounded-lg p-2 transition-all hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                  'group relative flex flex-col items-center gap-1.5 rounded-lg p-2 transition-all hover:bg-muted focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-hidden',
                   currentAvatarType === AvatarType.CUSTOM &&
                     'bg-muted ring-2 ring-primary ring-offset-2',
                   isLoading && 'cursor-not-allowed opacity-50'
@@ -236,7 +236,7 @@ const AvatarSettings: React.FC = () => {
                     className='h-14 w-14 rounded-full object-cover transition-transform group-hover:scale-105'
                   />
                   {currentAvatarType === AvatarType.CUSTOM && (
-                    <div className='absolute -bottom-0.5 -right-0.5 rounded-full bg-primary p-1'>
+                    <div className='absolute -right-0.5 -bottom-0.5 rounded-full bg-primary p-1'>
                       <Check className='h-3 w-3 text-white' />
                     </div>
                   )}
@@ -267,7 +267,7 @@ const AvatarSettings: React.FC = () => {
                   onClick={() => handleSelectPreset(preset.id)}
                   disabled={isLoading}
                   className={cn(
-                    'group relative flex flex-col items-center gap-1.5 rounded-lg p-2 transition-all hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                    'group relative flex flex-col items-center gap-1.5 rounded-lg p-2 transition-all hover:bg-muted focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-hidden',
                     isSelected && 'bg-muted ring-2 ring-primary ring-offset-2',
                     isLoading && 'cursor-not-allowed opacity-50'
                   )}
@@ -283,7 +283,7 @@ const AvatarSettings: React.FC = () => {
                       }}
                     />
                     {isSelected && (
-                      <div className='absolute -bottom-0.5 -right-0.5 rounded-full bg-primary p-1'>
+                      <div className='absolute -right-0.5 -bottom-0.5 rounded-full bg-primary p-1'>
                         <Check className='h-3 w-3 text-white' />
                       </div>
                     )}

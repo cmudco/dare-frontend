@@ -44,7 +44,7 @@ export function EmotionStep({ selectedEmotion, onSelect }: EmotionStepProps) {
             whileTap='tap'
             animate={selectedEmotion === option.value ? 'selected' : 'initial'}
             onClick={() => onSelect(option.value)}
-            className={`relative flex flex-col items-center gap-1.5 rounded-xl p-3 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+            className={`relative flex flex-col items-center gap-1.5 rounded-xl p-3 transition-colors duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${
               selectedEmotion === option.value
                 ? 'bg-dare-gradient/20 ring-2 ring-primary/60'
                 : 'hover:bg-white/5'
@@ -54,11 +54,11 @@ export function EmotionStep({ selectedEmotion, onSelect }: EmotionStepProps) {
           >
             <motion.span
               variants={emojiVariants}
-              className='select-none text-4xl'
+              className='text-4xl select-none'
               style={{
                 filter:
                   selectedEmotion === option.value
-                    ? 'drop-shadow(0 0 8px hsl(var(--primary)))'
+                    ? 'drop-shadow(0 0 8px var(--primary))'
                     : 'none',
               }}
             >

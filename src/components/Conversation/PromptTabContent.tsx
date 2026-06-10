@@ -44,7 +44,7 @@ const RichTextPreview = ({ content }: { content: string }) => {
 
   return (
     <div
-      className='prose prose-sm max-w-none overflow-hidden text-sm text-gray-600 dark:prose-invert focus:outline-none [&_*]:max-w-full [&_*]:overflow-hidden [&_*]:text-ellipsis'
+      className='prose prose-sm max-w-none overflow-hidden text-sm text-muted-foreground **:max-w-full **:overflow-hidden **:text-ellipsis focus:outline-hidden dark:prose-invert'
       dangerouslySetInnerHTML={{ __html: truncateHtml(content || '') }}
     />
   )
@@ -220,8 +220,8 @@ const PromptTabContent = () => {
       <div
         className={`mb-3 min-w-0 cursor-pointer overflow-hidden rounded-lg border border-border p-3 text-foreground transition-colors ${
           selectedPrompt?.id === prompt.id
-            ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
-            : 'bg-background hover:bg-muted dark:hover:bg-blue-900/30'
+            ? 'bg-primary/10 text-primary'
+            : 'bg-background hover:bg-accent'
         }`}
         onClick={() => handlePromptSelect(prompt)}
       >
@@ -269,8 +269,8 @@ const PromptTabContent = () => {
         key={published.id}
         className={`mb-3 min-w-0 cursor-pointer overflow-hidden rounded-lg border border-border p-3 text-foreground transition-colors ${
           selectedPrompt?.id === published.promptId
-            ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
-            : 'bg-background hover:bg-muted dark:hover:bg-blue-900/30'
+            ? 'bg-primary/10 text-primary'
+            : 'bg-background hover:bg-accent'
         }`}
         onClick={() => handleLibraryPromptSelect(published)}
       >
@@ -300,7 +300,7 @@ const PromptTabContent = () => {
     <>
       <div className='mb-4 flex items-center gap-3'>
         <div className='relative flex-1'>
-          <MagnifyingGlassIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
+          <MagnifyingGlassIcon className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
           <Input
             type='text'
             placeholder='Search prompts'

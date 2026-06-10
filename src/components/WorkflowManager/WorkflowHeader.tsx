@@ -41,7 +41,7 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
         <Input
           type='text'
           placeholder='Search workflows'
-          className='rounded-md border border-gray-300 bg-white pl-10 focus:border-primary focus:ring-2 focus:ring-primary'
+          className='rounded-md border border-border bg-background pl-10 focus:border-primary focus:ring-2 focus:ring-primary'
           value={searchQuery}
           onChange={handleSearchChange}
         />
@@ -50,7 +50,7 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ onSearch }) => {
       <Button
         data-tour='workflows-create'
         variant='default'
-        className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
+        className='rounded-md py-2 font-normal whitespace-nowrap normal-case shadow-xs'
         onClick={handleCreateWorkflow}
       >
         <Plus />

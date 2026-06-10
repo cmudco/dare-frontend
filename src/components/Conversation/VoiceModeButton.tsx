@@ -66,7 +66,7 @@ const VoiceModeButton: React.FC<{ disabled?: boolean }> = ({
         isRecording && 'animate-pulse bg-red-500 text-white',
         !isRecording &&
           !showLoader &&
-          'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+          'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
       )}
     >
       {showLoader ? (

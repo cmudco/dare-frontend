@@ -143,16 +143,14 @@ const SharedPromptsTable = ({ searchQuery }: SharedPromptsTableProps) => {
 
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max bg-background bg-white text-left'>
+      <Table className='mt-4 w-full min-w-max bg-background text-left'>
         <TableHeader>
           <TableRow className='bg-background bg-muted'>
             {TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 dark:text-white ${
-                  head !== 'Action'
-                    ? 'hover:bg-gray-100 hover:opacity-100 dark:hover:bg-gray-700'
-                    : ''
+                className={`cursor-pointer p-4 text-sm font-semibold text-foreground transition-colors duration-150 select-none ${
+                  head !== 'Action' ? 'hover:bg-accent hover:opacity-100' : ''
                 }`}
                 onClick={() => handleSort(head)}
               >
@@ -183,7 +181,7 @@ const SharedPromptsTable = ({ searchQuery }: SharedPromptsTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={TABLE_HEAD.length}
-                className='p-4 text-center dark:text-white'
+                className='p-4 text-center text-foreground'
               >
                 Loading shared prompts...
               </TableCell>
@@ -192,18 +190,18 @@ const SharedPromptsTable = ({ searchQuery }: SharedPromptsTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={TABLE_HEAD.length}
-                className='p-4 text-center dark:text-white'
+                className='p-4 text-center text-foreground'
               >
                 No shared prompts found
               </TableCell>
             </TableRow>
           ) : (
             paginatedPrompts.map((prompt) => (
-              <TableRow key={prompt.id} className='dark:border-gray-700'>
+              <TableRow key={prompt.id} className='border-border'>
                 <TableCell className='p-4'>
                   <div>
                     <div className='flex items-center gap-2'>
-                      <h3 className='font-medium dark:text-white'>
+                      <h3 className='font-medium text-foreground'>
                         {prompt.entityTitle || 'Untitled'}
                       </h3>
                       {prompt.entityVersion && (
@@ -212,15 +210,15 @@ const SharedPromptsTable = ({ searchQuery }: SharedPromptsTableProps) => {
                         </span>
                       )}
                     </div>
-                    <p className='max-w-[300px] truncate text-sm text-gray-500 dark:text-gray-400'>
+                    <p className='max-w-[300px] truncate text-sm text-muted-foreground'>
                       {stripHtml(prompt.entityContent || '') || 'No content'}
                     </p>
                   </div>
                 </TableCell>
-                <TableCell className='p-4 dark:text-white'>
+                <TableCell className='p-4 text-foreground'>
                   {prompt.sharedByEmail}
                 </TableCell>
-                <TableCell className='p-4 dark:text-white'>
+                <TableCell className='p-4 text-foreground'>
                   {formatDate(prompt.createdAt)}
                 </TableCell>
                 <TableCell className='p-4'>
@@ -241,21 +239,21 @@ const SharedPromptsTable = ({ searchQuery }: SharedPromptsTableProps) => {
             <TableRow className='bg-background'>
               <TableCell
                 colSpan={TABLE_HEAD.length}
-                className='w-full p-4 dark:text-white'
+                className='w-full p-4 text-foreground'
               >
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
-                    <span className='text-sm dark:text-white'>
+                    <span className='text-sm text-foreground'>
                       Rows per page:
                     </span>
                     <Select
                       value={String(itemsPerPage)}
                       onValueChange={(val) => setItemsPerPage(Number(val))}
                     >
-                      <SelectTrigger className='w-[80px] bg-background dark:border-gray-700 dark:text-white'>
+                      <SelectTrigger className='w-[80px] bg-background'>
                         <SelectValue placeholder='Rows' />
                       </SelectTrigger>
-                      <SelectContent className='bg-background dark:border-gray-700'>
+                      <SelectContent className='bg-background'>
                         <SelectItem value='5'>5</SelectItem>
                         <SelectItem value='10'>10</SelectItem>
                         <SelectItem value='20'>20</SelectItem>
@@ -271,7 +269,7 @@ const SharedPromptsTable = ({ searchQuery }: SharedPromptsTableProps) => {
                     >
                       Previous
                     </Button>
-                    <span className='text-sm dark:text-white'>
+                    <span className='text-sm text-foreground'>
                       Page {currentPage} of {totalPages || 1}
                     </span>
                     <Button

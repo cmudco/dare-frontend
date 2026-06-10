@@ -24,7 +24,7 @@ export function ThankYouStep() {
             repeat: Infinity,
             ease: 'easeInOut',
           }}
-          className='absolute inset-0 rounded-full bg-gradient-to-r from-green-500/30 to-emerald-500/30'
+          className='absolute inset-0 rounded-full bg-linear-to-r from-green-500/30 to-emerald-500/30'
         />
 
         {/* Circle background */}
@@ -32,7 +32,7 @@ export function ThankYouStep() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-          className='absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30'
+          className='absolute inset-0 flex items-center justify-center rounded-full bg-linear-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30'
         >
           {/* Checkmark SVG */}
           <svg
@@ -58,7 +58,7 @@ export function ThankYouStep() {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
-          className='absolute -right-1 -top-1'
+          className='absolute -top-1 -right-1'
         >
           <span className='text-2xl'>✨</span>
         </motion.div>

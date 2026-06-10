@@ -95,12 +95,12 @@ const FileTagModal: React.FC<FileTagModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className='mx-auto w-[90vw] max-w-md rounded-lg bg-background bg-white p-6 shadow-lg'>
+      <DialogContent className='mx-auto w-[90vw] max-w-md rounded-lg bg-card p-6 shadow-lg'>
         <DialogHeader>
-          <DialogTitle className='text-lg font-semibold text-gray-900 dark:text-white'>
+          <DialogTitle className='text-lg font-semibold text-foreground'>
             {existingTags.length > 0 ? 'Edit Tags' : 'Add Tags'}
           </DialogTitle>
-          <DialogDescription className='text-sm text-gray-500 dark:text-dark-icon-unselected'>
+          <DialogDescription className='text-sm text-muted-foreground'>
             {existingTags.length > 0 ? 'Edit tags for' : 'Add tags to'} "
             {fileName}"
           </DialogDescription>
@@ -109,10 +109,10 @@ const FileTagModal: React.FC<FileTagModalProps> = ({
         <div className='space-y-4'>
           <div className='flex flex-col gap-2'>
             <Select onValueChange={(value) => handleAddTag(parseInt(value))}>
-              <SelectTrigger className='w-full bg-background dark:border-gray-700 dark:text-white'>
+              <SelectTrigger className='w-full bg-background'>
                 <SelectValue placeholder='Add Tags' />
               </SelectTrigger>
-              <SelectContent className='bg-background dark:border-gray-700'>
+              <SelectContent className='bg-background'>
                 {Array.isArray(tags) && tags.length > 0 ? (
                   tags
                     .filter((tag) => !selectedTags.includes(tag.id))
@@ -120,7 +120,7 @@ const FileTagModal: React.FC<FileTagModalProps> = ({
                       <SelectItem
                         key={tag.id}
                         value={String(tag.id)}
-                        className='dark:text-white dark:hover:bg-white/10'
+                        className='hover:bg-accent'
                       >
                         {tag.label}
                       </SelectItem>
@@ -129,7 +129,7 @@ const FileTagModal: React.FC<FileTagModalProps> = ({
                   <SelectItem
                     value='no-tags'
                     disabled
-                    className='dark:text-gray-400'
+                    className='text-muted-foreground'
                   >
                     No tags available
                   </SelectItem>
@@ -180,9 +180,7 @@ const FileTagModal: React.FC<FileTagModalProps> = ({
           </div>
 
           {error && (
-            <div className='text-center text-sm text-red-500 dark:text-red-400'>
-              {error}
-            </div>
+            <div className='text-center text-sm text-destructive'>{error}</div>
           )}
         </div>
 

@@ -46,11 +46,11 @@ const AudioTranscriptionPanel: React.FC = () => {
         <Button
           variant='ghost'
           size='sm'
-          className='dark:hover:bg-dare-gradient/90 group flex h-9 items-center gap-2 rounded-md bg-purple-50 px-3 hover:bg-purple-100 dark:bg-dare-gradient'
+          className='group flex h-9 items-center gap-2 rounded-md bg-muted px-3 hover:bg-accent'
           title='Audio Transcription Settings'
         >
-          <Mic className='h-5 w-5 text-gray-700 dark:text-white' />
-          <span className='bg-dare-gradient bg-clip-text text-sm font-medium text-transparent dark:bg-none dark:text-white'>
+          <Mic className='h-5 w-5 text-foreground' />
+          <span className='text-sm font-medium text-dare'>
             Transcription Settings
           </span>
         </Button>
@@ -63,10 +63,8 @@ const AudioTranscriptionPanel: React.FC = () => {
           {/* Header */}
           <div className='border-b border-border pb-4'>
             <h3 className='flex items-center gap-2 text-lg font-semibold'>
-              <Mic className='h-5 w-5 text-gray-700 dark:text-white' />
-              <span className='bg-dare-gradient bg-clip-text text-transparent dark:bg-none dark:text-white'>
-                Transcription Settings
-              </span>
+              <Mic className='h-5 w-5 text-foreground' />
+              <span className='text-dare'>Transcription Settings</span>
             </h3>
             <p className='mt-1 text-sm text-muted-foreground'>
               Select language for audio transcription

@@ -170,9 +170,7 @@ export const BillingModeSelector: React.FC = () => {
 
         <div className={`rounded-lg border p-4 ${currentStyle.container}`}>
           <div className='flex gap-3'>
-            <AlertCircle
-              className={`h-5 w-5 flex-shrink-0 ${currentStyle.icon}`}
-            />
+            <AlertCircle className={`h-5 w-5 shrink-0 ${currentStyle.icon}`} />
             <div className='space-y-1'>
               <p className={`text-sm font-medium ${currentStyle.title}`}>
                 {modeInfo.title}

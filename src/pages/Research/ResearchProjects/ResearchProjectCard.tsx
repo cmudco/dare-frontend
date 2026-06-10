@@ -25,7 +25,7 @@ const ResearchProjectCard = ({ project, onOpen, onEdit, onDelete }: Props) => {
           onOpen(project)
         }
       }}
-      className='group flex cursor-pointer flex-col rounded-xl border border-border bg-card p-5 text-left shadow-sm transition-all hover:border-foreground/20 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+      className='group flex cursor-pointer flex-col rounded-xl border border-border bg-card p-5 text-left shadow-xs transition-all hover:border-foreground/20 hover:shadow-md focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring'
     >
       <div className='mb-3 flex items-start justify-between gap-2'>
         <Badge variant={isArchived ? 'gray' : 'green'}>
@@ -55,7 +55,7 @@ const ResearchProjectCard = ({ project, onOpen, onEdit, onDelete }: Props) => {
         </div>
       </div>
 
-      <h3 className='line-clamp-2 text-[15px] font-semibold leading-snug tracking-tight'>
+      <h3 className='line-clamp-2 text-[15px] leading-snug font-semibold tracking-tight'>
         {project.title}
       </h3>
       <p className='mt-1.5 line-clamp-2 text-sm text-muted-foreground'>

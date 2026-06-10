@@ -160,9 +160,9 @@ const FolderFilesModal: React.FC<FolderFilesModalProps> = ({
                     (head) => (
                       <TableHead
                         key={head}
-                        className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 dark:text-white ${
+                        className={`cursor-pointer p-4 text-sm font-semibold text-foreground transition-colors duration-150 select-none ${
                           head !== 'Action'
-                            ? 'hover:bg-gray-100 hover:opacity-100 dark:hover:bg-gray-700'
+                            ? 'hover:bg-accent hover:opacity-100'
                             : ''
                         }`}
                         onClick={() => head !== 'Action' && handleSort(head)}
@@ -243,8 +243,8 @@ const FolderFilesModal: React.FC<FolderFilesModalProps> = ({
                         </TableCell>
                         <TableCell className='p-4 text-center'>
                           <DropdownMenu>
-                            <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
-                              <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
+                            <DropdownMenuTrigger className='rounded-md p-2 hover:bg-accent'>
+                              <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                               <DropdownMenuItem

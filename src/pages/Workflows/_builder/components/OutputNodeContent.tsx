@@ -98,7 +98,7 @@ export function OutputNodeContent({
       {isStreaming && showScrollButton && (
         <button
           onClick={forceScrollToBottom}
-          className='absolute bottom-12 right-3 flex h-6 w-6 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-md transition-all hover:bg-primary'
+          className='absolute right-3 bottom-12 flex h-6 w-6 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-md transition-all hover:bg-primary'
           title='Scroll to bottom'
         >
           <ChevronDown size={14} />
@@ -107,7 +107,7 @@ export function OutputNodeContent({
 
       <div className='flex justify-end border-t border-border/30 px-3 py-1.5'>
         <button
-          className='flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+          className='flex items-center gap-1 rounded-sm px-2 py-1 text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground'
           onClick={onOpenFullView}
           title='Open full view'
         >

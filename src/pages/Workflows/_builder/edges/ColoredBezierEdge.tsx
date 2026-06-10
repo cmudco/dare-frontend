@@ -2,7 +2,7 @@ import { type EdgeProps, getBezierPath, BaseEdge } from '@xyflow/react'
 
 import { HANDLE_COLOR_HEX } from '@/utils/constants/workflowBuilder'
 
-const DEFAULT_EDGE_COLOR = '#9ca3af'
+const DEFAULT_EDGE_COLOR = 'var(--muted-foreground)'
 
 export default function ColoredBezierEdge({
   id,

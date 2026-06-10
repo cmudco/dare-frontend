@@ -15,14 +15,14 @@ const PRESET_AVATAR_PATH = '/avatars'
 // Generate consistent color based on user's name
 const getInitialsColor = (name: string): string => {
   const colors = [
-    'bg-gradient-to-br from-purple-500 to-pink-500',
-    'bg-gradient-to-br from-blue-500 to-cyan-500',
-    'bg-gradient-to-br from-green-500 to-emerald-500',
-    'bg-gradient-to-br from-orange-500 to-amber-500',
-    'bg-gradient-to-br from-rose-500 to-red-500',
-    'bg-gradient-to-br from-indigo-500 to-violet-500',
-    'bg-gradient-to-br from-teal-500 to-cyan-500',
-    'bg-gradient-to-br from-fuchsia-500 to-pink-500',
+    'bg-linear-to-br from-purple-500 to-pink-500',
+    'bg-linear-to-br from-blue-500 to-cyan-500',
+    'bg-linear-to-br from-green-500 to-emerald-500',
+    'bg-linear-to-br from-orange-500 to-amber-500',
+    'bg-linear-to-br from-rose-500 to-red-500',
+    'bg-linear-to-br from-indigo-500 to-violet-500',
+    'bg-linear-to-br from-teal-500 to-cyan-500',
+    'bg-linear-to-br from-fuchsia-500 to-pink-500',
   ]
 
   // Generate consistent index from name
@@ -109,7 +109,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       {/* Initials fallback - shown when no image or as hidden fallback */}
       <div
         className={cn(
-          'flex items-center justify-center rounded-full font-semibold text-white shadow-sm',
+          'flex items-center justify-center rounded-full font-semibold text-white shadow-xs',
           initialsColor,
           sizeClasses[size],
           presetImage ? 'hidden' : '',
