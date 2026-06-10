@@ -132,6 +132,7 @@ const ARTIFACT_TYPES = [
   { key: 'svg', label: 'SVG' },
   { key: 'html', label: 'HTML' },
   { key: 'excalidraw', label: 'Excalidraw' },
+  { key: 'document', label: 'Document' },
 ]
 
 const GenerateBar = ({ projectId }: { projectId?: number }) => {

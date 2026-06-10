@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Loader2, Sparkles } from 'lucide-react'
+import { BookOpenText, Check, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -113,6 +113,15 @@ const ScoutComposer = ({ tools, running, status, onRun }: Props) => {
               </button>
             )
           })}
+          {/* Built-in, always on: Scout reads result pages with DARE's fast
+              fetcher (the fetch_page gateway tool) — shown for full clarity. */}
+          <span
+            title="Built-in: Scout reads the pages behind search results with DARE's fast page reader before staging."
+            className='inline-flex cursor-default items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground'
+          >
+            <BookOpenText className='h-3 w-3' />
+            Page reader · built-in
+          </span>
         </div>
 
         <div className='flex items-center gap-0.5 rounded-lg border border-border p-0.5'>
