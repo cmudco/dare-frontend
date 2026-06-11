@@ -64,6 +64,7 @@ export interface ImportMemoryRequest {
 /** Response from memory import endpoint */
 export interface ImportMemoryResponse {
   itemsCreated: number
+  itemsFailed: number
   message: string
 }
 
