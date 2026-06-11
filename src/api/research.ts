@@ -5,6 +5,7 @@ import type {
   AgentRun,
   ChatMessage,
   CreateResearchProjectPayload,
+  EvidenceGraph,
   ResearchProject,
   ResearchProjectsResponse,
   ReviewItem,
@@ -201,4 +202,14 @@ export const streamChatMessage = async (
       }
     }
   }
+}
+
+/** The project's evidence graph — nodes/edges for the Graph view. */
+export const getResearchGraphAPI = async (
+  projectId: number
+): Promise<EvidenceGraph> => {
+  return await baseRequest<EvidenceGraph>({
+    url: `api/research/projects/${projectId}/graph/`,
+    method: METHOD.GET,
+  })
 }

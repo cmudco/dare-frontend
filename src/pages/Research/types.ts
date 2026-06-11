@@ -6,6 +6,7 @@ export type NavSection =
   | 'chat'
   | 'review'
   | 'memory'
+  | 'graph'
   | 'artifacts'
   | 'runs'
 

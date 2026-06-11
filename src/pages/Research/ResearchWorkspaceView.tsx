@@ -11,6 +11,7 @@ import ReviewInbox from './components/ReviewInbox'
 import { ArtifactsView } from './components/SecondaryViews'
 import AskScoutView from './components/AskScoutView'
 import HandsOnChat from './components/HandsOnChat'
+import GraphView from './components/GraphView'
 import RunsView from './components/RunsView'
 import WorkspaceShell from './components/WorkspaceShell'
 import { AGENT_RUNS, PROJECT } from './mockData'
@@ -224,6 +225,8 @@ const ResearchWorkspaceView = ({
             memoryProposals={memoryProposals}
           />
         )
+      case 'graph':
+        return <GraphView projectId={projectId} />
       case 'artifacts':
         return <ArtifactsView projectId={projectId} artifacts={artifacts} />
       case 'runs':

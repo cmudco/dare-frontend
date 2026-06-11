@@ -7,6 +7,7 @@ import {
   MessagesSquare,
   Shapes,
   Telescope,
+  Waypoints,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PROJECT } from '../mockData'
@@ -24,6 +25,7 @@ const NAV: NavDef[] = [
   { key: 'chat', label: 'Chat', icon: MessagesSquare },
   { key: 'review', label: 'Review Inbox', icon: Inbox },
   { key: 'memory', label: 'Context', icon: Library },
+  { key: 'graph', label: 'Graph', icon: Waypoints },
   { key: 'artifacts', label: 'Artifacts', icon: Shapes },
   { key: 'runs', label: 'Runs', icon: Activity },
 ]

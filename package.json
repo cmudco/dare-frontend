@@ -60,6 +60,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "docx": "^9.6.1",
+    "force-graph": "^1.51.4",
     "formik": "^2.4.6",
     "framer-motion": "^12.38.0",
     "highlight.js": "^11.11.1",

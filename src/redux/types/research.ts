@@ -250,3 +250,36 @@ export interface ResearchState {
   loading: boolean
   error: string | null
 }
+
+/** A node in the project's evidence graph (`GET .../graph/`). */
+export interface EvidenceGraphNode {
+  id: string
+  kind: 'question' | 'source' | 'request'
+  label: string
+  stagingItemId?: number
+  authors?: string
+  year?: number | null
+  venue?: string
+  doi?: string
+  url?: string
+  status?: string
+  confidence?: number
+  evidenceLabel?: string
+  rationale?: string
+  sourceTool?: string
+  runId?: number
+}
+
+/** An edge in the evidence graph — every kind is observed, never inferred. */
+export interface EvidenceGraphEdge {
+  source: string
+  target: string
+  kind: 'evidence' | 'request' | 'mention'
+  label?: string
+  weight?: number
+}
+
+export interface EvidenceGraph {
+  nodes: EvidenceGraphNode[]
+  edges: EvidenceGraphEdge[]
+}
