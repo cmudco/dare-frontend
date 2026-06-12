@@ -3,20 +3,13 @@ import type { RootState } from './store'
 
 export const THEME_NAMES = [
   'default',
-  'amber-minimal',
-  'amethyst-haze',
-  'bold-tech',
-  'bubblegum',
-  'caffeine',
+  'aurora',
+  'cobalt',
   'cyberpunk',
-  'ember',
+  'evergreen',
   'midnight',
   'mono',
-  'ocean-breeze',
   'rose',
-  'sunset-horizon',
-  't3-chat',
-  'twitter',
 ] as const
 
 export type ThemeName = (typeof THEME_NAMES)[number]

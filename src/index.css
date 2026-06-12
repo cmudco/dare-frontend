@@ -1,20 +1,13 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './themes/default.css';
-@import './themes/amber-minimal.css';
-@import './themes/amethyst-haze.css';
-@import './themes/bold-tech.css';
-@import './themes/bubblegum.css';
-@import './themes/caffeine.css';
+@import './themes/aurora.css';
+@import './themes/cobalt.css';
 @import './themes/cyberpunk.css';
-@import './themes/ember.css';
+@import './themes/evergreen.css';
 @import './themes/midnight.css';
 @import './themes/mono.css';
-@import './themes/ocean-breeze.css';
 @import './themes/rose.css';
-@import './themes/sunset-horizon.css';
-@import './themes/t3-chat.css';
-@import './themes/twitter.css';
 
 @plugin '@tailwindcss/typography';
 

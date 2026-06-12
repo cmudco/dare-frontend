@@ -32,53 +32,23 @@ const themes: ThemeOption[] = [
     swatches: ['hsl(348 88% 52%)', 'hsl(214 100% 22%)', 'hsl(0 0% 100%)'],
   },
   {
-    name: 'amber-minimal',
-    label: 'Amber Minimal',
-    description: 'Clean and minimal with warm amber accents',
+    name: 'aurora',
+    label: 'Aurora',
+    description: 'Northern-lights teal and violet over deep indigo',
     swatches: [
-      'oklch(0.7686 0.1647 70.0804)',
-      'oklch(0.9869 0.0214 95.2774)',
-      'oklch(1 0 0)',
+      'oklch(0.5 0.17 300)',
+      'oklch(0.91 0.05 190)',
+      'oklch(0.98 0.008 220)',
     ],
   },
   {
-    name: 'amethyst-haze',
-    label: 'Amethyst Haze',
-    description: 'Elegant purple theme with mystical vibes',
+    name: 'cobalt',
+    label: 'Cobalt',
+    description: 'Vivid blue on warm cream, deep navy at night',
     swatches: [
-      'oklch(0.488 0.243 264.376)',
-      'oklch(0.97 0 0)',
-      'oklch(0.985 0 0)',
-    ],
-  },
-  {
-    name: 'bold-tech',
-    label: 'Bold Tech',
-    description: 'Modern tech-focused with bold blue accents',
-    swatches: [
-      'oklch(0.6 0.118 184.704)',
-      'oklch(0.95 0 0)',
-      'oklch(0.98 0 0)',
-    ],
-  },
-  {
-    name: 'bubblegum',
-    label: 'Bubblegum',
-    description: 'Soft pinks and purples with playful tone',
-    swatches: [
-      'oklch(0.6209 0.1801 348.1385)',
-      'oklch(0.9195 0.0801 87.667)',
-      'oklch(0.9399 0.0203 345.6985)',
-    ],
-  },
-  {
-    name: 'caffeine',
-    label: 'Caffeine',
-    description: 'Bold, energetic palette with caffeine vibes',
-    swatches: [
-      'oklch(0.4341 0.0392 41.9938)',
-      'oklch(0.931 0 0)',
-      'oklch(0.9821 0 0)',
+      'oklch(0.5 0.24 262)',
+      'oklch(0.92 0.04 250)',
+      'oklch(0.975 0.012 85)',
     ],
   },
   {
@@ -92,13 +62,13 @@ const themes: ThemeOption[] = [
     ],
   },
   {
-    name: 'ember',
-    label: 'Ember',
-    description: 'Warm crimson and bronze with a fireside glow',
+    name: 'evergreen',
+    label: 'Evergreen',
+    description: 'Deep forest green and soft sage, calm and grounded',
     swatches: [
-      'oklch(0.5 0.18 27)',
-      'oklch(0.9 0.04 70)',
-      'oklch(0.985 0.008 80)',
+      'oklch(0.45 0.12 150)',
+      'oklch(0.9 0.045 135)',
+      'oklch(0.98 0.008 130)',
     ],
   },
   {
@@ -118,16 +88,6 @@ const themes: ThemeOption[] = [
     swatches: ['oklch(0.2 0 0)', 'oklch(0.94 0 0)', 'oklch(1 0 0)'],
   },
   {
-    name: 'ocean-breeze',
-    label: 'Ocean Breeze',
-    description: 'Refreshing blues and greens with coastal feel',
-    swatches: [
-      'oklch(0.7227 0.192 149.5793)',
-      'oklch(0.9505 0.0507 163.0508)',
-      'oklch(0.9751 0.0127 244.2507)',
-    ],
-  },
-  {
     name: 'rose',
     label: 'Rose',
     description: 'Soft pink and warm ivory, easy on the eyes',
@@ -135,36 +95,6 @@ const themes: ThemeOption[] = [
       'oklch(0.6 0.16 13)',
       'oklch(0.92 0.04 10)',
       'oklch(0.985 0.008 20)',
-    ],
-  },
-  {
-    name: 'sunset-horizon',
-    label: 'Sunset Horizon',
-    description: 'Warm sunset-inspired orange and red tones',
-    swatches: [
-      'oklch(0.646 0.222 41.116)',
-      'oklch(0.97 0 0)',
-      'oklch(0.99 0 0)',
-    ],
-  },
-  {
-    name: 't3-chat',
-    label: 'T3 Chat',
-    description: 'Tech-inspired chat UI aesthetic',
-    swatches: [
-      'oklch(0.5316 0.1409 355.1999)',
-      'oklch(0.8696 0.0675 334.8991)',
-      'oklch(0.9754 0.0084 325.6414)',
-    ],
-  },
-  {
-    name: 'twitter',
-    label: 'Twitter',
-    description: 'Modern, clean theme inspired by Twitter',
-    swatches: [
-      'oklch(0.6723 0.1606 244.9955)',
-      'oklch(0.9392 0.0166 250.8453)',
-      'oklch(1 0 0)',
     ],
   },
 ]

@@ -311,9 +311,9 @@ sets `data-theme` attribute + `dark` class on `<body>`, persists to localStorage
 mode is `'system'`. An inline script in `index.html` applies the persisted
 selection before first paint (no FOUC).
 
-**Themes** — 15 themes in `src/themes/` (`default` is the DARE brand theme;
-9 are shared with Socratic Books; cyberpunk/ember/midnight/mono/rose are
-Hermes-inspired). Each file defines the full token set for light + dark,
+**Themes** — 8 themes in `src/themes/` (`default` is the DARE brand theme;
+cyberpunk/midnight/mono/rose/cobalt are Hermes-inspired; aurora/evergreen
+are originals). Each file defines the full token set for light + dark,
 plus `--brand-from`/`--brand-to` — the gradient endpoints consumed by
 `bg-dare-gradient`, `.gradient-border`, and the workflow-builder accents, so
 gradient branding follows the theme (the default theme keeps DARE red→blue).
