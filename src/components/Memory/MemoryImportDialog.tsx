@@ -25,7 +25,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
-const MEMORY_IMPORT_PROMPT = `Export all of my stored memories and durable context you have learned about me. Preserve my words verbatim where possible, especially instructions, preferences, corrections, and rules I asked you to follow.
+const MEMORY_IMPORT_PROMPT = `Export everything durable you know about me, gathered from BOTH of these sources:
+1. Your stored/saved memories about me, if you have a memory feature.
+2. Our visible conversation history and anything stable you can infer from it (who I am, what I work on, my preferences, instructions I gave you).
+
+Combine both sources. Do not return an empty array just because your stored memory is empty — extract from conversation history instead. Return an empty array only if you truly know nothing about me from either source.
+
+Preserve my words verbatim where possible, especially instructions, preferences, corrections, and rules I asked you to follow.
 
 Return valid JSON only. Do not use markdown, code fences, comments, or explanation.
 
@@ -292,7 +298,7 @@ const MemoryImportDialog = ({
         <div className='space-y-5'>
           <div className='space-y-2'>
             <div className='flex items-center justify-between gap-3'>
-              <span className='text-foreground text-sm font-medium'>
+              <span className='text-sm font-medium text-foreground'>
                 1. Copy the prompt into the other AI
               </span>
               <Button
@@ -309,7 +315,7 @@ const MemoryImportDialog = ({
               <CollapsibleTrigger asChild>
                 <button
                   type='button'
-                  className='text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs'
+                  className='flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground'
                 >
                   <ChevronDown
                     className={cn(
@@ -331,7 +337,7 @@ const MemoryImportDialog = ({
           </div>
 
           <div className='space-y-2'>
-            <span className='text-foreground text-sm font-medium'>
+            <span className='text-sm font-medium text-foreground'>
               2. Paste the JSON response here
             </span>
             <Textarea
@@ -341,13 +347,13 @@ const MemoryImportDialog = ({
               className='min-h-40 resize-y font-mono text-xs'
             />
             {parsedPreview.error && (
-              <p className='text-destructive text-sm'>{parsedPreview.error}</p>
+              <p className='text-sm text-destructive'>{parsedPreview.error}</p>
             )}
           </div>
 
           {itemCount > 0 && (
-            <div className='border-border bg-muted/20 rounded-md border p-3'>
-              <div className='text-foreground mb-3 text-sm font-medium'>
+            <div className='rounded-md border border-border bg-muted/20 p-3'>
+              <div className='mb-3 text-sm font-medium text-foreground'>
                 Preview ({itemCount} {itemCount === 1 ? 'memory' : 'memories'})
               </div>
               <div className='max-h-48 space-y-3 overflow-y-auto pr-1'>
@@ -355,10 +361,10 @@ const MemoryImportDialog = ({
                   .slice(0, PREVIEW_ITEM_LIMIT)
                   .map((item, index) => (
                     <div key={`${item.content}-${index}`} className='space-y-1'>
-                      <div className='text-foreground text-sm'>
+                      <div className='text-sm text-foreground'>
                         {item.content}
                       </div>
-                      <div className='text-muted-foreground flex flex-wrap items-center gap-2 text-xs'>
+                      <div className='flex flex-wrap items-center gap-2 text-xs text-muted-foreground'>
                         <Badge
                           variant='outline'
                           className={cn(
@@ -371,7 +377,7 @@ const MemoryImportDialog = ({
                         {item.categories.map((category) => (
                           <span
                             key={`${item.content}-${category}`}
-                            className='bg-muted rounded-full px-2 py-0.5'
+                            className='rounded-full bg-muted px-2 py-0.5'
                           >
                             {category}
                           </span>
@@ -380,7 +386,7 @@ const MemoryImportDialog = ({
                     </div>
                   ))}
                 {itemCount > PREVIEW_ITEM_LIMIT && (
-                  <div className='text-muted-foreground text-xs'>
+                  <div className='text-xs text-muted-foreground'>
                     {itemCount - PREVIEW_ITEM_LIMIT} more memories
                   </div>
                 )}
