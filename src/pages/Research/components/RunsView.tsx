@@ -51,6 +51,8 @@ const ToolCallModal = ({
             <DialogTitle className='text-sm'>{call.tool}</DialogTitle>
             <p className='text-xs text-muted-foreground'>
               {call.status} · {formatToolCallDuration(call.durationMs)}
+              {call.resultTokens != null &&
+                ` · ${formatTokens(call.resultTokens)} added to context`}
             </p>
           </DialogHeader>
           <div className='min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4'>
@@ -59,9 +61,19 @@ const ToolCallModal = ({
                 Input
               </p>
               <pre className='whitespace-pre-wrap break-all rounded-lg bg-muted/40 p-3 text-xs'>
-                {call.query || '—'}
+                {call.url || call.query || '—'}
               </pre>
             </div>
+            {call.error && (
+              <div>
+                <p className='mb-1.5 text-xs font-medium uppercase tracking-wide text-red-600 dark:text-red-400'>
+                  Error
+                </p>
+                <pre className='whitespace-pre-wrap break-all rounded-lg bg-red-500/10 p-3 text-xs text-red-700 dark:text-red-300'>
+                  {call.error}
+                </pre>
+              </div>
+            )}
             <div>
               <p className='mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
                 Result
@@ -69,7 +81,9 @@ const ToolCallModal = ({
               <pre className='whitespace-pre-wrap break-all rounded-lg bg-muted/40 p-3 text-xs'>
                 {call.resultSummary
                   ? prettify(call.resultSummary)
-                  : 'Result not captured for this call — agent-side tool results stay in the agent loop; DARE-executed calls record theirs.'}
+                  : call.error
+                    ? 'The call failed — see the error above.'
+                    : 'No result captured — this is a native agent tool (e.g. web_search) that runs inside the agent loop and never passes through DARE’s gateway. Gateway tools (fetch_page, Scite, Consensus) record their full result here.'}
               </pre>
             </div>
           </div>
@@ -210,15 +224,27 @@ const RunCard = ({ run }: { run: AgentRun }) => {
                     {call.tool}
                   </Badge>
                   <span className='min-w-0 flex-1 truncate text-muted-foreground'>
-                    {call.query}
+                    {call.url || call.query}
                   </span>
+                  {call.resultTokens != null && call.resultTokens > 0 && (
+                    <span className='shrink-0 text-xs tabular-nums text-muted-foreground'>
+                      {formatTokens(call.resultTokens)}
+                    </span>
+                  )}
                   <span className='shrink-0 text-xs tabular-nums text-muted-foreground'>
                     {formatToolCallDuration(call.durationMs)}
                   </span>
                 </div>
-                {call.resultSummary && (
-                  <p className='ml-7 mt-1 line-clamp-2 break-all text-xs text-muted-foreground/80'>
-                    {call.resultSummary}
+                {(call.error || call.resultSummary) && (
+                  <p
+                    className={cn(
+                      'ml-7 mt-1 line-clamp-2 break-all text-xs',
+                      call.error
+                        ? 'text-red-600/90 dark:text-red-400/90'
+                        : 'text-muted-foreground/80'
+                    )}
+                  >
+                    {call.error || call.resultSummary}
                   </p>
                 )}
               </button>

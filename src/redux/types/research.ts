@@ -179,9 +179,12 @@ export interface CreateProjectSourceInput {
 export interface AgentRunToolCall {
   tool: string
   query: string
+  url?: string
   status: string // 'success' | 'error'
   durationMs: number | null
+  resultTokens?: number | null
   resultSummary?: string
+  error?: string
 }
 
 /** Token usage the agent runtime reported for a run. */
