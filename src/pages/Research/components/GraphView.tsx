@@ -67,7 +67,7 @@ const GraphView = ({ projectId }: { projectId?: number }) => {
     }))
     const links = graph.edges.map((e) => ({ ...e }))
 
-    const fg = ForceGraph()(el)
+    const fg = new ForceGraph(el)
       .graphData({ nodes, links })
       .backgroundColor('rgba(0,0,0,0)')
       .nodeVal((n) => (n as RenderNode).val || 4)
