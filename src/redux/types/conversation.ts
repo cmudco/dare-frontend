@@ -265,7 +265,10 @@ export interface WalletMeta {
 
 export interface Snippet {
   id: number
-  file: MyFile
+  /** Null for shared-library snippets (use library + sourceRef instead). */
+  file: MyFile | null
+  library?: { id: number; name: string; slug: string } | null
+  sourceRef?: string
   text: string
   similarityScore: number
   chunkIndex: number

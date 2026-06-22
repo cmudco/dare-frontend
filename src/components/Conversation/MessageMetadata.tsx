@@ -558,7 +558,9 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                         >
                           <div className='mb-2 flex items-center justify-between'>
                             <span className='text-sm font-medium'>
-                              {snippet.file.name}
+                              {snippet.file
+                                ? snippet.file.name
+                                : `${snippet.library?.name} — ${snippet.sourceRef}`}
                             </span>
                             <div className='flex items-center gap-2'>
                               <Badge variant='outline' className='text-xs'>
