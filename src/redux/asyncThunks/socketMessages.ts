@@ -40,6 +40,7 @@ export const sendSocketMessage = createAsyncThunk<
       selectedMediaFiles,
       selectedTags,
       selectedFolders,
+      selectedLibraries,
       memoryEnabled,
       referencedConversations,
       referencedConversationHistoryLimit,
@@ -76,6 +77,7 @@ export const sendSocketMessage = createAsyncThunk<
       media_ids: selectedMediaFiles.map((file) => file.id),
       tag_ids: selectedTags.map((tag) => tag.id),
       folder_ids: selectedFolders.map((folder) => folder.id),
+      library_ids: selectedLibraries.map((library) => library.id),
       use_memory: memoryEnabled,
       referenced_conversation_ids: referencedConversations.map(
         (conv) => conv.conversationId
@@ -177,6 +179,7 @@ export const regenerateSocketResponse = createAsyncThunk<
       selectedFiles,
       selectedEmbeddings,
       selectedMediaFiles,
+      selectedLibraries,
       selectedModel,
       webSearchEnabled,
       audioTranscriptionEnabled,
@@ -191,6 +194,7 @@ export const regenerateSocketResponse = createAsyncThunk<
       file_ids: selectedFiles.map((file) => file.id),
       embedding_ids: selectedEmbeddings.map((file) => file.id),
       media_ids: selectedMediaFiles.map((file) => file.id),
+      library_ids: selectedLibraries.map((library) => library.id),
       // Opaque dispatch id — the BE inverts the encoding in
       // `parse_model_id` (DB-PK string or `litellm:<key>:<model>`).
       model_id: selectedModel,
