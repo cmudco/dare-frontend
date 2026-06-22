@@ -14,6 +14,7 @@ import type { LanguageCode } from '@/utils/constants/audioTranscription'
 import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
+import { SharedLibrary } from './library'
 import { EffortLevel } from '@/utils/constants/model'
 
 /**
@@ -322,6 +323,7 @@ export interface ConversationState {
   selectedMediaFiles: MyFile[] // NEW: Persistent media files (images/videos)
   selectedTags: Tag[]
   selectedFolders: MyFolder[]
+  selectedLibraries: SharedLibrary[]
   memoryEnabled: boolean
   selectedConversations: string[]
   referencedConversations: Conversation[]

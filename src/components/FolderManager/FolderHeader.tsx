@@ -5,6 +5,7 @@ import { Input } from '../ui/input'
 import { AppDispatch, RootState } from '../../redux/store'
 import { useState } from 'react'
 import { FolderPlus, FolderInput, Plus, Upload } from 'lucide-react'
+import ViewToggle from '../FileManager/ViewToggle'
 import FolderModal from './FolderModal'
 import FolderUploadModal from './FolderUploadModal'
 import { createFolder } from '../../redux/asyncThunks/file'
@@ -19,7 +20,7 @@ import { FolderHeaderProps } from '@/redux/types/files'
 
 const FolderHeader: React.FC<FolderHeaderProps> = ({ onToggleView }) => {
   const dispatch = useDispatch<AppDispatch>()
-  const { searchQuery, selectedItems, currentView } = useSelector(
+  const { searchQuery, selectedItems } = useSelector(
     (state: RootState) => state.files
   )
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false)
@@ -34,29 +35,7 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({ onToggleView }) => {
     <div className='flex flex-col gap-4 px-2.5'>
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-2'>
-          <div className='mr-4 flex gap-2'>
-            <Button
-              variant={currentView === 'files' ? 'default' : 'outline'}
-              size='sm'
-              onClick={() => onToggleView('files')}
-            >
-              Files
-            </Button>
-            <Button
-              variant={currentView === 'folders' ? 'default' : 'outline'}
-              size='sm'
-              onClick={() => onToggleView('folders')}
-            >
-              Folders
-            </Button>
-            <Button
-              variant={currentView === 'media' ? 'default' : 'outline'}
-              size='sm'
-              onClick={() => onToggleView('media')}
-            >
-              Media
-            </Button>
-          </div>
+          <ViewToggle onToggleView={onToggleView} />
           <div className='relative flex h-[40px] w-[300px] items-center'>
             <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-muted-foreground' />
             <Input

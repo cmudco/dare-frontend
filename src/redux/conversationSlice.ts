@@ -38,6 +38,7 @@ import { ServerSlug, ToolCallOrigin } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
+import { SharedLibrary } from './types/library'
 import { Prompt } from './types/prompt'
 import {
   selectAppropriateModel,
@@ -140,6 +141,9 @@ export const conversationSlice = createSlice({
     },
     updateSelectedFolders(state, action: PayloadAction<MyFolder[]>) {
       state.selectedFolders = action.payload
+    },
+    updateSelectedLibraries(state, action: PayloadAction<SharedLibrary[]>) {
+      state.selectedLibraries = action.payload
     },
     updateMemoryEnabled(state, action: PayloadAction<boolean>) {
       state.memoryEnabled = action.payload
@@ -391,6 +395,7 @@ export const conversationSlice = createSlice({
       state.selectedEmbeddings = []
       state.selectedTags = []
       state.selectedFolders = []
+      state.selectedLibraries = []
       state.memoryEnabled = false
       state.conversationInput = ''
       state.referencedConversations = []
@@ -1173,6 +1178,7 @@ export const {
   updateSelectedMediaFiles,
   updateSelectedTags,
   updateSelectedFolders,
+  updateSelectedLibraries,
   updateMemoryEnabled,
   updateTemperature,
   updateEffort,

@@ -19,7 +19,7 @@ import {
   togglePublicShare,
 } from './asyncThunks/file'
 import { initialState } from './initialState/files'
-import { MediaTypeFilter } from './types/files'
+import { MediaTypeFilter, FileView } from './types/files'
 
 const fileSlice = createSlice({
   name: 'files',
@@ -83,10 +83,7 @@ const fileSlice = createSlice({
     setSelectedItems: (state, action: PayloadAction<number[]>) => {
       state.selectedItems = action.payload
     },
-    setCurrentView: (
-      state,
-      action: PayloadAction<'files' | 'folders' | 'media'>
-    ) => {
+    setCurrentView: (state, action: PayloadAction<FileView>) => {
       state.currentView = action.payload
       state.selectedItems = []
     },

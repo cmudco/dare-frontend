@@ -48,6 +48,9 @@ export type MediaTypeFilter =
   | 'document'
   | 'generated_image'
 
+/** The view modes of the Sources page toggle. */
+export type FileView = 'files' | 'folders' | 'media' | 'libraries'
+
 export interface FileState {
   files: MyFile[]
   folders: MyFolder[]
@@ -64,7 +67,7 @@ export interface FileState {
   }
   searchQuery: string
   selectedItems: number[]
-  currentView: 'files' | 'folders' | 'media'
+  currentView: FileView
   isMoveModalOpen: boolean
   mediaTypeFilter: MediaTypeFilter
   sharedFiles: MyFile[]
@@ -76,5 +79,5 @@ export interface FileState {
 }
 
 export interface FolderHeaderProps {
-  onToggleView: (view: 'files' | 'folders' | 'media') => void
+  onToggleView: (view: FileView) => void
 }
