@@ -1,4 +1,13 @@
-import { Library, Check, Plus, Clock, Cpu, Globe, Lock } from 'lucide-react'
+import {
+  Library,
+  Check,
+  Plus,
+  Clock,
+  Cpu,
+  Globe,
+  Lock,
+  Database,
+} from 'lucide-react'
 import { Button } from '../ui/button'
 import { SharedLibrary } from '@/redux/types/library'
 
@@ -48,6 +57,12 @@ const SharedLibraryCard: React.FC<SharedLibraryCardProps> = ({
       <div className='mt-auto flex flex-wrap gap-1.5'>
         {isAvailable ? (
           <>
+            {library.objectCount != null && (
+              <span className='inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground'>
+                <Database className='h-3 w-3' />
+                {library.objectCount.toLocaleString()} chunks
+              </span>
+            )}
             <span className='inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground'>
               <Cpu className='h-3 w-3' />
               {library.embeddingModel} · {library.dims}d
