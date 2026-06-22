@@ -107,6 +107,7 @@ const ConversationFileSelect: React.FC = () => {
       const selectedFileIds = selectedFiles.map((file) => file.id)
       const selectedEmbeddingIds = selectedEmbeddings.map((file) => file.id)
       const selectedMediaIds = selectedMediaFiles.map((file) => file.id)
+      const selectedLibraryIds = selectedLibraries.map((library) => library.id)
 
       dispatch(
         updateConversationSelectedIds({
@@ -114,6 +115,7 @@ const ConversationFileSelect: React.FC = () => {
           selectedFileIds,
           selectedEmbeddingIds,
           selectedMediaIds,
+          selectedLibraryIds,
         })
       )
     }
@@ -123,12 +125,14 @@ const ConversationFileSelect: React.FC = () => {
     selectedFiles,
     selectedEmbeddings,
     selectedMediaFiles,
+    selectedLibraries,
   ])
 
   useDebounce(saveSelectedIds, 1000, [
     selectedFiles,
     selectedEmbeddings,
     selectedMediaFiles,
+    selectedLibraries,
     activeConversation?.conversationId,
   ])
 

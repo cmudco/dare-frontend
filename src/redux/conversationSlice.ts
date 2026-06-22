@@ -114,6 +114,18 @@ export const conversationSlice = createSlice({
         )
       }
     },
+    loadSelectedLibrariesFromIds(
+      state,
+      action: PayloadAction<{
+        libraries: SharedLibrary[]
+        selectedLibraryIds: number[]
+      }>
+    ) {
+      const { libraries, selectedLibraryIds } = action.payload
+      state.selectedLibraries = libraries.filter((library) =>
+        selectedLibraryIds.includes(library.id)
+      )
+    },
     updateSelectedModel(state, action: PayloadAction<string | null>) {
       state.selectedModel = action.payload
       const selectedEntry = state.pickerEntries.find(
@@ -1213,6 +1225,7 @@ export const {
   updateReferencedConversationHistoryLimit,
   updateReferencedSummaries,
   loadSelectedFilesFromIds,
+  loadSelectedLibrariesFromIds,
   saveDraftForConversation,
   loadDraftForConversation,
   clearDraftForConversation,

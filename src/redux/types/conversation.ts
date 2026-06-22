@@ -52,6 +52,7 @@ export interface Conversation {
   sortOrder?: number
   selectedEmbeddingIds?: number[]
   selectedFileIds?: number[]
+  selectedLibraryIds?: number[]
   selectedMcpServerIds?: number[] // MCP servers enabled for this conversation
   selectedDareToolSlugs?: string[] // DARE tools enabled for this conversation
   selectedAgent?: number | null // Agent template selected for this conversation

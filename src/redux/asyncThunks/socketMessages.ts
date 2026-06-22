@@ -77,7 +77,7 @@ export const sendSocketMessage = createAsyncThunk<
       media_ids: selectedMediaFiles.map((file) => file.id),
       tag_ids: selectedTags.map((tag) => tag.id),
       folder_ids: selectedFolders.map((folder) => folder.id),
-      library_ids: selectedLibraries.map((library) => library.id),
+      library_ids: (selectedLibraries || []).map((library) => library.id),
       use_memory: memoryEnabled,
       referenced_conversation_ids: referencedConversations.map(
         (conv) => conv.conversationId
