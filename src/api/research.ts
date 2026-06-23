@@ -6,6 +6,7 @@ import type {
   ChatMessage,
   CreateResearchProjectPayload,
   EvidenceGraph,
+  OkfBundle,
   ResearchProject,
   ResearchProjectsResponse,
   ReviewItem,
@@ -212,4 +213,80 @@ export const getResearchGraphAPI = async (
     url: `api/research/projects/${projectId}/graph/`,
     method: METHOD.GET,
   })
+}
+
+export interface ThesisSourceLink {
+  sourceId: number
+  stance: string
+}
+
+/** List the source links for a thesis (project-memory item). */
+export const getThesisSourceLinksAPI = async (
+  memoryId: number
+): Promise<ThesisSourceLink[]> => {
+  return await baseRequest<ThesisSourceLink[]>({
+    url: `api/research/theses/${memoryId}/sources/`,
+    method: METHOD.GET,
+  })
+}
+
+/** Link a source to a thesis with a stance (defaults to the source's evidence label). */
+export const addThesisSourceLinkAPI = async (
+  memoryId: number,
+  sourceId: number,
+  stance?: string
+): Promise<ThesisSourceLink> => {
+  return await baseRequest<ThesisSourceLink>({
+    url: `api/research/theses/${memoryId}/sources/`,
+    method: METHOD.POST,
+    data: { sourceId, stance },
+  })
+}
+
+/** Remove a source link from a thesis. */
+export const removeThesisSourceLinkAPI = async (
+  memoryId: number,
+  sourceId: number
+): Promise<void> => {
+  await baseRequest<void>({
+    url: `api/research/theses/${memoryId}/sources/${sourceId}/`,
+    method: METHOD.DELETE,
+  })
+}
+
+/** The project's durable knowledge as an OKF bundle (JSON) for the Maps viewer. */
+export const getResearchOkfBundleAPI = async (
+  projectId: number
+): Promise<OkfBundle> => {
+  return await baseRequest<OkfBundle>({
+    url: `api/research/projects/${projectId}/okf-bundle/`,
+    method: METHOD.GET,
+  })
+}
+
+/**
+ * Download the OKF bundle as a zip. Uses fetch (not an <a href>) so the JWT
+ * auth header can be sent, then triggers a client-side blob download.
+ */
+export const downloadOkfBundleAPI = async (
+  projectId: number
+): Promise<void> => {
+  const token = localStorage.getItem('token')
+  const response = await fetch(
+    `${config.apiUrl}/api/research/projects/${projectId}/okf-export/`,
+    { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+  )
+  if (!response.ok) throw new Error('Export failed')
+  const disposition = response.headers.get('Content-Disposition') || ''
+  const match = disposition.match(/filename="?([^"]+)"?/)
+  const filename = match ? match[1] : `project-${projectId}-okf.zip`
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(url)
 }

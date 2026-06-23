@@ -286,3 +286,40 @@ export interface EvidenceGraph {
   nodes: EvidenceGraphNode[]
   edges: EvidenceGraphEdge[]
 }
+
+/** One concept file in the project's OKF bundle (`GET .../okf-bundle/`). */
+export interface OkfBundleFile {
+  path: string
+  conceptId: string
+  kind: 'index' | 'log' | 'thesis' | 'source'
+  type: string
+  title: string
+  description: string
+  /** Verbatim YAML frontmatter — keys are snake_case as in the .md file. */
+  frontmatter: Record<string, unknown>
+  body: string
+  links: { to: string; text: string }[]
+  evidenceLabel: string
+  confidence: number | null
+}
+
+export interface OkfBundleGraphNode {
+  id: string
+  kind: 'thesis' | 'source'
+  type: string
+  label: string
+  evidenceLabel: string
+  confidence: number | null
+}
+
+export interface OkfBundleGraphEdge {
+  source: string
+  target: string
+  kind: 'cites'
+}
+
+/** The durable-knowledge bundle for the Maps tab's OKF viewer. */
+export interface OkfBundle {
+  files: OkfBundleFile[]
+  graph: { nodes: OkfBundleGraphNode[]; edges: OkfBundleGraphEdge[] }
+}
