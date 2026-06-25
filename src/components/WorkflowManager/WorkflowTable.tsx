@@ -65,6 +65,9 @@ import { Workflow } from '@/redux/types/workflow'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { openSharing } from '@/redux/sharingSlice'
 import { ShareableEntityType } from '@/redux/types/sharing'
+import { exportWorkflowAPI } from '@/api/workflows'
+import { triggerBrowserDownload } from '../Artifacts/download/fileDownload'
+import { toast } from '@/utils/toast'
 
 const LIBRARY_TABLE_HEAD = [
   'Title',
@@ -172,6 +175,19 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
         isForked: !!workflow.isForked,
       })
     )
+  }
+
+  const handleExport = async (id: number, title: string) => {
+    try {
+      const { blob, filename } = await exportWorkflowAPI(id)
+      const fallback = `${(title || 'workflow')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')}.dare.json`
+      triggerBrowserDownload(blob, filename || fallback)
+    } catch (error) {
+      toast.error((error as Error).message || 'Failed to export workflow.')
+    }
   }
 
   const handleForkClick = (id: number, title: string) => {
@@ -433,6 +449,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                     onClone={handleClone}
                     onDelete={handleDelete}
                     onSharing={handleSharing}
+                    onExport={handleExport}
                   />
                 ))
               )}
