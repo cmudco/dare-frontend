@@ -39,7 +39,9 @@ import {
   Tv,
   Car,
   Thermometer,
+  Route,
 } from 'lucide-react'
+import RetrievalTraceStages from './RetrievalTracePanel'
 import {
   formatEnergy,
   formatCarbon,
@@ -121,7 +123,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className='fixed top-0 right-0 bottom-0 mt-0 h-full w-[50vw] rounded-l-lg bg-white p-0 shadow-lg'>
+      <DrawerContent className='fixed top-0 right-0 bottom-0 mt-0 h-full w-[50vw] rounded-l-lg bg-background p-0 shadow-lg'>
         <ScrollArea className='h-full w-full'>
           <div className='p-4'>
             <DrawerHeader className='p-0 text-left'>
@@ -717,6 +719,21 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                     </CardContent>
                   </Card>
                 )}
+
+              {/* Retrieval Trace */}
+              {!isSenderMessage(message) && message.retrievalTrace && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className='flex items-center gap-2 text-lg'>
+                      <Route className='h-5 w-5' />
+                      Retrieval Trace
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <RetrievalTraceStages trace={message.retrievalTrace} />
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </ScrollArea>

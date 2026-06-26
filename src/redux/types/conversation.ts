@@ -116,6 +116,41 @@ export interface Message {
   mcpToolCalls?: ToolCall[]
   contentType?: MessageContentType
   contentMetadata?: Record<string, unknown>
+  /** Per-stage RAG pipeline trace, when retrieval ran with tracing enabled. */
+  retrievalTrace?: RetrievalTrace | null
+}
+
+/** One chunk as it appeared at a single RAG pipeline stage. */
+export interface RetrievalTraceEntry {
+  sourceRef: string
+  chunkIndex: number
+  score: number
+  rank: number
+  /** Rank at the previous stage, for showing rank movement (null if new/unranked). */
+  prevRank: number | null
+  preview: string
+}
+
+/** How an answer was retrieved, stage by stage (matches backend RetrievalTrace.to_payload). */
+export interface RetrievalTrace {
+  query: string
+  queryAnalysis: {
+    intent: string
+    keywords: string[]
+    /** Cleaned, disambiguated restatement embedded for the dense leg. */
+    rewrittenQuery?: string
+    /** HyDE: a hypothetical answer embedded instead of the bare question. */
+    hydePassage?: string
+  } | null
+  hybrid: { poolSize: number; topCandidates: RetrievalTraceEntry[] }
+  rerank: { applied: boolean; results: RetrievalTraceEntry[] }
+  mmr: { applied: boolean; reason: string }
+  grounding: {
+    answerFound: boolean
+    topScore: number
+    threshold: number
+  } | null
+  finalSize: number
 }
 
 /** Check if a message was sent by the user (not the AI). */
