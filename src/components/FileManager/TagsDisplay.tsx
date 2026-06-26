@@ -58,7 +58,7 @@ const TagsDisplay: React.FC<TagsDisplayProps> = ({
           <PopoverTrigger asChild>
             <Badge
               variant='gray'
-              className='cursor-pointer text-xs hover:bg-gray-200 dark:hover:bg-gray-700'
+              className='cursor-pointer text-xs hover:bg-accent'
             >
               +{remainingTags.length} more
             </Badge>

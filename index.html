@@ -19,6 +19,28 @@
     />
   </head>
   <body>
+    <!-- Apply persisted theme before first paint to avoid a flash; must run
+         after <body> exists since the theme attributes live on body. -->
+    <script>
+      ;(function () {
+        try {
+          var theme = localStorage.getItem('dare-theme-name') || 'default'
+          var mode =
+            localStorage.getItem('dare-theme-mode') ||
+            localStorage.getItem('dare-theme') ||
+            'light'
+          if (mode === 'system') {
+            mode = window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+          }
+          document.body.setAttribute('data-theme', theme)
+          if (mode === 'dark') document.body.classList.add('dark')
+        } catch (e) {
+          /* default theme stays applied */
+        }
+      })()
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

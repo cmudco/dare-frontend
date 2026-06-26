@@ -55,7 +55,7 @@ const FileManagerLayout = () => {
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='relative flex-grow overflow-auto p-8'>
+      <div className='relative grow overflow-auto p-8'>
         <div className='h-full w-full bg-transparent shadow-none'>
           <div className='px-0'>
             {currentView === 'files' && (
@@ -67,7 +67,7 @@ const FileManagerLayout = () => {
                     <button
                       className={`relative px-4 pb-3 text-sm font-medium transition-colors ${
                         activeTab === 'my-files'
-                          ? 'text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary'
+                          ? 'text-foreground after:absolute after:right-0 after:bottom-0 after:left-0 after:h-0.5 after:bg-primary'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                       onClick={() => handleTabChange('my-files')}
@@ -77,7 +77,7 @@ const FileManagerLayout = () => {
                     <button
                       className={`relative flex items-center gap-2 px-4 pb-3 text-sm font-medium transition-colors ${
                         activeTab === 'shared'
-                          ? 'text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary'
+                          ? 'text-foreground after:absolute after:right-0 after:bottom-0 after:left-0 after:h-0.5 after:bg-primary'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                       onClick={() => handleTabChange('shared')}

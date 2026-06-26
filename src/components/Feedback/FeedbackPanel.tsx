@@ -66,7 +66,7 @@ export function FeedbackPanel({
           initial='hidden'
           animate='visible'
           exit='exit'
-          className='fixed bottom-24 right-6 z-50 w-[400px] max-w-[calc(100vw-48px)]'
+          className='fixed right-6 bottom-24 z-50 w-[400px] max-w-[calc(100vw-48px)]'
         >
           {/* Glass morphism panel */}
           <motion.div
@@ -76,7 +76,7 @@ export function FeedbackPanel({
             className='relative rounded-2xl shadow-2xl shadow-black/40'
           >
             {/* Backdrop blur layer */}
-            <div className='absolute inset-0 rounded-2xl bg-background/95 backdrop-blur-xl dark:bg-[#030a12]/95' />
+            <div className='absolute inset-0 rounded-2xl bg-background/95 backdrop-blur-xl' />
 
             {/* Gradient overlay - consistent dare-gradient */}
             <motion.div

@@ -19,7 +19,7 @@ const BudgetCard = ({ groupWallet, accessCode }: BudgetCardProps) => {
 
   return (
     <Card className='overflow-hidden'>
-      <div className='h-1 w-full bg-gradient-to-r from-teal-500 to-cyan-500' />
+      <div className='h-1 w-full bg-linear-to-r from-teal-500 to-cyan-500' />
       <CardHeader className='pb-2'>
         <div className='flex items-center justify-between'>
           <CardTitle className='text-lg font-medium'>Group Budget</CardTitle>

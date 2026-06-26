@@ -94,7 +94,7 @@ const NotificationPopover: React.FC = () => {
   const getNotificationIcon = (category: NotificationCategory) => {
     switch (category) {
       case NotificationCategory.DESTRUCTIVE:
-        return <AlertTriangle className='h-3 w-3 text-red-500' />
+        return <AlertTriangle className='h-3 w-3 text-destructive' />
       case NotificationCategory.WARNING:
         return <AlertTriangle className='h-3 w-3 text-yellow-500' />
       case NotificationCategory.SUCCESS:
@@ -102,7 +102,7 @@ const NotificationPopover: React.FC = () => {
       case NotificationCategory.INFO:
         return <Info className='h-3 w-3 text-blue-500' />
       default:
-        return <Info className='h-3 w-3 text-gray-500' />
+        return <Info className='h-3 w-3 text-muted-foreground' />
     }
   }
 
@@ -122,7 +122,7 @@ const NotificationPopover: React.FC = () => {
           {unreadCount > 0 && (
             <Badge
               variant='destructive'
-              className='absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs font-medium'
+              className='absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs font-medium'
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
@@ -190,17 +190,17 @@ const NotificationPopover: React.FC = () => {
                 >
                   {notification.effectiveStatus ===
                     NotificationStatus.UNREAD && (
-                    <div className='absolute left-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-blue-500' />
+                    <div className='absolute top-1/2 left-2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-blue-500' />
                   )}
 
                   <div className='flex items-start gap-3'>
-                    <div className='mt-0.5 flex-shrink-0'>
+                    <div className='mt-0.5 shrink-0'>
                       {getNotificationIcon(notification.category)}
                     </div>
 
                     <div className='min-w-0 flex-1'>
                       <div className='mb-1 flex items-center justify-between gap-2'>
-                        <p className='line-clamp-1 text-sm font-medium leading-tight'>
+                        <p className='line-clamp-1 text-sm leading-tight font-medium'>
                           {notification.title}
                         </p>
                         {notification.effectiveStatus ===
@@ -208,7 +208,7 @@ const NotificationPopover: React.FC = () => {
                           <Button
                             variant='ghost'
                             size='sm'
-                            className='h-6 w-6 p-0 text-muted-foreground opacity-0 hover:text-foreground group-hover:opacity-100'
+                            className='h-6 w-6 p-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground'
                             onClick={(e) =>
                               handleMarkAsRead(e, notification.id)
                             }

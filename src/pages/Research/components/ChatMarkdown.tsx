@@ -11,7 +11,7 @@ import ChatArtifactCard from './ChatArtifactCard'
 // diagram, raw SVG/HTML/Excalidraw payloads -> a compact artifact card,
 // other languages -> highlighted code, plus tables/links/raw HTML.
 const ChatMarkdown = ({ content }: { content: string }) => (
-  <div className='prose prose-sm max-w-none break-words dark:prose-invert'>
+  <div className='prose prose-sm max-w-none wrap-break-word dark:prose-invert'>
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeHighlight, rehypeRaw]}
@@ -44,7 +44,7 @@ const ChatMarkdown = ({ content }: { content: string }) => (
           }
           return (
             <code
-              className='not-prose break-all rounded border border-border bg-muted px-1 text-foreground'
+              className='not-prose rounded-sm border border-border bg-muted px-1 break-all text-foreground'
               {...props}
             >
               {children}

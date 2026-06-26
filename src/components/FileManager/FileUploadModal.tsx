@@ -148,15 +148,15 @@ const FileUploadModal: React.FC = () => {
         }
       }}
     >
-      <DialogContent className='mx-auto w-[90vw] max-w-md rounded-lg bg-background bg-white p-6 shadow-lg'>
+      <DialogContent className='mx-auto w-[90vw] max-w-md rounded-lg bg-card p-6 shadow-lg'>
         {/* Header */}
         <DialogHeader>
           <div className='flex items-start justify-between gap-3'>
             <div>
-              <DialogTitle className='text-lg font-semibold text-gray-900 dark:text-white'>
+              <DialogTitle className='text-lg font-semibold text-foreground'>
                 File Upload
               </DialogTitle>
-              <DialogDescription className='text-sm text-gray-500 dark:text-dark-icon-unselected'>
+              <DialogDescription className='text-sm text-muted-foreground'>
                 Upload multiple files and add tags to categorize them.
               </DialogDescription>
             </div>
@@ -170,7 +170,7 @@ const FileUploadModal: React.FC = () => {
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='text-gray-600 hover:text-gray-900 dark:text-dark-icon-unselected dark:hover:text-white'
+                  className='text-muted-foreground hover:text-foreground'
                   aria-label='Adjust chunk settings'
                 >
                   <Settings className='h-5 w-5' />
@@ -184,10 +184,10 @@ const FileUploadModal: React.FC = () => {
                 onCloseAutoFocus={(event) => event.preventDefault()}
               >
                 <div>
-                  <h3 className='text-sm font-semibold text-gray-900 dark:text-white'>
+                  <h3 className='text-sm font-semibold text-foreground'>
                     Chunk settings
                   </h3>
-                  <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+                  <p className='mt-1 text-xs text-muted-foreground'>
                     Control how your documents are split into chunks for
                     retrieval.
                   </p>
@@ -207,16 +207,16 @@ const FileUploadModal: React.FC = () => {
                 dispatch(updateTagChange(parseInt(value)))
               }
             >
-              <SelectTrigger className='w-full bg-background dark:border-gray-700 dark:text-white'>
+              <SelectTrigger className='w-full bg-background'>
                 <SelectValue placeholder='Add Tags' />
               </SelectTrigger>
-              <SelectContent className='bg-background dark:border-gray-700'>
+              <SelectContent className='bg-background'>
                 {Array.isArray(tags) && tags.length > 0 ? (
                   tags.map((tag) => (
                     <SelectItem
                       key={tag.id}
                       value={String(tag.id)}
-                      className='dark:text-white dark:hover:bg-white/10'
+                      className='hover:bg-accent'
                     >
                       {tag.label}
                     </SelectItem>
@@ -225,7 +225,7 @@ const FileUploadModal: React.FC = () => {
                   <SelectItem
                     value='no-tags'
                     disabled
-                    className='dark:text-gray-400'
+                    className='text-muted-foreground'
                   >
                     No tags available
                   </SelectItem>
@@ -278,8 +278,8 @@ const FileUploadModal: React.FC = () => {
           <div
             className={`border-2 border-dashed ${
               error
-                ? 'border-red-300 bg-red-50 dark:border-red-500 dark:bg-red-900/20'
-                : 'border-gray-300 bg-gray-50 hover:bg-gray-100 dark:border-dark-icon-unselected dark:bg-black/20 dark:hover:bg-white/10'
+                ? 'border-destructive/50 bg-destructive/10'
+                : 'border-border bg-muted hover:bg-accent'
             } cursor-pointer rounded-lg p-4 text-center transition`}
             onClick={() => document.getElementById('fileInput')?.click()}
             onDrop={handleDrop}
@@ -291,7 +291,7 @@ const FileUploadModal: React.FC = () => {
                 <span className='text-sm font-medium text-green-700 dark:text-green-300'>
                   {selectedFiles.length} file(s) ready to upload
                 </span>
-                <ul className='max-h-24 w-full overflow-auto text-xs text-gray-600 dark:text-gray-300'>
+                <ul className='max-h-24 w-full overflow-auto text-xs text-muted-foreground'>
                   {selectedFiles.map((file, index) => (
                     <li key={index}>{file.name}</li>
                   ))}
@@ -299,13 +299,13 @@ const FileUploadModal: React.FC = () => {
               </div>
             ) : error ? (
               <div className='flex items-center justify-center space-x-2'>
-                <XMarkIcon className='h-6 w-6 text-red-600 dark:text-red-400' />
-                <span className='text-sm font-medium text-red-700 dark:text-red-300'>
+                <XMarkIcon className='h-6 w-6 text-destructive' />
+                <span className='text-sm font-medium text-destructive'>
                   File(s) not uploaded
                 </span>
               </div>
             ) : (
-              <div className='font-medium text-gray-600 dark:text-gray-300'>
+              <div className='font-medium text-muted-foreground'>
                 Drop your files here or{' '}
                 <span className='text-blue-600 dark:text-blue-400'>browse</span>
               </div>
@@ -318,12 +318,12 @@ const FileUploadModal: React.FC = () => {
               onChange={handleFileChange}
               className='hidden'
             />
-            <span className='mt-2 block text-xs text-gray-500 dark:text-gray-400'>
+            <span className='mt-2 block text-xs text-muted-foreground'>
               Maximum size per file: {MAX_FILE_SIZE_MB} MB
             </span>
           </div>
           {fileErrors.length > 0 && (
-            <div className='text-center text-sm text-red-500 dark:text-red-400'>
+            <div className='text-center text-sm text-destructive'>
               <p>Some files were discarded due to errors:</p>
               <ul className='max-h-24 w-full list-inside list-disc overflow-auto'>
                 {fileErrors.map((err, index) => (
@@ -332,7 +332,7 @@ const FileUploadModal: React.FC = () => {
               </ul>
             </div>
           )}
-          <div className='flex items-center justify-between text-xs text-gray-500 dark:text-gray-400'>
+          <div className='flex items-center justify-between text-xs text-muted-foreground'>
             <span>
               Chunk size: {chunkSettings?.chunkSize ?? 1000}, overlap:{' '}
               {chunkSettings?.overlapSize ?? 20}
@@ -341,7 +341,7 @@ const FileUploadModal: React.FC = () => {
               <PopoverTrigger asChild>
                 <button
                   type='button'
-                  className='rounded-md p-1 hover:bg-gray-200 dark:hover:bg-white/10'
+                  className='rounded-md p-1 hover:bg-accent'
                   aria-label='Learn about chunking'
                 >
                   <Info className='h-4 w-4' />
@@ -367,9 +367,7 @@ const FileUploadModal: React.FC = () => {
             </Popover>
           </div>
           {error && (
-            <div className='text-center text-sm text-red-500 dark:text-red-400'>
-              {error}
-            </div>
+            <div className='text-center text-sm text-destructive'>{error}</div>
           )}
         </div>
 

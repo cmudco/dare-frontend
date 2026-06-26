@@ -18,24 +18,24 @@ const ZoomControls: React.FC<ZoomControlsProps> = ({
   onZoomOut,
   onReset,
 }) => (
-  <div className='absolute right-2 top-2 z-10 flex gap-1 rounded-lg bg-white/90 p-1 shadow-md backdrop-blur-sm dark:bg-gray-800/90'>
+  <div className='absolute top-2 right-2 z-10 flex gap-1 rounded-lg bg-card/90 p-1 shadow-md backdrop-blur-xs'>
     <button
       onClick={onZoomIn}
-      className='rounded p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+      className='rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
       title='Zoom in'
     >
       <MagnifyingGlassPlusIcon className='h-4 w-4' />
     </button>
     <button
       onClick={onZoomOut}
-      className='rounded p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+      className='rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
       title='Zoom out'
     >
       <MagnifyingGlassMinusIcon className='h-4 w-4' />
     </button>
     <button
       onClick={onReset}
-      className='rounded p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+      className='rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
       title='Reset view'
     >
       <ArrowsPointingOutIcon className='h-4 w-4' />
@@ -105,7 +105,7 @@ export const MermaidBlock: React.FC<{
         </div>
         <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
         {showRaw && (
-          <pre className='mt-2 max-h-40 overflow-auto rounded bg-gray-800 p-2 text-xs text-gray-200'>
+          <pre className='mt-2 max-h-40 overflow-auto rounded-sm bg-muted p-2 text-xs text-foreground'>
             {code}
           </pre>
         )}
@@ -115,8 +115,8 @@ export const MermaidBlock: React.FC<{
 
   if (!svg) {
     return (
-      <div className='not-prose my-4 flex items-center gap-2 text-gray-500'>
-        <div className='h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500' />
+      <div className='not-prose my-4 flex items-center gap-2 text-muted-foreground'>
+        <div className='h-4 w-4 animate-spin rounded-full border-2 border-border border-t-blue-500' />
         Loading diagram...
       </div>
     )
@@ -125,7 +125,7 @@ export const MermaidBlock: React.FC<{
   return (
     <div
       ref={containerRef}
-      className='not-prose group relative my-4 h-[500px] overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'
+      className='not-prose group relative my-4 h-[500px] overflow-hidden rounded-lg border border-border bg-card'
     >
       <TransformWrapper
         initialScale={1.5}
@@ -165,7 +165,7 @@ export const MermaidBlock: React.FC<{
             </TransformComponent>
 
             {/* Hint text */}
-            <div className='absolute bottom-2 left-2 rounded bg-gray-900/60 px-2 py-1 text-xs text-gray-300 opacity-0 transition-opacity group-hover:opacity-100'>
+            <div className='absolute bottom-2 left-2 rounded-sm bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100'>
               Scroll to zoom • Drag to pan • Double-click to reset
             </div>
           </>

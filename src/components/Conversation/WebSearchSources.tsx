@@ -70,14 +70,14 @@ const WebSearchSources: React.FC<WebSearchSourcesProps> = ({ sources }) => {
                     <span className='truncate'>
                       {source.title || getDomain(source.url)}
                     </span>
-                    <ExternalLink className='h-3 w-3 flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100' />
+                    <ExternalLink className='h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100' />
                   </a>
                   <p className='mt-0.5 truncate text-xs text-muted-foreground'>
                     {getDomain(source.url)}
                   </p>
                 </div>
 
-                <div className='flex flex-shrink-0 flex-wrap items-center gap-2'>
+                <div className='flex shrink-0 flex-wrap items-center gap-2'>
                   {source.pageAge && (
                     <span className='text-xs text-muted-foreground'>
                       {source.pageAge}
@@ -86,7 +86,7 @@ const WebSearchSources: React.FC<WebSearchSourcesProps> = ({ sources }) => {
                   <span
                     className={`rounded px-1.5 py-0.5 text-xs font-medium ${
                       providerColors[source.provider] ||
-                      'bg-gray-100 text-gray-700'
+                      'bg-muted text-muted-foreground'
                     }`}
                   >
                     {source.provider}
@@ -95,8 +95,8 @@ const WebSearchSources: React.FC<WebSearchSourcesProps> = ({ sources }) => {
               </div>
 
               {source.citedText && (
-                <div className='mt-2 flex items-start gap-2 rounded border-l-2 border-muted-foreground/30 bg-background/50 p-2'>
-                  <Quote className='mt-0.5 h-3 w-3 flex-shrink-0 text-muted-foreground' />
+                <div className='mt-2 flex items-start gap-2 rounded-sm border-l-2 border-muted-foreground/30 bg-background/50 p-2'>
+                  <Quote className='mt-0.5 h-3 w-3 shrink-0 text-muted-foreground' />
                   <p className='line-clamp-3 text-xs text-muted-foreground'>
                     {source.citedText}
                   </p>

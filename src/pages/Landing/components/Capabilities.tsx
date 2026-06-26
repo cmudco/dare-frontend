@@ -77,7 +77,7 @@ const ORBIT_RADIUS = '6.25rem'
  */
 const OrbitingModelsVisual: React.FC = () => {
   return (
-    <div className='relative mt-auto flex min-h-[16rem] items-center justify-center overflow-hidden pt-6'>
+    <div className='relative mt-auto flex min-h-64 items-center justify-center overflow-hidden pt-6'>
       <style>
         {`
           @keyframes dare-provider-orbit {
@@ -91,13 +91,13 @@ const OrbitingModelsVisual: React.FC = () => {
       </style>
 
       {/* Guide rings */}
-      <div className='absolute h-[12.5rem] w-[12.5rem] rounded-full border border-border/60' />
-      <div className='absolute h-[8.5rem] w-[8.5rem] rounded-full border border-border/50' />
+      <div className='absolute h-50 w-50 rounded-full border border-border/60' />
+      <div className='absolute h-34 w-34 rounded-full border border-border/50' />
 
       {/* Gateway hub — the real shield mark */}
-      <div className='relative z-10 flex h-[4.75rem] w-[4.75rem] flex-col items-center justify-center gap-1 rounded-full border border-dare/25 bg-background shadow-sm'>
+      <div className='relative z-10 flex h-19 w-19 flex-col items-center justify-center gap-1 rounded-full border border-dare/25 bg-background shadow-xs'>
         <img src='/icons/Logo.png' alt='' aria-hidden className='w-8' />
-        <span className='font-mono text-[0.5rem] uppercase tracking-[0.16em] text-dare'>
+        <span className='font-mono text-[0.5rem] tracking-[0.16em] text-dare uppercase'>
           Gateway
         </span>
       </div>
@@ -106,7 +106,7 @@ const OrbitingModelsVisual: React.FC = () => {
       {PROVIDERS.map((p, i) => (
         <div
           key={p.name}
-          className='dare-orbit-badge absolute left-1/2 top-1/2 z-20'
+          className='dare-orbit-badge absolute top-1/2 left-1/2 z-20'
           style={
             {
               '--orbit-start': `${(360 / PROVIDERS.length) * i}deg`,
@@ -116,7 +116,7 @@ const OrbitingModelsVisual: React.FC = () => {
           }
         >
           <div
-            className='flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white shadow-sm'
+            className='flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white shadow-xs'
             title={p.name}
             aria-label={p.name}
           >
@@ -156,10 +156,9 @@ export const Capabilities: React.FC = () => {
             <article
               key={title}
               className={cn(
-                'group relative flex min-h-[15.5rem] flex-col rounded-2xl border border-border bg-card p-6 transition-colors hover:border-dare/30',
+                'group relative flex min-h-62 flex-col rounded-2xl border border-border bg-card p-6 transition-colors hover:border-dare/30',
                 span,
-                feature &&
-                  'bg-gradient-to-br from-card to-muted/40 sm:col-span-2'
+                feature && 'bg-linear-to-br from-card to-muted/40 sm:col-span-2'
               )}
             >
               <span

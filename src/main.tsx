@@ -3,6 +3,7 @@ import './index.css'
 import App from './App.tsx'
 import { Provider } from 'react-redux'
 import { store } from './redux/store.ts'
+import { ThemeProvider } from './providers/ThemeProvider.tsx'
 import * as Sentry from '@sentry/react'
 
 Sentry.init({
@@ -24,7 +25,9 @@ Sentry.init({
 createRoot(document.getElementById('root')!).render(
   <Sentry.ErrorBoundary fallback={<p>An error has occurred</p>}>
     <Provider store={store}>
-      <App />
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
     </Provider>
   </Sentry.ErrorBoundary>
 )

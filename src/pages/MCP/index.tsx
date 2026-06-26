@@ -201,7 +201,7 @@ const MCPPlayground = () => {
                       <div className='flex items-center gap-2'>
                         <span className='font-medium'>{server.name}</span>
                         {isConnected && (
-                          <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900 dark:text-green-300'>
+                          <span className='rounded-sm bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900 dark:text-green-300'>
                             Connected
                           </span>
                         )}

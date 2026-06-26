@@ -99,14 +99,14 @@ const ContextPanel = ({
                 <div className='mb-2 flex items-center justify-between'>
                   <span className='text-xs font-medium'>Soul file</span>
                   {soulFile && (
-                    <span className='rounded bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground'>
+                    <span className='rounded-sm bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground'>
                       v{soulFile.version} ·{' '}
                       {formatRelativeDate(soulFile.updatedAt)}
                     </span>
                   )}
                 </div>
                 {soulFile && soulFile.content.trim() ? (
-                  <p className='line-clamp-[8] whitespace-pre-line text-xs text-foreground/80'>
+                  <p className='line-clamp-8 text-xs whitespace-pre-line text-foreground/80'>
                     {soulFile.content}
                   </p>
                 ) : (
@@ -136,7 +136,7 @@ const Block = ({
   children: React.ReactNode
 }) => (
   <div>
-    <p className='mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+    <p className='mb-2 flex items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase'>
       {icon}
       {label}
     </p>

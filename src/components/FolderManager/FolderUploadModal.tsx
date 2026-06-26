@@ -216,12 +216,12 @@ const FolderUploadModal: React.FC<FolderUploadModalProps> = ({
         }
       }}
     >
-      <DialogContent className='mx-auto w-[90vw] max-w-md rounded-lg bg-white p-6 shadow-lg'>
+      <DialogContent className='mx-auto w-[90vw] max-w-md rounded-lg bg-card p-6 shadow-lg'>
         <DialogHeader>
-          <DialogTitle className='text-lg font-semibold text-gray-900'>
+          <DialogTitle className='text-lg font-semibold text-foreground'>
             Folder Upload
           </DialogTitle>
-          <DialogDescription className='text-sm text-gray-500'>
+          <DialogDescription className='text-sm text-muted-foreground'>
             Upload a folder with multiple files.
           </DialogDescription>
         </DialogHeader>
@@ -242,7 +242,7 @@ const FolderUploadModal: React.FC<FolderUploadModalProps> = ({
             className={`border-2 border-dashed ${
               error
                 ? 'border-red-300 bg-red-50'
-                : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                : 'border-border bg-muted hover:bg-accent'
             } cursor-pointer rounded-lg p-4 text-center transition`}
             onClick={() => folderInputRef.current?.click()}
             onDrop={handleDrop}
@@ -254,7 +254,7 @@ const FolderUploadModal: React.FC<FolderUploadModalProps> = ({
                 <span className='text-sm font-medium text-green-700'>
                   {selectedFiles.length} file(s) ready to upload
                 </span>
-                <ul className='max-h-24 w-full overflow-auto text-xs text-gray-600'>
+                <ul className='max-h-24 w-full overflow-auto text-xs text-muted-foreground'>
                   {selectedFiles.map((file, index) => (
                     <li key={index}>{file.name}</li>
                   ))}
@@ -268,12 +268,12 @@ const FolderUploadModal: React.FC<FolderUploadModalProps> = ({
                 </span>
               </div>
             ) : (
-              <div className='font-medium text-gray-600'>
+              <div className='font-medium text-muted-foreground'>
                 <div>
                   Drop your folder here or{' '}
                   <span className='text-blue-600'>browse</span>
                 </div>
-                <div className='mt-1 text-xs text-gray-500'>
+                <div className='mt-1 text-xs text-muted-foreground'>
                   Select a folder to upload all its files at once
                 </div>
               </div>
@@ -285,7 +285,7 @@ const FolderUploadModal: React.FC<FolderUploadModalProps> = ({
               onChange={handleFileChange}
               className='hidden'
             />
-            <span className='mt-2 block text-xs text-gray-500'>
+            <span className='mt-2 block text-xs text-muted-foreground'>
               Maximum size per file: {MAX_FILE_SIZE_MB} MB
             </span>
           </div>

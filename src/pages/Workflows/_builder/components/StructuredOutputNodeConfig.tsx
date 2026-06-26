@@ -211,7 +211,7 @@ export default function StructuredOutputNodeConfig({
         {routes.map((route, index) => (
           <div
             key={index}
-            className='space-y-2 rounded-md border border-muted bg-white/80 p-3 dark:bg-background/50'
+            className='space-y-2 rounded-md border border-muted bg-card/80 p-3'
           >
             <div className='flex items-center justify-between'>
               <Label className='text-xs text-muted-foreground'>

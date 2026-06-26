@@ -1,9 +1,11 @@
 import React from 'react'
+import { useSelector } from 'react-redux'
 import {
   SandpackProvider,
   SandpackPreview,
   useSandpack,
 } from '@codesandbox/sandpack-react'
+import { selectResolvedMode } from '@/redux/themeSlice'
 
 interface SandpackRendererProps {
   code: string
@@ -21,10 +23,12 @@ const LoadingOverlay: React.FC = () => {
   if (!isLoading) return null
 
   return (
-    <div className='absolute inset-0 z-10 flex items-center justify-center bg-neutral-950'>
+    <div className='absolute inset-0 z-10 flex items-center justify-center bg-background'>
       <div className='flex flex-col items-center gap-3'>
-        <div className='h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent' />
-        <span className='text-sm text-neutral-400'>Loading component...</span>
+        <div className='h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+        <span className='text-sm text-muted-foreground'>
+          Loading component...
+        </span>
       </div>
     </div>
   )
@@ -43,6 +47,7 @@ export const SandpackRenderer: React.FC<SandpackRendererProps> = ({
   code,
   title: _title, // eslint-disable-line @typescript-eslint/no-unused-vars
 }) => {
+  const resolvedMode = useSelector(selectResolvedMode)
   return (
     <div className='relative h-full min-w-0' style={{ minHeight: '100%' }}>
       <style>{`
@@ -56,7 +61,7 @@ export const SandpackRenderer: React.FC<SandpackRendererProps> = ({
       `}</style>
       <SandpackProvider
         template='react'
-        theme='dark'
+        theme={resolvedMode}
         files={{
           '/App.js': code,
         }}

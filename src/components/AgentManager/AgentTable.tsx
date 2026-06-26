@@ -101,16 +101,14 @@ const AgentTable = ({ searchQuery }: AgentTableProps) => {
 
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max bg-background bg-white text-left'>
+      <Table className='mt-4 w-full min-w-max bg-background text-left'>
         <TableHeader>
           <TableRow className='bg-background'>
             {AGENTS_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 dark:text-white ${
-                  head !== 'Action'
-                    ? 'hover:bg-gray-100 hover:opacity-100 dark:hover:bg-gray-700'
-                    : ''
+                className={`cursor-pointer p-4 text-sm font-semibold text-foreground transition-colors duration-150 select-none ${
+                  head !== 'Action' ? 'hover:bg-accent hover:opacity-100' : ''
                 }`}
                 onClick={() => head !== 'Action' && handleSort(head)}
               >
@@ -142,7 +140,7 @@ const AgentTable = ({ searchQuery }: AgentTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={AGENTS_TABLE_HEAD.length}
-                className='p-4 text-center dark:text-white'
+                className='p-4 text-center text-foreground'
               >
                 Loading agents...
               </TableCell>
@@ -151,43 +149,43 @@ const AgentTable = ({ searchQuery }: AgentTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={AGENTS_TABLE_HEAD.length}
-                className='p-4 text-center dark:text-white'
+                className='p-4 text-center text-foreground'
               >
                 No matching agents found
               </TableCell>
             </TableRow>
           ) : (
             paginatedAgents.map((agent) => (
-              <TableRow key={agent.id} className='dark:border-gray-700'>
+              <TableRow key={agent.id} className='border-border'>
                 <TableCell className='p-4'>
                   <div>
                     <div className='flex items-center gap-2'>
-                      <h3 className='font-medium dark:text-white'>
+                      <h3 className='font-medium text-foreground'>
                         {agent.name || 'Untitled'}
                       </h3>
                     </div>
-                    <p className='max-w-[300px] truncate text-sm text-gray-500 dark:text-gray-400'>
+                    <p className='max-w-[300px] truncate text-sm text-muted-foreground'>
                       {agent.description || 'No description'}
                     </p>
                   </div>
                 </TableCell>
-                <TableCell className='p-4 dark:text-white'>
+                <TableCell className='p-4 text-foreground'>
                   <span className='inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400'>
                     {agent.promptTitle || 'Unknown'}
                   </span>
                 </TableCell>
-                <TableCell className='p-4 dark:text-white'>
+                <TableCell className='p-4 text-foreground'>
                   <span className='inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'>
                     {agent.temperature ? agent.temperature.toFixed(2) : 'N/A'}
                   </span>
                 </TableCell>
-                <TableCell className='p-4 dark:text-white'>
+                <TableCell className='p-4 text-foreground'>
                   {formatDate(agent.createdAt)}
                 </TableCell>
                 <TableCell className='p-4 text-center'>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200 dark:hover:bg-gray-700'>
-                      <EllipsisVerticalIcon className='h-4 w-4 text-gray-500 dark:text-gray-400' />
+                    <DropdownMenuTrigger className='rounded-md p-2 hover:bg-accent'>
+                      <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem
@@ -219,37 +217,28 @@ const AgentTable = ({ searchQuery }: AgentTableProps) => {
             <TableRow className='bg-background'>
               <TableCell
                 colSpan={AGENTS_TABLE_HEAD.length}
-                className='w-full p-4 dark:text-white'
+                className='w-full p-4 text-foreground'
               >
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
-                    <span className='text-sm dark:text-white'>
+                    <span className='text-sm text-foreground'>
                       Rows per page:
                     </span>
                     <Select
                       value={String(itemsPerPage)}
                       onValueChange={(val) => setItemsPerPage(Number(val))}
                     >
-                      <SelectTrigger className='w-[80px] bg-background dark:border-gray-700 dark:text-white'>
+                      <SelectTrigger className='w-[80px] bg-background'>
                         <SelectValue placeholder='Rows' />
                       </SelectTrigger>
-                      <SelectContent className='bg-background dark:border-gray-700'>
-                        <SelectItem
-                          value='5'
-                          className='dark:text-white dark:hover:bg-white/10'
-                        >
+                      <SelectContent className='bg-background'>
+                        <SelectItem value='5' className='hover:bg-accent'>
                           5
                         </SelectItem>
-                        <SelectItem
-                          value='10'
-                          className='dark:text-white dark:hover:bg-white/10'
-                        >
+                        <SelectItem value='10' className='hover:bg-accent'>
                           10
                         </SelectItem>
-                        <SelectItem
-                          value='20'
-                          className='dark:text-white dark:hover:bg-white/10'
-                        >
+                        <SelectItem value='20' className='hover:bg-accent'>
                           20
                         </SelectItem>
                       </SelectContent>
@@ -265,7 +254,7 @@ const AgentTable = ({ searchQuery }: AgentTableProps) => {
                     >
                       Previous
                     </Button>
-                    <span className='text-sm dark:text-white'>
+                    <span className='text-sm text-foreground'>
                       Page {currentPage} of {totalPages || 1}
                     </span>
                     <Button

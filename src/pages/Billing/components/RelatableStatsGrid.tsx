@@ -17,7 +17,7 @@ const relatableItems = [
   {
     key: 'phone',
     emoji: '📱',
-    bgColor: 'bg-slate-500/10',
+    bgColor: 'bg-muted',
     label: 'iPhone charge',
     format: (s: RelatableStats) => formatPhoneBattery(s.phoneBatteryPct),
   },
@@ -76,7 +76,7 @@ const RelatableStatsGrid: React.FC<RelatableStatsGridProps> = ({ stats }) => {
           viewport={{ once: true }}
           transition={{ duration: 0.3, delay: index * 0.05 }}
         >
-          <Card className='group h-full border-slate-200/50 bg-white/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/90 hover:shadow-lg dark:border-slate-800/50 dark:bg-slate-900/40 dark:hover:bg-slate-900/90'>
+          <Card className='group h-full border-border/50 bg-card/40 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:bg-card/90 hover:shadow-lg'>
             <CardContent className='flex flex-col items-center justify-center p-4 text-center'>
               <div
                 className={`mb-3 flex items-center justify-center rounded-xl p-2.5 text-2xl transition-transform duration-300 group-hover:scale-125 ${bgColor}`}
@@ -87,11 +87,11 @@ const RelatableStatsGrid: React.FC<RelatableStatsGridProps> = ({ stats }) => {
                 {!stats ? (
                   <Skeleton className='mx-auto mb-1 h-5 w-16' />
                 ) : (
-                  <p className='text-sm font-black tracking-tight text-slate-900 dark:text-slate-100'>
+                  <p className='text-sm font-black tracking-tight text-foreground'>
                     {format(stats)}
                   </p>
                 )}
-                <p className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 transition-colors group-hover:text-muted-foreground'>
+                <p className='text-[10px] font-bold tracking-widest text-muted-foreground/60 uppercase transition-colors group-hover:text-muted-foreground'>
                   {label}
                 </p>
               </div>

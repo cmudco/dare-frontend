@@ -126,12 +126,12 @@ const SharedFilesTable = () => {
           <TableRow className='bg-muted'>
             <TableHead
               key='select-all'
-              className='w-[50px] cursor-pointer select-none p-4 text-sm font-semibold transition-colors dark:text-white'
+              className='w-[50px] cursor-pointer p-4 text-sm font-semibold text-foreground transition-colors select-none'
             >
               <div className='flex items-center justify-center'>
                 <input
                   type='checkbox'
-                  className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
+                  className='h-4 w-4 rounded-sm border-border text-primary focus:ring-primary'
                   disabled
                 />
               </div>
@@ -139,7 +139,7 @@ const SharedFilesTable = () => {
             {SHARED_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 dark:text-white ${head !== 'Action' ? 'hover:bg-gray-100 hover:opacity-100 dark:hover:bg-gray-700' : ''}`}
+                className={`cursor-pointer p-4 text-sm font-semibold text-foreground transition-colors duration-150 select-none ${head !== 'Action' ? 'hover:bg-accent hover:opacity-100' : ''}`}
                 onClick={() => head !== 'Action' && handleSort(head)}
               >
                 <div className='flex items-center gap-2 opacity-70'>
@@ -198,7 +198,7 @@ const SharedFilesTable = () => {
                   <TableCell className='w-[50px] p-4 text-center'>
                     <input
                       type='checkbox'
-                      className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
+                      className='h-4 w-4 rounded-sm border-border text-primary focus:ring-primary'
                       disabled
                     />
                   </TableCell>
@@ -224,7 +224,7 @@ const SharedFilesTable = () => {
                   <TableCell className='p-4'>
                     {sharedBy ? (
                       <div className='flex items-center gap-2'>
-                        <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-400 text-xs font-semibold text-white'>
+                        <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted-foreground text-xs font-semibold text-background'>
                           {sharedBy.initials}
                         </div>
                         <span className='text-sm'>{sharedBy.name}</span>
@@ -243,8 +243,8 @@ const SharedFilesTable = () => {
                   </TableCell>
                   <TableCell className='p-4 text-center'>
                     <DropdownMenu>
-                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
-                        <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
+                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-accent'>
+                        <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem
@@ -279,40 +279,31 @@ const SharedFilesTable = () => {
 
         {sortedFiles.length > 0 && (
           <TableFooter>
-            <TableRow className='dark:bg-gray-800/50'>
+            <TableRow className='bg-muted/50'>
               <TableCell
                 colSpan={SHARED_TABLE_HEAD.length + 1}
-                className='w-full p-4 dark:text-white'
+                className='w-full p-4 text-foreground'
               >
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
-                    <span className='text-sm dark:text-white'>
+                    <span className='text-sm text-foreground'>
                       Rows per page:
                     </span>
                     <Select
                       value={String(itemsPerPage)}
                       onValueChange={(val) => setItemsPerPage(Number(val))}
                     >
-                      <SelectTrigger className='w-[80px] bg-background dark:border-gray-700 dark:text-white'>
+                      <SelectTrigger className='w-[80px] bg-background'>
                         <SelectValue placeholder='Rows' />
                       </SelectTrigger>
-                      <SelectContent className='bg-background dark:border-gray-700'>
-                        <SelectItem
-                          value='5'
-                          className='dark:text-white dark:hover:bg-white/10'
-                        >
+                      <SelectContent className='bg-background'>
+                        <SelectItem value='5' className='hover:bg-accent'>
                           5
                         </SelectItem>
-                        <SelectItem
-                          value='10'
-                          className='dark:text-white dark:hover:bg-white/10'
-                        >
+                        <SelectItem value='10' className='hover:bg-accent'>
                           10
                         </SelectItem>
-                        <SelectItem
-                          value='20'
-                          className='dark:text-white dark:hover:bg-white/10'
-                        >
+                        <SelectItem value='20' className='hover:bg-accent'>
                           20
                         </SelectItem>
                       </SelectContent>
@@ -327,7 +318,7 @@ const SharedFilesTable = () => {
                     >
                       Previous
                     </Button>
-                    <span className='text-sm dark:text-white'>
+                    <span className='text-sm text-foreground'>
                       Page {currentPage} of {totalPages || 1}
                     </span>
                     <Button

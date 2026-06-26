@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 import { Moon, Sun, Menu, X, Github } from 'lucide-react'
-import { AppDispatch, RootState } from '@/redux/store'
-import { toggleDarkMode } from '@/redux/themeSlice'
+import { AppDispatch } from '@/redux/store'
+import { selectResolvedMode, toggleMode } from '@/redux/themeSlice'
 import { cn } from '@/lib/utils'
 import { Logo } from '@/components/Logo'
 import { Container } from './primitives'
@@ -17,7 +17,7 @@ const NAV_LINKS = [
 export const Nav: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const isDarkMode = useSelector((s: RootState) => s.theme.isDarkMode)
+  const isDarkMode = useSelector(selectResolvedMode) === 'dark'
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -69,7 +69,7 @@ export const Nav: React.FC = () => {
           </a>
 
           <button
-            onClick={() => dispatch(toggleDarkMode())}
+            onClick={() => dispatch(toggleMode())}
             className='flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
             aria-label='Toggle theme'
           >
@@ -82,7 +82,7 @@ export const Nav: React.FC = () => {
 
           <button
             onClick={() => navigate(LINKS.console)}
-            className='hidden h-9 items-center rounded-lg bg-dare-gradient px-4 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 md:inline-flex'
+            className='hidden h-9 items-center rounded-lg bg-dare-gradient px-4 text-sm font-semibold text-white shadow-xs transition-opacity hover:opacity-90 md:inline-flex'
           >
             Launch console
           </button>

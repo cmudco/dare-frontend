@@ -110,7 +110,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
       >
         <div className='space-y-2'>
           <div className='flex items-center gap-2'>
-            <Key className='h-4 w-4 flex-shrink-0 text-muted-foreground' />
+            <Key className='h-4 w-4 shrink-0 text-muted-foreground' />
             <Label className='text-sm font-medium text-foreground'>
               {label}
             </Label>
@@ -131,7 +131,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
               </Tooltip>
             )}
             {isLlama && (
-              <span className='rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300'>
+              <span className='rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground'>
                 No API Key Required
               </span>
             )}
@@ -156,7 +156,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
             )}
           </div>
           {hasKey && maskedKey && !isLlama && (
-            <div className='break-all pl-6 font-mono text-xs text-muted-foreground'>
+            <div className='pl-6 font-mono text-xs break-all text-muted-foreground'>
               {maskedKey}
             </div>
           )}
@@ -187,7 +187,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
                 <button
                   type='button'
                   onClick={() => setIsVisible(!isVisible)}
-                  className='absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground'
+                  className='absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground'
                 >
                   {isVisible ? (
                     <EyeOff className='h-4 w-4' />

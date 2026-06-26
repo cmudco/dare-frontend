@@ -36,17 +36,17 @@ const ProfileView: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.05 }}
       >
-        <Card className='border-slate-200/50 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/50'>
+        <Card className='border-border bg-card p-5 shadow-xs'>
           <div className='flex flex-wrap gap-6'>
             <div className='flex items-center gap-2.5'>
               <div className='rounded-md bg-emerald-50 p-1.5 dark:bg-emerald-900/20'>
                 <User className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
               </div>
               <div>
-                <p className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50'>
+                <p className='text-[10px] font-bold tracking-widest text-muted-foreground/50 uppercase'>
                   Name
                 </p>
-                <p className='text-sm font-semibold text-slate-800 dark:text-slate-100'>
+                <p className='text-sm font-semibold text-foreground'>
                   {user?.name || 'Not set'}
                 </p>
               </div>
@@ -56,10 +56,10 @@ const ProfileView: React.FC = () => {
                 <Mail className='h-4 w-4 text-blue-600 dark:text-blue-400' />
               </div>
               <div>
-                <p className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50'>
+                <p className='text-[10px] font-bold tracking-widest text-muted-foreground/50 uppercase'>
                   Email
                 </p>
-                <p className='text-sm font-semibold text-slate-800 dark:text-slate-100'>
+                <p className='text-sm font-semibold text-foreground'>
                   {user?.email || 'Not set'}
                 </p>
               </div>
@@ -70,10 +70,10 @@ const ProfileView: React.FC = () => {
                   <User className='h-4 w-4 text-violet-600 dark:text-violet-400' />
                 </div>
                 <div>
-                  <p className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50'>
+                  <p className='text-[10px] font-bold tracking-widest text-muted-foreground/50 uppercase'>
                     Role
                   </p>
-                  <p className='text-sm font-semibold text-slate-800 dark:text-slate-100'>
+                  <p className='text-sm font-semibold text-foreground'>
                     {user.role}
                   </p>
                 </div>

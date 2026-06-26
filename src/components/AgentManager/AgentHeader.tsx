@@ -30,11 +30,11 @@ const AgentHeader: React.FC<AgentHeaderProps> = ({ onSearch }) => {
         data-tour='agents-search'
         className='relative flex h-[40px] w-[300px] items-center'
       >
-        <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-gray-500' />
+        <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-muted-foreground' />
         <Input
           type='text'
           placeholder='Search agents'
-          className='rounded-md border border-gray-300 bg-white pl-10 focus:border-primary focus:ring-2 focus:ring-primary dark:border-dark-icon-unselected dark:bg-transparent dark:text-white'
+          className='rounded-md border border-border bg-background pl-10 focus:border-primary focus:ring-2 focus:ring-primary'
           value={searchQuery}
           onChange={handleSearchChange}
         />
@@ -43,7 +43,7 @@ const AgentHeader: React.FC<AgentHeaderProps> = ({ onSearch }) => {
       <Button
         data-tour='agents-create'
         variant='default'
-        className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
+        className='rounded-md py-2 font-normal whitespace-nowrap normal-case shadow-xs'
         onClick={handleCreateAgent}
       >
         <Plus />

@@ -137,11 +137,11 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
             data-tour='files-search'
             className='relative flex h-[40px] w-[300px] items-center'
           >
-            <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-gray-500' />
+            <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-muted-foreground' />
             <Input
               type='text'
               placeholder='Search by Files'
-              className='rounded-md border border-gray-300 bg-white pl-10 focus:border-primary focus:ring-2 focus:ring-primary dark:border-dark-icon-unselected dark:bg-transparent dark:text-white'
+              className='rounded-md border border-border bg-background pl-10 focus:border-primary focus:ring-2 focus:ring-primary'
               value={searchQuery}
               onChange={handleSearchChange}
             />
@@ -153,7 +153,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
             onClick={() => setShowTagFilter(!showTagFilter)}
           >
             <AdjustmentsVerticalIcon
-              className={`h-5 w-5 ${showTagFilter ? 'text-primary' : 'text-gray-500'}`}
+              className={`h-5 w-5 ${showTagFilter ? 'text-primary' : 'text-muted-foreground'}`}
             />
             Filter by Tags
           </Button>
@@ -161,7 +161,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
         <div className='flex items-center gap-2'>
           {selectedItems.length > 0 && (
             <Button
-              className='whitespace-nowrap rounded-md bg-dark-blue py-2 font-normal normal-case shadow-sm hover:bg-dark-blue-hovered'
+              className='rounded-md bg-secondary py-2 font-normal whitespace-nowrap text-secondary-foreground normal-case shadow-xs hover:bg-secondary/80'
               variant='default'
               size='default'
               onClick={() => dispatch(openMoveModal())}
@@ -172,7 +172,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
           )}
           {selectedItems.length > 0 && (
             <Button
-              className='whitespace-nowrap rounded-md bg-red-600 py-2 font-normal normal-case shadow-sm hover:bg-red-700'
+              className='rounded-md bg-red-600 py-2 font-normal whitespace-nowrap normal-case shadow-xs hover:bg-red-700'
               variant='default'
               size='default'
               onClick={handleBulkDelete}
@@ -183,7 +183,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
           )}
           <Button
             data-tour='files-upload'
-            className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
+            className='rounded-md py-2 font-normal whitespace-nowrap normal-case shadow-xs'
             variant='default'
             size='default'
             onClick={() => dispatch(openModal())}
@@ -213,13 +213,15 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
             )
           })}
           {tags.length === 0 && (
-            <div className='text-sm text-gray-500'>No tags available</div>
+            <div className='text-sm text-muted-foreground'>
+              No tags available
+            </div>
           )}
         </div>
       )}
 
       {currentView === 'media' && (
-        <div className='flex flex-wrap gap-2 border-b border-gray-200 pb-2 dark:border-gray-700'>
+        <div className='flex flex-wrap gap-2 border-b border-border pb-2'>
           {MEDIA_TYPE_TABS.map((tab) => (
             <Button
               key={tab.value}
@@ -228,7 +230,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
               className={`flex items-center gap-1.5 ${
                 mediaTypeFilter === tab.value
                   ? ''
-                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
               onClick={() => handleMediaTypeChange(tab.value)}
             >

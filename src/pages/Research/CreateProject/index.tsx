@@ -152,7 +152,7 @@ const CreateProject = () => {
 
   return (
     <div className='flex h-screen flex-col bg-background font-sans text-foreground'>
-      <header className='sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur'>
+      <header className='sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur-sm'>
         <div className='mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4 lg:px-8'>
           <div className='min-w-0'>
             <button
@@ -183,7 +183,7 @@ const CreateProject = () => {
         </div>
       </div>
 
-      <footer className='sticky bottom-0 border-t border-border bg-background/80 backdrop-blur'>
+      <footer className='sticky bottom-0 border-t border-border bg-background/80 backdrop-blur-sm'>
         <div className='mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4 lg:px-8'>
           <Button
             variant='ghost'

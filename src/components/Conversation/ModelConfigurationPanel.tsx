@@ -287,20 +287,20 @@ const ModelConfigurationPanel: React.FC = () => {
           <Button
             data-tour='model-config'
             variant='ghost'
-            className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
+            className='h-9 w-9 p-0 hover:bg-accent'
           >
-            <Settings className='h-5 w-5 text-gray-600 dark:text-gray-300' />
+            <Settings className='h-5 w-5 text-muted-foreground' />
           </Button>
         </PopoverTrigger>
         <PopoverContent className='w-80 border border-border bg-popover p-4'>
-          <div className='flex flex-col justify-center gap-4 text-gray-900 dark:text-white'>
+          <div className='flex flex-col justify-center gap-4 text-foreground'>
             {activeConversation?.conversationId && (
-              <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
-                <h3 className='font-medium dark:text-white'>Configuration</h3>
+              <div className='flex items-center justify-between border-b border-border pb-2'>
+                <h3 className='font-medium text-foreground'>Configuration</h3>
                 <Button
                   size='sm'
                   onClick={resetToDefaults}
-                  className='text-xs dark:bg-dark-button-primary dark:text-white dark:hover:bg-dark-button-primary/80'
+                  className='bg-primary text-xs text-primary-foreground hover:bg-primary/90'
                 >
                   Reset to Defaults
                 </Button>
@@ -310,10 +310,10 @@ const ModelConfigurationPanel: React.FC = () => {
             <div className='space-y-4'>
               {/* Web Search Toggle */}
               {showWebSearch && (
-                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                <div className='flex items-center justify-between border-b border-border pb-2'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>
-                      <h4 className='font-medium dark:text-white'>
+                      <h4 className='font-medium text-foreground'>
                         Web Search
                       </h4>
                       <Tooltip>
@@ -348,10 +348,10 @@ const ModelConfigurationPanel: React.FC = () => {
 
               {/* Web Fetch Toggle - provider-native URL/PDF fetch */}
               {showWebFetch && (
-                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                <div className='flex items-center justify-between border-b border-border pb-2'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>
-                      <h4 className='font-medium dark:text-white'>Web Fetch</h4>
+                      <h4 className='font-medium text-foreground'>Web Fetch</h4>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
@@ -381,10 +381,10 @@ const ModelConfigurationPanel: React.FC = () => {
 
               {/* Image Generation Toggle - Only show in Georgia Tech and Development */}
               {enableImageGeneration && showImageGeneration && (
-                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                <div className='flex items-center justify-between border-b border-border pb-2'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>
-                      <h4 className='font-medium dark:text-white'>
+                      <h4 className='font-medium text-foreground'>
                         Image Generation
                       </h4>
                       <Tooltip>
@@ -423,14 +423,14 @@ const ModelConfigurationPanel: React.FC = () => {
 
               {/* Audio Transcription Toggle - Only show when feature enabled */}
               {enableAudioTranscription && showAudioTranscription && (
-                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                <div className='flex items-center justify-between border-b border-border pb-2'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>
                       <h4
                         className={
                           audioTranscriptionEnabled
-                            ? 'bg-gradient-to-r from-purple-600 via-violet-500 to-indigo-600 bg-clip-text font-medium text-transparent'
-                            : 'font-medium dark:text-white'
+                            ? 'bg-linear-to-r from-purple-600 via-violet-500 to-indigo-600 bg-clip-text font-medium text-transparent'
+                            : 'font-medium text-foreground'
                         }
                       >
                         Audio Transcription
@@ -463,14 +463,14 @@ const ModelConfigurationPanel: React.FC = () => {
 
               {/* Artifacts Toggle - Only show when feature enabled */}
               {enableArtifacts && (
-                <div className='flex items-center justify-between border-b pb-2 dark:border-dark-icon-unselected'>
+                <div className='flex items-center justify-between border-b border-border pb-2'>
                   <div className='flex flex-col gap-1'>
                     <div className='flex items-center gap-2'>
                       <h4
                         className={
                           artifactsEnabled
-                            ? 'bg-gradient-to-r from-[#f7931e] via-[#8b5cf6] to-[#00c2ff] bg-clip-text font-medium text-transparent'
-                            : 'font-medium dark:text-white'
+                            ? 'bg-linear-to-r from-orange-500 via-violet-500 to-sky-400 bg-clip-text font-medium text-transparent'
+                            : 'font-medium text-foreground'
                         }
                       >
                         Artifacts
@@ -507,10 +507,10 @@ const ModelConfigurationPanel: React.FC = () => {
             </div>
 
             {showEffort && (
-              <div className='space-y-3 border-t pt-2 dark:border-dark-icon-unselected'>
+              <div className='space-y-3 border-t border-border pt-2'>
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
-                    <h4 className='font-medium dark:text-white'>Effort</h4>
+                    <h4 className='font-medium text-foreground'>Effort</h4>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
@@ -526,7 +526,7 @@ const ModelConfigurationPanel: React.FC = () => {
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
+                  <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
                     {EffortLevelLabels[effort]}
                   </span>
                 </div>
@@ -551,7 +551,7 @@ const ModelConfigurationPanel: React.FC = () => {
               <div className='space-y-4'>
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
-                    <h4 className='font-medium dark:text-white'>Temperature</h4>
+                    <h4 className='font-medium text-foreground'>Temperature</h4>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
@@ -574,7 +574,7 @@ const ModelConfigurationPanel: React.FC = () => {
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
+                  <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
                     {temperature.toFixed(1)}
                   </span>
                 </div>
@@ -588,7 +588,7 @@ const ModelConfigurationPanel: React.FC = () => {
                   className='my-4 cursor-pointer'
                 />
 
-                <div className='flex justify-between px-1 text-xs text-gray-500 dark:text-gray-400'>
+                <div className='flex justify-between px-1 text-xs text-muted-foreground'>
                   <span>Precise</span>
                   <span>Balanced</span>
                   <span>Creative</span>
@@ -596,10 +596,10 @@ const ModelConfigurationPanel: React.FC = () => {
               </div>
             )}
 
-            <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
+            <div className='space-y-4 border-t border-border pt-2'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
-                  <h4 className='font-medium dark:text-white'>Max Tokens</h4>
+                  <h4 className='font-medium text-foreground'>Max Tokens</h4>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
@@ -619,7 +619,7 @@ const ModelConfigurationPanel: React.FC = () => {
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
+                <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
                   {maxTokens}
                 </span>
               </div>
@@ -634,10 +634,10 @@ const ModelConfigurationPanel: React.FC = () => {
               />
             </div>
 
-            <div className='space-y-4 border-t pt-2 dark:border-dark-icon-unselected'>
+            <div className='space-y-4 border-t border-border pt-2'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
-                  <h4 className='font-medium dark:text-white'>History Limit</h4>
+                  <h4 className='font-medium text-foreground'>History Limit</h4>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
@@ -657,7 +657,7 @@ const ModelConfigurationPanel: React.FC = () => {
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <span className='rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-black/20 dark:text-white'>
+                <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
                   {historyLimit === 50 ? 'Full Context' : historyLimit}
                 </span>
               </div>
@@ -671,7 +671,7 @@ const ModelConfigurationPanel: React.FC = () => {
                 className='my-4 cursor-pointer'
               />
 
-              <div className='flex justify-between px-1 text-xs text-gray-500 dark:text-gray-400'>
+              <div className='flex justify-between px-1 text-xs text-muted-foreground'>
                 <span>Minimal</span>
                 <span>Standard</span>
                 <span>Max</span>
@@ -679,7 +679,7 @@ const ModelConfigurationPanel: React.FC = () => {
             </div>
 
             {activeConversation?.conversationId && (
-              <p className='mt-2 border-t pt-2 text-xs text-gray-500 dark:border-dark-icon-unselected dark:text-gray-400'>
+              <p className='mt-2 border-t border-border pt-2 text-xs text-muted-foreground'>
                 These settings are specific to this conversation and will be
                 remembered when you return.
               </p>

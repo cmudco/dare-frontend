@@ -214,9 +214,9 @@ const TokenBreakdownModal = ({
                             </TableCell>
                             <TableCell className='text-right'>
                               <div className='flex items-center justify-end gap-2'>
-                                <div className='h-2 max-w-[100px] flex-1 rounded-full bg-gray-200'>
+                                <div className='h-2 max-w-[100px] flex-1 rounded-full bg-muted'>
                                   <div
-                                    className='h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500'
+                                    className='h-2 rounded-full bg-linear-to-r from-blue-500 to-purple-500'
                                     style={{
                                       width: `${Math.min(percentage, 100)}%`,
                                     }}

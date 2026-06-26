@@ -40,7 +40,7 @@ const MemoryContextSources: React.FC<MemoryContextSourcesProps> = ({
                   {item.content}
                 </p>
                 {item.memoryType && (
-                  <span className='flex-shrink-0 rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'>
+                  <span className='shrink-0 rounded-sm bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'>
                     {item.memoryType}
                   </span>
                 )}
@@ -50,7 +50,7 @@ const MemoryContextSources: React.FC<MemoryContextSourcesProps> = ({
                   {item.categories.map((cat) => (
                     <span
                       key={cat}
-                      className='rounded-full bg-slate-100 px-2 py-0.5 text-xs text-muted-foreground dark:bg-slate-800'
+                      className='rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground'
                     >
                       {cat}
                     </span>

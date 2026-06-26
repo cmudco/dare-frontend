@@ -25,7 +25,7 @@ const Tiptap: React.FC<TiptapProps> = ({ content, onChange }) => {
     editorProps: {
       attributes: {
         class:
-          'prose dark:prose-invert prose-sm focus:outline-none w-full max-w-full',
+          'prose dark:prose-invert prose-sm focus:outline-hidden w-full max-w-full',
       },
       // Smart paste handling:
       // - If content has code blocks or ASCII art → paste as plain text
@@ -62,7 +62,7 @@ const Tiptap: React.FC<TiptapProps> = ({ content, onChange }) => {
       <div className='bg-transparent p-4'>
         <EditorContent
           editor={editor}
-          className='min-h-[150px] break-all text-sm text-foreground'
+          className='min-h-[150px] text-sm break-all text-foreground'
         />
       </div>
     </div>

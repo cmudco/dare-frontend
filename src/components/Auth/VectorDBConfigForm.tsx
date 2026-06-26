@@ -91,7 +91,7 @@ export const VectorDBConfigForm: React.FC = () => {
                 </TooltipContent>
               </Tooltip>
             </div>
-            <p className='mt-1 text-sm text-gray-600'>
+            <p className='mt-1 text-sm text-muted-foreground'>
               Choose which vector database to use for your document search and
               embedding storage.
             </p>
@@ -128,9 +128,9 @@ export const VectorDBConfigForm: React.FC = () => {
               <SelectTrigger className='h-10'>
                 <div className='flex items-center gap-2'>
                   {vectorDBValue == VectorDbSource.PINECONE ? (
-                    <DollarSign className='h-4 w-4 text-gray-500' />
+                    <DollarSign className='h-4 w-4 text-muted-foreground' />
                   ) : (
-                    <Database className='h-4 w-4 text-gray-500' />
+                    <Database className='h-4 w-4 text-muted-foreground' />
                   )}
 
                   <SelectValue placeholder='Select vector database'>

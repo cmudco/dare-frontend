@@ -62,12 +62,12 @@ export const WalletPopover: React.FC = () => {
           <button
             type='button'
             aria-label={`Wallet: ${triggerLabel} (${triggerSecondary})`}
-            className='group inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#023572]/15 bg-background py-0.5 pl-0.5 pr-3 text-sm font-medium text-foreground shadow-sm transition-all hover:border-[#023572]/40 hover:shadow-md dark:border-[#EE183C]/20 dark:hover:border-[#EE183C]/50'
+            className='group inline-flex cursor-pointer items-center gap-2 rounded-full border border-dare/20 bg-background py-0.5 pr-3 pl-0.5 text-sm font-medium text-foreground shadow-xs transition-all hover:border-dare/50 hover:shadow-md'
           >
             <span className='flex h-7 w-7 items-center justify-center rounded-full bg-dare-gradient text-white shadow-inner'>
               <CreditCardIcon className='h-3.5 w-3.5' />
             </span>
-            <span className='font-semibold tabular-nums text-foreground'>
+            <span className='font-semibold text-foreground tabular-nums'>
               {triggerSecondary}
             </span>
             <span className='hidden h-3 w-px bg-border sm:inline-block' />
@@ -83,7 +83,7 @@ export const WalletPopover: React.FC = () => {
           <div className='relative bg-dare-gradient px-5 py-4 text-white'>
             <div className='flex items-start justify-between gap-3'>
               <div className='min-w-0'>
-                <p className='text-[10px] font-semibold uppercase tracking-wider text-white/80'>
+                <p className='text-[10px] font-semibold tracking-wider text-white/80 uppercase'>
                   Active wallet
                 </p>
                 <p className='mt-0.5 truncate text-base font-semibold'>
@@ -94,7 +94,7 @@ export const WalletPopover: React.FC = () => {
               <Button
                 size='sm'
                 variant='secondary'
-                className='h-8 bg-white/15 text-white shadow-none backdrop-blur-sm hover:bg-white/25'
+                className='h-8 bg-white/15 text-white shadow-none backdrop-blur-xs hover:bg-white/25'
                 onClick={() => {
                   setOpen(false)
                   navigate('/billing/')
@@ -108,7 +108,7 @@ export const WalletPopover: React.FC = () => {
 
           {/* Wallet picker */}
           <div className='max-h-[320px] overflow-y-auto px-3 py-3'>
-            <p className='mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground'>
+            <p className='mb-2 px-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase'>
               Switch default
             </p>
             <WalletPickerList
@@ -131,7 +131,7 @@ export const WalletPopover: React.FC = () => {
                 type='button'
                 size='sm'
                 variant='outline'
-                className='flex-1 border-[#023572]/30 text-[#023572] hover:bg-[#023572]/5 dark:border-[#EE183C]/30 dark:text-[#EE183C] dark:hover:bg-[#EE183C]/10'
+                className='flex-1 border-dare/30 text-dare hover:bg-dare/10'
                 onClick={() => setShowLite(true)}
               >
                 <Network className='mr-1 h-3.5 w-3.5' />
@@ -144,7 +144,7 @@ export const WalletPopover: React.FC = () => {
                 type='button'
                 size='sm'
                 variant='outline'
-                className='flex-1 border-[#EE183C]/30 text-[#EE183C] hover:bg-[#EE183C]/5 dark:border-[#EE183C]/30 dark:hover:bg-[#EE183C]/10'
+                className='flex-1 border-dare/30 text-dare hover:bg-dare/10'
                 onClick={() => setShowByo(true)}
               >
                 <KeyRound className='mr-1 h-3.5 w-3.5' />

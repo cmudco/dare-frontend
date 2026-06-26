@@ -150,7 +150,7 @@ export default function ConversationTourTooltip({
   return (
     <motion.div
       ref={tooltipRef}
-      className='fixed z-[202]'
+      className='fixed z-202'
       style={{
         width: 'max-content',
         maxWidth: TOOLTIP_MAX_WIDTH,
@@ -160,21 +160,21 @@ export default function ConversationTourTooltip({
       transition={{ type: 'tween', duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
     >
       {/* Gradient border wrapper */}
-      <div className='relative rounded-2xl bg-gradient-to-br from-primary/40 via-primary/10 to-transparent p-px shadow-2xl shadow-black/40'>
+      <div className='relative rounded-2xl bg-linear-to-br from-primary/40 via-primary/10 to-transparent p-px shadow-2xl shadow-black/40'>
         {/* Glass card */}
         <div className='relative overflow-hidden rounded-2xl bg-background/95 backdrop-blur-xl'>
           {/* Top accent line */}
-          <div className='absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent' />
+          <div className='absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/60 to-transparent' />
 
           {/* Subtle inner glow */}
-          <div className='absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-transparent' />
+          <div className='absolute inset-0 rounded-2xl bg-linear-to-br from-primary/5 via-transparent to-transparent' />
 
           <div className='relative flex flex-col gap-4 p-5'>
             {/* Header row */}
             <div className='flex items-start justify-between gap-3'>
               <div className='flex items-center gap-3'>
                 {/* Glowing icon */}
-                <div className='relative flex-shrink-0'>
+                <div className='relative shrink-0'>
                   <div className='absolute inset-0 rounded-xl bg-primary/30 blur-md' />
                   <div className='relative flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/10'>
                     <Icon className='h-4 w-4 text-primary' />
@@ -191,7 +191,7 @@ export default function ConversationTourTooltip({
                     animate='center'
                     exit='exit'
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className='text-sm font-semibold leading-tight text-foreground'
+                    className='text-sm leading-tight font-semibold text-foreground'
                   >
                     {step.title}
                   </motion.h3>
@@ -201,7 +201,7 @@ export default function ConversationTourTooltip({
               {/* Close — onPointerDown bypasses Radix focus trap */}
               <button
                 type='button'
-                className='flex-shrink-0 rounded-lg p-1 opacity-40 transition-all hover:bg-primary/10 hover:opacity-100'
+                className='shrink-0 rounded-lg p-1 opacity-40 transition-all hover:bg-primary/10 hover:opacity-100'
                 onPointerDown={(e) => {
                   e.preventDefault()
                   onSkip()
@@ -255,7 +255,7 @@ export default function ConversationTourTooltip({
                       animate='center'
                       exit='exit'
                       transition={{ duration: 0.15 }}
-                      className='text-xs font-semibold tabular-nums text-primary'
+                      className='text-xs font-semibold text-primary tabular-nums'
                     >
                       {displayStep}
                     </motion.span>
@@ -264,7 +264,7 @@ export default function ConversationTourTooltip({
                     / {displayTotal}
                   </span>
                 </div>
-                <span className='text-xs tabular-nums text-muted-foreground/50'>
+                <span className='text-xs text-muted-foreground/50 tabular-nums'>
                   {Math.round(progressPercent)}%
                 </span>
               </div>
@@ -290,7 +290,7 @@ export default function ConversationTourTooltip({
                   }
                 }}
                 disabled={isFirst}
-                className='rounded-xl border border-border/60 bg-secondary/60 px-3.5 py-2 text-xs font-medium text-foreground/80 backdrop-blur-sm transition-all hover:border-primary/30 hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30'
+                className='rounded-xl border border-border/60 bg-secondary/60 px-3.5 py-2 text-xs font-medium text-foreground/80 backdrop-blur-xs transition-all hover:border-primary/30 hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30'
               >
                 Back
               </button>
@@ -324,7 +324,7 @@ export default function ConversationTourTooltip({
                   {/* Gradient background */}
                   <span className='absolute inset-0 bg-dare-gradient transition-opacity group-hover:opacity-90' />
                   {/* Shine sweep */}
-                  <span className='absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 group-hover:translate-x-full' />
+                  <span className='absolute inset-0 -translate-x-full skew-x-12 bg-linear-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 group-hover:translate-x-full' />
                   <span className='relative'>{isLast ? 'Finish' : 'Next'}</span>
                 </button>
               </div>

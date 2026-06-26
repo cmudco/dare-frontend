@@ -132,7 +132,9 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
           <div className='text-center'>
             <div className='mb-4 text-6xl'>📄</div>
             <h3 className='mb-2 text-lg font-medium'>{artifact.filename}</h3>
-            <p className='text-sm text-gray-500'>{artifact.contentType}</p>
+            <p className='text-sm text-muted-foreground'>
+              {artifact.contentType}
+            </p>
           </div>
         </div>
       )
@@ -148,8 +150,8 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
 
 const ErrorDisplay: React.FC<{ message: string }> = ({ message }) => (
   <div className='flex h-full items-center justify-center p-8'>
-    <div className='rounded-lg bg-red-50 p-4 dark:bg-red-900/20'>
-      <p className='text-red-600 dark:text-red-400'>{message}</p>
+    <div className='rounded-lg bg-destructive/10 p-4'>
+      <p className='text-destructive'>{message}</p>
     </div>
   </div>
 )

@@ -21,7 +21,7 @@ const MCPToolCard = ({ tool, serverSlug }: MCPToolCardProps) => {
   return (
     <div
       onClick={() => navigate(`/mcp/${serverSlug}/tools/${tool.name}`)}
-      className='group cursor-pointer rounded-lg border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm'
+      className='group cursor-pointer rounded-lg border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-xs'
     >
       <div className='mb-2 flex items-start justify-between'>
         <div className='flex items-center gap-2'>

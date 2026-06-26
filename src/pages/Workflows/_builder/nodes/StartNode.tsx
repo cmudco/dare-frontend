@@ -98,10 +98,10 @@ export default function StartNode({ id, data, selected }: NodeProps) {
               style={{ top: `${topPercent}%` }}
               className={`transition-all duration-200 ${
                 isConnected
-                  ? `${handleColor} !opacity-100 ring-2 ring-purple-300`
+                  ? `${handleColor} opacity-100! ring-2 ring-purple-300`
                   : shouldShow
-                    ? `${handleColor} !opacity-40 hover:!opacity-80`
-                    : '!opacity-0'
+                    ? `${handleColor} opacity-40! hover:opacity-80!`
+                    : 'opacity-0!'
               }`}
             />
           )
@@ -134,10 +134,10 @@ export default function StartNode({ id, data, selected }: NodeProps) {
               style={{ top: `${topPercent}%` }}
               className={`transition-all duration-200 ${
                 isConnected
-                  ? `${handleColor} !opacity-100`
+                  ? `${handleColor} opacity-100!`
                   : shouldShow
-                    ? `${handleColor} !opacity-50 hover:!opacity-80`
-                    : '!opacity-0'
+                    ? `${handleColor} opacity-50! hover:opacity-80!`
+                    : 'opacity-0!'
               }`}
             />
           )

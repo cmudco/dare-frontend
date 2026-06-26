@@ -67,32 +67,32 @@ const EnergyOverviewCards: React.FC<EnergyOverviewCardsProps> = ({ stats }) => {
             transition={{ duration: 0.3, delay: index * 0.1 }}
           >
             <Card
-              className={`relative overflow-hidden border-slate-200/60 bg-white shadow-sm transition-all duration-300 hover:shadow-lg dark:border-slate-800/60 dark:bg-slate-900/80 ${borderColor}`}
+              className={`relative overflow-hidden border-border/60 bg-card shadow-xs transition-all duration-300 hover:shadow-lg ${borderColor}`}
             >
               <div
-                className={`absolute -right-4 -top-4 select-none text-6xl opacity-[0.05] transition-transform duration-500 hover:scale-110`}
+                className={`absolute -top-4 -right-4 text-6xl opacity-[0.05] transition-transform duration-500 select-none hover:scale-110`}
               >
                 {emoji}
               </div>
               <div
-                className={`absolute inset-0 bg-gradient-to-br ${gradient} pointer-events-none`}
+                className={`absolute inset-0 bg-linear-to-br ${gradient} pointer-events-none`}
               />
 
               <CardContent className='relative flex items-center gap-4 p-5'>
                 <div
-                  className={`flex flex-shrink-0 items-center justify-center rounded-2xl p-3 shadow-inner ${bgColor} text-2xl transition-transform duration-300 group-hover:scale-110`}
+                  className={`flex shrink-0 items-center justify-center rounded-2xl p-3 shadow-inner ${bgColor} text-2xl transition-transform duration-300 group-hover:scale-110`}
                 >
                   {emoji}
                 </div>
                 <div className='min-w-0 flex-1'>
-                  <p className='text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80'>
+                  <p className='text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase'>
                     {label}
                   </p>
                   {!stats ? (
                     <Skeleton className='mt-1.5 h-7 w-24 rounded-md' />
                   ) : (
                     <div className='flex items-baseline gap-1'>
-                      <p className='text-xl font-black tracking-tight text-slate-900 dark:text-slate-100'>
+                      <p className='text-xl font-black tracking-tight text-foreground'>
                         {getValue(stats)}
                       </p>
                     </div>
@@ -100,7 +100,7 @@ const EnergyOverviewCards: React.FC<EnergyOverviewCardsProps> = ({ stats }) => {
                 </div>
               </CardContent>
 
-              <div className='absolute bottom-0 left-0 h-0.5 w-0 bg-slate-400/20 transition-all duration-300 group-hover:w-full' />
+              <div className='absolute bottom-0 left-0 h-0.5 w-0 bg-muted-foreground/20 transition-all duration-300 group-hover:w-full' />
             </Card>
           </motion.div>
         )

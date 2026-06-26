@@ -84,7 +84,7 @@ export function RouteConfigPanel({
 
   const routeItemStyles =
     variant === 'purple'
-      ? 'space-y-2 rounded-md border border-muted bg-white/80 p-3 dark:bg-background/50'
+      ? 'space-y-2 rounded-md border border-muted bg-card/80 p-3'
       : 'space-y-2 rounded-md border border-muted bg-muted/20 p-3'
 
   return (

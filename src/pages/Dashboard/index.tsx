@@ -205,7 +205,7 @@ const Dashboard = () => {
                     className='group relative'
                   >
                     <Card
-                      className={`relative h-full overflow-hidden border-slate-200/50 bg-white shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-slate-700 ${card.onClick ? 'cursor-pointer' : ''}`}
+                      className={`relative h-full overflow-hidden border-border/50 bg-card shadow-xs transition-all duration-300 hover:border-border hover:shadow-lg ${card.onClick ? 'cursor-pointer' : ''}`}
                       onClick={card.onClick}
                     >
                       <CardHeader className='relative z-10 pb-3'>
@@ -216,7 +216,7 @@ const Dashboard = () => {
                             >
                               {card.icon}
                             </div>
-                            <CardTitle className='text-sm font-bold tracking-tight text-slate-800 dark:text-slate-100'>
+                            <CardTitle className='text-sm font-bold tracking-tight text-foreground'>
                               {card.title}
                             </CardTitle>
                           </div>
@@ -224,7 +224,7 @@ const Dashboard = () => {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div
-                                  className='rounded-full p-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800'
+                                  className='rounded-full p-1.5 transition-colors hover:bg-accent'
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground/60' />
@@ -246,10 +246,10 @@ const Dashboard = () => {
                       </CardHeader>
                       <CardContent className='relative z-10'>
                         <div className='flex flex-col space-y-1.5'>
-                          <div className='text-4xl font-black tracking-tighter text-slate-900 transition-transform duration-300 group-hover:translate-x-1 dark:text-white'>
+                          <div className='text-4xl font-black tracking-tighter text-foreground transition-transform duration-300 group-hover:translate-x-1'>
                             {formatNumber(card.value)}
                           </div>
-                          <p className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 transition-colors group-hover:text-muted-foreground/70'>
+                          <p className='text-[10px] font-bold tracking-widest text-muted-foreground/50 uppercase transition-colors group-hover:text-muted-foreground/70'>
                             {card.description}
                           </p>
                         </div>
@@ -267,13 +267,13 @@ const Dashboard = () => {
             >
               <Card
                 data-tour='dashboard-activity'
-                className='group relative overflow-hidden border-none bg-white/50 shadow-lg backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/50'
+                className='group relative overflow-hidden border-none bg-card/50 shadow-lg backdrop-blur-md'
               >
-                <div className='pointer-events-none absolute right-0 top-0 p-8 opacity-[0.03] transition-opacity group-hover:opacity-[0.05]'>
+                <div className='pointer-events-none absolute top-0 right-0 p-8 opacity-[0.03] transition-opacity group-hover:opacity-[0.05]'>
                   <TrendingUp className='h-32 w-32' />
                 </div>
                 <CardHeader>
-                  <CardTitle className='flex items-center gap-2 text-xl font-bold text-slate-800 dark:text-slate-100'>
+                  <CardTitle className='flex items-center gap-2 text-xl font-bold text-foreground'>
                     <div className='rounded-lg bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400'>
                       <Clock className='h-5 w-5' />
                     </div>
@@ -288,7 +288,7 @@ const Dashboard = () => {
                   <div className='grid grid-cols-1 gap-8 md:grid-cols-2'>
                     <div className='flex flex-col space-y-3'>
                       <div className='flex items-center justify-between'>
-                        <span className='text-sm font-semibold text-slate-600 dark:text-slate-400'>
+                        <span className='text-sm font-semibold text-muted-foreground'>
                           AI Intervention Ratio
                         </span>
                         <span className='rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'>
@@ -309,20 +309,20 @@ const Dashboard = () => {
                           of messages are AI-generated
                         </span>
                       </div>
-                      <div className='h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800'>
+                      <div className='h-3 w-full overflow-hidden rounded-full bg-muted'>
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{
                             width: `${stats?.messageCount ? (stats.aiMessageCount / stats.messageCount) * 100 : 0}%`,
                           }}
                           transition={{ duration: 1, delay: 1 }}
-                          className='h-full rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-[0_0_15px_rgba(99,102,241,0.5)]'
+                          className='h-full rounded-full bg-linear-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-[0_0_15px_rgba(99,102,241,0.5)]'
                         />
                       </div>
                     </div>
                     <div className='flex flex-col space-y-3'>
                       <div className='flex items-center justify-between'>
-                        <span className='text-sm font-semibold text-slate-600 dark:text-slate-400'>
+                        <span className='text-sm font-semibold text-muted-foreground'>
                           Context Density
                         </span>
                         <span className='rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'>
@@ -341,14 +341,14 @@ const Dashboard = () => {
                           average files per conversation
                         </span>
                       </div>
-                      <div className='h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800'>
+                      <div className='h-3 w-full overflow-hidden rounded-full bg-muted'>
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{
                             width: `${stats?.conversationCount ? Math.min((stats.fileCount / stats.conversationCount / 5) * 100, 100) : 0}%`,
                           }}
                           transition={{ duration: 1, delay: 1.2 }}
-                          className='h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-[0_0_15px_rgba(59,130,246,0.5)]'
+                          className='h-full rounded-full bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-[0_0_15px_rgba(59,130,246,0.5)]'
                         />
                       </div>
                     </div>

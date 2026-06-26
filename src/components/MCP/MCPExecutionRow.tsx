@@ -109,8 +109,8 @@ const MCPExecutionRow = ({ execution }: MCPExecutionRowProps) => {
       )}
 
       {isFailedStatus(execution.status) && execution.errorMessage && (
-        <div className='flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300'>
-          <AlertCircle className='mt-0.5 h-4 w-4 flex-shrink-0' />
+        <div className='flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive'>
+          <AlertCircle className='mt-0.5 h-4 w-4 shrink-0' />
           <span>{execution.errorMessage}</span>
         </div>
       )}

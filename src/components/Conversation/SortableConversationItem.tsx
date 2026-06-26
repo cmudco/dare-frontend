@@ -56,7 +56,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
       className={getConversationItemClassName(isDragging, isActive, isSelected)}
       onClick={(e) => onConversationClick(conversation, e)}
     >
-      <div className='flex flex-shrink-0 items-center gap-1'>
+      <div className='flex shrink-0 items-center gap-1'>
         {!isSharedTab && !isSharedWithMeTab && (
           <div
             className={`p-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
@@ -77,7 +77,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
       <div className='relative min-w-0 flex-1'>
         {editingId === conversation.conversationId ? (
           <input
-            className='w-full rounded border bg-white px-2 py-1 text-sm shadow outline-none dark:border-dark-icon-unselected dark:bg-transparent dark:text-white'
+            className='w-full rounded-sm border bg-background px-2 py-1 text-sm text-foreground shadow-sm outline-hidden'
             value={editValue}
             autoFocus
             onChange={onEditChange}
@@ -88,7 +88,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
         ) : (
           <>
             <div className='flex items-center gap-1.5 pr-8'>
-              <span className='block overflow-hidden text-ellipsis whitespace-nowrap text-sm'>
+              <span className='block overflow-hidden text-sm text-ellipsis whitespace-nowrap'>
                 {getConversationTitle(conversation)}
               </span>
               {!isSharedTab &&
@@ -111,16 +111,16 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
             </div>
             {/* Owner email on shared tab */}
             {enableSharing && isSharedTab && conversation.ownerEmail && (
-              <span className='block truncate text-[10px] text-gray-400 dark:text-slate-500'>
+              <span className='block truncate text-[10px] text-muted-foreground'>
                 {conversation.ownerEmail}
               </span>
             )}
             {/* 3-dot dropdown menu */}
-            <div className='absolute right-0 top-1/2 flex -translate-y-1/2 gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
+            <div className='absolute top-1/2 right-0 flex -translate-y-1/2 gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className='rounded-md bg-gray-100 p-1.5 shadow-sm transition-colors duration-150 hover:bg-gray-200 dark:bg-white/20 dark:hover:bg-white/30'
+                    className='rounded-md bg-muted p-1.5 shadow-xs transition-colors duration-150 hover:bg-accent'
                     onClick={(e) => e.stopPropagation()}
                     aria-label='Conversation actions'
                   >

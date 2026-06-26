@@ -30,7 +30,7 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
 
   if (!result.success) {
     return (
-      <div className='my-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400'>
+      <div className='my-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive'>
         Error: {result.error || 'Unknown error'}
       </div>
     )
@@ -68,8 +68,8 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
   if (toolName === 'create_docx' && result.docConfig) {
     const blockCount = result.docConfig.blocks.length
     return (
-      <div className='not-prose my-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300'>
-        <FileText className='h-5 w-5 shrink-0 text-slate-500' />
+      <div className='not-prose my-2 flex items-center gap-2 rounded-lg border border-border bg-muted p-3 text-sm text-foreground'>
+        <FileText className='h-5 w-5 shrink-0 text-muted-foreground' />
         <span>
           {result.docConfig.title} &middot; {blockCount} block
           {blockCount !== 1 ? 's' : ''}
@@ -82,8 +82,8 @@ export const DareToolResultRenderer: React.FC<DareToolResultRendererProps> = ({
   if (toolName === 'create_pptx' && result.pptConfig) {
     const slideCount = result.pptConfig.slides.length
     return (
-      <div className='not-prose my-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300'>
-        <Presentation className='h-5 w-5 shrink-0 text-slate-500' />
+      <div className='not-prose my-2 flex items-center gap-2 rounded-lg border border-border bg-muted p-3 text-sm text-foreground'>
+        <Presentation className='h-5 w-5 shrink-0 text-muted-foreground' />
         <span>
           {result.pptConfig.title} &middot; {slideCount} slide
           {slideCount !== 1 ? 's' : ''}

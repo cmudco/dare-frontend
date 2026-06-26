@@ -1,148 +1,228 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import './themes/default.css';
+@import './themes/aurora.css';
+@import './themes/cobalt.css';
+@import './themes/cyberpunk.css';
+@import './themes/evergreen.css';
+@import './themes/midnight.css';
+@import './themes/mono.css';
+@import './themes/rose.css';
 
-body {
-  font-family: 'Open Sans', sans-serif;
-  background-color: #fdffff;
+@plugin '@tailwindcss/typography';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Brand gradient — driven by per-theme --brand-from/--brand-to tokens.
+     The default theme keeps the canonical DARE red→blue; other themes
+     re-point it to their own dominant colors. */
+  --background-image-dare-gradient: linear-gradient(
+    92.18deg,
+    var(--brand-from) -38.97%,
+    var(--brand-to) 132.6%
+  );
+
+  --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: Fraunces, ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-dare: var(--dare);
+  --color-dare-foreground: var(--dare-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-xl: var(--radius);
 }
 
-/* Autofill styles for both light and dark mode */
-input:-webkit-autofill {
-  animation-name: onAutoFillStart;
-  transition: background-color 5000s ease-in-out 0s;
-  -webkit-text-fill-color: var(--foreground) !important;
-  background-color: transparent !important;
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
 
-input:not(:-webkit-autofill) {
-  animation-name: onAutoFillCancel;
-}
-
-/* Dark mode autofill styles */
-.dark input:-webkit-autofill {
-  -webkit-text-fill-color: hsl(var(--foreground)) !important;
-  background-color: transparent !important;
-  border-color: hsl(var(--border)) !important;
-}
-
-.dark input:-webkit-autofill:hover {
-  -webkit-text-fill-color: hsl(var(--foreground)) !important;
-  background-color: transparent !important;
-}
-
-.dark input:-webkit-autofill:focus {
-  -webkit-text-fill-color: hsl(var(--foreground)) !important;
-  background-color: transparent !important;
-}
-
-@keyframes onAutoFillStart {
-  from {
+@layer utilities {
+  /* Autofill styles — token-based, so they adapt to every theme and mode */
+  input:-webkit-autofill {
+    animation-name: onAutoFillStart;
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: var(--foreground) !important;
+    background-color: transparent !important;
   }
 
-  to {
-  }
-}
-
-@keyframes onAutoFillCancel {
-  from {
+  input:not(:-webkit-autofill) {
+    animation-name: onAutoFillCancel;
   }
 
-  to {
+  @keyframes onAutoFillStart {
+    from {
+    }
+
+    to {
+    }
   }
-}
 
-.autofilled + label,
-input:-webkit-autofill + label {
-  color: hsl(var(--foreground)) !important;
-}
+  @keyframes onAutoFillCancel {
+    from {
+    }
 
-.dark .autofilled + label,
-.dark input:-webkit-autofill + label {
-  color: hsl(var(--foreground)) !important;
-}
+    to {
+    }
+  }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  /* Internet Explorer 10+ */
-  scrollbar-width: none;
-  /* Firefox */
-}
+  .autofilled + label,
+  input:-webkit-autofill + label {
+    color: var(--foreground) !important;
+  }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-  /* WebKit browsers (Chrome, Safari) */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* Internet Explorer 10+ */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* WebKit browsers (Chrome, Safari) */
+  }
 }
 
 @layer base {
+  /* Fallback tokens — identical to themes/default.css. They cover anything
+     rendered outside body's [data-theme] scope and the pre-hydration paint. */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --dare: 0 76% 45%;
-    --dare-bg: 214 65% 40%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --background: hsl(0 0% 100%);
+    --foreground: hsl(0 0% 3.9%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(0 0% 3.9%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(0 0% 3.9%);
+    --primary: hsl(0 0% 9%);
+    --primary-foreground: hsl(0 0% 98%);
+    --secondary: hsl(0 0% 96.1%);
+    --secondary-foreground: hsl(0 0% 9%);
+    --muted: hsl(0 0% 96.1%);
+    --muted-foreground: hsl(0 0% 45.1%);
+    --accent: hsl(0 0% 96.1%);
+    --accent-foreground: hsl(0 0% 9%);
+    --destructive: hsl(0 84.2% 60.2%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --border: hsl(0 0% 89.8%);
+    --input: hsl(0 0% 89.8%);
+    --ring: hsl(0 0% 3.9%);
+    --chart-1: hsl(12 76% 61%);
+    --chart-2: hsl(173 58% 39%);
+    --chart-3: hsl(197 37% 24%);
+    --chart-4: hsl(43 74% 66%);
+    --chart-5: hsl(27 87% 67%);
+    --sidebar: hsl(0 0% 98%);
+    --sidebar-foreground: hsl(0 0% 3.9%);
+    --sidebar-primary: hsl(348 88% 52%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(0 0% 96.1%);
+    --sidebar-accent-foreground: hsl(0 0% 9%);
+    --sidebar-border: hsl(0 0% 89.8%);
+    --sidebar-ring: hsl(348 88% 52%);
     --radius: 0.5rem;
+
+    /* DARE brand color — stable across every theme and mode */
+    --dare: hsl(348 88% 52%); /* #EE183C */
+    --dare-foreground: hsl(0 0% 100%);
+
+    /* Brand gradient endpoints — overridden per theme so gradient
+       buttons/borders follow each theme's dominant colors. Keep these
+       dark/saturated enough to carry white text. */
+    --brand-from: #ee183c;
+    --brand-to: #023572;
   }
 
   .dark {
-    /* Background: linear gradient #000000 #023572 */
-    --background: 210 94% 4%; /* #030a12 - Your main dark background */
-    --foreground: 0 0% 100%; /* #FFFFFF for text */
-    --card: 210 94% 4%; /* #030a12 - Your main dark background */
-    --card-foreground: 0 0% 100%; /* #FFFFFF for text */
-    --popover: 210 94% 4%; /* #030a12 - Your main dark background */
-    --popover-foreground: 0 0% 100%; /* #FFFFFF */
-    --primary: 348 88% 52%; /* #EE183C for buttons */
-    --primary-foreground: 0 0% 100%; /* #FFFFFF */
-    --dare: 348 88% 52%; /* #EE183C for buttons */
-    --dare-bg: 214 100% 22%; /* #023572 for button gradients */
-    --secondary: 200 6% 74%; /* #BCBEC0 for unselected icons/buttons */
-    --secondary-foreground: 0 0% 100%; /* #FFFFFF */
-    --muted: 210 94% 4%; /* #030a12 - Your main dark background */
-    --muted-foreground: 200 6% 74%; /* #BCBEC0 for unselected icons/buttons */
-    --accent: 210 94% 4%; /* #030a12 - Your main dark background */
-    --accent-foreground: 0 0% 100%; /* #FFFFFF */
-    --destructive: 348 88% 52%; /* #EE183C */
-    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
-    --border: 0 0% 100%; /* #FFFFFF for borders - changed to white */
-    --input: 214 100% 22%; /* #023572 for input background - changed to dark blue */
-    --ring: 348 88% 52%; /* #EE183C */
-    --chart-1: 348 88% 52%; /* #EE183C */
-    --chart-2: 214 100% 22%; /* #023572 */
-    --chart-3: 200 6% 74%; /* #BCBEC0 */
-    --chart-4: 0 0% 100%; /* #FFFFFF */
-    --chart-5: 210 94% 4%; /* #030a12 - Your main dark background */
-
-    /* Sidebar specific colors for dark mode */
-    --sidebar-background: 210 94% 4%; /* #030a12 - Your main dark background */
-    --sidebar-foreground: 0 0% 100%; /* #FFFFFF */
-    --sidebar-primary: 348 88% 52%; /* #EE183C */
-    --sidebar-primary-foreground: 0 0% 100%; /* #FFFFFF */
-    --sidebar-accent: 214 100% 22%; /* #023572 */
-    --sidebar-accent-foreground: 0 0% 100%; /* #FFFFFF */
-    --sidebar-border: 217 32% 46%; /* #6b7280 */
-    --sidebar-ring: 348 88% 52%; /* #EE183C */
+    --background: hsl(210 94% 4%);
+    --foreground: hsl(0 0% 100%);
+    --card: hsl(214 60% 8%);
+    --card-foreground: hsl(0 0% 100%);
+    --popover: hsl(214 60% 8%);
+    --popover-foreground: hsl(0 0% 100%);
+    --primary: hsl(348 88% 52%);
+    --primary-foreground: hsl(0 0% 100%);
+    --secondary: hsl(216 55% 19%);
+    --secondary-foreground: hsl(0 0% 100%);
+    --muted: hsl(214 55% 11%);
+    --muted-foreground: hsl(200 6% 74%);
+    --accent: hsl(214 60% 15%);
+    --accent-foreground: hsl(0 0% 100%);
+    --destructive: hsl(348 88% 52%);
+    --destructive-foreground: hsl(0 0% 100%);
+    --border: hsl(0 0% 100% / 0.15);
+    --input: hsl(0 0% 100% / 0.18);
+    --ring: hsl(348 88% 52%);
+    --chart-1: hsl(348 88% 52%);
+    --chart-2: hsl(214 90% 60%);
+    --chart-3: hsl(173 58% 45%);
+    --chart-4: hsl(43 74% 60%);
+    --chart-5: hsl(280 65% 60%);
+    --sidebar: hsl(210 94% 4%);
+    --sidebar-foreground: hsl(0 0% 100%);
+    --sidebar-primary: hsl(348 88% 52%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(214 100% 22%);
+    --sidebar-accent-foreground: hsl(0 0% 100%);
+    --sidebar-border: hsl(0 0% 100% / 0.15);
+    --sidebar-ring: hsl(348 88% 52%);
   }
 }
 
@@ -154,293 +234,41 @@ input:-webkit-autofill + label {
   body {
     @apply bg-background text-foreground;
   }
+
+  /* v4 preflight sets cursor: default on buttons; restore v3 behavior */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
-/* Dark mode specific styles */
-.dark body {
-  background: hsl(var(--background));
-}
-
-/* Semantic dark mode background classes */
-.dark .bg-dark-primary {
-  background-color: hsl(var(--background)) !important;
-}
-
-.dark .bg-dark-secondary {
-  background-color: hsl(var(--muted)) !important;
-}
-
-.dark .bg-dark-surface {
-  background-color: hsl(var(--card)) !important;
-}
-
-/* Modal and Dialog universal dark mode */
-.dark [data-radix-dialog-content],
-.dark [role='dialog'],
-.dark .modal-content {
-  background-color: hsl(var(--background)) !important;
-  border-color: hsl(var(--border)) !important;
-  color: hsl(var(--foreground)) !important;
-}
-
-/* Popover and Dropdown universal dark mode */
-.dark [data-radix-popover-content],
-.dark [data-radix-select-content],
-.dark .dropdown-content {
-  background-color: hsl(var(--popover)) !important;
-  border-color: hsl(var(--border)) !important;
-  color: hsl(var(--popover-foreground)) !important;
-}
-
-/* Table universal dark mode */
-.dark .table-header,
-.dark .table-footer,
-.dark table thead,
-.dark table tfoot {
-  background-color: hsl(var(--background)) !important;
-}
-
-/* Card universal dark mode */
-.dark .card,
-.dark .bg-card {
-  background-color: hsl(var(--card)) !important;
-  border-color: hsl(var(--border)) !important;
-}
-
-/* Input universal dark mode */
-.dark input,
-.dark textarea,
-.dark select {
-  background-color: hsl(var(--input)) !important;
-  border-color: hsl(var(--border)) !important;
-  color: hsl(var(--foreground)) !important;
-}
-
-.dark input::placeholder,
-.dark textarea::placeholder {
-  color: hsl(var(--muted-foreground)) !important;
-}
-
-/* Dropdown and Select components */
-.dark .dropdown-trigger,
-.dark .dropdown-content,
-.dark .dropdown-item {
-  background-color: hsl(var(--popover)) !important;
-  border-color: hsl(var(--border)) !important;
-  color: hsl(var(--popover-foreground)) !important;
-}
-
-.dark .dropdown-item:hover {
-  background-color: hsl(var(--accent)) !important;
-}
-
-/* Table content */
-.dark .table-content {
-  background-color: hsl(var(--background)) !important;
-  color: hsl(var(--foreground)) !important;
-}
-
-/* Button gradients for dark mode */
-.dark .bg-dare-gradient {
-  background: linear-gradient(92.18deg, #ee183c -38.97%, #023572 132.6%);
-}
-
-/* Input field dark mode styles */
-.dark input {
-  background-color: transparent !important;
-  color: #ffffff !important;
-  border-color: #bcbec0 !important;
-}
-
-.dark input::placeholder {
-  color: #bcbec0 !important;
-}
-
-.dark textarea {
-  background-color: transparent !important;
-  color: #ffffff !important;
-  border-color: #bcbec0 !important;
-}
-
-.dark textarea::placeholder {
-  color: #bcbec0 !important;
-}
-
-/* Remove white backgrounds in dark mode */
-.dark .bg-white {
-  background-color: transparent !important;
-}
-
-/* Specific overrides for components that should keep some background */
-.dark .bg-white.keep-bg {
-  background-color: #011227 !important;
-}
-
-/* Dialog and modal backgrounds */
-.dark [data-radix-dialog-content] {
-  background-color: #030a12 !important;
-  border-color: #bcbec0 !important;
-}
-
-/* Modal overlay for dark mode */
-.dark [data-radix-dialog-overlay] {
-  background-color: rgba(0, 0, 0, 0.8) !important;
-}
-
-/* Ensure dialog content is fully opaque in dark mode */
-.dark .bg-white.dark\:bg-dark-chat-history {
-  background-color: #011227 !important;
-  opacity: 1 !important;
-}
-
-/* Dropdown and popover backgrounds */
-.dark [data-radix-popover-content] {
-  background-color: #011227 !important;
-  border-color: #bcbec0 !important;
-}
-
-/* Card backgrounds */
-/* .dark .bg-gray-50,
-.dark .bg-gray-100 {
-  background-color: #01122780 !important;
-} */
-
+/* Brand gradient border (auth card, active composer) — both the surface
+   fill and the gradient stops are token-based, so it follows the theme. */
 .gradient-border {
   position: relative;
-  background: white;
   border: 2px solid transparent;
-  background-image: linear-gradient(white, white),
+  background-image:
+    linear-gradient(var(--card), var(--card)),
     linear-gradient(
       180deg,
-      #ef3a47 0%,
-      #ef3a47 50%,
-      #023572 50%,
-      #023572 100%
+      var(--brand-from) 0%,
+      var(--brand-from) 50%,
+      var(--brand-to) 50%,
+      var(--brand-to) 100%
     );
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
   border-radius: 1rem;
 }
 
-.dark .gradient-border {
-  background-image: linear-gradient(#030a12, #030a12),
-    linear-gradient(
-      180deg,
-      #ef3a47 0%,
-      #ef3a47 50%,
-      #023572 50%,
-      #023572 100%
-    ) !important;
+/* Tiptap editor baseline — colors come from tokens; typography is handled
+   by prose classes in the components. */
+.ProseMirror {
+  outline: none;
 }
 
-/* Additional dark mode modal fixes */
-.dark [role='dialog'] {
-  background-color: #030a12 !important;
-  opacity: 1 !important;
-}
-
-/* Ensure all dialog overlays are properly dark */
-.dark [data-state='open'][data-radix-dialog-overlay] {
-  background-color: rgba(0, 0, 0, 0.85) !important;
-}
-
-/* Fix any remaining transparent backgrounds in modals */
-.dark .bg-white[role='dialog'],
-.dark .bg-white[data-radix-dialog-content] {
-  background-color: #030a12 !important;
-  color: #ffffff !important;
-}
-
-/* Ensure modal content is not transparent */
-.dark .backdrop-blur-sm {
-  backdrop-filter: none !important;
-  background-color: #011227 !important;
-}
-
-/* Tiptap Editor Dark Mode Styles */
-.dark .ProseMirror {
-  background-color: #030a12 !important;
-  color: #ffffff !important;
-  outline: none !important;
-}
-
-.dark .ProseMirror p.is-editor-empty:first-child::before {
-  color: #9ca3af !important;
-}
-
-.dark .ProseMirror blockquote {
-  border-left-color: #6b7280 !important;
-  color: #d1d5db !important;
-}
-
-.dark .ProseMirror code {
-  background-color: transparent !important;
-  color: #f9fafb !important;
-}
-
-.dark .ProseMirror pre {
-  background-color: transparent !important;
-  color: #f9fafb !important;
-  border-left: 2px solid #6b7280;
-  padding-left: 1rem;
-}
-
-.dark .ProseMirror h1,
-.dark .ProseMirror h2,
-.dark .ProseMirror h3,
-.dark .ProseMirror h4,
-.dark .ProseMirror h5,
-.dark .ProseMirror h6 {
-  color: #ffffff !important;
-}
-
-/* Global fixes for hardcoded colors that may still exist */
-.dark .text-gray-900,
-.dark .text-gray-800,
-.dark .text-gray-700 {
-  color: hsl(var(--foreground)) !important;
-}
-
-.dark .text-gray-600,
-.dark .text-gray-500 {
-  color: hsl(var(--muted-foreground)) !important;
-}
-
-.dark .text-gray-400,
-.dark .text-gray-300 {
-  color: hsl(var(--muted-foreground)) !important;
-}
-
-.dark .text-black {
-  color: hsl(var(--foreground)) !important;
-}
-
-/* Fix any hardcoded hover states */
-.dark .hover\:text-gray-800:hover,
-.dark .hover\:text-gray-900:hover {
-  color: hsl(var(--foreground)) !important;
-}
-
-.dark .hover\:text-gray-600:hover,
-.dark .hover\:text-gray-700:hover {
-  color: hsl(var(--foreground)) !important;
-}
-
-/* Fix border colors */
-.dark .border-gray-300,
-.dark .border-gray-200,
-.dark .border-gray-100 {
-  border-color: hsl(var(--border)) !important;
-}
-
-/* Fix background colors for consistency */
-.dark .bg-gray-100,
-.dark .bg-gray-50 {
-  background-color: hsl(var(--muted)) !important;
-}
-
-.dark .bg-gray-200 {
-  background-color: hsl(var(--muted)) !important;
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: var(--muted-foreground);
 }
 
 /* React Flow handle styles */

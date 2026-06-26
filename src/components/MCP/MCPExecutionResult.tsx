@@ -51,14 +51,14 @@ export const MCPExecutionResult = ({
 
   if (displayError || status === ExecutionStatus.ERROR) {
     return (
-      <div className={`rounded-md bg-red-50 p-3 dark:bg-red-950 ${className}`}>
+      <div className={`rounded-md bg-destructive/10 p-3 ${className}`}>
         <div className='mb-2 flex items-center gap-2'>
-          <XCircle className='h-4 w-4 text-red-500' />
-          <span className='text-sm font-medium text-red-700 dark:text-red-300'>
+          <XCircle className='h-4 w-4 text-destructive' />
+          <span className='text-sm font-medium text-destructive'>
             Execution Failed
           </span>
         </div>
-        <p className='text-sm text-red-600 dark:text-red-400'>{displayError}</p>
+        <p className='text-sm text-destructive'>{displayError}</p>
       </div>
     )
   }
@@ -96,7 +96,7 @@ export const MCPExecutionResult = ({
           )}
         </div>
         {displayResult !== null && displayResult !== undefined && (
-          <pre className='max-h-60 overflow-auto whitespace-pre-wrap text-sm text-green-800 dark:text-green-200'>
+          <pre className='max-h-60 overflow-auto text-sm whitespace-pre-wrap text-green-800 dark:text-green-200'>
             {typeof displayResult === 'string'
               ? displayResult
               : JSON.stringify(displayResult, null, 2)}
@@ -156,7 +156,7 @@ export const MCPExecutionInline = ({
         return 'text-green-500'
       case ExecutionStatus.ERROR:
       case ExecutionStatus.FAILED:
-        return 'text-red-500'
+        return 'text-destructive'
       case ExecutionStatus.RUNNING:
       case ExecutionStatus.PENDING:
       default:
@@ -168,7 +168,7 @@ export const MCPExecutionInline = ({
   const statusColor = getStatusColor()
 
   return (
-    <div className='inline-flex items-center gap-1 rounded bg-muted px-2 py-1 text-sm'>
+    <div className='inline-flex items-center gap-1 rounded-sm bg-muted px-2 py-1 text-sm'>
       <StatusIcon className={`h-3 w-3 ${statusColor}`} />
       <span className='font-medium'>{toolName}</span>
       <span className='text-muted-foreground'>on {serverName}</span>

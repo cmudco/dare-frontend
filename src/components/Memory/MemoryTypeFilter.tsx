@@ -15,7 +15,7 @@ const TYPE_CONFIG = [
   {
     type: null,
     label: 'All',
-    activeClass: 'bg-dare text-white border-dare',
+    activeClass: 'bg-dare text-dare-foreground border-dare',
   },
   {
     type: MemoryType.PROFILE,

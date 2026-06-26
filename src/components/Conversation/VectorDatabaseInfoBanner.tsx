@@ -20,7 +20,7 @@ const VectorDatabaseInfoBanner: React.FC<VectorDatabaseInfoBannerProps> = ({
           : 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/30 dark:bg-amber-900/20 dark:text-amber-100'
       }`}
     >
-      <Info className='mt-0.5 h-4 w-4 flex-shrink-0' />
+      <Info className='mt-0.5 h-4 w-4 shrink-0' />
       <div className='space-y-1'>
         {isTopKMode ? (
           <>

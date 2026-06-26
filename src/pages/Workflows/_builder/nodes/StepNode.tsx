@@ -189,10 +189,10 @@ export default function StepNode({ id, data, selected }: NodeProps) {
             }}
             className={`transition-all duration-200 ${
               isConnected
-                ? `${handleColor} !opacity-100`
+                ? `${handleColor} opacity-100!`
                 : shouldShow
-                  ? `${handleColor} !opacity-50 hover:!opacity-80`
-                  : '!opacity-0'
+                  ? `${handleColor} opacity-50! hover:opacity-80!`
+                  : 'opacity-0!'
             }`}
           />
         )

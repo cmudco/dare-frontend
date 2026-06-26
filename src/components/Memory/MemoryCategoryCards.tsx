@@ -24,7 +24,7 @@ const getCategoryColor = (categoryName: string): string => {
     return 'from-pink-500 to-rose-500'
   if (lowerName.includes('skill') || lowerName.includes('expertise'))
     return 'from-purple-500 to-violet-500'
-  return 'from-slate-500 to-gray-500'
+  return 'from-muted-foreground to-muted-foreground'
 }
 
 const MemoryCategoryCards = ({
@@ -35,14 +35,14 @@ const MemoryCategoryCards = ({
     return (
       <div className='flex gap-3 overflow-x-auto pb-2'>
         {[1, 2, 3].map((i) => (
-          <Card key={i} className='min-w-[280px] flex-shrink-0 animate-pulse'>
+          <Card key={i} className='min-w-[280px] shrink-0 animate-pulse'>
             <CardHeader className='pb-2'>
-              <div className='h-4 w-24 rounded bg-muted' />
+              <div className='h-4 w-24 rounded-sm bg-muted' />
             </CardHeader>
             <CardContent>
               <div className='space-y-2'>
-                <div className='h-3 w-full rounded bg-muted' />
-                <div className='h-3 w-3/4 rounded bg-muted' />
+                <div className='h-3 w-full rounded-sm bg-muted' />
+                <div className='h-3 w-3/4 rounded-sm bg-muted' />
               </div>
             </CardContent>
           </Card>
@@ -65,10 +65,10 @@ const MemoryCategoryCards = ({
         {categories.map((category, index) => (
           <Card
             key={`${category.name}-${index}`}
-            className='min-w-[280px] max-w-[320px] flex-shrink-0 overflow-hidden transition-all hover:shadow-md'
+            className='max-w-[320px] min-w-[280px] shrink-0 overflow-hidden transition-all hover:shadow-md'
           >
             <div
-              className={`h-1 w-full bg-gradient-to-r ${getCategoryColor(category.name)}`}
+              className={`h-1 w-full bg-linear-to-r ${getCategoryColor(category.name)}`}
             />
             <CardHeader className='pb-2'>
               <CardTitle className='flex items-center justify-between text-sm font-medium'>

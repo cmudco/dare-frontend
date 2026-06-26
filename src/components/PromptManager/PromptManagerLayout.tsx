@@ -29,7 +29,7 @@ const PromptManagerLayout = () => {
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='flex-grow overflow-auto p-8'>
+      <div className='grow overflow-auto p-8'>
         <div
           className='h-full w-full shadow-none'
           color='transparent'

@@ -82,7 +82,7 @@ export function CategoryStep({
             whileTap='tap'
             animate={selectedCategory === option.value ? 'selected' : 'initial'}
             onClick={() => onSelect(option.value)}
-            className={`relative flex flex-col items-center gap-1 rounded-xl border p-3 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+            className={`relative flex flex-col items-center gap-1 rounded-xl border p-3 transition-all duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${
               selectedCategory === option.value
                 ? 'bg-dare-gradient/20 border-primary/60'
                 : 'border-white/10 hover:border-white/20 hover:bg-white/5'
@@ -92,7 +92,7 @@ export function CategoryStep({
           >
             <motion.span
               variants={categoryCardVariants}
-              className='select-none text-2xl'
+              className='text-2xl select-none'
             >
               {option.icon}
             </motion.span>
@@ -114,7 +114,7 @@ export function CategoryStep({
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className='absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary'
+                className='absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary'
               >
                 <svg
                   className='h-3 w-3 text-white'

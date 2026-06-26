@@ -68,7 +68,7 @@ export const ChangePasswordForm: React.FC = () => {
               className={`mt-1 h-10 max-w-md ${
                 passwordFormik.touched.currentPassword &&
                 passwordFormik.errors.currentPassword
-                  ? 'border-red-500'
+                  ? 'border-destructive'
                   : ''
               }`}
               id='currentPassword'
@@ -78,7 +78,7 @@ export const ChangePasswordForm: React.FC = () => {
             />
             {passwordFormik.touched.currentPassword &&
               passwordFormik.errors.currentPassword && (
-                <p className='mt-1 text-xs text-red-500'>
+                <p className='mt-1 text-xs text-destructive'>
                   {passwordFormik.errors.currentPassword}
                 </p>
               )}
@@ -92,7 +92,7 @@ export const ChangePasswordForm: React.FC = () => {
               className={`mt-1 h-10 max-w-md ${
                 passwordFormik.touched.newPassword &&
                 passwordFormik.errors.newPassword
-                  ? 'border-red-500'
+                  ? 'border-destructive'
                   : ''
               }`}
               id='newPassword'
@@ -102,7 +102,7 @@ export const ChangePasswordForm: React.FC = () => {
             />
             {passwordFormik.touched.newPassword &&
               passwordFormik.errors.newPassword && (
-                <p className='mt-1 text-xs text-red-500'>
+                <p className='mt-1 text-xs text-destructive'>
                   {passwordFormik.errors.newPassword}
                 </p>
               )}
@@ -116,7 +116,7 @@ export const ChangePasswordForm: React.FC = () => {
               className={`mt-1 h-10 max-w-md ${
                 passwordFormik.touched.confirmPassword &&
                 passwordFormik.errors.confirmPassword
-                  ? 'border-red-500'
+                  ? 'border-destructive'
                   : ''
               }`}
               id='confirmPassword'
@@ -126,7 +126,7 @@ export const ChangePasswordForm: React.FC = () => {
             />
             {passwordFormik.touched.confirmPassword &&
               passwordFormik.errors.confirmPassword && (
-                <p className='mt-1 text-xs text-red-500'>
+                <p className='mt-1 text-xs text-destructive'>
                   {passwordFormik.errors.confirmPassword}
                 </p>
               )}
@@ -134,7 +134,7 @@ export const ChangePasswordForm: React.FC = () => {
 
           {error && (
             <div className='mt-2'>
-              <p className='text-xs font-medium text-red-500'>{error}</p>
+              <p className='text-xs font-medium text-destructive'>{error}</p>
             </div>
           )}
 

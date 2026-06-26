@@ -107,7 +107,7 @@ export const MCPToolForm = ({
         <div key={key} className='space-y-2'>
           <Label htmlFor={key}>
             {key}
-            {isRequired && <span className='ml-1 text-red-500'>*</span>}
+            {isRequired && <span className='ml-1 text-destructive'>*</span>}
           </Label>
           <Select
             value={value as string}
@@ -142,7 +142,7 @@ export const MCPToolForm = ({
           />
           <Label htmlFor={key} className='cursor-pointer'>
             {key}
-            {isRequired && <span className='ml-1 text-red-500'>*</span>}
+            {isRequired && <span className='ml-1 text-destructive'>*</span>}
           </Label>
           {prop.description && (
             <span className='text-xs text-muted-foreground'>
@@ -159,7 +159,7 @@ export const MCPToolForm = ({
         <div key={key} className='space-y-2'>
           <Label htmlFor={key}>
             {key}
-            {isRequired && <span className='ml-1 text-red-500'>*</span>}
+            {isRequired && <span className='ml-1 text-destructive'>*</span>}
           </Label>
           <Input
             id={key}
@@ -191,7 +191,7 @@ export const MCPToolForm = ({
         <div key={key} className='space-y-2'>
           <Label htmlFor={key}>
             {key}
-            {isRequired && <span className='ml-1 text-red-500'>*</span>}
+            {isRequired && <span className='ml-1 text-destructive'>*</span>}
           </Label>
           <Textarea
             id={key}
@@ -212,7 +212,7 @@ export const MCPToolForm = ({
       <div key={key} className='space-y-2'>
         <Label htmlFor={key}>
           {key}
-          {isRequired && <span className='ml-1 text-red-500'>*</span>}
+          {isRequired && <span className='ml-1 text-destructive'>*</span>}
         </Label>
         <Input
           id={key}
@@ -257,7 +257,7 @@ export const MCPToolForm = ({
               <Label className='mb-2 block text-xs text-muted-foreground'>
                 Result
               </Label>
-              <pre className='max-h-40 overflow-auto whitespace-pre-wrap text-sm'>
+              <pre className='max-h-40 overflow-auto text-sm whitespace-pre-wrap'>
                 {typeof result === 'string'
                   ? result
                   : JSON.stringify(result, null, 2)}
@@ -267,8 +267,8 @@ export const MCPToolForm = ({
 
           {/* Error display */}
           {error && (
-            <div className='mt-4 rounded-md bg-red-50 p-3 dark:bg-red-950'>
-              <p className='text-sm text-red-700 dark:text-red-300'>{error}</p>
+            <div className='mt-4 rounded-md bg-destructive/10 p-3'>
+              <p className='text-sm text-destructive'>{error}</p>
             </div>
           )}
         </div>

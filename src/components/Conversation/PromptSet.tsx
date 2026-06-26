@@ -36,7 +36,7 @@ const PromptSet: React.FC = () => {
         <Button
           data-tour='prompt-set'
           variant='ghost'
-          className='h-9 w-9 p-0 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+          className='h-9 w-9 p-0 hover:bg-accent hover:text-accent-foreground'
         >
           <GoCommandPalette className='h-5 w-5 text-muted-foreground transition-colors hover:text-foreground' />
         </Button>

@@ -185,8 +185,7 @@ const ArtifactSidecar: React.FC = () => {
     <div
       className={cn(
         'flex h-full shrink-0 flex-col',
-        'border-l border-gray-200 bg-white',
-        'dark:border-gray-700 dark:bg-dark-bg',
+        'border-l border-border bg-background',
         isOverlay
           ? 'absolute inset-y-0 right-0 z-40 max-w-full shadow-2xl'
           : 'relative',
@@ -203,25 +202,25 @@ const ArtifactSidecar: React.FC = () => {
           role='separator'
           aria-orientation='vertical'
           onPointerDown={handleResizeStart}
-          className='absolute -left-1 top-0 z-10 h-full w-2 cursor-col-resize touch-none hover:bg-blue-500/30'
+          className='absolute top-0 -left-1 z-10 h-full w-2 cursor-col-resize touch-none hover:bg-blue-500/30'
           title='Resize artifact panel'
         />
       )}
 
       {/* Header */}
-      <div className='flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700'>
+      <div className='flex items-center justify-between border-b border-border px-4 py-3'>
         <div className='flex min-w-0 items-center gap-3'>
-          <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'>
+          <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground'>
             {getArtifactIcon(activeArtifact.artifactType)}
           </div>
           <div className='flex min-w-0 flex-col'>
             <div className='flex items-center gap-2'>
-              <h2 className='truncate font-medium text-gray-900 dark:text-white'>
+              <h2 className='truncate font-medium text-foreground'>
                 {activeArtifact.title}
               </h2>
               <ArtifactVersionDropdown artifact={activeArtifact} />
             </div>
-            <span className='truncate text-xs text-gray-500 dark:text-gray-400'>
+            <span className='truncate text-xs text-muted-foreground'>
               {activeArtifact.filename}
             </span>
           </div>
@@ -239,7 +238,7 @@ const ArtifactSidecar: React.FC = () => {
             variant='ghost'
             size='icon'
             onClick={() => dispatch(toggleSidecarFullscreen())}
-            className='h-8 w-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+            className='h-8 w-8 text-muted-foreground hover:text-foreground'
             title={sidecarFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           >
             {sidecarFullscreen ? (
@@ -252,7 +251,7 @@ const ArtifactSidecar: React.FC = () => {
             variant='ghost'
             size='icon'
             onClick={handleClose}
-            className='h-8 w-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+            className='h-8 w-8 text-muted-foreground hover:text-foreground'
             title='Close'
           >
             <X className='h-4 w-4' />
@@ -267,10 +266,8 @@ const ArtifactSidecar: React.FC = () => {
 
       {/* Error Message */}
       {activeArtifact.status === 'error' && activeArtifact.error && (
-        <div className='border-t border-red-200 bg-red-50 px-4 py-3 dark:border-red-900/50 dark:bg-red-900/20'>
-          <p className='text-sm text-red-700 dark:text-red-400'>
-            {activeArtifact.error}
-          </p>
+        <div className='border-t border-destructive/30 bg-destructive/10 px-4 py-3'>
+          <p className='text-sm text-destructive'>{activeArtifact.error}</p>
         </div>
       )}
     </div>

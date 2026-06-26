@@ -84,7 +84,7 @@ const ReviewItemCard = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.25 }}
-      className='rounded-xl border border-border bg-card text-card-foreground shadow-sm'
+      className='rounded-xl border border-border bg-card text-card-foreground shadow-xs'
     >
       <button
         onClick={() => setExpanded((v) => !v)}
@@ -98,7 +98,7 @@ const ReviewItemCard = ({
             </Badge>
             <span className='text-xs text-muted-foreground'>via {tool}</span>
           </div>
-          <h3 className='truncate text-[15px] font-semibold leading-snug tracking-tight'>
+          <h3 className='truncate text-[15px] leading-snug font-semibold tracking-tight'>
             {item.title}
           </h3>
           <p className='mt-0.5 truncate text-xs text-muted-foreground'>
@@ -135,7 +135,7 @@ const ReviewItemCard = ({
             )}
             {item.citationContext && (
               <Field label='Citation context'>
-                <span className='italic text-foreground/80'>
+                <span className='text-foreground/80 italic'>
                   {item.citationContext}
                 </span>
               </Field>
@@ -244,7 +244,7 @@ const Field = ({
   children: React.ReactNode
 }) => (
   <div>
-    <p className='mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+    <p className='mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase'>
       {label}
     </p>
     <p className='leading-relaxed text-foreground/90'>{children}</p>

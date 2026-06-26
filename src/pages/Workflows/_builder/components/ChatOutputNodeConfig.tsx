@@ -143,7 +143,7 @@ export default function ChatOutputNodeConfig({
                   ? 'animate-pulse bg-blue-500'
                   : status === WorkflowRunStepStatus.Failed
                     ? 'bg-red-500'
-                    : 'bg-gray-400'
+                    : 'bg-muted-foreground'
             }`}
           />
           <span className='text-sm capitalize'>
@@ -211,7 +211,7 @@ export default function ChatOutputNodeConfig({
                   pre({ children, ...props }) {
                     return (
                       <pre
-                        className='max-w-full overflow-x-auto whitespace-pre-wrap break-words'
+                        className='max-w-full overflow-x-auto wrap-break-word whitespace-pre-wrap'
                         {...props}
                       >
                         {children}
@@ -244,7 +244,7 @@ export default function ChatOutputNodeConfig({
                     }
                     return (
                       <code
-                        className='not-prose break-all rounded border border-border bg-muted px-1 text-foreground'
+                        className='not-prose rounded-sm border border-border bg-muted px-1 break-all text-foreground'
                         {...props}
                       >
                         {children}
@@ -347,7 +347,7 @@ export default function ChatOutputNodeConfig({
                   <ExternalLink className='h-2.5 w-2.5' />
                 </a>
                 {source.citedText && (
-                  <p className='mt-1 line-clamp-2 italic text-muted-foreground'>
+                  <p className='mt-1 line-clamp-2 text-muted-foreground italic'>
                     &ldquo;{source.citedText}&rdquo;
                   </p>
                 )}

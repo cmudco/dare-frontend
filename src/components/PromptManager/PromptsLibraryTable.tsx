@@ -150,16 +150,14 @@ const PromptsLibraryTable = ({ searchQuery }: PromptsLibraryTableProps) => {
 
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max bg-background bg-white text-left'>
+      <Table className='mt-4 w-full min-w-max bg-background text-left'>
         <TableHeader>
           <TableRow className='bg-background bg-muted'>
             {LIBRARY_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 dark:text-white ${
-                  head !== 'Action'
-                    ? 'hover:bg-gray-100 hover:opacity-100 dark:hover:bg-gray-700'
-                    : ''
+                className={`cursor-pointer p-4 text-sm font-semibold text-foreground transition-colors duration-150 select-none ${
+                  head !== 'Action' ? 'hover:bg-accent hover:opacity-100' : ''
                 }`}
                 onClick={() => handleSort(head)}
               >
@@ -190,7 +188,7 @@ const PromptsLibraryTable = ({ searchQuery }: PromptsLibraryTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={LIBRARY_TABLE_HEAD.length}
-                className='p-4 text-center dark:text-white'
+                className='p-4 text-center text-foreground'
               >
                 Loading library...
               </TableCell>
@@ -199,30 +197,30 @@ const PromptsLibraryTable = ({ searchQuery }: PromptsLibraryTableProps) => {
             <TableRow>
               <TableCell
                 colSpan={LIBRARY_TABLE_HEAD.length}
-                className='p-4 text-center dark:text-white'
+                className='p-4 text-center text-foreground'
               >
                 No published prompts found
               </TableCell>
             </TableRow>
           ) : (
             paginatedPrompts.map((prompt) => (
-              <TableRow key={prompt.id} className='dark:border-gray-700'>
+              <TableRow key={prompt.id} className='border-border'>
                 <TableCell className='p-4'>
                   <div>
                     <div className='flex items-center gap-2'>
-                      <h3 className='font-medium dark:text-white'>
+                      <h3 className='font-medium text-foreground'>
                         {prompt.title || 'Untitled'}
                       </h3>
                       <span className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'>
                         v{prompt.version || 1}
                       </span>
                     </div>
-                    <p className='max-w-[300px] truncate text-sm text-gray-500 dark:text-gray-400'>
+                    <p className='max-w-[300px] truncate text-sm text-muted-foreground'>
                       {renderPromptContent(prompt.content) || 'No content'}
                     </p>
                   </div>
                 </TableCell>
-                <TableCell className='p-4 dark:text-white'>
+                <TableCell className='p-4 text-foreground'>
                   <div className='flex items-center gap-2'>
                     {prompt.authorEmail}
                     {prompt.authorEmail === currentUserEmail && (
@@ -232,14 +230,14 @@ const PromptsLibraryTable = ({ searchQuery }: PromptsLibraryTableProps) => {
                     )}
                   </div>
                 </TableCell>
-                <TableCell className='p-4 dark:text-white'>
+                <TableCell className='p-4 text-foreground'>
                   {formatDate(prompt.publishedAt)}
                 </TableCell>
                 <TableCell className='p-4 text-center'>
                   {prompt.authorEmail !== currentUserEmail && (
                     <DropdownMenu>
-                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200 dark:hover:bg-gray-700'>
-                        <EllipsisVerticalIcon className='h-4 w-4 text-gray-500 dark:text-gray-400' />
+                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-accent'>
+                        <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem
@@ -270,37 +268,28 @@ const PromptsLibraryTable = ({ searchQuery }: PromptsLibraryTableProps) => {
             <TableRow className='bg-background'>
               <TableCell
                 colSpan={LIBRARY_TABLE_HEAD.length}
-                className='w-full p-4 dark:text-white'
+                className='w-full p-4 text-foreground'
               >
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
-                    <span className='text-sm dark:text-white'>
+                    <span className='text-sm text-foreground'>
                       Rows per page:
                     </span>
                     <Select
                       value={String(itemsPerPage)}
                       onValueChange={(val) => setItemsPerPage(Number(val))}
                     >
-                      <SelectTrigger className='w-[80px] bg-background dark:border-gray-700 dark:text-white'>
+                      <SelectTrigger className='w-[80px] bg-background'>
                         <SelectValue placeholder='Rows' />
                       </SelectTrigger>
-                      <SelectContent className='bg-background dark:border-gray-700'>
-                        <SelectItem
-                          value='5'
-                          className='dark:text-white dark:hover:bg-white/10'
-                        >
+                      <SelectContent className='bg-background'>
+                        <SelectItem value='5' className='hover:bg-accent'>
                           5
                         </SelectItem>
-                        <SelectItem
-                          value='10'
-                          className='dark:text-white dark:hover:bg-white/10'
-                        >
+                        <SelectItem value='10' className='hover:bg-accent'>
                           10
                         </SelectItem>
-                        <SelectItem
-                          value='20'
-                          className='dark:text-white dark:hover:bg-white/10'
-                        >
+                        <SelectItem value='20' className='hover:bg-accent'>
                           20
                         </SelectItem>
                       </SelectContent>
@@ -316,7 +305,7 @@ const PromptsLibraryTable = ({ searchQuery }: PromptsLibraryTableProps) => {
                     >
                       Previous
                     </Button>
-                    <span className='text-sm dark:text-white'>
+                    <span className='text-sm text-foreground'>
                       Page {currentPage} of {totalPages || 1}
                     </span>
                     <Button

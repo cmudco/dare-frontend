@@ -12,10 +12,10 @@ export const CodeBlock: React.FC<{
   const [copied, setCopied] = React.useState(false)
   return (
     <div className='group relative my-4 max-w-full'>
-      <pre className='not-prose max-w-full overflow-x-auto whitespace-pre-wrap break-words break-all rounded-md bg-transparent text-foreground'>
+      <pre className='not-prose max-w-full overflow-x-auto rounded-md bg-transparent wrap-break-word break-all whitespace-pre-wrap text-foreground'>
         <code
           className={
-            (className || '') + ' break-words break-all text-foreground'
+            (className || '') + ' wrap-break-word break-all text-foreground'
           }
           style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}
           {...props}
@@ -28,7 +28,7 @@ export const CodeBlock: React.FC<{
           type='button'
           variant='outline'
           size='sm'
-          className='dark:bg-dark-chat-history/80 flex h-6 min-h-0 w-6 min-w-0 items-center justify-center border border-border bg-background px-1 py-0.5 text-foreground opacity-80 shadow-sm transition-opacity hover:opacity-100'
+          className='flex h-6 min-h-0 w-6 min-w-0 items-center justify-center border border-border bg-background px-1 py-0.5 text-foreground opacity-80 shadow-xs transition-opacity hover:opacity-100'
           style={{ fontSize: '0.75rem' }}
           onClick={() => {
             navigator.clipboard.writeText(codeString)
@@ -47,7 +47,7 @@ export const CodeBlock: React.FC<{
         </Button>
         {copied && (
           <span
-            className='animate-fade-in-out dark:bg-dark-chat-history/90 ml-2 rounded bg-background px-2 py-0.5 text-xs font-semibold text-green-600 shadow dark:text-green-400'
+            className='animate-fade-in-out ml-2 rounded-sm bg-background px-2 py-0.5 text-xs font-semibold text-green-600 shadow-sm dark:text-green-400'
             style={{ zIndex: 20 }}
           >
             Snippet copied!

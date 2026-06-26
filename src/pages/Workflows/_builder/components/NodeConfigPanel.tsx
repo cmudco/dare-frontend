@@ -96,7 +96,7 @@ export default function NodeConfigPanel({
   }
 
   return (
-    <div className='absolute right-0 top-0 z-20 flex h-full w-[45vw] flex-col border-l border-border/50 bg-white/95 shadow-lg backdrop-blur-sm'>
+    <div className='absolute top-0 right-0 z-20 flex h-full w-[45vw] flex-col border-l border-border/50 bg-card/95 shadow-lg backdrop-blur-xs'>
       {/* Header */}
       <div className='flex items-center justify-between border-b border-border p-4'>
         <div>

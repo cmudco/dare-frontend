@@ -120,8 +120,8 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
         'group flex items-center gap-3 rounded-lg border bg-card px-3 py-2 transition-colors',
         compact ? 'text-sm' : 'text-base',
         wallet.isActive
-          ? 'cursor-default border-[#023572]/40 bg-gradient-to-r from-[#EE183C]/5 to-[#023572]/5 dark:border-[#EE183C]/40 dark:from-[#EE183C]/10 dark:to-[#023572]/10'
-          : 'cursor-pointer border-border hover:border-[#023572]/30 hover:bg-accent/40'
+          ? 'cursor-default border-dare/40 bg-dare/5'
+          : 'cursor-pointer border-border hover:border-dare/30 hover:bg-accent/40'
       )}
       data-wallet-type={wallet.type}
       data-wallet-active={wallet.isActive}
@@ -163,7 +163,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
                   <>
                     <Badge
                       variant='secondary'
-                      className='border-0 bg-gradient-to-r from-[#EE183C]/15 to-[#023572]/15 text-[10px] font-semibold uppercase tracking-wide text-[#023572] dark:text-[#EE183C]'
+                      className='border-0 bg-dare/15 text-[10px] font-semibold tracking-wide text-dare uppercase'
                     >
                       {providers.length}{' '}
                       {providers.length === 1 ? 'key' : 'keys'} configured
@@ -172,7 +172,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
                       <Badge
                         key={p}
                         variant='outline'
-                        className='border-[#023572]/20 text-[10px]'
+                        className='border-dare/20 text-[10px]'
                       >
                         {providerDisplayName(p)}
                       </Badge>
@@ -220,7 +220,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
       </div>
 
       {wallet.isActive && (
-        <span className='inline-flex items-center gap-1 rounded-full bg-dare-gradient px-2 py-0.5 text-xs font-medium text-white'>
+        <span className='inline-flex items-center gap-1 rounded-full bg-dare px-2 py-0.5 text-xs font-medium text-dare-foreground'>
           <CheckCircle2 className='h-3 w-3' aria-label='active' />
           Active
         </span>

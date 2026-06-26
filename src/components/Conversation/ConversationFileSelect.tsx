@@ -206,10 +206,7 @@ const ConversationFileSelect: React.FC = () => {
     <div data-tour='file-select' className='left-3 flex h-full items-center'>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant='ghost'
-            className='h-9 w-9 p-0 hover:bg-gray-200 dark:hover:bg-white/10'
-          >
+          <Button variant='ghost' className='h-9 w-9 p-0 hover:bg-accent'>
             <FolderIcon className='h-5 w-5 text-muted-foreground transition-colors hover:text-foreground' />
           </Button>
         </PopoverTrigger>
@@ -221,12 +218,12 @@ const ConversationFileSelect: React.FC = () => {
         >
           <div className='space-y-4 text-foreground'>
             <div className='relative'>
-              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+              <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
               <Input
                 placeholder={`Search ${activeTab}`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='pl-9 pr-10 dark:border-dark-icon-unselected dark:bg-transparent dark:text-white dark:placeholder-gray-400'
+                className='pr-10 pl-9'
               />
               <SettingsPopover
                 open={settingsOpen}
@@ -235,7 +232,7 @@ const ConversationFileSelect: React.FC = () => {
                 <SettingsPopoverTrigger asChild>
                   <Button
                     variant='ghost'
-                    className='absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0 dark:hover:bg-white/10'
+                    className='absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 p-0 hover:bg-accent'
                   >
                     <Settings className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
                   </Button>
@@ -262,34 +259,34 @@ const ConversationFileSelect: React.FC = () => {
                 )
               }
             >
-              <TabsList className='grid w-full grid-cols-5 border-border bg-muted/30 dark:bg-muted/50'>
+              <TabsList className='grid w-full grid-cols-5 border-border bg-muted/50'>
                 <TabsTrigger
                   value='embeddings'
-                  className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
+                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Embeddings
                 </TabsTrigger>
                 <TabsTrigger
                   value='files'
-                  className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
+                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Files
                 </TabsTrigger>
                 <TabsTrigger
                   value='media'
-                  className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
+                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Media
                 </TabsTrigger>
                 <TabsTrigger
                   value='tags'
-                  className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
+                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Tags
                 </TabsTrigger>
                 <TabsTrigger
                   value='folders'
-                  className='text-foreground hover:bg-blue-50 hover:text-blue-900 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm dark:hover:bg-white/10 dark:hover:text-white dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white'
+                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Folders
                 </TabsTrigger>
@@ -303,13 +300,13 @@ const ConversationFileSelect: React.FC = () => {
                       <div
                         key={file.id}
                         onClick={() => handleToggleEmbedding(file)}
-                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground'
                       >
                         <div
                           className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
                             selectedEmbeddings.some((f) => f.id === file.id)
                               ? 'border-primary bg-primary'
-                              : 'border-input hover:border-muted-foreground dark:border-dark-icon-unselected dark:hover:border-gray-300'
+                              : 'border-input hover:border-muted-foreground'
                           }`}
                         >
                           {selectedEmbeddings.some((f) => f.id === file.id) && (
@@ -317,7 +314,7 @@ const ConversationFileSelect: React.FC = () => {
                           )}
                         </div>
                         <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                        <span className='flex-1 text-sm dark:text-white'>
+                        <span className='flex-1 text-sm text-foreground'>
                           {file.name}
                         </span>
                         {isShared && (
@@ -342,7 +339,7 @@ const ConversationFileSelect: React.FC = () => {
                       <div
                         key={file.id}
                         onClick={() => handleToggleFile(file)}
-                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground'
                       >
                         <div
                           className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
@@ -383,13 +380,13 @@ const ConversationFileSelect: React.FC = () => {
                       <div
                         key={file.id}
                         onClick={() => handleToggleMedia(file)}
-                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground'
                       >
                         <div
                           className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
                             selectedMediaFiles.some((f) => f.id === file.id)
                               ? 'border-primary bg-primary'
-                              : 'border-input hover:border-muted-foreground dark:border-dark-icon-unselected dark:hover:border-gray-300'
+                              : 'border-input hover:border-muted-foreground'
                           }`}
                         >
                           {selectedMediaFiles.some((f) => f.id === file.id) && (
@@ -398,7 +395,7 @@ const ConversationFileSelect: React.FC = () => {
                         </div>
                         <Image className='mr-2 h-4 w-4 text-muted-foreground' />
                         <span
-                          className={`flex-1 text-sm ${selectedMediaFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'} dark:text-white`}
+                          className={`flex-1 text-sm ${selectedMediaFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'}`}
                         >
                           {file.name}
                         </span>
@@ -431,8 +428,8 @@ const ConversationFileSelect: React.FC = () => {
                         className={`flex items-center rounded-md p-2 transition-colors ${
                           hasFiles
                             ? isSelected
-                              ? 'cursor-pointer bg-blue-100 text-blue-900 dark:bg-white/20 dark:text-white'
-                              : 'cursor-pointer text-foreground hover:bg-blue-50 hover:text-blue-900 dark:text-white dark:hover:bg-white/10 dark:hover:text-white'
+                              ? 'cursor-pointer bg-accent text-accent-foreground'
+                              : 'cursor-pointer text-foreground hover:bg-accent hover:text-accent-foreground'
                             : 'cursor-not-allowed opacity-50'
                         }`}
                       >
@@ -481,8 +478,8 @@ const ConversationFileSelect: React.FC = () => {
                         className={`flex items-center rounded-md p-2 transition-colors ${
                           hasFiles
                             ? isSelected
-                              ? 'cursor-pointer bg-blue-100 text-blue-900 dark:bg-white/20 dark:text-white'
-                              : 'cursor-pointer text-foreground hover:bg-blue-50 hover:text-blue-900 dark:text-white dark:hover:bg-white/10 dark:hover:text-white'
+                              ? 'cursor-pointer bg-accent text-accent-foreground'
+                              : 'cursor-pointer text-foreground hover:bg-accent hover:text-accent-foreground'
                             : 'cursor-not-allowed opacity-50'
                         }`}
                       >
@@ -525,14 +522,14 @@ const ConversationFileSelect: React.FC = () => {
                 variant='ghost'
                 size='sm'
                 onClick={clearSelections}
-                className='dark:text-white dark:hover:bg-white/10'
+                className='text-foreground hover:bg-accent'
               >
                 Clear
               </Button>
               <Button
                 size='sm'
                 onClick={() => setOpen(false)}
-                className='dark:bg-dark-button-primary dark:text-white dark:hover:bg-dark-button-primary/80'
+                className='bg-primary text-primary-foreground hover:bg-primary/90'
               >
                 Done ({selectedEmbeddings.length} embeddings,{' '}
                 {selectedFiles.length} files, {selectedMediaFiles.length} media,{' '}

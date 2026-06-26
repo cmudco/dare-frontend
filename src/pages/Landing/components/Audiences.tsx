@@ -51,7 +51,7 @@ export const Audiences: React.FC = () => {
           {AUDIENCES.map(({ icon: Icon, role, body, note, links }) => (
             <div
               key={role}
-              className='flex flex-col rounded-2xl border border-border bg-card p-7 transition-shadow hover:shadow-lg hover:shadow-black/[0.04] dark:hover:shadow-black/20'
+              className='flex flex-col rounded-2xl border border-border bg-card p-7 transition-shadow hover:shadow-lg hover:shadow-black/4 dark:hover:shadow-black/20'
             >
               <span className='flex h-11 w-11 items-center justify-center rounded-xl bg-dare/10 text-dare'>
                 <Icon className='h-5 w-5' />
@@ -62,7 +62,7 @@ export const Audiences: React.FC = () => {
               <p className='mt-3 text-sm leading-relaxed text-muted-foreground'>
                 {body}
               </p>
-              <p className='mt-4 border-l-2 border-border pl-3 text-sm italic leading-relaxed text-foreground/70'>
+              <p className='mt-4 border-l-2 border-border pl-3 text-sm leading-relaxed text-foreground/70 italic'>
                 {note}
               </p>
 
@@ -80,7 +80,7 @@ export const Audiences: React.FC = () => {
                     className='group inline-flex items-center justify-between text-sm font-medium text-foreground transition-colors hover:text-dare'
                   >
                     {l.label}
-                    <ArrowUpRight className='h-4 w-4 text-muted-foreground transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-dare' />
+                    <ArrowUpRight className='h-4 w-4 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-dare' />
                   </a>
                 ))}
               </div>

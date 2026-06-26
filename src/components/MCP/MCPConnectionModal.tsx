@@ -194,7 +194,7 @@ export const MCPConnectionModal = ({
                 <Label htmlFor={cred.key}>
                   {cred.label}
                   {cred.required && (
-                    <span className='ml-1 text-red-500'>*</span>
+                    <span className='ml-1 text-destructive'>*</span>
                   )}
                 </Label>
                 <Input
@@ -220,7 +220,7 @@ export const MCPConnectionModal = ({
               className={`flex items-center gap-2 rounded-md p-3 text-sm ${
                 testResult.success
                   ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300'
-                  : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
+                  : 'bg-destructive/10 text-destructive'
               }`}
             >
               {testResult.success ? (

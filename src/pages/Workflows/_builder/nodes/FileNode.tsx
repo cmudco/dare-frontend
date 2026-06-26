@@ -171,10 +171,10 @@ export default function FileNode({ id, data, selected }: NodeProps) {
             style={{ top: `${topPercent}%` }}
             className={`transition-all duration-200 ${
               isConnected
-                ? `${handleColor} !opacity-100`
+                ? `${handleColor} opacity-100!`
                 : shouldShow
-                  ? `${handleColor} !opacity-50 hover:!opacity-80`
-                  : '!opacity-0'
+                  ? `${handleColor} opacity-50! hover:opacity-80!`
+                  : 'opacity-0!'
             }`}
           />
         )

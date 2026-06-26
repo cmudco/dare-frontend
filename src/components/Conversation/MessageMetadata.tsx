@@ -121,7 +121,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className='fixed bottom-0 right-0 top-0 mt-0 h-full w-[50vw] rounded-l-lg bg-white p-0 shadow-lg'>
+      <DrawerContent className='fixed top-0 right-0 bottom-0 mt-0 h-full w-[50vw] rounded-l-lg bg-white p-0 shadow-lg'>
         <ScrollArea className='h-full w-full'>
           <div className='p-4'>
             <DrawerHeader className='p-0 text-left'>
@@ -150,15 +150,15 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                 <CardContent className='space-y-4'>
                   <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                     <div>
-                      <label className='text-sm font-medium text-gray-600'>
+                      <label className='text-sm font-medium text-muted-foreground'>
                         Message ID
                       </label>
-                      <p className='rounded bg-gray-100 px-2 py-1 font-mono text-sm'>
+                      <p className='rounded-sm bg-muted px-2 py-1 font-mono text-sm'>
                         {message.id}
                       </p>
                     </div>
                     <div>
-                      <label className='text-sm font-medium text-gray-600'>
+                      <label className='text-sm font-medium text-muted-foreground'>
                         Sender
                       </label>
                       <div className='flex items-center gap-2'>
@@ -171,11 +171,11 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                   </div>
 
                   <div>
-                    <label className='text-sm font-medium text-gray-600'>
+                    <label className='text-sm font-medium text-muted-foreground'>
                       Message Content
                     </label>
-                    <div className='mt-1 max-h-32 overflow-y-auto rounded-md bg-gray-50 p-3'>
-                      <p className='whitespace-pre-wrap break-words text-sm'>
+                    <div className='mt-1 max-h-32 overflow-y-auto rounded-md bg-muted p-3'>
+                      <p className='text-sm wrap-break-word whitespace-pre-wrap'>
                         {message.message.length > 200
                           ? `${message.message.substring(0, 200)}...`
                           : message.message}
@@ -196,11 +196,11 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                 <CardContent>
                   <div className='space-y-2'>
                     <div>
-                      <label className='text-sm font-medium text-gray-600'>
+                      <label className='text-sm font-medium text-muted-foreground'>
                         Created
                       </label>
                       <p className='text-sm'>{dateInfo.relative}</p>
-                      <p className='text-xs text-gray-500'>
+                      <p className='text-xs text-muted-foreground'>
                         {dateInfo.absolute}
                       </p>
                     </div>
@@ -219,7 +219,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                   </CardHeader>
                   <CardContent className='space-y-4'>
                     <div>
-                      <label className='text-sm font-medium text-gray-600'>
+                      <label className='text-sm font-medium text-muted-foreground'>
                         Model
                       </label>
                       <p className='text-sm'>
@@ -233,7 +233,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                     {(message.inputTokens || message.outputTokens) && (
                       <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                         <div>
-                          <label className='text-sm font-medium text-gray-600'>
+                          <label className='text-sm font-medium text-muted-foreground'>
                             Input Tokens
                           </label>
                           <div className='flex items-center gap-2'>
@@ -244,7 +244,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                           </div>
                         </div>
                         <div>
-                          <label className='text-sm font-medium text-gray-600'>
+                          <label className='text-sm font-medium text-muted-foreground'>
                             Output Tokens
                           </label>
                           <div className='flex items-center gap-2'>
@@ -259,7 +259,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
 
                     {message.cost && (
                       <div>
-                        <label className='text-sm font-medium text-gray-600'>
+                        <label className='text-sm font-medium text-muted-foreground'>
                           Cost
                         </label>
                         <div className='flex items-center gap-2'>
@@ -323,7 +323,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                       {message.energyStats && (
                         <div className='grid grid-cols-2 gap-2 border-t pt-3'>
                           <div className='flex items-center gap-2 text-xs'>
-                            <Smartphone className='h-3.5 w-3.5 text-slate-500' />
+                            <Smartphone className='h-3.5 w-3.5 text-muted-foreground' />
                             <span>
                               {formatPhoneBattery(
                                 message.energyStats.phoneBatteryPct
@@ -403,9 +403,9 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                       {message.files.map((file) => (
                         <div
                           key={file.id}
-                          className='flex items-center gap-2 rounded bg-gray-50 p-2'
+                          className='flex items-center gap-2 rounded-sm bg-muted p-2'
                         >
-                          <FileText className='h-4 w-4 text-gray-500' />
+                          <FileText className='h-4 w-4 text-muted-foreground' />
                           <span className='text-sm'>{file.name}</span>
                         </div>
                       ))}
@@ -499,11 +499,11 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
 
                   {message.originalMessage && (
                     <div className='mt-4'>
-                      <label className='text-sm font-medium text-gray-600'>
+                      <label className='text-sm font-medium text-muted-foreground'>
                         Original Message
                       </label>
-                      <div className='mt-1 max-h-32 overflow-y-auto rounded-md bg-gray-50 p-3'>
-                        <p className='whitespace-pre-wrap break-words text-sm'>
+                      <div className='mt-1 max-h-32 overflow-y-auto rounded-md bg-muted p-3'>
+                        <p className='text-sm wrap-break-word whitespace-pre-wrap'>
                           {message.originalMessage.length > 200
                             ? `${message.originalMessage.substring(0, 200)}...`
                             : message.originalMessage}
@@ -514,7 +514,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
 
                   {message.feedbackText && (
                     <div className='mt-4'>
-                      <label className='text-sm font-medium text-gray-600'>
+                      <label className='text-sm font-medium text-muted-foreground'>
                         {message.feedbackType === 'like' ? 'Like' : 'Dislike'}{' '}
                         Feedback
                       </label>
@@ -554,7 +554,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                       {message.snippets.map((snippet) => (
                         <div
                           key={snippet.id}
-                          className='rounded-lg border bg-gray-50 p-3'
+                          className='rounded-lg border bg-muted/50 p-3'
                         >
                           <div className='mb-2 flex items-center justify-between'>
                             <span className='text-sm font-medium'>
@@ -569,7 +569,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                               </Badge>
                             </div>
                           </div>
-                          <p className='line-clamp-3 text-xs text-gray-600'>
+                          <p className='line-clamp-3 text-xs text-muted-foreground'>
                             {snippet.text}
                           </p>
                           {snippet.vectorDbSource && (
@@ -619,7 +619,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                           return (
                             <div
                               key={source.id}
-                              className='rounded-lg border bg-gray-50 p-3'
+                              className='rounded-lg border bg-muted/50 p-3'
                             >
                               <div className='mb-2 flex items-start justify-between gap-2'>
                                 <div className='min-w-0 flex-1'>
@@ -627,27 +627,27 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                                     href={source.url}
                                     target='_blank'
                                     rel='noopener noreferrer'
-                                    className='group flex items-center gap-1.5 text-sm font-medium text-gray-900 hover:text-blue-600'
+                                    className='group flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-blue-600'
                                   >
                                     <span className='truncate'>
                                       {source.title || domain}
                                     </span>
-                                    <ExternalLink className='h-3 w-3 flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100' />
+                                    <ExternalLink className='h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100' />
                                   </a>
-                                  <p className='mt-0.5 truncate text-xs text-gray-500'>
+                                  <p className='mt-0.5 truncate text-xs text-muted-foreground'>
                                     {domain}
                                   </p>
                                 </div>
-                                <div className='flex flex-shrink-0 items-center gap-2'>
+                                <div className='flex shrink-0 items-center gap-2'>
                                   {source.pageAge && (
-                                    <span className='text-xs text-gray-500'>
+                                    <span className='text-xs text-muted-foreground'>
                                       {source.pageAge}
                                     </span>
                                   )}
                                   <Badge
                                     className={`text-xs ${
                                       providerColors[source.provider] ||
-                                      'bg-gray-100 text-gray-700'
+                                      'bg-muted text-muted-foreground'
                                     }`}
                                   >
                                     {source.provider}
@@ -655,8 +655,8 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                                 </div>
                               </div>
                               {source.citedText && (
-                                <div className='mt-2 rounded border-l-2 border-gray-300 bg-white p-2'>
-                                  <p className='line-clamp-3 text-xs italic text-gray-600'>
+                                <div className='mt-2 rounded-sm border-l-2 border-border bg-card p-2'>
+                                  <p className='line-clamp-3 text-xs text-muted-foreground italic'>
                                     "{source.citedText}"
                                   </p>
                                 </div>
@@ -684,14 +684,14 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                         {message.memoryContextData.map((item, index) => (
                           <div
                             key={index}
-                            className='rounded-lg border bg-gray-50 p-3'
+                            className='rounded-lg border bg-muted/50 p-3'
                           >
                             <div className='flex items-start justify-between gap-2'>
-                              <p className='flex-1 text-sm text-gray-900'>
+                              <p className='flex-1 text-sm text-foreground'>
                                 {item.content}
                               </p>
                               {item.memoryType && (
-                                <Badge className='flex-shrink-0 bg-purple-100 text-xs text-purple-700'>
+                                <Badge className='shrink-0 bg-purple-100 text-xs text-purple-700'>
                                   {item.memoryType}
                                 </Badge>
                               )}
