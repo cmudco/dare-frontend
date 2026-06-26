@@ -3,6 +3,7 @@ import type { Artifact } from '@/redux/types/artifact'
 import {
   ChartRenderer,
   DocxRenderer,
+  ExcalidrawRenderer,
   MermaidRenderer,
   PptxRenderer,
   SandpackRenderer,
@@ -37,6 +38,31 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
 
     case 'diagram':
       return <MermaidRenderer code={artifact.content} />
+
+    case 'html':
+      return (
+        <iframe
+          title={artifact.title || 'HTML artifact'}
+          srcDoc={artifact.content}
+          sandbox=''
+          className='h-full min-h-[360px] w-full rounded-lg border border-border bg-white'
+        />
+      )
+
+    case 'svg':
+      // Wrap so the SVG scales to fit + centers, instead of rendering at its
+      // intrinsic size in the corner.
+      return (
+        <iframe
+          title={artifact.title || 'SVG figure'}
+          srcDoc={`<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%}body{display:grid;place-items:center;background:#fff}svg{max-width:100%;max-height:100%;height:auto}</style>${artifact.content}`}
+          sandbox=''
+          className='h-full min-h-[320px] w-full rounded-lg border border-border bg-white'
+        />
+      )
+
+    case 'excalidraw':
+      return <ExcalidrawRenderer content={artifact.content} />
 
     case 'docx':
       try {

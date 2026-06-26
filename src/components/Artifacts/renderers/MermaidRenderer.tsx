@@ -1,6 +1,10 @@
 import mermaid from 'mermaid'
-import { useEffect, useState, useRef } from 'react'
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
+import { useCallback, useEffect, useState, useRef } from 'react'
+import {
+  TransformWrapper,
+  TransformComponent,
+  type ReactZoomPanPinchRef,
+} from 'react-zoom-pan-pinch'
 import {
   MagnifyingGlassPlusIcon,
   MagnifyingGlassMinusIcon,
@@ -57,6 +61,37 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
   const [error, setError] = useState<string | null>(null)
   const [showRaw, setShowRaw] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const diagramRef = useRef<HTMLDivElement>(null)
+  const transformRef = useRef<ReactZoomPanPinchRef | null>(null)
+
+  // Open perfectly framed: scale the diagram so it fills the visible panel
+  // (capped so small diagrams aren't blown up into pixel soup).
+  const fitToView = useCallback(() => {
+    const api = transformRef.current
+    const wrapper = containerRef.current
+    // Scope to the diagram wrapper — the container also holds the zoom
+    // control icons, which are SVGs too.
+    const svgEl = diagramRef.current?.querySelector('svg')
+    if (!api || !wrapper || !svgEl) return
+    // Measure the laid-out diagram (un-zoomed): the viewBox often carries
+    // padding that would underscale the fit.
+    const currentScale = api.instance?.transformState?.scale || 1
+    const rect = svgEl.getBoundingClientRect()
+    const width = rect.width / currentScale
+    const height = rect.height / currentScale
+    if (!width || !height) return
+    const scale = Math.min(
+      (wrapper.clientWidth - 48) / width,
+      (wrapper.clientHeight - 48) / height
+    )
+    api.centerView(Math.min(Math.max(scale, 0.2), 2.5), 0)
+  }, [])
+
+  useEffect(() => {
+    if (!svg) return
+    const frame = requestAnimationFrame(fitToView)
+    return () => cancelAnimationFrame(frame)
+  }, [svg, fitToView])
 
   useEffect(() => {
     let isMounted = true
@@ -70,7 +105,19 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
         mermaid
           .render(id, code)
           .then(({ svg }) => {
-            if (isMounted) setSvg(svg)
+            // Mermaid emits width="100%" + a max-width cap. In the zoom
+            // container's shrink-to-fit content box a percentage width
+            // collapses to the 300px replaced-element default, wrecking the
+            // fit math. Pin the svg to its intrinsic (viewBox) size instead.
+            if (!isMounted) return
+            const vb =
+              /viewBox="[-\d.]+[ ,]+[-\d.]+[ ,]+([\d.]+)[ ,]+([\d.]+)"/.exec(
+                svg
+              )
+            const size = vb
+              ? `width:${vb[1]}px;height:${vb[2]}px;max-width:none`
+              : 'max-width:none'
+            setSvg(svg.replace(/max-width:\s*[\d.]+px/g, size))
           })
           .catch((err) => {
             if (isMounted)
@@ -132,21 +179,23 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
       className='group relative h-full min-w-0 overflow-hidden bg-white dark:bg-gray-900'
     >
       <TransformWrapper
+        ref={transformRef}
         initialScale={1}
         minScale={0.1}
         maxScale={8}
         centerOnInit
         wheel={{ step: 0.15 }}
-        doubleClick={{ mode: 'reset' }}
+        doubleClick={{ disabled: true }}
+        onInit={fitToView}
       >
-        {({ zoomIn, zoomOut, resetTransform }) => (
+        {({ zoomIn, zoomOut }) => (
           <>
             {/* Controls - visible on hover */}
             <div className='opacity-0 transition-opacity duration-200 group-hover:opacity-100'>
               <ZoomControls
                 onZoomIn={() => zoomIn()}
                 onZoomOut={() => zoomOut()}
-                onReset={() => resetTransform()}
+                onReset={fitToView}
               />
             </div>
 
@@ -157,20 +206,15 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
                 height: '100%',
                 cursor: 'grab',
               }}
-              contentStyle={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: '2rem',
-              }}
             >
-              <div dangerouslySetInnerHTML={{ __html: svg }} />
+              <div ref={diagramRef} onDoubleClick={fitToView}>
+                <div dangerouslySetInnerHTML={{ __html: svg }} />
+              </div>
             </TransformComponent>
 
             {/* Hint text */}
             <div className='absolute bottom-4 left-4 rounded bg-gray-900/60 px-2 py-1 text-xs text-gray-300 opacity-0 transition-opacity group-hover:opacity-100'>
-              Scroll to zoom • Drag to pan • Double-click to reset
+              Scroll to zoom • Drag to pan • Double-click to fit
             </div>
           </>
         )}
