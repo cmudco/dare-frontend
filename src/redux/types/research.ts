@@ -252,6 +252,24 @@ export interface ResearchState {
   projects: ResearchProject[]
   loading: boolean
   error: string | null
+  okfBundle: OkfBundle | null
+  okfBundleLoading: boolean
+  okfBundleError: string | null
+  thesisSourceLinks: Record<number, ThesisSourceLink[]>
+  thesisSourceLinksLoading: boolean
+  thesisSourceLinksError: string | null
+}
+
+/** Result of a delegated agent run kickoff (poll the run for status). */
+export interface ScoutResult {
+  runId: number
+  status: string
+}
+
+/** A typed thesis → source link backing the OKF "Supported by / Disputed by" sections. */
+export interface ThesisSourceLink {
+  sourceId: number
+  stance: string
 }
 
 /** A node in the project's evidence graph (`GET .../graph/`). */

@@ -1,9 +1,13 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 import {
+  addThesisSourceLink,
   createResearchProject,
+  getResearchOkfBundle,
   getResearchProject,
   getResearchProjects,
+  getThesisSourceLinks,
+  removeThesisSourceLink,
   updateResearchProject,
 } from '@/redux/asyncThunks/research'
 import type { ResearchProject, ResearchState } from './types/research'
@@ -24,6 +28,12 @@ const initialState: ResearchState = {
   projects: [],
   loading: false,
   error: null,
+  okfBundle: null,
+  okfBundleLoading: false,
+  okfBundleError: null,
+  thesisSourceLinks: {},
+  thesisSourceLinksLoading: false,
+  thesisSourceLinksError: null,
 }
 
 const researchSlice = createSlice({
@@ -91,6 +101,48 @@ const researchSlice = createSlice({
       })
       .addCase(updateResearchProject.rejected, (state, action) => {
         state.error = action.payload as string
+      })
+      .addCase(getResearchOkfBundle.pending, (state) => {
+        state.okfBundleLoading = true
+        state.okfBundleError = null
+      })
+      .addCase(getResearchOkfBundle.fulfilled, (state, action) => {
+        state.okfBundleLoading = false
+        state.okfBundle = action.payload
+      })
+      .addCase(getResearchOkfBundle.rejected, (state, action) => {
+        state.okfBundleLoading = false
+        state.okfBundleError = action.payload as string
+      })
+      .addCase(getThesisSourceLinks.pending, (state) => {
+        state.thesisSourceLinksLoading = true
+        state.thesisSourceLinksError = null
+      })
+      .addCase(getThesisSourceLinks.fulfilled, (state, action) => {
+        state.thesisSourceLinksLoading = false
+        state.thesisSourceLinks[action.payload.thesisId] = action.payload.links
+      })
+      .addCase(getThesisSourceLinks.rejected, (state, action) => {
+        state.thesisSourceLinksLoading = false
+        state.thesisSourceLinksError = action.payload as string
+      })
+      .addCase(addThesisSourceLink.fulfilled, (state, action) => {
+        state.thesisSourceLinks[action.payload.thesisId] = action.payload.links
+      })
+      .addCase(addThesisSourceLink.rejected, (state, action) => {
+        state.thesisSourceLinksError = action.payload as string
+      })
+      .addCase(removeThesisSourceLink.fulfilled, (state, action) => {
+        const { thesisId, sourceId } = action.payload
+        const links = state.thesisSourceLinks[thesisId]
+        if (links) {
+          state.thesisSourceLinks[thesisId] = links.filter(
+            (l) => l.sourceId !== sourceId
+          )
+        }
+      })
+      .addCase(removeThesisSourceLink.rejected, (state, action) => {
+        state.thesisSourceLinksError = action.payload as string
       })
   },
 })

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Download, Folder, Share2 } from 'lucide-react'
-import { downloadOkfBundleAPI } from '@/api/research'
+import { useAppDispatch } from '@/redux/hooks'
+import { downloadOkfBundle } from '@/redux/asyncThunks/research'
 import { cn } from '@/lib/utils'
 import GraphView from './GraphView'
 import KnowledgeBundleView from './KnowledgeBundleView'
@@ -14,6 +15,7 @@ type View = 'evidence' | 'bundle'
  * a downloadable zip.
  */
 const VisualizationView = ({ projectId }: { projectId?: number }) => {
+  const dispatch = useAppDispatch()
   const [view, setView] = useState<View>('evidence')
   const [downloading, setDownloading] = useState(false)
   const [evidenceCount, setEvidenceCount] = useState<number | null>(null)
@@ -23,9 +25,7 @@ const VisualizationView = ({ projectId }: { projectId?: number }) => {
     if (!projectId) return
     setDownloading(true)
     try {
-      await downloadOkfBundleAPI(projectId)
-    } catch {
-      // surface nothing noisy; the button simply re-enables
+      await dispatch(downloadOkfBundle(projectId))
     } finally {
       setDownloading(false)
     }

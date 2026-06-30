@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
-  addThesisSourceLinkAPI,
-  getThesisSourceLinksAPI,
-  removeThesisSourceLinkAPI,
-  type ThesisSourceLink,
-} from '@/api/research'
+  addThesisSourceLink,
+  getThesisSourceLinks,
+  removeThesisSourceLink,
+} from '@/redux/asyncThunks/research'
 import type { KnowledgeItem } from '../types'
 
 const STANCES = ['supporting', 'disputing', 'partial']
@@ -29,17 +29,18 @@ const ThesisSourceLinks = ({
   thesisId: number
   sources: KnowledgeItem[]
 }) => {
-  const [links, setLinks] = useState<ThesisSourceLink[]>([])
+  const dispatch = useAppDispatch()
+  const links = useAppSelector(
+    (state) => state.research.thesisSourceLinks[thesisId] ?? []
+  )
   const [adding, setAdding] = useState(false)
   const [pickId, setPickId] = useState<number | ''>('')
   const [stance, setStance] = useState('supporting')
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    getThesisSourceLinksAPI(thesisId)
-      .then(setLinks)
-      .catch(() => setLinks([]))
-  }, [thesisId])
+    dispatch(getThesisSourceLinks(thesisId))
+  }, [dispatch, thesisId])
 
   const byId = new Map(sources.map((s) => [s.id, s]))
   const linkedIds = new Set(links.map((l) => l.sourceId))
@@ -49,8 +50,9 @@ const ThesisSourceLinks = ({
     if (pickId === '') return
     setBusy(true)
     try {
-      await addThesisSourceLinkAPI(thesisId, Number(pickId), stance)
-      setLinks(await getThesisSourceLinksAPI(thesisId))
+      await dispatch(
+        addThesisSourceLink({ thesisId, sourceId: Number(pickId), stance })
+      )
       setPickId('')
       setAdding(false)
     } finally {
@@ -61,8 +63,7 @@ const ThesisSourceLinks = ({
   const remove = async (sourceId: number) => {
     setBusy(true)
     try {
-      await removeThesisSourceLinkAPI(thesisId, sourceId)
-      setLinks((prev) => prev.filter((l) => l.sourceId !== sourceId))
+      await dispatch(removeThesisSourceLink({ thesisId, sourceId }))
     } finally {
       setBusy(false)
     }

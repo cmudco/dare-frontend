@@ -10,6 +10,8 @@ import type {
   ResearchProject,
   ResearchProjectsResponse,
   ReviewItem,
+  ScoutResult,
+  ThesisSourceLink,
   UpdateResearchProjectPayload,
 } from '@/redux/types/research'
 
@@ -49,11 +51,6 @@ export const updateResearchProjectAPI = async (
     method: METHOD.PATCH,
     data: payload,
   })
-}
-
-export interface ScoutResult {
-  runId: number
-  status: string
 }
 
 /** Kick off a delegated Scout run (returns immediately; poll the run for status). */
@@ -213,11 +210,6 @@ export const getResearchGraphAPI = async (
     url: `api/research/projects/${projectId}/graph/`,
     method: METHOD.GET,
   })
-}
-
-export interface ThesisSourceLink {
-  sourceId: number
-  stance: string
 }
 
 /** List the source links for a thesis (project-memory item). */

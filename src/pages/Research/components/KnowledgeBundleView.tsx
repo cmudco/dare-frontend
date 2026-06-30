@@ -31,12 +31,9 @@ const OKF_MAP: { from: string; to: string }[] = [
   { from: 'Observed DOI citations', to: 'markdown links between files' },
   { from: 'Promotion history', to: 'log.md' },
 ]
-import { getResearchOkfBundleAPI } from '@/api/research'
-import type {
-  OkfBundle,
-  OkfBundleFile,
-  OkfBundleGraphNode,
-} from '@/redux/types/research'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { getResearchOkfBundle } from '@/redux/asyncThunks/research'
+import type { OkfBundleFile, OkfBundleGraphNode } from '@/redux/types/research'
 
 // Evidence palette — shared with the evidence graph for a consistent language.
 const LABEL_COLORS: Record<string, string> = {
@@ -79,20 +76,22 @@ const KnowledgeBundleView = ({
   projectId?: number
   onCount?: (n: number) => void
 }) => {
-  const [bundle, setBundle] = useState<OkfBundle | null>(null)
-  const [error, setError] = useState(false)
+  const dispatch = useAppDispatch()
+  const bundle = useAppSelector((state) => state.research.okfBundle)
+  const error = useAppSelector(
+    (state) => state.research.okfBundleError !== null
+  )
   const [activeId, setActiveId] = useState('index')
   const graphRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!projectId) return
-    getResearchOkfBundleAPI(projectId)
-      .then((b) => {
-        setBundle(b)
-        setActiveId(b.files[0]?.conceptId ?? 'index')
-      })
-      .catch(() => setError(true))
-  }, [projectId])
+    dispatch(getResearchOkfBundle(projectId))
+  }, [dispatch, projectId])
+
+  useEffect(() => {
+    if (bundle) setActiveId(bundle.files[0]?.conceptId ?? 'index')
+  }, [bundle])
 
   useEffect(() => {
     if (bundle && onCount) {
