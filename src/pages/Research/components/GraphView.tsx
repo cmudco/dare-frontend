@@ -38,7 +38,13 @@ const nodeColor = (n: RenderNode) =>
  * label and sized by confidence, clustered around the scout request that
  * surfaced them. Every node and edge is traceable to stored, reviewed data.
  */
-const GraphView = ({ projectId }: { projectId?: number }) => {
+const GraphView = ({
+  projectId,
+  onCount,
+}: {
+  projectId?: number
+  onCount?: (n: number) => void
+}) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [graph, setGraph] = useState<EvidenceGraph | null>(null)
   const [error, setError] = useState(false)
@@ -50,6 +56,12 @@ const GraphView = ({ projectId }: { projectId?: number }) => {
       .then(setGraph)
       .catch(() => setError(true))
   }, [projectId])
+
+  useEffect(() => {
+    if (graph && onCount) {
+      onCount(graph.nodes.filter((n) => n.kind === 'source').length)
+    }
+  }, [graph, onCount])
 
   useEffect(() => {
     const el = containerRef.current
@@ -102,10 +114,13 @@ const GraphView = ({ projectId }: { projectId?: number }) => {
           ctx.stroke()
         } else {
           ctx.fillStyle = nodeColor(n)
+          const inReview = n.kind === 'source' && n.status !== 'approved'
+          ctx.globalAlpha = inReview ? 0.4 : 1
           ctx.shadowColor = ctx.fillStyle
           ctx.shadowBlur = n.kind === 'question' ? 20 : 8
           ctx.fill()
           ctx.shadowBlur = 0
+          ctx.globalAlpha = 1
         }
 
         const text =
@@ -184,13 +199,15 @@ const GraphView = ({ projectId }: { projectId?: number }) => {
           <Dot color={QUESTION_COLOR} /> question{' '}
           <Dot color={REQUEST_COLOR} hollow /> scout request{' '}
           <Dot color={MENTION_COLOR} /> citation mention · size = confidence
+          <br />
+          solid = approved (in the bundle) · faded = still in review
         </div>
       </div>
 
       {selected && (
         <aside className='w-80 shrink-0 overflow-y-auto border-l border-border p-5'>
           <div className='mb-2 flex items-start justify-between gap-2'>
-            <h3 className='text-sm font-semibold leading-snug'>
+            <h3 className='text-sm leading-snug font-semibold'>
               {selected.label}
             </h3>
             <button

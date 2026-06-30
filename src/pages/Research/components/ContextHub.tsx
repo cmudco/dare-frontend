@@ -13,6 +13,7 @@ import type {
 } from '../types'
 import ProjectKnowledge from './ProjectKnowledge'
 import { SourcesView } from './SecondaryViews'
+import ThesisSourceLinks from './ThesisSourceLinks'
 
 type ContextCard = 'durable' | 'sources' | 'standards' | 'agent'
 
@@ -137,7 +138,11 @@ const ContextHub = ({
         {card === 'durable' && <ProjectKnowledge items={knowledgeItems} />}
         {card === 'sources' && <SourcesView sources={sources} />}
         {card === 'standards' && (
-          <StandardsSection soulFile={soulFile} projectMemory={projectMemory} />
+          <StandardsSection
+            soulFile={soulFile}
+            projectMemory={projectMemory}
+            knowledgeItems={knowledgeItems}
+          />
         )}
         {card === 'agent' && (
           <AgentMemorySection files={agentMemory} proposals={memoryProposals} />
@@ -156,9 +161,11 @@ const EmptyLine = ({ children }: { children: React.ReactNode }) => (
 const StandardsSection = ({
   soulFile,
   projectMemory,
+  knowledgeItems,
 }: {
   soulFile: SoulFile | null
   projectMemory: ProjectMemory[]
+  knowledgeItems: KnowledgeItem[]
 }) => (
   <div className='space-y-6'>
     <section>
@@ -166,7 +173,7 @@ const StandardsSection = ({
         Soul file{soulFile ? ` · v${soulFile.version}` : ''}
       </h3>
       {soulFile ? (
-        <pre className='whitespace-pre-wrap rounded-xl border border-border bg-card p-5 font-sans text-sm leading-relaxed text-foreground/90'>
+        <pre className='rounded-xl border border-border bg-card p-5 font-sans text-sm leading-relaxed whitespace-pre-wrap text-foreground/90'>
           {soulFile.content}
         </pre>
       ) : (
@@ -192,6 +199,7 @@ const StandardsSection = ({
               <p className='mt-2 text-xs text-muted-foreground'>
                 Captured {formatRelativeDate(m.capturedAt)}
               </p>
+              <ThesisSourceLinks thesisId={m.id} sources={knowledgeItems} />
             </div>
           ))}
         </div>
@@ -210,11 +218,11 @@ const FileBlock = ({
   content: string
 }) => (
   <div>
-    <p className='mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+    <p className='mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase'>
       {name} <span className='font-normal normal-case'>· {note}</span>
     </p>
     {content.trim() ? (
-      <pre className='max-h-72 overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-card p-4 font-sans text-sm leading-relaxed text-foreground/90'>
+      <pre className='max-h-72 overflow-auto rounded-lg border border-border bg-card p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap text-foreground/90'>
         {content}
       </pre>
     ) : (

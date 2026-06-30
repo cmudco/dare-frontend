@@ -25,7 +25,7 @@ const NAV: NavDef[] = [
   { key: 'chat', label: 'Chat', icon: MessagesSquare },
   { key: 'review', label: 'Review Inbox', icon: Inbox },
   { key: 'memory', label: 'Context', icon: Library },
-  { key: 'graph', label: 'Graph', icon: Waypoints },
+  { key: 'graph', label: 'Maps', icon: Waypoints },
   { key: 'artifacts', label: 'Artifacts', icon: Shapes },
   { key: 'runs', label: 'Runs', icon: Activity },
 ]

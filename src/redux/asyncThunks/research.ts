@@ -1,9 +1,14 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 
 import {
+  addThesisSourceLinkAPI,
   createResearchProjectAPI,
+  downloadOkfBundleAPI,
+  getResearchOkfBundleAPI,
   getResearchProjectAPI,
   getResearchProjectsAPI,
+  getThesisSourceLinksAPI,
+  removeThesisSourceLinkAPI,
   updateResearchProjectAPI,
 } from '@/api/research'
 import type {
@@ -53,6 +58,75 @@ export const updateResearchProject = createAsyncThunk(
   ) => {
     try {
       return await updateResearchProjectAPI(id, changes)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getResearchOkfBundle = createAsyncThunk(
+  'research/getResearchOkfBundle',
+  async (projectId: number, { rejectWithValue }) => {
+    try {
+      return await getResearchOkfBundleAPI(projectId)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const downloadOkfBundle = createAsyncThunk(
+  'research/downloadOkfBundle',
+  async (projectId: number, { rejectWithValue }) => {
+    try {
+      await downloadOkfBundleAPI(projectId)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getThesisSourceLinks = createAsyncThunk(
+  'research/getThesisSourceLinks',
+  async (thesisId: number, { rejectWithValue }) => {
+    try {
+      const links = await getThesisSourceLinksAPI(thesisId)
+      return { thesisId, links }
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const addThesisSourceLink = createAsyncThunk(
+  'research/addThesisSourceLink',
+  async (
+    {
+      thesisId,
+      sourceId,
+      stance,
+    }: { thesisId: number; sourceId: number; stance?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      await addThesisSourceLinkAPI(thesisId, sourceId, stance)
+      const links = await getThesisSourceLinksAPI(thesisId)
+      return { thesisId, links }
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const removeThesisSourceLink = createAsyncThunk(
+  'research/removeThesisSourceLink',
+  async (
+    { thesisId, sourceId }: { thesisId: number; sourceId: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      await removeThesisSourceLinkAPI(thesisId, sourceId)
+      return { thesisId, sourceId }
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }
