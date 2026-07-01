@@ -10,7 +10,7 @@ import {
 import { Button } from '../ui/button'
 import { FileDown, Copy, Check, Info } from 'lucide-react'
 
-const SYFTBOX_APP_URL = 'https://github.com/m-Hariss/dare-workflow-app.git'
+const SYFTBOX_APP_URL = 'https://github.com/m-Hariss/dare-workflows.git'
 
 interface ExportWorkflowDialogProps {
   isOpen: boolean
