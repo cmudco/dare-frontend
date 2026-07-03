@@ -65,6 +65,10 @@ import { Workflow } from '@/redux/types/workflow'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { openSharing } from '@/redux/sharingSlice'
 import { ShareableEntityType } from '@/redux/types/sharing'
+import { exportWorkflowAPI } from '@/api/workflows'
+import { triggerBrowserDownload } from '../Artifacts/download/fileDownload'
+import { toast } from '@/utils/toast'
+import ExportWorkflowDialog from './ExportWorkflowDialog'
 
 const LIBRARY_TABLE_HEAD = [
   'Title',
@@ -93,6 +97,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
   const [forkWorkflowId, setForkWorkflowId] = useState<number | null>(null)
   const [forkWorkflowTitle, setForkWorkflowTitle] = useState<string>('')
   const [activeId, setActiveId] = useState<number | null>(null)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const sensors = useDragSensors()
   const enableSharing = useFeatureFlag('enableSharing')
 
@@ -172,6 +177,20 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
         isForked: !!workflow.isForked,
       })
     )
+  }
+
+  const handleExport = async (id: number, title: string) => {
+    try {
+      const { blob, filename } = await exportWorkflowAPI(id)
+      const fallback = `${(title || 'workflow')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')}.dare.json`
+      triggerBrowserDownload(blob, filename || fallback)
+      setExportDialogOpen(true)
+    } catch (error) {
+      toast.error((error as Error).message || 'Failed to export workflow.')
+    }
   }
 
   const handleForkClick = (id: number, title: string) => {
@@ -433,6 +452,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                     onClone={handleClone}
                     onDelete={handleDelete}
                     onSharing={handleSharing}
+                    onExport={handleExport}
                   />
                 ))
               )}
@@ -535,6 +555,11 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
         infoNote="Files are not copied. You'll need to upload your own files after forking."
         onConfirm={handleConfirmFork}
         onCancel={handleCancelFork}
+      />
+
+      <ExportWorkflowDialog
+        isOpen={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
       />
     </div>
   )

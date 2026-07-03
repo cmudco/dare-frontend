@@ -1,3 +1,6 @@
+export const SYFTBOX_APP_URL =
+  'https://github.com/m-Hariss/dare-workflow-app.git'
+
 export const WORKFLOWS_TABLE_HEAD = [
   'Workflow Name',
   'Description',

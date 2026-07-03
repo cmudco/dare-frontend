@@ -13,7 +13,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from '@heroicons/react/20/solid'
-import { GripVertical, Share2 } from 'lucide-react'
+import { GripVertical, Share2, Download } from 'lucide-react'
 import { Workflow } from '@/redux/types/workflow'
 import { formatDate } from '@/utils/constants/prompts'
 import {
@@ -29,6 +29,7 @@ interface SortableWorkflowRowProps {
   onClone: (id: number) => void
   onDelete: (id: number, title: string) => void
   onSharing?: (workflow: Workflow) => void
+  onExport?: (id: number, title: string) => void
 }
 
 const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
@@ -37,6 +38,7 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
   onClone,
   onDelete,
   onSharing,
+  onExport,
 }) => {
   const {
     attributes,
@@ -113,6 +115,13 @@ const SortableWorkflowRow: React.FC<SortableWorkflowRowProps> = ({
             >
               <DocumentDuplicateIcon className='h-4 w-4' />
               <span>Clone</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onExport?.(workflow.id, workflow.title)}
+              className='cursor-pointer'
+            >
+              <Download className='mr-2 h-4 w-4' />
+              <span>Export JSON</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className='cursor-pointer text-red-500'
