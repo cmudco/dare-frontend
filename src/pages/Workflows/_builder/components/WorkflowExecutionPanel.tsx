@@ -157,15 +157,6 @@ export default function WorkflowExecutionPanel() {
 
       {/* Scrollable content */}
       <div ref={containerRef} className='flex-1 overflow-y-auto p-4'>
-        {/* Human Validation UI */}
-        {displayPendingValidation && (
-          <ValidationPanel
-            validation={displayPendingValidation}
-            workflowRunId={displayRun?.id}
-            nodeName={getNodeName(displayPendingValidation.nodeId)}
-          />
-        )}
-
         {/* Empty state */}
         {!hasDisplayData && !pendingValidation && !isRunning && (
           <div className='flex h-full flex-col items-center justify-center text-center text-muted-foreground'>
@@ -198,6 +189,18 @@ export default function WorkflowExecutionPanel() {
           <ExecutionNodeList
             displayRun={displayRun}
             displayActiveNodeId={displayActiveNodeId}
+          />
+        )}
+
+        {/* Human Validation UI — rendered after the executed nodes so the picker
+            appears in execution order (below the last node that ran) instead of
+            pinned to the top. The displayPendingValidation auto-scroll effect
+            then lands the view directly on it. */}
+        {displayPendingValidation && (
+          <ValidationPanel
+            validation={displayPendingValidation}
+            workflowRunId={displayRun?.id}
+            nodeName={getNodeName(displayPendingValidation.nodeId)}
           />
         )}
 

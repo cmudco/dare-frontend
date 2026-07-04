@@ -105,7 +105,9 @@ export const ValidationRequiredSchema = z.object({
   type: z.literal('validation_required'),
   nodeId: z.string(),
   routes: z.array(RouteOptionSchema),
-  context: z.object({ aiAnalysis: z.string().optional() }).optional(),
+  context: z
+    .object({ aiAnalysis: z.string().nullable().optional() })
+    .optional(),
   aiRecommendation: z.string().optional(),
   workflowRunId: z.number().optional(),
 })

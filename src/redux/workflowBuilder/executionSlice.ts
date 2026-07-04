@@ -391,6 +391,17 @@ const executionSlice = createSlice({
 
         state.isRunning = true
         state.activeNodeId = null
+
+        // A routing node streams its raw decision JSON as it runs. Once we pause
+        // for human validation the ValidationPanel shows the recommendation and
+        // routes, so drop the accumulated JSON to keep it from rendering beside
+        // the card.
+        const pendingNodeState =
+          state.currentRun?.nodeStates?.[action.payload.nodeId]
+        if (pendingNodeState) {
+          pendingNodeState.response = ''
+        }
+
         state.pendingValidation = {
           nodeId: action.payload.nodeId,
           routes: action.payload.routes,
