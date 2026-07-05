@@ -80,6 +80,7 @@ const ConversationFileSelect: React.FC = () => {
   const [open, setOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectionDirty, setSelectionDirty] = useState(false)
   const [activeTab, setActiveTab] = useState<
     'files' | 'embeddings' | 'media' | 'tags' | 'folders' | 'libraries'
   >('embeddings')
@@ -89,6 +90,10 @@ const ConversationFileSelect: React.FC = () => {
       dispatch(getSharedLibraries())
     }
   }, [open, librariesLoaded, dispatch])
+
+  useEffect(() => {
+    setSelectionDirty(false)
+  }, [activeConversation?.conversationId])
 
   // Fetch and merge owner files for forked or shared conversations
   const effectiveOwnerId = getConversationFileOwnerId(activeConversation)
@@ -101,6 +106,10 @@ const ConversationFileSelect: React.FC = () => {
   )
 
   const saveSelectedIds = useCallback(() => {
+    if (!selectionDirty) {
+      return
+    }
+
     // Only save selected IDs if user owns the conversation
     // Skip for shared conversations viewed from library (before forking)
     if (activeConversation && activeConversation.isOwner !== false) {
@@ -126,6 +135,7 @@ const ConversationFileSelect: React.FC = () => {
     selectedEmbeddings,
     selectedMediaFiles,
     selectedLibraries,
+    selectionDirty,
   ])
 
   useDebounce(saveSelectedIds, 1000, [
@@ -133,6 +143,7 @@ const ConversationFileSelect: React.FC = () => {
     selectedEmbeddings,
     selectedMediaFiles,
     selectedLibraries,
+    selectionDirty,
     activeConversation?.conversationId,
   ])
 
@@ -188,6 +199,7 @@ const ConversationFileSelect: React.FC = () => {
     const newSelectedFiles = selectedFiles.some((f) => f.id === file.id)
       ? selectedFiles.filter((f) => f.id !== file.id)
       : [...selectedFiles, file]
+    setSelectionDirty(true)
     dispatch(updateSelectedFiles(newSelectedFiles))
   }
 
@@ -197,6 +209,7 @@ const ConversationFileSelect: React.FC = () => {
     )
       ? selectedEmbeddings.filter((f) => f.id !== file.id)
       : [...selectedEmbeddings, file]
+    setSelectionDirty(true)
     dispatch(updateSelectedEmbeddings(newSelectedEmbeddings))
   }
 
@@ -206,6 +219,7 @@ const ConversationFileSelect: React.FC = () => {
     )
       ? selectedMediaFiles.filter((f) => f.id !== file.id)
       : [...selectedMediaFiles, file]
+    setSelectionDirty(true)
     dispatch(updateSelectedMediaFiles(newSelectedMediaFiles))
   }
 
@@ -213,6 +227,7 @@ const ConversationFileSelect: React.FC = () => {
     const newSelectedTags = selectedTags.some((t) => t.id === tag.id)
       ? selectedTags.filter((t) => t.id !== tag.id)
       : [...selectedTags, tag]
+    setSelectionDirty(true)
     dispatch(updateSelectedTags(newSelectedTags))
   }
 
@@ -220,6 +235,7 @@ const ConversationFileSelect: React.FC = () => {
     const newSelectedFolders = selectedFolders.some((f) => f.id === folder.id)
       ? selectedFolders.filter((f) => f.id !== folder.id)
       : [...selectedFolders, folder]
+    setSelectionDirty(true)
     dispatch(updateSelectedFolders(newSelectedFolders))
   }
 
@@ -229,6 +245,7 @@ const ConversationFileSelect: React.FC = () => {
     )
       ? selectedLibraries.filter((l) => l.id !== library.id)
       : [...selectedLibraries, library]
+    setSelectionDirty(true)
     dispatch(updateSelectedLibraries(newSelectedLibraries))
   }
 
@@ -247,6 +264,7 @@ const ConversationFileSelect: React.FC = () => {
     .join(' · ')
 
   const clearSelections = () => {
+    setSelectionDirty(true)
     dispatch(updateSelectedFiles([]))
     dispatch(updateSelectedEmbeddings([]))
     dispatch(updateSelectedMediaFiles([]))

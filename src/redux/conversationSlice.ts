@@ -33,6 +33,7 @@ import {
   AudioTranscriptionSettings,
   ToolCallStatus,
   WalletMeta,
+  RagMode,
 } from './types/conversation'
 import { ServerSlug, ToolCallOrigin } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
@@ -213,6 +214,11 @@ export const conversationSlice = createSlice({
     updateDocumentSimilarityThreshold(state, action: PayloadAction<number>) {
       if (state.activeConversation) {
         state.activeConversation.documentSimilarityThreshold = action.payload
+      }
+    },
+    updateRagMode(state, action: PayloadAction<RagMode>) {
+      if (state.activeConversation) {
+        state.activeConversation.ragMode = action.payload
       }
     },
     updateHistoryLimit(state, action: PayloadAction<number>) {
@@ -1206,6 +1212,7 @@ export const {
   setIsTranscribingAudio,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
+  updateRagMode,
   toggleDropdown,
   setHoveredModel,
   updateConversationInput,

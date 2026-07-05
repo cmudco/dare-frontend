@@ -94,6 +94,7 @@ export const sendSocketMessage = createAsyncThunk<
       max_context_snippets: activeConversation.maxContextSnippets,
       document_similarity_threshold:
         activeConversation.documentSimilarityThreshold,
+      rag_mode: activeConversation.ragMode ?? 'advanced',
       history_limit: activeConversation.historyLimit,
       web_search_enabled: webSearchEnabled,
       web_fetch_enabled:
@@ -205,6 +206,7 @@ export const regenerateSocketResponse = createAsyncThunk<
       max_context_snippets: activeConversation.maxContextSnippets,
       document_similarity_threshold:
         activeConversation.documentSimilarityThreshold,
+      rag_mode: activeConversation.ragMode ?? 'advanced',
       history_limit: activeConversation.historyLimit,
       web_search_enabled: webSearchEnabled,
       audio_transcription_enabled: audioTranscriptionEnabled,

@@ -26,6 +26,8 @@ export enum VoiceRecordingState {
   PROCESSING = 'processing',
 }
 
+export type RagMode = 'naive' | 'advanced'
+
 export interface Conversation {
   conversationId: string
   title?: string
@@ -33,6 +35,7 @@ export interface Conversation {
   user?: string
   maxContextSnippets: number
   documentSimilarityThreshold: number
+  ragMode?: RagMode
   temperature: number
   effort?: EffortLevel | null
   maxTokens: number
