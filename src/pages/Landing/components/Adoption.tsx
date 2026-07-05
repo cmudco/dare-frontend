@@ -20,8 +20,8 @@ export const Adoption: React.FC = () => {
           <div className='grid lg:grid-cols-2'>
             {/* Copy + CTA */}
             <div className='p-9 sm:p-12'>
-              <Eyebrow index='06'>Adoption</Eyebrow>
-              <h2 className='mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl'>
+              <Eyebrow index='07'>Adoption</Eyebrow>
+              <h2 className='mt-5 font-serif text-3xl leading-tight font-semibold tracking-tight text-foreground sm:text-4xl'>
                 Built honest, useful, and replicable.
               </h2>
               <p className='mt-5 max-w-md text-base leading-relaxed text-muted-foreground'>
@@ -40,14 +40,14 @@ export const Adoption: React.FC = () => {
             </div>
 
             {/* Stats */}
-            <div className='grid grid-cols-1 border-t border-border bg-muted/40 sm:grid-cols-3 lg:grid-cols-1 lg:border-l lg:border-t-0'>
+            <div className='grid grid-cols-1 border-t border-border bg-muted/40 sm:grid-cols-3 lg:grid-cols-1 lg:border-t-0 lg:border-l'>
               {STATS.map((s, i) => (
                 <div
                   key={s.label}
                   className={
                     'flex flex-col justify-center p-8 sm:p-9 ' +
                     (i > 0
-                      ? 'border-t border-border sm:border-l sm:border-t-0 lg:border-l-0 lg:border-t'
+                      ? 'border-t border-border sm:border-t-0 sm:border-l lg:border-t lg:border-l-0'
                       : '')
                   }
                 >

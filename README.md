@@ -8,6 +8,7 @@
 ## Table of Contents
 
 - [What is DARE?](#what-is-dare)
+- [Screenshots](#screenshots)
 - [Overview](#overview)
 - [Quick Start](#quick-start)
 - [Documentation](#documentation)
@@ -40,6 +41,21 @@ connects to the [DARE backend](../dare-backend/) over REST and Socket.IO and giv
 
 > **DARE runs standalone.** The DARE frontend and backend are all you need to run the platform —
 > nothing else is required. SocraticBooks is a separate, optional platform built on top of DARE.
+
+## Screenshots
+
+**Usage dashboard** — activity, conversations, tokens, and wallet balance, all at a glance the
+moment you land:
+
+<p align="center">
+  <img src="public/screenshots/dashboard.png" alt="DARE usage dashboard overview showing AI messages, conversations, files, token counts, and wallet balance" width="900" />
+</p>
+
+|                                                                                                                             |                                                                                                                            |
+| :-------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------: |
+| **Multi-LLM chat** — streaming conversations with per-conversation tools and controls<br/><img src="public/screenshots/conversation.png" alt="Conversation view with configuration panel" width="440" /> | **Workflow builder** — multi-step pipelines with conditional routing and human validation<br/><img src="public/screenshots/workflows.png" alt="Visual workflow builder canvas" width="440" /> |
+| **Research mode** — agent-gathered sources, human-reviewed before becoming knowledge<br/><img src="public/screenshots/research-mode.png" alt="Research workspace with review pipeline" width="440" /> | **Cost tracking** — a wallet per user, a ledger per message<br/><img src="public/screenshots/cost-wallet.png" alt="Cost tracking with wallet balance and transaction history" width="440" /> |
+| **Files & RAG** — upload and tag a corpus, ground answers in it<br/><img src="public/screenshots/files.png" alt="File manager with processing status" width="440" /> | **Environmental impact** — every message metered for energy, carbon, and water, with per-model breakdowns and real-world equivalents<br/><img src="public/screenshots/environmental-usage.png" alt="Environmental impact dashboard with energy, carbon, and water usage" width="440" /> |
 
 ## Overview
 
