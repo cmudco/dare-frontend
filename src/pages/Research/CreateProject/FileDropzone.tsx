@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { UploadCloud } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { ACCEPTED_SOURCE_EXTENSIONS } from '@/utils/constants/research'
 import type { ProjectDraftFile } from '@/redux/types/research'
 
@@ -25,6 +26,8 @@ const FileDropzone = ({ onAdd }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
 
+  const openPicker = () => inputRef.current?.click()
+
   const handleFiles = (fileList: FileList | null) => {
     if (!fileList) return
     const allowed = ACCEPTED_SOURCE_EXTENSIONS as readonly string[]
@@ -40,7 +43,12 @@ const FileDropzone = ({ onAdd }: Props) => {
   }
 
   return (
+    // The whole zone is a click target (mouse convenience); the visible
+    // "Browse files" button is the real keyboard-accessible control, so the
+    // outer div intentionally carries no button role to avoid nesting two
+    // interactive elements.
     <div
+      onClick={openPicker}
       onDragOver={(e) => {
         e.preventDefault()
         setDragging(true)
@@ -52,27 +60,46 @@ const FileDropzone = ({ onAdd }: Props) => {
         handleFiles(e.dataTransfer.files)
       }}
       className={cn(
-        'flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-12 text-center transition-colors',
-        dragging ? 'border-primary bg-muted/40' : 'border-border'
+        'flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors',
+        dragging
+          ? 'border-primary bg-muted/40'
+          : 'border-border hover:border-primary/60 hover:bg-muted/30'
       )}
     >
-      <div className='mb-3 rounded-full bg-muted p-3'>
-        <UploadCloud className='h-6 w-6 text-muted-foreground' />
+      <div
+        className={cn(
+          'mb-3 rounded-full p-3 transition-colors',
+          dragging ? 'bg-primary/10' : 'bg-muted'
+        )}
+      >
+        <UploadCloud
+          className={cn(
+            'h-6 w-6 transition-colors',
+            dragging ? 'text-primary' : 'text-muted-foreground'
+          )}
+        />
       </div>
       <p className='text-sm font-medium'>
-        Drag your sources here, or{' '}
-        <button
-          type='button'
-          onClick={() => inputRef.current?.click()}
-          className='text-primary hover:underline'
-        >
-          browse
-        </button>
+        {dragging ? 'Drop to add your sources' : 'Drag your sources here'}
       </p>
-      <p className='mt-1 text-xs text-muted-foreground'>
+      <p className='mt-1 mb-4 text-xs text-muted-foreground'>
         Documents, slides, spreadsheets, web &amp; data files · up to 50&nbsp;MB
         each
       </p>
+      <Button
+        type='button'
+        variant='outline'
+        size='sm'
+        onClick={(e) => {
+          // Stop the click from bubbling to the zone's onClick, which would
+          // open the file picker a second time.
+          e.stopPropagation()
+          openPicker()
+        }}
+      >
+        <UploadCloud aria-hidden='true' />
+        Browse files
+      </Button>
       <input
         ref={inputRef}
         type='file'
