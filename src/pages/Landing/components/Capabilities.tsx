@@ -137,7 +137,7 @@ export const Capabilities: React.FC = () => {
       <Container>
         <div className='grid items-end gap-10 lg:grid-cols-12'>
           <div className='lg:col-span-7'>
-            <Eyebrow index='04'>Platform</Eyebrow>
+            <Eyebrow index='05'>Platform</Eyebrow>
             <SectionTitle className='mt-5'>
               It is not a chatbot. It is infrastructure.
             </SectionTitle>

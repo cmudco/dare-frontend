@@ -69,7 +69,7 @@ export const Timeline: React.FC = () => {
     <Section className='border-t border-border bg-muted/30'>
       <Container>
         <div className='max-w-2xl'>
-          <Eyebrow index='02'>Origin</Eyebrow>
+          <Eyebrow index='03'>Origin</Eyebrow>
           <SectionTitle className='mt-5'>
             The problem we set out to solve.
           </SectionTitle>

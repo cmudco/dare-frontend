@@ -41,7 +41,7 @@ export const Audiences: React.FC = () => {
     <Section id='audiences' className='scroll-mt-20 border-t border-border'>
       <Container>
         <div className='max-w-2xl'>
-          <Eyebrow index='05'>Audiences</Eyebrow>
+          <Eyebrow index='06'>Audiences</Eyebrow>
           <SectionTitle className='mt-5'>
             Built for the people who run the classroom.
           </SectionTitle>

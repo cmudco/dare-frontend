@@ -123,7 +123,7 @@ export const ActionFramework: React.FC = () => {
         {/* Heading + the "AI in the loop" framing share the top row */}
         <div className='grid gap-10 lg:grid-cols-12 lg:items-center'>
           <div className='lg:col-span-6'>
-            <Eyebrow index='03'>Principles</Eyebrow>
+            <Eyebrow index='04'>Principles</Eyebrow>
             <SectionTitle className='mt-5'>
               Every decision grounded in{' '}
               <span className='text-dare'>ACTION</span>.
