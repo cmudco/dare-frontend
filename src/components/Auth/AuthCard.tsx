@@ -17,6 +17,7 @@ interface InputField {
 interface AuthCardProps<T extends FormikValues> {
   title: string
   subtitle?: string
+  subtitleClassName?: string
   inputs: InputField[]
   formikConfig: FormikConfig<T>
   buttonText: string
@@ -32,6 +33,7 @@ interface AuthCardProps<T extends FormikValues> {
 const AuthCard = <T extends FormikValues>({
   title,
   subtitle,
+  subtitleClassName = '',
   inputs,
   formikConfig,
   buttonText,
@@ -72,7 +74,11 @@ const AuthCard = <T extends FormikValues>({
         <h1 className='text-center text-2xl font-black text-foreground'>
           {title}
         </h1>
-        {subtitle && <p className='w-[80%] text-start text-sm'>{subtitle}</p>}
+        {subtitle && (
+          <p className={`w-[80%] text-sm ${subtitleClassName || 'text-start'}`}>
+            {subtitle}
+          </p>
+        )}
 
         {children}
 
