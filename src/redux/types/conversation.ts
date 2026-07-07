@@ -119,8 +119,25 @@ export interface Message {
   mcpToolCalls?: ToolCall[]
   contentType?: MessageContentType
   contentMetadata?: Record<string, unknown>
-  /** Per-stage RAG pipeline trace, when retrieval ran with tracing enabled. */
-  retrievalTrace?: RetrievalTrace | null
+  /**
+   * Per-stage RAG pipeline trace, when retrieval ran with tracing enabled.
+   * A single trace when one source was searched; an envelope with one trace
+   * per source (documents, shared libraries) when several were.
+   */
+  retrievalTrace?: RetrievalTrace | RetrievalTraceEnvelope | null
+}
+
+/** Multiple traces on one message — one per retrieval source. */
+export interface RetrievalTraceEnvelope {
+  traces: RetrievalTrace[]
+}
+
+/** Normalize a message's trace payload to a list of traces. */
+export const retrievalTraces = (
+  payload: RetrievalTrace | RetrievalTraceEnvelope | null | undefined
+): RetrievalTrace[] => {
+  if (!payload) return []
+  return 'traces' in payload ? payload.traces : [payload]
 }
 
 /** One chunk as it appeared at a single RAG pipeline stage. */
@@ -136,6 +153,8 @@ export interface RetrievalTraceEntry {
 
 /** How an answer was retrieved, stage by stage (matches backend RetrievalTrace.to_payload). */
 export interface RetrievalTrace {
+  /** Which corpus this trace covers: 'documents' | 'libraries' (absent on older traces). */
+  source?: string
   query: string
   queryAnalysis: {
     intent: string

@@ -1,7 +1,11 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux/store'
-import { Message, isSenderMessage } from '@/redux/types/conversation'
+import {
+  Message,
+  isSenderMessage,
+  retrievalTraces,
+} from '@/redux/types/conversation'
 import { FeedbackType } from '@/utils/constants/conversation'
 import {
   Drawer,
@@ -731,20 +735,33 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                   </Card>
                 )}
 
-              {/* Retrieval Trace */}
-              {!isSenderMessage(message) && message.retrievalTrace && (
-                <Card className='min-w-0 overflow-hidden'>
-                  <CardHeader>
-                    <CardTitle className='flex items-center gap-2 text-lg'>
-                      <Route className='h-5 w-5' />
-                      Retrieval Trace
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <RetrievalTraceStages trace={message.retrievalTrace} />
-                  </CardContent>
-                </Card>
-              )}
+              {/* Retrieval Trace — one card per searched source (documents / libraries) */}
+              {!isSenderMessage(message) &&
+                retrievalTraces(message.retrievalTrace).map((trace, i, all) => (
+                  <Card
+                    key={trace.source ?? i}
+                    className='min-w-0 overflow-hidden'
+                  >
+                    <CardHeader>
+                      <CardTitle className='flex items-center gap-2 text-lg'>
+                        <Route className='h-5 w-5' />
+                        Retrieval Trace
+                        {all.length > 1 && trace.source && (
+                          <span className='text-sm font-normal text-muted-foreground'>
+                            {trace.source === 'documents'
+                              ? '· Documents'
+                              : trace.source === 'libraries'
+                                ? '· Shared libraries'
+                                : `· ${trace.source}`}
+                          </span>
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <RetrievalTraceStages trace={trace} />
+                    </CardContent>
+                  </Card>
+                ))}
             </div>
           </div>
         </ScrollArea>
