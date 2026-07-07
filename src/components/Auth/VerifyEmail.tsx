@@ -58,6 +58,7 @@ const VerifyEmailScreen = () => {
             : 'Your email has been verified successfully.'
           : 'Verifying your email...'
       }
+      subtitleClassName='text-center'
       inputs={[]}
       formikConfig={{
         initialValues: {},
