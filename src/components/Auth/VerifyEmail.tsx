@@ -84,7 +84,7 @@ const VerifyEmailScreen = () => {
       {successMessage && (
         <div className='flex flex-col items-center gap-2 text-sm text-green-500'>
           <p>{successMessage}</p>
-          <p className='text-muted-foreground'>
+          <p className='text-center text-muted-foreground'>
             {!searchParams.get('callbackurl') && localStorage.getItem('token')
               ? 'Redirecting to dashboard...'
               : !searchParams.get('callbackurl') && alreadyVerified
