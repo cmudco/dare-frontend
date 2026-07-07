@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../redux/hooks'
 import AuthCard from './AuthCard'
@@ -11,11 +11,19 @@ const VerifyEmailScreen = () => {
   const { loading, error, successMessage } = useAppSelector(
     (state) => state.user
   )
+  const [alreadyVerified, setAlreadyVerified] = useState(false)
+  const verificationRequested = useRef(false)
 
   useEffect(() => {
     const key = searchParams.get('key')
-    if (key) {
+    // Guard against duplicate requests (StrictMode/remounts): the second POST
+    // would land after the key is consumed and surface a spurious error
+    if (key && !verificationRequested.current) {
+      verificationRequested.current = true
       dispatch(verifyEmailRegistration({ key }))
+        .unwrap()
+        .then((data) => setAlreadyVerified(Boolean(data?.alreadyVerified)))
+        .catch(() => {})
     }
   }, [searchParams, dispatch])
 
@@ -28,21 +36,26 @@ const VerifyEmailScreen = () => {
           // Socratic Bots or external platform - always redirect to login
           // (tokens in DARE localStorage won't be accessible on other domains)
           window.location.href = `${callbackUrl}/login`
-        } else {
+        } else if (hasToken) {
           // DARE users - auto-login if we have a token
-          navigate(hasToken ? '/dashboard' : '/login')
+          navigate('/dashboard')
+        } else {
+          // Already-verified visitors go home; fresh verifications go to login
+          navigate(alreadyVerified ? '/' : '/login')
         }
       }, 3000)
       return () => clearTimeout(timer)
     }
-  }, [successMessage, navigate, searchParams])
+  }, [successMessage, navigate, searchParams, alreadyVerified])
 
   return (
     <AuthCard
       title='Email Verification'
       subtitle={
         successMessage
-          ? 'Your email has been verified successfully.'
+          ? alreadyVerified
+            ? 'Your email is already verified.'
+            : 'Your email has been verified successfully.'
           : 'Verifying your email...'
       }
       inputs={[]}
@@ -74,7 +87,9 @@ const VerifyEmailScreen = () => {
           <p className='text-muted-foreground'>
             {!searchParams.get('callbackurl') && localStorage.getItem('token')
               ? 'Redirecting to dashboard...'
-              : 'Redirecting to login...'}
+              : !searchParams.get('callbackurl') && alreadyVerified
+                ? 'Redirecting to home page...'
+                : 'Redirecting to login...'}
           </p>
         </div>
       )}
