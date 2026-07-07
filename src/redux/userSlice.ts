@@ -56,10 +56,12 @@ const userSlice = createSlice({
         state.loading = true
         state.error = null
       })
-      .addCase(verifyEmailRegistration.fulfilled, (state) => {
+      .addCase(verifyEmailRegistration.fulfilled, (state, action) => {
         state.loading = false
         state.error = null
-        state.successMessage = 'Email verified successfully'
+        state.successMessage = action.payload?.alreadyVerified
+          ? 'Your email is already verified'
+          : 'Email verified successfully'
       })
       .addCase(verifyEmailRegistration.rejected, (state, action) => {
         state.loading = false

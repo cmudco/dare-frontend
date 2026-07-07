@@ -16,6 +16,7 @@ export interface VerifyEmailResponse {
   detail: string
   access?: string
   refresh?: string
+  alreadyVerified?: boolean
 }
 
 export interface ResetPasswordResponse {
