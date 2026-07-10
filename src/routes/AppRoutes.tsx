@@ -41,11 +41,13 @@ import ResearchProjects from '../pages/Research/ResearchProjects'
 import ResearchWorkspace from '../pages/Research/ResearchWorkspace'
 import CreateProject from '../pages/Research/CreateProject'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
+import { useCanAccessResearch } from '@/hooks/useCanAccessResearch'
 
 const AppRoutes = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.user)
   const enableMcp = useFeatureFlag('enableMcp')
   const enableMemory = useFeatureFlag('enableMemory')
+  const canAccessResearch = useCanAccessResearch()
 
   return (
     <BrowserRouter>
@@ -106,33 +108,37 @@ const AppRoutes = () => {
             element={<Navigate to='/about#repositories' replace />}
           />
 
-          {/* Research project create/edit wizard — full canvas */}
-          <Route
-            path='/research/new'
-            element={
-              <ProtectedRoute>
-                <CreateProject />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path='/research/:projectId/edit'
-            element={
-              <ProtectedRoute>
-                <CreateProject />
-              </ProtectedRoute>
-            }
-          />
+          {canAccessResearch && (
+            <>
+              {/* Research project create/edit wizard — full canvas */}
+              <Route
+                path='/research/new'
+                element={
+                  <ProtectedRoute>
+                    <CreateProject />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/research/:projectId/edit'
+                element={
+                  <ProtectedRoute>
+                    <CreateProject />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Research workspace detail — full canvas (no header/sidebar) */}
-          <Route
-            path='/research/:projectId'
-            element={
-              <ProtectedRoute>
-                <ResearchWorkspace />
-              </ProtectedRoute>
-            }
-          />
+              {/* Research workspace detail — full canvas (no header/sidebar) */}
+              <Route
+                path='/research/:projectId'
+                element={
+                  <ProtectedRoute>
+                    <ResearchWorkspace />
+                  </ProtectedRoute>
+                }
+              />
+            </>
+          )}
 
           {/* Protected console — pathless layout route wrapping the app */}
           <Route
@@ -148,7 +154,9 @@ const AppRoutes = () => {
             <Route path='/files' element={<Files />} />
             <Route path='/prompts' element={<Prompt />} />
             <Route path='/agents' element={<Agents />} />
-            <Route path='/research' element={<ResearchProjects />} />
+            {canAccessResearch && (
+              <Route path='/research' element={<ResearchProjects />} />
+            )}
             <Route path='/workflows' element={<Workflows />} />
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
