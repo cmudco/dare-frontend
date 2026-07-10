@@ -18,7 +18,7 @@ const TypeIcon: React.FC<TypeIconProps> = ({ type, className }) => {
     case 'Flash':
       return <Zap className={`${iconClass} text-emerald-500`} />
     default:
-      return <Box className={`${iconClass} text-slate-400`} />
+      return <Box className={`${iconClass} text-muted-foreground`} />
   }
 }
 

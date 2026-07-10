@@ -174,7 +174,7 @@ export const AgentSelector: React.FC = () => {
           className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm transition-all ${
             isSelected
               ? 'bg-primary/15 text-primary'
-              : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10'
+              : 'text-muted-foreground hover:bg-accent'
           } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
           title='Agent Template'
         >
@@ -191,26 +191,26 @@ export const AgentSelector: React.FC = () => {
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className='w-80 rounded-xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-white/10 dark:bg-[#1e1e2e]'
+        className='w-80 rounded-xl border border-border bg-popover p-3 shadow-2xl'
         align='start'
       >
         <div className='mb-1.5 flex items-center gap-2'>
           <Bot className='h-[18px] w-[18px] text-primary' />
-          <span className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
+          <span className='text-sm font-semibold text-foreground'>
             Agent Templates
           </span>
         </div>
-        <div className='mb-3 text-xs text-gray-500'>
+        <div className='mb-3 text-xs text-muted-foreground'>
           Select an agent to apply its settings to this conversation
         </div>
 
         {loading ? (
-          <div className='flex items-center justify-center gap-2 py-6 text-sm text-gray-500'>
+          <div className='flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground'>
             <Loader2 className='h-4 w-4 animate-spin' />
             <span>Loading agents...</span>
           </div>
         ) : agents.length === 0 ? (
-          <div className='py-6 text-center text-sm text-gray-500'>
+          <div className='py-6 text-center text-sm text-muted-foreground'>
             No agents available. Create agents in the Agents page.
           </div>
         ) : (
@@ -223,22 +223,22 @@ export const AgentSelector: React.FC = () => {
                   className={`flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all ${
                     isAgentSelected
                       ? 'border-primary bg-primary/10'
-                      : 'border-transparent bg-transparent hover:border-gray-200 hover:bg-gray-100 dark:hover:border-white/10 dark:hover:bg-white/5'
+                      : 'border-transparent bg-transparent hover:border-border hover:bg-accent'
                   }`}
                   onClick={() => handleSelectAgent(agent)}
                 >
-                  <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5'>
+                  <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted'>
                     <Bot className='h-4 w-4 text-primary' />
                   </div>
                   <div className='min-w-0 flex-1'>
-                    <div className='mb-0.5 text-[13px] font-medium text-gray-900 dark:text-gray-100'>
+                    <div className='mb-0.5 text-[13px] font-medium text-foreground'>
                       {agent.name}
                     </div>
-                    <div className='line-clamp-2 text-[11px] leading-relaxed text-gray-500'>
+                    <div className='line-clamp-2 text-[11px] leading-relaxed text-muted-foreground'>
                       {agent.description || 'No description'}
                     </div>
                     {agent.llmName && (
-                      <div className='mt-1 inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600 dark:bg-white/10 dark:text-gray-400'>
+                      <div className='mt-1 inline-flex items-center rounded-sm bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>
                         {agent.llmName}
                       </div>
                     )}
@@ -255,8 +255,8 @@ export const AgentSelector: React.FC = () => {
         )}
 
         {isSelected && (
-          <div className='mt-3 border-t border-gray-200 pt-3 dark:border-white/10'>
-            <div className='text-[11px] text-gray-500'>
+          <div className='mt-3 border-t border-border pt-3'>
+            <div className='text-[11px] text-muted-foreground'>
               Agent settings will be applied: model, temperature, max tokens,
               context snippets, similarity threshold, and web search.
             </div>

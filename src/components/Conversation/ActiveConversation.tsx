@@ -319,7 +319,7 @@ const ActiveConversation: React.FC = () => {
       <CreditErrorAlert />
       <div className='relative flex h-full min-h-0 min-w-0 flex-1 overflow-hidden'>
         <Card
-          className='dark:bg-dark-gradient relative flex min-h-0 min-w-0 flex-1 flex-col justify-end rounded-none border-none'
+          className='relative flex min-h-0 min-w-0 flex-1 flex-col justify-end rounded-none border-none bg-background'
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}

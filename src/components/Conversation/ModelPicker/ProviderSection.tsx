@@ -24,20 +24,20 @@ const ProviderSection: React.FC<ProviderSectionProps> = ({
   const brand = getProviderBrand(providerGroup.provider)
 
   return (
-    <div className='overflow-hidden rounded-xl border border-accent/20 bg-accent/5 shadow-sm dark:bg-white/5'>
+    <div className='overflow-hidden rounded-xl border border-accent/20 bg-accent/5 shadow-xs'>
       <button
         onClick={onToggle}
-        className='flex w-full items-center justify-between p-3 transition-colors hover:bg-accent/40 dark:hover:bg-white/5'
+        className='flex w-full items-center justify-between p-3 transition-colors hover:bg-accent/40'
       >
         <div className='flex items-center gap-2'>
           <div
-            className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded-md border border-accent/20 shadow-sm ${brand.lightBg} ${brand.text}`}
+            className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded-md border border-accent/20 shadow-xs ${brand.lightBg} ${brand.text}`}
           >
             {brand.logo ? (
               <img
                 src={brand.logo}
                 alt={brand.name}
-                className='h-4 w-4 object-contain brightness-100 dark:brightness-125'
+                className='h-4 w-4 object-contain'
               />
             ) : (
               <span className='text-[10px] font-bold uppercase'>
@@ -45,7 +45,7 @@ const ProviderSection: React.FC<ProviderSectionProps> = ({
               </span>
             )}
           </div>
-          <span className='text-xs font-bold uppercase tracking-wider text-muted-foreground'>
+          <span className='text-xs font-bold tracking-wider text-muted-foreground uppercase'>
             {providerGroup.provider}
           </span>
         </div>

@@ -60,7 +60,7 @@ const EmailConfirmationScreen: React.FC = () => {
             onClick={handleResendVerification}
           />
           {resendSuccess && (
-            <div className='mt-3 w-max rounded-md bg-green-500 px-4 py-2 text-xs font-medium text-white shadow-sm'>
+            <div className='mt-3 w-max rounded-md bg-green-500 px-4 py-2 text-xs font-medium text-white shadow-xs'>
               Verification email resent successfully.
             </div>
           )}

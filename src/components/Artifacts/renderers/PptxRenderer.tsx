@@ -59,15 +59,15 @@ export const PptxRenderer: React.FC<PptxRendererProps> = ({ config }) => {
 
   if (!activeSlide) {
     return (
-      <div className='flex h-full items-center justify-center p-8 text-sm text-slate-500'>
+      <div className='flex h-full items-center justify-center p-8 text-sm text-muted-foreground'>
         No slides to preview.
       </div>
     )
   }
 
   return (
-    <div className='flex h-full min-w-0 bg-slate-100 dark:bg-slate-950'>
-      <aside className='w-24 shrink-0 overflow-auto border-r border-slate-200 p-2 dark:border-slate-800 sm:w-32 sm:p-3'>
+    <div className='flex h-full min-w-0 bg-muted'>
+      <aside className='w-24 shrink-0 overflow-auto border-r border-border p-2 sm:w-32 sm:p-3'>
         <div className='space-y-2'>
           {slides.map((slide, index) => (
             <button
@@ -76,8 +76,8 @@ export const PptxRenderer: React.FC<PptxRendererProps> = ({ config }) => {
               onClick={() => setActiveIndex(index)}
               className={`block aspect-video w-full overflow-hidden rounded border text-left transition ${
                 activeIndex === index
-                  ? 'border-blue-500 ring-2 ring-blue-500/30'
-                  : 'border-slate-300 hover:border-slate-400 dark:border-slate-700'
+                  ? 'border-primary ring-2 ring-primary/30'
+                  : 'border-border hover:border-muted-foreground'
               }`}
               title={`Slide ${index + 1}`}
             >
@@ -88,7 +88,7 @@ export const PptxRenderer: React.FC<PptxRendererProps> = ({ config }) => {
       </aside>
 
       <main className='flex min-w-0 flex-1 flex-col'>
-        <div className='flex items-center justify-between border-b border-slate-200 px-4 py-2 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400'>
+        <div className='flex items-center justify-between border-b border-border px-4 py-2 text-xs text-muted-foreground'>
           <span className='min-w-0 truncate'>{config.title}</span>
           <span className='shrink-0 pl-2'>
             Slide {activeIndex + 1} of {slides.length}
@@ -106,7 +106,7 @@ export const PptxRenderer: React.FC<PptxRendererProps> = ({ config }) => {
               }}
             >
               <div
-                className='overflow-hidden rounded-sm shadow-xl'
+                className='overflow-hidden rounded-xs shadow-xl'
                 style={{
                   width: SLIDE_WIDTH,
                   height: SLIDE_HEIGHT,

@@ -33,15 +33,21 @@ import MCPServerList from '@/pages/MCP/MCPServerList.tsx'
 import MCPServerDetail from '@/pages/MCP/MCPServerDetail.tsx'
 import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
 import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
+import MCPConnectionResult from '@/pages/MCP/MCPConnectionResult.tsx'
 import MemoryScreen from '@/pages/Memory'
 import LandingPage from '../pages/Landing/LandingPage'
 import AboutPage from '../pages/About/AboutPage'
+import ResearchProjects from '../pages/Research/ResearchProjects'
+import ResearchWorkspace from '../pages/Research/ResearchWorkspace'
+import CreateProject from '../pages/Research/CreateProject'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
+import { useCanAccessResearch } from '@/hooks/useCanAccessResearch'
 
 const AppRoutes = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.user)
   const enableMcp = useFeatureFlag('enableMcp')
   const enableMemory = useFeatureFlag('enableMemory')
+  const canAccessResearch = useCanAccessResearch()
 
   return (
     <BrowserRouter>
@@ -102,6 +108,38 @@ const AppRoutes = () => {
             element={<Navigate to='/about#repositories' replace />}
           />
 
+          {canAccessResearch && (
+            <>
+              {/* Research project create/edit wizard — full canvas */}
+              <Route
+                path='/research/new'
+                element={
+                  <ProtectedRoute>
+                    <CreateProject />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/research/:projectId/edit'
+                element={
+                  <ProtectedRoute>
+                    <CreateProject />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Research workspace detail — full canvas (no header/sidebar) */}
+              <Route
+                path='/research/:projectId'
+                element={
+                  <ProtectedRoute>
+                    <ResearchWorkspace />
+                  </ProtectedRoute>
+                }
+              />
+            </>
+          )}
+
           {/* Protected console — pathless layout route wrapping the app */}
           <Route
             element={
@@ -116,9 +154,16 @@ const AppRoutes = () => {
             <Route path='/files' element={<Files />} />
             <Route path='/prompts' element={<Prompt />} />
             <Route path='/agents' element={<Agents />} />
+            {canAccessResearch && (
+              <Route path='/research' element={<ResearchProjects />} />
+            )}
             <Route path='/workflows' element={<Workflows />} />
             <Route path='/settings' element={<Settings />} />
             <Route path='/help' element={<Help />} />
+            {/* OAuth callback landing — must stay OUTSIDE the enableMcp gate:
+                the flag is false while still loading right after the redirect,
+                which would drop the user on the 404 catch-all. */}
+            <Route path='/mcp/callback' element={<MCPConnectionResult />} />
             {enableMcp && (
               <Route path='/mcp' element={<MCPLayout />}>
                 <Route index element={<MCPServerList />} />

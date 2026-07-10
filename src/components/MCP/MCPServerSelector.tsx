@@ -93,7 +93,7 @@ export const MCPServerSelector = ({
           className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm transition-all ${
             selectedCount > 0
               ? 'bg-primary/15 text-primary'
-              : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10'
+              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
           } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
           title='MCP Servers'
         >
@@ -103,31 +103,31 @@ export const MCPServerSelector = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className='w-80 rounded-xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-white/10 dark:bg-[#1e1e2e]'
+        className='w-80 rounded-xl border border-border bg-popover p-3 shadow-2xl'
         align='start'
       >
         <div className='mb-1.5 flex items-center gap-2'>
           <Plug className='h-[18px] w-[18px] text-primary' />
-          <span className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
+          <span className='text-sm font-semibold text-foreground'>
             MCP Servers
           </span>
         </div>
-        <div className='mb-3 text-xs text-gray-500'>
+        <div className='mb-3 text-xs text-muted-foreground'>
           Enable servers for this conversation
         </div>
 
         {serversLoading ? (
-          <div className='flex items-center justify-center gap-2 py-6 text-sm text-gray-500'>
+          <div className='flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground'>
             <Loader2 className='h-4 w-4 animate-spin' />
             <span>Loading servers...</span>
           </div>
         ) : connectedServers.length === 0 ? (
           <div className='flex flex-col gap-2 py-4'>
-            <div className='flex items-center gap-2 text-sm text-gray-500'>
+            <div className='flex items-center gap-2 text-sm text-muted-foreground'>
               <AlertCircle className='h-4 w-4' />
               No connected servers
             </div>
-            <p className='text-xs text-gray-500'>
+            <p className='text-xs text-muted-foreground'>
               Connect to MCP servers in Settings &gt; MCP to enable tools for
               this conversation.
             </p>
@@ -142,19 +142,19 @@ export const MCPServerSelector = ({
                   className={`flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all ${
                     isSelected
                       ? 'border-primary bg-primary/10'
-                      : 'border-transparent bg-transparent hover:border-gray-200 hover:bg-gray-100 dark:hover:border-white/10 dark:hover:bg-white/5'
+                      : 'border-transparent bg-transparent hover:border-border hover:bg-accent'
                   }`}
                   onClick={() => handleToggle(server.id)}
                 >
-                  <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5'>
+                  <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted'>
                     <MCPServerLogo slug={server.slug} size={20} />
                   </div>
                   <div className='min-w-0 flex-1'>
-                    <div className='mb-0.5 text-[13px] font-medium text-gray-900 dark:text-gray-100'>
+                    <div className='mb-0.5 text-[13px] font-medium text-foreground'>
                       {server.name}
                     </div>
                     {server.description && (
-                      <div className='line-clamp-2 text-[11px] leading-relaxed text-gray-500'>
+                      <div className='line-clamp-2 text-[11px] leading-relaxed text-muted-foreground'>
                         {server.description}
                       </div>
                     )}

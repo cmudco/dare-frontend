@@ -36,7 +36,7 @@ export const WalletSection: React.FC = () => {
         <div className='flex flex-wrap items-start justify-between gap-3'>
           <div className='min-w-0'>
             <div className='flex items-center gap-2'>
-              <div className='rounded-lg bg-white/15 p-2 backdrop-blur-sm'>
+              <div className='rounded-lg bg-white/15 p-2 backdrop-blur-xs'>
                 <WalletIcon className='h-5 w-5 text-white' />
               </div>
               <h2 className='text-lg font-semibold'>Wallet</h2>
@@ -68,7 +68,7 @@ export const WalletSection: React.FC = () => {
                 type='button'
                 size='sm'
                 variant='secondary'
-                className='bg-white/15 text-white shadow-none backdrop-blur-sm hover:bg-white/25'
+                className='bg-white/15 text-white shadow-none backdrop-blur-xs hover:bg-white/25'
                 onClick={() => setShowLite(true)}
               >
                 <Network className='mr-1 h-3.5 w-3.5' />
@@ -81,7 +81,7 @@ export const WalletSection: React.FC = () => {
                 type='button'
                 size='sm'
                 variant='secondary'
-                className='bg-white/15 text-white shadow-none backdrop-blur-sm hover:bg-white/25'
+                className='bg-white/15 text-white shadow-none backdrop-blur-xs hover:bg-white/25'
                 onClick={() => setShowByo(true)}
               >
                 <KeyRound className='mr-1 h-3.5 w-3.5' />

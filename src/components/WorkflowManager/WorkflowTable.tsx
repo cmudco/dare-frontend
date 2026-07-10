@@ -65,6 +65,10 @@ import { Workflow } from '@/redux/types/workflow'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { openSharing } from '@/redux/sharingSlice'
 import { ShareableEntityType } from '@/redux/types/sharing'
+import { exportWorkflowAPI } from '@/api/workflows'
+import { triggerBrowserDownload } from '../Artifacts/download/fileDownload'
+import { toast } from '@/utils/toast'
+import ExportWorkflowDialog from './ExportWorkflowDialog'
 
 const LIBRARY_TABLE_HEAD = [
   'Title',
@@ -93,6 +97,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
   const [forkWorkflowId, setForkWorkflowId] = useState<number | null>(null)
   const [forkWorkflowTitle, setForkWorkflowTitle] = useState<string>('')
   const [activeId, setActiveId] = useState<number | null>(null)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const sensors = useDragSensors()
   const enableSharing = useFeatureFlag('enableSharing')
 
@@ -172,6 +177,20 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
         isForked: !!workflow.isForked,
       })
     )
+  }
+
+  const handleExport = async (id: number, title: string) => {
+    try {
+      const { blob, filename } = await exportWorkflowAPI(id)
+      const fallback = `${(title || 'workflow')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')}.dare.json`
+      triggerBrowserDownload(blob, filename || fallback)
+      setExportDialogOpen(true)
+    } catch (error) {
+      toast.error((error as Error).message || 'Failed to export workflow.')
+    }
   }
 
   const handleForkClick = (id: number, title: string) => {
@@ -317,7 +336,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                       >
                         Previous
                       </Button>
-                      <span className='text-sm dark:text-white'>
+                      <span className='text-sm text-foreground'>
                         Page {currentPage} of {totalPages || 1}
                       </span>
                       <Button
@@ -373,9 +392,9 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
               {WORKFLOWS_TABLE_HEAD.map((head) => (
                 <TableHead
                   key={head}
-                  className={`cursor-pointer select-none p-4 text-sm font-semibold text-foreground transition-colors duration-150 ${
+                  className={`cursor-pointer p-4 text-sm font-semibold text-foreground transition-colors duration-150 select-none ${
                     head !== 'Action'
-                      ? 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+                      ? 'hover:bg-accent hover:text-accent-foreground'
                       : ''
                   }`}
                   onClick={() => head !== 'Action' && handleSort(head)}
@@ -433,6 +452,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                     onClone={handleClone}
                     onDelete={handleDelete}
                     onSharing={handleSharing}
+                    onExport={handleExport}
                   />
                 ))
               )}
@@ -447,7 +467,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                 >
                   <div className='flex w-full items-center justify-between'>
                     <div className='flex items-center gap-4'>
-                      <span className='text-sm dark:text-white'>
+                      <span className='text-sm text-foreground'>
                         Rows per page:
                       </span>
                       <Select
@@ -473,7 +493,7 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
                       >
                         Previous
                       </Button>
-                      <span className='text-sm dark:text-white'>
+                      <span className='text-sm text-foreground'>
                         Page {currentPage} of {totalPages || 1}
                       </span>
                       <Button
@@ -496,13 +516,13 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
 
         <DragOverlay>
           {activeId ? (
-            <div className='dark:bg-dark-chat-history min-h-[48px] rounded-md border border-gray-200 bg-white px-3 py-3 opacity-95 shadow-lg dark:border-dark-icon-unselected'>
+            <div className='min-h-[48px] rounded-md border border-border bg-card px-3 py-3 opacity-95 shadow-lg'>
               {(() => {
                 const draggedWorkflow = workflows.find((w) => w.id === activeId)
                 return draggedWorkflow ? (
                   <div className='flex items-center gap-2'>
-                    <GripVertical className='h-5 w-5 text-gray-600 dark:text-white' />
-                    <span className='text-gray-900 dark:text-white'>
+                    <GripVertical className='h-5 w-5 text-foreground' />
+                    <span className='text-foreground'>
                       {getWorkflowTitle(draggedWorkflow)}
                     </span>
                   </div>
@@ -535,6 +555,11 @@ const WorkflowTable = ({ searchQuery, activeTab }: WorkflowTableProps) => {
         infoNote="Files are not copied. You'll need to upload your own files after forking."
         onConfirm={handleConfirmFork}
         onCancel={handleCancelFork}
+      />
+
+      <ExportWorkflowDialog
+        isOpen={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
       />
     </div>
   )

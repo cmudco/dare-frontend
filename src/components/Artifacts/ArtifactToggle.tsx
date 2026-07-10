@@ -45,8 +45,8 @@ const ArtifactToggle: React.FC = () => {
               className={cn(
                 'h-9 px-3',
                 artifactsEnabled
-                  ? 'bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700'
-                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
+                  ? 'bg-purple-600 text-white hover:bg-purple-700'
+                  : 'text-muted-foreground hover:bg-accent'
               )}
             >
               <FileText className='mr-2 h-4 w-4' />

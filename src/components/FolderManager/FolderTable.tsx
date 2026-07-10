@@ -150,13 +150,13 @@ const FolderTable = () => {
 
   return (
     <div className='overflow-auto'>
-      <Table className='mt-4 w-full min-w-max bg-white text-left'>
+      <Table className='mt-4 w-full min-w-max bg-background text-left'>
         <TableHeader>
           <TableRow className='bg-muted'>
             {FOLDER_TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold transition-colors duration-150 ${head !== 'Action' && head !== 'Select' ? 'hover:bg-gray-100 hover:opacity-100' : ''}`}
+                className={`cursor-pointer p-4 text-sm font-semibold transition-colors duration-150 select-none ${head !== 'Action' && head !== 'Select' ? 'hover:bg-accent hover:opacity-100' : ''}`}
                 onClick={() =>
                   head !== 'Action' && head !== 'Select' && handleSort(head)
                 }
@@ -227,8 +227,8 @@ const FolderTable = () => {
                   <TableCell className='p-4'>{formatDate(updatedAt)}</TableCell>
                   <TableCell className='p-4 text-center'>
                     <DropdownMenu>
-                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-gray-200'>
-                        <EllipsisVerticalIcon className='h-4 w-4 text-gray-500' />
+                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-accent'>
+                        <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem

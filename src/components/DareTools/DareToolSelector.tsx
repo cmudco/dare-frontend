@@ -94,7 +94,7 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
           className={`flex min-w-0 max-w-[140px] items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm transition-all sm:max-w-[180px] ${
             selectedCount > 0
               ? 'bg-primary/15 text-primary'
-              : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10'
+              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
           } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
           title='DARE Tools'
         >
@@ -104,26 +104,26 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className='w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-white/10 dark:bg-[#1e1e2e]'
+        className='w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-border bg-popover p-3 shadow-2xl'
         align='start'
       >
         <div className='mb-1.5 flex items-center gap-2'>
           <Wrench className='h-[18px] w-[18px] text-primary' />
-          <span className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
+          <span className='text-sm font-semibold text-foreground'>
             DARE Tools
           </span>
         </div>
-        <div className='mb-3 text-xs text-gray-500'>
+        <div className='mb-3 text-xs text-muted-foreground'>
           Enable AI-powered tools for this conversation
         </div>
 
         {loading ? (
-          <div className='flex items-center justify-center gap-2 py-6 text-sm text-gray-500'>
+          <div className='flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground'>
             <Loader2 className='h-4 w-4 animate-spin' />
             <span>Loading tools...</span>
           </div>
         ) : tools.length === 0 ? (
-          <div className='py-6 text-center text-sm text-gray-500'>
+          <div className='py-6 text-center text-sm text-muted-foreground'>
             No tools available
           </div>
         ) : (
@@ -136,18 +136,18 @@ export const DareToolSelector: React.FC<DareToolSelectorProps> = ({
                   className={`flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all ${
                     isSelected
                       ? 'border-primary bg-primary/10'
-                      : 'border-transparent bg-transparent hover:border-gray-200 hover:bg-gray-100 dark:hover:border-white/10 dark:hover:bg-white/5'
+                      : 'border-transparent bg-transparent hover:border-border hover:bg-accent'
                   }`}
                   onClick={() => handleToggleTool(tool.slug)}
                 >
-                  <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5'>
+                  <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted'>
                     {getToolIcon(tool)}
                   </div>
                   <div className='min-w-0 flex-1'>
-                    <div className='mb-0.5 text-[13px] font-medium text-gray-900 dark:text-gray-100'>
+                    <div className='mb-0.5 text-[13px] font-medium text-foreground'>
                       {tool.name}
                     </div>
-                    <div className='line-clamp-2 text-[11px] leading-relaxed text-gray-500'>
+                    <div className='line-clamp-2 text-[11px] leading-relaxed text-muted-foreground'>
                       {tool.description}
                     </div>
                   </div>

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import type { Plugin, ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import path from 'path'
@@ -66,7 +67,7 @@ export default defineConfig({
   build: {
     sourcemap: false,
   },
-  plugins: [docsDevServer(), react()],
+  plugins: [docsDevServer(), react(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

@@ -231,7 +231,7 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
                 onChange={handleSnippetInputChange}
                 onBlur={handleSnippetInputBlur}
                 onKeyDown={handleSnippetInputKeyDown}
-                className='hide-number-arrows h-8 w-16 text-center font-mono text-sm focus:outline-none focus-visible:outline-none'
+                className='hide-number-arrows h-8 w-16 text-center font-mono text-sm focus:outline-hidden focus-visible:outline-hidden'
                 aria-label='Max Context Snippets'
                 inputMode='numeric'
                 pattern='[0-9]*'
@@ -305,7 +305,7 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
                 onChange={handleThresholdInputChange}
                 onBlur={handleThresholdInputBlur}
                 onKeyDown={handleThresholdInputKeyDown}
-                className='hide-number-arrows h-8 w-20 text-center font-mono text-sm focus:outline-none focus-visible:outline-none'
+                className='hide-number-arrows h-8 w-20 text-center font-mono text-sm focus:outline-hidden focus-visible:outline-hidden'
                 aria-label='Document Similarity Threshold'
                 inputMode='decimal'
               />

@@ -44,30 +44,30 @@ const CustomTooltip = ({
   if (!active || !payload?.length) return null
   const data = payload[0].payload
   return (
-    <div className='rounded-xl border border-slate-200/50 bg-white/95 p-3 shadow-xl backdrop-blur-md transition-all duration-200 animate-in zoom-in-95 dark:border-slate-800/50 dark:bg-slate-900/95'>
+    <div className='animate-in rounded-xl border border-border/50 bg-popover/95 p-3 shadow-xl backdrop-blur-md transition-all duration-200 zoom-in-95'>
       <div className='mb-1.5 flex items-center gap-2'>
         <div
           className='h-2 w-2 rounded-full'
           style={{ backgroundColor: data.fill }}
         />
-        <p className='text-sm font-black tracking-tight text-slate-900 dark:text-slate-100'>
+        <p className='text-sm font-black tracking-tight text-popover-foreground'>
           {data.name}
         </p>
       </div>
       <div className='space-y-1'>
         <div className='flex items-center justify-between gap-4'>
-          <p className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground'>
+          <p className='text-[10px] font-bold tracking-widest text-muted-foreground uppercase'>
             Energy
           </p>
-          <p className='text-xs font-bold text-slate-800 dark:text-slate-200'>
+          <p className='text-xs font-bold text-popover-foreground'>
             {formatEnergy(data.energyWh)}
           </p>
         </div>
         <div className='flex items-center justify-between gap-4'>
-          <p className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground'>
+          <p className='text-[10px] font-bold tracking-widest text-muted-foreground uppercase'>
             Messages
           </p>
-          <p className='text-xs font-bold text-slate-800 dark:text-slate-200'>
+          <p className='text-xs font-bold text-popover-foreground'>
             {data.messageCount}
           </p>
         </div>
@@ -94,7 +94,7 @@ const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
 
   if (loading && !models.length) {
     return (
-      <Card className='border-slate-200/50 dark:border-slate-800/50'>
+      <Card className='border-border/50'>
         <CardHeader className='pb-2'>
           <div className='flex items-center justify-between'>
             <CardTitle className='flex items-center gap-2 text-lg font-bold'>
@@ -121,14 +121,14 @@ const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
       viewport={{ once: true }}
       transition={{ duration: 0.4, delay: 0.2 }}
     >
-      <Card className='group relative overflow-hidden border-slate-200/50 bg-white/40 shadow-sm transition-all duration-300 hover:shadow-md dark:border-slate-800/50 dark:bg-slate-900/40'>
-        <div className='pointer-events-none absolute right-0 top-0 p-8 opacity-[0.02] transition-opacity group-hover:opacity-[0.04]'>
+      <Card className='group relative overflow-hidden border-border/50 bg-card/40 shadow-xs transition-all duration-300 hover:shadow-md'>
+        <div className='pointer-events-none absolute top-0 right-0 p-8 opacity-[0.02] transition-opacity group-hover:opacity-[0.04]'>
           <TrendingUp className='h-24 w-24' />
         </div>
         <CardHeader className='pb-4'>
           <div className='flex items-center justify-between'>
             <div className='space-y-1'>
-              <CardTitle className='flex items-center gap-2 text-lg font-bold text-slate-800 dark:text-slate-100'>
+              <CardTitle className='flex items-center gap-2 text-lg font-bold text-foreground'>
                 <div className='rounded-lg bg-orange-50 p-2 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'>
                   <BarChart3 className='h-5 w-5' />
                 </div>
@@ -162,7 +162,7 @@ const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
                       x={-10}
                       y={4}
                       fill='currentColor'
-                      className='text-xs font-bold text-slate-600 dark:text-slate-400'
+                      className='text-xs font-bold text-muted-foreground'
                       textAnchor='end'
                     >
                       {payload.value}

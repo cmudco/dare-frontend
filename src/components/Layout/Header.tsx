@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { AppDispatch, RootState } from '../../redux/store'
 import { userLogout } from '../../redux/asyncThunks/user'
 import { Sun, Moon } from 'lucide-react'
-import { toggleDarkMode } from '../../redux/themeSlice'
+import { toggleMode } from '../../redux/themeSlice'
 import NotificationPopover from './NotificationPopover'
 import { Avatar } from './Avatar'
 import { WalletPopover } from '@/components/wallet/WalletPopover'
@@ -35,7 +35,7 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className='dark:border-r-0dark:bg-dark-bg left-0 right-0 top-0 flex h-[80px] w-full items-center justify-between border border-pink-50 bg-white p-1 px-2 dark:border-l-0 dark:border-r-0 dark:border-t-0 dark:border-b-slate-800'>
+    <header className='top-0 right-0 left-0 flex h-[80px] w-full items-center justify-between border-b border-border bg-background p-1 px-2'>
       <div className='mx-2 flex items-center'>
         <Logo size='md' showTagline />
       </div>
@@ -48,10 +48,10 @@ const Header: React.FC = () => {
         <Button
           variant='ghost'
           size='icon'
-          onClick={() => dispatch(toggleDarkMode())}
+          onClick={() => dispatch(toggleMode())}
         >
-          <Sun className='h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0' />
-          <Moon className='absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100' />
+          <Sun className='h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90' />
+          <Moon className='absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0' />
           <span className='sr-only'>Toggle theme</span>
         </Button>
 
@@ -72,23 +72,23 @@ const Header: React.FC = () => {
 
           <DropdownMenuContent
             align='end'
-            className='w-[200px] border border-gray-100 bg-popover p-1 dark:border-gray-700'
+            className='w-[200px] border border-border bg-popover p-1'
           >
             <DropdownMenuItem
               onClick={() => navigate('/profile')}
-              className='cursor-pointer py-3 hover:bg-gray-100 dark:text-white dark:hover:bg-white/10'
+              className='cursor-pointer py-3 hover:bg-accent hover:text-accent-foreground'
             >
               Profile
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigate('/billing')}
-              className='cursor-pointer py-3 hover:bg-gray-100 dark:text-white dark:hover:bg-white/10'
+              className='cursor-pointer py-3 hover:bg-accent hover:text-accent-foreground'
             >
               Cost Tracking
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleLogout}
-              className='cursor-pointer py-3 text-red-500 hover:bg-gray-100 dark:hover:bg-white/10'
+              className='cursor-pointer py-3 text-destructive hover:bg-accent'
             >
               Sign Out
             </DropdownMenuItem>

@@ -47,23 +47,18 @@ export function DeleteConfirmation({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='dark:text-white'>{title}</DialogTitle>
-          <DialogDescription className='dark:text-gray-400'>
+          <DialogTitle className='text-foreground'>{title}</DialogTitle>
+          <DialogDescription className='text-muted-foreground'>
             {description}
             {itemName && (
-              <span className='mt-1 block font-medium text-foreground dark:text-white'>
+              <span className='mt-1 block font-medium text-foreground'>
                 "{itemName}"
               </span>
             )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className='gap-2 sm:gap-0'>
-          <Button
-            variant='outline'
-            onClick={onClose}
-            disabled={isDeleting}
-            className='dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700'
-          >
+          <Button variant='outline' onClick={onClose} disabled={isDeleting}>
             {cancelText}
           </Button>
           <Button

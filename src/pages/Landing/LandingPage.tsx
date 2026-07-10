@@ -5,6 +5,7 @@ import Democratization from './components/Democratization'
 import Timeline from './components/Timeline'
 import ActionFramework from './components/ActionFramework'
 import Capabilities from './components/Capabilities'
+import ProductTour from './components/ProductTour'
 import Audiences from './components/Audiences'
 import Adoption from './components/Adoption'
 import Footer from './components/Footer'
@@ -25,6 +26,7 @@ export const LandingPage: React.FC = () => {
       <main>
         <Hero />
         <Democratization />
+        <ProductTour />
         <Timeline />
         <ActionFramework />
         <Capabilities />

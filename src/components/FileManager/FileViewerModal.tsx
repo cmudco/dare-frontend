@@ -137,12 +137,12 @@ const FileViewerModal = ({
     return (
       <div className='relative h-full'>
         {/* Action buttons */}
-        <div className='absolute right-4 top-4 z-10 flex space-x-2'>
+        <div className='absolute top-4 right-4 z-10 flex space-x-2'>
           <Button
             variant='outline'
             size='sm'
             onClick={openInNewTab}
-            className='bg-white/90 backdrop-blur-sm'
+            className='bg-card/90 backdrop-blur-xs'
           >
             <ExternalLink className='mr-2 h-4 w-4' />
             Open in New Tab
@@ -151,7 +151,7 @@ const FileViewerModal = ({
             variant='outline'
             size='sm'
             onClick={downloadFile}
-            className='bg-white/90 backdrop-blur-sm'
+            className='bg-card/90 backdrop-blur-xs'
           >
             <Download className='mr-2 h-4 w-4' />
             Download
@@ -176,7 +176,7 @@ const FileViewerModal = ({
       return (
         <div className='flex items-center justify-center py-12'>
           <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-primary'></div>
-          <span className='ml-3 text-gray-600'>Loading file...</span>
+          <span className='ml-3 text-muted-foreground'>Loading file...</span>
         </div>
       )
     }
@@ -187,7 +187,7 @@ const FileViewerModal = ({
           <AlertCircle className='h-12 w-12 text-red-500' />
           <div className='text-center'>
             <p className='font-medium text-red-600'>Error loading file</p>
-            <p className='mb-4 text-sm text-gray-500'>{error}</p>
+            <p className='mb-4 text-sm text-muted-foreground'>{error}</p>
             <div className='flex space-x-2'>
               <>
                 <Button
@@ -220,7 +220,7 @@ const FileViewerModal = ({
               <FileText className='h-5 w-5' />
               <span>{fileName || 'File Viewer'}</span>
               {fileType && (
-                <span className='rounded bg-gray-100 px-2 py-1 text-sm text-gray-500'>
+                <span className='rounded-sm bg-muted px-2 py-1 text-sm text-muted-foreground'>
                   {fileType.toUpperCase()}
                 </span>
               )}

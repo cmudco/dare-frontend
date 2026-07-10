@@ -45,14 +45,11 @@ interface ChartRendererProps {
 }
 
 const DEFAULT_COLORS = [
-  '#8884d8',
-  '#82ca9d',
-  '#ffc658',
-  '#ff7c43',
-  '#a4de6c',
-  '#d0ed57',
-  '#83a6ed',
-  '#8dd1e1',
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
 ]
 
 /**
@@ -84,8 +81,8 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
   if (!chartConfig) {
     return (
       <div className='flex h-full items-center justify-center p-8'>
-        <div className='rounded-lg bg-red-50 p-4 dark:bg-red-900/20'>
-          <p className='text-red-600 dark:text-red-400'>
+        <div className='rounded-lg bg-destructive/10 p-4'>
+          <p className='text-destructive'>
             Failed to render chart: Invalid configuration
           </p>
         </div>
@@ -268,7 +265,7 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
 
       default:
         return (
-          <div className='flex h-full items-center justify-center text-gray-500'>
+          <div className='flex h-full items-center justify-center text-muted-foreground'>
             Unknown chart type: {chartType}
           </div>
         )
@@ -281,7 +278,7 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config }) => {
       data-artifact-chart-export
     >
       {title && (
-        <h3 className='mb-4 text-center text-lg font-semibold text-gray-900 dark:text-white'>
+        <h3 className='mb-4 text-center text-lg font-semibold text-foreground'>
           {title}
         </h3>
       )}

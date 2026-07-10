@@ -22,10 +22,10 @@ const CreditErrorAlert: React.FC = () => {
   }
 
   return (
-    <div className='fixed right-2 top-24 z-50'>
+    <div className='fixed top-24 right-2 z-50'>
       <div className='w-80 rounded-md border-l-4 border-red-400 bg-red-50 p-4 shadow-lg'>
         <div className='flex items-start'>
-          <div className='flex-shrink-0'>
+          <div className='shrink-0'>
             <svg
               className='h-5 w-5 text-red-400'
               viewBox='0 0 20 20'
@@ -60,7 +60,7 @@ const CreditErrorAlert: React.FC = () => {
                 {creditError.type === 'insufficient_balance' && (
                   <button
                     type='button'
-                    className='rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2'
+                    className='rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:outline-hidden'
                     onClick={() => {
                       dispatch(clearCreditError())
                       window.location.href = '/billing/'
@@ -71,7 +71,7 @@ const CreditErrorAlert: React.FC = () => {
                 )}
                 <button
                   type='button'
-                  className='rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2'
+                  className='rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:outline-hidden'
                   onClick={() => dispatch(clearCreditError())}
                 >
                   <XCircle className='h-5 w-5' />

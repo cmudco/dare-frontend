@@ -165,7 +165,7 @@ export default function ChatOutputNode({ id, selected, data }: NodeProps) {
         </div>
         {hasResponse && (
           <button
-            className='flex h-6 w-6 items-center justify-center rounded hover:bg-muted/50'
+            className='flex h-6 w-6 items-center justify-center rounded-sm hover:bg-muted/50'
             onClick={handleToggleExpand}
             title={isExpanded ? 'Collapse' : 'Expand'}
           >

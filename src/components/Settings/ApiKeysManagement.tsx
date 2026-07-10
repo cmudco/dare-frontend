@@ -73,7 +73,7 @@ const ApiKeysManagement: React.FC = () => {
                 >
                   <div className='flex gap-3'>
                     <AlertCircle
-                      className={`h-5 w-5 flex-shrink-0 ${ALERT_STYLES.info.icon}`}
+                      className={`h-5 w-5 shrink-0 ${ALERT_STYLES.info.icon}`}
                     />
                     <div className='space-y-1'>
                       <p
@@ -95,7 +95,7 @@ const ApiKeysManagement: React.FC = () => {
                   >
                     <div className='flex gap-3'>
                       <AlertCircle
-                        className={`h-5 w-5 flex-shrink-0 ${ALERT_STYLES.error.icon}`}
+                        className={`h-5 w-5 shrink-0 ${ALERT_STYLES.error.icon}`}
                       />
                       <p className={`text-sm ${ALERT_STYLES.error.text}`}>
                         {updateError}
@@ -152,7 +152,7 @@ const ApiKeysManagement: React.FC = () => {
             >
               <div className='flex gap-3'>
                 <Lock
-                  className={`h-5 w-5 flex-shrink-0 ${ALERT_STYLES.info.icon}`}
+                  className={`h-5 w-5 shrink-0 ${ALERT_STYLES.info.icon}`}
                 />
                 <div className='space-y-1'>
                   <p

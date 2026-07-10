@@ -69,7 +69,7 @@ export const Timeline: React.FC = () => {
     <Section className='border-t border-border bg-muted/30'>
       <Container>
         <div className='max-w-2xl'>
-          <Eyebrow index='02'>Origin</Eyebrow>
+          <Eyebrow index='03'>Origin</Eyebrow>
           <SectionTitle className='mt-5'>
             The problem we set out to solve.
           </SectionTitle>
@@ -125,7 +125,7 @@ export const Timeline: React.FC = () => {
                   <div className={cn('pb-12', isLast && 'pb-0')}>
                     <span
                       className={cn(
-                        'inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[0.7rem] uppercase tracking-[0.16em] transition-colors duration-300',
+                        'inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[0.7rem] tracking-[0.16em] uppercase transition-colors duration-300',
                         isActive
                           ? 'bg-dare/10 text-dare'
                           : 'bg-background text-muted-foreground'
@@ -149,19 +149,19 @@ export const Timeline: React.FC = () => {
               The visual frame is a slot for a real photo / screenshot later. */}
           <div className='hidden lg:col-span-5 lg:block'>
             <div className='lg:sticky lg:top-28'>
-              <div className='relative aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-card'>
+              <div className='relative aspect-4/3 overflow-hidden rounded-2xl border border-border bg-card'>
                 {/* Motif backdrop */}
                 <div
                   aria-hidden
-                  className='absolute inset-0 bg-gradient-to-br from-dare/10 via-transparent to-transparent'
+                  className='absolute inset-0 bg-linear-to-br from-dare/10 via-transparent to-transparent'
                 />
                 <div
                   aria-hidden
-                  className='absolute inset-0 bg-[radial-gradient(hsl(var(--border))_1px,transparent_1px)] opacity-50 [background-size:20px_20px]'
+                  className='absolute inset-0 bg-[radial-gradient(var(--border)_1px,transparent_1px)] bg-size-[20px_20px] opacity-50'
                 />
 
                 {/* Step counter */}
-                <div className='absolute right-5 top-5 font-mono text-xs text-muted-foreground'>
+                <div className='absolute top-5 right-5 font-mono text-xs text-muted-foreground'>
                   {String(active + 1).padStart(2, '0')} /{' '}
                   {String(MILESTONES.length).padStart(2, '0')}
                 </div>
@@ -169,12 +169,12 @@ export const Timeline: React.FC = () => {
                 {/* Active content (gently animates on change) */}
                 <div
                   key={active}
-                  className='absolute inset-0 flex flex-col justify-end p-7 duration-300 animate-in fade-in slide-in-from-bottom-2'
+                  className='absolute inset-0 flex animate-in flex-col justify-end p-7 duration-300 fade-in slide-in-from-bottom-2'
                 >
-                  <span className='font-mono text-xs uppercase tracking-[0.22em] text-dare'>
+                  <span className='font-mono text-xs tracking-[0.22em] text-dare uppercase'>
                     {current.phase}
                   </span>
-                  <span className='mt-1 font-serif text-5xl font-semibold leading-none tracking-tight text-foreground'>
+                  <span className='mt-1 font-serif text-5xl leading-none font-semibold tracking-tight text-foreground'>
                     {current.when}
                   </span>
                   <p className='mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground'>

@@ -59,7 +59,7 @@ export default function BatchProgressPanel() {
   if (!showPanel) return null
 
   return (
-    <div className='fixed bottom-6 right-6 z-30 w-[340px] overflow-hidden rounded-2xl border border-border bg-white/95 shadow-2xl backdrop-blur'>
+    <div className='fixed right-6 bottom-6 z-30 w-[340px] overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-sm'>
       <div className='flex items-center justify-between border-b border-border px-4 py-3'>
         <div>
           <p className='text-sm font-semibold text-foreground'>
@@ -117,7 +117,7 @@ export default function BatchProgressPanel() {
             >
               <div className='flex items-start justify-between gap-2'>
                 <div className='min-w-0 flex-1'>
-                  <p className='break-words text-xs font-medium text-foreground'>
+                  <p className='text-xs font-medium wrap-break-word text-foreground'>
                     {fileStatus.fileName}
                   </p>
                   <p className='text-[11px] text-muted-foreground'>

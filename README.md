@@ -1,10 +1,36 @@
 # DARE Frontend
 
-React/TypeScript frontend for the **DARE (Dietrich Analysis Research Education Platform)**. Provides real-time chat with multiple LLM providers, file management with RAG, a visual workflow builder, and a prompt-template system.
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/Node-18%2B-339933.svg)](https://nodejs.org/)
 
-## Purpose
+> React/TypeScript frontend for **DARE** — the Dietrich Analysis Research Education Platform.
 
-The DARE frontend is the primary user interface for the DARE platform. It connects to the [DARE backend](../dare-backend/) over REST and Socket.IO and gives users:
+## Table of Contents
+
+- [What is DARE?](#what-is-dare)
+- [Screenshots](#screenshots)
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+- [Tech Stack](#tech-stack)
+- [What is included in this repo?](#what-is-included-in-this-repo)
+- [What is not included in this repo?](#what-is-not-included-in-this-repo)
+- [Stay in touch](#stay-in-touch)
+- [Acknowledgements](#acknowledgements)
+- [Contributors](#contributors)
+- [License](#license)
+
+## What is DARE?
+
+DARE (Dietrich Analysis Research Education Platform) is an open-source, multi-LLM research and
+conversation platform. It provides a single, vendor-agnostic interface to OpenAI, Anthropic Claude,
+Google Gemini, and self-hosted LLaMA models, with file-grounded retrieval (RAG), Model Context
+Protocol (MCP) tool integration, visual multi-step workflows, and real-time streaming. DARE is
+built for researchers and institutions that need more than a chatbot — document intelligence,
+reproducible workflows, and per-user usage tracking in one place.
+
+**This repository is the DARE web frontend** — the primary user interface for the platform. It
+connects to the [DARE backend](../dare-backend/) over REST and Socket.IO and gives users:
 
 - **Multi-LLM chat** — streaming conversations with OpenAI, Anthropic, Google, and self-hosted LLaMA models
 - **File-grounded RAG** — upload documents and reference them in chat
@@ -13,7 +39,25 @@ The DARE frontend is the primary user interface for the DARE platform. It connec
 - **Artifacts** — rich rendering for code, diagrams, and documents emitted by the model
 - **MCP integration** — connect to Model Context Protocol servers for tool use
 
-## Architecture Overview
+> **DARE runs standalone.** The DARE frontend and backend are all you need to run the platform —
+> nothing else is required. SocraticBooks is a separate, optional platform built on top of DARE.
+
+## Screenshots
+
+**Usage dashboard** — activity, conversations, tokens, and wallet balance, all at a glance the
+moment you land:
+
+<p align="center">
+  <img src="public/screenshots/dashboard.png" alt="DARE usage dashboard overview showing AI messages, conversations, files, token counts, and wallet balance" width="900" />
+</p>
+
+|                                                                                                                             |                                                                                                                            |
+| :-------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------: |
+| **Multi-LLM chat** — streaming conversations with per-conversation tools and controls<br/><img src="public/screenshots/conversation.png" alt="Conversation view with configuration panel" width="440" /> | **Workflow builder** — multi-step pipelines with conditional routing and human validation<br/><img src="public/screenshots/workflows.png" alt="Visual workflow builder canvas" width="440" /> |
+| **Research mode** — agent-gathered sources, human-reviewed before becoming knowledge<br/><img src="public/screenshots/research-mode.png" alt="Research workspace with review pipeline" width="440" /> | **Cost tracking** — a wallet per user, a ledger per message<br/><img src="public/screenshots/cost-wallet.png" alt="Cost tracking with wallet balance and transaction history" width="440" /> |
+| **Files & RAG** — upload and tag a corpus, ground answers in it<br/><img src="public/screenshots/files.png" alt="File manager with processing status" width="440" /> | **Environmental impact** — every message metered for energy, carbon, and water, with per-model breakdowns and real-world equivalents<br/><img src="public/screenshots/environmental-usage.png" alt="Environmental impact dashboard with energy, carbon, and water usage" width="440" /> |
+
+## Overview
 
 ```mermaid
 flowchart TB
@@ -40,11 +84,16 @@ flowchart TB
     sockets <-->|Socket.IO| backend
 ```
 
-See [docs/architecture.md](docs/architecture.md) for the full diagram and component breakdown.
+The frontend is a static single-page app: a Redux Toolkit store drives feature components, an Axios
+API layer talks REST to the backend, and Socket.IO middleware streams chat and workflow events. See
+[docs/architecture.md](docs/architecture.md) for the full diagram and component breakdown.
 
-## Quick Start (Local Development)
+## Quick Start
 
-The frontend is a static SPA. For local development, use the Vite dev server. For production, build once and serve the generated `dist/` bundle from any static host.
+The frontend is a static SPA. For local development, use the Vite dev server. For production, build
+once and serve the generated `dist/` bundle from any static host.
+
+**Prerequisites:** Node.js 18+ and a running [DARE backend](../dare-backend/) (default `http://localhost:8000`).
 
 ```bash
 # 1. Clone (or pull) the repo
@@ -73,12 +122,7 @@ npm run preview     # serves ./dist locally for verification
 
 A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 
-## Prerequisites
-
-- Node.js 18+
-- A running [DARE backend](../dare-backend/) (default `http://localhost:8000`)
-
-## Available Scripts
+### Available scripts
 
 | Command           | Description                            |
 | ----------------- | -------------------------------------- |
@@ -100,31 +144,6 @@ A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 | [CHANGELOG.md](CHANGELOG.md)                   | Release notes                                                        |
 | [SECURITY.md](SECURITY.md)                     | Vulnerability disclosure process                                     |
 
-## Project Structure
-
-```
-src/
-├── api/                  # API layer (one file per domain)
-├── components/           # UI components, organized by feature
-│   ├── ui/               # Shadcn/ui primitives (Button, Dialog, etc.)
-│   ├── Conversation/     # Chat interface
-│   ├── WorkflowBuilder/  # Visual workflow editor
-│   ├── FileManager/      # File upload and management
-│   ├── Artifacts/        # Artifact rendering
-│   └── Layout/           # App shell and navigation
-├── config/               # Feature flags and runtime config
-├── pages/                # Route-level pages
-├── redux/
-│   ├── slices/           # Redux state slices
-│   ├── asyncThunks/      # createAsyncThunk wrappers per domain
-│   ├── middleware/       # Socket.IO middleware (chat + workflow)
-│   ├── types/            # TypeScript interfaces for API shapes
-│   └── workflowBuilder/  # Workflow canvas state
-├── routes/               # Route definitions and guards
-├── schemas/              # Zod schemas for Socket.IO event validation
-└── utils/                # Shared utilities
-```
-
 ## Tech Stack
 
 - **React 18** + **TypeScript**
@@ -137,11 +156,68 @@ src/
 - **Zod** for runtime validation of Socket.IO events
 - **Axios** for HTTP
 
-## Related
+## What is included in this repo?
 
-- [dare-backend](../dare-backend/) — Django REST + Socket.IO backend
-- [socraticbooks-backend](../socraticbooks-backend/) — Educational platform that proxies to DARE
-- [socraticbooks-react](../socraticbooks-react/) — Educational platform frontend
+- `src/` — all application source code:
+  - `api/` — API layer (one file per domain)
+  - `components/` — UI components by feature (`Conversation/`, `WorkflowBuilder/`, `FileManager/`, `Artifacts/`, `Layout/`, and `ui/` primitives)
+  - `redux/` — store, slices, async thunks, Socket.IO middleware, types, and workflow-canvas state
+  - `pages/`, `routes/`, `schemas/` (Zod), `config/`, and `utils/`
+- `docs/` — architecture, configuration, and project rules
+- Supporting docs — `INSTALL.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `SECURITY.md`
+
+## What is not included in this repo?
+
+- [dare-backend](../dare-backend/) — the Django REST + Socket.IO backend this frontend depends on (run it separately)
+- [socraticbooks-react](../../socraticbooks/socraticbooks-react/) — the SocraticBooks frontend
+- [socraticbooks-backend](../../socraticbooks/socraticbooks-backend/) — the SocraticBooks backend that proxies to DARE
+
+## Stay in touch
+
+- **Found a bug or have a feature request?** Open an issue on the project's GitHub repository.
+- **Questions or general inquiries?** Email the project team at vks@andrew.cmu.edu.
+- **Security disclosures:** see [SECURITY.md](SECURITY.md).
+
+## Acknowledgements
+
+DARE is developed at the Dietrich College of Humanities and Social Sciences, Carnegie Mellon University.
+
+"DARE" (Dietrich Analysis Research Education Platform) and "SocraticBots" are trademarks of Carnegie
+Mellon University. For trademark, licensing, or general inquiries, contact the project team at
+vks@andrew.cmu.edu.
+
+This software integrates with third-party APIs (Anthropic, OpenAI, Google, and others); use of those
+APIs is subject to each provider's own Terms of Service.
+
+## Contributors
+
+DARE is built and maintained by the team at the Dietrich College of Humanities and Social Sciences,
+Carnegie Mellon University.
+
+**Creators**
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="33.33%"><img src="https://ui-avatars.com/api/?name=Sayeed+Choudhury&size=100&background=162B4B&color=fff" width="100" height="100" style="border-radius:50%" alt="Sayeed Choudhury" /><br /><sub><b>Sayeed Choudhury</b></sub><br />Creator</td>
+    <td align="center" valign="top" width="33.33%"><img src=".github/assets/team/vince.png" width="100" height="100" style="border-radius:50%" alt="Vincent Sha" /><br /><sub><b>Vincent Sha</b></sub><br />Creator</td>
+    <td align="center" valign="top" width="33.33%"><img src=".github/assets/team/george.png" width="100" height="100" style="border-radius:50%" alt="George Cann" /><br /><sub><b>George Cann</b></sub><br />Creator</td>
+  </tr>
+</table>
+
+**Team**
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="33.33%"><img src=".github/assets/team/carl.png" width="100" height="100" style="border-radius:50%" alt="Carl Skipper" /><br /><sub><b>Carl Skipper</b></sub><br />Contributor</td>
+    <td align="center" valign="top" width="33.33%"><img src="https://ui-avatars.com/api/?name=Muhammad+Abdurrehman&size=100&background=162B4B&color=fff" width="100" height="100" style="border-radius:50%" alt="Muhammad Abdurrehman" /><br /><sub><b>Muhammad Abdurrehman</b></sub><br />Team Lead</td>
+    <td align="center" valign="top" width="33.33%"><img src="https://ui-avatars.com/api/?name=Brian+Wingenroth&size=100&background=162B4B&color=fff" width="100" height="100" style="border-radius:50%" alt="Brian Wingenroth" /><br /><sub><b>Brian Wingenroth</b></sub><br />Developer</td>
+  </tr>
+  <tr>
+    <td align="center" valign="top" width="33.33%"><img src="https://ui-avatars.com/api/?name=Farhat+Abbas&size=100&background=162B4B&color=fff" width="100" height="100" style="border-radius:50%" alt="Farhat Abbas" /><br /><sub><b>Farhat Abbas</b></sub><br />Developer</td>
+    <td align="center" valign="top" width="33.33%"><img src="https://ui-avatars.com/api/?name=Hariss+M&size=100&background=162B4B&color=fff" width="100" height="100" style="border-radius:50%" alt="Hariss M." /><br /><sub><b>Hariss M.</b></sub><br />Developer</td>
+    <td align="center" valign="top" width="33.33%"><img src="https://ui-avatars.com/api/?name=Eira+Khan&size=100&background=162B4B&color=fff" width="100" height="100" style="border-radius:50%" alt="Eira Khan" /><br /><sub><b>Eira Khan</b></sub><br />QA</td>
+  </tr>
+</table>
 
 ## License
 

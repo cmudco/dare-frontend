@@ -33,11 +33,11 @@ export const DEFAULT_EDGE_OPTIONS = {
 
 // Hex equivalents of HANDLE_COLORS for SVG edge stroke coloring
 export const HANDLE_COLOR_HEX: Record<string, string> = {
-  '!bg-blue-500': '#3b82f6',
-  '!bg-purple-500': '#a855f7',
-  '!bg-green-500': '#22c55e',
-  '!bg-orange-500': '#f97316',
-  '!bg-pink-500': '#ec4899',
+  'bg-blue-500!': '#3b82f6',
+  'bg-purple-500!': '#a855f7',
+  'bg-green-500!': '#22c55e',
+  'bg-orange-500!': '#f97316',
+  'bg-pink-500!': '#ec4899',
 }
 
 // Shared handle id prefix for route-based outputs
@@ -49,11 +49,11 @@ export const HANDLE_NUMBERS = [1, 2, 3, 4, 5] as const
 
 // Input handle colors (with !important for overriding React Flow styles)
 export const HANDLE_COLORS = [
-  '!bg-blue-500',
-  '!bg-purple-500',
-  '!bg-green-500',
-  '!bg-orange-500',
-  '!bg-pink-500',
+  'bg-blue-500!',
+  'bg-purple-500!',
+  'bg-green-500!',
+  'bg-orange-500!',
+  'bg-pink-500!',
 ] as const
 
 // Output route colors (for structured output nodes)

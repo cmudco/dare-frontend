@@ -45,12 +45,12 @@ const PromptVersionHistoryModal: React.FC<PromptVersionHistoryModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='dark:bg-dark-chat-history mx-auto w-[90vw] max-w-2xl rounded-lg bg-white p-6 shadow-lg'>
+      <DialogContent className='mx-auto w-[90vw] max-w-2xl rounded-lg bg-card p-6 shadow-lg'>
         <DialogHeader>
-          <DialogTitle className='text-lg font-semibold text-gray-900 dark:text-white'>
+          <DialogTitle className='text-lg font-semibold text-foreground'>
             Version History
           </DialogTitle>
-          <DialogDescription className='text-sm text-gray-500 dark:text-dark-icon-unselected'>
+          <DialogDescription className='text-sm text-muted-foreground'>
             View the version history of this prompt.
           </DialogDescription>
         </DialogHeader>
@@ -83,13 +83,13 @@ const PromptVersionHistoryModal: React.FC<PromptVersionHistoryModalProps> = ({
             <div className='space-y-2'>
               <div>
                 <Label>Title</Label>
-                <p className='rounded-md border bg-gray-100 p-2'>
+                <p className='rounded-md border bg-muted p-2'>
                   {selectedVersion.title || 'Untitled'}
                 </p>
               </div>
               <div>
                 <Label>Content</Label>
-                <div className='max-h-[50vh] overflow-y-auto rounded-md border bg-gray-100 p-2'>
+                <div className='max-h-[50vh] overflow-y-auto rounded-md border bg-muted p-2'>
                   {selectedVersion.content ? (
                     isHtmlContent(selectedVersion.content) ? (
                       <div
@@ -99,7 +99,7 @@ const PromptVersionHistoryModal: React.FC<PromptVersionHistoryModalProps> = ({
                         }}
                       />
                     ) : isPlainTextContent(selectedVersion.content) ? (
-                      <pre className='whitespace-pre-wrap break-all font-mono text-sm text-foreground'>
+                      <pre className='font-mono text-sm break-all whitespace-pre-wrap text-foreground'>
                         {selectedVersion.content}
                       </pre>
                     ) : (
@@ -108,25 +108,29 @@ const PromptVersionHistoryModal: React.FC<PromptVersionHistoryModalProps> = ({
                       </div>
                     )
                   ) : (
-                    <span className='text-sm text-gray-500'>No content</span>
+                    <span className='text-sm text-muted-foreground'>
+                      No content
+                    </span>
                   )}
                 </div>
               </div>
               <div>
                 <Label>Version</Label>
-                <p className='rounded-md border bg-gray-100 p-2'>
+                <p className='rounded-md border bg-muted p-2'>
                   v{selectedVersion.version || 1}
                 </p>
               </div>
               <div>
                 <Label>Created At</Label>
-                <p className='rounded-md border bg-gray-100 p-2'>
+                <p className='rounded-md border bg-muted p-2'>
                   {formatDate(selectedVersion.createdAt)}
                 </p>
               </div>
             </div>
           ) : (
-            <p className='text-gray-500'>Select a version to view details.</p>
+            <p className='text-muted-foreground'>
+              Select a version to view details.
+            </p>
           )}
         </div>
       </DialogContent>

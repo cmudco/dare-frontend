@@ -79,7 +79,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   className={`flex flex-1 items-center justify-center gap-2 rounded border p-3 transition-colors ${
                     selectedThumb === true
                       ? 'border-green-500 bg-green-50 text-green-700'
-                      : 'border-gray-300 hover:border-gray-400'
+                      : 'border-border hover:border-muted-foreground'
                   }`}
                 >
                   <ThumbsUp className='h-4 w-4' />
@@ -95,7 +95,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   className={`flex flex-1 items-center justify-center gap-2 rounded border p-3 transition-colors ${
                     selectedThumb === false
                       ? 'border-red-500 bg-red-50 text-red-700'
-                      : 'border-gray-300 hover:border-gray-400'
+                      : 'border-border hover:border-muted-foreground'
                   }`}
                 >
                   <ThumbsDown className='h-4 w-4' />

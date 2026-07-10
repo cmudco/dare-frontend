@@ -56,10 +56,10 @@ const AuthCard = <T extends FormikValues>({
 
   return (
     <div className='flex min-h-screen flex-col items-center justify-center'>
-      <div className='border-6 gradient-border relative mx-auto flex w-[80vw] flex-col items-center justify-center gap-3 rounded-2xl bg-card p-8 shadow-md md:w-[60vw] lg:w-[50vw] xl:w-[40vw]'>
+      <div className='gradient-border relative mx-auto flex w-[80vw] flex-col items-center justify-center gap-3 rounded-2xl border-6 bg-card p-8 shadow-md md:w-[60vw] lg:w-[50vw] xl:w-[40vw]'>
         {showBackButton && (
           <div
-            className='absolute left-9 top-5 mt-4 flex w-full cursor-pointer items-center gap-1 text-left text-xs'
+            className='absolute top-5 left-9 mt-4 flex w-full cursor-pointer items-center gap-1 text-left text-xs'
             onClick={() => navigate('/login')}
           >
             <ArrowLeftIcon className='h-5 w-5' />
@@ -106,10 +106,7 @@ const AuthCard = <T extends FormikValues>({
 
               {showForgotPassword && (
                 <div className='mb-4 flex justify-end text-sm'>
-                  <Link
-                    to='/forgot-password'
-                    className='font-medium text-red-500'
-                  >
+                  <Link to='/forgot-password' className='font-medium text-dare'>
                     Forgot Password?
                   </Link>
                 </div>
@@ -127,7 +124,7 @@ const AuthCard = <T extends FormikValues>({
 
               {error && (
                 <div className='mt-3'>
-                  <p className='text-center text-xs font-medium text-red-500'>
+                  <p className='text-center text-xs font-medium text-destructive'>
                     {error}
                   </p>
                   {showResendButton && (
@@ -138,7 +135,7 @@ const AuthCard = <T extends FormikValues>({
                           onResendVerification && onResendVerification(values)
                         }
                         disabled={loading}
-                        className='mt-3 w-max rounded-md bg-gray-500 text-xs font-medium text-white shadow-sm'
+                        className='mt-3 w-max rounded-md bg-secondary text-xs font-medium text-secondary-foreground shadow-xs hover:bg-secondary/80'
                       >
                         Resend Verification Email?
                       </Button>

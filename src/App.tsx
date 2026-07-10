@@ -4,7 +4,7 @@ import { AppDispatch, RootState } from './redux/store'
 import AppRoutes from './routes/AppRoutes'
 import Loader from './components/Loader'
 import { useEffect } from 'react'
-import { initializeTheme } from './redux/themeSlice'
+import { selectResolvedMode, selectTheme } from './redux/themeSlice'
 import { Toaster } from '@/components/ui/toaster'
 import SharingDialog from '@/components/shared/SharingDialog'
 import PageTourOverlay from '@/components/ConversationTour/PageTourOverlay'
@@ -18,13 +18,13 @@ function App() {
   const { userLoading, user, isAuthenticated } = useSelector(
     (state: RootState) => state.user
   )
-  const { isDarkMode } = useSelector((state: RootState) => state.theme)
+  const theme = useSelector(selectTheme)
+  const resolvedMode = useSelector(selectResolvedMode)
 
   // Socket.IO connection management
   useSocketConnection()
 
   useEffect(() => {
-    dispatch(initializeTheme())
     dispatch(clearOldDrafts(1 * 24 * 60 * 60 * 1000))
 
     if (!user) {
@@ -66,19 +66,18 @@ function App() {
     }
   }, [isAuthenticated, user, dispatch])
 
-  const BackgroundCircle = () => (
-    <div className='pointer-events-none fixed left-0 top-0 z-[-1] h-full w-full overflow-hidden backdrop-blur'>
-      {isDarkMode ? (
-        <div className='bg-dark-gradient absolute left-0 top-0 h-full w-full' />
-      ) : (
+  // The decorative circle belongs to the DARE brand look; other themes
+  // (and dark mode) get a plain bg-background canvas from the body.
+  const BackgroundCircle = () =>
+    theme === 'default' && resolvedMode === 'light' ? (
+      <div className='pointer-events-none fixed top-0 left-0 z-[-1] h-full w-full overflow-hidden'>
         <img
           src='/shapes/BgCircle.svg'
-          alt='Background Circle'
-          className='absolute left-0 top-0 h-auto w-full object-cover'
+          alt=''
+          className='absolute top-0 left-0 h-auto w-full object-cover'
         />
-      )}
-    </div>
-  )
+      </div>
+    ) : null
 
   if (userLoading) {
     return (

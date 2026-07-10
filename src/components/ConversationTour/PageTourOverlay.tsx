@@ -40,26 +40,26 @@ export default function PageTourOverlay() {
   const isWelcomeStep = isCentered && isFirst
 
   return (
-    <div className='pointer-events-auto fixed inset-0 z-[200]'>
+    <div className='pointer-events-auto fixed inset-0 z-200'>
       <AnimatePresence mode='wait'>
         {isCentered ? (
           <motion.div
             key={isWelcomeStep ? 'welcome' : `info-${step.id}`}
-            className='fixed inset-0 z-[200] flex items-center justify-center p-4'
+            className='fixed inset-0 z-200 flex items-center justify-center p-4'
             initial={skipAnimation ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className='absolute inset-0 bg-black/60 backdrop-blur-sm'
+              className='absolute inset-0 bg-black/60 backdrop-blur-xs'
               aria-hidden='true'
               onClick={skip}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             />
-            <div className='relative z-[201]'>
+            <div className='relative z-201'>
               {isWelcomeStep && (
                 <ConversationTourWelcome
                   onStart={next}
@@ -78,7 +78,7 @@ export default function PageTourOverlay() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <svg className='pointer-events-none fixed inset-0 z-[200] h-full w-full'>
+            <svg className='pointer-events-none fixed inset-0 z-200 h-full w-full'>
               <defs>
                 <mask id='page-tour-mask'>
                   <rect width='100%' height='100%' fill='white' />
@@ -188,7 +188,7 @@ export default function PageTourOverlay() {
             </svg>
 
             <div
-              className='fixed inset-0 z-[201]'
+              className='fixed inset-0 z-201'
               onClick={(e) => {
                 if (targetRect) {
                   const { clientX: cx, clientY: cy } = e

@@ -145,16 +145,16 @@ const ConversationHistory = () => {
   return (
     <div
       data-tour='conversation-history'
-      className={`relative flex h-full flex-col border border-pink-50 bg-white bg-clip-border text-gray-700 transition-all duration-300 dark:border-slate-800 dark:bg-dark-bg dark:text-white ${
+      className={`relative flex h-full flex-col border border-border bg-sidebar bg-clip-border text-sidebar-foreground transition-all duration-300 ${
         isCollapsed
           ? 'w-12 min-w-12 items-center border-l-0 p-2'
-          : 'min-w-[280px] max-w-[280px] p-2'
+          : 'max-w-[280px] min-w-[280px] p-2'
       }`}
     >
       {isCollapsed ? (
         <button
           onClick={() => setIsCollapsed(false)}
-          className='mt-2 shrink-0 rounded-full border-2 border-gray-200 bg-white p-1 transition-all hover:bg-gray-100 dark:border-slate-600 dark:bg-dark-bg dark:hover:bg-slate-700'
+          className='mt-2 shrink-0 rounded-full border-2 border-border bg-background p-1 transition-all hover:bg-accent'
           aria-label='Expand conversation list'
         >
           <ChevronRightIcon className='h-5 w-5 text-primary' />
@@ -164,19 +164,19 @@ const ConversationHistory = () => {
           <div className='flex shrink-0 items-center gap-2 border-pink-50 p-4'>
             <button
               onClick={() => setIsCollapsed(true)}
-              className='shrink-0 rounded-full border-2 border-gray-200 bg-white p-1 transition-all hover:bg-gray-100 dark:border-slate-600 dark:bg-dark-bg dark:hover:bg-slate-700'
+              className='shrink-0 rounded-full border-2 border-border bg-background p-1 transition-all hover:bg-accent'
               aria-label='Collapse conversation list'
             >
               <ChevronRightIcon className='h-5 w-5 rotate-180 text-primary' />
             </button>
-            <div className='flex min-w-0 flex-1 items-center rounded-3xl border border-gray-500 p-2 dark:border-slate-800'>
-              <MagnifyingGlassIcon className='mr-2 h-5 w-5 shrink-0 text-gray-600 dark:text-dark-icon-unselected' />
+            <div className='flex min-w-0 flex-1 items-center rounded-3xl border border-border p-2'>
+              <MagnifyingGlassIcon className='mr-2 h-5 w-5 shrink-0 text-muted-foreground' />
               <input
                 type='text'
                 placeholder='Search'
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className='min-w-0 flex-1 bg-transparent font-normal placeholder-gray-600 outline-none dark:text-white dark:placeholder-dark-icon-unselected'
+                className='min-w-0 flex-1 bg-transparent font-normal text-foreground outline-hidden placeholder:text-muted-foreground'
               />
             </div>
             {activeTab === ConversationTab.MINE && (
@@ -189,16 +189,16 @@ const ConversationHistory = () => {
               </Button>
             )}
           </div>
-          <hr className='mx-1 mb-2 shrink-0 border-gray-200' />
+          <hr className='mx-1 mb-2 shrink-0 border-border' />
           {/* Tab switcher */}
           {enableSharing && (
-            <div className='mx-1 mb-2 flex shrink-0 rounded-lg bg-gray-100 p-0.5 dark:bg-slate-800'>
+            <div className='mx-1 mb-2 flex shrink-0 rounded-lg bg-muted p-0.5'>
               <button
                 onClick={() => handleTabChange(ConversationTab.MINE)}
                 className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-all ${
                   activeTab === ConversationTab.MINE
-                    ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
+                    ? 'bg-background text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Mine
@@ -207,8 +207,8 @@ const ConversationHistory = () => {
                 onClick={() => handleTabChange(ConversationTab.SHARED)}
                 className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-all ${
                   activeTab === ConversationTab.SHARED
-                    ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
+                    ? 'bg-background text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Library
@@ -217,8 +217,8 @@ const ConversationHistory = () => {
                 onClick={() => handleTabChange(ConversationTab.SHARED_WITH_ME)}
                 className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-all ${
                   activeTab === ConversationTab.SHARED_WITH_ME
-                    ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
+                    ? 'bg-background text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Shared

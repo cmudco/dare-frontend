@@ -160,11 +160,11 @@ const MCPToolExecute = () => {
           </div>
 
           {error ? (
-            <div className='rounded-md bg-white/50 p-4 text-red-700 dark:bg-black/20 dark:text-red-300'>
+            <div className='rounded-md bg-background/50 p-4 text-red-700 dark:text-red-300'>
               {error}
             </div>
           ) : (
-            <div className='rounded-md bg-white/50 dark:bg-black/20'>
+            <div className='rounded-md bg-background/50'>
               <MCPJsonViewer data={result} />
             </div>
           )}

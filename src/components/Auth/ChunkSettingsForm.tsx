@@ -117,7 +117,7 @@ export const ChunkSettingsForm: React.FC<ChunkSettingsFormProps> = ({
             <Input
               className={`mt-1 h-10 max-w-md ${
                 chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize
-                  ? 'border-red-500'
+                  ? 'border-destructive'
                   : ''
               }`}
               id='chunkSize'
@@ -126,7 +126,7 @@ export const ChunkSettingsForm: React.FC<ChunkSettingsFormProps> = ({
               {...chunkFormik.getFieldProps('chunkSize')}
             />
             {chunkFormik.touched.chunkSize && chunkFormik.errors.chunkSize && (
-              <p className='mt-1 text-xs text-red-500'>
+              <p className='mt-1 text-xs text-destructive'>
                 {chunkFormik.errors.chunkSize}
               </p>
             )}
@@ -168,7 +168,7 @@ export const ChunkSettingsForm: React.FC<ChunkSettingsFormProps> = ({
               className={`mt-1 h-10 max-w-md ${
                 chunkFormik.touched.overlapSize &&
                 chunkFormik.errors.overlapSize
-                  ? 'border-red-500'
+                  ? 'border-destructive'
                   : ''
               }`}
               id='overlapSize'
@@ -178,7 +178,7 @@ export const ChunkSettingsForm: React.FC<ChunkSettingsFormProps> = ({
             />
             {chunkFormik.touched.overlapSize &&
               chunkFormik.errors.overlapSize && (
-                <p className='mt-1 text-xs text-red-500'>
+                <p className='mt-1 text-xs text-destructive'>
                   {chunkFormik.errors.overlapSize}
                 </p>
               )}
@@ -186,7 +186,7 @@ export const ChunkSettingsForm: React.FC<ChunkSettingsFormProps> = ({
 
           {error && (
             <div className='mt-2'>
-              <p className='text-xs font-medium text-red-500'>{error}</p>
+              <p className='text-xs font-medium text-destructive'>{error}</p>
             </div>
           )}
 

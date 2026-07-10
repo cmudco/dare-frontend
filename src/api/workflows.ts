@@ -86,6 +86,16 @@ export const exportWorkflowRunPdfAPI = async (
   })
 }
 
+export const exportWorkflowAPI = async (
+  id: number
+): Promise<{ blob: Blob; filename: string }> => {
+  return await baseRequest({
+    url: `api/workflows/${id}/export/`,
+    method: METHOD.GET,
+    responseType: 'blob',
+  })
+}
+
 export const getActivePartialRunAPI = async (
   workflowId: number
 ): Promise<GetActivePartialRunResponse> => {

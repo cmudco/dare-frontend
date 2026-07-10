@@ -41,7 +41,7 @@ const SideGroup: React.FC<{
       </span>
       <div className='leading-tight'>
         <p className='text-sm font-semibold text-foreground'>{title}</p>
-        <p className='font-mono text-[0.6rem] uppercase tracking-[0.16em] text-muted-foreground'>
+        <p className='font-mono text-[0.6rem] tracking-[0.16em] text-muted-foreground uppercase'>
           {caption}
         </p>
       </div>
@@ -78,12 +78,12 @@ const Connector: React.FC = () => (
  */
 export const ArchitectureDiagram: React.FC = () => {
   return (
-    <div className='rounded-2xl border border-border bg-card p-5 shadow-2xl shadow-black/[0.06] dark:shadow-black/40 sm:p-7'>
+    <div className='rounded-2xl border border-border bg-card p-5 shadow-2xl shadow-black/6 sm:p-7 dark:shadow-black/40'>
       <div className='mb-6 flex items-center justify-between'>
-        <span className='font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground'>
+        <span className='font-mono text-[0.65rem] tracking-[0.18em] text-muted-foreground uppercase'>
           Architecture
         </span>
-        <span className='font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground'>
+        <span className='font-mono text-[0.65rem] tracking-[0.18em] text-muted-foreground uppercase'>
           one governed layer
         </span>
       </div>
@@ -100,10 +100,10 @@ export const ArchitectureDiagram: React.FC = () => {
         <Connector />
 
         {/* DARE gateway — the emphasized centerpiece */}
-        <div className='relative flex flex-col rounded-xl border-2 border-dare/30 bg-gradient-to-b from-dare/[0.07] to-transparent p-5 shadow-lg shadow-dare/5 md:flex-[1.5]'>
+        <div className='relative flex flex-col rounded-xl border-2 border-dare/30 bg-linear-to-b from-dare/[0.07] to-transparent p-5 shadow-lg shadow-dare/5 md:flex-[1.5]'>
           <div className='flex flex-col gap-1.5'>
             <Logo size='sm' showTagline={false} />
-            <p className='font-mono text-[0.6rem] uppercase tracking-[0.16em] text-dare'>
+            <p className='font-mono text-[0.6rem] tracking-[0.16em] text-dare uppercase'>
               governed gateway
             </p>
           </div>

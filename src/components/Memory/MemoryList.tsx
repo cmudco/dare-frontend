@@ -22,8 +22,8 @@ const MemoryList = ({ items, onDelete, isLoading }: MemoryListProps) => {
             key={i}
             className='animate-pulse rounded-lg border border-border bg-muted/30 p-4'
           >
-            <div className='mb-2 h-5 w-20 rounded bg-muted' />
-            <div className='h-4 w-3/4 rounded bg-muted/70' />
+            <div className='mb-2 h-5 w-20 rounded-sm bg-muted' />
+            <div className='h-4 w-3/4 rounded-sm bg-muted/70' />
             <div className='mt-2 flex gap-2'>
               <div className='h-4 w-16 rounded-full bg-muted/70' />
               <div className='h-4 w-20 rounded-full bg-muted/70' />

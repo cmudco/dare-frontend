@@ -61,39 +61,39 @@ const MoveFilesModal = () => {
       onOpenChange={() => dispatch(closeMoveModal())}
     >
       <DialogContent className='flex max-h-[86vh] flex-col sm:max-w-[500px]'>
-        <DialogHeader className='flex-shrink-0 pb-4'>
+        <DialogHeader className='shrink-0 pb-4'>
           <DialogTitle className='text-center text-xl font-semibold'>
             Move Files to Folder
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className='flex h-full min-h-0 flex-col'>
-          <div className='flex-shrink-0 space-y-4'>
-            <div className='text-sm font-medium text-gray-600'>
+          <div className='shrink-0 space-y-4'>
+            <div className='text-sm font-medium text-muted-foreground'>
               Moving {selectedItems.length} file
               {selectedItems.length !== 1 ? 's' : ''}:
             </div>
-            <div className='grid max-h-36 grid-cols-2 gap-2 overflow-y-auto rounded-md border border-gray-200 p-2'>
+            <div className='grid max-h-36 grid-cols-2 gap-2 overflow-y-auto rounded-md border border-border p-2'>
               {selectedFiles.map((file) => (
                 <div
                   key={file.id}
-                  className='dark:bg-dark-chat-history flex items-center rounded-md border bg-white p-2 shadow-sm hover:bg-gray-50 dark:border-dark-icon-unselected dark:hover:bg-dark-icon-unselected'
+                  className='flex items-center rounded-md border bg-card p-2 shadow-xs hover:bg-accent'
                 >
-                  <div className='mr-2 flex-shrink-0'>
+                  <div className='mr-2 shrink-0'>
                     {getFileIcon(file.fileType)}
                   </div>
                   <div className='min-w-0 flex-1'>
-                    <p className='truncate text-sm font-medium text-gray-900 dark:text-white'>
+                    <p className='truncate text-sm font-medium text-foreground'>
                       {file.name || 'Unnamed'}
                     </p>
-                    <p className='truncate text-xs text-gray-500'>
+                    <p className='truncate text-xs text-muted-foreground'>
                       {file.fileType || 'Unknown'}
                     </p>
                   </div>
                 </div>
               ))}
               {selectedFiles.length === 0 && (
-                <div className='col-span-2 py-3 text-center text-gray-500'>
+                <div className='col-span-2 py-3 text-center text-muted-foreground'>
                   No files selected
                 </div>
               )}
@@ -101,7 +101,7 @@ const MoveFilesModal = () => {
           </div>
 
           <div className='flex min-h-0 flex-1 flex-col py-4'>
-            <Label className='mb-3 flex-shrink-0 text-base font-medium'>
+            <Label className='mb-3 shrink-0 text-base font-medium'>
               Select destination folder:
             </Label>
             <div className='overflow-y-auto pr-1'>
@@ -115,20 +115,20 @@ const MoveFilesModal = () => {
                     <Label
                       key={folder.id}
                       htmlFor={`folder-${folder.id}`}
-                      className={`flex cursor-pointer items-center space-x-3 rounded-lg border p-3 transition-colors hover:bg-gray-50 ${
+                      className={`flex cursor-pointer items-center space-x-3 rounded-lg border p-3 transition-colors hover:bg-accent ${
                         selectedFolderId === folder.id.toString()
                           ? 'border-blue-300 bg-blue-50'
-                          : 'border-gray-200'
+                          : 'border-border'
                       }`}
                     >
                       <RadioGroupItem
                         value={folder.id.toString()}
                         id={`folder-${folder.id}`}
-                        className='flex-shrink-0'
+                        className='shrink-0'
                       />
                       <div className='flex min-w-0 flex-1 items-center space-x-3'>
                         <FolderIcon
-                          className={`h-5 w-5 flex-shrink-0 ${
+                          className={`h-5 w-5 shrink-0 ${
                             selectedFolderId === folder.id.toString()
                               ? 'text-blue-600'
                               : 'text-blue-500'
@@ -140,12 +140,12 @@ const MoveFilesModal = () => {
                               {folder.name}
                             </span>
                             {fileCount > 0 && (
-                              <span className='flex-shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800'>
+                              <span className='shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800'>
                                 {fileCount} {fileCount === 1 ? 'file' : 'files'}
                               </span>
                             )}
                           </div>
-                          <div className='mt-1 text-xs text-gray-500'>
+                          <div className='mt-1 text-xs text-muted-foreground'>
                             Last updated:{' '}
                             {new Date(folder.updatedAt).toLocaleDateString()}
                           </div>
@@ -156,21 +156,21 @@ const MoveFilesModal = () => {
                 })}
               </RadioGroup>
               {folders.length === 0 && (
-                <div className='py-8 text-center text-sm text-gray-500'>
+                <div className='py-8 text-center text-sm text-muted-foreground'>
                   No folders available. Create a folder first to move files.
                 </div>
               )}
             </div>
           </div>
 
-          <DialogFooter className='flex-shrink-0 gap-2 border-t pt-4'>
+          <DialogFooter className='shrink-0 gap-2 border-t pt-4'>
             <Button type='button' variant='outline' onClick={handleCancel}>
               Cancel
             </Button>
             <Button
               type='submit'
               disabled={!selectedFolderId}
-              className='bg-dark-blue text-white hover:bg-dark-blue-hovered'
+              className='bg-secondary text-secondary-foreground hover:bg-secondary/80'
             >
               Move Files
             </Button>

@@ -81,24 +81,17 @@ src/components/
 
 ### Styling Patterns
 
-**Tailwind CSS Architecture:**
-- Custom design system via `tailwind.config.ts`
-- CSS custom properties for theme switching
-- Brand gradient: `bg-dare-gradient`
-- Dark mode support with `dark:` prefix
+**Tailwind CSS Architecture (v4):**
+- CSS-based config in `src/index.css` (`@theme inline` block); there is no `tailwind.config.ts`
+- Multi-theme system: theme CSS files in `src/themes/*.css` define semantic tokens per `[data-theme='<name>']` (light) and `[data-theme='<name>'].dark` (dark)
+- Brand gradient: `bg-dare-gradient`; brand red token: `bg-dare` / `text-dare` (stable across all themes)
 - Component variants using `class-variance-authority`
 
-**Design System:**
-```typescript
-// Custom colors
-colors: {
-  'dare': 'hsl(var(--dare))',
-  'dark-primary': '#030a12',
-  'dark-blue': '#162B4B',
-  // Brand gradient
-  'dare-gradient': 'linear-gradient(92.18deg, #EE183C -38.97%, #023572 132.6%)'
-}
-```
+**Design System rules:**
+- Style with semantic tokens only: `bg-background`, `bg-card`, `bg-popover`, `bg-muted`, `hover:bg-accent`, `bg-primary`, `bg-secondary`, `bg-destructive`, `text-foreground`, `text-muted-foreground`, `border-border`, `ring-ring`, `chart-1..5`, `sidebar-*`
+- Do NOT use `dark:` variants, gray/slate palette classes, or hardcoded hex colors — tokens adapt to theme + mode automatically
+- Allowed exceptions for `dark:`: status colors with no token equivalent (e.g. `text-green-600 dark:text-green-400`), `dark:prose-invert`, and non-color transforms (Sun/Moon icon swap)
+- Third-party components needing a binary light/dark value read `selectResolvedMode` from `@/redux/themeSlice`
 
 **Component Styling Pattern:**
 ```typescript
@@ -301,26 +294,37 @@ export const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL
 - WebSocket connection mocking
 - API endpoint mocking
 
-### Dark Mode Implementation
+### Theme System (multi-theme + dark mode)
 
-**Theme System:**
+**State** — `src/redux/themeSlice.ts` (pure; no DOM/localStorage side effects in reducers):
 ```typescript
-// Theme slice pattern
-const themeSlice = createSlice({
-  name: 'theme',
-  initialState: { mode: 'light' },
-  reducers: {
-    toggleTheme: (state) => {
-      state.mode = state.mode === 'light' ? 'dark' : 'light'
-    }
-  }
-})
+// { theme: ThemeName, mode: 'light' | 'dark' | 'system' }
+dispatch(setTheme('ocean-breeze'))
+dispatch(setMode('system'))
+dispatch(toggleMode()) // light <-> dark
+const resolved = useSelector(selectResolvedMode) // 'light' | 'dark'
 ```
 
-**CSS Custom Properties:**
-- Light/dark theme tokens
-- Automatic system preference detection
-- Persistent theme selection
+**Application** — `src/providers/ThemeProvider.tsx` (wraps `<App />` in `main.tsx`):
+sets `data-theme` attribute + `dark` class on `<body>`, persists to localStorage
+(`dare-theme-name`, `dare-theme-mode`), and tracks the OS preference while
+mode is `'system'`. An inline script in `index.html` applies the persisted
+selection before first paint (no FOUC).
+
+**Themes** — 8 themes in `src/themes/` (`default` is the DARE brand theme;
+cyberpunk/midnight/mono/rose/cobalt are Hermes-inspired; aurora/evergreen
+are originals). Each file defines the full token set for light + dark,
+plus `--brand-from`/`--brand-to` — the gradient endpoints consumed by
+`bg-dare-gradient`, `.gradient-border`, and the workflow-builder accents, so
+gradient branding follows the theme (the default theme keeps DARE red→blue).
+To add a theme: create the CSS file, `@import` it in `src/index.css`, add its
+name to `THEME_NAMES` in `themeSlice.ts`, and add a card entry
+(label/description/swatches) in
+`src/components/Settings/AppearanceSettings.tsx`.
+
+**UI** — the theme picker + color-mode control live in Settings → Appearance
+(`AppearanceSettings.tsx`); quick light/dark toggles in Header, Landing Nav,
+and ConversationList dispatch `toggleMode()`.
 
 ### Common Development Tasks
 

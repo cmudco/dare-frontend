@@ -40,11 +40,11 @@ const previewAlignmentClassNames: Record<DocxAlignment, string> = {
 }
 
 // Dark-mode aware text/border classes used across preview blocks
-const textPrimary = 'text-slate-900 dark:text-slate-100'
-const textSecondary = 'text-slate-700 dark:text-slate-300'
-const textMuted = 'text-slate-600 dark:text-slate-400'
-const borderLight = 'border-slate-200 dark:border-slate-700'
-const bgSubtle = 'bg-slate-100 dark:bg-slate-700/50'
+const textPrimary = 'text-foreground'
+const textSecondary = 'text-foreground/90'
+const textMuted = 'text-muted-foreground'
+const borderLight = 'border-border'
+const bgSubtle = 'bg-muted'
 
 const paragraphAlignmentMap: Record<
   DocxAlignment,
@@ -117,7 +117,7 @@ const renderPreviewBlock = (
       return (
         <blockquote
           key={`docx-blockquote-${index}`}
-          className={`border-l-4 border-slate-300 pl-4 italic leading-7 dark:border-slate-600 ${textMuted}`}
+          className={`border-l-4 border-border pl-4 leading-7 italic ${textMuted}`}
         >
           {block.text}
         </blockquote>
@@ -426,8 +426,8 @@ export const generateDocxBlob = async (
 
 export const DocxRenderer: React.FC<DocxRendererProps> = ({ config }) => {
   return (
-    <div className='h-full min-w-0 overflow-auto bg-slate-100 p-3 dark:bg-slate-900 sm:p-6'>
-      <div className='mx-auto flex max-w-3xl flex-col gap-5 rounded-sm bg-white p-5 shadow-lg dark:bg-slate-800 dark:shadow-slate-950/50 sm:p-10'>
+    <div className='h-full min-w-0 overflow-auto bg-muted p-3 sm:p-6'>
+      <div className='mx-auto flex max-w-3xl flex-col gap-5 rounded-xs bg-card p-5 shadow-lg sm:p-10'>
         <h1
           className={`break-words border-b pb-4 text-2xl font-bold sm:text-4xl ${borderLight} ${textPrimary}`}
         >

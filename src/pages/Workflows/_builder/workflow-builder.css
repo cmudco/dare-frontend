@@ -4,257 +4,302 @@
    DARE BRAND VARIABLES
    ============================================ */
 :root {
-    --dare-gradient: linear-gradient(135deg, #EE183C 0%, #023572 100%);
-    --dare-glow: 0 0 20px rgba(238, 24, 60, 0.3), 0 0 40px rgba(2, 53, 114, 0.2);
+  /* Brand gradient — follows the active theme's --brand-from/--brand-to
+     (the same tokens behind the bg-dare-gradient utility in index.css). */
+  --dare-blue: var(--brand-to);
+  --dare-gradient: linear-gradient(
+    135deg,
+    var(--brand-from) 0%,
+    var(--brand-to) 100%
+  );
+  --dare-glow:
+    0 0 20px color-mix(in oklab, var(--brand-from) 30%, transparent),
+    0 0 40px color-mix(in oklab, var(--brand-to) 20%, transparent);
 }
 
 /* ============================================
    NODE STYLES - DARE IDENTITY
    ============================================ */
 .workflow-node {
-    background: hsl(var(--card) / 0.95);
-    border: 2px solid transparent;
-    border-radius: 16px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    min-width: 180px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    position: relative;
-    overflow: visible;
+  background: color-mix(in oklab, var(--card) 95%, transparent);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: visible;
 }
 
 /* Output node width constraint when expanded */
 .workflow-node.output {
-    max-width: 720px;
+  max-width: 720px;
 }
 
 /* Gradient border effect using pseudo-element */
 .workflow-node::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, hsl(var(--border) / 0.2) 0%, hsl(var(--border) / 0.1) 100%);
-    z-index: -1;
-    transition: all 0.25s ease;
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--border) 20%, transparent) 0%,
+    color-mix(in oklab, var(--border) 10%, transparent) 100%
+  );
+  z-index: -1;
+  transition: all 0.25s ease;
 }
 
 .workflow-node:hover::before {
-    background: linear-gradient(135deg, rgba(238, 24, 60, 0.3) 0%, rgba(2, 53, 114, 0.3) 100%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--brand-from) 30%, transparent) 0%,
+    color-mix(in oklab, var(--dare-blue) 30%, transparent) 100%
+  );
 }
 
 .workflow-node:hover {
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 /* Selected state with DARE gradient border */
 .workflow-node.selected::before {
-    background: var(--dare-gradient);
+  background: var(--dare-gradient);
 }
 
 .workflow-node.selected {
-    box-shadow: var(--dare-glow);
+  box-shadow: var(--dare-glow);
 }
 
 /* ============================================
    NODE STATUS DOT
    ============================================ */
 .node-status-dot {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    border: 3px solid hsl(var(--card));
-    z-index: 20;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid var(--card);
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .node-status-dot.idle {
-    background: #64748b;
+  background: var(--muted-foreground);
 }
 
 .node-status-dot.running {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    animation: statusPulse 1.2s ease-in-out infinite;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  animation: statusPulse 1.2s ease-in-out infinite;
 }
 
 .node-status-dot.success {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
 
 .node-status-dot.error {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    animation: statusPulse 0.6s ease-in-out infinite;
+  background: var(--destructive);
+  animation: statusPulse 0.6s ease-in-out infinite;
 }
 
 @keyframes statusPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 currentColor;
+  }
 
-    0%,
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 currentColor;
-    }
-
-    50% {
-        transform: scale(1.15);
-        box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
-    }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
+  }
 }
 
 /* ============================================
    QUICK ACTIONS BAR
    ============================================ */
 .node-quick-actions {
-    position: absolute;
-    top: -52px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 6px;
-    background: hsl(var(--background));
-    border: 1px solid hsl(var(--border));
-    border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    animation: slideUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 100;
-}
-
-.dark .node-quick-actions {
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  position: absolute;
+  top: -52px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 100;
 }
 
 @keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(12px) scale(0.9);
-    }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px) scale(0.9);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0) scale(1);
-    }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
 }
 
 .quick-action-btn {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    background: transparent;
-    border: none;
-    color: hsl(var(--muted-foreground));
-    cursor: pointer;
-    transition: all 0.2s ease;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .quick-action-btn:hover {
-    background: hsl(var(--secondary));
-    color: hsl(var(--foreground));
-    transform: scale(1.1);
+  background: var(--secondary);
+  color: var(--foreground);
+  transform: scale(1.1);
 }
 
 .quick-action-btn.danger:hover {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+  background: color-mix(in oklab, var(--destructive) 15%, transparent);
+  color: var(--destructive);
 }
 
 /* Run button styling - DARE branded */
 .quick-action-btn.run {
-    background: linear-gradient(135deg, rgba(238, 24, 60, 0.1) 0%, rgba(2, 53, 114, 0.1) 100%);
-    color: #EE183C;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--brand-from) 10%, transparent) 0%,
+    color-mix(in oklab, var(--dare-blue) 10%, transparent) 100%
+  );
+  color: var(--brand-from);
 }
 
 .quick-action-btn.run:hover {
-    background: var(--dare-gradient);
-    color: white;
-    transform: scale(1.1);
+  background: var(--dare-gradient);
+  color: white;
+  transform: scale(1.1);
 }
 
 /* ============================================
    NODE HEADER
    ============================================ */
 .node-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
 }
 
 .node-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Icon glow on hover */
 .workflow-node:hover .node-icon {
-    transform: scale(1.08) rotate(-3deg);
+  transform: scale(1.08) rotate(-3deg);
 }
 
 /* Node type colors with gradients */
 .node-icon.start {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.1) 100%);
-    color: #22c55e;
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.2) 0%,
+    rgba(22, 163, 74, 0.1) 100%
+  );
+  color: #22c55e;
 }
 
 .node-icon.start.chained {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
-    color: #a855f7;
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.2) 0%,
+    rgba(139, 92, 246, 0.1) 100%
+  );
+  color: #a855f7;
 }
 
 .node-icon.step {
-    background: linear-gradient(135deg, rgba(51, 65, 85, 0.2) 0%, rgba(30, 41, 59, 0.15) 100%);
-    color: #334155;
-}
-
-.dark .node-icon.step {
-    background: linear-gradient(135deg, rgba(148, 163, 184, 0.2) 0%, rgba(100, 116, 139, 0.15) 100%);
-    color: #94a3b8;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--muted-foreground) 20%, transparent) 0%,
+    color-mix(in oklab, var(--muted-foreground) 15%, transparent) 100%
+  );
+  color: var(--muted-foreground);
 }
 
 .node-icon.conditional {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
-    color: #a855f7;
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.2) 0%,
+    rgba(139, 92, 246, 0.1) 100%
+  );
+  color: #a855f7;
 }
 
 .node-icon.output {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
-    color: #3b82f6;
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.2) 0%,
+    rgba(37, 99, 235, 0.1) 100%
+  );
+  color: #3b82f6;
 }
 
 .node-icon.agent {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
-    color: #fbbf24;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.2) 0%,
+    rgba(245, 158, 11, 0.1) 100%
+  );
+  color: #fbbf24;
 }
 
 .node-icon.classify {
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(219, 39, 119, 0.1) 100%);
-    color: #ec4899;
+  background: linear-gradient(
+    135deg,
+    rgba(236, 72, 153, 0.2) 0%,
+    rgba(219, 39, 119, 0.1) 100%
+  );
+  color: #ec4899;
 }
 
 .node-icon.guardrails {
-    background: linear-gradient(135deg, rgba(34, 211, 238, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%);
-    color: #22d3ee;
+  background: linear-gradient(
+    135deg,
+    rgba(34, 211, 238, 0.2) 0%,
+    rgba(6, 182, 212, 0.1) 100%
+  );
+  color: #22d3ee;
 }
 
 .node-icon.end {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
-    color: #3b82f6;
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.2) 0%,
+    rgba(37, 99, 235, 0.1) 100%
+  );
+  color: #3b82f6;
 }
 
 /* ============================================
@@ -264,246 +309,267 @@
 
 /* Start node - Green accent */
 .workflow-node:has(.node-icon.start) {
-    border-left: 3px solid rgba(34, 197, 94, 0.6);
+  border-left: 3px solid rgba(34, 197, 94, 0.6);
 }
 
 .workflow-node:has(.node-icon.start.chained) {
-    border-left: 3px solid rgba(168, 85, 247, 0.6);
+  border-left: 3px solid rgba(168, 85, 247, 0.6);
 }
 
-/* Step node - Slate/dark accent */
+/* Step node - neutral accent */
 .workflow-node:has(.node-icon.step) {
-    border-left: 3px solid rgba(51, 65, 85, 0.5);
-}
-
-.dark .workflow-node:has(.node-icon.step) {
-    border-left: 3px solid rgba(148, 163, 184, 0.4);
+  border-left: 3px solid
+    color-mix(in oklab, var(--muted-foreground) 50%, transparent);
 }
 
 /* Conditional node - Purple accent */
 .workflow-node.conditional {
-    border-left: 3px solid rgba(168, 85, 247, 0.6);
+  border-left: 3px solid rgba(168, 85, 247, 0.6);
 }
 
 /* Output node - Blue accent */
 .workflow-node.output {
-    border-left: 3px solid rgba(59, 130, 246, 0.6);
+  border-left: 3px solid rgba(59, 130, 246, 0.6);
 }
 
 .node-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: hsl(var(--foreground));
-    letter-spacing: -0.02em;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
 }
 
 /* Editable label — click-to-edit inline text */
 .editable-label {
-    cursor: text;
-    border-radius: 3px;
-    padding: 0 2px;
-    min-width: 40px;
+  cursor: text;
+  border-radius: 3px;
+  padding: 0 2px;
+  min-width: 40px;
 }
 
 .editable-label:hover {
-    background: hsl(var(--muted) / 0.5);
+  background: color-mix(in oklab, var(--muted) 50%, transparent);
 }
 
 .editable-label-input {
-    background: transparent;
-    border: none;
-    border-bottom: 1.5px solid hsl(var(--primary));
-    outline: none;
-    padding: 0 2px;
-    width: 100%;
-    min-width: 40px;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--primary);
+  outline: none;
+  padding: 0 2px;
+  width: 100%;
+  min-width: 40px;
 }
 
 .editable-label-placeholder {
-    color: hsl(var(--muted-foreground));
-    font-style: italic;
-    font-weight: 400;
+  color: var(--muted-foreground);
+  font-style: italic;
+  font-weight: 400;
 }
 
 /* Inherit white text for editable labels when node is selected */
-.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label,
-.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label-input {
-    color: white;
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(
+    .streaming
+  ):not(.pending):not(.pending-validation)
+  .editable-label,
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(
+    .streaming
+  ):not(.pending):not(.pending-validation)
+  .editable-label-input {
+  color: white;
 }
 
-.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label-input {
-    border-bottom-color: white;
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(
+    .streaming
+  ):not(.pending):not(.pending-validation)
+  .editable-label-input {
+  border-bottom-color: white;
 }
 
-.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .editable-label:hover {
-    background: rgba(255, 255, 255, 0.15);
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(
+    .streaming
+  ):not(.pending):not(.pending-validation)
+  .editable-label:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .node-subtitle {
-    font-size: 11px;
-    color: hsl(var(--muted-foreground));
-    margin-top: 3px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 3px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 /* Force white text when node is selected (gradient background is dark) */
 /* BUT not when node is in an executed state (completed, error, etc.) - those have light backgrounds */
-.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .node-title,
-.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .node-subtitle,
-.workflow-node.selected:not(.completed):not(.error):not(.running):not(.streaming):not(.pending):not(.pending-validation) .node-icon {
-    color: white;
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(
+    .streaming
+  ):not(.pending):not(.pending-validation)
+  .node-title,
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(
+    .streaming
+  ):not(.pending):not(.pending-validation)
+  .node-subtitle,
+.workflow-node.selected:not(.completed):not(.error):not(.running):not(
+    .streaming
+  ):not(.pending):not(.pending-validation)
+  .node-icon {
+  color: white;
 }
-
-
 
 /* ============================================
    ROUTE PILLS (Classify Node)
    ============================================ */
 .route-pills {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 0 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 18px 16px;
 }
 
 .route-pill {
-    font-size: 12px;
-    padding: 10px 14px;
-    background: hsl(var(--secondary) / 0.3);
-    border: 1px solid hsl(var(--border) / 0.1);
-    border-radius: 10px;
-    color: hsl(var(--foreground) / 0.85);
-    cursor: default;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
+  font-size: 12px;
+  padding: 10px 14px;
+  background: color-mix(in oklab, var(--secondary) 30%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 10%, transparent);
+  border-radius: 10px;
+  color: color-mix(in oklab, var(--foreground) 85%, transparent);
+  cursor: default;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .route-pill::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--dare-gradient);
-    opacity: 0;
-    transition: opacity 0.2s ease;
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--dare-gradient);
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 .route-pill:hover {
-    background: hsl(var(--secondary) / 0.5);
-    color: hsl(var(--foreground));
-    padding-left: 18px;
+  background: color-mix(in oklab, var(--secondary) 50%, transparent);
+  color: var(--foreground);
+  padding-left: 18px;
 }
 
 .route-pill:hover::before {
-    opacity: 1;
+  opacity: 1;
 }
 
 /* ============================================
    NODE HANDLES
    ============================================ */
 .workflow-builder-canvas .react-flow__handle {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid hsl(var(--card));
-    background: hsl(var(--muted-foreground) / 0.5);
-    transition: all 0.2s ease;
-    z-index: 10;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--card);
+  background: color-mix(in oklab, var(--muted-foreground) 50%, transparent);
+  transition: all 0.2s ease;
+  z-index: 10;
 }
 
 .workflow-builder-canvas .react-flow__handle:hover {
-    background: #EE183C;
-    border-color: hsl(var(--background));
-    box-shadow: 0 0 12px rgba(238, 24, 60, 0.5);
+  background: var(--brand-from);
+  border-color: var(--background);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--brand-from) 50%, transparent);
 }
 
 /* ============================================
    EDGE STYLES
    ============================================ */
 .workflow-builder-canvas .react-flow__edge-path {
-    /* stroke color is set per-edge by ColoredBezierEdge component */
-    stroke-width: 2;
-    stroke-dasharray: 6 4;
-    animation: flowDash 15s linear infinite;
-    transition: stroke-opacity 0.2s ease, stroke-width 0.2s ease;
+  /* stroke color is set per-edge by ColoredBezierEdge component */
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  animation: flowDash 15s linear infinite;
+  transition:
+    stroke-opacity 0.2s ease,
+    stroke-width 0.2s ease;
 }
 
 /* Selected/hover: increase width and add glow, but keep the edge's own color */
 .workflow-builder-canvas .react-flow__edge.selected .react-flow__edge-path,
 .workflow-builder-canvas .react-flow__edge:hover .react-flow__edge-path {
-    stroke-width: 3;
-    stroke-opacity: 1 !important;
-    animation: flowDash 0.8s linear infinite;
-    filter: drop-shadow(0 0 6px currentColor);
+  stroke-width: 3;
+  stroke-opacity: 1 !important;
+  animation: flowDash 0.8s linear infinite;
+  filter: drop-shadow(0 0 6px currentColor);
 }
 
 /* Dim non-hovered edges when any edge is hovered */
-.workflow-builder-canvas .react-flow__edges:has(.react-flow__edge:hover) .react-flow__edge:not(:hover):not(.selected) .react-flow__edge-path {
-    stroke-opacity: 0.15 !important;
+.workflow-builder-canvas
+  .react-flow__edges:has(.react-flow__edge:hover)
+  .react-flow__edge:not(:hover):not(.selected)
+  .react-flow__edge-path {
+  stroke-opacity: 0.15 !important;
 }
 
 @keyframes flowDash {
-    from {
-        stroke-dashoffset: 100;
-    }
+  from {
+    stroke-dashoffset: 100;
+  }
 
-    to {
-        stroke-dashoffset: 0;
-    }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* ============================================
    REACT FLOW CONTROLS STYLING
    ============================================ */
 .workflow-builder-canvas .react-flow__controls {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(229, 231, 235, 0.5);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
+  background: color-mix(in oklab, var(--card) 80%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 .workflow-builder-canvas .react-flow__controls-button {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid rgba(229, 231, 235, 0.5);
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .workflow-builder-canvas .react-flow__controls-button:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .workflow-builder-canvas .react-flow__controls-button:hover {
-    background: rgba(238, 24, 60, 0.1);
+  background: color-mix(in oklab, var(--brand-from) 10%, transparent);
 }
 
 .workflow-builder-canvas .react-flow__controls-button svg {
-    fill: #6b7280;
-    width: 14px;
-    height: 14px;
+  fill: var(--muted-foreground);
+  width: 14px;
+  height: 14px;
 }
 
 .workflow-builder-canvas .react-flow__controls-button:hover svg {
-    fill: #EE183C;
+  fill: var(--brand-from);
 }
 
 /* ============================================
    EXECUTION STATE STYLING - DARE BRANDED
-   Using DARE brand colors: Red (#EE183C) & Blue (#023572)
+   Using DARE brand colors: Red (--dare) & Blue (--dare-blue)
    ============================================ */
 
 /* Base execution state */
@@ -512,149 +578,165 @@
 .workflow-node.completed,
 .workflow-node.error,
 .workflow-node.pending {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ---- PENDING STATE ---- */
 .workflow-node.pending {
-    border-color: rgba(2, 53, 114, 0.3);
+  border-color: color-mix(in oklab, var(--dare-blue) 30%, transparent);
 }
 
 .workflow-node.pending::before {
-    background: linear-gradient(135deg, rgba(2, 53, 114, 0.08) 0%, rgba(2, 53, 114, 0.04) 100%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--dare-blue) 8%, transparent) 0%,
+    color-mix(in oklab, var(--dare-blue) 4%, transparent) 100%
+  );
 }
 
 /* ---- RUNNING STATE (DARE Red) ---- */
 .workflow-node.running {
-    border-color: rgba(238, 24, 60, 0.5);
+  border-color: color-mix(in oklab, var(--brand-from) 50%, transparent);
 }
 
 .workflow-node.running::before {
-    background: linear-gradient(135deg, rgba(238, 24, 60, 0.1) 0%, rgba(238, 24, 60, 0.05) 100%);
-    animation: executionPulse 2s ease-in-out infinite;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--brand-from) 10%, transparent) 0%,
+    color-mix(in oklab, var(--brand-from) 5%, transparent) 100%
+  );
+  animation: executionPulse 2s ease-in-out infinite;
 }
 
 .workflow-node.running::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 20px;
-    border: 2px solid rgba(238, 24, 60, 0.4);
-    animation: executionRing 1.5s ease-in-out infinite;
-    pointer-events: none;
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 20px;
+  border: 2px solid color-mix(in oklab, var(--brand-from) 40%, transparent);
+  animation: executionRing 1.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 /* ---- STREAMING STATE (DARE Blue) ---- */
 .workflow-node.streaming {
-    border-color: rgba(2, 53, 114, 0.6);
+  border-color: color-mix(in oklab, var(--dare-blue) 60%, transparent);
 }
 
 .workflow-node.streaming::before {
-    background: linear-gradient(135deg, rgba(2, 53, 114, 0.1) 0%, rgba(2, 53, 114, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--dare-blue) 10%, transparent) 0%,
+    color-mix(in oklab, var(--dare-blue) 5%, transparent) 100%
+  );
 }
 
 .workflow-node.streaming::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 20px;
-    border: 2px solid rgba(2, 53, 114, 0.5);
-    animation: streamingPulse 1s ease-in-out infinite;
-    pointer-events: none;
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 20px;
+  border: 2px solid color-mix(in oklab, var(--dare-blue) 50%, transparent);
+  animation: streamingPulse 1s ease-in-out infinite;
+  pointer-events: none;
 }
 
 /* ---- COMPLETED STATE ---- */
 .workflow-node.completed {
-    border-color: rgba(100, 116, 139, 0.3);
+  border-color: color-mix(in oklab, var(--muted-foreground) 30%, transparent);
 }
 
 .workflow-node.completed::before {
-    background: linear-gradient(135deg, rgba(100, 116, 139, 0.06) 0%, rgba(100, 116, 139, 0.02) 100%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--muted-foreground) 6%, transparent) 0%,
+    color-mix(in oklab, var(--muted-foreground) 2%, transparent) 100%
+  );
 }
 
-/* Default success indicator bar at top - neutral gray */
+/* Default success indicator bar at top - neutral */
 .workflow-node.completed::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 16px;
-    right: 16px;
-    height: 3px;
-    background: #64748b;
-    border-radius: 0 0 4px 4px;
-    pointer-events: none;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 3px;
+  background: var(--muted-foreground);
+  border-radius: 0 0 4px 4px;
+  pointer-events: none;
 }
 
 /* Node-type-specific completed states */
 /* Start node completed - Green */
 .workflow-node.completed:has(.node-icon.start) {
-    border-color: rgba(34, 197, 94, 0.4) !important;
-    border-left: 3px solid rgba(34, 197, 94, 0.8) !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  border-left: 3px solid rgba(34, 197, 94, 0.8) !important;
 }
 
 .workflow-node.completed:has(.node-icon.start)::after {
-    background: #22c55e !important;
+  background: #22c55e !important;
 }
 
-/* Step node completed - Slate/Dark */
+/* Step node completed - neutral */
 .workflow-node.completed:has(.node-icon.step) {
-    border-color: rgba(51, 65, 85, 0.4) !important;
-    border-left: 3px solid rgba(51, 65, 85, 0.7) !important;
+  border-color: color-mix(
+    in oklab,
+    var(--muted-foreground) 40%,
+    transparent
+  ) !important;
+  border-left: 3px solid
+    color-mix(in oklab, var(--muted-foreground) 70%, transparent) !important;
 }
 
 .workflow-node.completed:has(.node-icon.step)::after {
-    background: #334155 !important;
-}
-
-.dark .workflow-node.completed:has(.node-icon.step) {
-    border-color: rgba(148, 163, 184, 0.3) !important;
-    border-left: 3px solid rgba(148, 163, 184, 0.6) !important;
-}
-
-.dark .workflow-node.completed:has(.node-icon.step)::after {
-    background: #94a3b8 !important;
+  background: var(--muted-foreground) !important;
 }
 
 /* Conditional node completed - Purple */
 .workflow-node.conditional.completed {
-    border-color: rgba(168, 85, 247, 0.4) !important;
-    border-left: 3px solid rgba(168, 85, 247, 0.8) !important;
+  border-color: rgba(168, 85, 247, 0.4) !important;
+  border-left: 3px solid rgba(168, 85, 247, 0.8) !important;
 }
 
 .workflow-node.conditional.completed::after {
-    background: #a855f7 !important;
+  background: #a855f7 !important;
 }
 
 /* Output node completed - Blue */
 .workflow-node.output.completed {
-    border-color: rgba(59, 130, 246, 0.4) !important;
-    border-left: 3px solid rgba(59, 130, 246, 0.8) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  border-left: 3px solid rgba(59, 130, 246, 0.8) !important;
 }
 
 .workflow-node.output.completed::after {
-    background: #3b82f6 !important;
+  background: #3b82f6 !important;
 }
 
 /* ---- ERROR STATE (DARE Red - stronger) ---- */
 .workflow-node.error {
-    border-color: rgba(238, 24, 60, 0.6);
+  border-color: color-mix(in oklab, var(--brand-from) 60%, transparent);
 }
 
 .workflow-node.error::before {
-    background: linear-gradient(135deg, rgba(238, 24, 60, 0.12) 0%, rgba(238, 24, 60, 0.06) 100%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--brand-from) 12%, transparent) 0%,
+    color-mix(in oklab, var(--brand-from) 6%, transparent) 100%
+  );
 }
 
 /* Error indicator line at top */
 .workflow-node.error::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 16px;
-    right: 16px;
-    height: 3px;
-    background: #EE183C;
-    border-radius: 0 0 4px 4px;
-    pointer-events: none;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 3px;
+  background: var(--brand-from);
+  border-radius: 0 0 4px 4px;
+  pointer-events: none;
 }
 
 /* ============================================
@@ -662,105 +744,105 @@
    ============================================ */
 
 @keyframes executionPulse {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
 
-    0%,
-    100% {
-        opacity: 0.8;
-    }
-
-    50% {
-        opacity: 1;
-    }
+  50% {
+    opacity: 1;
+  }
 }
 
 @keyframes executionRing {
+  0%,
+  100% {
+    opacity: 0.3;
+    border-color: color-mix(in oklab, var(--brand-from) 30%, transparent);
+  }
 
-    0%,
-    100% {
-        opacity: 0.3;
-        border-color: rgba(238, 24, 60, 0.3);
-    }
-
-    50% {
-        opacity: 0.7;
-        border-color: rgba(238, 24, 60, 0.6);
-    }
+  50% {
+    opacity: 0.7;
+    border-color: color-mix(in oklab, var(--brand-from) 60%, transparent);
+  }
 }
 
 @keyframes streamingPulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    border-color: color-mix(in oklab, var(--dare-blue) 30%, transparent);
+  }
 
-    0%,
-    100% {
-        opacity: 0.4;
-        border-color: rgba(2, 53, 114, 0.3);
-    }
-
-    50% {
-        opacity: 0.8;
-        border-color: rgba(2, 53, 114, 0.6);
-    }
+  50% {
+    opacity: 0.8;
+    border-color: color-mix(in oklab, var(--dare-blue) 60%, transparent);
+  }
 }
 
 /* ============================================
    STATUS DOT - DARE BRANDED
    ============================================ */
 .node-status-dot.pending {
-    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  background: var(--muted-foreground);
 }
 
 .node-status-dot.streaming {
-    background: linear-gradient(135deg, #023572 0%, #034694 100%);
-    animation: statusPulse 1s ease-in-out infinite;
+  background: var(--dare-blue);
+  animation: statusPulse 1s ease-in-out infinite;
 }
 
 .node-status-dot.running {
-    background: linear-gradient(135deg, #EE183C 0%, #c41230 100%);
-    animation: statusPulse 1.2s ease-in-out infinite;
+  background: var(--brand-from);
+  animation: statusPulse 1.2s ease-in-out infinite;
 }
 
 .node-status-dot.success {
-    background: var(--dare-gradient);
+  background: var(--dare-gradient);
 }
 
 .node-status-dot.error {
-    background: linear-gradient(135deg, #EE183C 0%, #b91c1c 100%);
-    animation: statusPulse 0.6s ease-in-out infinite;
+  background: var(--destructive);
+  animation: statusPulse 0.6s ease-in-out infinite;
 }
 
 /* ---- PENDING VALIDATION STATE ---- */
 .workflow-node.pending-validation {
-    border-color: rgba(238, 24, 60, 0.5);
+  border-color: color-mix(in oklab, var(--brand-from) 50%, transparent);
 }
 
 .workflow-node.pending-validation::before {
-    background: linear-gradient(135deg, rgba(238, 24, 60, 0.08) 0%, rgba(2, 53, 114, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--brand-from) 8%, transparent) 0%,
+    color-mix(in oklab, var(--dare-blue) 5%, transparent) 100%
+  );
 }
 
 .workflow-node.pending-validation::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 20px;
-    border: 2px dashed rgba(238, 24, 60, 0.5);
-    animation: validationPulse 1.5s ease-in-out infinite;
-    pointer-events: none;
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 20px;
+  border: 2px dashed color-mix(in oklab, var(--brand-from) 50%, transparent);
+  animation: validationPulse 1.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 @keyframes validationPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    border-color: color-mix(in oklab, var(--brand-from) 30%, transparent);
+  }
 
-    0%,
-    100% {
-        opacity: 0.5;
-        border-color: rgba(238, 24, 60, 0.3);
-    }
-
-    50% {
-        opacity: 1;
-        border-color: rgba(238, 24, 60, 0.7);
-    }
+  50% {
+    opacity: 1;
+    border-color: color-mix(in oklab, var(--brand-from) 70%, transparent);
+  }
 }
 
 .node-status-dot.pending-validation {
-    background: linear-gradient(135deg, #EE183C 0%, #023572 100%);
-    animation: statusPulse 1.2s ease-in-out infinite;
+  background: var(--dare-gradient);
+  animation: statusPulse 1.2s ease-in-out infinite;
 }

@@ -1,6 +1,7 @@
 import { ChangePasswordForm } from '@/components/Auth/ChangePasswordForm'
 import ConversationSettingsForm from '@/components/Auth/ConversationSettingsForm'
 import ApiKeysManagement from '@/components/Settings/ApiKeysManagement'
+import AppearanceSettings from '@/components/Settings/AppearanceSettings'
 import AvatarSettings from '@/components/Settings/AvatarSettings'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { motion } from 'framer-motion'
@@ -19,6 +20,7 @@ const sectionVariants = {
 const Settings = () => {
   const enableByok = useFeatureFlag('enableByok')
   const sections: { key: string; component: ReactNode }[] = [
+    { key: 'appearance', component: <AppearanceSettings /> },
     { key: 'avatar', component: <AvatarSettings /> },
     ...(enableByok
       ? [{ key: 'apikeys', component: <ApiKeysManagement /> }]
@@ -36,8 +38,8 @@ const Settings = () => {
         className='flex flex-col space-y-1'
       >
         <div className='flex items-center gap-3'>
-          <div className='rounded-lg bg-slate-100 p-2 dark:bg-slate-800'>
-            <SettingsIcon className='h-6 w-6 text-slate-700 dark:text-slate-300' />
+          <div className='rounded-lg bg-muted p-2'>
+            <SettingsIcon className='h-6 w-6 text-muted-foreground' />
           </div>
           <div>
             <h1 className='text-3xl font-bold tracking-tight'>Settings</h1>

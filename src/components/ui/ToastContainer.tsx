@@ -27,7 +27,7 @@ const ToastItemView: React.FC<{
       className={`pointer-events-auto flex w-96 items-center gap-3 rounded-md border p-3 shadow-lg ${base}`}
     >
       <div
-        className={`flex h-5 w-5 flex-shrink-0 items-center justify-center ${iconColor}`}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center ${iconColor}`}
       >
         {toast.type === 'success' ? (
           <CheckCircle2 className='h-5 w-5' />
@@ -37,11 +37,11 @@ const ToastItemView: React.FC<{
           <Info className='h-5 w-5' />
         )}
       </div>
-      <div className='min-w-0 flex-1 whitespace-pre-line text-sm leading-5'>
+      <div className='min-w-0 flex-1 text-sm leading-5 whitespace-pre-line'>
         {toast.message}
       </div>
       <button
-        className='inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition hover:bg-muted'
+        className='inline-flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground transition hover:bg-muted'
         aria-label='Dismiss'
         onClick={() => onClose(toast.id)}
       >
@@ -58,7 +58,7 @@ const ToastContainer: React.FC = () => {
   if (typeof document === 'undefined') return null
 
   return createPortal(
-    <div className='pointer-events-none fixed inset-0 z-[1000] flex items-start justify-end p-4 sm:p-6'>
+    <div className='pointer-events-none fixed inset-0 z-1000 flex items-start justify-end p-4 sm:p-6'>
       <div className='flex flex-col gap-2'>
         {toasts.map((t) => (
           <ToastItemView key={t.id} toast={t} onClose={removeToast} />

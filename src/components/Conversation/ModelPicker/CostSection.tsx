@@ -22,14 +22,14 @@ const CostSection: React.FC<CostSectionProps> = ({
   onSelect,
 }) => {
   return (
-    <div className='overflow-hidden rounded-xl border border-accent/20 bg-accent/5 shadow-sm dark:bg-white/5'>
+    <div className='overflow-hidden rounded-xl border border-accent/20 bg-accent/5 shadow-xs'>
       <button
         onClick={onToggle}
-        className='flex w-full items-center justify-between p-3 transition-colors hover:bg-accent/40 dark:hover:bg-white/5'
+        className='flex w-full items-center justify-between p-3 transition-colors hover:bg-accent/40'
       >
         <div className='flex items-center gap-2'>
           <TypeIcon type={group.type} className='h-4 w-4' />
-          <span className='text-xs font-bold uppercase tracking-wider text-muted-foreground'>
+          <span className='text-xs font-bold tracking-wider text-muted-foreground uppercase'>
             {group.type} Models
           </span>
         </div>

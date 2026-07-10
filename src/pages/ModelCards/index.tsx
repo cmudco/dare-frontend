@@ -83,7 +83,7 @@ const ModelCards = () => {
           <ArrowLeft className='mr-1 h-4 w-4' />
           Back to Help
         </Link>
-        <div className='rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800'>
+        <div className='rounded-lg border border-border bg-muted p-8 text-center'>
           <h2 className='mb-2 text-xl font-semibold'>Model Card Not Found</h2>
           <p className='text-muted-foreground'>
             No model card data available for "{slug}"
@@ -276,7 +276,7 @@ const ModelCards = () => {
                           key={i}
                           className='flex items-start gap-2 text-sm text-muted-foreground'
                         >
-                          <span className='mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-green-500' />
+                          <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-green-500' />
                           <span className='flex-1'>
                             {strength.claim}
                             <Citation
@@ -304,7 +304,7 @@ const ModelCards = () => {
                           key={i}
                           className='flex items-start gap-2 text-sm text-muted-foreground'
                         >
-                          <span className='mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500' />
+                          <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500' />
                           <span className='flex-1'>
                             {weakness.claim}
                             <Citation
@@ -335,7 +335,7 @@ const ModelCards = () => {
                     {keyThemes.slice(0, 5).map((theme, i) => (
                       <div
                         key={i}
-                        className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'
+                        className='rounded-lg border border-border p-4'
                       >
                         <div className='mb-2 flex items-center justify-between'>
                           <h4 className='font-medium'>{theme.theme}</h4>
@@ -356,7 +356,7 @@ const ModelCards = () => {
                           </div>
                         </div>
                         {theme.exampleQuotes.length > 0 && (
-                          <blockquote className='border-l-2 border-gray-300 pl-3 text-sm italic text-muted-foreground'>
+                          <blockquote className='border-l-2 border-border pl-3 text-sm text-muted-foreground italic'>
                             "{theme.exampleQuotes[0].quote}"
                             <Citation
                               refs={[theme.exampleQuotes[0].ref]}
@@ -400,7 +400,7 @@ const ModelCards = () => {
                       ([task, insight]) => (
                         <div
                           key={task}
-                          className='border-b border-gray-100 pb-3 last:border-0 last:pb-0 dark:border-gray-800'
+                          className='border-b border-border pb-3 last:border-0 last:pb-0'
                         >
                           <dt className='mb-1 font-medium capitalize'>
                             {task.replace(/([A-Z])/g, ' $1').trim()}
@@ -433,7 +433,7 @@ const ModelCards = () => {
                       {comparativeMentions.map((comparison, i) => (
                         <div
                           key={i}
-                          className='flex items-start justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800'
+                          className='flex items-start justify-between rounded-lg bg-muted p-3'
                         >
                           <div>
                             <span className='font-medium'>

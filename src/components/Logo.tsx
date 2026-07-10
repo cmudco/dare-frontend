@@ -82,7 +82,7 @@ export const Logo: React.FC<LogoProps> = ({
       <div className={cn('flex flex-col', isVertical && 'items-center')}>
         <span
           className={cn(
-            'font-sans font-extrabold uppercase tracking-[0.1em] text-foreground',
+            'font-sans font-extrabold tracking-widest text-foreground uppercase',
             s.word
           )}
         >
@@ -91,7 +91,7 @@ export const Logo: React.FC<LogoProps> = ({
         {showTagline && (
           <span
             className={cn(
-              'mt-0.5 whitespace-nowrap font-sans font-medium text-muted-foreground',
+              'mt-0.5 font-sans font-medium whitespace-nowrap text-muted-foreground',
               s.tagline
             )}
           >

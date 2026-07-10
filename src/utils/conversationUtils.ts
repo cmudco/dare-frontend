@@ -119,7 +119,7 @@ export const getConversationItemClassName = (
   isSelected?: boolean
 ): string => {
   const baseClasses =
-    'group flex w-full items-center gap-2 rounded-md px-3 py-3 text-start leading-tight outline-none transition-all min-h-[48px] cursor-pointer'
+    'group flex w-full items-center gap-2 rounded-md px-3 py-3 text-start leading-tight outline-hidden transition-all min-h-[48px] cursor-pointer'
   const dragClasses = isDragging ? 'shadow-lg scale-105 bg-muted/50' : ''
   const selectedClasses = isSelected
     ? 'bg-blue-50 border-2 border-blue-300'

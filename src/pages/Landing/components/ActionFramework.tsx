@@ -123,7 +123,7 @@ export const ActionFramework: React.FC = () => {
         {/* Heading + the "AI in the loop" framing share the top row */}
         <div className='grid gap-10 lg:grid-cols-12 lg:items-center'>
           <div className='lg:col-span-6'>
-            <Eyebrow index='03'>Principles</Eyebrow>
+            <Eyebrow index='04'>Principles</Eyebrow>
             <SectionTitle className='mt-5'>
               Every decision grounded in{' '}
               <span className='text-dare'>ACTION</span>.
@@ -165,7 +165,7 @@ export const ActionFramework: React.FC = () => {
                 className={cn(
                   'group flex flex-col items-center gap-2 rounded-xl border px-3 py-4 transition-colors',
                   selected
-                    ? 'border-dare/40 bg-card shadow-sm'
+                    ? 'border-dare/40 bg-card shadow-xs'
                     : 'border-border bg-background hover:border-dare/20 hover:bg-muted/50'
                 )}
               >
@@ -196,7 +196,7 @@ export const ActionFramework: React.FC = () => {
 
         {/* Detail panel — full width, fixed minimum height so switching tabs
             doesn't jump the page */}
-        <div className='mt-4 grid min-h-[18rem] gap-6 rounded-2xl border border-border bg-card p-6 sm:p-8 lg:grid-cols-2 lg:gap-10'>
+        <div className='mt-4 grid min-h-72 gap-6 rounded-2xl border border-border bg-card p-6 sm:p-8 lg:grid-cols-2 lg:gap-10'>
           <div className='flex flex-col'>
             <div className='flex items-baseline gap-3'>
               <span className='font-serif text-3xl font-semibold text-dare'>
@@ -206,7 +206,7 @@ export const ActionFramework: React.FC = () => {
                 {current.name}
               </h3>
             </div>
-            <span className='mt-2 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground'>
+            <span className='mt-2 font-mono text-[0.65rem] tracking-[0.18em] text-muted-foreground uppercase'>
               {current.tag}
             </span>
             <p className='mt-5 max-w-md text-base leading-relaxed text-muted-foreground'>
@@ -226,16 +226,16 @@ export const ActionFramework: React.FC = () => {
 
             {current.researchSuggestion ? (
               <div className='p-4 sm:p-5'>
-                <div className='rounded-xl border border-dare/20 bg-background p-4 shadow-sm'>
+                <div className='rounded-xl border border-dare/20 bg-background p-4 shadow-xs'>
                   <div className='flex items-start gap-3'>
-                    <span className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-dare/25 bg-dare-gradient text-white shadow-sm shadow-dare/20'>
+                    <span className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-dare/25 bg-dare-gradient text-white shadow-xs shadow-dare/20'>
                       <BrainCircuit className='h-4 w-4' />
                     </span>
                     <div>
-                      <p className='font-mono text-[0.62rem] uppercase tracking-[0.16em] text-dare'>
+                      <p className='font-mono text-[0.62rem] tracking-[0.16em] text-dare uppercase'>
                         Suggested by AI
                       </p>
-                      <p className='mt-2 text-sm font-semibold leading-snug text-foreground'>
+                      <p className='mt-2 text-sm leading-snug font-semibold text-foreground'>
                         {current.researchSuggestion.suggestion}
                       </p>
                       <p className='mt-2 text-sm leading-relaxed text-muted-foreground'>
@@ -246,7 +246,7 @@ export const ActionFramework: React.FC = () => {
 
                   <dl className='mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-2'>
                     <div>
-                      <dt className='font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted-foreground'>
+                      <dt className='font-mono text-[0.62rem] tracking-[0.16em] text-muted-foreground uppercase'>
                         Provenance
                       </dt>
                       <dd className='mt-1 text-xs leading-relaxed text-foreground/80'>
@@ -254,7 +254,7 @@ export const ActionFramework: React.FC = () => {
                       </dd>
                     </div>
                     <div>
-                      <dt className='font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted-foreground'>
+                      <dt className='font-mono text-[0.62rem] tracking-[0.16em] text-muted-foreground uppercase'>
                         Confidence
                       </dt>
                       <dd className='mt-1 text-xs leading-relaxed text-foreground/80'>

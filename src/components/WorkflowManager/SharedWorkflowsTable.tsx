@@ -174,9 +174,9 @@ const SharedWorkflowsTable = ({ searchQuery }: SharedWorkflowsTableProps) => {
             {TABLE_HEAD.map((head) => (
               <TableHead
                 key={head}
-                className={`cursor-pointer select-none p-4 text-sm font-semibold text-foreground transition-colors duration-150 ${
+                className={`cursor-pointer p-4 text-sm font-semibold text-foreground transition-colors duration-150 select-none ${
                   head !== 'Action'
-                    ? 'hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-white/10 dark:hover:text-white'
+                    ? 'hover:bg-accent hover:text-accent-foreground'
                     : ''
                 }`}
                 onClick={() => handleSort(head)}
@@ -264,7 +264,7 @@ const SharedWorkflowsTable = ({ searchQuery }: SharedWorkflowsTableProps) => {
               <TableCell colSpan={TABLE_HEAD.length} className='w-full p-4'>
                 <div className='flex w-full items-center justify-between'>
                   <div className='flex items-center gap-4'>
-                    <span className='text-sm dark:text-white'>
+                    <span className='text-sm text-foreground'>
                       Rows per page:
                     </span>
                     <Select
@@ -290,7 +290,7 @@ const SharedWorkflowsTable = ({ searchQuery }: SharedWorkflowsTableProps) => {
                     >
                       Previous
                     </Button>
-                    <span className='text-sm dark:text-white'>
+                    <span className='text-sm text-foreground'>
                       Page {currentPage} of {totalPages || 1}
                     </span>
                     <Button

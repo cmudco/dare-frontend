@@ -186,7 +186,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           variant={BackgroundVariant.Dots}
           gap={12}
           size={1}
-          color='#e5e7eb'
+          color='var(--border)'
         />
         <Controls
           showZoom={true}
@@ -194,9 +194,11 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           showInteractive={true}
           position='bottom-right'
           style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            backgroundColor:
+              'color-mix(in oklab, var(--card) 80%, transparent)',
             backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(229, 231, 235, 0.5)',
+            border:
+              '1px solid color-mix(in oklab, var(--border) 50%, transparent)',
             borderRadius: '8px',
           }}
         />
@@ -207,9 +209,11 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
           pannable
           position='bottom-left'
           style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            backgroundColor:
+              'color-mix(in oklab, var(--card) 80%, transparent)',
             backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(229, 231, 235, 0.5)',
+            border:
+              '1px solid color-mix(in oklab, var(--border) 50%, transparent)',
             borderRadius: '8px',
           }}
         />

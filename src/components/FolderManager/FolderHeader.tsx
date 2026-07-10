@@ -58,11 +58,11 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({ onToggleView }) => {
             </Button>
           </div>
           <div className='relative flex h-[40px] w-[300px] items-center'>
-            <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-gray-500' />
+            <MagnifyingGlassIcon className='absolute left-3 h-5 w-5 text-muted-foreground' />
             <Input
               type='text'
               placeholder='Search by Folders'
-              className='rounded-md border border-gray-300 bg-white pl-10 focus:border-primary focus:ring-2 focus:ring-primary'
+              className='rounded-md border border-border bg-background pl-10 focus:border-primary focus:ring-2 focus:ring-primary'
               value={searchQuery}
               onChange={handleSearchChange}
             />
@@ -71,7 +71,7 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({ onToggleView }) => {
         <div className='flex items-center gap-2'>
           {selectedItems.length > 0 && (
             <Button
-              className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
+              className='rounded-md py-2 font-normal whitespace-nowrap normal-case shadow-xs'
               variant='outline'
               size='default'
               onClick={() => dispatch(openMoveModal())}
@@ -83,7 +83,7 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({ onToggleView }) => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                className='whitespace-nowrap rounded-md py-2 font-normal normal-case shadow-sm'
+                className='rounded-md py-2 font-normal whitespace-nowrap normal-case shadow-xs'
                 variant='default'
                 size='default'
               >

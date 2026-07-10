@@ -42,11 +42,11 @@ const ModelItem: React.FC<ModelItemProps> = ({
       >
         <div className='flex items-center gap-2'>
           {showProvider && brand.logo && (
-            <div className='flex h-5 w-5 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-accent/20 bg-accent/30 p-0.5 shadow-sm'>
+            <div className='flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-md border border-accent/20 bg-accent/30 p-0.5 shadow-xs'>
               <img
                 src={brand.logo}
                 alt={brand.name}
-                className='h-full w-full object-contain brightness-100 dark:brightness-125'
+                className='h-full w-full object-contain'
               />
             </div>
           )}
@@ -60,7 +60,7 @@ const ModelItem: React.FC<ModelItemProps> = ({
             <div className='h-1.5 w-1.5 animate-pulse rounded-full bg-purple-500' />
           )}
           {isLiteLLM && (
-            <span className='ml-1 rounded-full bg-accent/40 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground'>
+            <span className='ml-1 rounded-full bg-accent/40 px-1.5 py-0.5 text-[9px] font-medium tracking-wide text-muted-foreground uppercase'>
               LiteLLM
             </span>
           )}

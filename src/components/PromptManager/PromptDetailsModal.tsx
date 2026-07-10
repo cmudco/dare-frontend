@@ -90,7 +90,7 @@ const PromptDetailsModal: React.FC<PromptDetailsModalProps> = ({
             <div className='space-y-2'>
               <p className='text-sm font-medium text-foreground'>Description</p>
               <div className='rounded-lg border border-border bg-muted/20 p-3'>
-                <p className='whitespace-pre-wrap text-sm text-muted-foreground'>
+                <p className='text-sm whitespace-pre-wrap text-muted-foreground'>
                   {prompt.description}
                 </p>
               </div>
@@ -109,7 +109,7 @@ const PromptDetailsModal: React.FC<PromptDetailsModalProps> = ({
                   dangerouslySetInnerHTML={{ __html: prompt.content }}
                 />
               ) : isPlainTextContent(prompt.content) ? (
-                <pre className='whitespace-pre-wrap break-all font-mono text-sm text-foreground'>
+                <pre className='font-mono text-sm break-all whitespace-pre-wrap text-foreground'>
                   {prompt.content}
                 </pre>
               ) : (
