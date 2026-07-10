@@ -35,8 +35,14 @@ import {
   WalletMeta,
   RagMode,
 } from './types/conversation'
-import { ServerSlug, ToolCallOrigin } from '@/utils/constants/dareTools'
+import { ToolCallOrigin } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
+import type {
+  ToolCallPendingEvent,
+  ToolCallArgsProgressEvent,
+  ToolCallExecutingEvent,
+  ToolCallResultEvent,
+} from './types/toolEvents'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { SharedLibrary } from './types/library'
@@ -991,196 +997,141 @@ export const conversationSlice = createSlice({
           }
         }
       )
-      // Tool Call - external MCP or provider-native tool starts executing
+      // Tool Call Pending - the model started writing a tool call.
+      // Also absorbs throttled args-progress updates for the same call.
       .addMatcher(
         (
           action
         ): action is {
           type: string
-          payload: {
-            messageId: number
-            toolCallId: string
-            toolName: string
-            serverSlug: string
-            origin?: ToolCallOrigin
-            status: ToolCallStatus
-          }
+          payload: ToolCallPendingEvent | ToolCallArgsProgressEvent
         } =>
-          action.type === 'socket/mcp_tool_call' ||
-          action.type === 'socket/tool_call',
+          action.type === 'socket/tool_call_pending' ||
+          action.type === 'socket/tool_call_args_progress',
         (state, action) => {
-          const {
-            messageId,
-            toolCallId,
-            toolName,
-            serverSlug,
-            status,
-            origin,
-          } = action.payload
-          const toolOrigin =
-            origin ??
-            (action.type === 'socket/tool_call'
-              ? ToolCallOrigin.PROVIDER
-              : ToolCallOrigin.MCP)
+          const { messageId, toolCallId } = action.payload
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
-          if (msg) {
-            // Initialize toolCalls array if not present
-            if (!msg.mcpToolCalls) {
-              msg.mcpToolCalls = []
+          // Silently drop events for messages not in the store
+          if (!msg) return
+          if (!msg.toolCalls) {
+            msg.toolCalls = []
+          }
+          const existing = msg.toolCalls.find((tc) => tc.id === toolCallId)
+          if (existing) {
+            // Only update argsChars, and only while still PENDING —
+            // late throttled updates must never undo EXECUTING
+            if (
+              existing.status === ToolCallStatus.PENDING &&
+              'argsChars' in action.payload
+            ) {
+              existing.argsChars = action.payload.argsChars
             }
-            // Add new tool call entry using the ID from backend
-            msg.mcpToolCalls.push({
-              id: toolCallId,
-              toolName,
-              serverSlug,
-              origin: toolOrigin,
-              status,
+            return
+          }
+          // Only the full pending event carries tool identity — never
+          // create an entry from an args-progress event alone
+          if (action.type === 'socket/tool_call_pending') {
+            const payload = action.payload as ToolCallPendingEvent
+            msg.toolCalls.push({
+              id: payload.toolCallId,
+              toolName: payload.toolName,
+              serverSlug: payload.serverSlug,
+              origin: payload.origin,
+              status: ToolCallStatus.PENDING,
+              round: payload.round,
             })
           }
         }
       )
-      // Tool Result - external MCP or provider-native tool completes
+      // Tool Call Executing - arguments complete, tool is running
       .addMatcher(
-        (
-          action
-        ): action is {
-          type: string
-          payload: {
-            messageId: number
-            toolCallId: string
-            toolName: string
-            serverSlug: string
-            origin?: ToolCallOrigin
-            status: 'success' | 'error'
-            result?: unknown
-            error?: string
-          }
-        } =>
-          action.type === 'socket/mcp_tool_result' ||
-          action.type === 'socket/tool_result',
+        (action): action is { type: string; payload: ToolCallExecutingEvent } =>
+          action.type === 'socket/tool_call_executing',
         (state, action) => {
-          const { messageId, toolCallId, status, result, error, origin } =
+          const { messageId, toolCallId } = action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (!msg) return
+          if (!msg.toolCalls) {
+            msg.toolCalls = []
+          }
+          // Find the matching tool call by unique id only
+          // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
+          let toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId)
+          if (!toolCall) {
+            // Defensive upsert in case the pending event was missed
+            toolCall = {
+              id: action.payload.toolCallId,
+              toolName: action.payload.toolName,
+              serverSlug: action.payload.serverSlug,
+              origin: action.payload.origin,
+              status: ToolCallStatus.EXECUTING,
+              round: action.payload.round,
+            }
+            msg.toolCalls.push(toolCall)
+          }
+          toolCall.status = ToolCallStatus.EXECUTING
+          toolCall.arguments = action.payload.arguments
+        }
+      )
+      // Tool Call Result - tool finished (completed or failed)
+      .addMatcher(
+        (action): action is { type: string; payload: ToolCallResultEvent } =>
+          action.type === 'socket/tool_call_result',
+        (state, action) => {
+          const { messageId, toolCallId, status, origin, error } =
             action.payload
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
-          if (msg && msg.mcpToolCalls) {
-            // Find the matching tool call by unique id only
-            // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
-            const toolCall = msg.mcpToolCalls.find((tc) => tc.id === toolCallId)
-            if (toolCall) {
-              toolCall.status =
-                status === 'success'
-                  ? ToolCallStatus.COMPLETED
-                  : ToolCallStatus.FAILED
-              if (result) {
-                const toolOrigin =
-                  origin ?? toolCall.origin ?? ToolCallOrigin.MCP
-                if (toolOrigin === ToolCallOrigin.PROVIDER) {
-                  toolCall.providerResult =
-                    result as import('@/redux/types/dareToolResults').ProviderToolResult
-                } else {
-                  // Store as mcpResult (MCP tools use this field)
-                  toolCall.mcpResult = result
-                }
+          if (!msg) return
+          if (!msg.toolCalls) {
+            msg.toolCalls = []
+          }
+          // Find the matching tool call by unique id only
+          // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
+          let toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId)
+          if (!toolCall) {
+            // Defensive upsert in case pending/executing events were missed
+            toolCall = {
+              id: action.payload.toolCallId,
+              toolName: action.payload.toolName,
+              serverSlug: action.payload.serverSlug,
+              origin: action.payload.origin,
+              status,
+              round: action.payload.round,
+            }
+            msg.toolCalls.push(toolCall)
+          }
+          toolCall.status =
+            status === ToolCallStatus.COMPLETED
+              ? ToolCallStatus.COMPLETED
+              : ToolCallStatus.FAILED
+          // Exactly one result field is set, keyed by origin
+          switch (origin) {
+            case ToolCallOrigin.DARE:
+              toolCall.dareResult = action.payload.dareResult
+              // If the DARE result indicates failure, also surface its error
+              if (
+                action.payload.dareResult &&
+                action.payload.dareResult.success === false &&
+                action.payload.dareResult.error
+              ) {
+                toolCall.error = action.payload.dareResult.error
               }
-              if (error) {
-                toolCall.error = error
-              }
-            }
+              break
+            case ToolCallOrigin.MCP:
+              toolCall.mcpResult = action.payload.mcpResult
+              break
+            case ToolCallOrigin.PROVIDER:
+              toolCall.providerResult = action.payload.providerResult
+              break
           }
-        }
-      )
-      // DARE Tool Call - tool starts executing
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: string
-          payload: {
-            messageId: number
-            toolCall: {
-              id: string
-              toolName: string
-              toolSlug: string
-              serverSlug: string
-              origin?: ToolCallOrigin
-              status: ToolCallStatus
-              arguments?: Record<string, unknown>
-            }
-          }
-        } => action.type === 'socket/dareToolCall',
-        (state, action) => {
-          const { messageId, toolCall } = action.payload
-          const msg = state.activeConversationMessages.find(
-            (m) => m.id.toString() === messageId.toString()
-          )
-          if (msg) {
-            // Initialize toolCalls array if not present
-            if (!msg.mcpToolCalls) {
-              msg.mcpToolCalls = []
-            }
-            // Add new tool call entry
-            msg.mcpToolCalls.push({
-              id: toolCall.id,
-              toolName: toolCall.toolName,
-              serverSlug: toolCall.serverSlug || ServerSlug.DARE,
-              origin: toolCall.origin || ToolCallOrigin.DARE,
-              status: toolCall.status,
-            })
-          }
-        }
-      )
-      // DARE Tool Result - tool completes (success or error)
-      .addMatcher(
-        (
-          action
-        ): action is {
-          type: string
-          payload: {
-            messageId: number
-            toolCall: {
-              id: string
-              toolName: string
-              toolSlug: string
-              serverSlug: string
-              origin?: ToolCallOrigin
-              status: 'completed' | 'failed'
-              result?: Record<string, unknown>
-              arguments?: Record<string, unknown>
-            }
-          }
-        } => action.type === 'socket/dareToolResult',
-        (state, action) => {
-          const { messageId, toolCall } = action.payload
-          const msg = state.activeConversationMessages.find(
-            (m) => m.id.toString() === messageId.toString()
-          )
-          if (msg && msg.mcpToolCalls) {
-            // Find the matching tool call by unique id only
-            // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
-            const existingToolCall = msg.mcpToolCalls.find(
-              (tc) => tc.id === toolCall.id
-            )
-            if (existingToolCall) {
-              existingToolCall.status =
-                toolCall.status === 'completed'
-                  ? ToolCallStatus.COMPLETED
-                  : ToolCallStatus.FAILED
-              if (toolCall.result) {
-                // Store as dareResult (DARE tools use this field)
-                // Result is already parsed and camelCased from BE
-                existingToolCall.dareResult =
-                  toolCall.result as unknown as import('@/redux/types/dareToolResults').DareToolResult
-
-                // If result indicates failure, also set error
-                if (!toolCall.result.success && toolCall.result.error) {
-                  existingToolCall.error = toolCall.result.error as string
-                }
-              }
-            }
+          if (error) {
+            toolCall.error = error
           }
         }
       )

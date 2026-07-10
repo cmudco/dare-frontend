@@ -9,9 +9,9 @@ import {
   updateRagMode,
 } from '../../redux/conversationSlice'
 import { MODEL_CONFIG } from '../../config/modelConfig'
-import { RotateCw, X, Info, Database, Route } from 'lucide-react'
+import { RotateCw, X, Info, Database, Route, Bot } from 'lucide-react'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
-import type { RagMode } from '@/redux/types/conversation'
+import { RagMode } from '@/redux/types/conversation'
 import VectorDatabaseInfoBanner from './VectorDatabaseInfoBanner'
 import {
   Tooltip,
@@ -37,7 +37,7 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   const documentSimilarityThreshold =
     activeConversation?.documentSimilarityThreshold ??
     MODEL_CONFIG.documentSimilarityThreshold
-  const ragMode = activeConversation?.ragMode ?? 'advanced'
+  const ragMode = activeConversation?.ragMode ?? RagMode.ADVANCED
 
   const [snippetInput, setSnippetInput] = React.useState(
     maxContextSnippets.toString()
@@ -202,29 +202,40 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
                 <TooltipContent className='max-w-sm'>
                   <p className='text-sm'>
                     Naive uses dense lookup. Advanced adds query analysis,
-                    hybrid retrieval, rerank, grounding, and trace data.
+                    hybrid retrieval, rerank, grounding, and trace data. Agentic
+                    lets the model search your documents itself — issuing and
+                    refining retrieval queries as tool calls across rounds.
                   </p>
                 </TooltipContent>
               </Tooltip>
             </div>
-            <div className='grid grid-cols-2 gap-2'>
+            <div className='grid grid-cols-3 gap-2'>
               <Button
                 type='button'
-                variant={ragMode === 'naive' ? 'default' : 'outline'}
+                variant={ragMode === RagMode.NAIVE ? 'default' : 'outline'}
                 className='h-9 justify-center gap-2'
-                onClick={() => handleRagModeChange('naive')}
+                onClick={() => handleRagModeChange(RagMode.NAIVE)}
               >
                 <Database className='h-4 w-4' />
-                Naive RAG
+                Naive
               </Button>
               <Button
                 type='button'
-                variant={ragMode === 'advanced' ? 'default' : 'outline'}
+                variant={ragMode === RagMode.ADVANCED ? 'default' : 'outline'}
                 className='h-9 justify-center gap-2'
-                onClick={() => handleRagModeChange('advanced')}
+                onClick={() => handleRagModeChange(RagMode.ADVANCED)}
               >
                 <Route className='h-4 w-4' />
-                Advanced RAG
+                Advanced
+              </Button>
+              <Button
+                type='button'
+                variant={ragMode === RagMode.AGENTIC ? 'default' : 'outline'}
+                className='h-9 justify-center gap-2'
+                onClick={() => handleRagModeChange(RagMode.AGENTIC)}
+              >
+                <Bot className='h-4 w-4' />
+                Agentic
               </Button>
             </div>
           </div>

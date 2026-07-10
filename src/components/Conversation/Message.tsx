@@ -44,7 +44,7 @@ import WebSearchSources from './WebSearchSources'
 import MemoryContextSources from './MemoryContextSources'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
-import { ToolCallIndicator } from '../MCP/ToolCallIndicator'
+import { ToolActivity } from './ToolActivity/ToolActivity'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { debugLog } from '@/utils/debugLogger'
 
@@ -238,7 +238,7 @@ const Message: React.FC<MessageProps> = ({
       } group mb-4`}
     >
       <div
-        className={`flex w-full min-w-0 max-w-full ${
+        className={`flex w-full max-w-full min-w-0 ${
           isSenderMessage(message) ? 'justify-end' : 'justify-start'
         } items-start`}
       >
@@ -314,7 +314,7 @@ const Message: React.FC<MessageProps> = ({
         )}
 
         <div
-          className={`relative mb-2 min-w-0 max-w-[95%] text-wrap rounded-xl px-4 py-3 sm:px-5 ${
+          className={`relative mb-2 max-w-[95%] min-w-0 rounded-xl px-4 py-3 text-wrap sm:px-5 ${
             isSenderMessage(message)
               ? 'border border-border bg-muted'
               : 'border border-border bg-card'
@@ -691,7 +691,7 @@ const Message: React.FC<MessageProps> = ({
         !message.streaming &&
         message.snippets &&
         message.snippets.length > 0 && (
-          <div className='mt-2 w-full min-w-0 max-w-[95%] pl-0 sm:pl-10'>
+          <div className='mt-2 w-full max-w-[95%] min-w-0 pl-0 sm:pl-10'>
             <button
               onClick={toggleSnippets}
               className='flex items-center text-sm text-muted-foreground hover:text-foreground'
@@ -715,7 +715,7 @@ const Message: React.FC<MessageProps> = ({
                       className='min-w-0 rounded-r-lg border-l-4 border-border bg-muted p-3 pl-4'
                     >
                       <div className='mb-1 flex flex-wrap items-center justify-between gap-1'>
-                        <span className='min-w-0 break-words text-sm font-medium text-foreground'>
+                        <span className='min-w-0 text-sm font-medium break-words text-foreground'>
                           From{' '}
                           {snippet.file
                             ? snippet.file.name
@@ -735,7 +735,7 @@ const Message: React.FC<MessageProps> = ({
                           )}
                         </span>
                       </div>
-                      <p className='break-words text-sm text-muted-foreground'>
+                      <p className='text-sm break-words text-muted-foreground'>
                         {snippet.text}
                       </p>
                     </div>
@@ -761,13 +761,15 @@ const Message: React.FC<MessageProps> = ({
           <MemoryContextSources items={message.memoryContextData} />
         )}
 
-      {/* MCP Tool Calls - Show tool usage indicator for AI messages */}
+      {/* Tool Calls - live tool-loop activity for AI messages (also during streaming) */}
       {!isSenderMessage(message) &&
-        !message.streaming &&
-        message.mcpToolCalls &&
-        message.mcpToolCalls.length > 0 && (
-          <div className='mt-2 w-full min-w-0 max-w-[95%] pl-0 sm:pl-10'>
-            <ToolCallIndicator toolCalls={message.mcpToolCalls} />
+        message.toolCalls &&
+        message.toolCalls.length > 0 && (
+          <div className='mt-2 w-full max-w-[95%] min-w-0 pl-0 sm:pl-10'>
+            <ToolActivity
+              toolCalls={message.toolCalls}
+              streaming={!!message.streaming}
+            />
           </div>
         )}
 

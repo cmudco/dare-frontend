@@ -11,7 +11,6 @@
 export enum ToolCallStatus {
   PENDING = 'pending',
   EXECUTING = 'executing',
-  RUNNING = 'running',
   COMPLETED = 'completed',
   FAILED = 'failed',
 }

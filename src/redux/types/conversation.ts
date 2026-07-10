@@ -2,9 +2,19 @@ import {
   SenderType,
   FeedbackType,
   ConversationTab,
+  RagMode,
 } from '@/utils/constants/conversation'
 import type { RelatableStats } from '@/redux/types/billing'
-import { ToolCallStatus, MessageContentType } from '@/utils/constants/dareTools'
+import {
+  ToolCallStatus,
+  ToolCallOrigin,
+  MessageContentType,
+} from '@/utils/constants/dareTools'
+import type {
+  DareToolResult,
+  McpToolResult,
+  ProviderToolResult,
+} from '@/redux/types/dareToolResults'
 import type {
   ImageSizeType,
   ImageQualityType,
@@ -26,7 +36,9 @@ export enum VoiceRecordingState {
   PROCESSING = 'processing',
 }
 
-export type RagMode = 'naive' | 'advanced'
+// RagMode is now defined in @/utils/constants/conversation
+// Re-export for backwards compatibility
+export { RagMode }
 
 export interface Conversation {
   conversationId: string
@@ -116,7 +128,7 @@ export interface Message {
   generatedImage?: GeneratedImage
   generatedTranscription?: GeneratedTranscription
   artifactId?: number
-  mcpToolCalls?: ToolCall[]
+  toolCalls?: ToolCall[]
   contentType?: MessageContentType
   contentMetadata?: Record<string, unknown>
   /**
@@ -206,19 +218,28 @@ export interface ToolCall {
   serverSlug: string
 
   /** Execution origin: DARE internal, MCP external, or provider-native */
-  origin: import('@/utils/constants/dareTools').ToolCallOrigin
+  origin: ToolCallOrigin
 
   /** Current execution status */
   status: ToolCallStatus
 
+  /** 1-based tool-loop round this call belongs to */
+  round: number
+
+  /** Characters of arguments streamed so far (live, while status is pending) */
+  argsChars?: number
+
+  /** Final parsed arguments the tool was invoked with */
+  arguments?: Record<string, unknown>
+
   /** Result from DARE internal tools */
-  dareResult?: import('@/redux/types/dareToolResults').DareToolResult
+  dareResult?: DareToolResult
 
   /** Result from MCP external tools */
-  mcpResult?: import('@/redux/types/dareToolResults').McpToolResult
+  mcpResult?: McpToolResult
 
   /** Result from provider-native tools (for example Anthropic web_fetch) */
-  providerResult?: import('@/redux/types/dareToolResults').ProviderToolResult
+  providerResult?: ProviderToolResult
 
   /** Error message if execution failed */
   error?: string
