@@ -1238,27 +1238,6 @@ export const conversationSlice = createSlice({
           })
         }
       )
-      // Generation error - the backend aborts without a final streaming=false
-      // message, so clear live indicators: stop streaming placeholders and
-      // fail any tool calls still marked as in-flight on those messages.
-      .addMatcher(
-        (action): action is { type: string } => action.type === 'socket/error',
-        (state) => {
-          for (const msg of state.activeConversationMessages) {
-            if (!msg.streaming) continue
-            msg.streaming = false
-            for (const toolCall of msg.mcpToolCalls ?? []) {
-              if (
-                toolCall.status === ToolCallStatus.PENDING ||
-                toolCall.status === ToolCallStatus.EXECUTING ||
-                toolCall.status === ToolCallStatus.RUNNING
-              ) {
-                toolCall.status = ToolCallStatus.FAILED
-              }
-            }
-          }
-        }
-      )
   },
 })
 
