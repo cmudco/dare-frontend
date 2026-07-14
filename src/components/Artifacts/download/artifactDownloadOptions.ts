@@ -19,6 +19,8 @@ export function getDownloadOptions(
         { format: ArtifactDownloadFormat.DOCX, label: 'Word Document (.docx)' },
         { format: ArtifactDownloadFormat.PDF, label: 'PDF (.pdf)' },
       ]
+    case 'pdf':
+      return [{ format: ArtifactDownloadFormat.PDF, label: 'PDF (.pdf)' }]
     case 'diagram':
       return [
         { format: ArtifactDownloadFormat.SVG, label: 'SVG (.svg)' },
