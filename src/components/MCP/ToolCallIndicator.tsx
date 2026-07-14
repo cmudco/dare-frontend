@@ -13,19 +13,25 @@ import { ToolCallOrigin, ToolCallStatus } from '@/utils/constants/dareTools'
 import type { ToolCall } from '@/redux/types/conversation'
 import type { ProviderToolResult } from '@/redux/types/dareToolResults'
 import { MCPServerLogo } from './MCPServerLogo'
+import { friendlyToolLabel } from '../Conversation/toolCallLabels'
 
 interface ToolCallIndicatorProps {
   toolCalls: ToolCall[]
   className?: string
+  /** Render live chips for each tool call while the message is streaming. */
+  live?: boolean
 }
 
 /**
  * Displays tool call status and results in chat messages.
  * Shows a compact indicator during execution, expandable for details.
+ * With `live`, each tool call also renders as a chip (spinner while
+ * executing, check/error once its result arrives).
  */
 export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
   toolCalls,
   className = '',
+  live = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -135,7 +141,7 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
     >
       {/* Compact header */}
       <button
-        className={`flex w-full cursor-pointer items-center justify-between border-none bg-transparent px-3 py-2 text-muted-foreground transition-colors hover:bg-accent ${hasExecuting ? 'text-blue-500' : ''} ${hasError ? 'text-destructive' : ''}`}
+        className={`flex w-full cursor-pointer items-center justify-between border-none bg-transparent px-3 py-2 text-muted-foreground transition-colors hover:bg-accent ${hasExecuting ? 'text-dare' : ''} ${hasError ? 'text-destructive' : ''}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span className='flex items-center gap-2'>
@@ -150,6 +156,23 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
         </span>
         {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
       </button>
+
+      {/* Live tool chips - one per call, updating as results arrive */}
+      {live && !isExpanded && (
+        <div className='flex flex-wrap gap-1.5 px-3 pb-2'>
+          {toolCalls.map((tc) => (
+            <span
+              key={tc.id}
+              className='inline-flex items-center gap-1.5 rounded-full bg-card px-2.5 py-1 text-xs text-muted-foreground'
+            >
+              {getStatusIcon(tc.status)}
+              <span className='min-w-0 truncate'>
+                {friendlyToolLabel(tc.toolName)}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Expanded details */}
       {isExpanded && (
@@ -170,7 +193,7 @@ export const ToolCallIndicator: React.FC<ToolCallIndicatorProps> = ({
                       {tc.serverSlug}
                     </span>
                     <span className='text-muted-foreground'>→</span>
-                    <span className='min-w-0 break-all font-mono text-foreground'>
+                    <span className='min-w-0 font-mono break-all text-foreground'>
                       {tc.toolName}
                     </span>
                   </span>
