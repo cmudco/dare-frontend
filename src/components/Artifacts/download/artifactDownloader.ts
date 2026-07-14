@@ -41,6 +41,14 @@ export async function downloadArtifact(params: DownloadArtifactParams) {
     sanitizedTitle,
   } = params
 
+  if (artifactType === 'pdf' && format === ArtifactDownloadFormat.PDF) {
+    // Content is a data:application/pdf;base64 URI — decode client-side.
+    const response = await fetch(content)
+    const blob = await response.blob()
+    triggerBrowserDownload(blob, filename || `${sanitizedTitle}.pdf`)
+    return
+  }
+
   if (artifactType === 'docx' && format === ArtifactDownloadFormat.DOCX) {
     const config = JSON.parse(content) as DocxDocumentConfig
     const blob = await generateDocxBlob(config)
