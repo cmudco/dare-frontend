@@ -13,10 +13,19 @@ export const fetchConversationArtifacts = createAsyncThunk<
   { dispatch: AppDispatch; state: RootState }
 >(
   'artifact/fetchConversationArtifacts',
-  async ({ conversationId }, { rejectWithValue, dispatch }) => {
+  async ({ conversationId }, { rejectWithValue, dispatch, getState }) => {
     try {
       const artifacts = await getArtifactsAPI(conversationId)
-      dispatch(loadArtifacts(artifacts))
+      // The list endpoint omits `content`; never clobber content that
+      // streaming or a detail fetch already put in the store.
+      const existing = getState().artifact.artifacts
+      const merged = artifacts.map((artifact) => {
+        const prev = existing[String(artifact.id)]
+        return prev?.content && artifact.content === undefined
+          ? { ...artifact, content: prev.content }
+          : artifact
+      })
+      dispatch(loadArtifacts(merged))
       return artifacts
     } catch (error) {
       console.error('Failed to fetch conversation artifacts:', error)
