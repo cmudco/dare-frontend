@@ -2,10 +2,9 @@ import { ArrowRight, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatRanAt, runStatusBadge } from '../runFormat'
+import { isRunInFlight } from '@/utils/constants/research'
 import type { AgentRun } from '../types'
 import ScoutComposer from './ScoutComposer'
-
-const IN_FLIGHT = ['running', 'queued', 'started']
 
 interface Props {
   tools: string[]
@@ -67,7 +66,7 @@ const AskScoutView = ({
           )}
           {recentRuns.map((run) => {
             const badge = runStatusBadge(run.status)
-            const inFlight = IN_FLIGHT.includes(run.status)
+            const inFlight = isRunInFlight(run.status)
             return (
               <div
                 key={run.id}
