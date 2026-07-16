@@ -25,7 +25,6 @@ const ECHOED_ARTIFACT_CONFIG_KEYS = new Set([
   'chartConfig',
   'docConfig',
   'pptConfig',
-  'mermaidCode',
 ])
 
 const compactTechnicalResult = (result: unknown): unknown => {

@@ -208,9 +208,11 @@ export const sendMessage = createAsyncThunk<
   'conversation/sendMessage',
   async (message, { dispatch, rejectWithValue }) => {
     try {
-      dispatch(sendSocketMessage(message))
+      await dispatch(sendSocketMessage(message)).unwrap()
     } catch (error) {
-      return rejectWithValue((error as Error).message)
+      return rejectWithValue(
+        error instanceof Error ? error.message : String(error)
+      )
     }
   }
 )
