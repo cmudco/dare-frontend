@@ -9,7 +9,7 @@ import {
   updateRagMode,
 } from '../../redux/conversationSlice'
 import { MODEL_CONFIG } from '../../config/modelConfig'
-import { RotateCw, X, Info, Database, Route, Bot } from 'lucide-react'
+import { RotateCw, X, Info } from 'lucide-react'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
 import { RagMode } from '@/redux/types/conversation'
 import VectorDatabaseInfoBanner from './VectorDatabaseInfoBanner'
@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip'
 import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
+import RagModeSelector from './RagModeSelector'
 
 interface ModelContextSettingsProps {
   onClose: () => void
@@ -209,35 +210,7 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
                 </TooltipContent>
               </Tooltip>
             </div>
-            <div className='grid grid-cols-3 gap-2'>
-              <Button
-                type='button'
-                variant={ragMode === RagMode.NAIVE ? 'default' : 'outline'}
-                className='h-9 justify-center gap-2'
-                onClick={() => handleRagModeChange(RagMode.NAIVE)}
-              >
-                <Database className='h-4 w-4' />
-                Naive
-              </Button>
-              <Button
-                type='button'
-                variant={ragMode === RagMode.ADVANCED ? 'default' : 'outline'}
-                className='h-9 justify-center gap-2'
-                onClick={() => handleRagModeChange(RagMode.ADVANCED)}
-              >
-                <Route className='h-4 w-4' />
-                Advanced
-              </Button>
-              <Button
-                type='button'
-                variant={ragMode === RagMode.AGENTIC ? 'default' : 'outline'}
-                className='h-9 justify-center gap-2'
-                onClick={() => handleRagModeChange(RagMode.AGENTIC)}
-              >
-                <Bot className='h-4 w-4' />
-                Agentic
-              </Button>
-            </div>
+            <RagModeSelector value={ragMode} onChange={handleRagModeChange} />
           </div>
           <hr />
           <div className='space-y-2'>

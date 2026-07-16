@@ -8,6 +8,7 @@ import type { RelatableStats } from '@/redux/types/billing'
 import {
   ToolCallStatus,
   ToolCallOrigin,
+  ToolLoopState,
   MessageContentType,
 } from '@/utils/constants/dareTools'
 import type {
@@ -129,6 +130,8 @@ export interface Message {
   generatedTranscription?: GeneratedTranscription
   artifactId?: number
   toolCalls?: ToolCall[]
+  toolLoopState?: ToolLoopState
+  toolLoopNotice?: string
   contentType?: MessageContentType
   contentMetadata?: Record<string, unknown>
   /**

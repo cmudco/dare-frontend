@@ -769,6 +769,8 @@ const Message: React.FC<MessageProps> = ({
             <ToolActivity
               toolCalls={message.toolCalls}
               streaming={!!message.streaming}
+              loopState={message.toolLoopState}
+              notice={message.toolLoopNotice}
             />
           </div>
         )}

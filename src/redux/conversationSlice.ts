@@ -35,13 +35,14 @@ import {
   WalletMeta,
   RagMode,
 } from './types/conversation'
-import { ToolCallOrigin } from '@/utils/constants/dareTools'
+import { ToolCallOrigin, ToolLoopState } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
 import type {
   ToolCallPendingEvent,
   ToolCallArgsProgressEvent,
   ToolCallExecutingEvent,
   ToolCallResultEvent,
+  ToolRoundsCappedEvent,
 } from './types/toolEvents'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
@@ -923,6 +924,14 @@ export const conversationSlice = createSlice({
               ...state.activeConversationMessages[existingIndex],
               ...action.payload,
             }
+            const message = state.activeConversationMessages[existingIndex]
+            if (
+              !message.streaming &&
+              message.toolLoopState !== ToolLoopState.INTERRUPTED
+            ) {
+              message.toolLoopState = undefined
+              message.toolLoopNotice = undefined
+            }
           } else {
             // New message - add it
             state.activeConversationMessages.push(action.payload)
@@ -1018,6 +1027,8 @@ export const conversationSlice = createSlice({
           if (!msg.toolCalls) {
             msg.toolCalls = []
           }
+          msg.toolLoopState = ToolLoopState.ACTIVE
+          msg.toolLoopNotice = undefined
           const existing = msg.toolCalls.find((tc) => tc.id === toolCallId)
           if (existing) {
             // Only update argsChars, and only while still PENDING —
@@ -1058,9 +1069,17 @@ export const conversationSlice = createSlice({
           if (!msg.toolCalls) {
             msg.toolCalls = []
           }
+          msg.toolLoopState = ToolLoopState.ACTIVE
+          msg.toolLoopNotice = undefined
           // Find the matching tool call by unique id only
           // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
           let toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId)
+          if (
+            toolCall?.status === ToolCallStatus.COMPLETED ||
+            toolCall?.status === ToolCallStatus.FAILED
+          ) {
+            return
+          }
           if (!toolCall) {
             // Defensive upsert in case the pending event was missed
             toolCall = {
@@ -1121,6 +1140,7 @@ export const conversationSlice = createSlice({
                 action.payload.dareResult.error
               ) {
                 toolCall.error = action.payload.dareResult.error
+                toolCall.status = ToolCallStatus.FAILED
               }
               break
             case ToolCallOrigin.MCP:
@@ -1133,6 +1153,51 @@ export const conversationSlice = createSlice({
           if (error) {
             toolCall.error = error
           }
+        }
+      )
+      .addMatcher(
+        (action): action is { type: string; payload: ToolRoundsCappedEvent } =>
+          action.type === 'socket/tool_rounds_capped',
+        (state, action) => {
+          const message = state.activeConversationMessages.find(
+            (item) => item.id.toString() === action.payload.messageId.toString()
+          )
+          if (!message) return
+          message.toolLoopState = ToolLoopState.CAPPED
+          message.toolLoopNotice =
+            'The research limit was reached. DARE is preparing the best available answer.'
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: { error?: string; message?: string }
+        } =>
+          action.type === 'socket/error' || action.type === 'websocket/error',
+        (state, action) => {
+          const notice =
+            action.payload?.message ||
+            action.payload?.error ||
+            'The connection was interrupted before the tool could finish.'
+
+          state.activeConversationMessages.forEach((message) => {
+            const activeCalls = message.toolCalls?.filter(
+              (toolCall) =>
+                toolCall.status === ToolCallStatus.PENDING ||
+                toolCall.status === ToolCallStatus.EXECUTING
+            )
+            if (!message.streaming && !activeCalls?.length) return
+
+            message.streaming = false
+            message.toolLoopState = ToolLoopState.INTERRUPTED
+            message.toolLoopNotice = notice
+            activeCalls?.forEach((toolCall) => {
+              toolCall.status = ToolCallStatus.FAILED
+              toolCall.error = notice
+            })
+          })
         }
       )
   },

@@ -1,31 +1,27 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   ChevronDown,
   ChevronRight,
   Loader2,
   CheckCircle,
   XCircle,
+  CircleAlert,
 } from 'lucide-react'
-import { ToolCallStatus } from '@/utils/constants/dareTools'
+import { ToolCallStatus, ToolLoopState } from '@/utils/constants/dareTools'
 import type { ToolCall } from '@/redux/types/conversation'
+import { getToolPresentation } from '@/utils/toolActivityPresentation'
 import { ToolActivityRow } from './ToolActivityRow'
 
 interface ToolActivityProps {
   toolCalls: ToolCall[]
   streaming: boolean
+  loopState?: ToolLoopState
+  notice?: string
 }
 
 interface ToolCallRound {
   round: number
   calls: ToolCall[]
-}
-
-/** Shorten thousands: 3241 → "3.2k". */
-const formatChars = (chars: number): string => {
-  if (chars >= 1000) {
-    return `${(chars / 1000).toFixed(1)}k`
-  }
-  return chars.toString()
 }
 
 /**
@@ -38,6 +34,8 @@ const formatChars = (chars: number): string => {
 export const ToolActivity: React.FC<ToolActivityProps> = ({
   toolCalls,
   streaming,
+  loopState,
+  notice,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -57,8 +55,6 @@ export const ToolActivity: React.FC<ToolActivityProps> = ({
       .map(([round, calls]) => ({ round, calls }))
   }, [toolCalls])
 
-  if (!toolCalls || toolCalls.length === 0) return null
-
   const activeCalls = toolCalls.filter(
     (tc) =>
       tc.status === ToolCallStatus.PENDING ||
@@ -66,48 +62,61 @@ export const ToolActivity: React.FC<ToolActivityProps> = ({
   )
   const hasActive = activeCalls.length > 0
   const hasError = toolCalls.some((tc) => tc.status === ToolCallStatus.FAILED)
+  const failedCalls = toolCalls.filter(
+    (tc) => tc.status === ToolCallStatus.FAILED
+  )
+  const completedCalls = toolCalls.filter(
+    (tc) => tc.status === ToolCallStatus.COMPLETED
+  )
+  const lastFailedRound = Math.max(0, ...failedCalls.map((tc) => tc.round))
+  const recovered = completedCalls.some((tc) => tc.round > lastFailedRound)
+  const interrupted = loopState === ToolLoopState.INTERRUPTED
+  const capped = loopState === ToolLoopState.CAPPED
   const doneCount = toolCalls.filter(
     (tc) =>
       tc.status === ToolCallStatus.COMPLETED ||
       tc.status === ToolCallStatus.FAILED
   ).length
 
+  useEffect(() => {
+    if (interrupted || (!hasActive && hasError && !recovered)) {
+      setIsExpanded(true)
+    }
+  }, [hasActive, hasError, interrupted, recovered])
+
+  if (toolCalls.length === 0) return null
+
   const renderStatusText = () => {
     if (hasActive) {
       if (activeCalls.length === 1) {
         const active = activeCalls[0]
-        if (active.status === ToolCallStatus.PENDING) {
-          return (
-            <>
-              Writing {active.toolName}…
-              {active.argsChars != null && (
-                <>
-                  {' '}
-                  <span className='tabular-nums'>
-                    {formatChars(active.argsChars)}
-                  </span>{' '}
-                  chars
-                </>
-              )}
-            </>
-          )
-        }
-        return <>Running {active.toolName}…</>
+        const presentation = getToolPresentation(active.toolName)
+        return active.status === ToolCallStatus.PENDING
+          ? `${presentation.pendingLabel}…`
+          : `${presentation.executingLabel}…`
       }
       return (
         <>
-          Using tools…{' '}
-          <span className='tabular-nums'>
-            {doneCount} of {toolCalls.length}
-          </span>{' '}
-          done
+          Working across {toolCalls.length} steps…{' '}
+          <span className='tabular-nums'>{doneCount} complete</span>
         </>
       )
     }
-    if (hasError) return <>Tool execution failed</>
+    if (capped) return <>Finishing with the best available result…</>
+    if (interrupted) return <>{notice || 'The connection was interrupted'}</>
+    if (recovered) return <>Recovered and completed {toolCalls.length} steps</>
+    if (hasError && completedCalls.length > 0) {
+      return (
+        <>
+          Completed with {failedCalls.length} tool issue
+          {failedCalls.length === 1 ? '' : 's'}
+        </>
+      )
+    }
+    if (hasError) return <>Couldn’t complete the tool step</>
     return (
       <>
-        Used {toolCalls.length} tool{toolCalls.length > 1 ? 's' : ''}
+        Completed {toolCalls.length} step{toolCalls.length > 1 ? 's' : ''}
         {rounds.length > 1 && <> across {rounds.length} rounds</>}
       </>
     )
@@ -119,7 +128,12 @@ export const ToolActivity: React.FC<ToolActivityProps> = ({
         <Loader2 className='h-3.5 w-3.5 animate-spin motion-reduce:animate-none' />
       )
     }
-    if (hasError) return <XCircle className='h-3.5 w-3.5 text-destructive' />
+    if (capped || interrupted) {
+      return <CircleAlert className='h-3.5 w-3.5 text-amber-500' />
+    }
+    if (hasError && !recovered) {
+      return <XCircle className='h-3.5 w-3.5 text-destructive' />
+    }
     return <CheckCircle className='h-3.5 w-3.5 text-green-500' />
   }
 
@@ -137,7 +151,7 @@ export const ToolActivity: React.FC<ToolActivityProps> = ({
       >
         <span className='flex items-center gap-2'>
           {renderStatusIcon()}
-          <span className='font-medium' aria-live='polite'>
+          <span className='font-medium' aria-live='polite' aria-atomic='true'>
             {renderStatusText()}
           </span>
         </span>

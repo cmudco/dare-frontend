@@ -15,6 +15,13 @@ export enum ToolCallStatus {
   FAILED = 'failed',
 }
 
+/** Message-level state for a bounded multi-round tool loop. */
+export enum ToolLoopState {
+  ACTIVE = 'active',
+  CAPPED = 'capped',
+  INTERRUPTED = 'interrupted',
+}
+
 /**
  * DARE tool categories for UI grouping
  */

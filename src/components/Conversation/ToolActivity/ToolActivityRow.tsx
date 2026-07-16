@@ -9,8 +9,13 @@ import {
 } from 'lucide-react'
 import { ToolCallOrigin, ToolCallStatus } from '@/utils/constants/dareTools'
 import type { ToolCall } from '@/redux/types/conversation'
+import {
+  getToolPresentation,
+  getToolSourceLabel,
+  getToolStatusLabel,
+} from '@/utils/toolActivityPresentation'
 import { MCPServerLogo } from '../../MCP/MCPServerLogo'
-import { ProviderToolResultView } from './ProviderToolResultView'
+import { ToolResultPreview } from './ToolResultPreview'
 
 interface ToolActivityRowProps {
   toolCall: ToolCall
@@ -46,6 +51,9 @@ export const ToolActivityRow: React.FC<ToolActivityRowProps> = ({
       ? toolCall.dareResult
       : toolCall.providerResult || toolCall.mcpResult
 
+  const presentation = getToolPresentation(toolCall.toolName)
+  const sourceLabel = getToolSourceLabel(toolCall.serverSlug)
+
   const hasDetail =
     (toolCall.status === ToolCallStatus.COMPLETED && !!result) ||
     (toolCall.status === ToolCallStatus.FAILED && !!toolCall.error)
@@ -62,12 +70,12 @@ export const ToolActivityRow: React.FC<ToolActivityRowProps> = ({
           {getStatusIcon(toolCall.status)}
           <span className='flex min-w-0 flex-wrap items-center gap-1.5'>
             <MCPServerLogo slug={toolCall.serverSlug} size={16} />
-            <span className='font-medium text-primary'>
-              {toolCall.serverSlug}
+            <span className='min-w-0 font-medium text-foreground'>
+              {presentation.title}
             </span>
-            <span className='text-muted-foreground'>→</span>
-            <span className='min-w-0 font-mono break-all text-foreground'>
-              {toolCall.toolName}
+            <span className='text-muted-foreground'>·</span>
+            <span className='text-xs text-muted-foreground'>
+              {getToolStatusLabel(toolCall.status)}
             </span>
           </span>
         </span>
@@ -81,23 +89,9 @@ export const ToolActivityRow: React.FC<ToolActivityRowProps> = ({
 
       {isExpanded && (
         <>
-          {/* Provider-native result preview */}
-          {toolCall.status === ToolCallStatus.COMPLETED &&
-            toolCall.origin === ToolCallOrigin.PROVIDER &&
-            toolCall.providerResult && (
-              <ProviderToolResultView result={toolCall.providerResult} />
-            )}
-
-          {/* Result JSON - no truncation, with scroll */}
-          {toolCall.status === ToolCallStatus.COMPLETED &&
-            result &&
-            toolCall.origin !== ToolCallOrigin.PROVIDER && (
-              <div className='mt-2 max-h-80 overflow-auto rounded-sm bg-muted p-2'>
-                <pre className='m-0 text-xs leading-relaxed wrap-break-word whitespace-pre-wrap text-muted-foreground'>
-                  {JSON.stringify(result, null, 2)}
-                </pre>
-              </div>
-            )}
+          {toolCall.status === ToolCallStatus.COMPLETED && (
+            <ToolResultPreview toolCall={toolCall} />
+          )}
 
           {/* Error display */}
           {toolCall.status === ToolCallStatus.FAILED && toolCall.error && (
@@ -105,6 +99,36 @@ export const ToolActivityRow: React.FC<ToolActivityRowProps> = ({
               {toolCall.error}
             </div>
           )}
+
+          <details className='mt-2 text-xs text-muted-foreground'>
+            <summary className='cursor-pointer font-medium'>
+              Technical details
+            </summary>
+            <dl className='mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1'>
+              <dt>Source</dt>
+              <dd>{sourceLabel}</dd>
+              <dt>Tool</dt>
+              <dd className='font-mono break-all'>{toolCall.toolName}</dd>
+              <dt>Round</dt>
+              <dd>{toolCall.round}</dd>
+              {toolCall.argsChars != null && (
+                <>
+                  <dt>Arguments</dt>
+                  <dd>{toolCall.argsChars.toLocaleString()} characters</dd>
+                </>
+              )}
+            </dl>
+            {toolCall.arguments && (
+              <pre className='mt-2 max-h-48 overflow-auto rounded-sm bg-muted p-2 break-words whitespace-pre-wrap'>
+                {JSON.stringify(toolCall.arguments, null, 2)}
+              </pre>
+            )}
+            {result && (
+              <pre className='mt-2 max-h-64 overflow-auto rounded-sm bg-muted p-2 break-words whitespace-pre-wrap'>
+                {JSON.stringify(result, null, 2)}
+              </pre>
+            )}
+          </details>
         </>
       )}
     </div>
