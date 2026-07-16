@@ -45,6 +45,19 @@ export enum ToolCallStatus {
 }
 
 /**
+ * Scout depth presets — mirror the backend scout job (research/tasks.py):
+ * quick = max_searches 2 / max_candidates 3; deep = 5 / 10. Explanatory copy
+ * for the "how it works" guide; keep in sync if the backend caps change.
+ */
+export const SCOUT_DEPTH = {
+  quick: { searches: 2, findings: 3 },
+  deep: { searches: 5, findings: 10 },
+} as const
+
+/** The agent-loop ceiling per run (Hermes runtime `agent.max_turns`). */
+export const AGENT_LOOP_MAX_TURNS = 40
+
+/**
  * Run states where the agent is still working (or a stop is not yet confirmed):
  * the UI keeps polling and shows a live indicator. Everything else is settled.
  */
