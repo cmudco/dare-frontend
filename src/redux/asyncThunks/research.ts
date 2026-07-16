@@ -2,8 +2,10 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 
 import {
   addThesisSourceLinkAPI,
+  cancelAgentRunAPI,
   createResearchProjectAPI,
   downloadOkfBundleAPI,
+  getAgentRunAPI,
   getResearchOkfBundleAPI,
   getResearchProjectAPI,
   getResearchProjectsAPI,
@@ -33,6 +35,28 @@ export const getResearchProject = createAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       return await getResearchProjectAPI(id)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getAgentRun = createAsyncThunk(
+  'research/getAgentRun',
+  async (runId: number, { rejectWithValue }) => {
+    try {
+      return await getAgentRunAPI(runId)
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const cancelAgentRun = createAsyncThunk(
+  'research/cancelAgentRun',
+  async (runId: number, { rejectWithValue }) => {
+    try {
+      return await cancelAgentRunAPI(runId)
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }

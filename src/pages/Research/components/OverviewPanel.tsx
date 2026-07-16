@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatRanAt, roleLabel, runStatusBadge } from '../runFormat'
 import type { AgentRun } from '../types'
+import AgentGuide from './AgentGuide'
 
 interface Props {
   question: string
@@ -49,10 +50,10 @@ const OverviewPanel = ({
   return (
     <div className='space-y-8'>
       <header>
-        <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+        <p className='text-xs font-medium tracking-wide text-muted-foreground uppercase'>
           Research question
         </p>
-        <h2 className='mt-2 max-w-2xl text-2xl font-semibold leading-snug tracking-tight'>
+        <h2 className='mt-2 max-w-2xl text-2xl leading-snug font-semibold tracking-tight'>
           {question}
         </h2>
       </header>
@@ -136,6 +137,9 @@ const OverviewPanel = ({
         </div>
       </div>
 
+      {/* What each helper does + its limits */}
+      <AgentGuide />
+
       {/* Recent activity */}
       <section>
         <div className='mb-3 flex items-center justify-between'>
@@ -211,7 +215,7 @@ const StatTile = ({
       <Icon className='h-4 w-4 text-muted-foreground' />
       <div
         className={cn(
-          'mt-2 text-2xl font-semibold tabular-nums leading-none',
+          'mt-2 text-2xl leading-none font-semibold tabular-nums',
           tone === 'attention' && 'text-amber-600 dark:text-amber-400',
           tone === 'good' && 'text-green-600 dark:text-green-400'
         )}

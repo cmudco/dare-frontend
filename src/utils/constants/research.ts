@@ -8,6 +8,79 @@ export enum ResearchProjectStatus {
 }
 
 /**
+ * Agent-run lifecycle. Values are IDENTICAL to the backend `AgentRunStatus`
+ * (research/constants.py) — the single source of truth. Never compare run
+ * statuses with string literals; use these members.
+ */
+export enum AgentRunStatus {
+  STARTED = 'started',
+  RUNNING = 'running',
+  QUEUED = 'queued',
+  WAITING_FOR_APPROVAL = 'waiting_for_approval',
+  STOPPING = 'stopping',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled',
+  OUTCOME_UNKNOWN = 'outcome_unknown',
+}
+
+/** How far a cancellation got — mirrors the backend `cancellation.state`. */
+export enum CancellationState {
+  UNCONFIRMED = 'unconfirmed',
+  ACKNOWLEDGED = 'acknowledged',
+  CONFIRMED = 'confirmed',
+}
+
+/** Delegated agent roles — the backend run `role` slug. */
+export enum AgentRunRole {
+  SCOUT = 'scout',
+  CRITIC = 'critic',
+  PRESENTER = 'presenter',
+}
+
+/** Tool-call outcome — the backend tool-call `status`. */
+export enum ToolCallStatus {
+  SUCCESS = 'success',
+  ERROR = 'error',
+}
+
+/**
+ * Scout depth presets — mirror the backend scout job (research/tasks.py):
+ * quick = max_searches 2 / max_candidates 3; deep = 5 / 10. Explanatory copy
+ * for the "how it works" guide; keep in sync if the backend caps change.
+ */
+export const SCOUT_DEPTH = {
+  quick: { searches: 2, findings: 3 },
+  deep: { searches: 5, findings: 10 },
+} as const
+
+/** The agent-loop ceiling per run (Hermes runtime `agent.max_turns`). */
+export const AGENT_LOOP_MAX_TURNS = 40
+
+/**
+ * Run states where the agent is still working (or a stop is not yet confirmed):
+ * the UI keeps polling and shows a live indicator. Everything else is settled.
+ */
+export const IN_FLIGHT_RUN_STATUSES: AgentRunStatus[] = [
+  AgentRunStatus.STARTED,
+  AgentRunStatus.RUNNING,
+  AgentRunStatus.QUEUED,
+  AgentRunStatus.WAITING_FOR_APPROVAL,
+  AgentRunStatus.STOPPING,
+]
+
+/** True while the agent is still working or a stop is not yet confirmed. */
+export const isRunInFlight = (status: string): boolean =>
+  (IN_FLIGHT_RUN_STATUSES as string[]).includes(status)
+
+/**
+ * True once a run will not change on its own — a real outcome, an honest
+ * unknown, or any unrecognized terminal value. Used to stop polling so the UI
+ * never spins forever on a state it does not explicitly know about.
+ */
+export const isRunSettled = (status: string): boolean => !isRunInFlight(status)
+
+/**
  * The tools Scout may search are dynamic: they come from the MCP integrations
  * the user has connected (see `state.mcp.connections`), plus a small set of
  * built-ins below. A project's `enabledTools` therefore stores tool *slugs*
@@ -19,15 +92,21 @@ export interface ResearchToolMeta {
   description: string
 }
 
-/** Reserved slug for web search — handled by Hermes for now, not an MCP connection. */
+/**
+ * Reserved slug for DARE's own web search. Not an MCP *connection* the user
+ * adds — it's a DARE-owned builtin. At run time Scout calls `mcp_dare_web_search`
+ * and `mcp_dare_fetch_page` through DARE's audited MCP gateway (never the
+ * runtime's native web_search/web_extract/browser tools).
+ */
 export const WEB_SEARCH_TOOL_SLUG = 'web'
 
 /** Tools always available regardless of the user's MCP connections. */
 export const BUILTIN_RESEARCH_TOOLS: ResearchToolMeta[] = [
   {
     slug: WEB_SEARCH_TOOL_SLUG,
-    name: 'Web search',
-    description: 'Open-web search & fetch — handled by Hermes for now.',
+    name: 'DARE Web Search',
+    description:
+      "DARE's own web search & page reader, via DARE's audited MCP gateway.",
   },
 ]
 

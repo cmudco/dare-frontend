@@ -25,8 +25,8 @@ import { generateArtifactAPI } from '@/api/research'
 import { formatRelativeDate } from '@/utils/dateUtils'
 import { ArtifactRenderer } from '@/components/Artifacts/ArtifactRenderer'
 import type { Artifact, ArtifactType } from '@/redux/types/artifact'
-import { usePolledRun } from '../usePolledRun'
-import type { ResearchArtifact, ResearchSource } from '../types'
+import { AgentRunRole, isRunInFlight } from '@/utils/constants/research'
+import type { AgentRun, ResearchArtifact, ResearchSource } from '../types'
 
 // Deliberately sparse views — present, but not competing for attention.
 
@@ -137,34 +137,26 @@ const ARTIFACT_TYPES = [
   { key: 'pptx', label: 'Slides' },
 ]
 
+// Fire-and-queue: each Generate enqueues a run on the backend and refreshes so
+// it shows up as a generating row. The composer stays open, so several artifacts
+// can run at once — their progress is tracked from server state, not here.
 const GenerateBar = ({ projectId }: { projectId?: number }) => {
   const dispatch = useAppDispatch()
   const [prompt, setPrompt] = useState('')
   const [type, setType] = useState('')
-  const [runId, setRunId] = useState<number | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
-  usePolledRun(
-    runId,
-    () => {},
-    () => {
-      setRunId(null)
-      setPrompt('')
-      if (projectId) dispatch(getResearchProject(projectId))
-    }
-  )
-
-  const generating = runId !== null
   const generate = async () => {
-    if (!projectId || !prompt.trim() || generating) return
+    if (!projectId || !prompt.trim() || submitting) return
+    setSubmitting(true)
     try {
-      const { runId: id } = await generateArtifactAPI(
-        projectId,
-        prompt.trim(),
-        type
-      )
-      setRunId(id)
+      await generateArtifactAPI(projectId, prompt.trim(), type)
+      setPrompt('')
+      dispatch(getResearchProject(projectId)) // surface the new run immediately
     } catch {
       // stays ready to retry
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -175,7 +167,6 @@ const GenerateBar = ({ projectId }: { projectId?: number }) => {
         onChange={(e) => setPrompt(e.target.value)}
         placeholder='Describe an artifact to generate — e.g. "a Mermaid diagram of the causal mechanisms" or "an HTML one-pager of the working thesis"'
         rows={2}
-        disabled={generating}
       />
       <div className='flex flex-wrap items-center gap-x-4 gap-y-2'>
         <div className='flex flex-wrap items-center gap-1.5'>
@@ -198,12 +189,12 @@ const GenerateBar = ({ projectId }: { projectId?: number }) => {
         </div>
         <Button
           onClick={generate}
-          disabled={!prompt.trim() || generating}
+          disabled={!prompt.trim() || submitting}
           className='ml-auto shrink-0'
         >
-          {generating ? (
+          {submitting ? (
             <>
-              <Loader2 className='h-4 w-4 animate-spin' /> Generating…
+              <Loader2 className='h-4 w-4 animate-spin' /> Queuing…
             </>
           ) : (
             <>
@@ -219,12 +210,20 @@ const GenerateBar = ({ projectId }: { projectId?: number }) => {
 export const ArtifactsView = ({
   projectId,
   artifacts,
+  runs = [],
 }: {
   projectId?: number
   artifacts: ResearchArtifact[]
+  runs?: AgentRun[]
 }) => {
   const [mode, setMode] = useState<'grid' | 'list'>('grid')
   const [open, setOpen] = useState<ResearchArtifact | null>(null)
+
+  // In-flight artifact runs come from server state, so their rows survive tab
+  // switches and several can generate at once.
+  const pendingRuns = runs.filter(
+    (r) => r.role === AgentRunRole.PRESENTER && isRunInFlight(r.status)
+  )
 
   return (
     <div className='space-y-6'>
@@ -263,7 +262,30 @@ export const ArtifactsView = ({
 
       <GenerateBar projectId={projectId} />
 
-      {artifacts.length === 0 ? (
+      {pendingRuns.length > 0 && (
+        <div className='space-y-2'>
+          {pendingRuns.map((r) => (
+            <div
+              key={r.id}
+              className='flex items-center gap-3 rounded-xl border border-border bg-card p-4'
+            >
+              <div className='rounded-lg bg-muted p-2'>
+                <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
+              </div>
+              <div className='min-w-0 flex-1'>
+                <p className='truncate text-sm font-medium'>
+                  {r.task || 'Generating artifact…'}
+                </p>
+                <p className='truncate text-xs text-muted-foreground'>
+                  {r.statusDetail || 'Generating…'}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {artifacts.length === 0 && pendingRuns.length === 0 ? (
         <div className='flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-12 text-center'>
           <div className='mb-4 rounded-full bg-muted p-3'>
             <Shapes className='h-6 w-6 text-muted-foreground' />
