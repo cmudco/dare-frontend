@@ -20,7 +20,6 @@ import HandsOnChat from './components/HandsOnChat'
 import VisualizationView from './components/VisualizationView'
 import RunsView from './components/runs/RunsView'
 import WorkspaceShell from './components/WorkspaceShell'
-import { AGENT_RUNS, PROJECT } from './mockData'
 import type {
   AgentRun,
   KnowledgeItem,
@@ -72,10 +71,10 @@ const ResearchWorkspaceView = ({
   projectId,
   projectTitle,
   projectMeta,
-  question = PROJECT.question,
+  question = '',
   sourceCount = 0,
   enabledTools = DEFAULT_TOOLS,
-  runs = AGENT_RUNS,
+  runs = [],
   sources = [],
   soulFile = null,
   projectMemory = [],

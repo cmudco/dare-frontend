@@ -1,4 +1,5 @@
 import {
+  CancellationState,
   ResearchProjectStatus,
   StandardsTemplate,
 } from '@/utils/constants/research'
@@ -201,7 +202,7 @@ export interface AgentRunUsage {
  * outcome not yet terminal), `confirmed` (Hermes reports terminal `cancelled`).
  */
 export interface AgentRunCancellation {
-  state: 'unconfirmed' | 'acknowledged' | 'confirmed'
+  state: CancellationState
   requestedAt: string | null
   lastAttemptAt: string | null
   attemptCount: number
