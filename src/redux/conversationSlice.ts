@@ -1173,6 +1173,29 @@ export const conversationSlice = createSlice({
           action
         ): action is {
           type: string
+          payload: { artifactId: number; messageId?: number }
+        } => action.type === 'socket/artifact_created',
+        (state, action) => {
+          const { artifactId, messageId } = action.payload
+          if (messageId == null) return
+          const message = state.activeConversationMessages.find(
+            (item) => item.id.toString() === messageId.toString()
+          )
+          if (!message) return
+          const ids = message.artifactIds?.length
+            ? message.artifactIds
+            : message.artifactId != null
+              ? [message.artifactId]
+              : []
+          message.artifactIds = Array.from(new Set([...ids, artifactId]))
+          message.artifactId ??= artifactId
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
           payload: { error?: string; message?: string }
         } =>
           action.type === 'socket/error' || action.type === 'websocket/error',

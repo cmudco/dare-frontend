@@ -21,6 +21,25 @@ interface ToolActivityRowProps {
   toolCall: ToolCall
 }
 
+const ECHOED_ARTIFACT_CONFIG_KEYS = new Set([
+  'chartConfig',
+  'docConfig',
+  'pptConfig',
+  'mermaidCode',
+])
+
+const compactTechnicalResult = (result: unknown): unknown => {
+  if (!result || typeof result !== 'object' || Array.isArray(result)) {
+    return result
+  }
+
+  return Object.fromEntries(
+    Object.entries(result).filter(
+      ([key]) => !ECHOED_ARTIFACT_CONFIG_KEYS.has(key)
+    )
+  )
+}
+
 const getStatusIcon = (status: ToolCallStatus) => {
   switch (status) {
     case ToolCallStatus.PENDING:
@@ -53,6 +72,10 @@ export const ToolActivityRow: React.FC<ToolActivityRowProps> = ({
 
   const presentation = getToolPresentation(toolCall.toolName)
   const sourceLabel = getToolSourceLabel(toolCall.serverSlug)
+  const technicalResult =
+    toolCall.origin === ToolCallOrigin.DARE
+      ? compactTechnicalResult(result)
+      : result
 
   const hasDetail =
     (toolCall.status === ToolCallStatus.COMPLETED && !!result) ||
@@ -123,9 +146,9 @@ export const ToolActivityRow: React.FC<ToolActivityRowProps> = ({
                 {JSON.stringify(toolCall.arguments, null, 2)}
               </pre>
             )}
-            {result && (
+            {technicalResult != null && (
               <pre className='mt-2 max-h-64 overflow-auto rounded-sm bg-muted p-2 break-words whitespace-pre-wrap'>
-                {JSON.stringify(result, null, 2)}
+                {JSON.stringify(technicalResult, null, 2)}
               </pre>
             )}
           </details>

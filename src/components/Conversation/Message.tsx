@@ -88,6 +88,18 @@ const Message: React.FC<MessageProps> = ({
     source: 'auto', // Just an arbitrary default
   })
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const artifactIds = Array.from(
+    new Set(
+      (message.artifactIds?.length
+        ? message.artifactIds
+        : message.artifactId != null
+          ? [message.artifactId]
+          : []
+      )
+        .map(Number)
+        .filter(Number.isFinite)
+    )
+  )
   const [copiedUserMessage, setCopiedUserMessage] = useState(false)
   const [copiedAiResponse, setCopiedAiResponse] = useState(false)
 
@@ -541,10 +553,11 @@ const Message: React.FC<MessageProps> = ({
                 return null
               })()}
 
-              {/* Artifact Card - Show when message has associated artifact */}
-              {enableArtifacts && message.artifactId && (
-                <ArtifactCard artifactId={message.artifactId} />
-              )}
+              {/* One card per artifact; singular artifactId remains a legacy fallback. */}
+              {enableArtifacts &&
+                artifactIds.map((artifactId) => (
+                  <ArtifactCard key={artifactId} artifactId={artifactId} />
+                ))}
             </div>
           </div>
         </div>

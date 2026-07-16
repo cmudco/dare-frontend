@@ -69,7 +69,9 @@ export const ToolActivity: React.FC<ToolActivityProps> = ({
     (tc) => tc.status === ToolCallStatus.COMPLETED
   )
   const lastFailedRound = Math.max(0, ...failedCalls.map((tc) => tc.round))
-  const recovered = completedCalls.some((tc) => tc.round > lastFailedRound)
+  const recovered =
+    failedCalls.length > 0 &&
+    completedCalls.some((tc) => tc.round > lastFailedRound)
   const interrupted = loopState === ToolLoopState.INTERRUPTED
   const capped = loopState === ToolLoopState.CAPPED
   const doneCount = toolCalls.filter(

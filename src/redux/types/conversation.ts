@@ -129,6 +129,7 @@ export interface Message {
   generatedImage?: GeneratedImage
   generatedTranscription?: GeneratedTranscription
   artifactId?: number
+  artifactIds?: number[]
   toolCalls?: ToolCall[]
   toolLoopState?: ToolLoopState
   toolLoopNotice?: string
