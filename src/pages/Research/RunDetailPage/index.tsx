@@ -2,16 +2,22 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { cancelAgentRun, getAgentRun } from '@/redux/asyncThunks/research'
+import {
+  cancelAgentRun,
+  getAgentRun,
+  getResearchProject,
+} from '@/redux/asyncThunks/research'
 import { clearCurrentRun } from '@/redux/researchSlice'
 import { isRunInFlight } from '@/utils/constants/research'
-import type { AgentRun } from '../types'
+import type { AgentRun, NavSection } from '../types'
 import RunDetail from '../components/runs/RunDetail'
+import WorkspaceShell from '../components/WorkspaceShell'
+import ContextPanel from '../components/ContextPanel'
 
-// Dedicated page for one run's full details, at
-// /research/:projectId/runs/:runId. Fetches + polls the run through Redux
-// (state.research.currentRun) while it is in flight, and owns the cancel action;
-// RunDetail is presentational.
+// One run's full details at /research/:projectId/runs/:runId. Rendered inside
+// the same workspace shell (header, left nav, right context) as the rest of
+// research mode — only the center changes — so it never feels like a separate
+// app. Fetches + polls the run through Redux; RunDetail is presentational.
 const RunDetailPage = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
@@ -21,8 +27,18 @@ const RunDetailPage = () => {
   }>()
   const id = Number(runId)
 
+  const project = useAppSelector((state) =>
+    state.research.projects.find((p) => String(p.id) === projectId)
+  )
   const run = useAppSelector((state) => state.research.currentRun)
   const [cancelling, setCancelling] = useState(false)
+
+  // Ensure the project (for the shell's header + nav + context) is loaded, even
+  // on a direct deep-link to this page.
+  useEffect(() => {
+    const pid = Number(projectId)
+    if (!Number.isNaN(pid)) dispatch(getResearchProject(pid))
+  }, [dispatch, projectId])
 
   useEffect(() => {
     if (Number.isNaN(id)) return
@@ -51,29 +67,53 @@ const RunDetailPage = () => {
     }
   }, [dispatch, id])
 
-  const back = useCallback(
+  const goToSection = useCallback(
+    (section: NavSection) => navigate(`/research/${projectId}?tab=${section}`),
+    [navigate, projectId]
+  )
+  const backToRuns = useCallback(
     () => navigate(`/research/${projectId}?tab=runs`),
     [navigate, projectId]
   )
 
+  const reviewItems = project?.reviewItems ?? []
+  const pendingCount = reviewItems.filter((i) => i.status === 'staged').length
+  const approvedCount = project?.knowledgeItems?.length ?? 0
   // Only show a run that matches the URL — never a stale slot from a prior page.
   const showRun = run && run.id === id ? run : null
 
   return (
-    <div className='mx-auto w-full max-w-3xl px-4 py-8'>
-      {showRun ? (
-        <RunDetail
-          run={showRun}
-          cancelling={cancelling}
-          onBack={back}
-          onCancel={cancel}
+    <WorkspaceShell
+      active='runs'
+      onNavigate={goToSection}
+      pendingCount={pendingCount}
+      approvedCount={approvedCount}
+      projectTitle={project?.title}
+      projectMeta={project?.field}
+      onBack={() => navigate('/research')}
+      context={
+        <ContextPanel
+          question={project?.question ?? ''}
+          enabledTools={project?.enabledTools ?? []}
+          soulFile={project?.soulFile ?? null}
+          projectMemory={project?.projectMemory ?? []}
         />
-      ) : (
-        <div className='flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground'>
-          <Loader2 className='h-4 w-4 animate-spin' /> Loading run…
-        </div>
-      )}
-    </div>
+      }
+      center={
+        showRun ? (
+          <RunDetail
+            run={showRun}
+            cancelling={cancelling}
+            onBack={backToRuns}
+            onCancel={cancel}
+          />
+        ) : (
+          <div className='flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground'>
+            <Loader2 className='h-4 w-4 animate-spin' /> Loading run…
+          </div>
+        )
+      }
+    />
   )
 }
 
