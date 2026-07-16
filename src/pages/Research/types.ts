@@ -28,6 +28,7 @@ export interface SoulVirtue {
 // Canonical API shapes; re-exported here for the workspace.
 export type {
   AgentRun,
+  AgentRunCancellation,
   AgentRunToolCall,
   ChatMessage,
   KnowledgeItem,
