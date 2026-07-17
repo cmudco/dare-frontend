@@ -30,7 +30,7 @@ built for researchers and institutions that need more than a chatbot — documen
 reproducible workflows, and per-user usage tracking in one place.
 
 **This repository is the DARE web frontend** — the primary user interface for the platform. It
-connects to the [DARE backend](../dare-backend/) over REST and Socket.IO and gives users:
+connects to the [DARE backend](https://github.com/cmudco/dare-backend/) over REST and Socket.IO and gives users:
 
 - **Multi-LLM chat** — streaming conversations with OpenAI, Anthropic, Google, and self-hosted LLaMA models
 - **File-grounded RAG** — upload documents and reference them in chat
@@ -122,7 +122,12 @@ npm run preview     # serves ./dist locally for verification
 
 A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 
-### Available scripts
+## Prerequisites
+
+- Node.js 18+
+- A running [DARE backend](https://github.com/cmudco/dare-backend/) (default `http://localhost:8000`)
+
+## Available Scripts
 
 | Command           | Description                            |
 | ----------------- | -------------------------------------- |
@@ -168,9 +173,9 @@ A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 
 ## What is not included in this repo?
 
-- [dare-backend](../dare-backend/) — the Django REST + Socket.IO backend this frontend depends on (run it separately)
-- [socraticbooks-react](../../socraticbooks/socraticbooks-react/) — the SocraticBooks frontend
-- [socraticbooks-backend](../../socraticbooks/socraticbooks-backend/) — the SocraticBooks backend that proxies to DARE
+- [dare-backend](https://github.com/cmudco/dare-backend/) — the Django REST + Socket.IO backend this frontend depends on (run it separately)
+- [socraticbooks-react](https://github.com/socraticbooks/socraticbooks-react/) — the SocraticBooks frontend
+- [socraticbooks-backend](https://github.com/socraticbooks/socraticbooks-backend/) — the SocraticBooks backend that proxies to DARE
 
 ## Stay in touch
 
