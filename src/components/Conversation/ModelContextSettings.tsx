@@ -134,14 +134,12 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   }
 
   const isTopK = documentSimilarityThreshold === 0
-  const summary =
+  const summaryDetail =
     ragMode === RagMode.AGENTIC
-      ? `${MODE_LABELS[ragMode]} retrieval · the model searches on demand`
-      : `${MODE_LABELS[ragMode]} retrieval · ${
-          isTopK
-            ? `top ${maxContextSnippets} by score (no filter)`
-            : `up to ${maxContextSnippets} snippets · similarity ≥ ${documentSimilarityThreshold.toFixed(2)}`
-        }`
+      ? 'Searches on demand and refines across rounds'
+      : isTopK
+        ? `Top ${maxContextSnippets} snippets by score · no similarity filter`
+        : `Up to ${maxContextSnippets} snippets · similarity ≥ ${documentSimilarityThreshold.toFixed(2)}`
 
   const snippetsAtDefault =
     maxContextSnippets === MODEL_CONFIG.maxContextSnippets
@@ -174,9 +172,18 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
         </div>
 
         {/* Live summary of what retrieval will do with the current values */}
-        <div className='flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground'>
-          <DatabaseZap className='h-4 w-4 shrink-0' />
-          <span className='min-w-0'>{summary}</span>
+        <div className='flex items-center gap-3 rounded-lg border border-border/60 bg-muted/50 p-3'>
+          <span className='flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-background text-primary shadow-xs ring-1 ring-border/60'>
+            <DatabaseZap className='h-4 w-4' />
+          </span>
+          <div className='min-w-0 leading-tight'>
+            <p className='font-medium text-foreground'>
+              {MODE_LABELS[ragMode]} retrieval
+            </p>
+            <p className='mt-1 text-xs leading-snug text-muted-foreground'>
+              {summaryDetail}
+            </p>
+          </div>
         </div>
 
         <div className='space-y-4'>

@@ -21,21 +21,21 @@ const options: RagModeOption[] = [
   {
     value: RagMode.NAIVE,
     label: 'Fast',
-    description: 'Quick source lookup',
+    description: 'Direct vector lookup',
     recommended: false,
     icon: <Database className='h-4 w-4' />,
   },
   {
     value: RagMode.ADVANCED,
     label: 'Thorough',
-    description: 'Analyzes and reranks',
+    description: 'Analyzes, blends, and reranks',
     recommended: true,
     icon: <Route className='h-4 w-4' />,
   },
   {
     value: RagMode.AGENTIC,
     label: 'Autonomous',
-    description: 'Searches and refines',
+    description: 'Searches in multiple steps',
     recommended: false,
     icon: <Bot className='h-4 w-4' />,
   },
@@ -52,32 +52,36 @@ export const RagModeSelector: React.FC<RagModeSelectorProps> = ({
         <button
           key={option.value}
           type='button'
-          className={`flex min-h-20 flex-col items-start gap-1 rounded-md border p-3 text-left transition-colors ${
+          className={`relative flex min-h-28 min-w-0 flex-col items-center gap-1.5 rounded-lg border px-2 py-3 text-center transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${
             selected
-              ? 'border-primary bg-primary/10'
-              : 'border-border bg-card hover:bg-accent'
+              ? 'border-primary bg-primary/10 shadow-sm'
+              : 'border-border bg-card hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-accent/60 hover:shadow-sm'
           }`}
           onClick={() => onChange(option.value)}
           aria-pressed={selected}
         >
-          <span className='flex w-full min-w-0 items-center gap-1.5'>
-            <span
-              className={selected ? 'text-primary' : 'text-muted-foreground'}
-            >
-              {option.icon}
+          {selected && (
+            <span className='absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground'>
+              <Check className='h-2.5 w-2.5' />
             </span>
-            <span className='min-w-0 truncate font-medium text-foreground'>
-              {option.label}
-            </span>
-            {selected && (
-              <Check className='ml-auto h-3.5 w-3.5 shrink-0 text-primary' />
-            )}
+          )}
+          <span
+            className={`mt-0.5 flex h-7 w-7 items-center justify-center rounded-md ${
+              selected
+                ? 'bg-primary/15 text-primary'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {option.icon}
           </span>
-          <span className='text-xs text-muted-foreground'>
+          <span className='text-sm font-semibold whitespace-nowrap text-foreground'>
+            {option.label}
+          </span>
+          <span className='text-[11px] leading-4 text-muted-foreground'>
             {option.description}
           </span>
           {option.recommended && (
-            <span className='rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary'>
+            <span className='mt-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] leading-4 font-medium text-primary'>
               Recommended
             </span>
           )}
