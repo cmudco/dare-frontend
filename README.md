@@ -174,8 +174,8 @@ A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 ## What is not included in this repo?
 
 - [dare-backend](https://github.com/cmudco/dare-backend/) — the Django REST + Socket.IO backend this frontend depends on (run it separately)
-- [socraticbooks-react](https://github.com/socraticbooks/socraticbooks-react/) — the SocraticBooks frontend
-- [socraticbooks-backend](https://github.com/socraticbooks/socraticbooks-backend/) — the SocraticBooks backend that proxies to DARE
+- [socraticbooks-frontend](https://github.com/cmudco/socraticbots-frontend/) — the SocraticBooks frontend (Private Repo for now)
+- [socraticbooks-backend](https://github.com/cmudco/socraticbots-backend/) — the SocraticBooks backend that proxies to DARE (Private Repo for now)
 
 ## Stay in touch
 
