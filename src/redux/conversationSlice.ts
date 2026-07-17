@@ -43,6 +43,7 @@ import type {
   ToolCallExecutingEvent,
   ToolCallResultEvent,
   ToolRoundsCappedEvent,
+  ContextTraceEvent,
 } from './types/toolEvents'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
@@ -1153,6 +1154,20 @@ export const conversationSlice = createSlice({
           if (error) {
             toolCall.error = error
           }
+        }
+      )
+      // Context Trace - how the turn's prompt was assembled (once, pre-round-1)
+      .addMatcher(
+        (action): action is { type: string; payload: ContextTraceEvent } =>
+          action.type === 'socket/context_trace',
+        (state, action) => {
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === action.payload.messageId.toString()
+          )
+          // Silently drop events for messages not in the store — the trace
+          // is also persisted on the message, so a refresh recovers it.
+          if (!msg) return
+          msg.contextTrace = action.payload.trace
         }
       )
       .addMatcher(

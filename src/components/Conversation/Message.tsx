@@ -40,11 +40,9 @@ import { AppDispatch } from '../../redux/store'
 import { regenerateSocketResponse } from '@/redux/asyncThunks/socketMessages'
 import FeedbackModal from './FeedbackModal'
 import MessageMetadata from './MessageMetadata'
-import WebSearchSources from './WebSearchSources'
-import MemoryContextSources from './MemoryContextSources'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
-import { ToolActivity } from './ToolActivity/ToolActivity'
+import { MessageActivity } from './MessageActivity/MessageActivity'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { debugLog } from '@/utils/debugLogger'
 
@@ -758,35 +756,13 @@ const Message: React.FC<MessageProps> = ({
           </div>
         )}
 
-      {/* Web Search Sources */}
-      {!isSenderMessage(message) &&
-        !message.streaming &&
-        message.webSearchSources &&
-        message.webSearchSources.length > 0 && (
-          <WebSearchSources sources={message.webSearchSources} />
-        )}
-
-      {/* Memory Context Sources */}
-      {!isSenderMessage(message) &&
-        !message.streaming &&
-        message.memoryContextData &&
-        message.memoryContextData.length > 0 && (
-          <MemoryContextSources items={message.memoryContextData} />
-        )}
-
-      {/* Tool Calls - live tool-loop activity for AI messages (also during streaming) */}
-      {!isSenderMessage(message) &&
-        message.toolCalls &&
-        message.toolCalls.length > 0 && (
-          <div className='mt-2 w-full max-w-[95%] min-w-0 pl-0 sm:pl-10'>
-            <ToolActivity
-              toolCalls={message.toolCalls}
-              streaming={!!message.streaming}
-              loopState={message.toolLoopState}
-              notice={message.toolLoopNotice}
-            />
-          </div>
-        )}
+      {/* Unified activity panel: context trace, tool rounds, web sources,
+          memories — live with shimmer status during the turn */}
+      {!isSenderMessage(message) && (
+        <div className='mt-2 w-full max-w-[95%] min-w-0 pl-0 sm:pl-10'>
+          <MessageActivity message={message} />
+        </div>
+      )}
 
       <FeedbackModal
         isOpen={feedbackModalState.isOpen}

@@ -8,6 +8,7 @@
  */
 
 import { ToolCallOrigin, ToolCallStatus } from '@/utils/constants/dareTools'
+import type { ContextTrace } from '@/redux/types/conversation'
 import type {
   DareToolResult,
   McpToolResult,
@@ -75,4 +76,13 @@ export interface ToolCallResultEvent {
 export interface ToolRoundsCappedEvent {
   messageId: number | string
   round: number
+}
+
+/**
+ * `context_trace` — the turn's context assembly finished (sent once,
+ * after preparation and before the first model round).
+ */
+export interface ContextTraceEvent {
+  messageId: number | string
+  trace: ContextTrace
 }

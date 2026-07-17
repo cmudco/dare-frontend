@@ -141,6 +141,13 @@ export interface Message {
    * per source (documents, shared libraries) when several were.
    */
   retrievalTrace?: RetrievalTrace | RetrievalTraceEnvelope | null
+  /**
+   * Timed context-assembly trace for the turn: what went into the prompt
+   * (files, retrieval, memory, history, …) before the model started
+   * answering. Arrives live as a `context_trace` socket event and persists
+   * on the message for refresh.
+   */
+  contextTrace?: ContextTrace | null
 }
 
 /** Multiple traces on one message — one per retrieval source. */
@@ -189,6 +196,44 @@ export interface RetrievalTrace {
     threshold: number
   } | null
   finalSize: number
+}
+
+/** One timed stage of a turn's context assembly. */
+export interface ContextTraceStage {
+  kind:
+    | 'prompt'
+    | 'referencedConversations'
+    | 'summaries'
+    | 'files'
+    | 'retrieval'
+    | 'memory'
+    | 'history'
+    | 'media'
+    | 'tools'
+  ms: number
+  /** Generic item count (referenced conversations, memories, media, tools). */
+  count?: number
+  /** Injected characters (prompt, referenced conversations). */
+  chars?: number
+  /** History: turns kept after filtering, and the configured limit. */
+  turns?: number
+  limit?: number | null
+  /** Files read in full. */
+  files?: { name: string; chars: number }[]
+  /** Retrieval: settings used and the per-source pipeline traces. */
+  mode?: string
+  threshold?: number
+  topK?: number
+  injectedBlocks?: number
+  sources?: RetrievalTrace[]
+  /** Naive mode: kept snippets (no pipeline trace exists to embed). */
+  snippets?: { ref: string; score: number; preview: string }[]
+}
+
+/** How the turn's prompt was assembled, stage by stage. */
+export interface ContextTrace {
+  totalMs: number
+  stages: ContextTraceStage[]
 }
 
 /** Check if a message was sent by the user (not the AI). */
