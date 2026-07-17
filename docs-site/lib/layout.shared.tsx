@@ -27,7 +27,7 @@ export function baseOptions(): BaseLayoutProps {
       },
       {
         text: 'GitHub',
-        url: 'https://github.com/',
+        url: 'https://github.com/cmudco',
         icon: <ExternalLink className='size-4' />,
         external: true,
       },
