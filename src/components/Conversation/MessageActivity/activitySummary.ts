@@ -9,13 +9,6 @@ export const formatMs = (ms: number): string =>
 export const formatChars = (chars: number): string =>
   chars >= 1000 ? `${Math.round(chars / 1000)}k chars` : `${chars} chars`
 
-/**
- * Adaptive precision: calibrated rerank scores are tiny (0.002–0.006), so
- * two decimals would flatten them all to 0.00.
- */
-export const formatScore = (score: number): string =>
-  Math.abs(score) < 0.1 ? score.toFixed(3) : score.toFixed(2)
-
 /** Kept snippets across advanced sources AND the naive snippet list. */
 export const keptSnippetCount = (stage: ContextTraceStage): number => {
   const fromSources = (stage.sources ?? []).reduce(
