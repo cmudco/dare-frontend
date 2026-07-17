@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Bot, Database, Route } from 'lucide-react'
+import { Bot, Check, Database, Route } from 'lucide-react'
 
 import { RagMode } from '@/utils/constants/conversation'
 
@@ -52,38 +52,35 @@ export const RagModeSelector: React.FC<RagModeSelectorProps> = ({
         <button
           key={option.value}
           type='button'
-          className={`flex min-h-20 flex-col items-start justify-between rounded-md border p-3 text-left transition-colors ${
+          className={`flex min-h-20 flex-col items-start gap-1 rounded-md border p-3 text-left transition-colors ${
             selected
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-border bg-card text-card-foreground hover:bg-accent'
+              ? 'border-primary bg-primary/10'
+              : 'border-border bg-card hover:bg-accent'
           }`}
           onClick={() => onChange(option.value)}
           aria-pressed={selected}
         >
-          <span className='flex w-full items-center justify-between gap-2'>
-            <span className='flex items-center gap-2 font-medium'>
+          <span className='flex w-full min-w-0 items-center gap-1.5'>
+            <span
+              className={selected ? 'text-primary' : 'text-muted-foreground'}
+            >
               {option.icon}
+            </span>
+            <span className='min-w-0 truncate font-medium text-foreground'>
               {option.label}
             </span>
-            {option.recommended && (
-              <span
-                className={`text-xs ${
-                  selected
-                    ? 'text-primary-foreground/80'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                Recommended
-              </span>
+            {selected && (
+              <Check className='ml-auto h-3.5 w-3.5 shrink-0 text-primary' />
             )}
           </span>
-          <span
-            className={`text-xs ${
-              selected ? 'text-primary-foreground/80' : 'text-muted-foreground'
-            }`}
-          >
+          <span className='text-xs text-muted-foreground'>
             {option.description}
           </span>
+          {option.recommended && (
+            <span className='rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary'>
+              Recommended
+            </span>
+          )}
         </button>
       )
     })}

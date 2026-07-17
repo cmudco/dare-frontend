@@ -2,6 +2,7 @@ import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
+import { Slider } from '../ui/slider'
 import { AppDispatch, RootState } from '../../redux/store'
 import {
   updateMaxContextSnippets,
@@ -9,10 +10,9 @@ import {
   updateRagMode,
 } from '../../redux/conversationSlice'
 import { MODEL_CONFIG } from '../../config/modelConfig'
-import { RotateCw, X, Info } from 'lucide-react'
+import { Check, DatabaseZap, Info, RotateCcw, X } from 'lucide-react'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
 import { RagMode } from '@/redux/types/conversation'
-import VectorDatabaseInfoBanner from './VectorDatabaseInfoBanner'
 import {
   Tooltip,
   TooltipContent,
@@ -25,6 +25,23 @@ import RagModeSelector from './RagModeSelector'
 interface ModelContextSettingsProps {
   onClose: () => void
 }
+
+const MIN_SNIPPETS = 1
+const MAX_SNIPPETS = 20
+const SAVE_DEBOUNCE_MS = 600
+
+/** Same vocabulary as the mode cards. */
+const MODE_LABELS: Record<RagMode, string> = {
+  [RagMode.NAIVE]: 'Fast',
+  [RagMode.ADVANCED]: 'Thorough',
+  [RagMode.AGENTIC]: 'Autonomous',
+}
+
+type SettingsUpdates = Partial<{
+  maxContextSnippets: number
+  documentSimilarityThreshold: number
+  ragMode: RagMode
+}>
 
 const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   onClose,
@@ -43,183 +60,152 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   const [snippetInput, setSnippetInput] = React.useState(
     maxContextSnippets.toString()
   )
-  const [thresholdInput, setThresholdInput] = React.useState(
-    documentSimilarityThreshold.toString()
-  )
+  const [showSaved, setShowSaved] = React.useState(false)
 
   React.useEffect(() => {
     setSnippetInput(maxContextSnippets.toString())
   }, [maxContextSnippets])
 
-  React.useEffect(() => {
-    setThresholdInput(documentSimilarityThreshold.toString())
-  }, [documentSimilarityThreshold])
+  // One debounced PATCH per burst of changes: rapid +/+/+ clicks or slider
+  // drags merge into a single updateConversation call.
+  const pendingRef = React.useRef<SettingsUpdates>({})
+  const saveTimerRef = React.useRef<ReturnType<typeof setTimeout>>()
+  const savedTimerRef = React.useRef<ReturnType<typeof setTimeout>>()
 
-  const handleMaxContextSnippetsChange = (value: number) => {
-    dispatch(updateMaxContextSnippets(value))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { maxContextSnippets: value },
-        })
-      )
-    }
+  const flushSave = React.useCallback(() => {
+    const updates = pendingRef.current
+    pendingRef.current = {}
+    if (!activeConversation || Object.keys(updates).length === 0) return
+    dispatch(
+      updateConversation({
+        conversationId: activeConversation.conversationId,
+        updates,
+      })
+    ).then(() => {
+      setShowSaved(true)
+      clearTimeout(savedTimerRef.current)
+      savedTimerRef.current = setTimeout(() => setShowSaved(false), 1600)
+    })
+  }, [activeConversation, dispatch])
+
+  const queueSave = React.useCallback(
+    (updates: SettingsUpdates) => {
+      pendingRef.current = { ...pendingRef.current, ...updates }
+      clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = setTimeout(flushSave, SAVE_DEBOUNCE_MS)
+    },
+    [flushSave]
+  )
+
+  // Unsaved changes must not die with the panel: flush on unmount.
+  React.useEffect(
+    () => () => {
+      clearTimeout(saveTimerRef.current)
+      clearTimeout(savedTimerRef.current)
+      flushSave()
+    },
+    [flushSave]
+  )
+
+  const setSnippets = (value: number) => {
+    const clamped = Math.min(MAX_SNIPPETS, Math.max(MIN_SNIPPETS, value))
+    dispatch(updateMaxContextSnippets(clamped))
+    queueSave({ maxContextSnippets: clamped })
   }
 
-  const handleSnippetInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/[^0-9]/g, '')
-    setSnippetInput(val)
+  const setThreshold = (value: number) => {
+    const clamped = Math.min(1, Math.max(0, value))
+    dispatch(updateDocumentSimilarityThreshold(clamped))
+    queueSave({ documentSimilarityThreshold: clamped })
+  }
+
+  const setMode = (value: RagMode) => {
+    dispatch(updateRagMode(value))
+    queueSave({ ragMode: value })
   }
 
   const handleSnippetInputBlur = () => {
-    const num = Math.max(1, parseInt(snippetInput, 10) || 1)
-    if (num !== maxContextSnippets) {
-      handleMaxContextSnippetsChange(num)
-    } else {
-      setSnippetInput(num.toString())
+    const parsed = parseInt(snippetInput, 10)
+    if (Number.isNaN(parsed)) {
+      setSnippetInput(maxContextSnippets.toString())
+      return
     }
+    setSnippets(parsed)
   }
 
-  const handleSnippetInputKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key === 'Enter') {
-      ;(e.target as HTMLInputElement).blur()
-    }
-  }
+  const isTopK = documentSimilarityThreshold === 0
+  const summary =
+    ragMode === RagMode.AGENTIC
+      ? `${MODE_LABELS[ragMode]} retrieval · the model searches on demand`
+      : `${MODE_LABELS[ragMode]} retrieval · ${
+          isTopK
+            ? `top ${maxContextSnippets} by score (no filter)`
+            : `up to ${maxContextSnippets} snippets · similarity ≥ ${documentSimilarityThreshold.toFixed(2)}`
+        }`
 
-  const handleThresholdInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const val = e.target.value.replace(/[^0-9.]/g, '')
-    setThresholdInput(val)
-  }
-
-  const handleThresholdInputBlur = () => {
-    const num = Math.max(0, Math.min(1, parseFloat(thresholdInput) || 0))
-    if (num !== documentSimilarityThreshold) {
-      handleDocumentSimilarityThresholdChange(num.toString())
-    } else {
-      setThresholdInput(num.toString())
-    }
-  }
-
-  const handleThresholdInputKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key === 'Enter') {
-      ;(e.target as HTMLInputElement).blur()
-    }
-  }
-
-  const handleDocumentSimilarityThresholdChange = (value: string) => {
-    const threshold = parseFloat(value)
-    dispatch(updateDocumentSimilarityThreshold(threshold))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { documentSimilarityThreshold: threshold },
-        })
-      )
-    }
-  }
-
-  const handleRagModeChange = (value: RagMode) => {
-    dispatch(updateRagMode(value))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { ragMode: value },
-        })
-      )
-    }
-  }
-
-  const handleResetMaxContextSnippets = () => {
-    dispatch(updateMaxContextSnippets(MODEL_CONFIG.maxContextSnippets))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { maxContextSnippets: MODEL_CONFIG.maxContextSnippets },
-        })
-      )
-    }
-  }
-
-  const handleResetDocumentSimilarityThreshold = () => {
-    dispatch(
-      updateDocumentSimilarityThreshold(
-        MODEL_CONFIG.documentSimilarityThreshold
-      )
-    )
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: {
-            documentSimilarityThreshold:
-              MODEL_CONFIG.documentSimilarityThreshold,
-          },
-        })
-      )
-    }
-  }
+  const snippetsAtDefault =
+    maxContextSnippets === MODEL_CONFIG.maxContextSnippets
+  const thresholdAtDefault =
+    documentSimilarityThreshold === MODEL_CONFIG.documentSimilarityThreshold
 
   return (
     <TooltipProvider>
       <div className='space-y-4'>
         <div className='flex items-center justify-between'>
-          <h3 className='text-md font-semibold'>Vector Database Settings</h3>
-          <Button
-            variant='ghost'
-            size='icon'
-            onClick={onClose}
-            aria-label='Close Settings'
-            className='h-6 w-6'
-          >
-            <X className='h-4 w-4' />
-          </Button>
+          <h3 className='text-md font-semibold'>Vector database settings</h3>
+          <div className='flex items-center gap-2'>
+            <span
+              className={`flex items-center gap-1 text-xs text-green-600 transition-opacity duration-300 dark:text-green-400 ${showSaved ? 'opacity-100' : 'opacity-0'}`}
+              aria-hidden={!showSaved}
+            >
+              <Check className='h-3.5 w-3.5' />
+              Saved
+            </span>
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={onClose}
+              aria-label='Close settings'
+              className='h-6 w-6'
+            >
+              <X className='h-4 w-4' />
+            </Button>
+          </div>
         </div>
 
-        {/* Dynamic Info Banner */}
-        <VectorDatabaseInfoBanner
-          maxContextSnippets={maxContextSnippets}
-          documentSimilarityThreshold={documentSimilarityThreshold}
-        />
+        {/* Live summary of what retrieval will do with the current values */}
+        <div className='flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground'>
+          <DatabaseZap className='h-4 w-4 shrink-0' />
+          <span className='min-w-0'>{summary}</span>
+        </div>
 
-        <hr />
         <div className='space-y-4'>
           <div className='space-y-2'>
             <div className='flex items-center gap-2'>
-              <h4 className='font-semibold'>Retrieval Mode</h4>
+              <h4 className='font-semibold'>Retrieval mode</h4>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
                 </TooltipTrigger>
                 <TooltipContent className='max-w-sm'>
                   <p className='text-sm'>
-                    Naive uses dense lookup. Advanced adds query analysis,
-                    hybrid retrieval, rerank, grounding, and trace data. Agentic
+                    Fast uses dense lookup. Thorough adds query analysis, hybrid
+                    retrieval, rerank, grounding, and trace data. Autonomous
                     lets the model search your documents itself — issuing and
                     refining retrieval queries as tool calls across rounds.
                   </p>
                 </TooltipContent>
               </Tooltip>
             </div>
-            <RagModeSelector value={ragMode} onChange={handleRagModeChange} />
+            <RagModeSelector value={ragMode} onChange={setMode} />
           </div>
+
           <hr />
-          <div className='space-y-2'>
+
+          <div className='space-y-1'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
-                <h4 className='font-semibold'>
-                  Max Context Snippets (Recommended:{' '}
-                  {MODEL_CONFIG.maxContextSnippets})
-                </h4>
+                <h4 className='font-semibold'>Context snippets</h4>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
@@ -232,62 +218,69 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
                       <p className='text-sm'>
                         {TOOLTIP_CONTENT.modelContext.maxSnippets.description}
                       </p>
-                      <p className='text-xs text-muted-foreground'>
-                        💡 {TOOLTIP_CONTENT.modelContext.maxSnippets.tip}
-                      </p>
                     </div>
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={handleResetMaxContextSnippets}
-                aria-label='Reset Max Context Snippets'
-              >
-                <RotateCw className='h-4 w-4' />
-              </Button>
+              <div className='flex items-center gap-1'>
+                <Button
+                  variant='outline'
+                  className='h-8 w-8 p-0'
+                  onClick={() => setSnippets(maxContextSnippets - 1)}
+                  disabled={maxContextSnippets <= MIN_SNIPPETS}
+                  aria-label='Fewer snippets'
+                >
+                  -
+                </Button>
+                <Input
+                  type='number'
+                  min={MIN_SNIPPETS}
+                  max={MAX_SNIPPETS}
+                  value={snippetInput}
+                  onChange={(e) =>
+                    setSnippetInput(e.target.value.replace(/[^0-9]/g, ''))
+                  }
+                  onBlur={handleSnippetInputBlur}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' && (e.target as HTMLInputElement).blur()
+                  }
+                  className='hide-number-arrows h-8 w-14 text-center font-mono text-sm'
+                  aria-label='Max context snippets'
+                  inputMode='numeric'
+                />
+                <Button
+                  variant='outline'
+                  className='h-8 w-8 p-0'
+                  onClick={() => setSnippets(maxContextSnippets + 1)}
+                  disabled={maxContextSnippets >= MAX_SNIPPETS}
+                  aria-label='More snippets'
+                >
+                  +
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-8 w-8'
+                  onClick={() => setSnippets(MODEL_CONFIG.maxContextSnippets)}
+                  disabled={snippetsAtDefault}
+                  aria-label='Reset context snippets to default'
+                >
+                  <RotateCcw className='h-3.5 w-3.5' />
+                </Button>
+              </div>
             </div>
-            <div className='flex items-center space-x-2'>
-              <Button
-                variant='outline'
-                className='h-auto px-2 py-1'
-                onClick={() =>
-                  handleMaxContextSnippetsChange(
-                    Math.max(1, maxContextSnippets - 1)
-                  )
-                }
-              >
-                -
-              </Button>
-              <Input
-                type='number'
-                min={1}
-                value={snippetInput}
-                onChange={handleSnippetInputChange}
-                onBlur={handleSnippetInputBlur}
-                onKeyDown={handleSnippetInputKeyDown}
-                className='hide-number-arrows h-8 w-16 text-center font-mono text-sm focus:outline-hidden focus-visible:outline-hidden'
-                aria-label='Max Context Snippets'
-                inputMode='numeric'
-                pattern='[0-9]*'
-              />
-              <Button
-                variant='outline'
-                className='h-auto px-2 py-1'
-                onClick={() =>
-                  handleMaxContextSnippetsChange(maxContextSnippets + 1)
-                }
-              >
-                +
-              </Button>
-            </div>
+            <p className='text-xs text-muted-foreground'>
+              Recommended: {MODEL_CONFIG.maxContextSnippets} — more snippets add
+              context but slow the turn and cost more.
+            </p>
           </div>
+
           <hr />
+
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
-                <h4 className='font-semibold'>Document Similarity threshold</h4>
+                <h4 className='font-semibold'>Similarity threshold</h4>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
@@ -303,62 +296,45 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
                             .description
                         }
                       </p>
-                      <p className='text-xs text-muted-foreground'>
-                        💡{' '}
-                        {TOOLTIP_CONTENT.modelContext.similarityThreshold.tip}
-                      </p>
                     </div>
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={handleResetDocumentSimilarityThreshold}
-                aria-label='Reset Document Similarity Threshold'
-              >
-                <RotateCw className='h-4 w-4' />
-              </Button>
+              <div className='flex items-center gap-1'>
+                <span className='font-mono text-sm text-muted-foreground tabular-nums'>
+                  {isTopK
+                    ? 'Off — top-K'
+                    : documentSimilarityThreshold.toFixed(2)}
+                </span>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-8 w-8'
+                  onClick={() =>
+                    setThreshold(MODEL_CONFIG.documentSimilarityThreshold)
+                  }
+                  disabled={thresholdAtDefault}
+                  aria-label='Reset similarity threshold to default'
+                >
+                  <RotateCcw className='h-3.5 w-3.5' />
+                </Button>
+              </div>
             </div>
-            <div className='flex items-center space-x-2'>
-              <Button
-                variant='outline'
-                className='h-auto px-2 py-1'
-                onClick={() =>
-                  handleDocumentSimilarityThresholdChange(
-                    Math.max(0, documentSimilarityThreshold - 0.1).toFixed(1)
-                  )
-                }
-              >
-                -
-              </Button>
-              <Input
-                type='number'
-                min={0}
-                max={1}
-                step={0.01}
-                value={thresholdInput}
-                onChange={handleThresholdInputChange}
-                onBlur={handleThresholdInputBlur}
-                onKeyDown={handleThresholdInputKeyDown}
-                className='hide-number-arrows h-8 w-20 text-center font-mono text-sm focus:outline-hidden focus-visible:outline-hidden'
-                aria-label='Document Similarity Threshold'
-                inputMode='decimal'
-              />
-              <Button
-                variant='outline'
-                className='h-auto px-2 py-1'
-                onClick={() =>
-                  handleDocumentSimilarityThresholdChange(
-                    Math.min(1, documentSimilarityThreshold + 0.1).toFixed(1)
-                  )
-                }
-              >
-                +
-              </Button>
-            </div>
+            <Slider
+              value={[documentSimilarityThreshold]}
+              min={0}
+              max={1}
+              step={0.05}
+              onValueChange={([value]) => setThreshold(value)}
+              aria-label='Similarity threshold'
+            />
+            <p className='text-xs text-muted-foreground'>
+              Snippets scoring below this are dropped. Slide to 0 to keep the
+              top {maxContextSnippets} regardless of score.
+            </p>
           </div>
         </div>
+
         <style>{`
         input.hide-number-arrows::-webkit-outer-spin-button,
         input.hide-number-arrows::-webkit-inner-spin-button {
@@ -367,11 +343,6 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
         }
         input.hide-number-arrows[type='number'] {
           -moz-appearance: textfield;
-        }
-        input.hide-number-arrows:focus,
-        input.hide-number-arrows:focus-visible {
-          outline: none !important;
-          box-shadow: none !important;
         }
       `}</style>
       </div>
