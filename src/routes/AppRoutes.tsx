@@ -39,6 +39,7 @@ import LandingPage from '../pages/Landing/LandingPage'
 import AboutPage from '../pages/About/AboutPage'
 import ResearchProjects from '../pages/Research/ResearchProjects'
 import ResearchWorkspace from '../pages/Research/ResearchWorkspace'
+import RunDetailPage from '../pages/Research/RunDetailPage'
 import CreateProject from '../pages/Research/CreateProject'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { useCanAccessResearch } from '@/hooks/useCanAccessResearch'
@@ -134,6 +135,15 @@ const AppRoutes = () => {
                 element={
                   <ProtectedRoute>
                     <ResearchWorkspace />
+                  </ProtectedRoute>
+                }
+              />
+              {/* One run's full details — dedicated page */}
+              <Route
+                path='/research/:projectId/runs/:runId'
+                element={
+                  <ProtectedRoute>
+                    <RunDetailPage />
                   </ProtectedRoute>
                 }
               />

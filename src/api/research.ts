@@ -110,6 +110,19 @@ export const getAgentRunAPI = async (runId: number): Promise<AgentRun> => {
   })
 }
 
+/**
+ * Request cancellation of an in-flight run. Idempotent and owner-scoped; the
+ * backend records intent and asks Hermes to stop, but the terminal outcome
+ * (cancelled / completed / outcome_unknown) is resolved by later polling — do
+ * not assume the run is cancelled just because this resolved.
+ */
+export const cancelAgentRunAPI = async (runId: number): Promise<AgentRun> => {
+  return await baseRequest<AgentRun>({
+    url: `api/research/agent-runs/${runId}/cancel/`,
+    method: METHOD.POST,
+  })
+}
+
 /** Approve / reject / defer a staged review item. */
 export const reviewStagingItemAPI = async (
   itemId: number,

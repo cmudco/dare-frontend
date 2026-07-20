@@ -2,6 +2,7 @@
 // (slugs, ISO timestamps, numeric cost/duration); these format them for display.
 
 import { formatRelativeDate } from '@/utils/dateUtils'
+import { AgentRunStatus } from '@/utils/constants/research'
 
 type BadgeVariant = 'green' | 'yellow' | 'red' | 'gray'
 
@@ -13,16 +14,24 @@ export const runStatusBadge = (
   status: string
 ): { variant: BadgeVariant; label: string } => {
   switch (status) {
-    case 'completed':
+    case AgentRunStatus.COMPLETED:
       return { variant: 'green', label: 'Completed' }
-    case 'running':
+    case AgentRunStatus.RUNNING:
       return { variant: 'yellow', label: 'Running' }
-    case 'failed':
+    case AgentRunStatus.FAILED:
       return { variant: 'red', label: 'Failed' }
-    case 'queued':
+    case AgentRunStatus.QUEUED:
       return { variant: 'gray', label: 'Queued' }
-    case 'started':
+    case AgentRunStatus.STARTED:
       return { variant: 'yellow', label: 'Started' }
+    case AgentRunStatus.WAITING_FOR_APPROVAL:
+      return { variant: 'yellow', label: 'Awaiting approval' }
+    case AgentRunStatus.STOPPING:
+      return { variant: 'yellow', label: 'Stopping…' }
+    case AgentRunStatus.CANCELLED:
+      return { variant: 'gray', label: 'Cancelled' }
+    case AgentRunStatus.OUTCOME_UNKNOWN:
+      return { variant: 'yellow', label: 'Outcome unknown' }
     default:
       return { variant: 'gray', label: roleLabel(status) }
   }

@@ -1,9 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAppDispatch } from '@/redux/hooks'
 import { getResearchProject } from '@/redux/asyncThunks/research'
 import { askCriticAPI, reviewStagingItemAPI, runScoutAPI } from '@/api/research'
-import { WEB_SEARCH_TOOL_SLUG } from '@/utils/constants/research'
+import {
+  AgentRunRole,
+  WEB_SEARCH_TOOL_SLUG,
+  isRunInFlight,
+} from '@/utils/constants/research'
 import { usePolledRun } from './usePolledRun'
+import { isNavSection } from './types'
 import ContextHub from './components/ContextHub'
 import ContextPanel from './components/ContextPanel'
 import OverviewPanel from './components/OverviewPanel'
@@ -12,9 +18,8 @@ import { ArtifactsView } from './components/SecondaryViews'
 import AskScoutView from './components/AskScoutView'
 import HandsOnChat from './components/HandsOnChat'
 import VisualizationView from './components/VisualizationView'
-import RunsView from './components/RunsView'
+import RunsView from './components/runs/RunsView'
 import WorkspaceShell from './components/WorkspaceShell'
-import { AGENT_RUNS, PROJECT } from './mockData'
 import type {
   AgentRun,
   KnowledgeItem,
@@ -66,10 +71,10 @@ const ResearchWorkspaceView = ({
   projectId,
   projectTitle,
   projectMeta,
-  question = PROJECT.question,
+  question = '',
   sourceCount = 0,
   enabledTools = DEFAULT_TOOLS,
-  runs = AGENT_RUNS,
+  runs = [],
   sources = [],
   soulFile = null,
   projectMemory = [],
@@ -80,7 +85,13 @@ const ResearchWorkspaceView = ({
   onBack,
 }: ResearchWorkspaceViewProps) => {
   const dispatch = useAppDispatch()
-  const [section, setSection] = useState<NavSection>('overview')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const section: NavSection = isNavSection(tabParam) ? tabParam : 'overview'
+  const setSection = useCallback(
+    (next: NavSection) => setSearchParams({ tab: next }),
+    [setSearchParams]
+  )
   const [runningRunId, setRunningRunId] = useState<number | null>(null)
   const [scoutStatus, setScoutStatus] = useState('')
   const [criticRunId, setCriticRunId] = useState<number | null>(null)
@@ -93,14 +104,33 @@ const ResearchWorkspaceView = ({
     if (projectId) dispatch(getResearchProject(projectId))
   }
 
+  // Keep the Runs tab current: refetch whenever it's opened, since a run can
+  // settle while the scholar is on another tab.
+  useEffect(() => {
+    if (section === 'runs') refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section])
+
+  // Poll while any in-flight run isn't already covered by the scout/critic
+  // pollers below — chiefly queued artifact runs — so their generating rows and
+  // statuses stay live across tab switches (this view stays mounted).
+  useEffect(() => {
+    const hasOther = runs.some(
+      (r) =>
+        isRunInFlight(r.status) && r.id !== runningRunId && r.id !== criticRunId
+    )
+    if (!hasOther) return
+    const timer = setTimeout(refresh, 3000)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runs, runningRunId, criticRunId])
+
   // Adopt an in-flight Scout run from server state, so the running indicator
   // survives leaving the page and full reloads (the run lives on the backend).
   useEffect(() => {
     if (runningRunId) return
     const live = runs.find(
-      (r) =>
-        r.role === 'scout' &&
-        ['queued', 'started', 'running'].includes(r.status)
+      (r) => r.role === AgentRunRole.SCOUT && isRunInFlight(r.status)
     )
     if (live) {
       setRunningRunId(live.id)
@@ -228,9 +258,15 @@ const ResearchWorkspaceView = ({
       case 'graph':
         return <VisualizationView projectId={projectId} />
       case 'artifacts':
-        return <ArtifactsView projectId={projectId} artifacts={artifacts} />
+        return (
+          <ArtifactsView
+            projectId={projectId}
+            artifacts={artifacts}
+            runs={runs}
+          />
+        )
       case 'runs':
-        return <RunsView runs={runs} />
+        return <RunsView runs={runs} projectId={projectId} />
     }
   }
 

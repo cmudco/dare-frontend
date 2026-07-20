@@ -1,4 +1,5 @@
 import {
+  CancellationState,
   ResearchProjectStatus,
   StandardsTemplate,
 } from '@/utils/constants/research'
@@ -194,13 +195,33 @@ export interface AgentRunUsage {
   totalTokens?: number
 }
 
+/**
+ * Cancellation record for a run the user asked to stop. Present only once a
+ * cancellation was requested (otherwise null). `state` reflects how far the
+ * stop got: `unconfirmed` (requested, no ack), `acknowledged` (Hermes ack'd,
+ * outcome not yet terminal), `confirmed` (Hermes reports terminal `cancelled`).
+ */
+export interface AgentRunCancellation {
+  state: CancellationState
+  requestedAt: string | null
+  lastAttemptAt: string | null
+  attemptCount: number
+  acknowledgedAt: string | null
+  confirmedAt: string | null
+  stopHttpStatus: number | null
+  errorCode: string
+  errorDetail: string
+}
+
 /** One delegated run from DARE to Hermes — the Runs/activity record. */
 export interface AgentRun {
   id: number
   role: string // slug, e.g. 'scout' | 'critic'
   mode: string // 'scout' | 'chat'
   task: string
-  status: string // started | running | queued | completed | failed
+  // started | running | queued | waiting_for_approval | stopping | completed
+  // | failed | cancelled | outcome_unknown
+  status: string
   statusDetail: string // live progress line, e.g. 'Searching the web…'
   soulFileVersion: string
   tools: string[]
@@ -212,6 +233,10 @@ export interface AgentRun {
   ranAt: string
   hermesRunId: string
   toolCalls: AgentRunToolCall[]
+  cancellation: AgentRunCancellation | null
+  // The agent's exact final response text. Only present on the single-run
+  // detail fetch (getAgentRunAPI), not in list payloads — hence optional.
+  rawOutput?: string
 }
 
 /** Working state for the create/edit wizard before it becomes a project. */
@@ -252,6 +277,8 @@ export interface ResearchState {
   projects: ResearchProject[]
   loading: boolean
   error: string | null
+  /** The run open on the run-details page (fetched + polled via thunks). */
+  currentRun: AgentRun | null
   okfBundle: OkfBundle | null
   okfBundleLoading: boolean
   okfBundleError: string | null

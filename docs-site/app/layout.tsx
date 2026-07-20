@@ -11,7 +11,7 @@ export const metadata = {
     template: '%s | DARE Documentation',
   },
   description:
-    'Client and technical documentation for the Dietrich Analysis Research Education Platform.',
+    'Client and technical documentation for the Dietrich Analysis Research Education (DARE) Platform.',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

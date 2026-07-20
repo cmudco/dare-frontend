@@ -2,7 +2,9 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 import {
   addThesisSourceLink,
+  cancelAgentRun,
   createResearchProject,
+  getAgentRun,
   getResearchOkfBundle,
   getResearchProject,
   getResearchProjects,
@@ -28,6 +30,7 @@ const initialState: ResearchState = {
   projects: [],
   loading: false,
   error: null,
+  currentRun: null,
   okfBundle: null,
   okfBundleLoading: false,
   okfBundleError: null,
@@ -44,6 +47,11 @@ const researchSlice = createSlice({
     // research-backend increment); list + create + edit are wired to the API.
     deleteResearchProject(state, action: PayloadAction<number>) {
       state.projects = state.projects.filter((p) => p.id !== action.payload)
+    },
+    // Reset the run-details slot when leaving the page, so opening another run
+    // never flashes the previous one.
+    clearCurrentRun(state) {
+      state.currentRun = null
     },
   },
   extraReducers: (builder) => {
@@ -83,6 +91,12 @@ const researchSlice = createSlice({
       .addCase(getResearchProject.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
+      })
+      .addCase(getAgentRun.fulfilled, (state, action) => {
+        state.currentRun = action.payload
+      })
+      .addCase(cancelAgentRun.fulfilled, (state, action) => {
+        state.currentRun = action.payload
       })
       .addCase(updateResearchProject.fulfilled, (state, action) => {
         const index = state.projects.findIndex(
@@ -147,6 +161,6 @@ const researchSlice = createSlice({
   },
 })
 
-export const { deleteResearchProject } = researchSlice.actions
+export const { deleteResearchProject, clearCurrentRun } = researchSlice.actions
 
 export default researchSlice.reducer

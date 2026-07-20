@@ -3,7 +3,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/Node-18%2B-339933.svg)](https://nodejs.org/)
 
-> React/TypeScript frontend for **DARE** — the Dietrich Analysis Research Education Platform.
+> React/TypeScript frontend for the **Dietrich Analysis Research Education (DARE) Platform**.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@
 
 ## What is DARE?
 
-DARE (Dietrich Analysis Research Education Platform) is an open-source, multi-LLM research and
+The Dietrich Analysis Research Education (DARE) Platform is an open-source, multi-LLM research and
 conversation platform. It provides a single, vendor-agnostic interface to OpenAI, Anthropic Claude,
 Google Gemini, and self-hosted LLaMA models, with file-grounded retrieval (RAG), Model Context
 Protocol (MCP) tool integration, visual multi-step workflows, and real-time streaming. DARE is
@@ -30,7 +30,7 @@ built for researchers and institutions that need more than a chatbot — documen
 reproducible workflows, and per-user usage tracking in one place.
 
 **This repository is the DARE web frontend** — the primary user interface for the platform. It
-connects to the [DARE backend](../dare-backend/) over REST and Socket.IO and gives users:
+connects to the [DARE backend](https://github.com/cmudco/dare-backend/) over REST and Socket.IO and gives users:
 
 - **Multi-LLM chat** — streaming conversations with OpenAI, Anthropic, Google, and self-hosted LLaMA models
 - **File-grounded RAG** — upload documents and reference them in chat
@@ -122,7 +122,12 @@ npm run preview     # serves ./dist locally for verification
 
 A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 
-### Available scripts
+## Prerequisites
+
+- Node.js 18+
+- A running [DARE backend](https://github.com/cmudco/dare-backend/) (default `http://localhost:8000`)
+
+## Available Scripts
 
 | Command           | Description                            |
 | ----------------- | -------------------------------------- |
@@ -168,9 +173,9 @@ A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 
 ## What is not included in this repo?
 
-- [dare-backend](../dare-backend/) — the Django REST + Socket.IO backend this frontend depends on (run it separately)
-- [socraticbooks-react](../../socraticbooks/socraticbooks-react/) — the SocraticBooks frontend
-- [socraticbooks-backend](../../socraticbooks/socraticbooks-backend/) — the SocraticBooks backend that proxies to DARE
+- [dare-backend](https://github.com/cmudco/dare-backend/) — the Django REST + Socket.IO backend this frontend depends on (run it separately)
+- [socraticbooks-frontend](https://github.com/cmudco/socraticbots-frontend/) — the SocraticBooks frontend (Private Repo for now)
+- [socraticbooks-backend](https://github.com/cmudco/socraticbots-backend/) — the SocraticBooks backend that proxies to DARE (Private Repo for now)
 
 ## Stay in touch
 
@@ -180,19 +185,18 @@ A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 
 ## Acknowledgements
 
-DARE is developed at the Dietrich College of Humanities and Social Sciences, Carnegie Mellon University.
+DARE is an Open Forum for AI (OFAI) initiative, Carnegie Mellon University Libraries.
 
-"DARE" (Dietrich Analysis Research Education Platform) and "SocraticBots" are trademarks of Carnegie
-Mellon University. For trademark, licensing, or general inquiries, contact the project team at
-vks@andrew.cmu.edu.
+The DARE name and marks are owned by Carnegie Mellon University. Use of the name, wordmark,
+Scotty dog mark, header lockup, and footer badge is governed by the
+[DARE Brand Guidelines & Usage Policy](BRAND_GUIDELINES.md), independently of the software license.
 
 This software integrates with third-party APIs (Anthropic, OpenAI, Google, and others); use of those
 APIs is subject to each provider's own Terms of Service.
 
 ## Contributors
 
-DARE is built and maintained by the team at the Dietrich College of Humanities and Social Sciences,
-Carnegie Mellon University.
+DARE is built and maintained by contributors at Carnegie Mellon University and in the open-source community.
 
 **Creators**
 
@@ -222,5 +226,7 @@ Carnegie Mellon University.
 ## License
 
 This project is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).
+The software license does not grant rights to the DARE name or marks; see the
+[DARE Brand Guidelines & Usage Policy](BRAND_GUIDELINES.md).
 
 See the [LICENSE](LICENSE) file for the full license text, or visit <https://www.gnu.org/licenses/agpl-3.0.en.html>.

@@ -10,7 +10,6 @@ import {
   Waypoints,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { PROJECT } from '../mockData'
 import type { NavSection } from '../types'
 
 interface NavDef {
@@ -78,10 +77,10 @@ const WorkspaceShell = ({
               <span>Research Workspace</span>
             </div>
             <h1 className='mt-0.5 truncate text-lg font-semibold tracking-tight'>
-              {projectTitle ?? PROJECT.title}
+              {projectTitle ?? 'Research project'}
             </h1>
             <p className='truncate text-xs text-muted-foreground'>
-              {projectMeta ?? `${PROJECT.scholar} · ${PROJECT.field}`}
+              {projectMeta ?? ''}
             </p>
           </div>
 
