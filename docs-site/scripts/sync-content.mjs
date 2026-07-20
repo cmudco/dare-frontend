@@ -14,7 +14,7 @@ const pages = [
     to: 'platform-overview.mdx',
     title: 'Platform Overview',
     description:
-      'What DARE provides to users and how the frontend fits into the Dietrich Analysis Research Education Platform.',
+      'What the Dietrich Analysis Research Education (DARE) Platform provides and how the frontend fits into it.',
   },
   {
     from: path.join(backendRoot, 'docs', 'getting-started.md'),
@@ -27,7 +27,7 @@ const pages = [
     to: 'frontend/index.mdx',
     title: 'Frontend Overview',
     description:
-      'React, TypeScript, routing, state, and UI structure for the Dare frontend.',
+      'React, TypeScript, routing, state, and UI structure for the Dietrich Analysis Research Education (DARE) Platform frontend.',
   },
   {
     from: path.join(frontendRoot, 'INSTALL.md'),
@@ -164,10 +164,11 @@ const pages = [
       'Human-readable REST API overview and links to interactive Swagger and Redoc.',
   },
   {
-    from: path.join(backendRoot, 'BRAND.md'),
+    from: path.join(frontendRoot, 'BRAND_GUIDELINES.md'),
     to: 'reference/brand.mdx',
-    title: 'Brand Usage',
-    description: 'DARE brand and trademark usage policy.',
+    title: 'DARE Brand Guidelines & Usage Policy',
+    description:
+      'Version 0.1 of the Dietrich Analysis Research Education (DARE) Platform brand and usage policy.',
   },
   {
     from: path.join(frontendRoot, 'LICENSE'),
@@ -278,6 +279,7 @@ function cleanMarkdown(markdown, currentSource) {
     .replaceAll('http://localhost:8000/api/docs/', '/api/docs/')
     .replaceAll('http://localhost:8000/api/redoc/', '/api/redoc/')
     .replaceAll('http://localhost:8000/api/schema/', '/api/schema/')
+    .replaceAll('](docs-site/public/brand/', '](/brand/')
     .replace(
       /SocraticBooks-DARE Proxy Contract/g,
       'SocraticBooks-DARE Proxy Contract (planned)'
@@ -291,6 +293,8 @@ async function writePage(page) {
     page.format === 'license'
       ? [
           'The DARE frontend and backend are licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only).',
+          '',
+          'The software license and the [DARE Brand Guidelines & Usage Policy](/docs/reference/brand) are independent instruments. The software license governs the code; it does not grant rights to the DARE name or marks.',
           '',
           '## Full license text',
           '',
@@ -311,14 +315,14 @@ async function writeStaticPages() {
     path.join(contentRoot, 'index.mdx'),
     `---
 title: "DARE Documentation"
-description: "Client guides and technical references for the Dietrich Analysis Research Education Platform."
+description: "Client guides and technical references for the Dietrich Analysis Research Education (DARE) Platform."
 ---
 
 <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-fd-card via-fd-card to-fd-muted p-8">
   <div className="dare-hero-grid absolute inset-0" />
   <div className="relative max-w-3xl">
     <p className="mb-3 text-sm font-medium uppercase tracking-wider text-fd-muted-foreground">
-      Dietrich Analysis Research Education Platform
+      Dietrich Analysis Research Education (DARE) Platform
     </p>
     <h2 className="mb-4 text-3xl font-semibold tracking-tight md:text-5xl">
       Product guides and technical references for <span className="dare-gradient-text">DARE</span>.
