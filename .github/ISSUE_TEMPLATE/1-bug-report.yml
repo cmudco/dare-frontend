@@ -1,0 +1,54 @@
+name: Bug Report
+description: Something isn't working as intended
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please use a descriptive title, and check
+        [existing issues](https://github.com/cmudco/dare-frontend/issues?q=label%3Abug)
+        first to avoid duplicates.
+
+        **Security vulnerabilities:** do **not** report them here — see
+        [SECURITY.md](https://github.com/cmudco/dare-frontend/blob/main/SECURITY.md).
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Minimal, numbered steps. Detail each click, input, or menu selection.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Expected behavior
+      placeholder: "Ex: the conversation list refreshes after deleting a chat"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Actual behavior
+      placeholder: "Ex: the deleted chat stays visible until a hard refresh"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Console / network output
+      description: Relevant browser console errors or request/response excerpts. **Redact tokens.**
+      render: shell
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: Browser and OS
+      placeholder: "Chrome 138, macOS 15.1"
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Additional details
+      description: "Screenshots or recordings are especially helpful for layout and interaction issues — you can drag and drop them here."
+    validations:
+      required: false
