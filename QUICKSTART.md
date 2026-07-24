@@ -11,13 +11,17 @@ For deploying to a server, see [DEPLOYMENT.md](DEPLOYMENT.md).
 ## Run it
 
 ```bash
-# 1. Install dependencies
+# 1. Clone the repo
+git clone https://github.com/cmudco/dare-frontend.git
+cd dare-frontend
+
+# 2. Install dependencies
 npm install                # or: npm ci
 
-# 2. Configure environment
+# 3. Configure environment
 cp .env.example .env       # defaults already point at a backend on http://localhost:8000
 
-# 3. Start the dev server (Vite, port 5173)
+# 4. Start the dev server (Vite, port 5173)
 npm run dev
 ```
 
