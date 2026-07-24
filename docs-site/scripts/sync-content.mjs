@@ -30,11 +30,18 @@ const pages = [
       'React, TypeScript, routing, state, and UI structure for the Dietrich Analysis Research Education (DARE) Platform frontend.',
   },
   {
-    from: path.join(frontendRoot, 'INSTALL.md'),
-    to: 'frontend/install.mdx',
-    title: 'Frontend Installation',
+    from: path.join(frontendRoot, 'QUICKSTART.md'),
+    to: 'frontend/quickstart.mdx',
+    title: 'Frontend Quick Start',
     description:
-      'Install, configure, build, and serve the frontend application.',
+      'Run the frontend locally: install, set two env vars, and start the dev server.',
+  },
+  {
+    from: path.join(frontendRoot, 'DEPLOYMENT.md'),
+    to: 'frontend/deployment.mdx',
+    title: 'Frontend Deployment',
+    description:
+      'Deploy to production: build the static bundle and serve dist/, with an optional Docker recipe.',
   },
   {
     from: path.join(frontendRoot, 'docs', 'configuration.md'),
@@ -77,11 +84,18 @@ const pages = [
     description: 'Django REST and Socket.IO backend overview.',
   },
   {
+    from: path.join(backendRoot, 'QUICKSTART.md'),
+    to: 'backend/quickstart.mdx',
+    title: 'Backend Quick Start',
+    description:
+      'Run the backend locally: Docker one-command stack, or local Python in a venv.',
+  },
+  {
     from: path.join(backendRoot, 'DEPLOYMENT.md'),
-    to: 'backend/install.mdx',
+    to: 'backend/deployment.mdx',
     title: 'Backend Deployment',
     description:
-      'Backend deployment paths, service dependencies, and troubleshooting.',
+      'Production and server deployment: Docker and bare-metal paths, reverse proxy, and troubleshooting.',
   },
   {
     from: path.join(backendRoot, 'CONTRIBUTING.md'),
@@ -430,7 +444,8 @@ async function writeMeta() {
         defaultOpen: true,
         pages: [
           'index',
-          'install',
+          'quickstart',
+          'deployment',
           'configuration',
           'architecture',
           'contributing',
@@ -452,7 +467,8 @@ async function writeMeta() {
         pages: [
           'index',
           'readme',
-          'install',
+          'quickstart',
+          'deployment',
           'contributing',
           'admin-guide',
           'configuration',

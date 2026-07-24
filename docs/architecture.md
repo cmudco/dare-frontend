@@ -147,7 +147,7 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 - Route-level code splitting (`React.lazy` + `Suspense`).
 - `useMemo` / `useCallback` for expensive renders or stable references passed to memoized children.
 - Virtualization (`react-virtual` or similar) for long lists where applicable.
-- Vite's default asset fingerprinting + immutable cache headers in production (see [INSTALL.md](../INSTALL.md)).
+- Vite's default asset fingerprinting + immutable cache headers in production (see [DEPLOYMENT.md](../DEPLOYMENT.md)).
 
 ## Build & Bundle
 
