@@ -90,37 +90,20 @@ API layer talks REST to the backend, and Socket.IO middleware streams chat and w
 
 ## Quick Start
 
-The frontend is a static SPA. For local development, use the Vite dev server. For production, build
-once and serve the generated `dist/` bundle from any static host.
+Get the frontend running locally in about two minutes:
+
+```bash
+git clone https://github.com/cmudco/dare-frontend.git
+cd dare-frontend
+npm install
+cp .env.example .env      # defaults assume a backend on http://localhost:8000
+npm run dev               # Vite dev server on http://localhost:5173
+```
 
 **Prerequisites:** Node.js 18+ and a running [DARE backend](../dare-backend/) (default `http://localhost:8000`).
 
-```bash
-# 1. Clone (or pull) the repo
-git clone <repo-url> dare-frontend && cd dare-frontend
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure environment
-cp .env.example .env
-# Edit .env — point VITE_DJANGO_BACKEND_URL and VITE_WEBSOCKET_URL at your backend.
-# Defaults assume backend on http://localhost:8000.
-
-# 4. Run the dev server (Vite, port 5173)
-npm run dev
-```
-
-Then open http://localhost:5173. The dev server hot-reloads on changes.
-
-For a production build:
-
-```bash
-npm run build       # produces ./dist
-npm run preview     # serves ./dist locally for verification
-```
-
-A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
+See **[QUICKSTART.md](QUICKSTART.md)** for the full local-setup walkthrough, and
+**[DEPLOYMENT.md](DEPLOYMENT.md)** for building and serving `dist/` in production.
 
 ## Prerequisites
 
@@ -141,7 +124,8 @@ A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
 
 | Doc                                            | What's in it                                                         |
 | ---------------------------------------------- | -------------------------------------------------------------------- |
-| [INSTALL.md](INSTALL.md)                       | Full deployment guide — Docker and bare-metal static hosting         |
+| [QUICKSTART.md](QUICKSTART.md)                 | Run the frontend locally — clone, install, configure, `npm run dev`  |
+| [DEPLOYMENT.md](DEPLOYMENT.md)                 | Production deployment — build and serve `dist/`, with an optional Docker recipe |
 | [docs/configuration.md](docs/configuration.md) | Every Vite environment variable, with type, default, and description |
 | [docs/architecture.md](docs/architecture.md)   | Component diagram, state management, Socket.IO integration           |
 | [CONTRIBUTING.md](CONTRIBUTING.md)             | Issues, pull requests, coding standards                              |
@@ -169,7 +153,7 @@ A minimal Docker recipe is in [INSTALL.md](INSTALL.md).
   - `redux/` — store, slices, async thunks, Socket.IO middleware, types, and workflow-canvas state
   - `pages/`, `routes/`, `schemas/` (Zod), `config/`, and `utils/`
 - `docs/` — architecture, configuration, and project rules
-- Supporting docs — `INSTALL.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `SECURITY.md`
+- Supporting docs — `QUICKSTART.md`, `DEPLOYMENT.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `SECURITY.md`
 
 ## What is not included in this repo?
 
