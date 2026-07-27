@@ -8,6 +8,7 @@ import {
   Trophy,
 } from 'lucide-react'
 import { RetrievalTrace, RetrievalTraceEntry } from '@/redux/types/conversation'
+import { StepHeader, TimelineStep } from './Timeline'
 
 interface RetrievalTraceStagesProps {
   trace: RetrievalTrace
@@ -15,43 +16,6 @@ interface RetrievalTraceStagesProps {
 
 const fmtScore = (score: number): string =>
   Math.abs(score) < 1 ? score.toFixed(3) : score.toFixed(2)
-
-/**
- * One node on the vertical timeline rail: a dotted icon on the left, the
- * stage's content on the right, and a connector line down to the next node
- * (suppressed on the last step).
- */
-const TraceStep: React.FC<{
-  icon: React.ReactNode
-  isLast: boolean
-  children: React.ReactNode
-}> = ({ icon, isLast, children }) => (
-  <div className='flex min-w-0 gap-3 overflow-hidden'>
-    <div className='flex flex-col items-center'>
-      <div className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground'>
-        {icon}
-      </div>
-      {!isLast && <div className='mt-1 w-px flex-1 bg-border' />}
-    </div>
-    <div
-      className={`min-w-0 flex-1 overflow-hidden pt-0.5 ${
-        isLast ? '' : 'pb-4'
-      }`}
-    >
-      {children}
-    </div>
-  </div>
-)
-
-const StepHeader: React.FC<{
-  title: string
-  children?: React.ReactNode
-}> = ({ title, children }) => (
-  <div className='flex min-w-0 flex-wrap items-center gap-1.5 text-xs font-medium [overflow-wrap:anywhere] break-words text-foreground'>
-    {title}
-    {children}
-  </div>
-)
 
 const EntryRow: React.FC<{
   entry: RetrievalTraceEntry
@@ -215,13 +179,13 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
   return (
     <div className='min-w-0 overflow-hidden'>
       {steps.map((step, i) => (
-        <TraceStep
+        <TimelineStep
           key={step.key}
           icon={step.icon}
           isLast={i === steps.length - 1}
         >
           {step.content}
-        </TraceStep>
+        </TimelineStep>
       ))}
     </div>
   )

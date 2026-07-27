@@ -2,9 +2,20 @@ import {
   SenderType,
   FeedbackType,
   ConversationTab,
+  RagMode,
 } from '@/utils/constants/conversation'
 import type { RelatableStats } from '@/redux/types/billing'
-import { ToolCallStatus, MessageContentType } from '@/utils/constants/dareTools'
+import {
+  ToolCallStatus,
+  ToolCallOrigin,
+  ToolLoopState,
+  MessageContentType,
+} from '@/utils/constants/dareTools'
+import type {
+  DareToolResult,
+  McpToolResult,
+  ProviderToolResult,
+} from '@/redux/types/dareToolResults'
 import type {
   ImageSizeType,
   ImageQualityType,
@@ -26,7 +37,9 @@ export enum VoiceRecordingState {
   PROCESSING = 'processing',
 }
 
-export type RagMode = 'naive' | 'advanced'
+// RagMode is now defined in @/utils/constants/conversation
+// Re-export for backwards compatibility
+export { RagMode }
 
 export interface Conversation {
   conversationId: string
@@ -116,7 +129,10 @@ export interface Message {
   generatedImage?: GeneratedImage
   generatedTranscription?: GeneratedTranscription
   artifactId?: number
-  mcpToolCalls?: ToolCall[]
+  artifactIds?: number[]
+  toolCalls?: ToolCall[]
+  toolLoopState?: ToolLoopState
+  toolLoopNotice?: string
   contentType?: MessageContentType
   contentMetadata?: Record<string, unknown>
   /**
@@ -125,6 +141,13 @@ export interface Message {
    * per source (documents, shared libraries) when several were.
    */
   retrievalTrace?: RetrievalTrace | RetrievalTraceEnvelope | null
+  /**
+   * Timed context-assembly trace for the turn: what went into the prompt
+   * (files, retrieval, memory, history, …) before the model started
+   * answering. Arrives live as a `context_trace` socket event and persists
+   * on the message for refresh.
+   */
+  contextTrace?: ContextTrace | null
 }
 
 /** Multiple traces on one message — one per retrieval source. */
@@ -175,6 +198,44 @@ export interface RetrievalTrace {
   finalSize: number
 }
 
+/** One timed stage of a turn's context assembly. */
+export interface ContextTraceStage {
+  kind:
+    | 'prompt'
+    | 'referencedConversations'
+    | 'summaries'
+    | 'files'
+    | 'retrieval'
+    | 'memory'
+    | 'history'
+    | 'media'
+    | 'tools'
+  ms: number
+  /** Generic item count (referenced conversations, memories, media, tools). */
+  count?: number
+  /** Injected characters (prompt, referenced conversations). */
+  chars?: number
+  /** History: turns kept after filtering, and the configured limit. */
+  turns?: number
+  limit?: number | null
+  /** Files read in full. */
+  files?: { name: string; chars: number }[]
+  /** Retrieval: settings used and the per-source pipeline traces. */
+  mode?: string
+  threshold?: number
+  topK?: number
+  injectedBlocks?: number
+  sources?: RetrievalTrace[]
+  /** Naive mode: kept snippets (no pipeline trace exists to embed). */
+  snippets?: { ref: string; score: number; preview: string }[]
+}
+
+/** How the turn's prompt was assembled, stage by stage. */
+export interface ContextTrace {
+  totalMs: number
+  stages: ContextTraceStage[]
+}
+
 /** Check if a message was sent by the user (not the AI). */
 export const isSenderMessage = (msg: Message): boolean =>
   msg.senderType === SenderType.PLAYER
@@ -206,19 +267,28 @@ export interface ToolCall {
   serverSlug: string
 
   /** Execution origin: DARE internal, MCP external, or provider-native */
-  origin: import('@/utils/constants/dareTools').ToolCallOrigin
+  origin: ToolCallOrigin
 
   /** Current execution status */
   status: ToolCallStatus
 
+  /** 1-based tool-loop round this call belongs to */
+  round: number
+
+  /** Characters of arguments streamed so far (live, while status is pending) */
+  argsChars?: number
+
+  /** Final parsed arguments the tool was invoked with */
+  arguments?: Record<string, unknown>
+
   /** Result from DARE internal tools */
-  dareResult?: import('@/redux/types/dareToolResults').DareToolResult
+  dareResult?: DareToolResult
 
   /** Result from MCP external tools */
-  mcpResult?: import('@/redux/types/dareToolResults').McpToolResult
+  mcpResult?: McpToolResult
 
   /** Result from provider-native tools (for example Anthropic web_fetch) */
-  providerResult?: import('@/redux/types/dareToolResults').ProviderToolResult
+  providerResult?: ProviderToolResult
 
   /** Error message if execution failed */
   error?: string
