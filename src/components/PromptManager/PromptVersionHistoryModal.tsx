@@ -93,7 +93,7 @@ const PromptVersionHistoryModal: React.FC<PromptVersionHistoryModalProps> = ({
                   {selectedVersion.content ? (
                     isHtmlContent(selectedVersion.content) ? (
                       <div
-                        className='prose prose-sm max-w-none'
+                        className='prose prose-sm max-w-none wrap-anywhere [&_pre]:whitespace-pre-wrap'
                         dangerouslySetInnerHTML={{
                           __html: selectedVersion.content,
                         }}

@@ -105,7 +105,7 @@ const PromptDetailsModal: React.FC<PromptDetailsModalProps> = ({
             <div className='max-h-80 overflow-y-auto rounded-lg border border-border bg-muted/20 p-4'>
               {isHtmlContent(prompt.content) ? (
                 <div
-                  className='prose prose-sm max-w-none dark:prose-invert'
+                  className='prose prose-sm max-w-none wrap-anywhere dark:prose-invert [&_pre]:whitespace-pre-wrap'
                   dangerouslySetInnerHTML={{ __html: prompt.content }}
                 />
               ) : isPlainTextContent(prompt.content) ? (
