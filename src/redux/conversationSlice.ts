@@ -33,11 +33,13 @@ import {
   AudioTranscriptionSettings,
   ToolCallStatus,
   WalletMeta,
+  RagMode,
 } from './types/conversation'
 import { ServerSlug, ToolCallOrigin } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
+import { SharedLibrary } from './types/library'
 import { Prompt } from './types/prompt'
 import {
   selectAppropriateModel,
@@ -113,6 +115,18 @@ export const conversationSlice = createSlice({
         )
       }
     },
+    loadSelectedLibrariesFromIds(
+      state,
+      action: PayloadAction<{
+        libraries: SharedLibrary[]
+        selectedLibraryIds: number[]
+      }>
+    ) {
+      const { libraries, selectedLibraryIds } = action.payload
+      state.selectedLibraries = libraries.filter((library) =>
+        selectedLibraryIds.includes(library.id)
+      )
+    },
     updateSelectedModel(state, action: PayloadAction<string | null>) {
       state.selectedModel = action.payload
       const selectedEntry = state.pickerEntries.find(
@@ -140,6 +154,9 @@ export const conversationSlice = createSlice({
     },
     updateSelectedFolders(state, action: PayloadAction<MyFolder[]>) {
       state.selectedFolders = action.payload
+    },
+    updateSelectedLibraries(state, action: PayloadAction<SharedLibrary[]>) {
+      state.selectedLibraries = action.payload
     },
     updateMemoryEnabled(state, action: PayloadAction<boolean>) {
       state.memoryEnabled = action.payload
@@ -197,6 +214,11 @@ export const conversationSlice = createSlice({
     updateDocumentSimilarityThreshold(state, action: PayloadAction<number>) {
       if (state.activeConversation) {
         state.activeConversation.documentSimilarityThreshold = action.payload
+      }
+    },
+    updateRagMode(state, action: PayloadAction<RagMode>) {
+      if (state.activeConversation) {
+        state.activeConversation.ragMode = action.payload
       }
     },
     updateHistoryLimit(state, action: PayloadAction<number>) {
@@ -391,6 +413,7 @@ export const conversationSlice = createSlice({
       state.selectedEmbeddings = []
       state.selectedTags = []
       state.selectedFolders = []
+      state.selectedLibraries = []
       state.memoryEnabled = false
       state.conversationInput = ''
       state.referencedConversations = []
@@ -1173,6 +1196,7 @@ export const {
   updateSelectedMediaFiles,
   updateSelectedTags,
   updateSelectedFolders,
+  updateSelectedLibraries,
   updateMemoryEnabled,
   updateTemperature,
   updateEffort,
@@ -1188,6 +1212,7 @@ export const {
   setIsTranscribingAudio,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
+  updateRagMode,
   toggleDropdown,
   setHoveredModel,
   updateConversationInput,
@@ -1207,6 +1232,7 @@ export const {
   updateReferencedConversationHistoryLimit,
   updateReferencedSummaries,
   loadSelectedFilesFromIds,
+  loadSelectedLibrariesFromIds,
   saveDraftForConversation,
   loadDraftForConversation,
   clearDraftForConversation,

@@ -18,7 +18,10 @@ import FolderTable from '../FolderManager/FolderTable'
 import MoveFilesModal from './MoveFilesModal'
 import ShareFileModal from './ShareFileModal'
 import SharedFilesTable from './SharedFilesTable'
+import SharedLibraries from './SharedLibraries'
+import ViewToggle from './ViewToggle'
 import { Badge } from '../ui/badge'
+import { FileView } from '../../redux/types/files'
 
 const FileManagerLayout = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -37,11 +40,11 @@ const FileManagerLayout = () => {
     }
   }, [dispatch, isSyftboxUser])
 
-  const handleToggleView = (view: 'files' | 'folders' | 'media') => {
+  const handleToggleView = (view: FileView) => {
     dispatch(setCurrentView(view))
     if (view === 'files' || view === 'media') {
       dispatch(getFiles())
-    } else {
+    } else if (view === 'folders') {
       dispatch(getFolders())
     }
   }
@@ -112,6 +115,14 @@ const FileManagerLayout = () => {
               <>
                 <FileHeader onToggleView={handleToggleView} />
                 <FileTable />
+              </>
+            )}
+            {currentView === 'libraries' && (
+              <>
+                <div className='px-2.5'>
+                  <ViewToggle onToggleView={handleToggleView} />
+                </div>
+                <SharedLibraries />
               </>
             )}
           </div>

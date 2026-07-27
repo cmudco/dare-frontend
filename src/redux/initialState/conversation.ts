@@ -2,6 +2,7 @@ import { ConversationState } from '../types/conversation'
 import { ConversationTab } from '../../utils/constants/conversation'
 import { MyFile, MyFolder } from '../types/files'
 import { Tag } from '../types/tags'
+import { SharedLibrary } from '../types/library'
 import { loadDraftsFromLocalStorage } from '../../utils/draftStorage'
 import { DEFAULT_IMAGE_SETTINGS } from '../../utils/constants/imageGeneration'
 import { DEFAULT_TRANSCRIPTION_SETTINGS } from '../../utils/constants/audioTranscription'
@@ -22,6 +23,7 @@ export const initialState: ConversationState = {
   selectedMediaFiles: [] as MyFile[], // NEW: Persistent media files
   selectedTags: [] as Tag[],
   selectedFolders: [] as MyFolder[],
+  selectedLibraries: [] as SharedLibrary[],
   memoryEnabled: false,
   selectedConversations: [],
   referencedConversations: [],

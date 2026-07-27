@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Check,
@@ -9,6 +9,7 @@ import {
   Folder,
   Image,
   Users,
+  Library,
 } from 'lucide-react'
 import type { RootState, AppDispatch } from '@/redux/store'
 import {
@@ -17,10 +18,17 @@ import {
   updateSelectedMediaFiles,
   updateSelectedTags,
   updateSelectedFolders,
+  updateSelectedLibraries,
 } from '@/redux/conversationSlice'
+import {
+  selectAddedLibraries,
+  selectLibrariesLoaded,
+} from '@/redux/librarySlice'
+import { getSharedLibraries } from '@/redux/asyncThunks/library'
 import { updateConversationSelectedIds } from '@/redux/asyncThunks/conversation'
 import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { Tag } from '@/redux/types/tags'
+import type { SharedLibrary } from '@/redux/types/library'
 import { useDebounce } from '@/utils/debounce'
 import { useOwnerFiles } from '@/hooks/useOwnerFiles'
 import { getConversationFileOwnerId } from '@/hooks/useConversationFiles'
@@ -59,6 +67,11 @@ const ConversationFileSelect: React.FC = () => {
   const selectedFolders = useSelector(
     (state: RootState) => state.conversation.selectedFolders
   )
+  const selectedLibraries = useSelector(
+    (state: RootState) => state.conversation.selectedLibraries
+  )
+  const addedLibraries = useSelector(selectAddedLibraries)
+  const librariesLoaded = useSelector(selectLibrariesLoaded)
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
@@ -67,9 +80,20 @@ const ConversationFileSelect: React.FC = () => {
   const [open, setOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectionDirty, setSelectionDirty] = useState(false)
   const [activeTab, setActiveTab] = useState<
-    'files' | 'embeddings' | 'media' | 'tags' | 'folders'
+    'files' | 'embeddings' | 'media' | 'tags' | 'folders' | 'libraries'
   >('embeddings')
+
+  useEffect(() => {
+    if (open && !librariesLoaded) {
+      dispatch(getSharedLibraries())
+    }
+  }, [open, librariesLoaded, dispatch])
+
+  useEffect(() => {
+    setSelectionDirty(false)
+  }, [activeConversation?.conversationId])
 
   // Fetch and merge owner files for forked or shared conversations
   const effectiveOwnerId = getConversationFileOwnerId(activeConversation)
@@ -82,12 +106,17 @@ const ConversationFileSelect: React.FC = () => {
   )
 
   const saveSelectedIds = useCallback(() => {
+    if (!selectionDirty) {
+      return
+    }
+
     // Only save selected IDs if user owns the conversation
     // Skip for shared conversations viewed from library (before forking)
     if (activeConversation && activeConversation.isOwner !== false) {
       const selectedFileIds = selectedFiles.map((file) => file.id)
       const selectedEmbeddingIds = selectedEmbeddings.map((file) => file.id)
       const selectedMediaIds = selectedMediaFiles.map((file) => file.id)
+      const selectedLibraryIds = selectedLibraries.map((library) => library.id)
 
       dispatch(
         updateConversationSelectedIds({
@@ -95,6 +124,7 @@ const ConversationFileSelect: React.FC = () => {
           selectedFileIds,
           selectedEmbeddingIds,
           selectedMediaIds,
+          selectedLibraryIds,
         })
       )
     }
@@ -104,12 +134,16 @@ const ConversationFileSelect: React.FC = () => {
     selectedFiles,
     selectedEmbeddings,
     selectedMediaFiles,
+    selectedLibraries,
+    selectionDirty,
   ])
 
   useDebounce(saveSelectedIds, 1000, [
     selectedFiles,
     selectedEmbeddings,
     selectedMediaFiles,
+    selectedLibraries,
+    selectionDirty,
     activeConversation?.conversationId,
   ])
 
@@ -155,10 +189,17 @@ const ConversationFileSelect: React.FC = () => {
     )
   }, [folders, searchQuery])
 
+  const filteredLibraries = useMemo(() => {
+    return addedLibraries.filter((library) =>
+      library.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  }, [addedLibraries, searchQuery])
+
   const handleToggleFile = (file: MyFile) => {
     const newSelectedFiles = selectedFiles.some((f) => f.id === file.id)
       ? selectedFiles.filter((f) => f.id !== file.id)
       : [...selectedFiles, file]
+    setSelectionDirty(true)
     dispatch(updateSelectedFiles(newSelectedFiles))
   }
 
@@ -168,6 +209,7 @@ const ConversationFileSelect: React.FC = () => {
     )
       ? selectedEmbeddings.filter((f) => f.id !== file.id)
       : [...selectedEmbeddings, file]
+    setSelectionDirty(true)
     dispatch(updateSelectedEmbeddings(newSelectedEmbeddings))
   }
 
@@ -177,6 +219,7 @@ const ConversationFileSelect: React.FC = () => {
     )
       ? selectedMediaFiles.filter((f) => f.id !== file.id)
       : [...selectedMediaFiles, file]
+    setSelectionDirty(true)
     dispatch(updateSelectedMediaFiles(newSelectedMediaFiles))
   }
 
@@ -184,6 +227,7 @@ const ConversationFileSelect: React.FC = () => {
     const newSelectedTags = selectedTags.some((t) => t.id === tag.id)
       ? selectedTags.filter((t) => t.id !== tag.id)
       : [...selectedTags, tag]
+    setSelectionDirty(true)
     dispatch(updateSelectedTags(newSelectedTags))
   }
 
@@ -191,15 +235,42 @@ const ConversationFileSelect: React.FC = () => {
     const newSelectedFolders = selectedFolders.some((f) => f.id === folder.id)
       ? selectedFolders.filter((f) => f.id !== folder.id)
       : [...selectedFolders, folder]
+    setSelectionDirty(true)
     dispatch(updateSelectedFolders(newSelectedFolders))
   }
 
+  const handleToggleLibrary = (library: SharedLibrary) => {
+    const newSelectedLibraries = selectedLibraries.some(
+      (l) => l.id === library.id
+    )
+      ? selectedLibraries.filter((l) => l.id !== library.id)
+      : [...selectedLibraries, library]
+    setSelectionDirty(true)
+    dispatch(updateSelectedLibraries(newSelectedLibraries))
+  }
+
+  const selectionCounts = [
+    { n: selectedEmbeddings.length, label: 'embeddings' },
+    { n: selectedFiles.length, label: 'files' },
+    { n: selectedMediaFiles.length, label: 'media' },
+    { n: selectedTags.length, label: 'tags' },
+    { n: selectedFolders.length, label: 'folders' },
+    { n: selectedLibraries.length, label: 'libraries' },
+  ]
+  const totalSelected = selectionCounts.reduce((sum, c) => sum + c.n, 0)
+  const selectionSummary = selectionCounts
+    .filter((c) => c.n > 0)
+    .map((c) => `${c.n} ${c.label}`)
+    .join(' · ')
+
   const clearSelections = () => {
+    setSelectionDirty(true)
     dispatch(updateSelectedFiles([]))
     dispatch(updateSelectedEmbeddings([]))
     dispatch(updateSelectedMediaFiles([]))
     dispatch(updateSelectedTags([]))
     dispatch(updateSelectedFolders([]))
+    dispatch(updateSelectedLibraries([]))
   }
 
   return (
@@ -259,7 +330,7 @@ const ConversationFileSelect: React.FC = () => {
                 )
               }
             >
-              <TabsList className='grid w-full grid-cols-5 border-border bg-muted/50'>
+              <TabsList className='grid w-full grid-cols-6 border-border bg-muted/50'>
                 <TabsTrigger
                   value='embeddings'
                   className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
@@ -289,6 +360,12 @@ const ConversationFileSelect: React.FC = () => {
                   className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Folders
+                </TabsTrigger>
+                <TabsTrigger
+                  value='libraries'
+                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
+                >
+                  Libraries
                 </TabsTrigger>
               </TabsList>
 
@@ -513,28 +590,80 @@ const ConversationFileSelect: React.FC = () => {
                   )}
                 </div>
               </TabsContent>
+
+              <TabsContent value='libraries' className='mt-4'>
+                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                  {filteredLibraries.map((library) => {
+                    const isSelected = selectedLibraries.some(
+                      (l) => l.id === library.id
+                    )
+                    return (
+                      <div
+                        key={library.id}
+                        onClick={() => handleToggleLibrary(library)}
+                        className={`flex items-center rounded-md p-2 transition-colors ${
+                          isSelected
+                            ? 'cursor-pointer bg-accent text-accent-foreground'
+                            : 'cursor-pointer text-foreground hover:bg-accent hover:text-accent-foreground'
+                        }`}
+                      >
+                        <div
+                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
+                            isSelected
+                              ? 'border-primary bg-primary'
+                              : 'border-input hover:border-muted-foreground'
+                          }`}
+                        >
+                          {isSelected && (
+                            <Check className='h-3 w-3 text-primary-foreground' />
+                          )}
+                        </div>
+                        <Library className='mr-2 h-4 w-4 text-muted-foreground' />
+                        <span
+                          className={`flex-1 text-sm ${isSelected ? 'font-medium text-primary' : 'text-foreground'}`}
+                        >
+                          {library.name}
+                        </span>
+                        <span className='ml-2 text-xs text-muted-foreground'>
+                          {library.curator}
+                        </span>
+                      </div>
+                    )
+                  })}
+                  {filteredLibraries.length === 0 && (
+                    <p className='py-4 text-center text-muted-foreground'>
+                      No libraries added yet
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
             </Tabs>
 
             <Separator />
 
-            <div className='flex items-center justify-between'>
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={clearSelections}
-                className='text-foreground hover:bg-accent'
-              >
-                Clear
-              </Button>
-              <Button
-                size='sm'
-                onClick={() => setOpen(false)}
-                className='bg-primary text-primary-foreground hover:bg-primary/90'
-              >
-                Done ({selectedEmbeddings.length} embeddings,{' '}
-                {selectedFiles.length} files, {selectedMediaFiles.length} media,{' '}
-                {selectedTags.length} tags, {selectedFolders.length} folders)
-              </Button>
+            <div className='space-y-2'>
+              {totalSelected > 0 && (
+                <p className='px-1 text-xs text-muted-foreground'>
+                  {selectionSummary}
+                </p>
+              )}
+              <div className='flex items-center justify-between'>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={clearSelections}
+                  className='text-foreground hover:bg-accent'
+                >
+                  Clear
+                </Button>
+                <Button
+                  size='sm'
+                  onClick={() => setOpen(false)}
+                  className='bg-primary text-primary-foreground hover:bg-primary/90'
+                >
+                  Done{totalSelected > 0 ? ` (${totalSelected})` : ''}
+                </Button>
+              </div>
             </div>
           </div>
         </PopoverContent>

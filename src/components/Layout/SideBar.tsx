@@ -161,7 +161,7 @@ const Sidebar = () => {
   const menuItems: MenuItem[] = [
     { name: 'Dashboard', icon: RectangleGroupIcon, path: '/dashboard' },
     { name: 'Conversations', icon: ChatBubbleLeftIcon, path: '/conversation' },
-    { name: 'Files', icon: FolderOpenIcon, path: '/files' },
+    { name: 'Sources', icon: FolderOpenIcon, path: '/files' },
     { name: 'Prompts', icon: PromptsIcon, path: '/prompts' },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
     { name: 'Agents', icon: AgentsIcon, path: '/agents' },

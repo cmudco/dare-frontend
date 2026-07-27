@@ -712,12 +712,15 @@ const Message: React.FC<MessageProps> = ({
                   .map((snippet) => (
                     <div
                       key={snippet.id}
-                      className='rounded-r-lg border-l-4 border-border bg-muted p-3 pl-4'
+                      className='min-w-0 rounded-r-lg border-l-4 border-border bg-muted p-3 pl-4'
                     >
                       <div className='mb-1 flex flex-wrap items-center justify-between gap-1'>
                         <span className='min-w-0 break-words text-sm font-medium text-foreground'>
-                          From {snippet.file.name} (Score:{' '}
-                          {snippet.similarityScore.toFixed(2)})
+                          From{' '}
+                          {snippet.file
+                            ? snippet.file.name
+                            : `${snippet.library?.name} — ${snippet.sourceRef}`}{' '}
+                          (Score: {snippet.similarityScore.toFixed(2)})
                         </span>
                         <span className='shrink-0 text-xs text-muted-foreground'>
                           {snippet.vectorDbSource ? (
@@ -732,7 +735,7 @@ const Message: React.FC<MessageProps> = ({
                           )}
                         </span>
                       </div>
-                      <p className='text-sm text-muted-foreground'>
+                      <p className='break-words text-sm text-muted-foreground'>
                         {snippet.text}
                       </p>
                     </div>

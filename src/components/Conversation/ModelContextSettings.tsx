@@ -6,10 +6,12 @@ import { AppDispatch, RootState } from '../../redux/store'
 import {
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
+  updateRagMode,
 } from '../../redux/conversationSlice'
 import { MODEL_CONFIG } from '../../config/modelConfig'
-import { RotateCw, X, Info } from 'lucide-react'
+import { RotateCw, X, Info, Database, Route } from 'lucide-react'
 import { updateConversation } from '@/redux/asyncThunks/conversation'
+import type { RagMode } from '@/redux/types/conversation'
 import VectorDatabaseInfoBanner from './VectorDatabaseInfoBanner'
 import {
   Tooltip,
@@ -35,6 +37,7 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   const documentSimilarityThreshold =
     activeConversation?.documentSimilarityThreshold ??
     MODEL_CONFIG.documentSimilarityThreshold
+  const ragMode = activeConversation?.ragMode ?? 'advanced'
 
   const [snippetInput, setSnippetInput] = React.useState(
     maxContextSnippets.toString()
@@ -122,6 +125,18 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
     }
   }
 
+  const handleRagModeChange = (value: RagMode) => {
+    dispatch(updateRagMode(value))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { ragMode: value },
+        })
+      )
+    }
+  }
+
   const handleResetMaxContextSnippets = () => {
     dispatch(updateMaxContextSnippets(MODEL_CONFIG.maxContextSnippets))
     if (activeConversation) {
@@ -177,6 +192,43 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
 
         <hr />
         <div className='space-y-4'>
+          <div className='space-y-2'>
+            <div className='flex items-center gap-2'>
+              <h4 className='font-semibold'>Retrieval Mode</h4>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                </TooltipTrigger>
+                <TooltipContent className='max-w-sm'>
+                  <p className='text-sm'>
+                    Naive uses dense lookup. Advanced adds query analysis,
+                    hybrid retrieval, rerank, grounding, and trace data.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className='grid grid-cols-2 gap-2'>
+              <Button
+                type='button'
+                variant={ragMode === 'naive' ? 'default' : 'outline'}
+                className='h-9 justify-center gap-2'
+                onClick={() => handleRagModeChange('naive')}
+              >
+                <Database className='h-4 w-4' />
+                Naive RAG
+              </Button>
+              <Button
+                type='button'
+                variant={ragMode === 'advanced' ? 'default' : 'outline'}
+                className='h-9 justify-center gap-2'
+                onClick={() => handleRagModeChange('advanced')}
+              >
+                <Route className='h-4 w-4' />
+                Advanced RAG
+              </Button>
+            </div>
+          </div>
+          <hr />
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
