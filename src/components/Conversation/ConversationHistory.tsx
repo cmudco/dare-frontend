@@ -157,7 +157,7 @@ const ConversationHistory = () => {
           className='mt-2 shrink-0 rounded-full border-2 border-border bg-background p-1 transition-all hover:bg-accent'
           aria-label='Expand conversation list'
         >
-          <ChevronRightIcon className='h-5 w-5 text-primary' />
+          <ChevronRightIcon className='h-5 w-5 rotate-180 text-primary' />
         </button>
       ) : (
         <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
@@ -167,7 +167,7 @@ const ConversationHistory = () => {
               className='shrink-0 rounded-full border-2 border-border bg-background p-1 transition-all hover:bg-accent'
               aria-label='Collapse conversation list'
             >
-              <ChevronRightIcon className='h-5 w-5 rotate-180 text-primary' />
+              <ChevronRightIcon className='h-5 w-5 text-primary' />
             </button>
             <div className='flex min-w-0 flex-1 items-center rounded-3xl border border-border p-2'>
               <MagnifyingGlassIcon className='mr-2 h-5 w-5 shrink-0 text-muted-foreground' />
