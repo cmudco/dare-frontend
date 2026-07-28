@@ -251,12 +251,12 @@ const AgentMemorySection = ({
     />
     <FileBlock
       name='MEMORY.md'
-      note='what the agent has learned (Hermes writes this)'
+      note='project facts the agent kept — written by Hermes, not yet reviewed by you'
       content={files?.memory ?? ''}
     />
     <FileBlock
       name='USER.md'
-      note='what the agent knows about you (Hermes writes this)'
+      note='what the agent knows about you — written by Hermes, not yet reviewed by you'
       content={files?.user ?? ''}
     />
 
@@ -265,8 +265,9 @@ const AgentMemorySection = ({
         Pending from the agent · {proposals.length}
       </h3>
       <p className='mb-3 text-xs text-muted-foreground'>
-        Hermes proposes; you decide. Nothing here is remembered until you accept
-        it.
+        Proposals you accept here become project memory, which you own. The two
+        files above are different: Hermes writes those itself as it works, and
+        they are not gated by this queue.
       </p>
       {proposals.length === 0 ? (
         <EmptyLine>No pending proposals.</EmptyLine>
