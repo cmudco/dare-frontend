@@ -92,12 +92,18 @@ export interface AgentMemory {
   soul: string
   memory: string
   user: string
+  /** Which Hermes profile these files came from ('default' when unisolated). */
+  profile: string
+  /** True once the project has its own profile, so these files are private to it. */
+  isolated: boolean
 }
 
-/** Read the Hermes profile's operational memory files (read-only). */
-export const getAgentMemoryAPI = async (): Promise<AgentMemory> => {
+/** Read this project's Hermes profile memory files (read-only). */
+export const getAgentMemoryAPI = async (
+  projectId: number
+): Promise<AgentMemory> => {
   return await baseRequest<AgentMemory>({
-    url: 'api/research/agent-memory/',
+    url: `api/research/projects/${projectId}/agent-memory/`,
     method: METHOD.GET,
   })
 }

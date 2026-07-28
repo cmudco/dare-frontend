@@ -18,6 +18,7 @@ import ThesisSourceLinks from './ThesisSourceLinks'
 type ContextCard = 'durable' | 'sources' | 'standards' | 'agent'
 
 interface Props {
+  projectId?: number
   knowledgeItems: KnowledgeItem[]
   sources: ResearchSource[]
   soulFile: SoulFile | null
@@ -29,6 +30,7 @@ interface Props {
 // knowledge, raw sources, the standards that govern it, and what the agent
 // learned — each owned by a clear party. Pick a card to reveal that layer.
 const ContextHub = ({
+  projectId,
   knowledgeItems,
   sources,
   soulFile,
@@ -39,10 +41,11 @@ const ContextHub = ({
   const [agentMemory, setAgentMemory] = useState<AgentMemory | null>(null)
 
   useEffect(() => {
-    getAgentMemoryAPI()
+    if (!projectId) return
+    getAgentMemoryAPI(projectId)
       .then(setAgentMemory)
       .catch(() => setAgentMemory(null))
-  }, [])
+  }, [projectId])
 
   const cards = [
     {
@@ -240,9 +243,17 @@ const AgentMemorySection = ({
 }) => (
   <div className='space-y-6'>
     <p className='text-sm text-muted-foreground'>
-      Hermes's own files on disk — the live agent state behind every run. These
-      live in one shared agent profile today; they become per-project once each
-      project gets its own Hermes profile.
+      Hermes's own files on disk — the live agent state behind every run.
+      {files?.isolated ? (
+        <>
+          {' '}
+          They belong to this project's own agent profile (
+          <span className='font-mono text-xs'>{files.profile}</span>), so no
+          other project or scholar can read them.
+        </>
+      ) : (
+        ' They live in the shared default profile, so every project on this instance sees the same files.'
+      )}
     </p>
     <FileBlock
       name='SOUL.md'

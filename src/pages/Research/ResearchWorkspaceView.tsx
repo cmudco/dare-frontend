@@ -248,6 +248,7 @@ const ResearchWorkspaceView = ({
       case 'memory':
         return (
           <ContextHub
+            projectId={projectId}
             knowledgeItems={knowledgeItems}
             sources={sources}
             soulFile={soulFile}
