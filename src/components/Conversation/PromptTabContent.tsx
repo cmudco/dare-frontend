@@ -44,7 +44,7 @@ const RichTextPreview = ({ content }: { content: string }) => {
 
   return (
     <div
-      className='prose prose-sm max-w-none overflow-hidden text-sm text-muted-foreground **:max-w-full **:overflow-hidden **:text-ellipsis focus:outline-hidden dark:prose-invert'
+      className='prose prose-sm max-w-none overflow-hidden text-sm wrap-anywhere text-muted-foreground **:max-w-full **:overflow-hidden **:text-ellipsis focus:outline-hidden dark:prose-invert [&_pre]:whitespace-pre-wrap'
       dangerouslySetInnerHTML={{ __html: truncateHtml(content || '') }}
     />
   )
