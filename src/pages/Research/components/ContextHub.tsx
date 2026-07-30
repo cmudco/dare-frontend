@@ -371,9 +371,11 @@ const AgentMemorySection = ({
         Pending from the agent · {proposals.length}
       </h3>
       <p className='mb-3 text-xs text-muted-foreground'>
-        Proposals you accept here become project memory, which you own. The two
-        files above are different: Hermes writes those itself as it works, and
-        they are not gated by this queue.
+        Everything the agent writes to project memory surfaces here. Accept it
+        and it becomes project memory you own; reject it and it is removed from
+        the agent's memory too, so it stops acting on it. Until you decide, it
+        stays working context — the agent can use it, but it is not part of your
+        record.
       </p>
       {proposals.length === 0 ? (
         <EmptyLine>No pending proposals.</EmptyLine>
