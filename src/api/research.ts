@@ -96,6 +96,25 @@ export interface AgentMemory {
   profile: string
   /** True once the project has its own profile, so these files are private to it. */
   isolated: boolean
+  /** Newest first. How these files got to their current state, one entry per change. */
+  history: AgentMemoryChange[]
+}
+
+/** What changed in one file between two snapshots. */
+export interface AgentMemoryFileChange {
+  count: number
+  added: string[]
+  removed: string[]
+}
+
+/** One moment the agent's memory changed. */
+export interface AgentMemoryChange {
+  id: number
+  takenAt: string
+  memory: AgentMemoryFileChange
+  user: AgentMemoryFileChange
+  /** The earliest snapshot on record — everything in it counts as newly learned. */
+  isFirst: boolean
 }
 
 /** Read this project's Hermes profile memory files (read-only). */

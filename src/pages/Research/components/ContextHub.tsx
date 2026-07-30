@@ -3,7 +3,11 @@ import { BookMarked, Brain, Cpu, FileText, ScrollText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { formatRelativeDate } from '@/utils/dateUtils'
-import { getAgentMemoryAPI, type AgentMemory } from '@/api/research'
+import {
+  getAgentMemoryAPI,
+  type AgentMemory,
+  type AgentMemoryChange,
+} from '@/api/research'
 import type {
   KnowledgeItem,
   MemoryProposal,
@@ -234,6 +238,95 @@ const FileBlock = ({
   </div>
 )
 
+/**
+ * How the agent's memory got to its current state.
+ *
+ * The files themselves only ever show what the agent believes now. This shows
+ * the moments it changed — what it learned, and what it dropped or corrected —
+ * so "the agent remembers your project" is something the scholar can inspect
+ * rather than take on trust.
+ */
+const MemoryTimeline = ({ history }: { history: AgentMemoryChange[] }) => {
+  const changes = history.filter(
+    (h) =>
+      h.memory.added.length ||
+      h.memory.removed.length ||
+      h.user.added.length ||
+      h.user.removed.length
+  )
+  const total = (history[0]?.memory.count ?? 0) + (history[0]?.user.count ?? 0)
+
+  return (
+    <section>
+      <h3 className='mb-1 text-sm font-medium'>
+        How this memory grew · {total} {total === 1 ? 'fact' : 'facts'}
+      </h3>
+      <p className='mb-3 text-xs text-muted-foreground'>
+        Recorded each time the files changed. Green is what the agent learned;
+        struck through is what it dropped or replaced.
+      </p>
+      {changes.length === 0 ? (
+        <EmptyLine>
+          Nothing recorded yet — the agent has not written to memory in this
+          project.
+        </EmptyLine>
+      ) : (
+        <ol className='space-y-3'>
+          {changes.map((h) => (
+            <li
+              key={h.id}
+              className='rounded-lg border border-border bg-card p-3'
+            >
+              <div className='mb-2 flex items-baseline justify-between gap-3'>
+                <span className='text-xs font-medium'>
+                  {h.isFirst ? 'First recorded' : 'Updated'}
+                </span>
+                <span className='text-xs text-muted-foreground'>
+                  {new Date(h.takenAt).toLocaleString()}
+                </span>
+              </div>
+              <ul className='space-y-1'>
+                {(['memory', 'user'] as const).flatMap((file) => [
+                  ...h[file].added.map((text) => (
+                    <li
+                      key={`${file}-a-${text}`}
+                      className='flex gap-2 text-xs leading-relaxed'
+                    >
+                      <span className='shrink-0 font-mono text-emerald-600 dark:text-emerald-400'>
+                        +
+                      </span>
+                      <span className='text-foreground/90'>{text}</span>
+                      <span className='ml-auto shrink-0 font-mono text-[11px] text-muted-foreground'>
+                        {file === 'memory' ? 'project' : 'you'}
+                      </span>
+                    </li>
+                  )),
+                  ...h[file].removed.map((text) => (
+                    <li
+                      key={`${file}-r-${text}`}
+                      className='flex gap-2 text-xs leading-relaxed'
+                    >
+                      <span className='shrink-0 font-mono text-muted-foreground'>
+                        −
+                      </span>
+                      <span className='text-muted-foreground line-through'>
+                        {text}
+                      </span>
+                      <span className='ml-auto shrink-0 font-mono text-[11px] text-muted-foreground'>
+                        {file === 'memory' ? 'project' : 'you'}
+                      </span>
+                    </li>
+                  )),
+                ])}
+              </ul>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  )
+}
+
 const AgentMemorySection = ({
   files,
   proposals,
@@ -270,6 +363,8 @@ const AgentMemorySection = ({
       note='what the agent knows about you — written by Hermes, not yet reviewed by you'
       content={files?.user ?? ''}
     />
+
+    <MemoryTimeline history={files?.history ?? []} />
 
     <section>
       <h3 className='mb-1 text-sm font-medium'>
