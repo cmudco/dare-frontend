@@ -127,6 +127,23 @@ export const getAgentMemoryAPI = async (
   })
 }
 
+/**
+ * Decide on something the agent wants to remember.
+ *
+ * Accept promotes it into project memory the scholar owns; reject also removes
+ * it from the agent's own memory, so it stops acting on a fact they rejected.
+ */
+export const reviewMemoryProposalAPI = async (
+  proposalId: number,
+  decision: 'accept' | 'reject'
+): Promise<{ id: number; status: string }> => {
+  return await baseRequest<{ id: number; status: string }>({
+    url: `api/research/memory-proposals/${proposalId}/review/`,
+    method: METHOD.POST,
+    data: { decision },
+  })
+}
+
 /** Poll a single agent run's live status (for Scout/Critic progress). */
 export const getAgentRunAPI = async (runId: number): Promise<AgentRun> => {
   return await baseRequest<AgentRun>({

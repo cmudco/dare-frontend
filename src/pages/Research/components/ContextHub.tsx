@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { BookMarked, Brain, Cpu, FileText, ScrollText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { formatRelativeDate } from '@/utils/dateUtils'
 import {
   getAgentMemoryAPI,
+  reviewMemoryProposalAPI,
   type AgentMemory,
   type AgentMemoryChange,
 } from '@/api/research'
@@ -44,12 +45,14 @@ const ContextHub = ({
   const [card, setCard] = useState<ContextCard>('durable')
   const [agentMemory, setAgentMemory] = useState<AgentMemory | null>(null)
 
-  useEffect(() => {
+  const loadAgentMemory = useCallback(() => {
     if (!projectId) return
     getAgentMemoryAPI(projectId)
       .then(setAgentMemory)
       .catch(() => setAgentMemory(null))
   }, [projectId])
+
+  useEffect(loadAgentMemory, [loadAgentMemory])
 
   const cards = [
     {
@@ -152,7 +155,11 @@ const ContextHub = ({
           />
         )}
         {card === 'agent' && (
-          <AgentMemorySection files={agentMemory} proposals={memoryProposals} />
+          <AgentMemorySection
+            files={agentMemory}
+            proposals={memoryProposals}
+            onDecided={loadAgentMemory}
+          />
         )}
       </div>
     </div>
@@ -330,77 +337,120 @@ const MemoryTimeline = ({ history }: { history: AgentMemoryChange[] }) => {
 const AgentMemorySection = ({
   files,
   proposals,
+  onDecided,
 }: {
   files: AgentMemory | null
   proposals: MemoryProposal[]
-}) => (
-  <div className='space-y-6'>
-    <p className='text-sm text-muted-foreground'>
-      Hermes's own files on disk — the live agent state behind every run.
-      {files?.isolated ? (
-        <>
-          {' '}
-          They belong to this project's own agent profile (
-          <span className='font-mono text-xs'>{files.profile}</span>), so no
-          other project or scholar can read them.
-        </>
-      ) : (
-        ' They live in the shared default profile, so every project on this instance sees the same files.'
-      )}
-    </p>
-    <FileBlock
-      name='SOUL.md'
-      note='the anchor Hermes obeys — DARE keeps it in sync with your standards'
-      content={files?.soul ?? ''}
-    />
-    <FileBlock
-      name='MEMORY.md'
-      note='project facts the agent kept — written by Hermes, not yet reviewed by you'
-      content={files?.memory ?? ''}
-    />
-    <FileBlock
-      name='USER.md'
-      note='what the agent knows about you — written by Hermes, not yet reviewed by you'
-      content={files?.user ?? ''}
-    />
+  onDecided: () => void
+}) => {
+  // Decided proposals leave the queue immediately rather than waiting for the
+  // refetch — a review queue that still shows what you just actioned reads as
+  // broken, even when the request succeeded.
+  const [decided, setDecided] = useState<Record<number, string>>({})
+  const [busy, setBusy] = useState<number | null>(null)
 
-    <MemoryTimeline history={files?.history ?? []} />
+  const decide = async (id: number, decision: 'accept' | 'reject') => {
+    setBusy(id)
+    try {
+      await reviewMemoryProposalAPI(id, decision)
+      setDecided((d) => ({ ...d, [id]: decision }))
+      // Rejecting rewrites the profile's MEMORY.md, so the files above are now
+      // stale; accepting moves the fact into project memory. Either way, refetch.
+      onDecided()
+    } finally {
+      setBusy(null)
+    }
+  }
 
-    <section>
-      <h3 className='mb-1 text-sm font-medium'>
-        Pending from the agent · {proposals.length}
-      </h3>
-      <p className='mb-3 text-xs text-muted-foreground'>
-        Everything the agent writes to project memory surfaces here. Accept it
-        and it becomes project memory you own; reject it and it is removed from
-        the agent's memory too, so it stops acting on it. Until you decide, it
-        stays working context — the agent can use it, but it is not part of your
-        record.
+  const open = proposals.filter((p) => !decided[p.id])
+
+  return (
+    <div className='space-y-6'>
+      <p className='text-sm text-muted-foreground'>
+        Hermes's own files on disk — the live agent state behind every run.
+        {files?.isolated ? (
+          <>
+            {' '}
+            They belong to this project's own agent profile (
+            <span className='font-mono text-xs'>{files.profile}</span>), so no
+            other project or scholar can read them.
+          </>
+        ) : (
+          ' They live in the shared default profile, so every project on this instance sees the same files.'
+        )}
       </p>
-      {proposals.length === 0 ? (
-        <EmptyLine>No pending proposals.</EmptyLine>
-      ) : (
-        <div className='space-y-2'>
-          {proposals.map((p) => (
-            <div
-              key={p.id}
-              className='flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3'
-            >
-              <Badge variant='gray' className='mt-0.5 shrink-0'>
-                {p.role}
-              </Badge>
-              <div className='min-w-0 flex-1'>
-                <p className='text-sm'>{p.content}</p>
-                <p className='mt-1 text-xs text-muted-foreground'>
-                  Proposed {formatRelativeDate(p.proposedAt)}
-                </p>
+      <FileBlock
+        name='SOUL.md'
+        note='the anchor Hermes obeys — DARE keeps it in sync with your standards'
+        content={files?.soul ?? ''}
+      />
+      <FileBlock
+        name='MEMORY.md'
+        note='project facts the agent kept — written by Hermes, not yet reviewed by you'
+        content={files?.memory ?? ''}
+      />
+      <FileBlock
+        name='USER.md'
+        note='what the agent knows about you — written by Hermes, not yet reviewed by you'
+        content={files?.user ?? ''}
+      />
+
+      <MemoryTimeline history={files?.history ?? []} />
+
+      <section>
+        <h3 className='mb-1 text-sm font-medium'>
+          Pending from the agent · {proposals.length}
+        </h3>
+        <p className='mb-3 text-xs text-muted-foreground'>
+          Everything the agent writes to project memory surfaces here. Accept it
+          and it becomes project memory you own; reject it and it is removed
+          from the agent's memory too, so it stops acting on it. Until you
+          decide, it stays working context — the agent can use it, but it is not
+          part of your record.
+        </p>
+        {open.length === 0 ? (
+          <EmptyLine>Nothing waiting on you.</EmptyLine>
+        ) : (
+          <div className='space-y-2'>
+            {open.map((p) => (
+              <div
+                key={p.id}
+                className='flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3'
+              >
+                <Badge variant='gray' className='mt-0.5 shrink-0'>
+                  {p.role}
+                </Badge>
+                <div className='min-w-0 flex-1'>
+                  <p className='text-sm'>{p.content}</p>
+                  <p className='mt-1 text-xs text-muted-foreground'>
+                    Proposed {formatRelativeDate(p.proposedAt)}
+                  </p>
+                </div>
+                <div className='flex shrink-0 gap-2'>
+                  <button
+                    type='button'
+                    disabled={busy === p.id}
+                    onClick={() => decide(p.id, 'accept')}
+                    className='rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50'
+                  >
+                    Keep
+                  </button>
+                  <button
+                    type='button'
+                    disabled={busy === p.id}
+                    onClick={() => decide(p.id, 'reject')}
+                    className='rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent disabled:opacity-50'
+                  >
+                    Discard
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  </div>
-)
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  )
+}
 
 export default ContextHub
