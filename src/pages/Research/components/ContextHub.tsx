@@ -249,7 +249,10 @@ const StandardsSection = ({
           Nothing yet. Keep a fact from the agent and it lands here.
         </EmptyLine>
       ) : (
-        <div className='space-y-3'>
+        // Same row shape as the agent's fact list, deliberately: these hold
+        // near-identical content, and rendering one as cards and the other as
+        // rows made them look like different kinds of thing.
+        <ul className='space-y-2'>
           {projectMemory.map((m) => {
             // The label is derived, not authored — it is the detail's leading
             // clause ("Method decision: …"), or a truncation when there is no
@@ -263,28 +266,34 @@ const StandardsSection = ({
               ? m.detail.trim().slice(prefix.length).trim()
               : m.detail
             return (
-              <div
+              <li
                 key={m.id}
-                className='rounded-xl border border-border bg-card p-5'
+                className='rounded-lg border border-border bg-card px-4 py-3'
               >
-                {hasClause && (
-                  <div className='mb-2 flex items-center gap-2'>
-                    <Cpu className='h-4 w-4 text-muted-foreground' />
-                    <p className='text-sm font-medium'>{label}</p>
+                <div className='flex items-baseline gap-3'>
+                  <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50' />
+                  <div className='min-w-0 flex-1'>
+                    {hasClause && (
+                      <p className='text-sm font-medium'>{label}</p>
+                    )}
+                    <p className='text-sm leading-relaxed text-foreground/90'>
+                      {body}
+                    </p>
                   </div>
-                )}
-                <p className='text-sm text-foreground/80'>{body}</p>
-                <p className='mt-2 text-xs text-muted-foreground'>
-                  {m.source === 'proposal'
-                    ? 'Kept from the agent'
-                    : 'Added by you'}{' '}
-                  · {formatRelativeDate(m.capturedAt)}
-                </p>
+                  <span className='shrink-0 text-[11px] text-muted-foreground'>
+                    {m.source === 'proposal'
+                      ? 'kept from the agent'
+                      : 'added by you'}
+                  </span>
+                  <span className='shrink-0 text-[11px] text-muted-foreground'>
+                    {formatRelativeDate(m.capturedAt)}
+                  </span>
+                </div>
                 <ThesisSourceLinks thesisId={m.id} sources={knowledgeItems} />
-              </div>
+              </li>
             )
           })}
-        </div>
+        </ul>
       )}
     </section>
   </div>
