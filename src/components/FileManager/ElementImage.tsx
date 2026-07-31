@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ImageOff } from 'lucide-react'
 
 import { getElementImageAPI } from '@/api/files'
@@ -10,8 +10,18 @@ interface ElementImageProps {
   alt: string
 }
 
+// Start fetching a little before the crop scrolls into view, so it is usually
+// there by the time it is on screen.
+const PRELOAD_MARGIN = '300px'
+
 /**
  * The actual pixels of one document element, cropped out of the original.
+ *
+ * Nothing is stored server-side: the backend re-opens the file and cuts the
+ * region out using the bounding box recorded at parse time. That makes each
+ * crop a real render, so they are fetched only once the row is near the
+ * viewport — a 65-picture newsletter would otherwise fire 65 renders the
+ * moment the panel opens.
  *
  * Fetched as a blob rather than pointed at with a plain `src`, because the
  * endpoint needs the auth header. The object URL is revoked on unmount so a
@@ -20,8 +30,37 @@ interface ElementImageProps {
 const ElementImage = ({ fileId, order, alt }: ElementImageProps) => {
   const [url, setUrl] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
+  const [visible, setVisible] = useState(false)
+  const holder = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
+    const node = holder.current
+    if (!node || visible) return
+
+    // Without IntersectionObserver, fall back to loading immediately: a
+    // needlessly eager fetch is better than an image that never appears.
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVisible(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: PRELOAD_MARGIN }
+    )
+    observer.observe(node)
+
+    return () => observer.disconnect()
+  }, [visible])
+
+  useEffect(() => {
+    if (!visible) return
+
     let objectUrl: string | null = null
     let cancelled = false
 
@@ -42,7 +81,7 @@ const ElementImage = ({ fileId, order, alt }: ElementImageProps) => {
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [fileId, order])
+  }, [fileId, order, visible])
 
   if (failed) {
     return (
@@ -53,15 +92,18 @@ const ElementImage = ({ fileId, order, alt }: ElementImageProps) => {
     )
   }
 
-  if (!url) return <Skeleton className='h-32 w-full max-w-xs' />
-
   return (
-    <img
-      src={url}
-      alt={alt}
-      loading='lazy'
-      className='max-h-64 max-w-full rounded-sm border border-border object-contain'
-    />
+    <div ref={holder}>
+      {url ? (
+        <img
+          src={url}
+          alt={alt}
+          className='max-h-64 max-w-full rounded-sm border border-border object-contain'
+        />
+      ) : (
+        <Skeleton className='h-32 w-full max-w-xs' />
+      )}
+    </div>
   )
 }
 
