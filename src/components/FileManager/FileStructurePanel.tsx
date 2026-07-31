@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
+  BookOpen,
   Heading,
   Image as ImageIcon,
   ScanLine,
@@ -12,6 +13,7 @@ import { getFileStructureAPI } from '@/api/files'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import ElementImage from './ElementImage'
 import {
   DocumentElement,
   DocumentElementKind,
@@ -25,6 +27,8 @@ import {
 
 interface FileStructurePanelProps {
   fileId: number | null
+  /** Open the document viewer at a given page. Omitted when there is none. */
+  onOpenPage?: (pageNo: number) => void
 }
 
 const KIND_ICON: Record<DocumentElementKind, typeof Type> = {
@@ -41,7 +45,10 @@ const KIND_ICON: Record<DocumentElementKind, typeof Type> = {
  * and footers are hidden by default: they repeat on every page and carry no
  * content, which is exactly why they are dropped before chunking too.
  */
-const FileStructurePanel = ({ fileId }: FileStructurePanelProps) => {
+const FileStructurePanel = ({
+  fileId,
+  onOpenPage,
+}: FileStructurePanelProps) => {
   const [structure, setStructure] = useState<FileStructure | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -187,23 +194,37 @@ const FileStructurePanel = ({ fileId }: FileStructurePanelProps) => {
       )}
 
       {pages.length > 1 && (
-        <section className='flex flex-wrap items-center gap-1.5'>
-          <span className='mr-1 text-xs font-medium text-muted-foreground'>
-            Page
-          </span>
-          <PageButton
-            label='All'
-            active={page === null}
-            onClick={() => selectPage(null)}
-          />
-          {pages.map((pageNo) => (
+        <section className='space-y-2'>
+          <div className='flex flex-wrap items-center gap-1.5'>
+            <span className='mr-1 text-xs font-medium text-muted-foreground'>
+              Page
+            </span>
             <PageButton
-              key={pageNo}
-              label={String(pageNo)}
-              active={page === pageNo}
-              onClick={() => selectPage(pageNo)}
+              label='All'
+              active={page === null}
+              onClick={() => selectPage(null)}
             />
-          ))}
+            {pages.map((pageNo) => (
+              <PageButton
+                key={pageNo}
+                label={String(pageNo)}
+                active={page === pageNo}
+                onClick={() => selectPage(pageNo)}
+              />
+            ))}
+          </div>
+
+          {page !== null && onOpenPage && (
+            <Button
+              variant='outline'
+              size='sm'
+              className='h-7 text-xs'
+              onClick={() => onOpenPage(page)}
+            >
+              <BookOpen className='mr-1.5 h-3.5 w-3.5' />
+              Open page {page} in the document
+            </Button>
+          )}
         </section>
       )}
 
@@ -235,7 +256,11 @@ const FileStructurePanel = ({ fileId }: FileStructurePanelProps) => {
         ) : (
           <div className='divide-y divide-border rounded-md border border-border'>
             {elements.map((element) => (
-              <ElementRow key={element.order} element={element} />
+              <ElementRow
+                key={element.order}
+                element={element}
+                fileId={fileId}
+              />
             ))}
           </div>
         )}
@@ -274,7 +299,13 @@ const PageButton = ({
   </button>
 )
 
-const ElementRow = ({ element }: { element: DocumentElement }) => {
+const ElementRow = ({
+  element,
+  fileId,
+}: {
+  element: DocumentElement
+  fileId: number | null
+}) => {
   const Icon = KIND_ICON[element.kind] ?? Type
   const isHeading = HEADING_LABELS.includes(element.label)
 
@@ -305,9 +336,18 @@ const ElementRow = ({ element }: { element: DocumentElement }) => {
             {element.tableMarkdown}
           </pre>
         ) : element.kind === 'picture' ? (
-          <p className='text-sm text-muted-foreground italic'>
-            {element.caption || 'No caption in the document'}
-          </p>
+          <div className='space-y-2'>
+            <p className='text-sm text-muted-foreground italic'>
+              {element.caption || 'No caption in the document'}
+            </p>
+            {fileId != null && element.bbox && (
+              <ElementImage
+                fileId={fileId}
+                order={element.order}
+                alt={element.caption || `Image on page ${element.pageNo}`}
+              />
+            )}
+          </div>
         ) : (
           <p
             className={`text-sm break-words ${

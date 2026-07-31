@@ -47,6 +47,25 @@ export const getFileStructureAPI = async (
   })
 }
 
+/**
+ * Render one element of a document as an image.
+ *
+ * `order` is the element's reading-order index from the structure endpoint;
+ * the backend crops that region out of the original on demand.
+ */
+export const getElementImageAPI = async (
+  id: number,
+  order: number
+): Promise<Blob> => {
+  const { blob } = await baseRequest({
+    url: `api/files/${id}/element-image/`,
+    method: METHOD.GET,
+    params: { order },
+    responseType: 'blob',
+  })
+  return blob
+}
+
 export const deleteFileAPI = async (id: number): Promise<void> => {
   await baseRequest<void>({
     url: `api/files/${id}/`,
