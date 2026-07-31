@@ -77,11 +77,11 @@ const pages = [
     description: 'Django REST and Socket.IO backend overview.',
   },
   {
-    from: path.join(backendRoot, 'INSTALL.md'),
+    from: path.join(backendRoot, 'DEPLOYMENT.md'),
     to: 'backend/install.mdx',
-    title: 'Backend Installation',
+    title: 'Backend Deployment',
     description:
-      'Backend installation paths, service dependencies, deployment, and troubleshooting.',
+      'Backend deployment paths, service dependencies, and troubleshooting.',
   },
   {
     from: path.join(backendRoot, 'CONTRIBUTING.md'),
