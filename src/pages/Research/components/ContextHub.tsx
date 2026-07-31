@@ -15,7 +15,10 @@ import type {
   ResearchSource,
   SoulFile,
 } from '../types'
+import EmptyLine from './EmptyLine'
+import FactGroup from './FactGroup'
 import MemoryProposalQueue from './MemoryProposalQueue'
+import MemoryTimeline from './MemoryTimeline'
 import ProjectKnowledge from './ProjectKnowledge'
 import { SourcesView } from './SecondaryViews'
 import ThesisSourceLinks from './ThesisSourceLinks'
@@ -206,12 +209,6 @@ const ContextHub = ({
   )
 }
 
-const EmptyLine = ({ children }: { children: React.ReactNode }) => (
-  <p className='rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground'>
-    {children}
-  </p>
-)
-
 const StandardsSection = ({
   soulFile,
   projectMemory,
@@ -298,164 +295,6 @@ const StandardsSection = ({
     </section>
   </div>
 )
-
-/**
- * One group of the agent's memory, grouped by how far it reaches.
- *
- * Reach is the thing a scholar actually needs to know — that the agent knows
- * their name in every project but the working thesis only here — and it is a
- * property of the file, so the file name stays on the heading rather than
- * being the heading.
- */
-const FactGroup = ({
-  title,
-  file,
-  scope,
-  entries,
-  firstSeen,
-  kept,
-}: {
-  title: string
-  file: string
-  scope: string
-  entries: string[]
-  firstSeen: Record<string, string>
-  /** Entries DARE has also written into its own record. */
-  kept?: Set<string>
-}) => (
-  <section>
-    <div className='mb-1 flex flex-wrap items-baseline justify-between gap-x-3'>
-      <h3 className='text-sm font-medium'>
-        {title} · {entries.length}
-      </h3>
-      <span className='font-mono text-[11px] text-muted-foreground'>
-        {file}
-      </span>
-    </div>
-    <p className='mb-3 text-xs text-muted-foreground'>{scope}</p>
-    {entries.length === 0 ? (
-      <EmptyLine>Hermes hasn't written anything here yet.</EmptyLine>
-    ) : (
-      <ul className='space-y-2'>
-        {entries.map((entry) => (
-          <li
-            key={entry}
-            className='flex items-baseline gap-3 rounded-lg border border-border bg-card px-4 py-3'
-          >
-            <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50' />
-            <p className='flex-1 text-sm leading-relaxed text-foreground/90'>
-              {entry}
-            </p>
-            {/* Names the overlap with project memory rather than leaving the
-                same sentence sitting in two tabs with no relationship. */}
-            {kept?.has(entry) && (
-              <span className='shrink-0 text-[11px] text-green-700 dark:text-green-400'>
-                in your record
-              </span>
-            )}
-            {firstSeen[entry] && (
-              <span className='shrink-0 text-[11px] text-muted-foreground'>
-                {formatRelativeDate(firstSeen[entry])}
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
-    )}
-  </section>
-)
-
-/**
- * How the agent's memory got to its current state.
- *
- * Collapsed, because every current fact now carries its own date above — what
- * is left in here is the part the files genuinely cannot show: what the agent
- * dropped or replaced, and why it went.
- */
-const MemoryTimeline = ({
-  history,
-  discarded,
-}: {
-  history: AgentMemoryChange[]
-  discarded: string[]
-}) => {
-  const changes = history.filter(
-    (h) =>
-      h.memory.added.length ||
-      h.memory.removed.length ||
-      h.user.added.length ||
-      h.user.removed.length
-  )
-
-  if (changes.length === 0) return null
-
-  const wasDiscarded = (text: string) => discarded.includes(text)
-
-  return (
-    <details className='rounded-xl border border-border bg-card px-4 py-3'>
-      <summary className='cursor-pointer text-sm font-medium'>
-        How this memory grew · {changes.length}{' '}
-        {changes.length === 1 ? 'change' : 'changes'}
-      </summary>
-      <p className='mt-2 mb-3 text-xs text-muted-foreground'>
-        Recorded each time the files changed. Green is what the agent learned;
-        struck through is what left. Entries marked{' '}
-        <span className='font-mono'>you</span> are about you rather than this
-        project, so they show up in every project you own.
-      </p>
-      <ol className='space-y-3'>
-        {changes.map((h) => (
-          <li key={h.id} className='rounded-lg border border-border p-3'>
-            <div className='mb-2 flex items-baseline justify-between gap-3'>
-              <span className='text-xs font-medium'>
-                {h.isFirst ? 'First recorded' : 'Updated'}
-              </span>
-              <span className='text-xs text-muted-foreground'>
-                {new Date(h.takenAt).toLocaleString()}
-              </span>
-            </div>
-            <ul className='space-y-1'>
-              {(['memory', 'user'] as const).flatMap((file) => [
-                ...h[file].added.map((text) => (
-                  <li
-                    key={`${file}-a-${text}`}
-                    className='flex gap-2 text-xs leading-relaxed'
-                  >
-                    <span className='shrink-0 font-mono text-emerald-600 dark:text-emerald-400'>
-                      +
-                    </span>
-                    <span className='text-foreground/90'>{text}</span>
-                    <span className='ml-auto shrink-0 font-mono text-[11px] text-muted-foreground'>
-                      {file === 'memory' ? 'project' : 'you'}
-                    </span>
-                  </li>
-                )),
-                ...h[file].removed.map((text) => (
-                  <li
-                    key={`${file}-r-${text}`}
-                    className='flex gap-2 text-xs leading-relaxed'
-                  >
-                    <span className='shrink-0 font-mono text-muted-foreground'>
-                      −
-                    </span>
-                    <span className='text-muted-foreground line-through'>
-                      {text}
-                    </span>
-                    {/* Without this a removal reads as the agent forgetting on
-                        its own, when the usual cause is the scholar. */}
-                    <span className='ml-auto shrink-0 font-mono text-[11px] text-muted-foreground'>
-                      {wasDiscarded(text) ? 'you discarded this' : 'replaced'}
-                    </span>
-                  </li>
-                )),
-              ])}
-            </ul>
-          </li>
-        ))}
-      </ol>
-    </details>
-  )
-}
 
 const AgentMemorySection = ({
   files,
