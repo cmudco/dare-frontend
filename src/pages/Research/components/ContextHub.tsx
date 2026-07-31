@@ -277,7 +277,9 @@ const MemoryTimeline = ({ history }: { history: AgentMemoryChange[] }) => {
       </h3>
       <p className='mb-3 text-xs text-muted-foreground'>
         Recorded each time the files changed. Green is what the agent learned;
-        struck through is what it dropped or replaced.
+        struck through is what it dropped or replaced. Entries marked &ldquo;you
+        &middot; shared&rdquo; are about you rather than this project, so they
+        show up in every project you own.
       </p>
       {changes.length === 0 ? (
         <EmptyLine>
@@ -311,7 +313,7 @@ const MemoryTimeline = ({ history }: { history: AgentMemoryChange[] }) => {
                       </span>
                       <span className='text-foreground/90'>{text}</span>
                       <span className='ml-auto shrink-0 font-mono text-[11px] text-muted-foreground'>
-                        {file === 'memory' ? 'project' : 'you'}
+                        {file === 'memory' ? 'project' : 'you \u00b7 shared'}
                       </span>
                     </li>
                   )),
@@ -327,7 +329,7 @@ const MemoryTimeline = ({ history }: { history: AgentMemoryChange[] }) => {
                         {text}
                       </span>
                       <span className='ml-auto shrink-0 font-mono text-[11px] text-muted-foreground'>
-                        {file === 'memory' ? 'project' : 'you'}
+                        {file === 'memory' ? 'project' : 'you \u00b7 shared'}
                       </span>
                     </li>
                   )),
@@ -386,11 +388,19 @@ const AgentMemorySection = ({
           ' They live in the shared default profile, so every project on this instance sees the same files.'
         )}
       </p>
-      <FileBlock
-        name='SOUL.md'
-        note='the anchor Hermes obeys — DARE keeps it in sync with your standards'
-        content={files?.soul ?? ''}
-      />
+      <div>
+        <p className='mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase'>
+          SOUL.md{' '}
+          <span className='font-normal normal-case'>
+            · the standards the agent obeys
+          </span>
+        </p>
+        <p className='rounded-lg border border-border bg-card px-4 py-3 text-xs text-muted-foreground'>
+          {files?.soul?.trim()
+            ? 'In sync with your soul file. DARE writes it and versions it — open Standards & Memory to read or change it.'
+            : 'No soul file yet. Set your standards under Standards & Memory and the agent picks them up on its next run.'}
+        </p>
+      </div>
       <FileBlock
         name='MEMORY.md'
         note='project facts the agent kept — written by Hermes, not yet reviewed by you'
