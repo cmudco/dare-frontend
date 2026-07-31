@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   BookOpen,
+  Info,
   Heading,
   Image as ImageIcon,
   ScanLine,
@@ -12,6 +13,11 @@ import {
 import { getFileStructureAPI } from '@/api/files'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
 import ElementImage from './ElementImage'
 import {
@@ -21,6 +27,7 @@ import {
 } from '@/redux/types/files'
 import {
   ELEMENT_LABEL_TEXT,
+  ELEMENT_TYPE_GROUPS,
   FURNITURE_LABELS,
   HEADING_LABELS,
 } from '@/utils/constants/documentStructure'
@@ -230,10 +237,13 @@ const FileStructurePanel = ({
 
       <section className='space-y-1.5'>
         <div className='flex items-center justify-between'>
-          <p className='text-xs font-medium text-muted-foreground'>
-            Reading order &middot; {elements.length}{' '}
-            {elements.length === 1 ? 'element' : 'elements'}
-          </p>
+          <div className='flex items-center gap-1.5'>
+            <p className='text-xs font-medium text-muted-foreground'>
+              Reading order &middot; {elements.length}{' '}
+              {elements.length === 1 ? 'element' : 'elements'}
+            </p>
+            <ElementTypeLegend />
+          </div>
           {(hiddenFurnitureCount > 0 || showFurniture) && (
             <button
               type='button'
@@ -367,5 +377,57 @@ const ElementRow = ({
     </div>
   )
 }
+
+/**
+ * What the parser can recognise, not only what this document happens to use.
+ *
+ * A newsletter has no formulas and a syllabus has no photographs, so reading
+ * the vocabulary off one file gives a misleading picture of the model.
+ */
+const ElementTypeLegend = () => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <button
+        type='button'
+        aria-label='Element types the document model recognises'
+        className='text-muted-foreground transition-colors hover:text-foreground'
+      >
+        <Info className='h-3.5 w-3.5' />
+      </button>
+    </PopoverTrigger>
+    <PopoverContent align='start' className='max-h-96 w-96 overflow-y-auto'>
+      <p className='text-sm font-medium'>Element types</p>
+      <p className='mt-1 text-xs text-muted-foreground'>
+        Every element the parser finds is given one of these labels. A document
+        uses only the ones it contains.
+      </p>
+
+      <div className='mt-3 space-y-3'>
+        {ELEMENT_TYPE_GROUPS.map((group) => (
+          <div key={group.title} className='space-y-1.5'>
+            <p className='text-xs font-medium'>{group.title}</p>
+            {group.note && (
+              <p className='text-xs text-muted-foreground'>{group.note}</p>
+            )}
+            <dl className='space-y-1'>
+              {group.types.map((type) => (
+                <div key={type.label} className='flex gap-2'>
+                  <dt className='w-28 shrink-0'>
+                    <Badge variant='gray' className='px-1.5 py-0 text-[10px]'>
+                      {ELEMENT_LABEL_TEXT[type.label] ?? type.label}
+                    </Badge>
+                  </dt>
+                  <dd className='text-xs text-muted-foreground'>
+                    {type.description}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))}
+      </div>
+    </PopoverContent>
+  </Popover>
+)
 
 export default FileStructurePanel
