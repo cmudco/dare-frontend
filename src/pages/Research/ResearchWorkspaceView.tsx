@@ -238,11 +238,13 @@ const ResearchWorkspaceView = ({
             pending={pending}
             later={later}
             criticItemId={criticItemId}
+            memoryProposals={memoryProposals}
             onApprove={(id) => review(id, 'approve')}
             onReject={(id) => review(id, 'reject')}
             onLater={(id) => review(id, 'later')}
             onAskCritic={askCritic}
             onGoToOverview={() => setSection('overview')}
+            onMemoryDecided={refresh}
           />
         )
       case 'memory':
@@ -254,6 +256,7 @@ const ResearchWorkspaceView = ({
             soulFile={soulFile}
             projectMemory={projectMemory}
             memoryProposals={memoryProposals}
+            onMemoryDecided={refresh}
           />
         )
       case 'graph':
@@ -277,6 +280,7 @@ const ResearchWorkspaceView = ({
       onNavigate={setSection}
       pendingCount={pending.length}
       approvedCount={knowledgeItems.length}
+      memoryPendingCount={memoryProposals.length}
       center={center()}
       context={
         <ContextPanel

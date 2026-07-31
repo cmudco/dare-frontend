@@ -98,6 +98,13 @@ export interface AgentMemory {
   isolated: boolean
   /** Newest first. How these files got to their current state, one entry per change. */
   history: AgentMemoryChange[]
+  /**
+   * Facts the scholar rejected. A line the agent dropped otherwise reads as it
+   * forgetting on its own; matching against this names the real cause.
+   */
+  discarded: string[]
+  /** Profiles this scholar's shared USER.md was pushed to on the last read. */
+  sharedTo?: string[]
 }
 
 /** What changed in one file between two snapshots. */

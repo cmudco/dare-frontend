@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils'
 import { formatRelativeDate } from '@/utils/dateUtils'
 import {
   getAgentMemoryAPI,
-  reviewMemoryProposalAPI,
   type AgentMemory,
   type AgentMemoryChange,
 } from '@/api/research'
@@ -16,6 +15,7 @@ import type {
   ResearchSource,
   SoulFile,
 } from '../types'
+import MemoryProposalQueue from './MemoryProposalQueue'
 import ProjectKnowledge from './ProjectKnowledge'
 import { SourcesView } from './SecondaryViews'
 import ThesisSourceLinks from './ThesisSourceLinks'
@@ -29,6 +29,34 @@ interface Props {
   soulFile: SoulFile | null
   projectMemory: ProjectMemory[]
   memoryProposals: MemoryProposal[]
+  /** Refetch the project after a memory decision moves something. */
+  onMemoryDecided?: () => void
+}
+
+/** The runtime writes one fact per `§`-delimited block; that separator is ours. */
+const splitEntries = (text: string) =>
+  (text ?? '')
+    .split('§')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+
+/**
+ * When each fact was first written, keyed by its text.
+ *
+ * The files only say what the agent believes now. Walking the snapshots oldest
+ * first gives every current fact its own date, which is what the timeline was
+ * really being read for — and is why the timeline no longer has to be open.
+ */
+const firstSeenByEntry = (history: AgentMemoryChange[]) => {
+  const seen: Record<string, string> = {}
+  for (const change of [...history].reverse()) {
+    for (const file of ['memory', 'user'] as const) {
+      for (const text of change[file].added) {
+        if (!(text in seen)) seen[text] = change.takenAt
+      }
+    }
+  }
+  return seen
 }
 
 // The project's context hub: one place for everything it holds — approved
@@ -41,6 +69,7 @@ const ContextHub = ({
   soulFile,
   projectMemory,
   memoryProposals,
+  onMemoryDecided,
 }: Props) => {
   const [card, setCard] = useState<ContextCard>('durable')
   const [agentMemory, setAgentMemory] = useState<AgentMemory | null>(null)
@@ -54,48 +83,50 @@ const ContextHub = ({
 
   useEffect(loadAgentMemory, [loadAgentMemory])
 
+  const afterDecision = useCallback(() => {
+    loadAgentMemory()
+    onMemoryDecided?.()
+  }, [loadAgentMemory, onMemoryDecided])
+
+  const agentFactCount =
+    splitEntries(agentMemory?.memory ?? '').length +
+    splitEntries(agentMemory?.user ?? '').length
+
   const cards = [
     {
       key: 'durable' as const,
       icon: BookMarked,
-      title: 'Durable Knowledge',
-      owner: 'DARE',
-      badge: 'On demand',
-      tone: 'green' as const,
-      desc: 'Approved sources and claims. Changes only when you approve.',
+      title: 'Durable knowledge',
+      // The count means the same thing on every card: how many things are in
+      // this layer. It used to mean approved items on one and open decisions on
+      // another, so the row of numbers could not be read across.
       count: knowledgeItems.length,
+      waiting: 0,
+      desc: 'Approved sources and claims. Nothing lands here without you.',
     },
     {
       key: 'sources' as const,
       icon: FileText,
       title: 'Sources',
-      owner: 'DARE',
-      badge: 'Inputs',
-      tone: 'gray' as const,
-      desc: 'Files you brought in. Scout can read across these.',
       count: sources.length,
+      waiting: 0,
+      desc: 'Files you brought in. Scout can read across these.',
     },
     {
       key: 'standards' as const,
       icon: ScrollText,
-      title: 'Standards & Memory',
-      owner: 'DARE',
-      badge: 'Versioned',
-      tone: 'blue' as const,
-      desc: 'Your soul file plus working thesis, decisions and open questions.',
+      title: 'Standards & memory',
       count: projectMemory.length,
+      waiting: 0,
+      desc: 'Your soul file, plus the record of this project that DARE keeps.',
     },
     {
       key: 'agent' as const,
       icon: Cpu,
-      title: 'Agent Memory',
-      owner: 'Hermes',
-      badge: 'Auto',
-      tone: 'yellow' as const,
-      desc: memoryProposals.length
-        ? `${memoryProposals.length} ${memoryProposals.length === 1 ? 'fact is' : 'facts are'} waiting for you to keep or discard.`
-        : 'What the agent has learned working on this project.',
-      count: memoryProposals.length,
+      title: 'Agent memory',
+      count: agentFactCount,
+      waiting: memoryProposals.length,
+      desc: 'What Hermes picked up while working. You decide what it keeps.',
     },
   ]
 
@@ -119,25 +150,31 @@ const ContextHub = ({
               onClick={() => setCard(c.key)}
               aria-pressed={selected}
               className={cn(
-                'rounded-xl border p-4 text-left transition-colors',
+                'flex flex-col rounded-xl border p-4 text-left transition-colors',
                 selected
                   ? 'border-primary/60 bg-primary/5'
                   : 'border-border bg-card hover:border-foreground/30'
               )}
             >
-              <div className='mb-2 flex items-center justify-between'>
-                <div className='rounded-lg bg-muted p-2'>
+              {/* Fixed-height header row so a two-word badge can never push one
+                  card's title a line below its neighbours'. */}
+              <div className='mb-2 flex h-8 items-center justify-between gap-2'>
+                <span className='rounded-lg bg-muted p-2'>
                   <Icon className='h-4 w-4 text-muted-foreground' />
-                </div>
-                <Badge variant={c.tone}>{c.badge}</Badge>
-              </div>
-              <p className='text-sm font-medium'>
-                {c.title}
-                {c.count > 0 && (
-                  <span className='text-muted-foreground'> · {c.count}</span>
+                </span>
+                {c.waiting > 0 && (
+                  <Badge variant='yellow'>{c.waiting} to review</Badge>
                 )}
+              </div>
+              {/* Two lines' worth, so a title that wraps on one card cannot
+                  drop that card's description below its neighbours'. */}
+              <p className='min-h-10 text-sm font-medium'>
+                {c.title}
+                <span className='font-normal text-muted-foreground tabular-nums'>
+                  {' '}
+                  · {c.count}
+                </span>
               </p>
-              <p className='text-xs text-muted-foreground'>{c.owner}</p>
               <p className='mt-2 text-xs leading-relaxed text-muted-foreground'>
                 {c.desc}
               </p>
@@ -160,7 +197,7 @@ const ContextHub = ({
           <AgentMemorySection
             files={agentMemory}
             proposals={memoryProposals}
-            onDecided={loadAgentMemory}
+            onDecided={afterDecision}
           />
         )}
       </div>
@@ -199,68 +236,127 @@ const StandardsSection = ({
     <section>
       <h3 className='mb-1 text-sm font-medium'>Project memory</h3>
       <p className='mb-3 text-xs text-muted-foreground'>
-        Your record of the project — what you wrote down yourself, plus anything
-        from the agent you chose to keep. Held by DARE, not by the agent, so it
-        survives the agent forgetting or being replaced.
+        DARE's own record of this project — kept in the database, not in a file
+        the agent can edit. Everything here is either something you wrote down
+        or a fact you kept from the agent, which is why it survives the agent
+        forgetting, being reset, or being replaced.
       </p>
       {projectMemory.length === 0 ? (
-        <EmptyLine>No project memory yet.</EmptyLine>
+        <EmptyLine>
+          Nothing yet. Keep a fact from the agent and it lands here.
+        </EmptyLine>
       ) : (
         <div className='space-y-3'>
-          {projectMemory.map((m) => (
-            <div
-              key={m.id}
-              className='rounded-xl border border-border bg-card p-5'
-            >
-              <div className='flex items-center gap-2'>
-                <Brain className='h-4 w-4 text-muted-foreground' />
-                <p className='text-sm font-medium'>{m.label}</p>
+          {projectMemory.map((m) => {
+            // The label is derived, not authored — it is the detail's leading
+            // clause ("Method decision: …"), or a truncation when there is no
+            // such clause. So use it as a heading only when the detail actually
+            // carries that clause, and show the rest as the body; otherwise the
+            // card printed the same words twice with an ellipsis in between.
+            const label = m.label?.trim() ?? ''
+            const prefix = `${label}:`
+            const hasClause = !!label && m.detail.trim().startsWith(prefix)
+            const body = hasClause
+              ? m.detail.trim().slice(prefix.length).trim()
+              : m.detail
+            return (
+              <div
+                key={m.id}
+                className='rounded-xl border border-border bg-card p-5'
+              >
+                {hasClause && (
+                  <div className='mb-2 flex items-center gap-2'>
+                    <Brain className='h-4 w-4 text-muted-foreground' />
+                    <p className='text-sm font-medium'>{label}</p>
+                  </div>
+                )}
+                <p className='text-sm text-foreground/80'>{body}</p>
+                <p className='mt-2 text-xs text-muted-foreground'>
+                  {m.source === 'proposal'
+                    ? 'Kept from the agent'
+                    : 'Added by you'}{' '}
+                  · {formatRelativeDate(m.capturedAt)}
+                </p>
+                <ThesisSourceLinks thesisId={m.id} sources={knowledgeItems} />
               </div>
-              <p className='mt-2 text-sm text-foreground/80'>{m.detail}</p>
-              <p className='mt-2 text-xs text-muted-foreground'>
-                Captured {formatRelativeDate(m.capturedAt)}
-              </p>
-              <ThesisSourceLinks thesisId={m.id} sources={knowledgeItems} />
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </section>
   </div>
 )
 
-const FileBlock = ({
-  name,
-  note,
-  content,
+/**
+ * One group of the agent's memory, grouped by how far it reaches.
+ *
+ * Reach is the thing a scholar actually needs to know — that the agent knows
+ * their name in every project but the working thesis only here — and it is a
+ * property of the file, so the file name stays on the heading rather than
+ * being the heading.
+ */
+const FactGroup = ({
+  title,
+  file,
+  scope,
+  entries,
+  firstSeen,
 }: {
-  name: string
-  note: string
-  content: string
+  title: string
+  file: string
+  scope: string
+  entries: string[]
+  firstSeen: Record<string, string>
 }) => (
-  <div>
-    <p className='mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase'>
-      {name} <span className='font-normal normal-case'>· {note}</span>
-    </p>
-    {content.trim() ? (
-      <pre className='max-h-72 overflow-auto rounded-lg border border-border bg-card p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap text-foreground/90'>
-        {content}
-      </pre>
+  <section>
+    <div className='mb-1 flex flex-wrap items-baseline justify-between gap-x-3'>
+      <h3 className='text-sm font-medium'>
+        {title} · {entries.length}
+      </h3>
+      <span className='font-mono text-[11px] text-muted-foreground'>
+        {file}
+      </span>
+    </div>
+    <p className='mb-3 text-xs text-muted-foreground'>{scope}</p>
+    {entries.length === 0 ? (
+      <EmptyLine>Hermes hasn't written anything here yet.</EmptyLine>
     ) : (
-      <EmptyLine>Hermes hasn’t written this yet.</EmptyLine>
+      <ul className='space-y-2'>
+        {entries.map((entry) => (
+          <li
+            key={entry}
+            className='flex items-baseline gap-3 rounded-lg border border-border bg-card px-4 py-3'
+          >
+            <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50' />
+            <p className='flex-1 text-sm leading-relaxed text-foreground/90'>
+              {entry}
+            </p>
+            {firstSeen[entry] && (
+              <span className='shrink-0 text-[11px] text-muted-foreground'>
+                {formatRelativeDate(firstSeen[entry])}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
     )}
-  </div>
+  </section>
 )
 
 /**
  * How the agent's memory got to its current state.
  *
- * The files themselves only ever show what the agent believes now. This shows
- * the moments it changed — what it learned, and what it dropped or corrected —
- * so "the agent remembers your project" is something the scholar can inspect
- * rather than take on trust.
+ * Collapsed, because every current fact now carries its own date above — what
+ * is left in here is the part the files genuinely cannot show: what the agent
+ * dropped or replaced, and why it went.
  */
-const MemoryTimeline = ({ history }: { history: AgentMemoryChange[] }) => {
+const MemoryTimeline = ({
+  history,
+  discarded,
+}: {
+  history: AgentMemoryChange[]
+  discarded: string[]
+}) => {
   const changes = history.filter(
     (h) =>
       h.memory.added.length ||
@@ -268,78 +364,74 @@ const MemoryTimeline = ({ history }: { history: AgentMemoryChange[] }) => {
       h.user.added.length ||
       h.user.removed.length
   )
-  const total = (history[0]?.memory.count ?? 0) + (history[0]?.user.count ?? 0)
+
+  if (changes.length === 0) return null
+
+  const wasDiscarded = (text: string) => discarded.includes(text)
 
   return (
-    <section>
-      <h3 className='mb-1 text-sm font-medium'>
-        How this memory grew · {total} {total === 1 ? 'fact' : 'facts'}
-      </h3>
-      <p className='mb-3 text-xs text-muted-foreground'>
+    <details className='rounded-xl border border-border bg-card px-4 py-3'>
+      <summary className='cursor-pointer text-sm font-medium'>
+        How this memory grew · {changes.length}{' '}
+        {changes.length === 1 ? 'change' : 'changes'}
+      </summary>
+      <p className='mt-2 mb-3 text-xs text-muted-foreground'>
         Recorded each time the files changed. Green is what the agent learned;
-        struck through is what it dropped or replaced. Entries marked &ldquo;you
-        &middot; shared&rdquo; are about you rather than this project, so they
-        show up in every project you own.
+        struck through is what left. Entries marked{' '}
+        <span className='font-mono'>you</span> are about you rather than this
+        project, so they show up in every project you own.
       </p>
-      {changes.length === 0 ? (
-        <EmptyLine>
-          Nothing recorded yet — the agent has not written to memory in this
-          project.
-        </EmptyLine>
-      ) : (
-        <ol className='space-y-3'>
-          {changes.map((h) => (
-            <li
-              key={h.id}
-              className='rounded-lg border border-border bg-card p-3'
-            >
-              <div className='mb-2 flex items-baseline justify-between gap-3'>
-                <span className='text-xs font-medium'>
-                  {h.isFirst ? 'First recorded' : 'Updated'}
-                </span>
-                <span className='text-xs text-muted-foreground'>
-                  {new Date(h.takenAt).toLocaleString()}
-                </span>
-              </div>
-              <ul className='space-y-1'>
-                {(['memory', 'user'] as const).flatMap((file) => [
-                  ...h[file].added.map((text) => (
-                    <li
-                      key={`${file}-a-${text}`}
-                      className='flex gap-2 text-xs leading-relaxed'
-                    >
-                      <span className='shrink-0 font-mono text-emerald-600 dark:text-emerald-400'>
-                        +
-                      </span>
-                      <span className='text-foreground/90'>{text}</span>
-                      <span className='ml-auto shrink-0 font-mono text-[11px] text-muted-foreground'>
-                        {file === 'memory' ? 'project' : 'you \u00b7 shared'}
-                      </span>
-                    </li>
-                  )),
-                  ...h[file].removed.map((text) => (
-                    <li
-                      key={`${file}-r-${text}`}
-                      className='flex gap-2 text-xs leading-relaxed'
-                    >
-                      <span className='shrink-0 font-mono text-muted-foreground'>
-                        −
-                      </span>
-                      <span className='text-muted-foreground line-through'>
-                        {text}
-                      </span>
-                      <span className='ml-auto shrink-0 font-mono text-[11px] text-muted-foreground'>
-                        {file === 'memory' ? 'project' : 'you \u00b7 shared'}
-                      </span>
-                    </li>
-                  )),
-                ])}
-              </ul>
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
+      <ol className='space-y-3'>
+        {changes.map((h) => (
+          <li key={h.id} className='rounded-lg border border-border p-3'>
+            <div className='mb-2 flex items-baseline justify-between gap-3'>
+              <span className='text-xs font-medium'>
+                {h.isFirst ? 'First recorded' : 'Updated'}
+              </span>
+              <span className='text-xs text-muted-foreground'>
+                {new Date(h.takenAt).toLocaleString()}
+              </span>
+            </div>
+            <ul className='space-y-1'>
+              {(['memory', 'user'] as const).flatMap((file) => [
+                ...h[file].added.map((text) => (
+                  <li
+                    key={`${file}-a-${text}`}
+                    className='flex gap-2 text-xs leading-relaxed'
+                  >
+                    <span className='shrink-0 font-mono text-emerald-600 dark:text-emerald-400'>
+                      +
+                    </span>
+                    <span className='text-foreground/90'>{text}</span>
+                    <span className='ml-auto shrink-0 font-mono text-[11px] text-muted-foreground'>
+                      {file === 'memory' ? 'project' : 'you'}
+                    </span>
+                  </li>
+                )),
+                ...h[file].removed.map((text) => (
+                  <li
+                    key={`${file}-r-${text}`}
+                    className='flex gap-2 text-xs leading-relaxed'
+                  >
+                    <span className='shrink-0 font-mono text-muted-foreground'>
+                      −
+                    </span>
+                    <span className='text-muted-foreground line-through'>
+                      {text}
+                    </span>
+                    {/* Without this a removal reads as the agent forgetting on
+                        its own, when the usual cause is the scholar. */}
+                    <span className='ml-auto shrink-0 font-mono text-[11px] text-muted-foreground'>
+                      {wasDiscarded(text) ? 'you discarded this' : 'replaced'}
+                    </span>
+                  </li>
+                )),
+              ])}
+            </ul>
+          </li>
+        ))}
+      </ol>
+    </details>
   )
 }
 
@@ -352,120 +444,59 @@ const AgentMemorySection = ({
   proposals: MemoryProposal[]
   onDecided: () => void
 }) => {
-  // Decided proposals leave the queue immediately rather than waiting for the
-  // refetch — a review queue that still shows what you just actioned reads as
-  // broken, even when the request succeeded.
-  const [decided, setDecided] = useState<Record<number, string>>({})
-  const [busy, setBusy] = useState<number | null>(null)
-
-  const decide = async (id: number, decision: 'accept' | 'reject') => {
-    setBusy(id)
-    try {
-      await reviewMemoryProposalAPI(id, decision)
-      setDecided((d) => ({ ...d, [id]: decision }))
-      // Rejecting rewrites the profile's MEMORY.md, so the files above are now
-      // stale; accepting moves the fact into project memory. Either way, refetch.
-      onDecided()
-    } finally {
-      setBusy(null)
-    }
-  }
-
-  const open = proposals.filter((p) => !decided[p.id])
+  const history = files?.history ?? []
+  const firstSeen = firstSeenByEntry(history)
 
   return (
     <div className='space-y-6'>
-      <p className='text-sm text-muted-foreground'>
-        Hermes's own files on disk — the live agent state behind every run.
+      <p className='flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-border pb-4 text-sm text-muted-foreground'>
         {files?.isolated ? (
           <>
-            {' '}
-            They belong to this project's own agent profile (
-            <span className='font-mono text-xs'>{files.profile}</span>), so no
-            other project or scholar can read them.
+            <span>Private to this project ·</span>
+            <span className='rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground/80'>
+              {files.profile}
+            </span>
+            <span>No other project or scholar can read it.</span>
           </>
         ) : (
-          ' They live in the shared default profile, so every project on this instance sees the same files.'
+          <span>
+            These live in the shared default profile, so every project on this
+            instance sees the same files.
+          </span>
         )}
       </p>
-      <div>
-        <p className='mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase'>
-          SOUL.md{' '}
-          <span className='font-normal normal-case'>
-            · the standards the agent obeys
-          </span>
-        </p>
-        <p className='rounded-lg border border-border bg-card px-4 py-3 text-xs text-muted-foreground'>
-          {files?.soul?.trim()
-            ? 'In sync with your soul file. DARE writes it and versions it — open Standards & Memory to read or change it.'
-            : 'No soul file yet. Set your standards under Standards & Memory and the agent picks them up on its next run.'}
-        </p>
-      </div>
-      <FileBlock
-        name='MEMORY.md'
-        note='project facts the agent kept — written by Hermes, not yet reviewed by you'
-        content={files?.memory ?? ''}
-      />
-      <FileBlock
-        name='USER.md'
-        note='what the agent knows about you — written by Hermes, not yet reviewed by you'
-        content={files?.user ?? ''}
+
+      {/* First, because it is the only thing here that needs you. */}
+      <MemoryProposalQueue
+        proposals={proposals}
+        onDecided={onDecided}
+        title='Waiting on you'
+        note="Keep it and it becomes project memory you own. Discard it and it leaves the agent's memory too, so it stops acting on it."
       />
 
-      <MemoryTimeline history={files?.history ?? []} />
+      <FactGroup
+        title='About this project'
+        file='MEMORY.md'
+        scope='Stays here. No other project of yours can see these.'
+        entries={splitEntries(files?.memory ?? '')}
+        firstSeen={firstSeen}
+      />
 
-      <section>
-        <h3 className='mb-1 text-sm font-medium'>
-          Pending from the agent · {proposals.length}
-        </h3>
-        <p className='mb-3 text-xs text-muted-foreground'>
-          Everything the agent writes to project memory surfaces here. Accept it
-          and it becomes project memory you own; reject it and it is removed
-          from the agent's memory too, so it stops acting on it. Until you
-          decide, it stays working context — the agent can use it, but it is not
-          part of your record.
-        </p>
-        {open.length === 0 ? (
-          <EmptyLine>Nothing waiting on you.</EmptyLine>
-        ) : (
-          <div className='space-y-2'>
-            {open.map((p) => (
-              <div
-                key={p.id}
-                className='flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3'
-              >
-                <Badge variant='gray' className='mt-0.5 shrink-0'>
-                  {p.role}
-                </Badge>
-                <div className='min-w-0 flex-1'>
-                  <p className='text-sm'>{p.content}</p>
-                  <p className='mt-1 text-xs text-muted-foreground'>
-                    Proposed {formatRelativeDate(p.proposedAt)}
-                  </p>
-                </div>
-                <div className='flex shrink-0 gap-2'>
-                  <button
-                    type='button'
-                    disabled={busy === p.id}
-                    onClick={() => decide(p.id, 'accept')}
-                    className='rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50'
-                  >
-                    Keep
-                  </button>
-                  <button
-                    type='button'
-                    disabled={busy === p.id}
-                    onClick={() => decide(p.id, 'reject')}
-                    className='rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent disabled:opacity-50'
-                  >
-                    Discard
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      <FactGroup
+        title='About you'
+        file='USER.md'
+        scope='Travels with you — the agent knows these in every project you own.'
+        entries={splitEntries(files?.user ?? '')}
+        firstSeen={firstSeen}
+      />
+
+      <MemoryTimeline history={history} discarded={files?.discarded ?? []} />
+
+      <p className='border-t border-border pt-4 text-xs text-muted-foreground'>
+        {files?.soul?.trim()
+          ? 'Standards come from your soul file, which DARE writes and versions — open Standards & memory to read or change it.'
+          : 'No soul file yet. Set your standards under Standards & memory and the agent picks them up on its next run.'}
+      </p>
     </div>
   )
 }
