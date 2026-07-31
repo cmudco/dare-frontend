@@ -1,6 +1,6 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
-import { MyFile, MyFolder } from '@/redux/types/files'
+import { FileStructure, MyFile, MyFolder } from '@/redux/types/files'
 import { FileStatus } from '@/utils/constants/file'
 
 export const getFilesAPI = async (): Promise<{ results: MyFile[] }> => {
@@ -27,6 +27,23 @@ export const uploadFileAPI = async (data: FormData): Promise<MyFile[]> => {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
+  })
+}
+
+/**
+ * Fetch the parsed document model for a file.
+ *
+ * Pass `pageNo` to get only that page's elements — a long document has
+ * hundreds, and the structure view only ever renders one page at a time.
+ */
+export const getFileStructureAPI = async (
+  id: number,
+  pageNo?: number | null
+): Promise<FileStructure> => {
+  return await baseRequest<FileStructure>({
+    url: `api/files/${id}/structure/`,
+    method: METHOD.GET,
+    params: pageNo != null ? { page_no: pageNo } : undefined,
   })
 }
 

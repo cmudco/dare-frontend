@@ -29,6 +29,69 @@ export interface MyFile {
   sharedBy?: { id: number; name: string; initials: string }
   isSharedByMe?: boolean
   isSharedPublicly?: boolean
+  // Document parsing. Headline numbers only — the elements behind them come
+  // from the dedicated structure endpoint.
+  pageCount?: number | null
+  pagesWithoutText?: number
+  parserName?: string | null
+  structureCounts?: DocumentCounts | null
+}
+
+export interface DocumentCounts {
+  pages: number
+  sections: number
+  tables: number
+  pictures: number
+  pagesWithoutText: number
+  contentChars: number
+}
+
+/** Where an element sits on its page, as fractions of page width and height. */
+export interface ElementBoundingBox {
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
+export type DocumentElementKind = 'text' | 'table' | 'picture'
+
+/**
+ * One element of the parsed document, positioned in reading order.
+ *
+ * `order` is the document-wide index, not the row position: it is what lets a
+ * description generated for a picture be placed back where the picture was.
+ */
+export interface DocumentElement {
+  order: number
+  kind: DocumentElementKind
+  label: string
+  pageNo: number | null
+  text?: string
+  section?: string
+  caption?: string
+  tableMarkdown?: string
+  bbox?: ElementBoundingBox
+}
+
+export interface DocumentOutlineEntry {
+  order: number
+  pageNo: number | null
+  text: string
+}
+
+export interface FileStructure {
+  id: number
+  name: string
+  status: FileStatus
+  parser: string | null
+  pageCount: number | null
+  pagesWithoutText: number
+  counts: DocumentCounts
+  outline: DocumentOutlineEntry[]
+  elements: DocumentElement[]
+  hasText: boolean
+  needsOcr: boolean
 }
 
 export interface MyFolder {

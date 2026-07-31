@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Button } from '../ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { FileText, AlertCircle, Download, ExternalLink } from 'lucide-react'
 import axios from 'axios'
+import FileStructurePanel from './FileStructurePanel'
 
 interface FileViewerModalProps {
   isOpen: boolean
@@ -15,6 +17,10 @@ interface FileViewerModalProps {
 /**
  * Modal component for viewing files (PDF, TXT, DOCX) with proper authentication.
  * Uses blob URLs for secure file display in iframe.
+ *
+ * The Structure tab shows the parsed document model behind the file — headings,
+ * tables and where each image sits — which is the only place the scanned-page
+ * count is visible.
  */
 const FileViewerModal = ({
   isOpen,
@@ -228,7 +234,26 @@ const FileViewerModal = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className='h-[70vh] flex-1 overflow-hidden'>{renderContent()}</div>
+        <Tabs defaultValue='document' className='flex h-[70vh] flex-1 flex-col'>
+          <TabsList className='self-start'>
+            <TabsTrigger value='document'>Document</TabsTrigger>
+            <TabsTrigger value='structure'>Structure</TabsTrigger>
+          </TabsList>
+
+          <TabsContent
+            value='document'
+            className='mt-3 flex-1 overflow-hidden data-[state=inactive]:hidden'
+          >
+            {renderContent()}
+          </TabsContent>
+
+          <TabsContent
+            value='structure'
+            className='mt-3 flex-1 overflow-y-auto data-[state=inactive]:hidden'
+          >
+            <FileStructurePanel fileId={fileId} />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   )

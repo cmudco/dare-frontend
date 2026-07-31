@@ -112,6 +112,10 @@ export enum FileStatus {
   PROCESSING = 0,
   PROCESSED = 1,
   FAILED = 2,
+  // Parsed without error, but every page is a scanned image so there was no
+  // text to embed. Nothing went wrong, and the file still cannot answer
+  // questions — which is why it is neither PROCESSED nor FAILED.
+  NEEDS_OCR = 3,
 }
 
 export const FOLDER_TABLE_HEAD = ['Folder Name', 'Last Updated', 'Action']
