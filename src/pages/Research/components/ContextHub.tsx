@@ -92,7 +92,9 @@ const ContextHub = ({
       owner: 'Hermes',
       badge: 'Auto',
       tone: 'yellow' as const,
-      desc: 'How the agent works for you — Hermes updates this, never your record.',
+      desc: memoryProposals.length
+        ? `${memoryProposals.length} ${memoryProposals.length === 1 ? 'fact is' : 'facts are'} waiting for you to keep or discard.`
+        : 'What the agent has learned working on this project.',
       count: memoryProposals.length,
     },
   ]
@@ -195,7 +197,12 @@ const StandardsSection = ({
       )}
     </section>
     <section>
-      <h3 className='mb-3 text-sm font-medium'>Project memory</h3>
+      <h3 className='mb-1 text-sm font-medium'>Project memory</h3>
+      <p className='mb-3 text-xs text-muted-foreground'>
+        Your record of the project — what you wrote down yourself, plus anything
+        from the agent you chose to keep. Held by DARE, not by the agent, so it
+        survives the agent forgetting or being replaced.
+      </p>
       {projectMemory.length === 0 ? (
         <EmptyLine>No project memory yet.</EmptyLine>
       ) : (
