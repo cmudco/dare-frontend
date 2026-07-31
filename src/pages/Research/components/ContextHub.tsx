@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BookMarked, Brain, Cpu, FileText, ScrollText } from 'lucide-react'
+import { BookMarked, Cpu, FileText, ScrollText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { formatRelativeDate } from '@/utils/dateUtils'
@@ -197,6 +197,7 @@ const ContextHub = ({
           <AgentMemorySection
             files={agentMemory}
             proposals={memoryProposals}
+            projectMemory={projectMemory}
             onDecided={afterDecision}
           />
         )}
@@ -236,10 +237,12 @@ const StandardsSection = ({
     <section>
       <h3 className='mb-1 text-sm font-medium'>Project memory</h3>
       <p className='mb-3 text-xs text-muted-foreground'>
-        DARE's own record of this project — kept in the database, not in a file
-        the agent can edit. Everything here is either something you wrote down
-        or a fact you kept from the agent, which is why it survives the agent
-        forgetting, being reset, or being replaced.
+        DARE's own record of this project — a database row, not a file the agent
+        can edit. Mostly the same facts as the agent's{' '}
+        <span className='font-mono'>MEMORY.md</span>, on purpose: keeping one
+        copies it here. The difference is what happens next — this copy survives
+        the agent being reset or replaced, gets fed back into every run, and can
+        carry linked sources.
       </p>
       {projectMemory.length === 0 ? (
         <EmptyLine>
@@ -266,7 +269,7 @@ const StandardsSection = ({
               >
                 {hasClause && (
                   <div className='mb-2 flex items-center gap-2'>
-                    <Brain className='h-4 w-4 text-muted-foreground' />
+                    <Cpu className='h-4 w-4 text-muted-foreground' />
                     <p className='text-sm font-medium'>{label}</p>
                   </div>
                 )}
@@ -301,12 +304,15 @@ const FactGroup = ({
   scope,
   entries,
   firstSeen,
+  kept,
 }: {
   title: string
   file: string
   scope: string
   entries: string[]
   firstSeen: Record<string, string>
+  /** Entries DARE has also written into its own record. */
+  kept?: Set<string>
 }) => (
   <section>
     <div className='mb-1 flex flex-wrap items-baseline justify-between gap-x-3'>
@@ -331,6 +337,13 @@ const FactGroup = ({
             <p className='flex-1 text-sm leading-relaxed text-foreground/90'>
               {entry}
             </p>
+            {/* Names the overlap with project memory rather than leaving the
+                same sentence sitting in two tabs with no relationship. */}
+            {kept?.has(entry) && (
+              <span className='shrink-0 text-[11px] text-green-700 dark:text-green-400'>
+                in your record
+              </span>
+            )}
             {firstSeen[entry] && (
               <span className='shrink-0 text-[11px] text-muted-foreground'>
                 {formatRelativeDate(firstSeen[entry])}
@@ -438,14 +451,17 @@ const MemoryTimeline = ({
 const AgentMemorySection = ({
   files,
   proposals,
+  projectMemory,
   onDecided,
 }: {
   files: AgentMemory | null
   proposals: MemoryProposal[]
+  projectMemory: ProjectMemory[]
   onDecided: () => void
 }) => {
   const history = files?.history ?? []
   const firstSeen = firstSeenByEntry(history)
+  const kept = new Set(projectMemory.map((m) => m.detail.trim()))
 
   return (
     <div className='space-y-6'>
@@ -477,9 +493,10 @@ const AgentMemorySection = ({
       <FactGroup
         title='About this project'
         file='MEMORY.md'
-        scope='Stays here. No other project of yours can see these.'
+        scope="Stays here. No other project of yours can see these. Anything you keep is copied into DARE's own record under Standards & memory."
         entries={splitEntries(files?.memory ?? '')}
         firstSeen={firstSeen}
+        kept={kept}
       />
 
       <FactGroup

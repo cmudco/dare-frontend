@@ -1,8 +1,7 @@
 import { AnimatePresence } from 'framer-motion'
 import { Compass, Inbox } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { MemoryProposal, ReviewItem } from '../types'
-import MemoryProposalQueue from './MemoryProposalQueue'
+import type { ReviewItem } from '../types'
 import ReviewItemCard from './ReviewItemCard'
 
 interface Props {
@@ -10,27 +9,22 @@ interface Props {
   later: ReviewItem[]
   /** The item currently being assessed by the Critic, if any. */
   criticItemId: number | null
-  /** Facts the agent wants to remember — the same kind of decision as a source. */
-  memoryProposals: MemoryProposal[]
   onApprove: (id: number) => void
   onReject: (id: number) => void
   onLater: (id: number) => void
   onAskCritic: (id: number) => void
   onGoToOverview: () => void
-  onMemoryDecided: () => void
 }
 
 const ReviewInbox = ({
   pending,
   later,
   criticItemId,
-  memoryProposals,
   onApprove,
   onReject,
   onLater,
   onAskCritic,
   onGoToOverview,
-  onMemoryDecided,
 }: Props) => {
   return (
     <div className='space-y-6'>
@@ -42,23 +36,12 @@ const ReviewInbox = ({
         </p>
       </header>
 
-      {/* Memory decisions surface here too. A scholar who only ever opens the
-          inbox should not have to find a second queue behind a tab. */}
-      <MemoryProposalQueue
-        proposals={memoryProposals}
-        onDecided={onMemoryDecided}
-        title='Memory the agent wants to keep'
-        note='Keep it and it becomes project memory you own; discard it and the agent forgets it too.'
-      />
-
       {pending.length === 0 ? (
         <div className='flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-16 text-center'>
           <div className='mb-4 rounded-full bg-muted p-3'>
             <Inbox className='h-6 w-6 text-muted-foreground' />
           </div>
-          {/* Names sources specifically: memory decisions can be waiting right
-              above this, and "your inbox is clear" would contradict them. */}
-          <p className='text-sm font-medium'>No sources waiting</p>
+          <p className='text-sm font-medium'>Your inbox is clear</p>
           <p className='mt-1 max-w-xs text-sm text-muted-foreground'>
             Run Scout from the Overview to gather candidate sources for review.
           </p>

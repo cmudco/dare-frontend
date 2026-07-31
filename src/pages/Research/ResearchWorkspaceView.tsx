@@ -238,13 +238,11 @@ const ResearchWorkspaceView = ({
             pending={pending}
             later={later}
             criticItemId={criticItemId}
-            memoryProposals={memoryProposals}
             onApprove={(id) => review(id, 'approve')}
             onReject={(id) => review(id, 'reject')}
             onLater={(id) => review(id, 'later')}
             onAskCritic={askCritic}
             onGoToOverview={() => setSection('overview')}
-            onMemoryDecided={refresh}
           />
         )
       case 'memory':

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Brain } from 'lucide-react'
+import { Cpu } from 'lucide-react'
 import { reviewMemoryProposalAPI } from '@/api/research'
 import { formatRelativeDate } from '@/utils/dateUtils'
 import type { MemoryProposal } from '../types'
@@ -58,16 +58,15 @@ const MemoryProposalQueue = ({
   }
 
   return (
-    <section className='rounded-xl border border-amber-300 bg-amber-50/60 p-4 dark:border-amber-800 dark:bg-amber-950/20'>
-      <h3 className='flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-300'>
-        <Brain className='h-4 w-4' />
+    // Deliberately quiet. The nav badge and the layer card's pill already carry
+    // the "something needs you" signal; a saturated panel on top of them is
+    // just noise inside the tab you opened to deal with it.
+    <section className='rounded-xl border border-border bg-muted/30 p-4'>
+      <h3 className='flex items-center gap-2 text-sm font-medium'>
+        <Cpu className='h-4 w-4 text-muted-foreground' />
         {title} · {open.length}
       </h3>
-      {note && (
-        <p className='mt-1 text-xs text-amber-900/70 dark:text-amber-200/70'>
-          {note}
-        </p>
-      )}
+      {note && <p className='mt-1 text-xs text-muted-foreground'>{note}</p>}
       <div className='mt-3 space-y-2'>
         {open.map((p) => (
           <div
