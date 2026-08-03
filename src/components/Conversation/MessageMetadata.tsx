@@ -17,7 +17,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   X,
   Bot,
@@ -71,6 +70,18 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
   const allModels = useSelector(
     (state: RootState) => state.conversation.allModels
   )
+  const usageDetails = Array.isArray(message.usageDetails)
+    ? message.usageDetails
+    : []
+  const thinkingTokens = usageDetails.reduce(
+    (total, round) => total + (round.thinkingTokens ?? 0),
+    0
+  )
+  const visibleOutputTokens = usageDetails.reduce(
+    (total, round) => total + (round.visibleOutputTokens ?? 0),
+    0
+  )
+  const finalUsage = usageDetails[usageDetails.length - 1]
 
   // Resolve the dispatch model's display name from the message's persisted
   // FKs. Real LLM dispatches set `message.llm` (numeric pk); LiteLLM
@@ -127,9 +138,9 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className='fixed top-0 right-0 bottom-0 mt-0 h-full w-[50vw] max-w-full overflow-hidden rounded-l-lg bg-background p-0 shadow-lg'>
-        <ScrollArea className='h-full w-full overflow-x-hidden'>
-          <div className='min-w-0 overflow-x-hidden p-4'>
+      <DrawerContent className='fixed top-0 right-0 bottom-0 mt-0 h-full w-full max-w-[100vw] min-w-0 overflow-hidden rounded-l-lg bg-background p-0 shadow-lg sm:w-[90vw] lg:w-[50vw]'>
+        <div className='h-full w-full min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain'>
+          <div className='w-full max-w-full min-w-0 overflow-x-hidden p-4'>
             <DrawerHeader className='p-0 text-left'>
               <div className='flex items-center justify-between px-6 py-4'>
                 <DrawerTitle className='flex items-center gap-2'>
@@ -251,7 +262,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                         </div>
                         <div>
                           <label className='text-sm font-medium text-muted-foreground'>
-                            Output Tokens
+                            Billed Output Tokens
                           </label>
                           <div className='flex items-center gap-2'>
                             <Zap className='h-4 w-4 text-green-500' />
@@ -262,6 +273,84 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                         </div>
                       </div>
                     )}
+
+                    {thinkingTokens > 0 && (
+                      <div className='grid grid-cols-1 gap-4 rounded-md bg-muted p-3 md:grid-cols-2'>
+                        <div>
+                          <label className='text-sm font-medium text-muted-foreground'>
+                            Hidden Thinking Tokens
+                          </label>
+                          <div className='flex items-center gap-2'>
+                            <Brain className='h-4 w-4 text-primary' />
+                            <span className='font-mono text-sm'>
+                              {thinkingTokens.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <label className='text-sm font-medium text-muted-foreground'>
+                            Non-thinking Output
+                          </label>
+                          <div className='flex items-center gap-2'>
+                            <MessageSquare className='h-4 w-4 text-primary' />
+                            <span className='font-mono text-sm'>
+                              {visibleOutputTokens.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <p className='text-xs text-muted-foreground md:col-span-2'>
+                          Anthropic bills thinking inside total output. The
+                          non-thinking value is total output minus reported
+                          thinking tokens.
+                        </p>
+                      </div>
+                    )}
+
+                    {message.outputTokens && usageDetails.length === 0 && (
+                      <p className='rounded-md bg-muted p-3 text-xs text-muted-foreground'>
+                        A thinking-token breakdown was not captured for this
+                        older message. The billed output total may include
+                        hidden reasoning.
+                      </p>
+                    )}
+
+                    {finalUsage &&
+                      (finalUsage.effort ||
+                        finalUsage.requestMaxTokens ||
+                        finalUsage.stopReason) && (
+                        <div className='grid grid-cols-1 gap-3 md:grid-cols-3'>
+                          <div>
+                            <label className='text-xs text-muted-foreground'>
+                              Effort used
+                            </label>
+                            <p className='text-sm capitalize'>
+                              {finalUsage.effort ?? 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <label className='text-xs text-muted-foreground'>
+                              Response token ceiling
+                            </label>
+                            <p className='font-mono text-sm'>
+                              {finalUsage.requestMaxTokens?.toLocaleString() ??
+                                'N/A'}
+                            </p>
+                            <p className='text-xs text-muted-foreground'>
+                              Maximum thinking plus answer tokens requested. It
+                              does not include input tokens or mean the full
+                              amount was consumed.
+                            </p>
+                          </div>
+                          <div>
+                            <label className='text-xs text-muted-foreground'>
+                              Stop reason
+                            </label>
+                            <p className='font-mono text-sm'>
+                              {finalUsage.stopReason ?? 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
                     {message.cost && (
                       <div>
@@ -503,6 +592,11 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                         Streaming
                       </Badge>
                     )}
+                    {finalUsage?.stopReason && (
+                      <Badge variant='outline'>
+                        Stop: {finalUsage.stopReason}
+                      </Badge>
+                    )}
                   </div>
 
                   {message.originalMessage && (
@@ -638,9 +732,9 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                           return (
                             <div
                               key={source.id}
-                              className='min-w-0 overflow-hidden rounded-lg border bg-muted/50 p-3'
+                              className='max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/50 p-3'
                             >
-                              <div className='mb-2 flex items-start justify-between gap-2'>
+                              <div className='mb-2 flex max-w-full min-w-0 flex-wrap items-start justify-between gap-2'>
                                 <div className='min-w-0 flex-1'>
                                   <a
                                     href={source.url}
@@ -657,14 +751,14 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                                     {domain}
                                   </p>
                                 </div>
-                                <div className='flex shrink-0 items-center gap-2'>
+                                <div className='flex max-w-full min-w-0 shrink items-center gap-2'>
                                   {source.pageAge && (
-                                    <span className='text-xs text-muted-foreground'>
+                                    <span className='max-w-32 truncate text-xs text-muted-foreground'>
                                       {source.pageAge}
                                     </span>
                                   )}
                                   <Badge
-                                    className={`text-xs ${
+                                    className={`max-w-32 truncate text-xs ${
                                       providerColors[source.provider] ||
                                       'bg-muted text-muted-foreground'
                                     }`}
@@ -764,7 +858,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                 ))}
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </DrawerContent>
     </Drawer>
   )

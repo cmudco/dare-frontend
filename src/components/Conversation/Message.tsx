@@ -43,6 +43,7 @@ import MessageMetadata from './MessageMetadata'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
 import { MessageActivity } from './MessageActivity/MessageActivity'
+import ThinkingSummary from './ThinkingSummary'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { debugLog } from '@/utils/debugLogger'
 
@@ -98,6 +99,13 @@ const Message: React.FC<MessageProps> = ({
         .filter(Number.isFinite)
     )
   )
+  const thinkingSummary =
+    message.thinkingSummary ??
+    message.usageDetails
+      ?.map((round) => round.thinkingSummary)
+      .filter((summary): summary is string => Boolean(summary))
+      .join('\n\n') ??
+    ''
   const [copiedUserMessage, setCopiedUserMessage] = useState(false)
   const [copiedAiResponse, setCopiedAiResponse] = useState(false)
 
@@ -335,6 +343,12 @@ const Message: React.FC<MessageProps> = ({
               message.streaming ? 'animate-pulse' : ''
             }`}
           >
+            {!isSenderMessage(message) && thinkingSummary && (
+              <ThinkingSummary
+                summary={thinkingSummary}
+                streaming={message.streaming}
+              />
+            )}
             <div
               className={`prose ${getFontSizeClasses()} max-w-full text-foreground focus:outline-hidden dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
               style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
