@@ -357,7 +357,10 @@ const ModelConfigurationPanel: React.FC = () => {
             <Settings className='h-5 w-5 text-muted-foreground' />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className='max-h-[calc(100dvh-1rem)] w-80 max-w-[calc(100vw-1rem)] overflow-x-hidden overflow-y-auto overscroll-contain border border-border bg-popover p-4'>
+        <PopoverContent
+          collisionPadding={8}
+          className='max-h-[var(--radix-popover-content-available-height)] w-80 max-w-[calc(100vw-1rem)] touch-pan-y touch-pinch-zoom [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto overscroll-contain border border-border bg-popover p-4'
+        >
           <div className='flex flex-col justify-center gap-4 text-foreground'>
             {activeConversation?.conversationId && (
               <div className='flex items-center justify-between border-b border-border pb-2'>
