@@ -122,6 +122,9 @@ export interface Message {
   cost?: string | null
   inputTokens?: number | null
   outputTokens?: number | null
+  usageDetails?: MessageUsageDetail[] | null
+  /** Provider-generated summarized thinking; never raw hidden chain-of-thought. */
+  thinkingSummary?: string | null
   energyWh?: string | null
   carbonG?: string | null
   waterMl?: string | null
@@ -148,6 +151,19 @@ export interface Message {
    * on the message for refresh.
    */
   contextTrace?: ContextTrace | null
+}
+
+export interface MessageUsageDetail {
+  round: number
+  inputTokens: number
+  outputTokens: number
+  thinkingTokens?: number
+  visibleOutputTokens?: number
+  stopReason?: string
+  requestMaxTokens?: number
+  effort?: EffortLevel
+  thinkingSummary?: string
+  cost?: number
 }
 
 /** Multiple traces on one message — one per retrieval source. */
