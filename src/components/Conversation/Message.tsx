@@ -460,7 +460,11 @@ const Message: React.FC<MessageProps> = ({
                   },
                 }}
               >
-                {message.streaming ? `${displayMessage}\u258b` : displayMessage}
+                {message.streaming
+                  ? displayMessage
+                    ? `${displayMessage}\u258b`
+                    : ''
+                  : displayMessage}
               </ReactMarkdown>
 
               {/* User Uploaded Images Display */}
@@ -572,6 +576,7 @@ const Message: React.FC<MessageProps> = ({
                 ))}
             </div>
           </div>
+
         </div>
 
         {isSenderMessage(message) && (

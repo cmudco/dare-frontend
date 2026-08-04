@@ -5,6 +5,7 @@ import {
   DocxRenderer,
   ExcalidrawRenderer,
   MermaidRenderer,
+  PdfRenderer,
   PptxRenderer,
   SandpackRenderer,
 } from './renderers'
@@ -81,6 +82,9 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
         console.error('Failed to parse pptx config:', e)
         return <ErrorDisplay message='Failed to render presentation' />
       }
+
+    case 'pdf':
+      return <PdfRenderer artifact={artifact} />
 
     case 'react':
       return <SandpackRenderer code={artifact.content} title={artifact.title} />
