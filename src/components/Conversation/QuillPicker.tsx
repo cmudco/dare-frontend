@@ -21,9 +21,6 @@ interface QuillPickerProps {
   disabled?: boolean
 }
 
-// Module-level cache — quills rarely change, so fetch once per session.
-let quillsCache: Quill[] | null = null
-
 /**
  * Pretty display name for a quill, e.g. "trip_report" -> "Trip Report"
  */
@@ -36,26 +33,20 @@ export const QuillPicker: React.FC<QuillPickerProps> = ({
   disabled = false,
 }) => {
   const [open, setOpen] = useState(false)
-  const [quills, setQuills] = useState<Quill[]>(quillsCache ?? [])
+  const [quills, setQuills] = useState<Quill[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const fetchedRef = useRef(false)
   const closedBySelectionRef = useRef(false)
 
-  // Fetch quills once when the popover first opens
+  // Read the catalog through the user's live MCP connection. Refreshing on
+  // every open avoids showing templates from a previous connection/session.
   useEffect(() => {
-    if (!open || fetchedRef.current) return
-    fetchedRef.current = true
-
-    if (quillsCache) {
-      setQuills(quillsCache)
-      return
-    }
+    if (!open) return
 
     setLoading(true)
+    setError(null)
     getQuillmarkQuillsAPI()
       .then((response) => {
-        quillsCache = response.quills
         setQuills(response.quills)
       })
       .catch((err) => {
