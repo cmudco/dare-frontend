@@ -137,9 +137,11 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   const summaryDetail =
     ragMode === RagMode.AGENTIC
       ? 'Searches on demand and refines across rounds'
-      : isTopK
-        ? `Top ${maxContextSnippets} snippets by score · no similarity filter`
-        : `Up to ${maxContextSnippets} snippets · similarity ≥ ${documentSimilarityThreshold.toFixed(2)}`
+      : ragMode === RagMode.ADVANCED
+        ? `Reranks a wider candidate pool · keeps the top ${maxContextSnippets}`
+        : isTopK
+          ? `Top ${maxContextSnippets} snippets by score · no similarity filter`
+          : `Up to ${maxContextSnippets} snippets · similarity ≥ ${documentSimilarityThreshold.toFixed(2)}`
 
   const snippetsAtDefault =
     maxContextSnippets === MODEL_CONFIG.maxContextSnippets
@@ -282,64 +284,71 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
             </p>
           </div>
 
-          <hr />
+          {ragMode === RagMode.NAIVE && (
+            <>
+              <hr />
 
-          <div className='space-y-2'>
-            <div className='flex items-center justify-between'>
-              <div className='flex items-center gap-2'>
-                <h4 className='font-semibold'>Similarity threshold</h4>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                  </TooltipTrigger>
-                  <TooltipContent className='max-w-sm'>
-                    <div className='space-y-2'>
-                      <p className='font-semibold'>
-                        {TOOLTIP_CONTENT.modelContext.similarityThreshold.title}
-                      </p>
-                      <p className='text-sm'>
-                        {
-                          TOOLTIP_CONTENT.modelContext.similarityThreshold
-                            .description
-                        }
-                      </p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
+              <div className='space-y-2'>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <h4 className='font-semibold'>Similarity threshold</h4>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                      </TooltipTrigger>
+                      <TooltipContent className='max-w-sm'>
+                        <div className='space-y-2'>
+                          <p className='font-semibold'>
+                            {
+                              TOOLTIP_CONTENT.modelContext.similarityThreshold
+                                .title
+                            }
+                          </p>
+                          <p className='text-sm'>
+                            {
+                              TOOLTIP_CONTENT.modelContext.similarityThreshold
+                                .description
+                            }
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <div className='flex items-center gap-1'>
+                    <span className='font-mono text-sm text-muted-foreground tabular-nums'>
+                      {isTopK
+                        ? 'Off — top-K'
+                        : documentSimilarityThreshold.toFixed(2)}
+                    </span>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8'
+                      onClick={() =>
+                        setThreshold(MODEL_CONFIG.documentSimilarityThreshold)
+                      }
+                      disabled={thresholdAtDefault}
+                      aria-label='Reset similarity threshold to default'
+                    >
+                      <RotateCcw className='h-3.5 w-3.5' />
+                    </Button>
+                  </div>
+                </div>
+                <Slider
+                  value={[documentSimilarityThreshold]}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  onValueChange={([value]) => setThreshold(value)}
+                  aria-label='Similarity threshold'
+                />
+                <p className='text-xs text-muted-foreground'>
+                  Snippets scoring below this are dropped. Slide to 0 to keep
+                  the top {maxContextSnippets} regardless of score.
+                </p>
               </div>
-              <div className='flex items-center gap-1'>
-                <span className='font-mono text-sm text-muted-foreground tabular-nums'>
-                  {isTopK
-                    ? 'Off — top-K'
-                    : documentSimilarityThreshold.toFixed(2)}
-                </span>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='h-8 w-8'
-                  onClick={() =>
-                    setThreshold(MODEL_CONFIG.documentSimilarityThreshold)
-                  }
-                  disabled={thresholdAtDefault}
-                  aria-label='Reset similarity threshold to default'
-                >
-                  <RotateCcw className='h-3.5 w-3.5' />
-                </Button>
-              </div>
-            </div>
-            <Slider
-              value={[documentSimilarityThreshold]}
-              min={0}
-              max={1}
-              step={0.05}
-              onValueChange={([value]) => setThreshold(value)}
-              aria-label='Similarity threshold'
-            />
-            <p className='text-xs text-muted-foreground'>
-              Snippets scoring below this are dropped. Slide to 0 to keep the
-              top {maxContextSnippets} regardless of score.
-            </p>
-          </div>
+            </>
+          )}
         </div>
 
         <style>{`
