@@ -178,7 +178,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     clearPendingDraftSave()
 
     const messageText = selectedQuill
-      ? `${conversationInput}\n\n[Use the "${selectedQuill}" CMU document template: call the quillmark get_spec tool for it, then create_document.]`
+      ? `${conversationInput}\n\n[Selected CMU document template: "${selectedQuill}"]`
       : conversationInput
 
     const newMessage: Partial<Message> = {
