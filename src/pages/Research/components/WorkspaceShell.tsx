@@ -34,6 +34,8 @@ interface Props {
   onNavigate: (s: NavSection) => void
   pendingCount: number
   approvedCount: number
+  /** Agent facts awaiting a keep/discard decision — badges the Context tab. */
+  memoryPendingCount?: number
   center: React.ReactNode
   context: React.ReactNode
   /** Overrides the demo project title (falls back to the mock project). */
@@ -49,6 +51,7 @@ const WorkspaceShell = ({
   onNavigate,
   pendingCount,
   approvedCount,
+  memoryPendingCount = 0,
   center,
   context,
   projectTitle,
@@ -105,7 +108,12 @@ const WorkspaceShell = ({
             {NAV.map((item) => {
               const isActive = active === item.key
               const Icon = item.icon
-              const badge = item.key === 'review' ? pendingCount : 0
+              const badge =
+                item.key === 'review'
+                  ? pendingCount
+                  : item.key === 'memory'
+                    ? memoryPendingCount
+                    : 0
               return (
                 <li key={item.key} className='shrink-0'>
                   <button

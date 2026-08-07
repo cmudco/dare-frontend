@@ -92,13 +92,62 @@ export interface AgentMemory {
   soul: string
   memory: string
   user: string
+  /** Which Hermes profile these files came from ('default' when unisolated). */
+  profile: string
+  /** True once the project has its own profile, so these files are private to it. */
+  isolated: boolean
+  /** Newest first. How these files got to their current state, one entry per change. */
+  history: AgentMemoryChange[]
+  /**
+   * Facts the scholar rejected. A line the agent dropped otherwise reads as it
+   * forgetting on its own; matching against this names the real cause.
+   */
+  discarded: string[]
+  /** Profiles this scholar's shared USER.md was pushed to on the last read. */
+  sharedTo?: string[]
 }
 
-/** Read the Hermes profile's operational memory files (read-only). */
-export const getAgentMemoryAPI = async (): Promise<AgentMemory> => {
+/** What changed in one file between two snapshots. */
+export interface AgentMemoryFileChange {
+  count: number
+  added: string[]
+  removed: string[]
+}
+
+/** One moment the agent's memory changed. */
+export interface AgentMemoryChange {
+  id: number
+  takenAt: string
+  memory: AgentMemoryFileChange
+  user: AgentMemoryFileChange
+  /** The earliest snapshot on record — everything in it counts as newly learned. */
+  isFirst: boolean
+}
+
+/** Read this project's Hermes profile memory files (read-only). */
+export const getAgentMemoryAPI = async (
+  projectId: number
+): Promise<AgentMemory> => {
   return await baseRequest<AgentMemory>({
-    url: 'api/research/agent-memory/',
+    url: `api/research/projects/${projectId}/agent-memory/`,
     method: METHOD.GET,
+  })
+}
+
+/**
+ * Decide on something the agent wants to remember.
+ *
+ * Accept promotes it into project memory the scholar owns; reject also removes
+ * it from the agent's own memory, so it stops acting on a fact they rejected.
+ */
+export const reviewMemoryProposalAPI = async (
+  proposalId: number,
+  decision: 'accept' | 'reject'
+): Promise<{ id: number; status: string }> => {
+  return await baseRequest<{ id: number; status: string }>({
+    url: `api/research/memory-proposals/${proposalId}/review/`,
+    method: METHOD.POST,
+    data: { decision },
   })
 }
 
