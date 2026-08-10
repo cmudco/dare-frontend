@@ -3,10 +3,9 @@
  *
  * Barrel exports for Memory components.
  */
-export { default as MemoryItem } from './MemoryItem'
-export { default as MemoryList } from './MemoryList'
-export { default as MemorySearch } from './MemorySearch'
-export { default as SeedMemoryButton } from './SeedMemoryButton'
-export { default as MemoryStatsHeader } from './MemoryStatsHeader'
-export { default as MemoryTypeFilter } from './MemoryTypeFilter'
-export { default as MemoryCategoryCards } from './MemoryCategoryCards'
+export { default as MemoryCard } from './MemoryCard'
+export { default as MemoryFeed } from './MemoryFeed'
+export { default as MemoryLayerCards } from './MemoryLayerCards'
+export { default as MemoryCommandBar } from './MemoryCommandBar'
+export { default as ClearMemoryDialog } from './ClearMemoryDialog'
+export { default as MemoryExplainer } from './MemoryExplainer'

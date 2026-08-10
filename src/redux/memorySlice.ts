@@ -24,6 +24,23 @@ const memorySlice = createSlice({
     clearSearchResults: (state) => {
       state.searchResults = null
     },
+    /** Enter sample mode: load client-side demo memories (nothing persisted) */
+    loadSampleMemories: (state, action: PayloadAction<MemoryItem[]>) => {
+      state.items = action.payload
+      state.previewMode = true
+      state.searchResults = null
+      state.error = null
+    },
+    /** Leave sample mode and drop the demo memories */
+    exitSampleMode: (state) => {
+      state.items = []
+      state.previewMode = false
+      state.searchResults = null
+    },
+    /** Remove a memory locally (sample mode only — no API call) */
+    removeMemoryItemLocal: (state, action: PayloadAction<string>) => {
+      state.items = state.items.filter((item) => item.id !== action.payload)
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -51,8 +68,13 @@ const memorySlice = createSlice({
       .addCase(
         deleteMemoryItem.fulfilled,
         (state, action: PayloadAction<string>) => {
-          // Remove the deleted item from the list
+          // Remove the deleted item from the list and any live search results
           state.items = state.items.filter((item) => item.id !== action.payload)
+          if (state.searchResults) {
+            state.searchResults.items = state.searchResults.items.filter(
+              (item) => item.id !== action.payload
+            )
+          }
         }
       )
       .addCase(deleteMemoryItem.rejected, (state, action) => {
@@ -107,5 +129,11 @@ const memorySlice = createSlice({
   },
 })
 
-export const { clearMemoryError, clearSearchResults } = memorySlice.actions
+export const {
+  clearMemoryError,
+  clearSearchResults,
+  loadSampleMemories,
+  exitSampleMode,
+  removeMemoryItemLocal,
+} = memorySlice.actions
 export default memorySlice.reducer

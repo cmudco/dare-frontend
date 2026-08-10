@@ -63,6 +63,8 @@ export interface MemoryState {
   seeding: boolean
   /** Whether clearing is in progress */
   clearing: boolean
+  /** Whether the store holds client-side sample data (nothing persisted) */
+  previewMode: boolean
   /** Error message if any operation failed */
   error: string | null
 }
