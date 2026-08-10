@@ -39,12 +39,14 @@ import { QuillPicker } from './QuillPicker'
 interface ConversationPillProps {
   editMessageId?: string | null
   onCancelEdit?: () => void
+  onMessageSent?: () => void
   disabled?: boolean
 }
 
 const ConversationPill: React.FC<ConversationPillProps> = ({
   editMessageId,
   onCancelEdit,
+  onMessageSent,
   disabled = false,
 }) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -184,6 +186,8 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     const newMessage: Partial<Message> = {
       message: messageText,
     }
+
+    onMessageSent?.()
 
     if (!activeConversation) {
       setPendingMessage(messageText)
