@@ -5,37 +5,12 @@
  */
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
-
-// Types
-export interface MemoryItem {
-  id: string
-  memoryType: string
-  content: string
-  categories: string[]
-  createdAt?: string
-  updatedAt?: string
-  score?: number
-}
-
-export interface MemorySearchResult {
-  query: string
-  items: MemoryItem[]
-  categories: Array<{
-    name: string
-    summary: string
-    score?: number
-  }>
-}
-
-export interface SeedResponse {
-  itemsCreated: number
-  message: string
-}
-
-export interface ClearResponse {
-  success: boolean
-  message: string
-}
+import type {
+  ClearMemoryResponse,
+  MemoryItem,
+  MemorySearchResult,
+  SeedMemoryResponse,
+} from '@/redux/types/memory'
 
 // API Functions
 
@@ -85,8 +60,8 @@ export const searchMemoryAPI = async (
 /**
  * Clear all memory items for the authenticated user
  */
-export const clearAllMemoryAPI = async (): Promise<ClearResponse> => {
-  return await baseRequest<ClearResponse>({
+export const clearAllMemoryAPI = async (): Promise<ClearMemoryResponse> => {
+  return await baseRequest<ClearMemoryResponse>({
     url: 'api/memory/clear/',
     method: METHOD.DELETE,
   })
@@ -95,8 +70,8 @@ export const clearAllMemoryAPI = async (): Promise<ClearResponse> => {
 /**
  * Seed demo memory data (development only)
  */
-export const seedMemoryAPI = async (): Promise<SeedResponse> => {
-  return await baseRequest<SeedResponse>({
+export const seedMemoryAPI = async (): Promise<SeedMemoryResponse> => {
+  return await baseRequest<SeedMemoryResponse>({
     url: 'api/memory/seed/',
     method: METHOD.POST,
   })
