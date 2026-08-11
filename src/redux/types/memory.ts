@@ -37,12 +37,6 @@ export interface MemorySearchResult {
   categories: MemoryCategory[]
 }
 
-/** Response from seed endpoint */
-export interface SeedMemoryResponse {
-  itemsCreated: number
-  message: string
-}
-
 /** Response from clear endpoint */
 export interface ClearMemoryResponse {
   success: boolean
@@ -59,12 +53,10 @@ export interface MemoryState {
   searchResults: MemorySearchResult | null
   /** Whether search is in progress */
   searchLoading: boolean
-  /** Whether seeding is in progress */
-  seeding: boolean
   /** Whether clearing is in progress */
   clearing: boolean
-  /** Whether the store holds client-side sample data (nothing persisted) */
-  previewMode: boolean
+  /** Id of the memory currently being saved, if any */
+  savingId: string | null
   /** Error message if any operation failed */
   error: string | null
 }

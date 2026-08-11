@@ -8,8 +8,7 @@ export const initialMemoryState: MemoryState = {
   itemsLoading: false,
   searchResults: null,
   searchLoading: false,
-  seeding: false,
   clearing: false,
-  previewMode: false,
+  savingId: null,
   error: null,
 }

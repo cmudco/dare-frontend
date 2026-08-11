@@ -6,26 +6,19 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen, Fingerprint, FlaskConical, Sprout } from 'lucide-react'
+import { BookOpen, Fingerprint } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   clearAllMemory,
   deleteMemoryItem,
   getMemoryItems,
   searchMemory,
+  updateMemoryItem,
 } from '@/redux/asyncThunks/memory'
-import {
-  clearMemoryError,
-  clearSearchResults,
-  exitSampleMode,
-  loadSampleMemories,
-  removeMemoryItemLocal,
-} from '@/redux/memorySlice'
+import { clearMemoryError, clearSearchResults } from '@/redux/memorySlice'
 import { MemoryType } from '@/redux/types/memory'
-import { config } from '@/config/environment'
 import { toast } from '@/utils/toast'
 import { formatRelativeDate } from '@/utils/dateUtils'
-import { SAMPLE_MEMORIES } from '@/utils/constants/memorySamples'
 import { Button } from '@/components/ui/button'
 import {
   ClearMemoryDialog,
@@ -47,14 +40,12 @@ const MemoryScreen = () => {
   const searchResults = useAppSelector((state) => state.memory.searchResults)
   const searchLoading = useAppSelector((state) => state.memory.searchLoading)
   const clearing = useAppSelector((state) => state.memory.clearing)
-  const previewMode = useAppSelector((state) => state.memory.previewMode)
+  const savingId = useAppSelector((state) => state.memory.savingId)
   const error = useAppSelector((state) => state.memory.error)
 
   useEffect(() => {
-    if (!previewMode) {
-      dispatch(getMemoryItems())
-    }
-  }, [dispatch, previewMode])
+    dispatch(getMemoryItems())
+  }, [dispatch])
 
   useEffect(() => {
     if (error) {
@@ -115,15 +106,20 @@ const MemoryScreen = () => {
   }
 
   const handleDelete = async (id: string) => {
-    if (previewMode) {
-      dispatch(removeMemoryItemLocal(id))
-      toast.success('Memory forgotten')
-      return
-    }
     const result = await dispatch(deleteMemoryItem(id))
     if (deleteMemoryItem.fulfilled.match(result)) {
       toast.success('Memory forgotten')
     }
+  }
+
+  /** Resolves false when the server refused, so the editor stays open. */
+  const handleEdit = async (id: string, content: string): Promise<boolean> => {
+    const result = await dispatch(updateMemoryItem({ id, content }))
+    if (updateMemoryItem.fulfilled.match(result)) {
+      toast.success('Memory updated')
+      return true
+    }
+    return false
   }
 
   const handleClearAll = async () => {
@@ -133,19 +129,6 @@ const MemoryScreen = () => {
       handleClearSearch()
       setSelectedLayer(null)
     }
-  }
-
-  const handleLoadSamples = () => {
-    dispatch(loadSampleMemories(SAMPLE_MEMORIES))
-    setSelectedLayer(null)
-    setQuery('')
-    toast.success('Sample memories loaded — nothing is stored')
-  }
-
-  const handleExitSamples = () => {
-    dispatch(exitSampleMode())
-    setSelectedLayer(null)
-    setQuery('')
   }
 
   const activeLayer = selectedLayer ? layerFor(selectedLayer) : null
@@ -177,13 +160,7 @@ const MemoryScreen = () => {
               <BookOpen className='h-4 w-4' />
               How it works
             </Button>
-            {config.isLocal && !previewMode && (
-              <Button variant='outline' onClick={handleLoadSamples}>
-                <Sprout className='h-4 w-4' />
-                Sample data
-              </Button>
-            )}
-            {items.length > 0 && !previewMode && (
+            {items.length > 0 && (
               <ClearMemoryDialog
                 memoryCount={items.length}
                 clearing={clearing}
@@ -192,19 +169,6 @@ const MemoryScreen = () => {
             )}
           </div>
         </motion.div>
-
-        {/* Sample mode banner */}
-        {previewMode && (
-          <div className='flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/50 px-4 py-2.5'>
-            <div className='flex items-center gap-2.5 text-sm'>
-              <FlaskConical className='h-4 w-4 shrink-0 text-muted-foreground' />
-              <span>Exploring with sample memories — nothing is stored.</span>
-            </div>
-            <Button variant='ghost' size='sm' onClick={handleExitSamples}>
-              Exit sample mode
-            </Button>
-          </div>
-        )}
 
         {/* Layer overview + filter */}
         <MemoryLayerCards
@@ -230,7 +194,6 @@ const MemoryScreen = () => {
             semanticResult={searchResults}
             searchLoading={searchLoading}
             visibleCount={visibleItems.length}
-            semanticDisabled={previewMode}
           />
         </motion.div>
 
@@ -294,11 +257,10 @@ const MemoryScreen = () => {
           isSearching={Boolean(searchResults) || trimmedQuery.length > 0}
           showScores={Boolean(searchResults)}
           onDelete={handleDelete}
+          onEdit={handleEdit}
+          savingId={savingId}
           onCategoryClick={handleQueryChange}
           onOpenExplainer={() => setExplainerOpen(true)}
-          onLoadSamples={
-            config.isLocal && !previewMode ? handleLoadSamples : undefined
-          }
         />
       </div>
 

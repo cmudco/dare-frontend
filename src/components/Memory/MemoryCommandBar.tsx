@@ -20,8 +20,6 @@ interface Props {
   searchLoading: boolean
   /** Number of items currently visible in the feed */
   visibleCount: number
-  /** Sample mode: semantic search needs the live backend */
-  semanticDisabled?: boolean
 }
 
 const MemoryCommandBar = ({
@@ -32,11 +30,10 @@ const MemoryCommandBar = ({
   semanticResult,
   searchLoading,
   visibleCount,
-  semanticDisabled = false,
 }: Props) => {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
-    if (!semanticDisabled && query.trim().length > 0) {
+    if (query.trim().length > 0) {
       onSemanticSearch(query.trim())
     }
   }
@@ -73,12 +70,7 @@ const MemoryCommandBar = ({
         <Button
           type='submit'
           variant='outline'
-          disabled={!hasQuery || searchLoading || semanticDisabled}
-          title={
-            semanticDisabled
-              ? 'Semantic search needs the live memory backend — keyword filtering still works'
-              : undefined
-          }
+          disabled={!hasQuery || searchLoading}
           className='h-11 shrink-0 rounded-xl'
         >
           {searchLoading ? (
@@ -105,9 +97,7 @@ const MemoryCommandBar = ({
             <>
               Keyword filter — {visibleCount}{' '}
               {visibleCount === 1 ? 'memory' : 'memories'} matching as you type.
-              {semanticDisabled
-                ? ' Sample mode: keyword filtering only.'
-                : ' Press Enter to search by meaning instead.'}
+              Press Enter to search by meaning instead.
             </>
           )}
         </p>

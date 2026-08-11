@@ -350,8 +350,9 @@ const MemoryExplainer = ({ open, onOpenChange }: Props) => {
             </div>
             <TurnDiagram />
             <p className='text-xs text-muted-foreground italic'>
-              The layers are live today. The writer, gate, and consolidation
-              passes are the layered memory engine DARE is rolling out next.
+              The layers, the writer and the gate are live today. Consolidation
+              — the sweep that merges duplicates and promotes what has proved
+              durable — is what DARE is rolling out next.
             </p>
           </motion.section>
 
