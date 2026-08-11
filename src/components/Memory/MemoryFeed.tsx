@@ -6,7 +6,7 @@
  */
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { BookOpen, FileText, Fingerprint, Rows3, Sprout } from 'lucide-react'
+import { BookOpen, FileText, Fingerprint, Rows3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { MemoryType, type MemoryItem } from '@/redux/types/memory'
@@ -22,10 +22,12 @@ interface Props {
   isSearching: boolean
   showScores: boolean
   onDelete: (id: string) => void
+  /** Rewrite a memory. Resolves false when the server refused. */
+  onEdit: (id: string, content: string) => Promise<boolean>
+  /** Id of the memory currently being saved, if any */
+  savingId?: string | null
   /** Filter the feed by a category tag */
   onCategoryClick?: (category: string) => void
-  /** Offer client-side sample data in the empty state (local dev) */
-  onLoadSamples?: () => void
   /** Open the "How memory works" drawer from the empty state */
   onOpenExplainer?: () => void
 }
@@ -70,8 +72,9 @@ const MemoryFeed = ({
   isSearching,
   showScores,
   onDelete,
+  onEdit,
+  savingId,
   onCategoryClick,
-  onLoadSamples,
   onOpenExplainer,
 }: Props) => {
   const [profileView, setProfileView] = useState<'document' | 'cards'>(
@@ -110,20 +113,12 @@ const MemoryFeed = ({
               ? layer.blurb
               : 'As you talk to DARE, the things worth keeping land here — visible, searchable, and yours to prune.'}
         </p>
-        {!isSearching && (
-          <div className='mt-4 flex items-center gap-2'>
-            {onOpenExplainer && (
-              <Button variant='outline' size='sm' onClick={onOpenExplainer}>
-                <BookOpen className='h-4 w-4' />
-                How memory works
-              </Button>
-            )}
-            {onLoadSamples && (
-              <Button variant='outline' size='sm' onClick={onLoadSamples}>
-                <Sprout className='h-4 w-4' />
-                Explore with sample data
-              </Button>
-            )}
+        {!isSearching && onOpenExplainer && (
+          <div className='mt-4'>
+            <Button variant='outline' size='sm' onClick={onOpenExplainer}>
+              <BookOpen className='h-4 w-4' />
+              How memory works
+            </Button>
           </div>
         )}
       </div>
@@ -145,7 +140,12 @@ const MemoryFeed = ({
         </div>
       )}
       {showProfileDocument && profileView === 'document' ? (
-        <ProfileDocument items={items} onDelete={onDelete} />
+        <ProfileDocument
+          items={items}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          savingId={savingId}
+        />
       ) : (
         <AnimatePresence initial={false}>
           {items.map((item) => (
@@ -153,6 +153,8 @@ const MemoryFeed = ({
               key={item.id}
               item={item}
               onDelete={onDelete}
+              onEdit={onEdit}
+              saving={savingId === item.id}
               showScore={showScores}
               onCategoryClick={onCategoryClick}
             />

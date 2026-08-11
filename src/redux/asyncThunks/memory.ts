@@ -7,9 +7,9 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   getMemoryItemsAPI,
   deleteMemoryItemAPI,
+  updateMemoryItemAPI,
   searchMemoryAPI,
   clearAllMemoryAPI,
-  seedMemoryAPI,
 } from '../../api/memory'
 
 /**
@@ -43,6 +43,22 @@ export const deleteMemoryItem = createAsyncThunk(
 )
 
 /**
+ * Rewrite a memory. The server may refuse — a rule whose new trigger collides
+ * with another, a profile line that would cross the token ceiling — so the
+ * rejection message is surfaced rather than swallowed.
+ */
+export const updateMemoryItem = createAsyncThunk(
+  'memory/updateMemoryItem',
+  async ({ id, content }: { id: string; content: string }, thunkAPI) => {
+    try {
+      return await updateMemoryItemAPI(id, content)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
  * Search memories using vector similarity
  */
 export const searchMemory = createAsyncThunk(
@@ -65,21 +81,6 @@ export const clearAllMemory = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await clearAllMemoryAPI()
-      return response
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message)
-    }
-  }
-)
-
-/**
- * Seed demo memory data (development only)
- */
-export const seedMemory = createAsyncThunk(
-  'memory/seedMemory',
-  async (_, thunkAPI) => {
-    try {
-      const response = await seedMemoryAPI()
       return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)

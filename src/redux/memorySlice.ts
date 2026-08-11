@@ -8,9 +8,9 @@ import { initialMemoryState } from './initialState/memory'
 import {
   getMemoryItems,
   deleteMemoryItem,
+  updateMemoryItem,
   searchMemory,
   clearAllMemory,
-  seedMemory,
 } from './asyncThunks/memory'
 import { MemoryItem, MemorySearchResult } from './types/memory'
 
@@ -23,23 +23,6 @@ const memorySlice = createSlice({
     },
     clearSearchResults: (state) => {
       state.searchResults = null
-    },
-    /** Enter sample mode: load client-side demo memories (nothing persisted) */
-    loadSampleMemories: (state, action: PayloadAction<MemoryItem[]>) => {
-      state.items = action.payload
-      state.previewMode = true
-      state.searchResults = null
-      state.error = null
-    },
-    /** Leave sample mode and drop the demo memories */
-    exitSampleMode: (state) => {
-      state.items = []
-      state.previewMode = false
-      state.searchResults = null
-    },
-    /** Remove a memory locally (sample mode only — no API call) */
-    removeMemoryItemLocal: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter((item) => item.id !== action.payload)
     },
   },
   extraReducers: (builder) => {
@@ -81,6 +64,29 @@ const memorySlice = createSlice({
         state.error = action.payload as string
       })
 
+      // Update Memory Item
+      .addCase(updateMemoryItem.pending, (state, action) => {
+        state.savingId = action.meta.arg.id
+        state.error = null
+      })
+      .addCase(updateMemoryItem.fulfilled, (state, action) => {
+        state.savingId = null
+        // A rewritten profile line gets a new content-derived id, so the
+        // edited row is matched on the id that was SENT, not the one that
+        // came back.
+        const editedId = action.meta.arg.id
+        const replace = (item: MemoryItem) =>
+          item.id === editedId ? { ...item, ...action.payload } : item
+        state.items = state.items.map(replace)
+        if (state.searchResults) {
+          state.searchResults.items = state.searchResults.items.map(replace)
+        }
+      })
+      .addCase(updateMemoryItem.rejected, (state, action) => {
+        state.savingId = null
+        state.error = action.payload as string
+      })
+
       // Search Memory
       .addCase(searchMemory.pending, (state) => {
         state.searchLoading = true
@@ -112,28 +118,8 @@ const memorySlice = createSlice({
         state.clearing = false
         state.error = action.payload as string
       })
-
-      // Seed Memory
-      .addCase(seedMemory.pending, (state) => {
-        state.seeding = true
-        state.error = null
-      })
-      .addCase(seedMemory.fulfilled, (state) => {
-        state.seeding = false
-        // Items will be refreshed by a subsequent getMemoryItems call
-      })
-      .addCase(seedMemory.rejected, (state, action) => {
-        state.seeding = false
-        state.error = action.payload as string
-      })
   },
 })
 
-export const {
-  clearMemoryError,
-  clearSearchResults,
-  loadSampleMemories,
-  exitSampleMode,
-  removeMemoryItemLocal,
-} = memorySlice.actions
+export const { clearMemoryError, clearSearchResults } = memorySlice.actions
 export default memorySlice.reducer

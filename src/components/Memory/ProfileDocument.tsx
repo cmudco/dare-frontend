@@ -8,20 +8,19 @@
  */
 import { useMemo, useState } from 'react'
 import { Check, Copy, FileText, Pencil, Trash2 } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { toast } from '@/utils/toast'
 import type { MemoryItem } from '@/redux/types/memory'
 import { PROFILE_TOKEN_BUDGET, estimateTokens } from './layers'
+import InlineEditor from './InlineEditor'
 
 interface Props {
   items: MemoryItem[]
   onDelete: (id: string) => void
+  /** Rewrite one line. Resolves false when the server refused. */
+  onEdit: (id: string, content: string) => Promise<boolean>
+  /** Id of the line currently being saved, if any */
+  savingId?: string | null
 }
 
 /** Canonical USER.md sections, in document order */
@@ -51,11 +50,16 @@ const sectionFor = (item: MemoryItem): string => {
 const DocLine = ({
   item,
   onDelete,
+  onEdit,
+  saving,
 }: {
   item: MemoryItem
   onDelete: (id: string) => void
+  onEdit: (id: string, content: string) => Promise<boolean>
+  saving: boolean
 }) => {
   const [copied, setCopied] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   const handleCopy = async () => {
     try {
@@ -65,6 +69,23 @@ const DocLine = ({
     } catch {
       toast.error('Could not copy to clipboard')
     }
+  }
+
+  if (editing) {
+    return (
+      <div className='-mx-2 px-2'>
+        <InlineEditor
+          mono
+          value={item.content}
+          saving={saving}
+          onCancel={() => setEditing(false)}
+          onSave={async (content) => {
+            const saved = await onEdit(item.id, content)
+            if (saved) setEditing(false)
+          }}
+        />
+      </div>
+    )
   }
 
   return (
@@ -84,6 +105,13 @@ const DocLine = ({
           )}
         </button>
         <button
+          aria-label='Edit line'
+          onClick={() => setEditing(true)}
+          className='rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground'
+        >
+          <Pencil className='h-3.5 w-3.5' />
+        </button>
+        <button
           aria-label='Forget line'
           onClick={() => onDelete(item.id)}
           className='rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive'
@@ -95,7 +123,7 @@ const DocLine = ({
   )
 }
 
-const ProfileDocument = ({ items, onDelete }: Props) => {
+const ProfileDocument = ({ items, onDelete, onEdit, savingId }: Props) => {
   const sections = useMemo(() => {
     const grouped = new Map<string, MemoryItem[]>()
     items.forEach((item) => {
@@ -149,24 +177,6 @@ const ProfileDocument = ({ items, onDelete }: Props) => {
           <span className='text-xs text-muted-foreground tabular-nums'>
             ~{tokens} / {PROFILE_TOKEN_BUDGET} tokens
           </span>
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <button
-                    aria-label='Edit USER.md'
-                    disabled
-                    className='cursor-not-allowed rounded-md p-1.5 text-muted-foreground/40'
-                  >
-                    <Pencil className='h-4 w-4' />
-                  </button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                Editing arrives with the layered memory backend
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
       </div>
 
@@ -180,7 +190,13 @@ const ProfileDocument = ({ items, onDelete }: Props) => {
             </p>
             <div className='space-y-0.5'>
               {section.items.map((item) => (
-                <DocLine key={item.id} item={item} onDelete={onDelete} />
+                <DocLine
+                  key={item.id}
+                  item={item}
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                  saving={savingId === item.id}
+                />
               ))}
             </div>
           </div>

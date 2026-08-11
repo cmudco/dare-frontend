@@ -20,10 +20,15 @@ import { formatRelativeDate, formatShortDate } from '@/utils/dateUtils'
 import { toast } from '@/utils/toast'
 import { MemoryType, type MemoryItem } from '@/redux/types/memory'
 import { badgeVariantFor, layerFor } from './layers'
+import InlineEditor from './InlineEditor'
 
 interface Props {
   item: MemoryItem
   onDelete: (id: string) => void
+  /** Rewrite this memory. Resolves false when the server refused. */
+  onEdit: (id: string, content: string) => Promise<boolean>
+  /** True while this card's save is in flight */
+  saving?: boolean
   /** Show the relevance meter (semantic search results) */
   showScore?: boolean
   /** Filter the feed by a category tag */
@@ -48,10 +53,13 @@ const capitalize = (text: string): string =>
 const MemoryCard = ({
   item,
   onDelete,
+  onEdit,
+  saving = false,
   showScore = false,
   onCategoryClick,
 }: Props) => {
   const [copied, setCopied] = useState(false)
+  const [editing, setEditing] = useState(false)
   const layer = layerFor(item.memoryType)
   const isDated = item.memoryType === MemoryType.EVENT
   const anchorDate = item.createdAt
@@ -125,19 +133,15 @@ const MemoryCard = ({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span>
-                  <button
-                    aria-label='Edit memory'
-                    disabled
-                    className='cursor-not-allowed rounded-md p-1.5 text-muted-foreground/40'
-                  >
-                    <Pencil className='h-4 w-4' />
-                  </button>
-                </span>
+                <button
+                  aria-label='Edit memory'
+                  onClick={() => setEditing(true)}
+                  className='rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground'
+                >
+                  <Pencil className='h-4 w-4' />
+                </button>
               </TooltipTrigger>
-              <TooltipContent>
-                Editing arrives with the layered memory backend
-              </TooltipContent>
+              <TooltipContent>Edit</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -155,7 +159,17 @@ const MemoryCard = ({
         </div>
       </div>
 
-      {rule ? (
+      {editing ? (
+        <InlineEditor
+          value={item.content}
+          saving={saving}
+          onCancel={() => setEditing(false)}
+          onSave={async (content) => {
+            const saved = await onEdit(item.id, content)
+            if (saved) setEditing(false)
+          }}
+        />
+      ) : rule ? (
         <p className='mt-2.5 text-sm leading-relaxed'>
           <span className='mr-2 inline-flex translate-y-[-1px] items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 align-middle text-xs font-medium text-amber-700 dark:text-amber-400'>
             <Zap className='h-3 w-3' />

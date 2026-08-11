@@ -1,7 +1,7 @@
 /**
  * Memory API
  *
- * API functions for cross-conversation memory management using MemU.
+ * API functions for the layered cross-conversation memory store.
  */
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
@@ -9,7 +9,6 @@ import type {
   ClearMemoryResponse,
   MemoryItem,
   MemorySearchResult,
-  SeedMemoryResponse,
 } from '@/redux/types/memory'
 
 // API Functions
@@ -31,6 +30,22 @@ export const getMemoryItemAPI = async (id: string): Promise<MemoryItem> => {
   return await baseRequest<MemoryItem>({
     url: `api/memory/items/${id}/`,
     method: METHOD.GET,
+  })
+}
+
+/**
+ * Rewrite a memory. The backend corrects the row in place — re-embedding it
+ * so it stays findable by what it now says, and re-keying a rule whose
+ * trigger changed.
+ */
+export const updateMemoryItemAPI = async (
+  id: string,
+  content: string
+): Promise<MemoryItem> => {
+  return await baseRequest<MemoryItem>({
+    url: `api/memory/items/${id}/`,
+    method: METHOD.PATCH,
+    data: { content },
   })
 }
 
@@ -64,15 +79,5 @@ export const clearAllMemoryAPI = async (): Promise<ClearMemoryResponse> => {
   return await baseRequest<ClearMemoryResponse>({
     url: 'api/memory/clear/',
     method: METHOD.DELETE,
-  })
-}
-
-/**
- * Seed demo memory data (development only)
- */
-export const seedMemoryAPI = async (): Promise<SeedMemoryResponse> => {
-  return await baseRequest<SeedMemoryResponse>({
-    url: 'api/memory/seed/',
-    method: METHOD.POST,
   })
 }
