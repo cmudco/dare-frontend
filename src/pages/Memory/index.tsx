@@ -49,6 +49,10 @@ const MemoryScreen = () => {
 
   useEffect(() => {
     dispatch(getMemoryItems())
+    // Fetched up front rather than on expand: the count is the headline, and
+    // "2 retired" says something about the store that "expand to find out"
+    // does not.
+    dispatch(getRetiredMemoryItems())
   }, [dispatch])
 
   useEffect(() => {
@@ -182,6 +186,14 @@ const MemoryScreen = () => {
           onOpenExplainer={() => setExplainerOpen(true)}
         />
 
+        {/* What was replaced — up here with the layers, because a store that
+            corrects itself is the point, not a footnote */}
+        <MemoryArchive
+          items={retired}
+          loading={retiredLoading}
+          onOpen={() => dispatch(getRetiredMemoryItems())}
+        />
+
         {/* Search */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -266,15 +278,6 @@ const MemoryScreen = () => {
           onCategoryClick={handleQueryChange}
           onOpenExplainer={() => setExplainerOpen(true)}
         />
-
-        {/* What was replaced — below the feed, because it is the rarer read */}
-        {!searchResults && !trimmedQuery && (
-          <MemoryArchive
-            items={retired}
-            loading={retiredLoading}
-            onOpen={() => dispatch(getRetiredMemoryItems())}
-          />
-        )}
       </div>
 
       <MemoryExplainer open={explainerOpen} onOpenChange={setExplainerOpen} />

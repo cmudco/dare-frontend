@@ -263,8 +263,9 @@ const ConversationReferenceSelect: React.FC = () => {
                   {memoryEnabled ? (
                     <>
                       DARE brings what it knows about you into this
-                      conversation, and reads each finished reply for anything
-                      worth keeping.
+                      conversation, can search your past conversations when it
+                      needs to, and reads each finished reply for anything worth
+                      keeping.
                     </>
                   ) : (
                     <>

@@ -19,7 +19,7 @@ import { formatShortDate } from '@/utils/dateUtils'
 interface MemoryArchiveProps {
   items: MemoryItem[]
   loading: boolean
-  /** Fetched lazily — the archive is the rarer read. */
+  /** Refetched on expand, so a correction made in another tab shows up. */
   onOpen: () => void
 }
 
@@ -84,11 +84,11 @@ const MemoryArchive: React.FC<MemoryArchiveProps> = ({
         <Archive className='h-4 w-4 text-muted-foreground' />
         <span className='font-medium'>What DARE used to think</span>
         <span className='text-muted-foreground'>
-          {loading
+          {loading && !items.length
             ? 'loading…'
-            : isOpen || items.length
-              ? `${items.length} retired`
-              : 'replaced, never deleted'}
+            : items.length
+              ? `${items.length} replaced, never deleted`
+              : 'nothing replaced yet'}
         </span>
       </button>
 
