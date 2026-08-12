@@ -3,6 +3,7 @@
  *
  * Barrel exports for Memory components.
  */
+export { default as MemoryArchive } from './MemoryArchive'
 export { default as MemoryCard } from './MemoryCard'
 export { default as MemoryFeed } from './MemoryFeed'
 export { default as MemoryLayerCards } from './MemoryLayerCards'

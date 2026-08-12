@@ -7,6 +7,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialMemoryState } from './initialState/memory'
 import {
   getMemoryItems,
+  getRetiredMemoryItems,
   deleteMemoryItem,
   updateMemoryItem,
   searchMemory,
@@ -41,6 +42,22 @@ const memorySlice = createSlice({
       )
       .addCase(getMemoryItems.rejected, (state, action) => {
         state.itemsLoading = false
+        state.error = action.payload as string
+      })
+
+      // Retired memories — fetched on demand, when the archive is opened
+      .addCase(getRetiredMemoryItems.pending, (state) => {
+        state.retiredLoading = true
+      })
+      .addCase(
+        getRetiredMemoryItems.fulfilled,
+        (state, action: PayloadAction<MemoryItem[]>) => {
+          state.retiredLoading = false
+          state.retired = action.payload
+        }
+      )
+      .addCase(getRetiredMemoryItems.rejected, (state, action) => {
+        state.retiredLoading = false
         state.error = action.payload as string
       })
 

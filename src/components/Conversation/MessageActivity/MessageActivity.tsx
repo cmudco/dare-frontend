@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
-  Brain,
   CheckCircle,
   ChevronDown,
   ChevronRight,
   CircleAlert,
   ExternalLink,
+  Fingerprint,
   Globe,
   Loader2,
+  PencilLine,
   XCircle,
 } from 'lucide-react'
 import { ToolCallStatus, ToolLoopState } from '@/utils/constants/dareTools'
@@ -22,6 +23,7 @@ import { getStatusIcon } from '../ToolActivity/toolStatusIcon'
 import { StepHeader, TimelineStep } from '../Timeline'
 import { contextStageSteps, type ActivityStep } from './ContextStages'
 import { contextSummaryPieces, formatMs } from './activitySummary'
+import { MemoryWriteStep, memoryWriteSummary } from './MemoryWriteStep'
 
 interface MessageActivityProps {
   message: Message
@@ -100,6 +102,7 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
   const trace = message.contextTrace
   const webSources = message.webSearchSources ?? []
   const memories = message.memoryContextData ?? []
+  const memoryWrite = message.memoryWriteData
   const streaming = !!message.streaming
   const loopState = message.toolLoopState
 
@@ -137,7 +140,12 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
     }
   }, [hasActive, hasError, interrupted, recovered])
 
-  if (!trace?.stages.length && !toolCalls.length && !webSources.length) {
+  if (
+    !trace?.stages.length &&
+    !toolCalls.length &&
+    !webSources.length &&
+    !memoryWrite
+  ) {
     return null
   }
 
@@ -186,7 +194,12 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
       return 'Couldn’t complete the tool step'
     }
     const timing = trace ? ` in ${formatMs(trace.totalMs)}` : ''
-    return `${prefix} ${parts.length ? parts.join(' · ') : 'context'}${timing}`
+    const gathered = `${prefix} ${parts.length ? parts.join(' · ') : 'context'}${timing}`
+    // The write lands after everything else, so it reads as its own clause
+    // rather than another item in the gathered list.
+    return memoryWrite
+      ? `${gathered} — ${memoryWriteSummary(memoryWrite)}`
+      : gathered
   }
 
   const renderStatusIcon = () => {
@@ -245,7 +258,7 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
       ? [
           {
             key: 'memories',
-            icon: <Brain className='h-3.5 w-3.5' />,
+            icon: <Fingerprint className='h-3.5 w-3.5' />,
             content: (
               <>
                 <StepHeader title='Memories recalled'>
@@ -260,6 +273,18 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
                 </div>
               </>
             ),
+          },
+        ]
+      : []),
+    // Last on the rail because it genuinely happens last: the writer only sees
+    // the turn once the answer is finished, so this arrives seconds after
+    // everything above it.
+    ...(memoryWrite
+      ? [
+          {
+            key: 'memory-write',
+            icon: <PencilLine className='h-3.5 w-3.5' />,
+            content: <MemoryWriteStep write={memoryWrite} />,
           },
         ]
       : []),

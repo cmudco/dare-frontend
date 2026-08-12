@@ -21,6 +21,12 @@ export interface MemoryItem {
   createdAt?: string
   updatedAt?: string
   score?: number
+  /** 'active' | 'held' | 'superseded'. Absent on USER.md lines, which have no lifecycle. */
+  state?: string | null
+  /** The day it stopped being true — not the day we found out, which is createdAt. */
+  validUntil?: string | null
+  /** The memory that replaced this one, for retired rows. */
+  replacedBy?: string | null
 }
 
 /** Category summary from search results */
@@ -49,6 +55,9 @@ export interface MemoryState {
   items: MemoryItem[]
   /** Whether items are loading */
   itemsLoading: boolean
+  /** Retired memories — kept separately, since they answer a different question */
+  retired: MemoryItem[]
+  retiredLoading: boolean
   /** Search results from last query */
   searchResults: MemorySearchResult | null
   /** Whether search is in progress */

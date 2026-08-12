@@ -24,6 +24,20 @@ export const getMemoryItemsAPI = async (): Promise<MemoryItem[]> => {
 }
 
 /**
+ * Get retired memories — rows that were true once and were replaced.
+ *
+ * A separate call rather than a flag on the list above, because the two are
+ * never shown together: mixed in, a retired fact reads as a contradiction.
+ */
+export const getRetiredMemoryItemsAPI = async (): Promise<MemoryItem[]> => {
+  return await baseRequest<MemoryItem[]>({
+    url: 'api/memory/items/',
+    method: METHOD.GET,
+    params: { state: 'retired' },
+  })
+}
+
+/**
  * Get a single memory item by ID
  */
 export const getMemoryItemAPI = async (id: string): Promise<MemoryItem> => {
