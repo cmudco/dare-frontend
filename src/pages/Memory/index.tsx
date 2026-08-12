@@ -12,6 +12,7 @@ import {
   clearAllMemory,
   deleteMemoryItem,
   getMemoryItems,
+  getRetiredMemoryItems,
   searchMemory,
   updateMemoryItem,
 } from '@/redux/asyncThunks/memory'
@@ -22,6 +23,7 @@ import { formatRelativeDate } from '@/utils/dateUtils'
 import { Button } from '@/components/ui/button'
 import {
   ClearMemoryDialog,
+  MemoryArchive,
   MemoryCommandBar,
   MemoryExplainer,
   MemoryFeed,
@@ -37,6 +39,8 @@ const MemoryScreen = () => {
 
   const items = useAppSelector((state) => state.memory.items)
   const itemsLoading = useAppSelector((state) => state.memory.itemsLoading)
+  const retired = useAppSelector((state) => state.memory.retired)
+  const retiredLoading = useAppSelector((state) => state.memory.retiredLoading)
   const searchResults = useAppSelector((state) => state.memory.searchResults)
   const searchLoading = useAppSelector((state) => state.memory.searchLoading)
   const clearing = useAppSelector((state) => state.memory.clearing)
@@ -262,6 +266,15 @@ const MemoryScreen = () => {
           onCategoryClick={handleQueryChange}
           onOpenExplainer={() => setExplainerOpen(true)}
         />
+
+        {/* What was replaced — below the feed, because it is the rarer read */}
+        {!searchResults && !trimmedQuery && (
+          <MemoryArchive
+            items={retired}
+            loading={retiredLoading}
+            onOpen={() => dispatch(getRetiredMemoryItems())}
+          />
+        )}
       </div>
 
       <MemoryExplainer open={explainerOpen} onOpenChange={setExplainerOpen} />

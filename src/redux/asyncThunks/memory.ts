@@ -6,6 +6,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   getMemoryItemsAPI,
+  getRetiredMemoryItemsAPI,
   deleteMemoryItemAPI,
   updateMemoryItemAPI,
   searchMemoryAPI,
@@ -21,6 +22,20 @@ export const getMemoryItems = createAsyncThunk(
     try {
       const response = await getMemoryItemsAPI()
       return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Fetch retired memories — what the store used to believe
+ */
+export const getRetiredMemoryItems = createAsyncThunk(
+  'memory/getRetiredMemoryItems',
+  async (_, thunkAPI) => {
+    try {
+      return await getRetiredMemoryItemsAPI()
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

@@ -34,6 +34,7 @@ import {
   ToolCallStatus,
   WalletMeta,
   RagMode,
+  MemoryWriteData,
 } from './types/conversation'
 import { ToolCallOrigin, ToolLoopState } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
@@ -1168,6 +1169,25 @@ export const conversationSlice = createSlice({
           // is also persisted on the message, so a refresh recovers it.
           if (!msg) return
           msg.contextTrace = action.payload.trace
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: MemoryWriteData & { messageId: string | number }
+        } => action.type === 'socket/memory_written',
+        (state, action) => {
+          const { messageId, ...write } = action.payload
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          // The writer runs long after the reply, so the conversation may
+          // already be closed. Dropping is safe — this is stored on the
+          // message too, and reopening the thread brings it back.
+          if (!msg) return
+          msg.memoryWriteData = write
         }
       )
       .addMatcher(
