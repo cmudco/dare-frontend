@@ -4,8 +4,11 @@
  * Thunks for cross-conversation memory API operations.
  */
 import { createAsyncThunk } from '@reduxjs/toolkit'
+import type { MemoryProposal } from '../types/memory'
 import {
+  applyMemoryProposalAPI,
   getMemoryItemsAPI,
+  getMemorySweepAPI,
   getRetiredMemoryItemsAPI,
   deleteMemoryItemAPI,
   updateMemoryItemAPI,
@@ -36,6 +39,35 @@ export const getRetiredMemoryItems = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       return await getRetiredMemoryItemsAPI()
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Ask what the store would like to tidy
+ */
+export const getMemorySweep = createAsyncThunk(
+  'memory/getMemorySweep',
+  async (_, thunkAPI) => {
+    try {
+      return await getMemorySweepAPI()
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Approve one suggestion from the sweep
+ */
+export const applyMemoryProposal = createAsyncThunk(
+  'memory/applyMemoryProposal',
+  async (proposal: MemoryProposal, thunkAPI) => {
+    try {
+      const response = await applyMemoryProposalAPI(proposal)
+      return { proposal, detail: response.detail }
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

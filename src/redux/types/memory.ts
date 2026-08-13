@@ -29,6 +29,30 @@ export interface MemoryItem {
   replacedBy?: string | null
 }
 
+/** One change the tidy-up sweep suggests. Nothing happens until it is approved. */
+export interface MemoryProposal {
+  /** 'merge' | 'promote' | 'rekey' | 'evict' */
+  kind: string
+  recordId: string
+  text: string
+  /** Why the sweep thinks this, in words the person can judge. */
+  reason: string
+  /** For a merge, the memory that would be retired. */
+  otherId?: string | null
+  otherText?: string | null
+  /** The action in the imperative, for the button. */
+  detail: string
+}
+
+/** What one sweep found. */
+export interface MemorySweep {
+  proposals: MemoryProposal[]
+  examined: number
+  profileTokens: number
+  /** What the profile WANTS — above the ceiling means lines are being left out. */
+  pinnedTokens: number
+}
+
 /** Category summary from search results */
 export interface MemoryCategory {
   name: string
@@ -58,6 +82,10 @@ export interface MemoryState {
   /** Retired memories — kept separately, since they answer a different question */
   retired: MemoryItem[]
   retiredLoading: boolean
+  /** The tidy-up sweep's suggestions, and which one is mid-flight */
+  sweep: MemorySweep | null
+  sweepLoading: boolean
+  applyingProposal: string | null
   /** Search results from last query */
   searchResults: MemorySearchResult | null
   /** Whether search is in progress */

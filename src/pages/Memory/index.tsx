@@ -11,13 +11,16 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   clearAllMemory,
   deleteMemoryItem,
+  applyMemoryProposal,
   getMemoryItems,
+  getMemorySweep,
   getRetiredMemoryItems,
   searchMemory,
   updateMemoryItem,
 } from '@/redux/asyncThunks/memory'
 import { clearMemoryError, clearSearchResults } from '@/redux/memorySlice'
 import { MemoryType } from '@/redux/types/memory'
+import type { MemoryProposal } from '@/redux/types/memory'
 import { toast } from '@/utils/toast'
 import { formatRelativeDate } from '@/utils/dateUtils'
 import { Button } from '@/components/ui/button'
@@ -28,6 +31,7 @@ import {
   MemoryExplainer,
   MemoryFeed,
   MemoryLayerCards,
+  MemoryTidyUp,
 } from '@/components/Memory'
 import { bucketForType, layerFor } from '@/components/Memory/layers'
 
@@ -41,6 +45,11 @@ const MemoryScreen = () => {
   const itemsLoading = useAppSelector((state) => state.memory.itemsLoading)
   const retired = useAppSelector((state) => state.memory.retired)
   const retiredLoading = useAppSelector((state) => state.memory.retiredLoading)
+  const sweep = useAppSelector((state) => state.memory.sweep)
+  const sweepLoading = useAppSelector((state) => state.memory.sweepLoading)
+  const applyingProposal = useAppSelector(
+    (state) => state.memory.applyingProposal
+  )
   const searchResults = useAppSelector((state) => state.memory.searchResults)
   const searchLoading = useAppSelector((state) => state.memory.searchLoading)
   const clearing = useAppSelector((state) => state.memory.clearing)
@@ -130,6 +139,16 @@ const MemoryScreen = () => {
     return false
   }
 
+  /** Applying a suggestion changes the store, so the page has to catch up. */
+  const handleApproveProposal = async (proposal: MemoryProposal) => {
+    const result = await dispatch(applyMemoryProposal(proposal))
+    if (applyMemoryProposal.fulfilled.match(result)) {
+      toast.success(result.payload.detail)
+      dispatch(getMemoryItems())
+      dispatch(getRetiredMemoryItems())
+    }
+  }
+
   const handleClearAll = async () => {
     const result = await dispatch(clearAllMemory())
     if (clearAllMemory.fulfilled.match(result)) {
@@ -192,6 +211,15 @@ const MemoryScreen = () => {
           items={retired}
           loading={retiredLoading}
           onOpen={() => dispatch(getRetiredMemoryItems())}
+        />
+
+        {/* What the store would like to fix about itself */}
+        <MemoryTidyUp
+          sweep={sweep}
+          loading={sweepLoading}
+          applyingProposal={applyingProposal}
+          onRun={() => dispatch(getMemorySweep())}
+          onApprove={handleApproveProposal}
         />
 
         {/* Search */}

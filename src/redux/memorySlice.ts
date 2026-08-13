@@ -6,14 +6,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialMemoryState } from './initialState/memory'
 import {
+  applyMemoryProposal,
   getMemoryItems,
+  getMemorySweep,
   getRetiredMemoryItems,
   deleteMemoryItem,
   updateMemoryItem,
   searchMemory,
   clearAllMemory,
 } from './asyncThunks/memory'
-import { MemoryItem, MemorySearchResult } from './types/memory'
+import { MemoryItem, MemorySearchResult, MemorySweep } from './types/memory'
 
 const memorySlice = createSlice({
   name: 'memory',
@@ -58,6 +60,41 @@ const memorySlice = createSlice({
       )
       .addCase(getRetiredMemoryItems.rejected, (state, action) => {
         state.retiredLoading = false
+        state.error = action.payload as string
+      })
+
+      // The tidy-up sweep
+      .addCase(getMemorySweep.pending, (state) => {
+        state.sweepLoading = true
+      })
+      .addCase(
+        getMemorySweep.fulfilled,
+        (state, action: PayloadAction<MemorySweep>) => {
+          state.sweepLoading = false
+          state.sweep = action.payload
+        }
+      )
+      .addCase(getMemorySweep.rejected, (state, action) => {
+        state.sweepLoading = false
+        state.error = action.payload as string
+      })
+
+      .addCase(applyMemoryProposal.pending, (state, action) => {
+        state.applyingProposal = action.meta.arg.recordId
+      })
+      .addCase(applyMemoryProposal.fulfilled, (state, action) => {
+        state.applyingProposal = null
+        // Drop the one just applied rather than refetching: the rest of the
+        // sweep is still valid, and re-running it would reshuffle the list
+        // under the person mid-review.
+        if (state.sweep) {
+          state.sweep.proposals = state.sweep.proposals.filter(
+            (item) => item.recordId !== action.payload.proposal.recordId
+          )
+        }
+      })
+      .addCase(applyMemoryProposal.rejected, (state, action) => {
+        state.applyingProposal = null
         state.error = action.payload as string
       })
 

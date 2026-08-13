@@ -5,6 +5,8 @@
  */
 export { default as MemoryArchive } from './MemoryArchive'
 export { default as MemoryCard } from './MemoryCard'
+export { default as MemoryProposalCard } from './MemoryProposalCard'
+export { default as MemoryTidyUp } from './MemoryTidyUp'
 export { default as MemoryFeed } from './MemoryFeed'
 export { default as MemoryLayerCards } from './MemoryLayerCards'
 export { default as MemoryCommandBar } from './MemoryCommandBar'
