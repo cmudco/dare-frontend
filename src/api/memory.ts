@@ -8,7 +8,9 @@ import { METHOD } from '@/utils/constants/requests'
 import type {
   ClearMemoryResponse,
   MemoryItem,
+  MemoryProposal,
   MemorySearchResult,
+  MemorySweep,
 } from '@/redux/types/memory'
 
 // API Functions
@@ -34,6 +36,30 @@ export const getRetiredMemoryItemsAPI = async (): Promise<MemoryItem[]> => {
     url: 'api/memory/items/',
     method: METHOD.GET,
     params: { state: 'retired' },
+  })
+}
+
+/**
+ * Ask what the store would like to tidy. Reads only — nothing changes here.
+ */
+export const getMemorySweepAPI = async (): Promise<MemorySweep> => {
+  return await baseRequest<MemorySweep>({
+    url: 'api/memory/v2/consolidate/',
+    method: METHOD.GET,
+  })
+}
+
+/**
+ * Approve one suggestion. The server re-checks it before committing, so a
+ * proposal that has gone stale is refused rather than applied blind.
+ */
+export const applyMemoryProposalAPI = async (
+  proposal: MemoryProposal
+): Promise<{ detail: string }> => {
+  return await baseRequest<{ detail: string }>({
+    url: 'api/memory/v2/consolidate/',
+    method: METHOD.POST,
+    data: proposal,
   })
 }
 
