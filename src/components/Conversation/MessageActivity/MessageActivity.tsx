@@ -8,7 +8,6 @@ import {
   Fingerprint,
   Globe,
   Loader2,
-  PencilLine,
   XCircle,
 } from 'lucide-react'
 import { ToolCallStatus, ToolLoopState } from '@/utils/constants/dareTools'
@@ -276,18 +275,6 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
           },
         ]
       : []),
-    // Last on the rail because it genuinely happens last: the writer only sees
-    // the turn once the answer is finished, so this arrives seconds after
-    // everything above it.
-    ...(memoryWrite
-      ? [
-          {
-            key: 'memory-write',
-            icon: <PencilLine className='h-3.5 w-3.5' />,
-            content: <MemoryWriteStep write={memoryWrite} />,
-          },
-        ]
-      : []),
   ]
 
   return (
@@ -337,6 +324,12 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
               </TimelineStep>
             </div>
           ))}
+
+          {/* Off the rail on purpose. Everything above happened while the
+              person waited; this happened afterwards, in another process, and
+              putting it on the same timeline made it read as a tool call the
+              turn had made. */}
+          {memoryWrite && <MemoryWriteStep write={memoryWrite} />}
         </div>
       )}
     </div>
