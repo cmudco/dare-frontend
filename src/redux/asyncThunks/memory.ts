@@ -13,6 +13,7 @@ import {
   deleteMemoryItemAPI,
   updateMemoryItemAPI,
   searchMemoryAPI,
+  searchSessionsAPI,
   clearAllMemoryAPI,
 } from '../../api/memory'
 
@@ -129,6 +130,21 @@ export const clearAllMemory = createAsyncThunk(
     try {
       const response = await clearAllMemoryAPI()
       return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/**
+ * Search the transcript layer — conversations word for word, by words
+ * and/or a date range
+ */
+export const searchSessions = createAsyncThunk(
+  'memory/searchSessions',
+  async (params: { q?: string; since?: string; until?: string }, thunkAPI) => {
+    try {
+      return await searchSessionsAPI(params)
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

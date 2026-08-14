@@ -14,7 +14,10 @@ interface Props {
   countsByType: Record<string, number>
   selectedLayer: MemoryType | null
   onSelectLayer: (layer: MemoryType | null) => void
-  onOpenExplainer: () => void
+  /** Sessions is a layer like the others now: selecting it switches the
+   *  search surface below into transcript mode. */
+  sessionsSelected: boolean
+  onSelectSessions: (selected: boolean) => void
 }
 
 const cardMotion = (index: number) => ({
@@ -27,7 +30,8 @@ const MemoryLayerCards = ({
   countsByType,
   selectedLayer,
   onSelectLayer,
-  onOpenExplainer,
+  sessionsSelected,
+  onSelectSessions,
 }: Props) => {
   const SessionsIcon = SESSIONS_LAYER.icon
 
@@ -80,16 +84,23 @@ const MemoryLayerCards = ({
       <motion.button
         type='button'
         {...cardMotion(MEMORY_LAYERS.length)}
-        onClick={onOpenExplainer}
-        title='The transcript layer — read how it works'
-        className='group flex flex-col rounded-xl border border-dashed border-border bg-card/60 p-4 text-left shadow-xs transition-all hover:border-foreground/20 hover:shadow-md focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring'
+        onClick={() => onSelectSessions(!sessionsSelected)}
+        aria-pressed={sessionsSelected}
+        title='Search your conversations word for word'
+        className={cn(
+          'group flex flex-col rounded-xl border border-dashed bg-card/60 p-4 text-left shadow-xs transition-all',
+          'hover:border-foreground/20 hover:shadow-md focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+          sessionsSelected
+            ? 'border-foreground/30 ring-1 ring-foreground/20'
+            : 'border-border'
+        )}
       >
         <div className='flex items-start justify-between'>
           <div className={cn('rounded-lg p-2', SESSIONS_LAYER.tile)}>
             <SessionsIcon className={cn('h-5 w-5', SESSIONS_LAYER.iconColor)} />
           </div>
           <span className='font-mono text-sm font-medium text-muted-foreground'>
-            FTS5
+            FTS
           </span>
         </div>
 

@@ -50,34 +50,34 @@ interface TurnStep {
 
 const TURN_STEPS: TurnStep[] = [
   {
-    phase: 'Before the reply',
+    phase: 'Before your message reaches the model',
     icon: Search,
     title: 'Recall',
-    text: 'Your message is searched against the layers — by keyword and by meaning. Only the few most relevant memories ride along; past sessions stay searchable word-for-word when the conversation needs them.',
+    text: 'Your whole profile goes in first — every turn, unconditionally. Then your message is matched by meaning against Knowledge (the best 3 facts make it) and against Behaviors (up to 5 rules for the task at hand). Anything below the relevance bar stays out, so most turns carry only a memory or two — and many carry none.',
   },
   {
-    phase: 'During the reply',
+    phase: 'While it replies',
     icon: MessageSquare,
     title: 'Reply',
-    text: 'The model answers with your profile and the recalled memories in hand.',
+    text: 'The model answers with those memories in hand. If you ask about the past, it can also search your old sessions word for word — that is the search_sessions step you sometimes see in the activity trail.',
   },
   {
     phase: 'After the reply',
     icon: PenLine,
     title: 'Propose',
-    text: 'A memory writer reads the finished turn and proposes what is worth keeping. Most turns produce nothing.',
+    text: 'A separate memory writer reads the finished exchange and proposes what, if anything, is worth keeping. Most turns produce nothing.',
   },
   {
     phase: 'After the reply',
     icon: ShieldCheck,
     title: 'Gate',
-    text: 'Rules route every proposal: into your profile, into the archive, superseding an outdated fact — or ignored. Corrections retire the old fact instead of erasing it.',
+    text: 'Fixed rules decide what actually happens to each proposal: profile, archive, replacing an outdated fact — or refused. A correction retires the old fact and keeps it visible in the archive; nothing is erased. Every decision, including the refusals, is recorded.',
   },
   {
-    phase: 'Off the clock',
+    phase: 'When you run Tidy up',
     icon: Combine,
     title: 'Consolidate',
-    text: 'Repeated facts merge and get promoted; stale ones fade. The archive stays small and true.',
+    text: 'The sweep at the top of this page. It looks for duplicates, facts repeated often enough to deserve a profile line, and labels gone stale — then asks you. Nothing changes until you approve a suggestion.',
   },
 ]
 
@@ -90,7 +90,7 @@ const PRINCIPLES: Array<{ icon: LucideIcon; title: string; text: string }> = [
   {
     icon: PenLine,
     title: 'Nothing locked in',
-    text: 'Memories can be pruned today; editing and export are on the way.',
+    text: 'Every memory can be edited or forgotten right here; export is on the way.',
   },
   {
     icon: History,
@@ -157,7 +157,7 @@ const LayerDiagram = () => (
               <p className='flex items-baseline gap-1.5 text-sm leading-tight font-semibold'>
                 {SESSIONS_LAYER.label}
                 <span className='font-mono text-[10px] font-normal text-muted-foreground'>
-                  FTS5
+                  FTS
                 </span>
               </p>
               <p className='text-[10px] tracking-wide text-muted-foreground uppercase'>
@@ -191,66 +191,6 @@ const LayerDiagram = () => (
     </p>
   </div>
 )
-
-/** The curation funnel for the cold layers: archive → shortlist → chosen. */
-const FunnelDiagram = () => {
-  const stages = [
-    {
-      title: 'Everything active',
-      detail: 'the whole archive',
-      className: 'border-border bg-card',
-    },
-    {
-      title: '~50 shortlisted',
-      detail: 'keyword ∪ important ∪ recent',
-      className: 'border-border bg-card',
-    },
-    {
-      title: '3–5 ride along',
-      detail: 'meaning · words · importance · recency',
-      className: 'border-foreground/30 bg-card ring-1 ring-foreground/10',
-    },
-  ]
-  return (
-    <div className='rounded-xl border border-border bg-muted/30 p-4'>
-      <div className='flex items-center gap-1.5'>
-        {stages.map((stage, index) => (
-          <div key={stage.title} className='flex min-w-0 flex-1 items-center'>
-            {index > 0 && (
-              <ChevronRight className='mx-1 h-3.5 w-3.5 shrink-0 text-muted-foreground' />
-            )}
-            <div
-              className={cn(
-                'min-w-0 flex-1 rounded-lg border p-2.5 text-center shadow-xs',
-                stage.className
-              )}
-            >
-              <p className='truncate text-xs font-semibold'>{stage.title}</p>
-              <p className='truncate text-[10px] text-muted-foreground'>
-                {stage.detail}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className='mt-3 space-y-1 text-xs text-muted-foreground'>
-        <p>
-          Facts answer the <span className='text-foreground'>question</span> —
-          the bar is high, only the best three make it.
-        </p>
-        <p>
-          Rules answer the <span className='text-foreground'>task</span> — the
-          bar is lower and wider, because a missed rule hurts more than a missed
-          fact.
-        </p>
-        <p>
-          A relevance gate holds back memories that score well on importance
-          alone but are not about this conversation.
-        </p>
-      </div>
-    </div>
-  )
-}
 
 const TurnDiagram = () => {
   let lastPhase = ''
@@ -325,20 +265,6 @@ const MemoryExplainer = ({ open, onOpenChange }: Props) => {
             <LayerDiagram />
           </motion.section>
 
-          <motion.section {...sectionMotion(0.1)} className='space-y-3'>
-            <div>
-              <h3 className='text-sm font-semibold'>
-                How the cold layers are curated
-              </h3>
-              <p className='mt-1 text-sm text-muted-foreground'>
-                Facts and rules are never dumped into the prompt. Before every
-                reply they pass through a funnel — searched, scored, and floored
-                — so only what this turn actually needs rides along.
-              </p>
-            </div>
-            <FunnelDiagram />
-          </motion.section>
-
           <motion.section {...sectionMotion(0.15)} className='space-y-3'>
             <div>
               <h3 className='text-sm font-semibold'>
@@ -350,9 +276,8 @@ const MemoryExplainer = ({ open, onOpenChange }: Props) => {
             </div>
             <TurnDiagram />
             <p className='text-xs text-muted-foreground italic'>
-              The layers, the writer and the gate are live today. Consolidation
-              — the sweep that merges duplicates and promotes what has proved
-              durable — is what DARE is rolling out next.
+              All of this is live — the recall, the writer, the gate, and the
+              Tidy up sweep are what you are looking at on this page.
             </p>
           </motion.section>
 

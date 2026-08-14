@@ -11,6 +11,7 @@ import type {
   MemoryProposal,
   MemorySearchResult,
   MemorySweep,
+  SessionSearchResult,
 } from '@/redux/types/memory'
 
 // API Functions
@@ -109,6 +110,25 @@ export const searchMemoryAPI = async (
     url: 'api/memory/search/',
     method: METHOD.POST,
     data: { query },
+  })
+}
+
+/**
+ * Search the transcript layer — the user's conversations, word for word.
+ * Words, a date range, or both; every bound only narrows.
+ */
+export const searchSessionsAPI = async (params: {
+  q?: string
+  since?: string
+  until?: string
+}): Promise<SessionSearchResult> => {
+  const search = new URLSearchParams()
+  if (params.q) search.set('q', params.q)
+  if (params.since) search.set('since', params.since)
+  if (params.until) search.set('until', params.until)
+  return await baseRequest<SessionSearchResult>({
+    url: `api/memory/v2/sessions/?${search.toString()}`,
+    method: METHOD.GET,
   })
 }
 
