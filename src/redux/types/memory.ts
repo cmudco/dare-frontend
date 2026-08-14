@@ -93,6 +93,21 @@ export interface SessionSearchResult {
   hits: SessionHit[]
 }
 
+/** A dare-memory-v2 bundle — the layered contract as one document */
+export interface MemoryExportBundle {
+  schema: string
+  exportedAt: string
+  document: string
+  records: unknown[]
+}
+
+/** What the import endpoint reports back */
+export interface MemoryImportResult {
+  records: number
+  embedded: number
+  document: boolean
+}
+
 /** Response from clear endpoint */
 export interface ClearMemoryResponse {
   success: boolean
@@ -121,6 +136,8 @@ export interface MemoryState {
   /** Results from the last transcript search */
   sessionResults: SessionSearchResult | null
   sessionLoading: boolean
+  exporting: boolean
+  importing: boolean
   /** Whether clearing is in progress */
   clearing: boolean
   /** Id of the memory currently being saved, if any */

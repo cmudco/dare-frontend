@@ -14,6 +14,8 @@ import {
   updateMemoryItemAPI,
   searchMemoryAPI,
   searchSessionsAPI,
+  exportMemoryAPI,
+  importMemoryAPI,
   clearAllMemoryAPI,
 } from '../../api/memory'
 
@@ -145,6 +147,30 @@ export const searchSessions = createAsyncThunk(
   async (params: { q?: string; since?: string; until?: string }, thunkAPI) => {
     try {
       return await searchSessionsAPI(params)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Download the whole store as one bundle */
+export const exportMemory = createAsyncThunk(
+  'memory/exportMemory',
+  async (_, thunkAPI) => {
+    try {
+      return await exportMemoryAPI()
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Reinstate a bundle into an empty store */
+export const importMemory = createAsyncThunk(
+  'memory/importMemory',
+  async (bundle: object, thunkAPI) => {
+    try {
+      return await importMemoryAPI(bundle)
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

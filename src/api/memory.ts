@@ -12,6 +12,8 @@ import type {
   MemorySearchResult,
   MemorySweep,
   SessionSearchResult,
+  MemoryExportBundle,
+  MemoryImportResult,
 } from '@/redux/types/memory'
 
 // API Functions
@@ -129,6 +131,29 @@ export const searchSessionsAPI = async (params: {
   return await baseRequest<SessionSearchResult>({
     url: `api/memory/v2/sessions/?${search.toString()}`,
     method: METHOD.GET,
+  })
+}
+
+/**
+ * Export the whole store as a self-contained dare-memory-v2 bundle
+ */
+export const exportMemoryAPI = async (): Promise<MemoryExportBundle> => {
+  return await baseRequest<MemoryExportBundle>({
+    url: 'api/memory/v2/export/',
+    method: METHOD.GET,
+  })
+}
+
+/**
+ * Import a dare-memory-v2 bundle into an empty store
+ */
+export const importMemoryAPI = async (
+  bundle: object
+): Promise<MemoryImportResult> => {
+  return await baseRequest<MemoryImportResult>({
+    url: 'api/memory/v2/import/',
+    method: METHOD.POST,
+    data: bundle,
   })
 }
 

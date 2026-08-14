@@ -35,6 +35,7 @@ import {
   MemoryExplainer,
   MemoryFeed,
   MemoryLayerCards,
+  MemoryPortability,
   MemoryTidyUp,
   SessionSearch,
 } from '@/components/Memory'
@@ -196,6 +197,7 @@ const MemoryScreen = () => {
               <BookOpen className='h-4 w-4' />
               How it works
             </Button>
+            <MemoryPortability memoryCount={items.length} />
             {items.length > 0 && (
               <ClearMemoryDialog
                 memoryCount={items.length}
