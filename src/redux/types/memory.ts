@@ -67,6 +67,32 @@ export interface MemorySearchResult {
   categories: MemoryCategory[]
 }
 
+/** One turn of a session-search hit, with the matched line flagged */
+export interface SessionExchangeLine {
+  role: 'user' | 'assistant'
+  text: string
+  matched: boolean
+}
+
+/** One clickable transcript hit — a conversation, a date, an exchange */
+export interface SessionHit {
+  conversationId: string
+  conversationTitle: string
+  messageId: number
+  date: string | null
+  exchange: SessionExchangeLine[]
+}
+
+/** Response from the session (transcript) search endpoint */
+export interface SessionSearchResult {
+  success: boolean
+  query: string
+  since: string | null
+  until: string | null
+  found: number
+  hits: SessionHit[]
+}
+
 /** Response from clear endpoint */
 export interface ClearMemoryResponse {
   success: boolean
@@ -90,6 +116,11 @@ export interface MemoryState {
   searchResults: MemorySearchResult | null
   /** Whether search is in progress */
   searchLoading: boolean
+  /** Whether the search surface is in session (transcript) mode */
+  sessionMode: boolean
+  /** Results from the last transcript search */
+  sessionResults: SessionSearchResult | null
+  sessionLoading: boolean
   /** Whether clearing is in progress */
   clearing: boolean
   /** Id of the memory currently being saved, if any */

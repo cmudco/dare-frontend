@@ -18,7 +18,11 @@ import {
   searchMemory,
   updateMemoryItem,
 } from '@/redux/asyncThunks/memory'
-import { clearMemoryError, clearSearchResults } from '@/redux/memorySlice'
+import {
+  clearMemoryError,
+  clearSearchResults,
+  setSessionMode,
+} from '@/redux/memorySlice'
 import { MemoryType } from '@/redux/types/memory'
 import type { MemoryProposal } from '@/redux/types/memory'
 import { toast } from '@/utils/toast'
@@ -32,6 +36,7 @@ import {
   MemoryFeed,
   MemoryLayerCards,
   MemoryTidyUp,
+  SessionSearch,
 } from '@/components/Memory'
 import { bucketForType, layerFor } from '@/components/Memory/layers'
 
@@ -39,6 +44,9 @@ const MemoryScreen = () => {
   const dispatch = useAppDispatch()
   const [selectedLayer, setSelectedLayer] = useState<MemoryType | null>(null)
   const [query, setQuery] = useState('')
+  const [sessionQuery, setSessionQuery] = useState('')
+  const [sessionSince, setSessionSince] = useState('')
+  const [sessionUntil, setSessionUntil] = useState('')
   const [explainerOpen, setExplainerOpen] = useState(false)
 
   const items = useAppSelector((state) => state.memory.items)
@@ -51,6 +59,7 @@ const MemoryScreen = () => {
     (state) => state.memory.applyingProposal
   )
   const searchResults = useAppSelector((state) => state.memory.searchResults)
+  const sessionMode = useAppSelector((state) => state.memory.sessionMode)
   const searchLoading = useAppSelector((state) => state.memory.searchLoading)
   const clearing = useAppSelector((state) => state.memory.clearing)
   const savingId = useAppSelector((state) => state.memory.savingId)
@@ -200,9 +209,16 @@ const MemoryScreen = () => {
         {/* Layer overview + filter */}
         <MemoryLayerCards
           countsByType={countsByType}
-          selectedLayer={selectedLayer}
-          onSelectLayer={setSelectedLayer}
-          onOpenExplainer={() => setExplainerOpen(true)}
+          selectedLayer={sessionMode ? null : selectedLayer}
+          onSelectLayer={(layer) => {
+            setSelectedLayer(layer)
+            if (sessionMode) dispatch(setSessionMode(false))
+          }}
+          sessionsSelected={sessionMode}
+          onSelectSessions={(selected) => {
+            dispatch(setSessionMode(selected))
+            if (selected) setSelectedLayer(null)
+          }}
         />
 
         {/* What was replaced — up here with the layers, because a store that
@@ -228,17 +244,28 @@ const MemoryScreen = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, delay: 0.2 }}
         >
-          <MemoryCommandBar
-            query={query}
-            onQueryChange={handleQueryChange}
-            onSemanticSearch={(searchQuery) =>
-              dispatch(searchMemory(searchQuery))
-            }
-            onClearSearch={handleClearSearch}
-            semanticResult={searchResults}
-            searchLoading={searchLoading}
-            visibleCount={visibleItems.length}
-          />
+          {sessionMode ? (
+            <SessionSearch
+              query={sessionQuery}
+              onQueryChange={setSessionQuery}
+              since={sessionSince}
+              onSinceChange={setSessionSince}
+              until={sessionUntil}
+              onUntilChange={setSessionUntil}
+            />
+          ) : (
+            <MemoryCommandBar
+              query={query}
+              onQueryChange={handleQueryChange}
+              onSemanticSearch={(searchQuery) =>
+                dispatch(searchMemory(searchQuery))
+              }
+              onClearSearch={handleClearSearch}
+              semanticResult={searchResults}
+              searchLoading={searchLoading}
+              visibleCount={visibleItems.length}
+            />
+          )}
         </motion.div>
 
         {/* Matched clusters from semantic search */}
@@ -265,47 +292,51 @@ const MemoryScreen = () => {
         )}
 
         {/* Feed header */}
-        <div className='flex items-center justify-between'>
-          <p className='text-sm text-muted-foreground'>
-            {visibleItems.length}{' '}
-            {visibleItems.length === 1 ? 'memory' : 'memories'}
-            {activeLayer && (
-              <>
-                {' '}
-                in{' '}
-                <span className='font-medium text-foreground'>
-                  {activeLayer.label}
-                </span>{' '}
-                <button
-                  type='button'
-                  onClick={() => setSelectedLayer(null)}
-                  className='ml-1 underline underline-offset-2 hover:text-foreground'
-                >
-                  show all
-                </button>
-              </>
-            )}
-          </p>
-          {lastUpdated && (
-            <p className='text-xs text-muted-foreground'>
-              Updated {formatRelativeDate(lastUpdated)}
+        {!sessionMode && (
+          <div className='flex items-center justify-between'>
+            <p className='text-sm text-muted-foreground'>
+              {visibleItems.length}{' '}
+              {visibleItems.length === 1 ? 'memory' : 'memories'}
+              {activeLayer && (
+                <>
+                  {' '}
+                  in{' '}
+                  <span className='font-medium text-foreground'>
+                    {activeLayer.label}
+                  </span>{' '}
+                  <button
+                    type='button'
+                    onClick={() => setSelectedLayer(null)}
+                    className='ml-1 underline underline-offset-2 hover:text-foreground'
+                  >
+                    show all
+                  </button>
+                </>
+              )}
             </p>
-          )}
-        </div>
+            {lastUpdated && (
+              <p className='text-xs text-muted-foreground'>
+                Updated {formatRelativeDate(lastUpdated)}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Feed */}
-        <MemoryFeed
-          items={visibleItems}
-          isLoading={itemsLoading}
-          selectedLayer={selectedLayer}
-          isSearching={Boolean(searchResults) || trimmedQuery.length > 0}
-          showScores={Boolean(searchResults)}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-          savingId={savingId}
-          onCategoryClick={handleQueryChange}
-          onOpenExplainer={() => setExplainerOpen(true)}
-        />
+        {!sessionMode && (
+          <MemoryFeed
+            items={visibleItems}
+            isLoading={itemsLoading}
+            selectedLayer={selectedLayer}
+            isSearching={Boolean(searchResults) || trimmedQuery.length > 0}
+            showScores={Boolean(searchResults)}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            savingId={savingId}
+            onCategoryClick={handleQueryChange}
+            onOpenExplainer={() => setExplainerOpen(true)}
+          />
+        )}
       </div>
 
       <MemoryExplainer open={explainerOpen} onOpenChange={setExplainerOpen} />

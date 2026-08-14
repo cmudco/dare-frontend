@@ -14,6 +14,7 @@ import {
   updateMemoryItem,
   searchMemory,
   clearAllMemory,
+  searchSessions,
 } from './asyncThunks/memory'
 import { MemoryItem, MemorySearchResult, MemorySweep } from './types/memory'
 
@@ -27,9 +28,36 @@ const memorySlice = createSlice({
     clearSearchResults: (state) => {
       state.searchResults = null
     },
+    // The search surface below the layer cards is ONE surface with two
+    // modes; entering session mode clears the other mode's results so a
+    // stale semantic result can never render under a session header.
+    setSessionMode: (state, action: PayloadAction<boolean>) => {
+      state.sessionMode = action.payload
+      if (action.payload) {
+        state.searchResults = null
+      } else {
+        state.sessionResults = null
+      }
+    },
+    clearSessionResults: (state) => {
+      state.sessionResults = null
+    },
   },
   extraReducers: (builder) => {
     builder
+      // Transcript (session) search
+      .addCase(searchSessions.pending, (state) => {
+        state.sessionLoading = true
+        state.error = null
+      })
+      .addCase(searchSessions.fulfilled, (state, action) => {
+        state.sessionLoading = false
+        state.sessionResults = action.payload
+      })
+      .addCase(searchSessions.rejected, (state, action) => {
+        state.sessionLoading = false
+        state.error = action.payload as string
+      })
       // Get Memory Items
       .addCase(getMemoryItems.pending, (state) => {
         state.itemsLoading = true
@@ -175,5 +203,10 @@ const memorySlice = createSlice({
   },
 })
 
-export const { clearMemoryError, clearSearchResults } = memorySlice.actions
+export const {
+  clearMemoryError,
+  clearSearchResults,
+  setSessionMode,
+  clearSessionResults,
+} = memorySlice.actions
 export default memorySlice.reducer
