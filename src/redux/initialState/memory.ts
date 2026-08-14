@@ -16,6 +16,8 @@ export const initialMemoryState: MemoryState = {
   sessionMode: false,
   sessionResults: null,
   sessionLoading: false,
+  exporting: false,
+  importing: false,
   clearing: false,
   savingId: null,
   error: null,
