@@ -14,6 +14,7 @@ import type {
   SessionSearchResult,
   MemoryExportBundle,
   MemoryImportResult,
+  ForeignImportResult,
 } from '@/redux/types/memory'
 
 // API Functions
@@ -154,6 +155,19 @@ export const importMemoryAPI = async (
     url: 'api/memory/v2/import/',
     method: METHOD.POST,
     data: bundle,
+  })
+}
+
+/**
+ * Queue a free-form paste (from any other AI) through the writer pipeline
+ */
+export const importForeignMemoryAPI = async (
+  text: string
+): Promise<ForeignImportResult> => {
+  return await baseRequest<ForeignImportResult>({
+    url: 'api/memory/v2/import/foreign/',
+    method: METHOD.POST,
+    data: { text },
   })
 }
 

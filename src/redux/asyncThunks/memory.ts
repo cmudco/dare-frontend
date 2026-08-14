@@ -16,6 +16,7 @@ import {
   searchSessionsAPI,
   exportMemoryAPI,
   importMemoryAPI,
+  importForeignMemoryAPI,
   clearAllMemoryAPI,
 } from '../../api/memory'
 
@@ -171,6 +172,18 @@ export const importMemory = createAsyncThunk(
   async (bundle: object, thunkAPI) => {
     try {
       return await importMemoryAPI(bundle)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Queue a paste from another AI through the writer pipeline */
+export const importForeignMemory = createAsyncThunk(
+  'memory/importForeignMemory',
+  async (text: string, thunkAPI) => {
+    try {
+      return await importForeignMemoryAPI(text)
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }
