@@ -108,6 +108,12 @@ export interface MemoryImportResult {
   document: boolean
 }
 
+/** What the foreign-paste endpoint reports: work queued, not yet done */
+export interface ForeignImportResult {
+  queuedChunks: number
+  conversationId: string
+}
+
 /** Response from clear endpoint */
 export interface ClearMemoryResponse {
   success: boolean

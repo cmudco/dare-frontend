@@ -17,6 +17,7 @@ import {
   searchSessions,
   exportMemory,
   importMemory,
+  importForeignMemory,
 } from './asyncThunks/memory'
 import { MemoryItem, MemorySearchResult, MemorySweep } from './types/memory'
 
@@ -80,6 +81,17 @@ const memorySlice = createSlice({
         state.importing = false
       })
       .addCase(importMemory.rejected, (state, action) => {
+        state.importing = false
+        state.error = action.payload as string
+      })
+      .addCase(importForeignMemory.pending, (state) => {
+        state.importing = true
+        state.error = null
+      })
+      .addCase(importForeignMemory.fulfilled, (state) => {
+        state.importing = false
+      })
+      .addCase(importForeignMemory.rejected, (state, action) => {
         state.importing = false
         state.error = action.payload as string
       })
