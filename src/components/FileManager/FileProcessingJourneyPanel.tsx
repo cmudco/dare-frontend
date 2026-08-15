@@ -4,13 +4,9 @@ import {
   CheckCircle2,
   Circle,
   Clock3,
-  Database,
-  FileSearch,
-  Image as ImageIcon,
   Loader2,
   MinusCircle,
   RotateCcw,
-  ScanText,
   XCircle,
 } from 'lucide-react'
 
@@ -25,69 +21,17 @@ import {
   ProcessingJourneyStageStatus,
 } from '@/redux/types/files'
 import { FileStatus } from '@/utils/constants/file'
+import {
+  JOURNEY_DETAIL_LABELS,
+  STAGE_ICONS,
+  STAGE_STATUS_LABELS,
+  STAGE_STATUS_VARIANTS,
+} from '@/utils/constants/fileProcessingJourney'
+import { formatDateTime } from '@/utils/dateUtils'
+import { formatJourneyDetail, formatJourneyDuration } from '@/utils/files'
 
 interface FileProcessingJourneyPanelProps {
   fileId: number | null
-}
-
-const STAGE_ICONS = {
-  parsing: FileSearch,
-  enriching: ImageIcon,
-  embedding: ScanText,
-  indexing: Database,
-} as const
-
-const DETAIL_LABELS: Record<string, string> = {
-  parser: 'Parser',
-  pages: 'Pages',
-  elements: 'Elements',
-  sections: 'Sections',
-  tables: 'Tables',
-  pictures: 'Images found',
-  classifiedPictures: 'Images classified',
-  parserReportedSeconds: 'Docling reported time',
-  outcome: 'Result',
-  model: 'Vision model',
-  attemptedCalls: 'Visual operations',
-  visualOperations: 'Visual operations',
-  providerRequests: 'Fresh Gemini requests',
-  cacheHits: 'Cache hits',
-  describedFigures: 'Figures described',
-  transcribedPages: 'Pages transcribed',
-  failedCalls: 'Failed visual operations',
-  textCharacters: 'Text characters',
-  chunks: 'Chunks embedded',
-  chunkSize: 'Chunk size',
-  overlapSize: 'Chunk overlap',
-  backend: 'Search backend',
-  vectors: 'Vectors stored',
-  reason: 'Note',
-}
-
-const formatDuration = (seconds?: number) => {
-  if (seconds == null) return 'In progress'
-  if (seconds < 0.05) return '<0.1s'
-  if (seconds < 60) return `${seconds.toFixed(seconds < 10 ? 1 : 0)}s`
-  const minutes = Math.floor(seconds / 60)
-  const remainder = Math.round(seconds % 60)
-  return remainder ? `${minutes}m ${remainder}s` : `${minutes}m`
-}
-
-const formatDateTime = (value?: string) => {
-  if (!value) return null
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'medium',
-  }).format(new Date(value))
-}
-
-const formatDetail = (key: string, value: unknown) => {
-  if (key === 'parserReportedSeconds' && typeof value === 'number') {
-    return formatDuration(value)
-  }
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
-  if (typeof value === 'number') return value.toLocaleString()
-  return String(value).split('_').join(' ')
 }
 
 const FileProcessingJourneyPanel = ({
@@ -167,7 +111,7 @@ const FileProcessingJourneyPanel = ({
         <div className='mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4'>
           <JourneyMetric
             label='Total time'
-            value={formatDuration(latestAttempt?.durationSeconds)}
+            value={formatJourneyDuration(latestAttempt?.durationSeconds)}
           />
           <JourneyMetric label='Attempts' value={String(attempts.length)} />
           <JourneyMetric
@@ -263,7 +207,7 @@ const AttemptCard = ({
           <p className='text-sm font-medium'>Attempt {attempt.number}</p>
           <p className='truncate text-xs text-muted-foreground'>
             {formatDateTime(attempt.startedAt)} ·{' '}
-            {formatDuration(attempt.durationSeconds)}
+            {formatJourneyDuration(attempt.durationSeconds)}
           </p>
         </div>
       </div>
@@ -343,11 +287,11 @@ const StageRow = ({
           <div>
             <p className='text-sm font-medium'>{stage.label}</p>
             <p className='text-xs text-muted-foreground'>
-              {formatDuration(stage.durationSeconds)}
+              {formatJourneyDuration(stage.durationSeconds)}
             </p>
           </div>
-          <Badge variant={stageStatusVariant(stage.status)}>
-            {stageStatusLabel(stage.status)}
+          <Badge variant={STAGE_STATUS_VARIANTS[stage.status]}>
+            {STAGE_STATUS_LABELS[stage.status]}
           </Badge>
         </div>
 
@@ -356,13 +300,13 @@ const StageRow = ({
             {entries.map(([key, value]) => (
               <div key={key} className='flex min-w-0 justify-between gap-2'>
                 <dt className='text-muted-foreground'>
-                  {DETAIL_LABELS[key] ?? key}
+                  {JOURNEY_DETAIL_LABELS[key] ?? key}
                 </dt>
                 <dd
                   className='truncate text-right font-medium'
                   title={String(value)}
                 >
-                  {formatDetail(key, value)}
+                  {formatJourneyDetail(key, value)}
                 </dd>
               </div>
             ))}
@@ -406,22 +350,6 @@ const StageStatusIcon = ({
     return <MinusCircle className={`${className} text-muted-foreground`} />
   }
   return <Circle className={`${className} text-muted-foreground`} />
-}
-
-const stageStatusVariant = (status: ProcessingJourneyStageStatus) => {
-  if (status === 'complete') return 'green' as const
-  if (status === 'failed') return 'red' as const
-  if (status === 'partial') return 'yellow' as const
-  if (status === 'running') return 'blue' as const
-  return 'gray' as const
-}
-
-const stageStatusLabel = (status: ProcessingJourneyStageStatus) => {
-  if (status === 'running') return 'Running'
-  if (status === 'complete') return 'Complete'
-  if (status === 'failed') return 'Failed'
-  if (status === 'partial') return 'Partial'
-  return 'Skipped'
 }
 
 export default FileProcessingJourneyPanel
