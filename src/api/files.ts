@@ -2,6 +2,7 @@ import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import {
   FileProcessingStage,
+  FileProcessingJourneyResponse,
   FileStructure,
   MyFile,
   MyFolder,
@@ -49,6 +50,15 @@ export const getFileStructureAPI = async (
     url: `api/files/${id}/structure/`,
     method: METHOD.GET,
     params: pageNo != null ? { page_no: pageNo } : undefined,
+  })
+}
+
+export const getFileProcessingJourneyAPI = async (
+  id: number
+): Promise<FileProcessingJourneyResponse> => {
+  return await baseRequest<FileProcessingJourneyResponse>({
+    url: `api/files/${id}/processing-journey/`,
+    method: METHOD.GET,
   })
 }
 

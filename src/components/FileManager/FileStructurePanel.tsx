@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  AlignLeft,
   AlertCircle,
   BookOpen,
   CheckCircle2,
@@ -7,7 +8,6 @@ import {
   Heading,
   Image as ImageIcon,
   ScanLine,
-  Sparkles,
   Table as TableIcon,
   Type,
 } from 'lucide-react'
@@ -46,6 +46,19 @@ const KIND_ICON: Record<DocumentElementKind, typeof Type> = {
   picture: ImageIcon,
 }
 
+type StructureFilter = 'all' | 'headings' | 'text' | 'tables' | 'images'
+
+const STRUCTURE_FILTERS: Array<{
+  value: StructureFilter
+  label: string
+}> = [
+  { value: 'all', label: 'All' },
+  { value: 'headings', label: 'Headings' },
+  { value: 'text', label: 'Text' },
+  { value: 'tables', label: 'Tables' },
+  { value: 'images', label: 'Images' },
+]
+
 /**
  * The parsed document model for one file.
  *
@@ -63,6 +76,7 @@ const FileStructurePanel = ({
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState<number | null>(null)
   const [showFurniture, setShowFurniture] = useState(false)
+  const [filter, setFilter] = useState<StructureFilter>('all')
 
   const fetchStructure = useCallback(
     async (pageNo: number | null) => {
@@ -91,15 +105,58 @@ const FileStructurePanel = ({
     return Array.from({ length: total }, (_, index) => index + 1)
   }, [structure?.pageCount])
 
-  const elements = useMemo(() => {
+  const visibleElements = useMemo(() => {
     const all = structure?.elements ?? []
     return showFurniture
       ? all
       : all.filter((element) => !FURNITURE_LABELS.includes(element.label))
   }, [structure?.elements, showFurniture])
 
+  const filterCounts = useMemo<Record<StructureFilter, number>>(() => {
+    const headings = visibleElements.filter((element) =>
+      HEADING_LABELS.includes(element.label)
+    ).length
+    const text = visibleElements.filter(
+      (element) =>
+        element.kind === 'text' && !HEADING_LABELS.includes(element.label)
+    ).length
+    const tables = visibleElements.filter(
+      (element) => element.kind === 'table'
+    ).length
+    const images = visibleElements.filter(
+      (element) => element.kind === 'picture'
+    ).length
+
+    return {
+      all: visibleElements.length,
+      headings,
+      text,
+      tables,
+      images,
+    }
+  }, [visibleElements])
+
+  const elements = useMemo(() => {
+    if (filter === 'all') return visibleElements
+    if (filter === 'headings') {
+      return visibleElements.filter((element) =>
+        HEADING_LABELS.includes(element.label)
+      )
+    }
+    if (filter === 'text') {
+      return visibleElements.filter(
+        (element) =>
+          element.kind === 'text' && !HEADING_LABELS.includes(element.label)
+      )
+    }
+    if (filter === 'tables') {
+      return visibleElements.filter((element) => element.kind === 'table')
+    }
+    return visibleElements.filter((element) => element.kind === 'picture')
+  }, [filter, visibleElements])
+
   const hiddenFurnitureCount =
-    (structure?.elements.length ?? 0) - (elements.length ?? 0)
+    (structure?.elements.length ?? 0) - visibleElements.length
 
   const selectPage = (pageNo: number | null) => {
     setPage(pageNo)
@@ -287,6 +344,34 @@ const FileStructurePanel = ({
         </section>
       )}
 
+      <section className='space-y-2'>
+        <p className='text-xs font-medium text-muted-foreground'>Show</p>
+        <div
+          className='flex flex-wrap gap-1.5'
+          role='group'
+          aria-label='Filter document structure'
+        >
+          {STRUCTURE_FILTERS.map((item) => (
+            <button
+              key={item.value}
+              type='button'
+              aria-pressed={filter === item.value}
+              onClick={() => setFilter(item.value)}
+              className={`rounded-md border px-2.5 py-1.5 text-xs transition-colors ${
+                filter === item.value
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border text-muted-foreground hover:bg-accent hover:text-foreground'
+              }`}
+            >
+              {item.label}
+              <span className='ml-1.5 tabular-nums opacity-70'>
+                {filterCounts[item.value]}
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section className='space-y-1.5'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-1.5'>
@@ -309,56 +394,61 @@ const FileStructurePanel = ({
           )}
         </div>
 
-        {pageEnrichments.length > 0 && (
-          <div className='space-y-2 pb-2'>
-            {pageEnrichments.map((pageEnrichment) => (
-              <div
-                key={pageEnrichment.pageNo}
-                className='rounded-md border border-blue-200 bg-blue-50/70 p-3 dark:border-blue-900 dark:bg-blue-950/20'
-              >
-                <div className='mb-2 flex items-center gap-1.5'>
-                  <Sparkles className='h-3.5 w-3.5 text-blue-600 dark:text-blue-300' />
-                  <span className='text-xs font-medium'>
-                    Machine transcription · page {pageEnrichment.pageNo}
-                  </span>
-                  {pageEnrichment.model && (
-                    <Badge variant='gray' className='px-1.5 py-0 text-[10px]'>
-                      {pageEnrichment.model}
-                    </Badge>
-                  )}
-                </div>
-                {pageEnrichment.status === 'complete' ? (
-                  <div className='max-h-80 space-y-2 overflow-auto text-sm leading-relaxed text-muted-foreground'>
-                    {pageEnrichment.summary && (
-                      <p>
-                        <span className='font-medium text-foreground'>
-                          Page description:
-                        </span>{' '}
-                        {pageEnrichment.summary}
-                      </p>
-                    )}
-                    {pageEnrichment.transcriptionMarkdown && (
-                      <p className='whitespace-pre-wrap'>
-                        {pageEnrichment.transcriptionMarkdown}
-                      </p>
+        {(filter === 'all' || filter === 'images') &&
+          pageEnrichments.length > 0 && (
+            <div className='space-y-2 pb-2'>
+              {pageEnrichments.map((pageEnrichment) => (
+                <div
+                  key={pageEnrichment.pageNo}
+                  className='rounded-md border border-blue-200 bg-blue-50/70 p-3 dark:border-blue-900 dark:bg-blue-950/20'
+                >
+                  <div className='mb-2 flex items-center gap-1.5'>
+                    <ScanLine className='h-3.5 w-3.5 text-blue-600 dark:text-blue-300' />
+                    <span className='text-xs font-medium'>
+                      Machine transcription · page {pageEnrichment.pageNo}
+                    </span>
+                    {pageEnrichment.model && (
+                      <Badge variant='gray' className='px-1.5 py-0 text-[10px]'>
+                        {pageEnrichment.model}
+                      </Badge>
                     )}
                   </div>
-                ) : (
-                  <p className='text-sm text-red-600 dark:text-red-300'>
-                    {pageEnrichment.error ||
-                      'This page could not be transcribed.'}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                  {pageEnrichment.status === 'complete' ? (
+                    <div className='max-h-80 space-y-2 overflow-auto text-sm leading-relaxed text-muted-foreground'>
+                      {pageEnrichment.summary && (
+                        <p>
+                          <span className='font-medium text-foreground'>
+                            Page description:
+                          </span>{' '}
+                          {pageEnrichment.summary}
+                        </p>
+                      )}
+                      {pageEnrichment.transcriptionMarkdown && (
+                        <p className='whitespace-pre-wrap'>
+                          {pageEnrichment.transcriptionMarkdown}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className='text-sm text-red-600 dark:text-red-300'>
+                      {pageEnrichment.error ||
+                        'This page could not be transcribed.'}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
-        {elements.length === 0 && pageEnrichments.length === 0 ? (
+        {elements.length === 0 &&
+        ((filter !== 'all' && filter !== 'images') ||
+          pageEnrichments.length === 0) ? (
           <p className='py-8 text-center text-sm text-muted-foreground'>
-            {needsOcr
-              ? 'Nothing was recovered from this page.'
-              : 'No elements on this page.'}
+            {filter !== 'all'
+              ? `No ${STRUCTURE_FILTERS.find((item) => item.value === filter)?.label.toLowerCase()} found${page ? ` on page ${page}` : ''}.`
+              : needsOcr
+                ? 'Nothing was recovered from this page.'
+                : 'No elements on this page.'}
           </p>
         ) : (
           elements.length > 0 && (
@@ -473,7 +563,7 @@ const ElementRow = ({
             {element.enrichment?.status === 'complete' && (
               <div className='rounded-md border border-blue-200 bg-blue-50/70 p-3 dark:border-blue-900 dark:bg-blue-950/20'>
                 <div className='mb-1.5 flex items-center gap-1.5'>
-                  <Sparkles className='h-3.5 w-3.5 text-blue-600 dark:text-blue-300' />
+                  <AlignLeft className='h-3.5 w-3.5 text-blue-600 dark:text-blue-300' />
                   <span className='text-xs font-medium'>
                     Machine-generated description
                   </span>

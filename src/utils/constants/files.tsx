@@ -37,7 +37,8 @@ export const getJobStatusDisplay = (jobStatus?: string) => {
 const PROCESSING_STAGE_LABELS: Record<FileProcessingStage, string> = {
   parsing: 'Analyzing document',
   enriching: 'Describing visuals',
-  embedding: 'Creating search index',
+  embedding: 'Creating embeddings',
+  indexing: 'Storing search index',
   complete: 'Processing',
 }
 

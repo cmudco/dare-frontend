@@ -54,7 +54,57 @@ export type FileProcessingStage =
   | 'parsing'
   | 'enriching'
   | 'embedding'
+  | 'indexing'
   | 'complete'
+
+export type ProcessingJourneyStageStatus =
+  | 'running'
+  | 'complete'
+  | 'partial'
+  | 'skipped'
+  | 'failed'
+
+export interface ProcessingJourneyStage {
+  key: 'parsing' | 'enriching' | 'embedding' | 'indexing'
+  label: string
+  status: ProcessingJourneyStageStatus
+  startedAt: string
+  completedAt?: string
+  durationSeconds?: number
+  details: Record<string, string | number | boolean | null>
+  error?: string
+}
+
+export interface ProcessingJourneyAttempt {
+  number: number
+  status: 'processing' | 'complete' | 'failed'
+  outcome?: string
+  startedAt: string
+  completedAt?: string
+  durationSeconds?: number
+  error?: string
+  stages: ProcessingJourneyStage[]
+}
+
+export interface FileProcessingJourney {
+  version: number
+  attempts: ProcessingJourneyAttempt[]
+}
+
+export interface FileProcessingJourneyResponse {
+  id: number
+  name: string
+  status: FileStatus
+  statusLabel: string
+  processingStage: FileProcessingStage
+  stageLabel: string
+  errorMessage?: string | null
+  parserName?: string | null
+  pageCount?: number | null
+  journey: FileProcessingJourney
+  createdAt: string
+  updatedAt: string
+}
 
 /** Where an element sits on its page, as fractions of page width and height. */
 export interface ElementBoundingBox {
