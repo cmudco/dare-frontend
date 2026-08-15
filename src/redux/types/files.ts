@@ -182,6 +182,9 @@ export interface DocumentEnrichmentSummary {
   describedFigures: number
   transcribedPages: number
   attemptedCalls?: number
+  visualOperations?: number
+  providerRequests?: number
+  cacheHits?: number
   failedCalls?: number
   reason?: string
   durationSeconds?: number
