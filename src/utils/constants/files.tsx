@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { FileStatus } from './file'
+import { FileProcessingStage } from '@/redux/types/files'
 import {
   Loader2,
   CheckCircle,
@@ -33,12 +34,26 @@ export const getJobStatusDisplay = (jobStatus?: string) => {
   }
 }
 
-export const getStatusDisplay = (status: FileStatus, errorMessage?: string) => {
+const PROCESSING_STAGE_LABELS: Record<FileProcessingStage, string> = {
+  parsing: 'Analyzing document',
+  enriching: 'Describing visuals',
+  embedding: 'Creating search index',
+  complete: 'Processing',
+}
+
+export const getStatusDisplay = (
+  status: FileStatus,
+  errorMessage?: string,
+  processingStage?: FileProcessingStage
+) => {
   switch (status) {
     case FileStatus.PROCESSING:
       return (
         <Badge variant='secondary'>
-          <Loader2 className='mr-1 h-4 w-4 animate-spin' /> Processing
+          <Loader2 className='mr-1 h-4 w-4 animate-spin' />{' '}
+          {processingStage
+            ? PROCESSING_STAGE_LABELS[processingStage]
+            : 'Processing'}
         </Badge>
       )
     case FileStatus.PROCESSED:

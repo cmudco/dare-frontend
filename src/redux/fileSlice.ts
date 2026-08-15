@@ -200,11 +200,13 @@ const fileSlice = createSlice({
             status: item.status,
             jobId: item.jobId,
             jobStatus: item.jobStatus,
+            processingStage: item.processingStage,
           }
           const fileIndex = state.files.findIndex((f) => f.id === item.fileId)
           if (fileIndex !== -1) {
             state.files[fileIndex].status = item.status
             state.files[fileIndex].jobId = item.jobId
+            state.files[fileIndex].processingStage = item.processingStage
           }
         })
       })

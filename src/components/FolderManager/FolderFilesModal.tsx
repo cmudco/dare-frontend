@@ -220,6 +220,7 @@ const FolderFilesModal: React.FC<FolderFilesModalProps> = ({
                       tags,
                       status,
                       errorMessage,
+                      processingStage,
                     }) => (
                       <TableRow key={id}>
                         <TableCell className='p-4'>
@@ -239,7 +240,11 @@ const FolderFilesModal: React.FC<FolderFilesModalProps> = ({
                           />
                         </TableCell>
                         <TableCell className='p-4'>
-                          {getStatusDisplay(status, errorMessage)}
+                          {getStatusDisplay(
+                            status,
+                            errorMessage,
+                            processingStage
+                          )}
                         </TableCell>
                         <TableCell className='p-4 text-center'>
                           <DropdownMenu>

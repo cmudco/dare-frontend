@@ -192,6 +192,7 @@ const SharedFilesTable = () => {
                 tags,
                 status,
                 errorMessage,
+                processingStage,
                 sharedBy,
               }) => (
                 <TableRow key={id}>
@@ -239,7 +240,7 @@ const SharedFilesTable = () => {
                     )}
                   </TableCell>
                   <TableCell className='p-4'>
-                    {getStatusDisplay(status, errorMessage)}
+                    {getStatusDisplay(status, errorMessage, processingStage)}
                   </TableCell>
                   <TableCell className='p-4 text-center'>
                     <DropdownMenu>

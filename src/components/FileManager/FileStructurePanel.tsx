@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   BookOpen,
+  CheckCircle2,
   Info,
   Heading,
   Image as ImageIcon,
   ScanLine,
+  Sparkles,
   Table as TableIcon,
   Type,
 } from 'lucide-react'
@@ -137,7 +139,8 @@ const FileStructurePanel = ({
 
   if (!structure) return null
 
-  const { counts, outline, needsOcr, parser } = structure
+  const { counts, outline, needsOcr, parser, enrichment, pageEnrichments } =
+    structure
 
   if (!parser) {
     return (
@@ -159,10 +162,46 @@ const FileStructurePanel = ({
           <div className='space-y-0.5'>
             <p className='text-sm font-medium'>Scanned document</p>
             <p className='text-xs opacity-80'>
-              {structure.pagesWithoutText} of {structure.pageCount} pages are
-              images with no readable text, so nothing was embedded. This file
-              cannot answer questions yet.
+              {structure.hasText
+                ? `${structure.pagesWithoutText} of ${structure.pageCount} pages began as images. Some content was recovered and embedded, but one or more pages still need transcription.`
+                : `${structure.pagesWithoutText} of ${structure.pageCount} pages are images with no readable text, so nothing was embedded. This file cannot answer questions yet.`}
             </p>
+          </div>
+        </div>
+      )}
+
+      {enrichment.status !== 'not_needed' && (
+        <div
+          className={`flex items-start gap-3 rounded-md border p-3 ${
+            enrichment.status === 'complete'
+              ? 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200'
+              : 'border-yellow-300 bg-yellow-100 text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+          }`}
+        >
+          {enrichment.status === 'complete' ? (
+            <CheckCircle2 className='mt-0.5 h-4 w-4 shrink-0' />
+          ) : (
+            <AlertCircle className='mt-0.5 h-4 w-4 shrink-0' />
+          )}
+          <div className='space-y-0.5'>
+            <p className='text-sm font-medium'>
+              {enrichment.status === 'complete'
+                ? 'Visual content enriched'
+                : enrichment.status === 'partial'
+                  ? 'Visual content partially enriched'
+                  : 'Visual enrichment unavailable'}
+            </p>
+            <p className='text-xs opacity-80'>
+              {enrichment.describedFigures} figure
+              {enrichment.describedFigures === 1 ? '' : 's'} described and{' '}
+              {enrichment.transcribedPages} scanned page
+              {enrichment.transcribedPages === 1 ? '' : 's'} transcribed
+              {enrichment.model ? ` with ${enrichment.model}` : ''}. Generated
+              content is labelled below.
+            </p>
+            {enrichment.reason && (
+              <p className='text-xs opacity-80'>{enrichment.reason}</p>
+            )}
           </div>
         </div>
       )}
@@ -173,6 +212,19 @@ const FileStructurePanel = ({
         <StatCard label='Tables' value={counts.tables} />
         <StatCard label='Images' value={counts.pictures} />
       </div>
+
+      {(counts.describedFigures ?? 0) + (counts.transcribedPages ?? 0) > 0 ? (
+        <div className='grid grid-cols-2 gap-2'>
+          <StatCard
+            label='Figures described'
+            value={counts.describedFigures ?? 0}
+          />
+          <StatCard
+            label='Pages transcribed'
+            value={counts.transcribedPages ?? 0}
+          />
+        </div>
+      ) : null}
 
       {outline.length > 0 && (
         <section className='space-y-1.5'>
@@ -257,22 +309,69 @@ const FileStructurePanel = ({
           )}
         </div>
 
-        {elements.length === 0 ? (
+        {pageEnrichments.length > 0 && (
+          <div className='space-y-2 pb-2'>
+            {pageEnrichments.map((pageEnrichment) => (
+              <div
+                key={pageEnrichment.pageNo}
+                className='rounded-md border border-blue-200 bg-blue-50/70 p-3 dark:border-blue-900 dark:bg-blue-950/20'
+              >
+                <div className='mb-2 flex items-center gap-1.5'>
+                  <Sparkles className='h-3.5 w-3.5 text-blue-600 dark:text-blue-300' />
+                  <span className='text-xs font-medium'>
+                    Machine transcription · page {pageEnrichment.pageNo}
+                  </span>
+                  {pageEnrichment.model && (
+                    <Badge variant='gray' className='px-1.5 py-0 text-[10px]'>
+                      {pageEnrichment.model}
+                    </Badge>
+                  )}
+                </div>
+                {pageEnrichment.status === 'complete' ? (
+                  <div className='max-h-80 space-y-2 overflow-auto text-sm leading-relaxed text-muted-foreground'>
+                    {pageEnrichment.summary && (
+                      <p>
+                        <span className='font-medium text-foreground'>
+                          Page description:
+                        </span>{' '}
+                        {pageEnrichment.summary}
+                      </p>
+                    )}
+                    {pageEnrichment.transcriptionMarkdown && (
+                      <p className='whitespace-pre-wrap'>
+                        {pageEnrichment.transcriptionMarkdown}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className='text-sm text-red-600 dark:text-red-300'>
+                    {pageEnrichment.error ||
+                      'This page could not be transcribed.'}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {elements.length === 0 && pageEnrichments.length === 0 ? (
           <p className='py-8 text-center text-sm text-muted-foreground'>
             {needsOcr
               ? 'Nothing was recovered from this page.'
               : 'No elements on this page.'}
           </p>
         ) : (
-          <div className='divide-y divide-border rounded-md border border-border'>
-            {elements.map((element) => (
-              <ElementRow
-                key={element.order}
-                element={element}
-                fileId={fileId}
-              />
-            ))}
-          </div>
+          elements.length > 0 && (
+            <div className='divide-y divide-border rounded-md border border-border'>
+              {elements.map((element) => (
+                <ElementRow
+                  key={element.order}
+                  element={element}
+                  fileId={fileId}
+                />
+              ))}
+            </div>
+          )
         )}
       </section>
     </div>
@@ -357,6 +456,50 @@ const ElementRow = ({
                 alt={element.caption || `Image on page ${element.pageNo}`}
               />
             )}
+            {element.classifications?.[0] && (
+              <div className='flex flex-wrap gap-1'>
+                {element.classifications.slice(0, 3).map((classification) => (
+                  <Badge
+                    key={classification.label}
+                    variant='gray'
+                    className='px-1.5 py-0 text-[10px]'
+                  >
+                    {classification.label.split('_').join(' ')} ·{' '}
+                    {Math.round(classification.confidence * 100)}%
+                  </Badge>
+                ))}
+              </div>
+            )}
+            {element.enrichment?.status === 'complete' && (
+              <div className='rounded-md border border-blue-200 bg-blue-50/70 p-3 dark:border-blue-900 dark:bg-blue-950/20'>
+                <div className='mb-1.5 flex items-center gap-1.5'>
+                  <Sparkles className='h-3.5 w-3.5 text-blue-600 dark:text-blue-300' />
+                  <span className='text-xs font-medium'>
+                    Machine-generated description
+                  </span>
+                </div>
+                <p className='text-sm leading-relaxed'>
+                  {element.enrichment.description}
+                </p>
+                {element.enrichment.visibleText && (
+                  <p className='mt-2 text-xs text-muted-foreground'>
+                    <span className='font-medium'>Visible text:</span>{' '}
+                    {element.enrichment.visibleText}
+                  </p>
+                )}
+                {element.enrichment.uncertainty && (
+                  <p className='mt-1 text-xs text-muted-foreground'>
+                    <span className='font-medium'>Uncertainty:</span>{' '}
+                    {element.enrichment.uncertainty}
+                  </p>
+                )}
+              </div>
+            )}
+            {element.enrichment?.status === 'error' && (
+              <p className='text-xs text-red-600 dark:text-red-300'>
+                Visual description failed: {element.enrichment.error}
+              </p>
+            )}
           </div>
         ) : (
           <p
@@ -371,6 +514,12 @@ const ElementRow = ({
         {element.section && !isHeading && (
           <p className='truncate text-xs text-muted-foreground/70'>
             &sect; {element.section}
+          </p>
+        )}
+        {element.headingContext && element.headingContext.length > 1 && (
+          <p className='truncate text-xs text-muted-foreground/70'>
+            Context:{' '}
+            {element.headingContext.map((heading) => heading.text).join(' › ')}
           </p>
         )}
       </div>
