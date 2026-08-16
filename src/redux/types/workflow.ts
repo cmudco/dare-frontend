@@ -10,6 +10,8 @@ export enum WorkflowMode {
 export interface WorkflowStepSnippet {
   id: number
   file: { id: number; name: string } | null
+  library?: { id: number; name: string } | null
+  sourceRef?: string
   text: string
   similarityScore: number
   chunkIndex: number
@@ -23,6 +25,25 @@ export interface WorkflowStepWebSearchSource {
   citedText: string
   pageAge?: string
   provider: string
+}
+
+/**
+ * Tool call made during a workflow step's LLM turn.
+ * Mirrors the backend WorkflowStepToolCall serializer (camelized).
+ */
+export interface WorkflowStepToolCall {
+  id?: number
+  toolCallId: string
+  serverSlug: string
+  origin: string
+  toolName: string
+  arguments?: Record<string, unknown>
+  roundIndex?: number
+  round?: number
+  status: string
+  result?: string | null
+  error?: string | null
+  executionTimeMs?: number
 }
 
 /**
@@ -108,6 +129,9 @@ export interface NodeState {
   metadata: RoutingMetadata | null // Present for completed routing nodes with AI analysis
   snippets: WorkflowStepSnippet[] // RAG snippets retrieved for this step
   webSearchSources: WorkflowStepWebSearchSource[] // Web search citations for this step
+  toolCalls?: WorkflowStepToolCall[] // Tool calls made by this step's LLM turn
+  retrievalTrace?: unknown // RAG pipeline trace (advanced/agentic modes)
+  contextTrace?: { stages?: Array<Record<string, unknown>> } | null // Context-assembly trace
 }
 
 /**

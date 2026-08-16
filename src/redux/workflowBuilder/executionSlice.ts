@@ -18,7 +18,12 @@ import {
   workflowStatus,
   validationRequired,
   validationSubmitted,
+  workflowToolCallPending,
+  workflowToolCallExecuting,
+  workflowToolCallResult,
+  workflowContextTrace,
 } from './actions'
+import type { WorkflowStepToolCall } from '../types/workflow'
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -49,7 +54,29 @@ function ensureNodeState(
       metadata: null,
       snippets: [],
       webSearchSources: [],
+      toolCalls: [],
+      retrievalTrace: null,
+      contextTrace: null,
     }
+  }
+}
+
+/** Insert or update a node's tool call, keyed by toolCallId. */
+function upsertToolCall(
+  nodeStates: NodeStatesMap,
+  nodeId: string,
+  toolCall: WorkflowStepToolCall
+): void {
+  ensureNodeState(nodeStates, nodeId)
+  const nodeState = nodeStates[nodeId]
+  if (!nodeState.toolCalls) nodeState.toolCalls = []
+  const existing = nodeState.toolCalls.find(
+    (call) => call.toolCallId === toolCall.toolCallId
+  )
+  if (existing) {
+    Object.assign(existing, toolCall)
+  } else {
+    nodeState.toolCalls.push(toolCall)
   }
 }
 
@@ -294,6 +321,8 @@ const executionSlice = createSlice({
         state.currentRun.nodeStates[nodeId].status =
           WorkflowRunStepStatus.Running
         state.currentRun.nodeStates[nodeId].response = ''
+        state.currentRun.nodeStates[nodeId].toolCalls = []
+        state.currentRun.nodeStates[nodeId].contextTrace = null
         if (startedAt) {
           state.currentRun.nodeStates[nodeId].startedAt = startedAt
         }
@@ -320,6 +349,16 @@ const executionSlice = createSlice({
         nodeState.status = WorkflowRunStepStatus.Completed
         nodeState.snippets = metadata?.snippets ?? []
         nodeState.webSearchSources = metadata?.webSearchSources ?? []
+        // Live tool events already populated toolCalls; the completed
+        // metadata is the persisted, authoritative set.
+        if (metadata?.toolCalls?.length || !nodeState.toolCalls?.length) {
+          nodeState.toolCalls = metadata?.toolCalls ?? []
+        }
+        nodeState.retrievalTrace = metadata?.retrievalTrace ?? null
+        nodeState.contextTrace =
+          (metadata?.contextTrace as typeof nodeState.contextTrace) ??
+          nodeState.contextTrace ??
+          null
 
         if (state.activeNodeId === nodeId) {
           state.activeNodeId = null
@@ -364,6 +403,88 @@ const executionSlice = createSlice({
               action.payload.error || null
           }
         }
+      })
+
+      // ── Tool-Loop Events ─────────────────────────────────────────────
+      .addCase(workflowToolCallPending, (state, action) => {
+        const {
+          workflowRunId,
+          nodeId,
+          toolCallId,
+          toolName,
+          serverSlug,
+          origin,
+          round,
+        } = action.payload
+        if (_isBatchRunId(state, workflowRunId)) return
+        if (!state.currentRun?.nodeStates) return
+
+        upsertToolCall(state.currentRun.nodeStates, nodeId, {
+          toolCallId,
+          toolName,
+          serverSlug,
+          origin,
+          round,
+          status: 'pending',
+        })
+      })
+      .addCase(workflowToolCallExecuting, (state, action) => {
+        const {
+          workflowRunId,
+          nodeId,
+          toolCallId,
+          toolName,
+          serverSlug,
+          origin,
+          round,
+          arguments: args,
+        } = action.payload
+        if (_isBatchRunId(state, workflowRunId)) return
+        if (!state.currentRun?.nodeStates) return
+
+        upsertToolCall(state.currentRun.nodeStates, nodeId, {
+          toolCallId,
+          toolName,
+          serverSlug,
+          origin,
+          round,
+          status: 'executing',
+          arguments: args,
+        })
+      })
+      .addCase(workflowToolCallResult, (state, action) => {
+        const {
+          workflowRunId,
+          nodeId,
+          toolCallId,
+          toolName,
+          serverSlug,
+          origin,
+          round,
+          status,
+          error,
+        } = action.payload
+        if (_isBatchRunId(state, workflowRunId)) return
+        if (!state.currentRun?.nodeStates) return
+
+        upsertToolCall(state.currentRun.nodeStates, nodeId, {
+          toolCallId,
+          toolName,
+          serverSlug,
+          origin,
+          round,
+          status,
+          error: error ?? null,
+        })
+      })
+      .addCase(workflowContextTrace, (state, action) => {
+        const { workflowRunId, nodeId, trace } = action.payload
+        if (_isBatchRunId(state, workflowRunId)) return
+        if (!state.currentRun?.nodeStates) return
+
+        ensureNodeState(state.currentRun.nodeStates, nodeId)
+        state.currentRun.nodeStates[nodeId].contextTrace =
+          trace as (typeof state.currentRun.nodeStates)[string]['contextTrace']
       })
 
       // ── Full Status Update ───────────────────────────────────────────

@@ -1,4 +1,15 @@
-import { FileText, Database, Globe, Type, Bot, Tag, Link2 } from 'lucide-react'
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  FileText,
+  Database,
+  Globe,
+  Type,
+  Bot,
+  Tag,
+  Link2,
+  Library,
+} from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
@@ -12,7 +23,33 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useDebouncedNodeField } from '@/hooks/useDebouncedNodeField'
+import { RagMode } from '@/utils/constants/conversation'
+import { selectLibraries } from '@/redux/librarySlice'
+import { getSharedLibraries } from '@/redux/asyncThunks/library'
+import type { AppDispatch } from '@/redux/store'
 import type { Agent } from '@/redux/types/agent'
+
+const RAG_MODE_OPTIONS: Array<{
+  value: RagMode
+  label: string
+  description: string
+}> = [
+  {
+    value: RagMode.NAIVE,
+    label: 'Fast',
+    description: 'Direct vector lookup',
+  },
+  {
+    value: RagMode.ADVANCED,
+    label: 'Thorough',
+    description: 'Analyzes, blends, and reranks',
+  },
+  {
+    value: RagMode.AGENTIC,
+    label: 'Autonomous',
+    description: 'Model searches in multiple steps',
+  },
+]
 
 // Step Node Data Type
 interface FileNameMap {
@@ -37,6 +74,9 @@ export interface StepNodeData {
   textInput?: string
   enableWebSearch?: boolean
   usePreviousContext?: boolean
+  ragMode?: string
+  libraries?: number[]
+  libraryNames?: FileNameMap
 }
 
 interface StepNodeConfigProps {
@@ -62,6 +102,15 @@ export default function StepNodeConfig({
     nodeData.textInput ?? '',
     (v) => updateNodeData({ textInput: v })
   )
+
+  const dispatch = useDispatch<AppDispatch>()
+  const sharedLibraries = useSelector(selectLibraries)
+  useEffect(() => {
+    if (!sharedLibraries.length) {
+      dispatch(getSharedLibraries())
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch])
 
   // Handle agent selection - prefill all configuration from the agent template
   const handleAgentSelect = (agentId: string) => {
@@ -230,6 +279,64 @@ export default function StepNodeConfig({
           })
         }
       />
+
+      {/* Shared Libraries */}
+      {sharedLibraries.length > 0 && (
+        <>
+          <MultiSelectBadge
+            label='Shared Libraries'
+            icon={Library}
+            selectedIds={nodeData?.libraries || []}
+            items={sharedLibraries}
+            nameMap={nodeData?.libraryNames}
+            placeholder='+ Add library'
+            onAdd={(id) =>
+              updateNodeData({
+                libraries: [...(nodeData?.libraries || []), id],
+              })
+            }
+            onRemove={(id) =>
+              updateNodeData({
+                libraries: (nodeData?.libraries || []).filter(
+                  (lid) => lid !== id
+                ),
+              })
+            }
+          />
+          <p className='-mt-2 text-xs text-muted-foreground'>
+            Curated corpora searched alongside this step&apos;s files.
+          </p>
+        </>
+      )}
+
+      {/* Retrieval Mode */}
+      <div className='space-y-2'>
+        <Label className='flex items-center gap-2 text-xs font-medium'>
+          <Database className='h-3 w-3' />
+          Retrieval Mode
+        </Label>
+        <Select
+          value={nodeData?.ragMode || RagMode.NAIVE}
+          onValueChange={(value) => {
+            updateNodeData({ ragMode: value })
+          }}
+        >
+          <SelectTrigger className='bg-background text-sm'>
+            <SelectValue placeholder='Select retrieval mode' />
+          </SelectTrigger>
+          <SelectContent>
+            {RAG_MODE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label} — {option.description}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className='text-xs text-muted-foreground'>
+          How document context is retrieved for this step. Autonomous lets the
+          model search on demand with the search_documents tool.
+        </p>
+      </div>
 
       {/* Embedding Tags */}
       {tags.length > 0 && (

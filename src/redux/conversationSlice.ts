@@ -1020,6 +1020,7 @@ export const conversationSlice = createSlice({
           action.type === 'socket/tool_call_args_progress',
         (state, action) => {
           const { messageId, toolCallId } = action.payload
+          if (messageId == null) return
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
@@ -1063,6 +1064,7 @@ export const conversationSlice = createSlice({
           action.type === 'socket/tool_call_executing',
         (state, action) => {
           const { messageId, toolCallId } = action.payload
+          if (messageId == null) return
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
@@ -1104,6 +1106,7 @@ export const conversationSlice = createSlice({
         (state, action) => {
           const { messageId, toolCallId, status, origin, error } =
             action.payload
+          if (messageId == null) return
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
@@ -1161,8 +1164,10 @@ export const conversationSlice = createSlice({
         (action): action is { type: string; payload: ContextTraceEvent } =>
           action.type === 'socket/context_trace',
         (state, action) => {
+          const { messageId } = action.payload
+          if (messageId == null) return
           const msg = state.activeConversationMessages.find(
-            (m) => m.id.toString() === action.payload.messageId.toString()
+            (m) => m.id.toString() === messageId.toString()
           )
           // Silently drop events for messages not in the store — the trace
           // is also persisted on the message, so a refresh recovers it.
@@ -1174,8 +1179,10 @@ export const conversationSlice = createSlice({
         (action): action is { type: string; payload: ToolRoundsCappedEvent } =>
           action.type === 'socket/tool_rounds_capped',
         (state, action) => {
+          const { messageId } = action.payload
+          if (messageId == null) return
           const message = state.activeConversationMessages.find(
-            (item) => item.id.toString() === action.payload.messageId.toString()
+            (item) => item.id.toString() === messageId.toString()
           )
           if (!message) return
           message.toolLoopState = ToolLoopState.CAPPED

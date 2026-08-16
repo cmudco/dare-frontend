@@ -87,6 +87,8 @@ export function ExecutionNodeList({
           isActive={displayActiveNodeId === nodeId}
           snippets={state.snippets}
           webSearchSources={state.webSearchSources}
+          toolCalls={state.toolCalls}
+          contextTrace={state.contextTrace}
         />
       ))}
     </div>

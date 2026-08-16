@@ -16,10 +16,21 @@ import type {
 } from '@/redux/types/dareToolResults'
 
 /**
+ * Correlation keys identifying the host turn. Chat events carry `messageId`;
+ * workflow step events carry `workflowRunId`/`nodeId`/`runStepId`. The rest
+ * of the payload is byte-identical across both surfaces.
+ */
+export interface ToolEventCorrelation {
+  messageId?: number | string
+  workflowRunId?: number
+  nodeId?: string
+  runStepId?: number
+}
+
+/**
  * `tool_call_pending` — the model started writing a tool call.
  */
-export interface ToolCallPendingEvent {
-  messageId: number | string
+export interface ToolCallPendingEvent extends ToolEventCorrelation {
   toolCallId: string
   toolName: string
   serverSlug: string
@@ -32,8 +43,7 @@ export interface ToolCallPendingEvent {
  * `tool_call_args_progress` — throttled (~400ms) progress while the model
  * streams the tool-call arguments. Only carries the character count.
  */
-export interface ToolCallArgsProgressEvent {
-  messageId: number | string
+export interface ToolCallArgsProgressEvent extends ToolEventCorrelation {
   toolCallId: string
   argsChars: number
 }
@@ -41,8 +51,7 @@ export interface ToolCallArgsProgressEvent {
 /**
  * `tool_call_executing` — arguments are complete and the tool is running.
  */
-export interface ToolCallExecutingEvent {
-  messageId: number | string
+export interface ToolCallExecutingEvent extends ToolEventCorrelation {
   toolCallId: string
   toolName: string
   serverSlug: string
@@ -56,8 +65,7 @@ export interface ToolCallExecutingEvent {
  * `tool_call_result` — the tool finished. Exactly one of
  * dareResult / mcpResult / providerResult is set, keyed by `origin`.
  */
-export interface ToolCallResultEvent {
-  messageId: number | string
+export interface ToolCallResultEvent extends ToolEventCorrelation {
   toolCallId: string
   toolName: string
   serverSlug: string
@@ -73,8 +81,7 @@ export interface ToolCallResultEvent {
 /**
  * `tool_rounds_capped` — the tool loop hit its round cap.
  */
-export interface ToolRoundsCappedEvent {
-  messageId: number | string
+export interface ToolRoundsCappedEvent extends ToolEventCorrelation {
   round: number
 }
 
@@ -82,7 +89,6 @@ export interface ToolRoundsCappedEvent {
  * `context_trace` — the turn's context assembly finished (sent once,
  * after preparation and before the first model round).
  */
-export interface ContextTraceEvent {
-  messageId: number | string
+export interface ContextTraceEvent extends ToolEventCorrelation {
   trace: ContextTrace
 }
