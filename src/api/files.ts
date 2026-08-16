@@ -1,6 +1,12 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
-import { FileStructure, MyFile, MyFolder } from '@/redux/types/files'
+import {
+  FileProcessingStage,
+  FileProcessingJourneyResponse,
+  FileStructure,
+  MyFile,
+  MyFolder,
+} from '@/redux/types/files'
 import { FileStatus } from '@/utils/constants/file'
 
 export const getFilesAPI = async (): Promise<{ results: MyFile[] }> => {
@@ -44,6 +50,15 @@ export const getFileStructureAPI = async (
     url: `api/files/${id}/structure/`,
     method: METHOD.GET,
     params: pageNo != null ? { page_no: pageNo } : undefined,
+  })
+}
+
+export const getFileProcessingJourneyAPI = async (
+  id: number
+): Promise<FileProcessingJourneyResponse> => {
+  return await baseRequest<FileProcessingJourneyResponse>({
+    url: `api/files/${id}/processing-journey/`,
+    method: METHOD.GET,
   })
 }
 
@@ -92,6 +107,7 @@ export const checkJobStatusesAPI = async (
     jobId?: string
     statusCode: FileStatus
     jobStatus: string
+    processingStage?: FileProcessingStage
   }[]
 > => {
   return await baseRequest<
@@ -101,6 +117,7 @@ export const checkJobStatusesAPI = async (
       jobId?: string
       statusCode: FileStatus
       jobStatus: string
+      processingStage?: FileProcessingStage
     }[]
   >({
     url: 'api/files/job-statuses/',

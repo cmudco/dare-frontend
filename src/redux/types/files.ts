@@ -11,6 +11,7 @@ export interface MyFile {
   tags: number[]
   jobId?: string
   status: FileStatus
+  processingStage?: FileProcessingStage
   vectorDbSource: VectorDbSource
   errorMessage?: string
   isMedia?: boolean
@@ -44,6 +45,65 @@ export interface DocumentCounts {
   pictures: number
   pagesWithoutText: number
   contentChars: number
+  describedFigures?: number
+  transcribedPages?: number
+  enrichmentFailures?: number
+}
+
+export type FileProcessingStage =
+  | 'parsing'
+  | 'enriching'
+  | 'embedding'
+  | 'indexing'
+  | 'complete'
+
+export type ProcessingJourneyStageStatus =
+  | 'running'
+  | 'complete'
+  | 'partial'
+  | 'skipped'
+  | 'failed'
+
+export interface ProcessingJourneyStage {
+  key: 'parsing' | 'enriching' | 'embedding' | 'indexing'
+  label: string
+  status: ProcessingJourneyStageStatus
+  startedAt: string
+  completedAt?: string
+  durationSeconds?: number
+  details: Record<string, string | number | boolean | null>
+  error?: string
+}
+
+export interface ProcessingJourneyAttempt {
+  number: number
+  status: 'processing' | 'complete' | 'failed'
+  outcome?: string
+  startedAt: string
+  completedAt?: string
+  durationSeconds?: number
+  error?: string
+  stages: ProcessingJourneyStage[]
+}
+
+export interface FileProcessingJourney {
+  version: number
+  attempts: ProcessingJourneyAttempt[]
+}
+
+export interface FileProcessingJourneyResponse {
+  id: number
+  name: string
+  status: FileStatus
+  statusLabel: string
+  processingStage: FileProcessingStage
+  stageLabel: string
+  errorMessage?: string | null
+  parserName?: string | null
+  pageCount?: number | null
+  journey: FileProcessingJourney
+  createdAt: string
+  updatedAt: string
 }
 
 /** Where an element sits on its page, as fractions of page width and height. */
@@ -72,6 +132,63 @@ export interface DocumentElement {
   caption?: string
   tableMarkdown?: string
   bbox?: ElementBoundingBox
+  treeDepth?: number
+  headingContext?: DocumentHeadingContext[]
+  classifications?: DocumentClassification[]
+  contentSha256?: string
+  enrichment?: DocumentElementEnrichment
+}
+
+export interface DocumentHeadingContext {
+  order: number
+  pageNo: number | null
+  text: string
+}
+
+export interface DocumentClassification {
+  label: string
+  confidence: number
+}
+
+export interface DocumentElementEnrichment {
+  status: 'complete' | 'skipped' | 'error'
+  kind: 'figure_description'
+  description?: string
+  visibleText?: string
+  uncertainty?: string
+  reason?: string
+  error?: string
+  model?: string
+  cacheHit?: boolean
+  provenance: 'machine_generated' | 'machine_routing'
+}
+
+export interface DocumentPageEnrichment {
+  pageNo: number
+  status: 'complete' | 'error'
+  kind: 'page_transcription'
+  transcriptionMarkdown?: string
+  summary?: string
+  uncertainty?: string
+  error?: string
+  model?: string
+  cacheHit?: boolean
+  provenance: 'machine_generated'
+}
+
+export interface DocumentEnrichmentSummary {
+  status: 'not_needed' | 'complete' | 'partial' | 'unavailable'
+  model?: string
+  describedFigures: number
+  transcribedPages: number
+  attemptedCalls?: number
+  visualOperations?: number
+  providerRequests?: number
+  cacheHits?: number
+  failedCalls?: number
+  reason?: string
+  durationSeconds?: number
+  provenance: 'machine_generated'
 }
 
 export interface DocumentOutlineEntry {
@@ -92,6 +209,8 @@ export interface FileStructure {
   elements: DocumentElement[]
   hasText: boolean
   needsOcr: boolean
+  enrichment: DocumentEnrichmentSummary
+  pageEnrichments: DocumentPageEnrichment[]
 }
 
 export interface MyFolder {
@@ -126,7 +245,12 @@ export interface FileState {
   foldername: string
   expandedFolders: { [folderId: number]: boolean }
   jobStatuses: {
-    [fileId: number]: { status: FileStatus; jobId?: string; jobStatus?: string }
+    [fileId: number]: {
+      status: FileStatus
+      jobId?: string
+      jobStatus?: string
+      processingStage?: FileProcessingStage
+    }
   }
   searchQuery: string
   selectedItems: number[]

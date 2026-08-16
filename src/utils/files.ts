@@ -3,6 +3,20 @@ import {
   ALLOWED_FILE_TYPES,
   TAG_COLORS,
 } from './constants/file'
+import { formatDurationSeconds } from './dateUtils'
+
+/** Journey durations: an absent value means the step is still running. */
+export const formatJourneyDuration = (seconds?: number): string =>
+  seconds == null ? 'In progress' : formatDurationSeconds(seconds)
+
+export const formatJourneyDetail = (key: string, value: unknown): string => {
+  if (key === 'parserReportedSeconds' && typeof value === 'number') {
+    return formatDurationSeconds(value)
+  }
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (typeof value === 'number') return value.toLocaleString()
+  return String(value).split('_').join(' ')
+}
 
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes'

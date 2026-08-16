@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { FileText, AlertCircle, Download, ExternalLink } from 'lucide-react'
 import axios from 'axios'
 import FileStructurePanel from './FileStructurePanel'
+import FileProcessingJourneyPanel from './FileProcessingJourneyPanel'
 
 interface FileViewerModalProps {
   isOpen: boolean
@@ -18,9 +19,8 @@ interface FileViewerModalProps {
  * Modal component for viewing files (PDF, TXT, DOCX) with proper authentication.
  * Uses blob URLs for secure file display in iframe.
  *
- * The Structure tab shows the parsed document model behind the file — headings,
- * tables and where each image sits — which is the only place the scanned-page
- * count is visible.
+ * The Structure tab shows the parsed document model behind the file. Metadata
+ * explains how the file moved through parsing, vision, embeddings, and search.
  */
 const FileViewerModal = ({
   isOpen,
@@ -259,6 +259,7 @@ const FileViewerModal = ({
           <TabsList className='self-start'>
             <TabsTrigger value='document'>Document</TabsTrigger>
             <TabsTrigger value='structure'>Structure</TabsTrigger>
+            <TabsTrigger value='metadata'>Metadata</TabsTrigger>
           </TabsList>
 
           <TabsContent
@@ -273,6 +274,13 @@ const FileViewerModal = ({
             className='mt-3 flex-1 overflow-y-auto data-[state=inactive]:hidden'
           >
             <FileStructurePanel fileId={fileId} onOpenPage={openPage} />
+          </TabsContent>
+
+          <TabsContent
+            value='metadata'
+            className='mt-3 flex-1 overflow-y-auto data-[state=inactive]:hidden'
+          >
+            <FileProcessingJourneyPanel fileId={fileId} />
           </TabsContent>
         </Tabs>
       </DialogContent>

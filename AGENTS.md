@@ -7,6 +7,9 @@ by Claude Code through the import in `CLAUDE.md`.
 Task-specific procedures — running the dev server, checking a change before a PR — live as skills
 in `.agents/skills/`. See `.agents/README.md` for how that directory works.
 
+Before changing frontend code, read and follow `docs/RULES.md`. Its data-flow, state-ownership,
+and definition-of-done rules are mandatory for new work and touched code.
+
 ## Project Architecture
 
 This is a React/TypeScript frontend for an AI-powered research and conversation platform with real-time WebSocket communication, file management, and multi-LLM support.
