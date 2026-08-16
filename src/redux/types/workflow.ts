@@ -1,4 +1,5 @@
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
+import type { ContextTrace } from './conversation'
 import { type Node, type Edge } from '@xyflow/react'
 import { OutputDisplayMode } from './workflowBuilder'
 
@@ -131,7 +132,7 @@ export interface NodeState {
   webSearchSources: WorkflowStepWebSearchSource[] // Web search citations for this step
   toolCalls?: WorkflowStepToolCall[] // Tool calls made by this step's LLM turn
   retrievalTrace?: unknown // RAG pipeline trace (advanced/agentic modes)
-  contextTrace?: { stages?: Array<Record<string, unknown>> } | null // Context-assembly trace
+  contextTrace?: ContextTrace | null // Context-assembly trace (same shape as chat)
 }
 
 /**

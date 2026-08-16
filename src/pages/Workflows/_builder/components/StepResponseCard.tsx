@@ -246,9 +246,7 @@ export const StepResponseCard = memo(function StepResponseCard({
                       className='flex items-center justify-between rounded-r-md border-l-2 border-border bg-background p-1.5 pl-2 text-xs'
                     >
                       <span className='font-medium text-foreground'>
-                        {String(
-                          stage.title ?? stage.kind ?? `Stage ${index + 1}`
-                        )}
+                        {stage.kind ?? `Stage ${index + 1}`}
                       </span>
                       <span className='text-muted-foreground'>
                         {typeof stage.ms === 'number' ? `${stage.ms}ms` : ''}
