@@ -9,6 +9,8 @@ import {
   Tag,
   Link2,
   Library,
+  Server,
+  Link,
 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -26,7 +28,8 @@ import { useDebouncedNodeField } from '@/hooks/useDebouncedNodeField'
 import { RagMode } from '@/utils/constants/conversation'
 import { selectLibraries } from '@/redux/librarySlice'
 import { getSharedLibraries } from '@/redux/asyncThunks/library'
-import type { AppDispatch } from '@/redux/store'
+import { getMcpServers } from '@/redux/asyncThunks/mcp'
+import type { AppDispatch, RootState } from '@/redux/store'
 import type { Agent } from '@/redux/types/agent'
 
 const RAG_MODE_OPTIONS: Array<{
@@ -77,6 +80,9 @@ export interface StepNodeData {
   ragMode?: string
   libraries?: number[]
   libraryNames?: FileNameMap
+  enableWebFetch?: boolean
+  mcpServers?: number[]
+  mcpServerNames?: FileNameMap
 }
 
 interface StepNodeConfigProps {
@@ -105,9 +111,13 @@ export default function StepNodeConfig({
 
   const dispatch = useDispatch<AppDispatch>()
   const sharedLibraries = useSelector(selectLibraries)
+  const mcpServers = useSelector((state: RootState) => state.mcp.servers)
   useEffect(() => {
     if (!sharedLibraries.length) {
       dispatch(getSharedLibraries())
+    }
+    if (!mcpServers.length) {
+      dispatch(getMcpServers())
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch])
@@ -309,6 +319,35 @@ export default function StepNodeConfig({
         </>
       )}
 
+      {/* MCP Servers */}
+      {mcpServers.length > 0 && (
+        <>
+          <MultiSelectBadge
+            label='MCP Servers'
+            icon={Server}
+            selectedIds={nodeData?.mcpServers || []}
+            items={mcpServers}
+            nameMap={nodeData?.mcpServerNames}
+            placeholder='+ Add MCP server'
+            onAdd={(id) =>
+              updateNodeData({
+                mcpServers: [...(nodeData?.mcpServers || []), id],
+              })
+            }
+            onRemove={(id) =>
+              updateNodeData({
+                mcpServers: (nodeData?.mcpServers || []).filter(
+                  (sid) => sid !== id
+                ),
+              })
+            }
+          />
+          <p className='-mt-2 text-xs text-muted-foreground'>
+            Connected servers whose tools this step&apos;s LLM may call.
+          </p>
+        </>
+      )}
+
       {/* Retrieval Mode */}
       <div className='space-y-2'>
         <Label className='flex items-center gap-2 text-xs font-medium'>
@@ -470,6 +509,25 @@ export default function StepNodeConfig({
             checked={nodeData?.enableWebSearch || false}
             onCheckedChange={(checked) => {
               updateNodeData({ enableWebSearch: checked })
+            }}
+            className='ml-2'
+          />
+        </div>
+
+        <div className='flex items-center justify-between rounded-md border border-muted bg-muted/20 p-3'>
+          <div className='flex-1'>
+            <Label className='flex cursor-pointer items-center gap-2 text-xs font-medium'>
+              <Link className='h-3 w-3' />
+              Enable Web Fetch
+            </Label>
+            <p className='mt-0.5 text-xs text-muted-foreground'>
+              Allow the LLM to fetch explicit URLs and PDFs
+            </p>
+          </div>
+          <Switch
+            checked={nodeData?.enableWebFetch || false}
+            onCheckedChange={(checked) => {
+              updateNodeData({ enableWebFetch: checked })
             }}
             className='ml-2'
           />
