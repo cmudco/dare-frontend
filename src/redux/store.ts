@@ -17,6 +17,7 @@ import artifactReducer from './artifactSlice'
 import mcpReducer from './mcpSlice'
 import dareToolsReducer from './dareToolsSlice'
 import memoryReducer from './memorySlice'
+import accountDataReducer from './accountDataSlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
 import sharingReducer from './sharingSlice'
@@ -52,6 +53,7 @@ export const store = configureStore({
     mcp: mcpReducer,
     dareTools: dareToolsReducer,
     memory: memoryReducer,
+    accountData: accountDataReducer,
     sharing: sharingReducer,
     conversationTour: conversationTourReducer,
     featureFlags: featureFlagsReducer,
