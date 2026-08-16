@@ -11,6 +11,7 @@ import {
   Library,
   Server,
   Link,
+  Palette,
 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -81,6 +82,7 @@ export interface StepNodeData {
   libraries?: number[]
   libraryNames?: FileNameMap
   enableWebFetch?: boolean
+  enableArtifacts?: boolean
   mcpServers?: number[]
   mcpServerNames?: FileNameMap
 }
@@ -528,6 +530,25 @@ export default function StepNodeConfig({
             checked={nodeData?.enableWebFetch || false}
             onCheckedChange={(checked) => {
               updateNodeData({ enableWebFetch: checked })
+            }}
+            className='ml-2'
+          />
+        </div>
+
+        <div className='flex items-center justify-between rounded-md border border-muted bg-muted/20 p-3'>
+          <div className='flex-1'>
+            <Label className='flex cursor-pointer items-center gap-2 text-xs font-medium'>
+              <Palette className='h-3 w-3' />
+              Enable Artifacts
+            </Label>
+            <p className='mt-0.5 text-xs text-muted-foreground'>
+              Allow the LLM to create charts, diagrams, documents and slides
+            </p>
+          </div>
+          <Switch
+            checked={nodeData?.enableArtifacts || false}
+            onCheckedChange={(checked) => {
+              updateNodeData({ enableArtifacts: checked })
             }}
             className='ml-2'
           />

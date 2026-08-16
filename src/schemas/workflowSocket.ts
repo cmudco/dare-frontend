@@ -62,11 +62,27 @@ const ToolCallSchema = z
   })
   .passthrough()
 
+const WorkflowArtifactSchema = z
+  .object({
+    id: z.number(),
+    artifactGroupId: z.number().nullable().optional(),
+    title: z.string(),
+    content: z.string(),
+    artifactType: z.string(),
+    filename: z.string(),
+    contentType: z.string(),
+    sourceTool: z.string().optional(),
+    version: z.number().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  })
+  .passthrough()
+
 const StepCompletedMetadataSchema = z
   .object({
     snippets: z.array(SnippetSchema).default([]),
     webSearchSources: z.array(WebSearchSourceSchema).default([]),
     toolCalls: z.array(ToolCallSchema).default([]),
+    artifacts: z.array(WorkflowArtifactSchema).default([]),
     retrievalTrace: z.unknown().nullable().optional(),
     contextTrace: z.unknown().nullable().optional(),
   })
@@ -236,6 +252,44 @@ export const WorkflowContextTraceSchema = z
   })
   .passthrough()
 
+// ── Artifact events (same payloads as chat's, with workflow correlation) ────
+
+export const WorkflowArtifactCreatedSchema = z
+  .object({
+    type: z.literal('artifact_created'),
+    ...workflowToolCorrelation,
+    artifactId: z.number(),
+    messageId: z.number().nullable().optional(),
+    artifactGroupId: z.number().nullable().optional(),
+    filename: z.string(),
+    title: z.string(),
+    contentType: z.string(),
+    content: z.string(),
+    artifactType: z.string(),
+    version: z.number().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  })
+  .passthrough()
+
+export const WorkflowArtifactUpdatedSchema = z
+  .object({
+    type: z.literal('artifact_updated'),
+    ...workflowToolCorrelation,
+    artifactId: z.number(),
+    parentArtifactId: z.number().nullable().optional(),
+    messageId: z.number().nullable().optional(),
+    artifactGroupId: z.number().nullable().optional(),
+    updateType: z.string().optional(),
+    filename: z.string(),
+    title: z.string(),
+    contentType: z.string(),
+    content: z.string(),
+    artifactType: z.string(),
+    version: z.number().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  })
+  .passthrough()
+
 // workflow_status: full WorkflowRunV2Serializer output.
 // Backend applies camelize() before socket emission, so all keys are camelCase
 // — identical to REST response format.
@@ -263,6 +317,7 @@ const NodeStateSchema = z
     snippets: z.array(SnippetSchema).default([]),
     webSearchSources: z.array(WebSearchSourceSchema).default([]),
     toolCalls: z.array(ToolCallSchema).default([]),
+    artifacts: z.array(WorkflowArtifactSchema).default([]),
     retrievalTrace: z.unknown().nullable().optional(),
     contextTrace: z.unknown().nullable().optional(),
   })
@@ -304,6 +359,8 @@ export const WorkflowEventSchema = z.discriminatedUnion('type', [
   WorkflowToolCallResultSchema,
   WorkflowToolRoundsCappedSchema,
   WorkflowContextTraceSchema,
+  WorkflowArtifactCreatedSchema,
+  WorkflowArtifactUpdatedSchema,
 ])
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -330,6 +387,12 @@ export type WorkflowToolCallResultEvent = z.infer<
 >
 export type WorkflowContextTraceEvent = z.infer<
   typeof WorkflowContextTraceSchema
+>
+export type WorkflowArtifactCreatedEvent = z.infer<
+  typeof WorkflowArtifactCreatedSchema
+>
+export type WorkflowArtifactUpdatedEvent = z.infer<
+  typeof WorkflowArtifactUpdatedSchema
 >
 export type WorkflowStatusEvent = z.infer<typeof WorkflowStatusSchema>
 export type WorkflowEvent = z.infer<typeof WorkflowEventSchema>
