@@ -9,6 +9,7 @@
  */
 
 import { memo, useState } from 'react'
+import { useDispatch } from 'react-redux'
 import {
   Loader2,
   CheckCircle,
@@ -20,6 +21,7 @@ import {
   Wrench,
   XCircle,
   ListTree,
+  Palette,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -35,10 +37,14 @@ import { CodeBlock } from '@/components/Conversation/CodeBlock'
 import { MermaidBlock } from '@/components/Conversation/MermaidBlock'
 import type {
   NodeState,
+  WorkflowStepArtifact,
   WorkflowStepSnippet,
   WorkflowStepToolCall,
   WorkflowStepWebSearchSource,
 } from '@/redux/types/workflow'
+import type { AppDispatch } from '@/redux/store'
+import type { Artifact, ArtifactType } from '@/redux/types/artifact'
+import { setArtifact, setActiveArtifact } from '@/redux/artifactSlice'
 
 export interface StepResponseCardProps {
   nodeId: string
@@ -50,8 +56,24 @@ export interface StepResponseCardProps {
   snippets?: WorkflowStepSnippet[]
   webSearchSources?: WorkflowStepWebSearchSource[]
   toolCalls?: WorkflowStepToolCall[]
+  artifacts?: WorkflowStepArtifact[]
   contextTrace?: NodeState['contextTrace']
 }
+
+/** Map a step artifact to the shared artifact-store shape for the sidecar. */
+const toSidecarArtifact = (artifact: WorkflowStepArtifact): Artifact => ({
+  id: artifact.id,
+  title: artifact.title,
+  content: artifact.content,
+  artifactType: artifact.artifactType as ArtifactType,
+  status: 'completed',
+  filename: artifact.filename,
+  contentType: artifact.contentType,
+  sourceTool: artifact.sourceTool,
+  version: artifact.version,
+  artifactGroupId: artifact.artifactGroupId ?? undefined,
+  metadata: artifact.metadata,
+})
 
 const toolCallStatusIcon = (status: string) => {
   if (status === 'completed')
@@ -72,8 +94,10 @@ export const StepResponseCard = memo(function StepResponseCard({
   snippets,
   webSearchSources,
   toolCalls,
+  artifacts,
   contextTrace,
 }: StepResponseCardProps) {
+  const dispatch = useDispatch<AppDispatch>()
   const [snippetsOpen, setSnippetsOpen] = useState(false)
   const [webSourcesOpen, setWebSourcesOpen] = useState(false)
   const [traceOpen, setTraceOpen] = useState(false)
@@ -81,7 +105,13 @@ export const StepResponseCard = memo(function StepResponseCard({
   const hasSnippets = snippets && snippets.length > 0
   const hasWebSources = webSearchSources && webSearchSources.length > 0
   const hasToolCalls = toolCalls && toolCalls.length > 0
+  const hasArtifacts = artifacts && artifacts.length > 0
   const traceStages = contextTrace?.stages ?? []
+
+  const openArtifact = (artifact: WorkflowStepArtifact) => {
+    dispatch(setArtifact(toSidecarArtifact(artifact)))
+    dispatch(setActiveArtifact(artifact.id))
+  }
 
   return (
     <div
@@ -146,6 +176,31 @@ export const StepResponseCard = memo(function StepResponseCard({
                 <span className='truncate text-destructive'>{call.error}</span>
               )}
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* Artifacts created by this step — click opens the sidecar */}
+      {hasArtifacts && (
+        <div className='mt-2 flex flex-wrap gap-1.5'>
+          {artifacts!.map((artifact) => (
+            <button
+              key={artifact.id}
+              type='button'
+              onClick={() => openArtifact(artifact)}
+              className='flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-xs transition-colors hover:border-dare/40 hover:bg-accent'
+            >
+              <Palette className='h-3 w-3 shrink-0 text-dare' />
+              <span className='max-w-48 truncate font-medium text-foreground'>
+                {artifact.title}
+              </span>
+              <span className='text-muted-foreground'>
+                {artifact.artifactType}
+                {artifact.version != null &&
+                  artifact.version > 1 &&
+                  ` · v${artifact.version}`}
+              </span>
+            </button>
           ))}
         </div>
       )}

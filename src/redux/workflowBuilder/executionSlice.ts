@@ -22,8 +22,13 @@ import {
   workflowToolCallExecuting,
   workflowToolCallResult,
   workflowContextTrace,
+  workflowArtifactCreated,
+  workflowArtifactUpdated,
 } from './actions'
-import type { WorkflowStepToolCall } from '../types/workflow'
+import type {
+  WorkflowStepArtifact,
+  WorkflowStepToolCall,
+} from '../types/workflow'
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -58,6 +63,48 @@ function ensureNodeState(
       retrievalTrace: null,
       contextTrace: null,
     }
+  }
+}
+
+/** Map an artifact_created/updated event payload to a step artifact. */
+function _artifactFromEvent(payload: {
+  artifactId: number
+  artifactGroupId?: number | null
+  title: string
+  content: string
+  artifactType: string
+  filename: string
+  contentType: string
+  version?: number
+  metadata?: Record<string, unknown>
+}): WorkflowStepArtifact {
+  return {
+    id: payload.artifactId,
+    artifactGroupId: payload.artifactGroupId,
+    title: payload.title,
+    content: payload.content,
+    artifactType: payload.artifactType,
+    filename: payload.filename,
+    contentType: payload.contentType,
+    version: payload.version,
+    metadata: payload.metadata,
+  }
+}
+
+/** Insert or update a node's artifact, keyed by artifact id. */
+function upsertArtifact(
+  nodeStates: NodeStatesMap,
+  nodeId: string,
+  artifact: WorkflowStepArtifact
+): void {
+  ensureNodeState(nodeStates, nodeId)
+  const nodeState = nodeStates[nodeId]
+  if (!nodeState.artifacts) nodeState.artifacts = []
+  const existing = nodeState.artifacts.find((item) => item.id === artifact.id)
+  if (existing) {
+    Object.assign(existing, artifact)
+  } else {
+    nodeState.artifacts.push(artifact)
   }
 }
 
@@ -322,6 +369,7 @@ const executionSlice = createSlice({
           WorkflowRunStepStatus.Running
         state.currentRun.nodeStates[nodeId].response = ''
         state.currentRun.nodeStates[nodeId].toolCalls = []
+        state.currentRun.nodeStates[nodeId].artifacts = []
         state.currentRun.nodeStates[nodeId].contextTrace = null
         if (startedAt) {
           state.currentRun.nodeStates[nodeId].startedAt = startedAt
@@ -353,6 +401,9 @@ const executionSlice = createSlice({
         // metadata is the persisted, authoritative set.
         if (metadata?.toolCalls?.length || !nodeState.toolCalls?.length) {
           nodeState.toolCalls = metadata?.toolCalls ?? []
+        }
+        if (metadata?.artifacts?.length || !nodeState.artifacts?.length) {
+          nodeState.artifacts = metadata?.artifacts ?? []
         }
         nodeState.retrievalTrace = metadata?.retrievalTrace ?? null
         nodeState.contextTrace =
@@ -485,6 +536,34 @@ const executionSlice = createSlice({
         ensureNodeState(state.currentRun.nodeStates, nodeId)
         state.currentRun.nodeStates[nodeId].contextTrace =
           trace as (typeof state.currentRun.nodeStates)[string]['contextTrace']
+      })
+
+      // ── Artifact Events ──────────────────────────────────────────────
+      .addCase(workflowArtifactCreated, (state, action) => {
+        const { workflowRunId, nodeId } = action.payload
+        // Chat's artifact_created events carry no workflow correlation —
+        // only workflow-socket events reach this slice's node state.
+        if (workflowRunId == null || nodeId == null) return
+        if (_isBatchRunId(state, workflowRunId)) return
+        if (!state.currentRun?.nodeStates) return
+
+        upsertArtifact(
+          state.currentRun.nodeStates,
+          nodeId,
+          _artifactFromEvent(action.payload)
+        )
+      })
+      .addCase(workflowArtifactUpdated, (state, action) => {
+        const { workflowRunId, nodeId } = action.payload
+        if (workflowRunId == null || nodeId == null) return
+        if (_isBatchRunId(state, workflowRunId)) return
+        if (!state.currentRun?.nodeStates) return
+
+        upsertArtifact(
+          state.currentRun.nodeStates,
+          nodeId,
+          _artifactFromEvent(action.payload)
+        )
       })
 
       // ── Full Status Update ───────────────────────────────────────────

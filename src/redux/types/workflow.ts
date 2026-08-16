@@ -48,6 +48,23 @@ export interface WorkflowStepToolCall {
 }
 
 /**
+ * Artifact created during a workflow step's LLM turn.
+ * Field set mirrors the artifact_created socket payload / step serializer.
+ */
+export interface WorkflowStepArtifact {
+  id: number
+  artifactGroupId?: number | null
+  title: string
+  content: string
+  artifactType: string
+  filename: string
+  contentType: string
+  sourceTool?: string
+  version?: number
+  metadata?: Record<string, unknown>
+}
+
+/**
  * Route definition for structured output nodes.
  * Used in node configuration where description is required.
  */
@@ -131,6 +148,7 @@ export interface NodeState {
   snippets: WorkflowStepSnippet[] // RAG snippets retrieved for this step
   webSearchSources: WorkflowStepWebSearchSource[] // Web search citations for this step
   toolCalls?: WorkflowStepToolCall[] // Tool calls made by this step's LLM turn
+  artifacts?: WorkflowStepArtifact[] // Artifacts created by this step's LLM turn
   retrievalTrace?: unknown // RAG pipeline trace (advanced/agentic modes)
   contextTrace?: ContextTrace | null // Context-assembly trace (same shape as chat)
 }

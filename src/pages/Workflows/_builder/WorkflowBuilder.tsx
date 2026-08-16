@@ -35,6 +35,7 @@ import type { Workflow } from '@/redux/types/workflow'
 import Sidebar from './components/Sidebar'
 import NodeConfigPanel from './components/NodeConfigPanel'
 import WorkflowExecutionPanel from './components/WorkflowExecutionPanel'
+import { ArtifactSidecar } from '@/components/Artifacts'
 import { getAgents } from '@/redux/asyncThunks/agent'
 import { useWorkflowPaste } from '@/hooks/useWorkflowPaste'
 import { getNodeColor } from '@/utils/workflowBuilder/getNodeColor'
@@ -224,6 +225,12 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
 
       {/* Execution Panel - shown based on showExecutionPanel state */}
       {showExecutionPanel && <WorkflowExecutionPanel />}
+
+      {/* Artifact sidecar — opens when a step creates or the user selects
+          an artifact; overlays the canvas from the right edge */}
+      <div className='absolute inset-y-0 right-0 z-40 flex h-full'>
+        <ArtifactSidecar />
+      </div>
     </div>
   )
 }

@@ -88,6 +88,7 @@ export function ExecutionNodeList({
           snippets={state.snippets}
           webSearchSources={state.webSearchSources}
           toolCalls={state.toolCalls}
+          artifacts={state.artifacts}
           contextTrace={state.contextTrace}
         />
       ))}

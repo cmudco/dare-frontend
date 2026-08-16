@@ -3,6 +3,7 @@ import type {
   WorkflowRun,
   RouteOption,
   PendingValidationContext,
+  WorkflowStepArtifact,
   WorkflowStepSnippet,
   WorkflowStepToolCall,
   WorkflowStepWebSearchSource,
@@ -13,6 +14,8 @@ import type {
   WorkflowToolCallExecutingEvent,
   WorkflowToolCallResultEvent,
   WorkflowContextTraceEvent,
+  WorkflowArtifactCreatedEvent,
+  WorkflowArtifactUpdatedEvent,
 } from '@/schemas/workflowSocket'
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -67,6 +70,7 @@ export const stepCompleted = createAction<{
     snippets: WorkflowStepSnippet[]
     webSearchSources: WorkflowStepWebSearchSource[]
     toolCalls?: WorkflowStepToolCall[]
+    artifacts?: WorkflowStepArtifact[]
     retrievalTrace?: unknown
     contextTrace?: unknown
   }
@@ -105,6 +109,15 @@ export const workflowToolRoundsCapped = createAction<{
 export const workflowContextTrace = createAction<WorkflowContextTraceEvent>(
   'workflowSocket/context_trace'
 )
+
+// Artifact events use chat's `socket/*` action types on purpose: the shared
+// artifactSlice hydrates its store (and opens the sidecar) from the exact
+// same actions, whichever socket they arrived on.
+export const workflowArtifactCreated =
+  createAction<WorkflowArtifactCreatedEvent>('socket/artifact_created')
+
+export const workflowArtifactUpdated =
+  createAction<WorkflowArtifactUpdatedEvent>('socket/artifact_updated')
 
 export const executionComplete = createAction<{
   status: string

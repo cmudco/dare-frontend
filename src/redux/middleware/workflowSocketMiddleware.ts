@@ -54,6 +54,8 @@ import {
   workflowToolCallResult,
   workflowToolRoundsCapped,
   workflowContextTrace,
+  workflowArtifactCreated,
+  workflowArtifactUpdated,
 } from '@/redux/workflowBuilder/actions'
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -185,6 +187,8 @@ const eventDispatchMap: Record<WorkflowEvent['type'], (payload: any) => any> = {
   tool_call_result: workflowToolCallResult,
   tool_rounds_capped: workflowToolRoundsCapped,
   context_trace: workflowContextTrace,
+  artifact_created: workflowArtifactCreated,
+  artifact_updated: workflowArtifactUpdated,
 }
 
 // ════════════════════════════════════════════════════════════════════════════
