@@ -48,6 +48,12 @@ import {
   batchProgress,
   batchComplete,
   batchSummaryLoaded,
+  workflowToolCallPending,
+  workflowToolCallArgsProgress,
+  workflowToolCallExecuting,
+  workflowToolCallResult,
+  workflowToolRoundsCapped,
+  workflowContextTrace,
 } from '@/redux/workflowBuilder/actions'
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -173,6 +179,12 @@ const eventDispatchMap: Record<WorkflowEvent['type'], (payload: any) => any> = {
   batch_started: batchStarted,
   batch_progress: batchProgress,
   batch_complete: batchComplete,
+  tool_call_pending: workflowToolCallPending,
+  tool_call_args_progress: workflowToolCallArgsProgress,
+  tool_call_executing: workflowToolCallExecuting,
+  tool_call_result: workflowToolCallResult,
+  tool_rounds_capped: workflowToolRoundsCapped,
+  context_trace: workflowContextTrace,
 }
 
 // ════════════════════════════════════════════════════════════════════════════

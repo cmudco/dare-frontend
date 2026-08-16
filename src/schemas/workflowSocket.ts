@@ -46,12 +46,39 @@ const WebSearchSourceSchema = z.object({
   provider: z.string(),
 })
 
+const ToolCallSchema = z
+  .object({
+    id: z.number().optional(),
+    toolCallId: z.string(),
+    serverSlug: z.string(),
+    origin: z.string(),
+    toolName: z.string(),
+    arguments: z.record(z.string(), z.unknown()).optional(),
+    roundIndex: z.number().optional(),
+    status: z.string(),
+    result: z.string().nullable().optional(),
+    error: z.string().nullable().optional(),
+    executionTimeMs: z.number().optional(),
+  })
+  .passthrough()
+
 const StepCompletedMetadataSchema = z
   .object({
     snippets: z.array(SnippetSchema).default([]),
     webSearchSources: z.array(WebSearchSourceSchema).default([]),
+    toolCalls: z.array(ToolCallSchema).default([]),
+    retrievalTrace: z.unknown().nullable().optional(),
+    contextTrace: z.unknown().nullable().optional(),
   })
   .passthrough()
+
+// Correlation keys carried by every workflow tool event (same payloads as
+// chat's tool events, with workflow correlation instead of messageId).
+const workflowToolCorrelation = {
+  workflowRunId: z.number(),
+  nodeId: z.string(),
+  runStepId: z.number(),
+}
 
 // ════════════════════════════════════════════════════════════════════════════
 // EVENT SCHEMAS
@@ -138,6 +165,77 @@ export const BatchCompleteSchema = z.object({
   totalFiles: z.number(),
 })
 
+// ── Tool-loop events (unified vocabulary shared with chat) ──────────────────
+
+export const WorkflowToolCallPendingSchema = z
+  .object({
+    type: z.literal('tool_call_pending'),
+    ...workflowToolCorrelation,
+    toolCallId: z.string(),
+    toolName: z.string(),
+    serverSlug: z.string(),
+    origin: z.string(),
+    round: z.number(),
+    status: z.literal('pending'),
+  })
+  .passthrough()
+
+export const WorkflowToolCallArgsProgressSchema = z
+  .object({
+    type: z.literal('tool_call_args_progress'),
+    ...workflowToolCorrelation,
+    toolCallId: z.string(),
+    argsChars: z.number(),
+  })
+  .passthrough()
+
+export const WorkflowToolCallExecutingSchema = z
+  .object({
+    type: z.literal('tool_call_executing'),
+    ...workflowToolCorrelation,
+    toolCallId: z.string(),
+    toolName: z.string(),
+    serverSlug: z.string(),
+    origin: z.string(),
+    round: z.number(),
+    status: z.literal('executing'),
+    arguments: z.record(z.string(), z.unknown()).optional(),
+  })
+  .passthrough()
+
+export const WorkflowToolCallResultSchema = z
+  .object({
+    type: z.literal('tool_call_result'),
+    ...workflowToolCorrelation,
+    toolCallId: z.string(),
+    toolName: z.string(),
+    serverSlug: z.string(),
+    origin: z.string(),
+    round: z.number(),
+    status: z.enum(['completed', 'failed']),
+    error: z.string().nullable().optional(),
+    dareResult: z.unknown().optional(),
+    mcpResult: z.unknown().optional(),
+    providerResult: z.unknown().optional(),
+  })
+  .passthrough()
+
+export const WorkflowToolRoundsCappedSchema = z
+  .object({
+    type: z.literal('tool_rounds_capped'),
+    ...workflowToolCorrelation,
+    round: z.number(),
+  })
+  .passthrough()
+
+export const WorkflowContextTraceSchema = z
+  .object({
+    type: z.literal('context_trace'),
+    ...workflowToolCorrelation,
+    trace: z.object({ stages: z.array(z.unknown()) }).passthrough(),
+  })
+  .passthrough()
+
 // workflow_status: full WorkflowRunV2Serializer output.
 // Backend applies camelize() before socket emission, so all keys are camelCase
 // — identical to REST response format.
@@ -164,6 +262,9 @@ const NodeStateSchema = z
     metadata: z.unknown().nullable(),
     snippets: z.array(SnippetSchema).default([]),
     webSearchSources: z.array(WebSearchSourceSchema).default([]),
+    toolCalls: z.array(ToolCallSchema).default([]),
+    retrievalTrace: z.unknown().nullable().optional(),
+    contextTrace: z.unknown().nullable().optional(),
   })
   .passthrough()
 
@@ -197,6 +298,12 @@ export const WorkflowEventSchema = z.discriminatedUnion('type', [
   BatchStartedSchema,
   BatchProgressSchema,
   BatchCompleteSchema,
+  WorkflowToolCallPendingSchema,
+  WorkflowToolCallArgsProgressSchema,
+  WorkflowToolCallExecutingSchema,
+  WorkflowToolCallResultSchema,
+  WorkflowToolRoundsCappedSchema,
+  WorkflowContextTraceSchema,
 ])
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -212,6 +319,18 @@ export type ValidationRequiredEvent = z.infer<typeof ValidationRequiredSchema>
 export type BatchStartedEvent = z.infer<typeof BatchStartedSchema>
 export type BatchProgressEvent = z.infer<typeof BatchProgressSchema>
 export type BatchCompleteEvent = z.infer<typeof BatchCompleteSchema>
+export type WorkflowToolCallPendingEvent = z.infer<
+  typeof WorkflowToolCallPendingSchema
+>
+export type WorkflowToolCallExecutingEvent = z.infer<
+  typeof WorkflowToolCallExecutingSchema
+>
+export type WorkflowToolCallResultEvent = z.infer<
+  typeof WorkflowToolCallResultSchema
+>
+export type WorkflowContextTraceEvent = z.infer<
+  typeof WorkflowContextTraceSchema
+>
 export type WorkflowStatusEvent = z.infer<typeof WorkflowStatusSchema>
 export type WorkflowEvent = z.infer<typeof WorkflowEventSchema>
 
