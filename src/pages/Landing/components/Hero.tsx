@@ -1,9 +1,10 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, PlayCircle } from 'lucide-react'
 import { Container } from './primitives'
 import ArchitectureDiagram from './ArchitectureDiagram'
 import { LINKS } from '../links'
+import { DEMO_VIDEO } from '../demoVideo'
 
 export const Hero: React.FC = () => {
   const navigate = useNavigate()
@@ -68,6 +69,16 @@ export const Hero: React.FC = () => {
               Read the deployment guide
             </a>
           </div>
+
+          <a
+            href='#tour'
+            className='group mx-auto mt-6 flex w-fit items-center gap-2 text-sm font-semibold text-foreground'
+          >
+            <PlayCircle className='h-4 w-4 text-dare' />
+            <span className='border-b border-dare/40 pb-0.5 transition-colors group-hover:border-dare'>
+              Watch the {DEMO_VIDEO.runtimeLabel} demo
+            </span>
+          </a>
 
           <div className='mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-mono text-xs tracking-[0.16em] text-muted-foreground uppercase'>
             <span>Open source · AGPL 3.0</span>
