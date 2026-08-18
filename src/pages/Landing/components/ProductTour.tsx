@@ -11,6 +11,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Container, Eyebrow, Section, SectionTitle } from './primitives'
+import DemoVideoPlayer from './DemoVideoPlayer'
+import { DEMO_VIDEO } from '../demoVideo'
 
 /**
  * Product tour — real screenshots of the shipping console, one stop per major
@@ -19,26 +21,25 @@ import { Container, Eyebrow, Section, SectionTitle } from './primitives'
  * loaded, so the tour adds nothing to first paint.
  */
 
-/**
- * Optional walkthrough video. Point this at a hosted MP4/WebM and a
- * "Walkthrough" stop appears first in the tour, playing inline in the same
- * frame — no other changes needed. Leave null until the recording exists.
- */
-const WALKTHROUGH_VIDEO_URL: string | null = null
-const WALKTHROUGH_POSTER = '/screenshots/dashboard.png'
-
-type Stop = {
+type BaseStop = {
   key: string
   icon: React.ComponentType<{ className?: string }>
   title: string
   blurb: string
-  src: string
-  alt: string
-  /** Rendered as a <video> instead of an <img> when set. */
-  video?: string
 }
 
-const FEATURE_STOPS: Stop[] = [
+type ScreenshotStop = BaseStop & {
+  src: string
+  alt: string
+  isVideo?: false
+}
+
+/** The demo player fills the stage, so it carries no screenshot of its own. */
+type VideoStop = BaseStop & { isVideo: true }
+
+type Stop = ScreenshotStop | VideoStop
+
+const FEATURE_STOPS: ScreenshotStop[] = [
   {
     key: 'dashboard',
     icon: LayoutDashboard,
@@ -104,20 +105,16 @@ const FEATURE_STOPS: Stop[] = [
   },
 ]
 
-const STOPS: Stop[] = WALKTHROUGH_VIDEO_URL
-  ? [
-      {
-        key: 'walkthrough',
-        icon: Play,
-        title: 'Video walkthrough',
-        blurb: 'A guided pass through the console, end to end.',
-        src: WALKTHROUGH_POSTER,
-        alt: 'DARE walkthrough video',
-        video: WALKTHROUGH_VIDEO_URL,
-      },
-      ...FEATURE_STOPS,
-    ]
-  : FEATURE_STOPS
+const STOPS: Stop[] = [
+  {
+    key: 'walkthrough',
+    icon: Play,
+    title: 'Video walkthrough',
+    blurb: `A guided pass through the console, end to end — ${DEMO_VIDEO.runtime}.`,
+    isVideo: true,
+  },
+  ...FEATURE_STOPS,
+]
 
 export const ProductTour: React.FC = () => {
   const [active, setActive] = useState(0)
@@ -215,31 +212,25 @@ export const ProductTour: React.FC = () => {
               </div>
 
               <div className='relative aspect-[3024/1655]'>
-                {stop.video ? (
-                  <video
-                    key={stop.video}
-                    controls
-                    preload='none'
-                    poster={stop.src}
-                    className='absolute inset-0 h-full w-full object-cover'
-                  >
-                    <source src={stop.video} />
-                  </video>
+                {stop.isVideo ? (
+                  <DemoVideoPlayer className='absolute inset-0 aspect-auto h-full w-full' />
                 ) : (
-                  STOPS.filter((s) => !s.video).map((s) => (
-                    <img
-                      key={s.key}
-                      src={s.src}
-                      alt={s.key === stop.key ? s.alt : ''}
-                      loading='lazy'
-                      decoding='async'
-                      aria-hidden={s.key !== stop.key}
-                      className={cn(
-                        'absolute inset-0 h-full w-full object-cover transition-opacity duration-300',
-                        s.key === stop.key ? 'opacity-100' : 'opacity-0'
-                      )}
-                    />
-                  ))
+                  STOPS.filter((s): s is ScreenshotStop => !s.isVideo).map(
+                    (s) => (
+                      <img
+                        key={s.key}
+                        src={s.src}
+                        alt={s.key === stop.key ? s.alt : ''}
+                        loading='lazy'
+                        decoding='async'
+                        aria-hidden={s.key !== stop.key}
+                        className={cn(
+                          'absolute inset-0 h-full w-full object-cover transition-opacity duration-300',
+                          s.key === stop.key ? 'opacity-100' : 'opacity-0'
+                        )}
+                      />
+                    )
+                  )
                 )}
               </div>
             </div>
