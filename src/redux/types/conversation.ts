@@ -94,6 +94,35 @@ export interface MemoryContextItem {
   categories: string[]
 }
 
+/** One decision the memory writer made about this turn, as the ledger records it. */
+export interface MemoryWriteChange {
+  /** What was actually done: add_fact, supersede, patch_user, ignore, edit… */
+  action: string
+  /** What the writer asked for. Differs from `action` when the gate intervened. */
+  proposedAction: string
+  applied: boolean
+  reason: string
+  note?: string | null
+  detail: string
+  recordId?: string | null
+}
+
+/**
+ * What the writer decided after the reply finished.
+ *
+ * It runs in a background job on a closed turn, so this arrives seconds late
+ * over the socket and is also stored on the message — a reload still shows it.
+ */
+export interface MemoryWriteData {
+  created: number
+  retired: number
+  reinforced: number
+  profileChanged: boolean
+  /** How many decisions were weighed, including the ones that were refused. */
+  considered: number
+  changes: MemoryWriteChange[]
+}
+
 export interface Message {
   id: string
   message: string
@@ -113,6 +142,7 @@ export interface Message {
   snippets?: Snippet[]
   webSearchSources?: WebSearchSource[]
   memoryContextData?: MemoryContextItem[]
+  memoryWriteData?: MemoryWriteData | null
   feedbackType?: FeedbackType | null
   feedbackText?: string
   feedbackSource?: string
