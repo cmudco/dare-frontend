@@ -36,6 +36,17 @@ export const uploadFileAPI = async (data: FormData): Promise<MyFile[]> => {
   })
 }
 
+export const startFileOcrRunAPI = async (
+  id: number,
+  pageLimit: number
+): Promise<MyFile> => {
+  return await baseRequest<MyFile>({
+    url: `api/files/${id}/approve-ocr/`,
+    method: METHOD.POST,
+    data: { pageLimit },
+  })
+}
+
 /**
  * Fetch the parsed document model for a file.
  *

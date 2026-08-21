@@ -17,10 +17,25 @@ import {
   importSharedFileAPI,
   shareFileWithUserAPI,
   togglePublicShareAPI,
+  startFileOcrRunAPI,
 } from '../../api/files'
 import { MyFile } from '../types/files'
 
 const BATCH_SIZE = 5
+
+export const startFileOcrRun = createAsyncThunk(
+  'files/startFileOcrRun',
+  async (
+    { fileId, pageLimit }: { fileId: number; pageLimit: number },
+    thunkAPI
+  ) => {
+    try {
+      return await startFileOcrRunAPI(fileId, pageLimit)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
 
 export const getFiles = createAsyncThunk(
   'files/getFiles',

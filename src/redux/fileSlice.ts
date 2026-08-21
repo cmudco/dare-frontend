@@ -17,6 +17,7 @@ import {
   importSharedFile,
   shareFileWithUser,
   togglePublicShare,
+  startFileOcrRun,
 } from './asyncThunks/file'
 import { initialState } from './initialState/files'
 import { MediaTypeFilter, FileView } from './types/files'
@@ -142,6 +143,23 @@ const fileSlice = createSlice({
       .addCase(uploadNewFile.rejected, (state, action) => {
         state.loading = false
         state.error = (action.payload as string) || 'Failed to upload files'
+      })
+      .addCase(startFileOcrRun.pending, (state) => {
+        state.error = null
+      })
+      .addCase(startFileOcrRun.fulfilled, (state, action) => {
+        const index = state.files.findIndex(
+          (file) => file.id === action.payload.id
+        )
+        if (index !== -1) state.files[index] = action.payload
+        state.jobStatuses[action.payload.id] = {
+          status: action.payload.status,
+          jobId: action.payload.jobId,
+          processingStage: action.payload.processingStage,
+        }
+      })
+      .addCase(startFileOcrRun.rejected, (state, action) => {
+        state.error = action.payload as string
       })
       .addCase(uploadFolder.pending, (state) => {
         state.loading = true

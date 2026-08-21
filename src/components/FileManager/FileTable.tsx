@@ -53,6 +53,7 @@ import {
   Share2,
   Globe,
   Users,
+  ScanText,
 } from 'lucide-react'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getStatusDisplay } from '@/utils/constants/files'
@@ -61,6 +62,7 @@ import FileTagModal from './FileTagModal'
 import FileViewerModal from './FileViewerModal'
 import TagsDisplay from './TagsDisplay'
 import { formatDate } from '@/utils/constants/prompts'
+import OcrApprovalDialog from './OcrApprovalDialog'
 
 const FileTable = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -90,6 +92,17 @@ const FileTable = () => {
   const [viewFileId, setViewFileId] = useState<number | null>(null)
   const [viewFileName, setViewFileName] = useState<string>('')
   const [viewFileType, setViewFileType] = useState<string>('')
+  const [ocrReviewFileId, setOcrReviewFileId] = useState<number | null>(null)
+
+  const actionableOcrFiles = useMemo(
+    () =>
+      files.filter((file) =>
+        ['awaiting_approval', 'partial'].includes(file.ocr?.status ?? '')
+      ),
+    [files]
+  )
+  const ocrReviewFile =
+    files.find((file) => file.id === ocrReviewFileId) ?? null
 
   const filteredFiles = useMemo(() => {
     if (!user) return []
@@ -176,6 +189,38 @@ const FileTable = () => {
 
   return (
     <div className='overflow-auto'>
+      {actionableOcrFiles.length > 0 && (
+        <div className='mt-4 flex min-w-max items-center justify-between gap-6 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3'>
+          <div className='flex items-center gap-3'>
+            <div className='flex h-9 w-9 items-center justify-center rounded-md border border-amber-500/30 bg-background'>
+              <ScanText className='h-4 w-4 text-amber-600' />
+            </div>
+            <div>
+              <p className='text-sm font-medium text-foreground'>
+                {actionableOcrFiles[0].ocr?.status === 'partial'
+                  ? 'Scanned-page transcription can continue'
+                  : 'Scanned-page transcription needs approval'}
+              </p>
+              <p className='text-xs text-muted-foreground'>
+                {actionableOcrFiles.length === 1
+                  ? actionableOcrFiles[0].ocr?.status === 'partial'
+                    ? `${actionableOcrFiles[0].name}: ${actionableOcrFiles[0].ocr?.processedPages} of ${actionableOcrFiles[0].ocr?.detectedPages} pages complete · ${actionableOcrFiles[0].ocr?.remainingPages ?? Math.max((actionableOcrFiles[0].ocr?.detectedPages ?? 0) - (actionableOcrFiles[0].ocr?.processedPages ?? 0), 0)} remaining.`
+                    : `${actionableOcrFiles[0].name} has ${actionableOcrFiles[0].ocr?.detectedPages} pages without readable text.`
+                  : `${actionableOcrFiles.length} files have scanned-page actions waiting.`}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => setOcrReviewFileId(actionableOcrFiles[0].id)}
+          >
+            {actionableOcrFiles[0].ocr?.status === 'partial'
+              ? 'Continue transcription'
+              : 'Review cost'}
+          </Button>
+        </div>
+      )}
       <Table className='mt-4 w-full min-w-max bg-background text-left'>
         <TableHeader>
           <TableRow className='bg-muted'>
@@ -252,6 +297,7 @@ const FileTable = () => {
                 status,
                 errorMessage,
                 processingStage,
+                ocr,
                 isSharedByMe,
                 isSharedPublicly,
                 createdAt,
@@ -319,6 +365,20 @@ const FileTable = () => {
                         <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
+                        {(ocr?.status === 'awaiting_approval' ||
+                          ocr?.status === 'partial') && (
+                          <DropdownMenuItem
+                            className='cursor-pointer'
+                            onClick={() => setOcrReviewFileId(id)}
+                          >
+                            <ScanText className='mr-2 h-4 w-4' />
+                            <span>
+                              {ocr.status === 'partial'
+                                ? 'Continue transcription'
+                                : 'Review transcription'}
+                            </span>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className='cursor-pointer'
                           onClick={() => handleView(id, name, fileType)}
@@ -448,6 +508,11 @@ const FileTable = () => {
         fileId={viewFileId}
         fileName={viewFileName}
         fileType={viewFileType}
+      />
+
+      <OcrApprovalDialog
+        file={ocrReviewFile}
+        onClose={() => setOcrReviewFileId(null)}
       />
     </div>
   )
