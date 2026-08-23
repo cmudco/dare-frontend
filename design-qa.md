@@ -39,3 +39,17 @@ The browser console contains the existing local Socket.IO connection errors and 
 None required for this scope.
 
 final result: passed
+
+# CMU Documents availability design QA
+
+- Source visual truth: `/var/folders/r_/1564_90n1x9gdhcg04538xs80000gn/T/codex-clipboard-f7587f75-c9d1-4a99-a2e1-d7b7bac4d550.png`
+- Implementation: `http://localhost:5173`
+- State contract: the Documents picker is present only when MCP is enabled and the signed-in user has an active, credential-ready connection to the active `quillmark` server.
+
+## Findings
+
+The existing composer layout and picker are unchanged for connected CMU Documents users. For users without that server connection, the entire Documents control is omitted rather than leaving an unusable production tab. Server and Tools controls retain their original placement and behavior.
+
+The production TypeScript/Vite build, scoped ESLint check, and scoped Prettier check pass. No P0, P1, or P2 visual or interaction issues remain for this conditional-visibility change.
+
+final result: passed
