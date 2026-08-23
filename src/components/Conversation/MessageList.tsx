@@ -32,11 +32,13 @@ const MessageList = ({
   } = useAutoScroll()
 
   const prevConversationIdRef = useRef<string | undefined>(conversationId)
+  const prevStreamingMessageIdRef = useRef<string | undefined>(undefined)
 
-  const isStreaming = useMemo(() => {
+  const streamingMessageId = useMemo(() => {
     const last = messages[messages.length - 1]
-    return Boolean(last?.streaming)
+    return last?.streaming ? last.id : undefined
   }, [messages])
+  const isStreaming = Boolean(streamingMessageId)
 
   // Force scroll on conversation switch
   useEffect(() => {
@@ -48,6 +50,19 @@ const MessageList = ({
       })
     }
   }, [conversationId, forceScrollToBottom])
+
+  // The assistant arrives after the send-triggered scroll. Force one more
+  // scroll when that new stream starts, then respect user scrolling normally.
+  useEffect(() => {
+    if (
+      streamingMessageId &&
+      streamingMessageId !== prevStreamingMessageIdRef.current
+    ) {
+      forceScrollToBottom('auto')
+    }
+
+    prevStreamingMessageIdRef.current = streamingMessageId
+  }, [streamingMessageId, forceScrollToBottom])
 
   // Scroll on new messages - respects user scroll state
   useEffect(() => {
