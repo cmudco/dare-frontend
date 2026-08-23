@@ -15,7 +15,6 @@
  */
 
 import type { Middleware } from '@reduxjs/toolkit'
-import type { RootState } from '@/redux/store'
 
 // Internal action type for middleware
 interface SocketActionWithPayload {
@@ -352,24 +351,18 @@ export function createSocketMiddleware(): Middleware {
           return next(typedAction)
         }
 
-        // Get active artifact ID from state (for intent detection)
-        const state = store.getState() as RootState
-        const activeArtifactId = state.artifact?.activeArtifactId
-
-        // Include active_artifact_id in the payload for backend intent detection
-        const messagePayload = {
-          ...(typedAction.payload as Record<string, unknown>),
-          active_artifact_id: activeArtifactId,
-        }
-
-        socket.emit('send_message', messagePayload, (response) => {
-          if (!response.success) {
-            dispatch({
-              type: 'socket/sendError',
-              payload: { error: response.error },
-            })
+        socket.emit(
+          'send_message',
+          typedAction.payload as Record<string, unknown>,
+          (response) => {
+            if (!response.success) {
+              dispatch({
+                type: 'socket/sendError',
+                payload: { error: response.error },
+              })
+            }
           }
-        })
+        )
         break
       }
 

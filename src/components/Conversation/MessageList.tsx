@@ -9,14 +9,14 @@ interface MessageListProps {
   onEditMessage?: (id: string, content: string) => void
   shouldShowAutoFeedbackModal?: boolean
   conversationId?: string
-  userJustSentMessage?: boolean
+  scrollToBottomRequest?: number
 }
 
 const MessageList = ({
   onEditMessage,
   shouldShowAutoFeedbackModal,
   conversationId,
-  userJustSentMessage,
+  scrollToBottomRequest = 0,
 }: MessageListProps) => {
   const messages = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages
@@ -32,11 +32,13 @@ const MessageList = ({
   } = useAutoScroll()
 
   const prevConversationIdRef = useRef<string | undefined>(conversationId)
+  const prevStreamingMessageIdRef = useRef<string | undefined>(undefined)
 
-  const isStreaming = useMemo(() => {
+  const streamingMessageId = useMemo(() => {
     const last = messages[messages.length - 1]
-    return Boolean(last?.streaming)
+    return last?.streaming ? last.id : undefined
   }, [messages])
+  const isStreaming = Boolean(streamingMessageId)
 
   // Force scroll on conversation switch
   useEffect(() => {
@@ -49,17 +51,29 @@ const MessageList = ({
     }
   }, [conversationId, forceScrollToBottom])
 
+  // The assistant arrives after the send-triggered scroll. Force one more
+  // scroll when that new stream starts, then respect user scrolling normally.
+  useEffect(() => {
+    if (
+      streamingMessageId &&
+      streamingMessageId !== prevStreamingMessageIdRef.current
+    ) {
+      forceScrollToBottom('auto')
+    }
+
+    prevStreamingMessageIdRef.current = streamingMessageId
+  }, [streamingMessageId, forceScrollToBottom])
+
   // Scroll on new messages - respects user scroll state
   useEffect(() => {
     scrollToBottom(isStreaming ? 'auto' : 'smooth')
   }, [messages, scrollToBottom, isStreaming])
 
-  // Force scroll when user sends a message
+  // A send request originates from the composer, so it cannot be missed if
+  // user and assistant socket messages arrive in the same render.
   useEffect(() => {
-    if (userJustSentMessage) {
-      forceScrollToBottom('smooth')
-    }
-  }, [userJustSentMessage, forceScrollToBottom])
+    if (scrollToBottomRequest > 0) forceScrollToBottom('auto')
+  }, [scrollToBottomRequest, forceScrollToBottom])
 
   const handleContentRendered = useCallback(() => {
     scrollToBottom(isStreaming ? 'auto' : 'smooth')
@@ -95,7 +109,7 @@ const MessageList = ({
       {showScrollButton && (
         <button
           onClick={handleScrollToBottomClick}
-          className='absolute bottom-4 right-4 z-30 h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl'
+          className='absolute right-4 bottom-4 z-30 h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl'
           aria-label='Scroll to bottom'
         >
           <ChevronDown className='mx-auto h-5 w-5' />

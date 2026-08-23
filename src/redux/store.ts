@@ -17,12 +17,14 @@ import artifactReducer from './artifactSlice'
 import mcpReducer from './mcpSlice'
 import dareToolsReducer from './dareToolsSlice'
 import memoryReducer from './memorySlice'
+import accountDataReducer from './accountDataSlice'
 import socketReducer from './slices/socketSlice'
 import feedbackReducer from './feedbackSlice'
 import sharingReducer from './sharingSlice'
 import conversationTourReducer from './conversationTourSlice'
 import featureFlagsReducer from './featureFlagsSlice'
 import researchReducer from './researchSlice'
+import libraryReducer from './librarySlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
@@ -51,10 +53,12 @@ export const store = configureStore({
     mcp: mcpReducer,
     dareTools: dareToolsReducer,
     memory: memoryReducer,
+    accountData: accountDataReducer,
     sharing: sharingReducer,
     conversationTour: conversationTourReducer,
     featureFlags: featureFlagsReducer,
     research: researchReducer,
+    library: libraryReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware

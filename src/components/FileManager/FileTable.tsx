@@ -251,6 +251,7 @@ const FileTable = () => {
                 tags,
                 status,
                 errorMessage,
+                processingStage,
                 isSharedByMe,
                 isSharedPublicly,
                 createdAt,
@@ -310,7 +311,7 @@ const FileTable = () => {
                     </div>
                   </TableCell>
                   <TableCell className='p-4'>
-                    {getStatusDisplay(status, errorMessage)}
+                    {getStatusDisplay(status, errorMessage, processingStage)}
                   </TableCell>
                   <TableCell className='p-4 text-center'>
                     <DropdownMenu>

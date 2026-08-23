@@ -47,6 +47,7 @@ interface ArtifactActionsProps {
 const SUPPORTED_ACTION_TYPES: ArtifactType[] = [
   'docx',
   'pptx',
+  'pdf',
   'diagram',
   'chart',
   'image',

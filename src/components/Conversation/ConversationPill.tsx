@@ -34,16 +34,21 @@ import clsx from 'clsx'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { MCPServerSelector } from '@/components/MCP/MCPServerSelector'
 import { DareToolSelector } from '@/components/DareTools/DareToolSelector'
+import { QuillPicker } from './QuillPicker'
+
+const QUILLMARK_SERVER_SLUG = 'quillmark'
 
 interface ConversationPillProps {
   editMessageId?: string | null
   onCancelEdit?: () => void
+  onMessageSent?: () => void
   disabled?: boolean
 }
 
 const ConversationPill: React.FC<ConversationPillProps> = ({
   editMessageId,
   onCancelEdit,
+  onMessageSent,
   disabled = false,
 }) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -65,6 +70,18 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   )
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const [showModelWarning, setShowModelWarning] = useState(false)
+  const [selectedQuill, setSelectedQuill] = useState<string | null>(null)
+  const mcpServers = useSelector((state: RootState) => state.mcp.servers)
+  const mcpConnections = useSelector(
+    (state: RootState) => state.mcp.connections
+  )
+  const hasQuillmarkConnection = mcpConnections.some(
+    (connection) =>
+      connection.isActive &&
+      connection.hasCredentials &&
+      connection.server.isActive &&
+      connection.server.slug === QUILLMARK_SERVER_SLUG
+  )
   const autoSaveEnabled = useSelector(
     (state: RootState) => state.conversation.autoSaveEnabled
   )
@@ -139,6 +156,32 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     clearPendingDraftSave,
   ])
 
+  const handleQuillChange = (quillName: string | null) => {
+    setSelectedQuill(quillName)
+
+    // Return focus to the composer so the next Enter sends the message
+    // (the picker popover otherwise keeps keyboard focus)
+    textareaRef.current?.focus()
+
+    // Ensure the quillmark MCP server is enabled when a quill is selected
+    if (quillName && activeConversation) {
+      const quillmarkServer = mcpServers.find(
+        (server) => server.slug === QUILLMARK_SERVER_SLUG
+      )
+      const currentServerIds = activeConversation.selectedMcpServerIds || []
+      if (quillmarkServer && !currentServerIds.includes(quillmarkServer.id)) {
+        const serverIds = [...currentServerIds, quillmarkServer.id]
+        dispatch(updateSelectedMcpServers(serverIds))
+        dispatch(
+          updateConversation({
+            conversationId: activeConversation.conversationId,
+            updates: { selectedMcpServerIds: serverIds },
+          })
+        )
+      }
+    }
+  }
+
   const handleSendMessage = () => {
     if (disabled || conversationInput.trim() === '') return
 
@@ -150,12 +193,18 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     setShowModelWarning(false)
     clearPendingDraftSave()
 
+    const messageText = selectedQuill
+      ? `${conversationInput}\n\n[Selected CMU document template: "${selectedQuill}"]`
+      : conversationInput
+
     const newMessage: Partial<Message> = {
-      message: conversationInput,
+      message: messageText,
     }
 
+    onMessageSent?.()
+
     if (!activeConversation) {
-      setPendingMessage(conversationInput)
+      setPendingMessage(messageText)
       dispatch(updateSelectedTags([]))
       dispatch(createConversation())
         .unwrap()
@@ -176,6 +225,9 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
         onCancelEdit()
       }
     }
+
+    // Quill hint is attached to the outgoing message — clear the selection
+    setSelectedQuill(null)
   }
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -348,6 +400,13 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
                     )
                   }
                 }}
+                disabled={!activeConversation}
+              />
+            )}
+            {enableMcp && hasQuillmarkConnection && (
+              <QuillPicker
+                selectedQuill={selectedQuill}
+                onChange={handleQuillChange}
                 disabled={!activeConversation}
               />
             )}

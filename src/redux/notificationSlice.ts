@@ -101,8 +101,12 @@ export const notificationSlice = createSlice({
       const notification = state.notifications.find(
         (n) => n.id === action.payload
       )
-      if (notification && notification.status === NotificationStatus.UNREAD) {
+      if (
+        notification &&
+        notification.effectiveStatus === NotificationStatus.UNREAD
+      ) {
         notification.status = NotificationStatus.READ
+        notification.effectiveStatus = NotificationStatus.READ
         if (notification.deliveryType === NotificationDeliveryType.PANEL) {
           state.unreadCount = Math.max(0, state.unreadCount - 1)
         }
@@ -113,8 +117,12 @@ export const notificationSlice = createSlice({
       const notification = state.notifications.find(
         (n) => n.id === action.payload
       )
-      if (notification && notification.status === NotificationStatus.READ) {
+      if (
+        notification &&
+        notification.effectiveStatus === NotificationStatus.READ
+      ) {
         notification.status = NotificationStatus.UNREAD
+        notification.effectiveStatus = NotificationStatus.UNREAD
         if (notification.deliveryType === NotificationDeliveryType.PANEL) {
           state.unreadCount += 1
         }
@@ -156,6 +164,7 @@ export const notificationSlice = createSlice({
       state.notifications = state.notifications.map((n) => ({
         ...n,
         status: NotificationStatus.READ,
+        effectiveStatus: NotificationStatus.READ,
       }))
       state.unreadCount = 0
     },
@@ -257,6 +266,7 @@ export const notificationSlice = createSlice({
         state.notifications = state.notifications.map((n) => ({
           ...n,
           status: NotificationStatus.READ,
+          effectiveStatus: NotificationStatus.READ,
         }))
         state.unreadCount = 0
       })

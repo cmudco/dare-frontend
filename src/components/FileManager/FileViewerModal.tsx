@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Button } from '../ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { FileText, AlertCircle, Download, ExternalLink } from 'lucide-react'
 import axios from 'axios'
+import FileStructurePanel from './FileStructurePanel'
+import FileProcessingJourneyPanel from './FileProcessingJourneyPanel'
 
 interface FileViewerModalProps {
   isOpen: boolean
@@ -15,6 +18,9 @@ interface FileViewerModalProps {
 /**
  * Modal component for viewing files (PDF, TXT, DOCX) with proper authentication.
  * Uses blob URLs for secure file display in iframe.
+ *
+ * The Structure tab shows the parsed document model behind the file. Metadata
+ * explains how the file moved through parsing, vision, embeddings, and search.
  */
 const FileViewerModal = ({
   isOpen,
@@ -26,6 +32,20 @@ const FileViewerModal = ({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
+  const [tab, setTab] = useState('document')
+  const [page, setPage] = useState<number | null>(null)
+
+  /**
+   * Show a page of the document from the Structure tab.
+   *
+   * The page is carried as a `#page=` fragment on the blob URL, which the
+   * browser's built-in PDF viewer honours. Keying the iframe on it forces a
+   * remount, since changing only the fragment would not reload the frame.
+   */
+  const openPage = (pageNo: number) => {
+    setPage(pageNo)
+    setTab('document')
+  }
 
   /**
    * Fetches file from backend using authenticated request and converts to blob URL
@@ -98,6 +118,8 @@ const FileViewerModal = ({
   const handleClose = () => {
     setError(null)
     setLoading(false)
+    setTab('document')
+    setPage(null)
     if (blobUrl) {
       URL.revokeObjectURL(blobUrl)
       setBlobUrl(null)
@@ -160,7 +182,8 @@ const FileViewerModal = ({
 
         {/* File viewer */}
         <iframe
-          src={blobUrl}
+          key={page ?? 'all'}
+          src={page ? `${blobUrl}#page=${page}` : blobUrl}
           className='h-full w-full rounded-md border-0'
           title={fileName}
           onLoad={handleIframeLoad}
@@ -228,7 +251,38 @@ const FileViewerModal = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className='h-[70vh] flex-1 overflow-hidden'>{renderContent()}</div>
+        <Tabs
+          value={tab}
+          onValueChange={setTab}
+          className='flex h-[70vh] flex-1 flex-col'
+        >
+          <TabsList className='self-start'>
+            <TabsTrigger value='document'>Document</TabsTrigger>
+            <TabsTrigger value='structure'>Structure</TabsTrigger>
+            <TabsTrigger value='metadata'>Metadata</TabsTrigger>
+          </TabsList>
+
+          <TabsContent
+            value='document'
+            className='mt-3 flex-1 overflow-hidden data-[state=inactive]:hidden'
+          >
+            {renderContent()}
+          </TabsContent>
+
+          <TabsContent
+            value='structure'
+            className='mt-3 flex-1 overflow-y-auto data-[state=inactive]:hidden'
+          >
+            <FileStructurePanel fileId={fileId} onOpenPage={openPage} />
+          </TabsContent>
+
+          <TabsContent
+            value='metadata'
+            className='mt-3 flex-1 overflow-y-auto data-[state=inactive]:hidden'
+          >
+            <FileProcessingJourneyPanel fileId={fileId} />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   )

@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
-  Brain,
   Check,
   FileText,
+  Fingerprint,
   MessageSquare,
   Search,
   Settings,
   X,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import type { RootState, AppDispatch } from '@/redux/store'
 import {
   updateReferencedConversations,
@@ -168,13 +169,14 @@ const ConversationReferenceSelect: React.FC = () => {
               <div className='flex items-center gap-2'>
                 {enableMemory && (
                   <div className='flex items-center gap-1.5'>
-                    <Brain className='h-3.5 w-3.5 text-muted-foreground' />
+                    <Fingerprint className='h-3.5 w-3.5 text-muted-foreground' />
                     <span className='text-xs font-medium text-muted-foreground'>
                       Memory
                     </span>
                     <Switch
                       checked={memoryEnabled}
                       onCheckedChange={handleMemoryToggle}
+                      aria-label='Use memory in this conversation'
                     />
                   </div>
                 )}
@@ -252,6 +254,35 @@ const ConversationReferenceSelect: React.FC = () => {
                 )}
               </div>
             </div>
+
+            {/* What the switch above actually turns on. Memory is the one
+                control here that both reads and writes, so it says so. */}
+            {enableMemory && (
+              <div className='rounded-xl border border-border bg-muted/40 px-3 py-2.5'>
+                <p className='text-xs leading-relaxed text-muted-foreground'>
+                  {memoryEnabled ? (
+                    <>
+                      DARE brings what it knows about you into this
+                      conversation, can search your past conversations when it
+                      needs to, and reads each finished reply for anything worth
+                      keeping.
+                    </>
+                  ) : (
+                    <>
+                      Memory is off for this conversation: nothing is recalled,
+                      and nothing new is remembered.
+                    </>
+                  )}{' '}
+                  <Link
+                    to='/memory'
+                    onClick={() => setOpen(false)}
+                    className='font-medium text-foreground underline underline-offset-2 hover:text-dare'
+                  >
+                    See what it remembers
+                  </Link>
+                </p>
+              </div>
+            )}
 
             <Tabs
               value={activeTab}

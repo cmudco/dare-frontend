@@ -11,7 +11,8 @@ import {
   clearSelectedItems,
   setMediaTypeFilter,
 } from '../../redux/fileSlice'
-import { MediaTypeFilter } from '../../redux/types/files'
+import { MediaTypeFilter, FileView } from '../../redux/types/files'
+import ViewToggle from './ViewToggle'
 import { deleteMultipleFiles, getFolders } from '../../redux/asyncThunks/file'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -34,7 +35,7 @@ import {
 } from 'lucide-react'
 
 interface FileHeaderProps {
-  onToggleView?: (view: 'files' | 'folders' | 'media') => void
+  onToggleView?: (view: FileView) => void
 }
 
 const MEDIA_TYPE_TABS: {
@@ -108,31 +109,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({ onToggleView }) => {
     <div className='flex flex-col gap-4 px-2.5'>
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-2'>
-          {onToggleView && (
-            <div data-tour='files-view-toggle' className='mr-4 flex gap-2'>
-              <Button
-                variant={currentView === 'files' ? 'default' : 'outline'}
-                size='sm'
-                onClick={() => onToggleView('files')}
-              >
-                Files
-              </Button>
-              <Button
-                variant={currentView === 'folders' ? 'default' : 'outline'}
-                size='sm'
-                onClick={() => onToggleView('folders')}
-              >
-                Folders
-              </Button>
-              <Button
-                variant={currentView === 'media' ? 'default' : 'outline'}
-                size='sm'
-                onClick={() => onToggleView('media')}
-              >
-                Media
-              </Button>
-            </div>
-          )}
+          {onToggleView && <ViewToggle onToggleView={onToggleView} />}
           <div
             data-tour='files-search'
             className='relative flex h-[40px] w-[300px] items-center'

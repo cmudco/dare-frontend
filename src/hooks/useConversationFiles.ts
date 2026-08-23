@@ -1,7 +1,12 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '@/redux/store'
-import { loadSelectedFilesFromIds } from '@/redux/conversationSlice'
+import {
+  loadSelectedFilesFromIds,
+  loadSelectedLibrariesFromIds,
+} from '@/redux/conversationSlice'
+import { selectLibraries, selectLibrariesLoaded } from '@/redux/librarySlice'
+import { getSharedLibraries } from '@/redux/asyncThunks/library'
 import { useOwnerFiles } from './useOwnerFiles'
 import type { Conversation } from '@/redux/types/conversation'
 
@@ -37,6 +42,8 @@ export function useConversationFiles(
 ): UseConversationFilesResult {
   const dispatch = useDispatch<AppDispatch>()
   const files = useSelector((state: RootState) => state.files.files)
+  const libraries = useSelector(selectLibraries)
+  const librariesLoaded = useSelector(selectLibrariesLoaded)
 
   const effectiveOwnerId = getConversationFileOwnerId(conversation)
   const { allFiles, ownerFiles, isLoading } = useOwnerFiles(
@@ -56,6 +63,23 @@ export function useConversationFiles(
       )
     }
   }, [conversation?.conversationId, allFiles, isLoading, dispatch])
+
+  // Re-hydrate selected shared libraries once the catalog is available.
+  useEffect(() => {
+    if (!librariesLoaded) {
+      dispatch(getSharedLibraries())
+      return
+    }
+    if (conversation) {
+      dispatch(
+        loadSelectedLibrariesFromIds({
+          libraries,
+          selectedLibraryIds: conversation.selectedLibraryIds || [],
+        })
+      )
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation?.conversationId, librariesLoaded, libraries, dispatch])
 
   return { allFiles, ownerFiles, isLoading }
 }

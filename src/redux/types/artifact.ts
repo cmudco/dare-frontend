@@ -12,6 +12,7 @@ export type ArtifactType =
   | 'code'
   | 'docx'
   | 'pptx'
+  | 'pdf'
   | 'document'
   | 'image'
   | 'file'

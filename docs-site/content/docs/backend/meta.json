@@ -4,7 +4,8 @@
   "pages": [
     "index",
     "readme",
-    "install",
+    "quickstart",
+    "deployment",
     "contributing",
     "admin-guide",
     "configuration",

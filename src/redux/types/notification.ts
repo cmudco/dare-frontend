@@ -59,6 +59,14 @@ export interface PaginatedResponse<T> {
   results: T[]
 }
 
+export interface NotificationQueryParams {
+  status?: NotificationStatus
+  deliveryType?: NotificationDeliveryType
+  category?: NotificationCategory
+  excludeExpired?: boolean
+  includeRead?: boolean
+}
+
 export interface NotificationState {
   notifications: Notification[]
   stats: NotificationStats | null

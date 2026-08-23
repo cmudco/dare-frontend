@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react'
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AppDispatch, RootState } from '../../redux/store'
@@ -108,7 +108,7 @@ const ActiveConversation: React.FC = () => {
   const [editMessageId, setEditMessageId] = useState<string | null>(null)
   const [shouldShowAutoFeedbackModal, setShouldShowAutoFeedbackModal] =
     useState(false)
-  const [userJustSentMessage, setUserJustSentMessage] = useState(false)
+  const [scrollToBottomRequest, setScrollToBottomRequest] = useState(0)
   const [showForkDialog, setShowForkDialog] = useState(false)
 
   // Resolve and load files for forked/shared conversations
@@ -117,7 +117,6 @@ const ActiveConversation: React.FC = () => {
   // Refs
   const hasCheckedAutoFeedback = useRef(false)
   const prevActiveConversationRef = useRef<typeof activeConversation>(null)
-  const prevMessageCountRef = useRef(conversationHistory.length)
 
   // Hooks
   const {
@@ -255,27 +254,13 @@ const ActiveConversation: React.FC = () => {
     setShouldShowAutoFeedbackModal(false)
   }, [activeConversation?.conversationId])
 
-  // Detect when user sends a new message (for scroll-to-bottom)
-  useEffect(() => {
-    const currentCount = conversationHistory.length
-    const prevCount = prevMessageCountRef.current
-
-    if (currentCount > prevCount) {
-      const newMessage = conversationHistory[currentCount - 1]
-      // If the new message is from the user, trigger scroll
-      if (newMessage && isSenderMessage(newMessage)) {
-        setUserJustSentMessage(true)
-        // Reset after a tick so the effect in MessageList can fire
-        requestAnimationFrame(() => setUserJustSentMessage(false))
-      }
-    }
-
-    prevMessageCountRef.current = currentCount
-  }, [conversationHistory.length, conversationHistory])
-
   // ──────────────────────────────────────────────────────────────────────────
   // HANDLERS
   // ──────────────────────────────────────────────────────────────────────────
+
+  const handleMessageSent = useCallback(() => {
+    setScrollToBottomRequest((request) => request + 1)
+  }, [])
 
   const handleEditMessage = (id: string, content: string) => {
     setEditMessageId(id)
@@ -336,7 +321,7 @@ const ActiveConversation: React.FC = () => {
                 onEditMessage={handleEditMessage}
                 shouldShowAutoFeedbackModal={shouldShowAutoFeedbackModal}
                 conversationId={activeConversation?.conversationId}
-                userJustSentMessage={userJustSentMessage}
+                scrollToBottomRequest={scrollToBottomRequest}
               />
             )}
             <div className='flex w-full shrink-0 flex-col items-center justify-center px-3 pb-2 sm:px-4'>
@@ -359,6 +344,7 @@ const ActiveConversation: React.FC = () => {
               <ConversationPill
                 editMessageId={editMessageId}
                 onCancelEdit={handleCancelEdit}
+                onMessageSent={handleMessageSent}
                 disabled={
                   !activeConversation || activeConversation.isOwner === false
                 }

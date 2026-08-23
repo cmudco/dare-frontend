@@ -149,8 +149,11 @@ export interface PptxPresentationConfig {
  */
 export interface DareToolResult {
   success: boolean
+  artifactId?: number
+  message?: string
   chartConfig?: ChartConfig
   mermaidCode?: string
+  diagramType?: string
   docConfig?: DocxDocumentConfig
   pptConfig?: PptxPresentationConfig
   error?: string

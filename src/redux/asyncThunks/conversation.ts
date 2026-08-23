@@ -171,12 +171,19 @@ export const updateConversationSelectedIds = createAsyncThunk<
     selectedEmbeddingIds: number[]
     selectedFileIds: number[]
     selectedMediaIds: number[]
+    selectedLibraryIds: number[]
   },
   { rejectValue: string }
 >(
   'conversation/updateConversationSelectedIds',
   async (
-    { conversationId, selectedEmbeddingIds, selectedFileIds, selectedMediaIds },
+    {
+      conversationId,
+      selectedEmbeddingIds,
+      selectedFileIds,
+      selectedMediaIds,
+      selectedLibraryIds,
+    },
     thunkAPI
   ) => {
     try {
@@ -184,6 +191,7 @@ export const updateConversationSelectedIds = createAsyncThunk<
         selectedEmbeddingIds,
         selectedFileIds,
         selectedMediaIds,
+        selectedLibraryIds,
       })
       return updatedConversation
     } catch (error) {
@@ -200,9 +208,11 @@ export const sendMessage = createAsyncThunk<
   'conversation/sendMessage',
   async (message, { dispatch, rejectWithValue }) => {
     try {
-      dispatch(sendSocketMessage(message))
+      await dispatch(sendSocketMessage(message)).unwrap()
     } catch (error) {
-      return rejectWithValue((error as Error).message)
+      return rejectWithValue(
+        error instanceof Error ? error.message : String(error)
+      )
     }
   }
 )

@@ -2,9 +2,20 @@ import {
   SenderType,
   FeedbackType,
   ConversationTab,
+  RagMode,
 } from '@/utils/constants/conversation'
 import type { RelatableStats } from '@/redux/types/billing'
-import { ToolCallStatus, MessageContentType } from '@/utils/constants/dareTools'
+import {
+  ToolCallStatus,
+  ToolCallOrigin,
+  ToolLoopState,
+  MessageContentType,
+} from '@/utils/constants/dareTools'
+import type {
+  DareToolResult,
+  McpToolResult,
+  ProviderToolResult,
+} from '@/redux/types/dareToolResults'
 import type {
   ImageSizeType,
   ImageQualityType,
@@ -14,6 +25,7 @@ import type { LanguageCode } from '@/utils/constants/audioTranscription'
 import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
+import { SharedLibrary } from './library'
 import { EffortLevel } from '@/utils/constants/model'
 
 /**
@@ -25,6 +37,10 @@ export enum VoiceRecordingState {
   PROCESSING = 'processing',
 }
 
+// RagMode is now defined in @/utils/constants/conversation
+// Re-export for backwards compatibility
+export { RagMode }
+
 export interface Conversation {
   conversationId: string
   title?: string
@@ -32,6 +48,7 @@ export interface Conversation {
   user?: string
   maxContextSnippets: number
   documentSimilarityThreshold: number
+  ragMode?: RagMode
   temperature: number
   effort?: EffortLevel | null
   maxTokens: number
@@ -51,6 +68,7 @@ export interface Conversation {
   sortOrder?: number
   selectedEmbeddingIds?: number[]
   selectedFileIds?: number[]
+  selectedLibraryIds?: number[]
   selectedMcpServerIds?: number[] // MCP servers enabled for this conversation
   selectedDareToolSlugs?: string[] // DARE tools enabled for this conversation
   selectedAgent?: number | null // Agent template selected for this conversation
@@ -76,6 +94,35 @@ export interface MemoryContextItem {
   categories: string[]
 }
 
+/** One decision the memory writer made about this turn, as the ledger records it. */
+export interface MemoryWriteChange {
+  /** What was actually done: add_fact, supersede, patch_user, ignore, edit… */
+  action: string
+  /** What the writer asked for. Differs from `action` when the gate intervened. */
+  proposedAction: string
+  applied: boolean
+  reason: string
+  note?: string | null
+  detail: string
+  recordId?: string | null
+}
+
+/**
+ * What the writer decided after the reply finished.
+ *
+ * It runs in a background job on a closed turn, so this arrives seconds late
+ * over the socket and is also stored on the message — a reload still shows it.
+ */
+export interface MemoryWriteData {
+  created: number
+  retired: number
+  reinforced: number
+  profileChanged: boolean
+  /** How many decisions were weighed, including the ones that were refused. */
+  considered: number
+  changes: MemoryWriteChange[]
+}
+
 export interface Message {
   id: string
   message: string
@@ -95,6 +142,7 @@ export interface Message {
   snippets?: Snippet[]
   webSearchSources?: WebSearchSource[]
   memoryContextData?: MemoryContextItem[]
+  memoryWriteData?: MemoryWriteData | null
   feedbackType?: FeedbackType | null
   feedbackText?: string
   feedbackSource?: string
@@ -104,6 +152,9 @@ export interface Message {
   cost?: string | null
   inputTokens?: number | null
   outputTokens?: number | null
+  usageDetails?: MessageUsageDetail[] | null
+  /** Provider-generated summarized thinking; never raw hidden chain-of-thought. */
+  thinkingSummary?: string | null
   energyWh?: string | null
   carbonG?: string | null
   waterMl?: string | null
@@ -111,9 +162,124 @@ export interface Message {
   generatedImage?: GeneratedImage
   generatedTranscription?: GeneratedTranscription
   artifactId?: number
-  mcpToolCalls?: ToolCall[]
+  artifactIds?: number[]
+  toolCalls?: ToolCall[]
+  toolLoopState?: ToolLoopState
+  toolLoopNotice?: string
   contentType?: MessageContentType
   contentMetadata?: Record<string, unknown>
+  /**
+   * Per-stage RAG pipeline trace, when retrieval ran with tracing enabled.
+   * A single trace when one source was searched; an envelope with one trace
+   * per source (documents, shared libraries) when several were.
+   */
+  retrievalTrace?: RetrievalTrace | RetrievalTraceEnvelope | null
+  /**
+   * Timed context-assembly trace for the turn: what went into the prompt
+   * (files, retrieval, memory, history, …) before the model started
+   * answering. Arrives live as a `context_trace` socket event and persists
+   * on the message for refresh.
+   */
+  contextTrace?: ContextTrace | null
+}
+
+export interface MessageUsageDetail {
+  round: number
+  inputTokens: number
+  outputTokens: number
+  thinkingTokens?: number
+  visibleOutputTokens?: number
+  stopReason?: string
+  requestMaxTokens?: number
+  effort?: EffortLevel
+  thinkingSummary?: string
+  cost?: number
+}
+
+/** Multiple traces on one message — one per retrieval source. */
+export interface RetrievalTraceEnvelope {
+  traces: RetrievalTrace[]
+}
+
+/** Normalize a message's trace payload to a list of traces. */
+export const retrievalTraces = (
+  payload: RetrievalTrace | RetrievalTraceEnvelope | null | undefined
+): RetrievalTrace[] => {
+  if (!payload) return []
+  return 'traces' in payload ? payload.traces : [payload]
+}
+
+/** One chunk as it appeared at a single RAG pipeline stage. */
+export interface RetrievalTraceEntry {
+  sourceRef: string
+  chunkIndex: number
+  score: number
+  rank: number
+  /** Rank at the previous stage, for showing rank movement (null if new/unranked). */
+  prevRank: number | null
+  preview: string
+}
+
+/** How an answer was retrieved, stage by stage (matches backend RetrievalTrace.to_payload). */
+export interface RetrievalTrace {
+  /** Which corpus this trace covers: 'documents' | 'libraries' (absent on older traces). */
+  source?: string
+  query: string
+  queryAnalysis: {
+    intent: string
+    keywords: string[]
+    /** Cleaned, disambiguated restatement embedded for the dense leg. */
+    rewrittenQuery?: string
+    /** HyDE: a hypothetical answer embedded instead of the bare question. */
+    hydePassage?: string
+  } | null
+  hybrid: { poolSize: number; topCandidates: RetrievalTraceEntry[] }
+  rerank: { applied: boolean; results: RetrievalTraceEntry[] }
+  mmr: { applied: boolean; reason: string }
+  grounding: {
+    answerFound: boolean
+    topScore: number
+    threshold: number
+  } | null
+  finalSize: number
+}
+
+/** One timed stage of a turn's context assembly. */
+export interface ContextTraceStage {
+  kind:
+    | 'prompt'
+    | 'referencedConversations'
+    | 'summaries'
+    | 'files'
+    | 'retrieval'
+    | 'memory'
+    | 'history'
+    | 'media'
+    | 'tools'
+  ms: number
+  /** Generic item count (referenced conversations, memories, media, tools). */
+  count?: number
+  /** Injected characters (prompt, referenced conversations). */
+  chars?: number
+  /** History: turns kept after filtering, and the configured limit. */
+  turns?: number
+  limit?: number | null
+  /** Files read in full. */
+  files?: { name: string; chars: number }[]
+  /** Retrieval: settings used and the per-source pipeline traces. */
+  mode?: string
+  threshold?: number
+  topK?: number
+  injectedBlocks?: number
+  sources?: RetrievalTrace[]
+  /** Naive mode: kept snippets (no pipeline trace exists to embed). */
+  snippets?: { ref: string; score: number; preview: string }[]
+}
+
+/** How the turn's prompt was assembled, stage by stage. */
+export interface ContextTrace {
+  totalMs: number
+  stages: ContextTraceStage[]
 }
 
 /** Check if a message was sent by the user (not the AI). */
@@ -147,19 +313,28 @@ export interface ToolCall {
   serverSlug: string
 
   /** Execution origin: DARE internal, MCP external, or provider-native */
-  origin: import('@/utils/constants/dareTools').ToolCallOrigin
+  origin: ToolCallOrigin
 
   /** Current execution status */
   status: ToolCallStatus
 
+  /** 1-based tool-loop round this call belongs to */
+  round: number
+
+  /** Characters of arguments streamed so far (live, while status is pending) */
+  argsChars?: number
+
+  /** Final parsed arguments the tool was invoked with */
+  arguments?: Record<string, unknown>
+
   /** Result from DARE internal tools */
-  dareResult?: import('@/redux/types/dareToolResults').DareToolResult
+  dareResult?: DareToolResult
 
   /** Result from MCP external tools */
-  mcpResult?: import('@/redux/types/dareToolResults').McpToolResult
+  mcpResult?: McpToolResult
 
   /** Result from provider-native tools (for example Anthropic web_fetch) */
-  providerResult?: import('@/redux/types/dareToolResults').ProviderToolResult
+  providerResult?: ProviderToolResult
 
   /** Error message if execution failed */
   error?: string
@@ -263,7 +438,10 @@ export interface WalletMeta {
 
 export interface Snippet {
   id: number
-  file: MyFile
+  /** Null for shared-library snippets (use library + sourceRef instead). */
+  file: MyFile | null
+  library?: { id: number; name: string; slug: string } | null
+  sourceRef?: string
   text: string
   similarityScore: number
   chunkIndex: number
@@ -322,6 +500,7 @@ export interface ConversationState {
   selectedMediaFiles: MyFile[] // NEW: Persistent media files (images/videos)
   selectedTags: Tag[]
   selectedFolders: MyFolder[]
+  selectedLibraries: SharedLibrary[]
   memoryEnabled: boolean
   selectedConversations: string[]
   referencedConversations: Conversation[]

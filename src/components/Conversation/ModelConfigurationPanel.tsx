@@ -33,6 +33,32 @@ import {
 import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
 import { EffortLevel, EffortLevelLabels } from '@/utils/constants/model'
 
+const ADAPTIVE_EFFORT_GUIDANCE: Record<
+  EffortLevel,
+  { recommendedTokens: number; description: string }
+> = {
+  [EffortLevel.Low]: {
+    recommendedTokens: 16384,
+    description: 'Low effort favors faster, lower-cost responses.',
+  },
+  [EffortLevel.Medium]: {
+    recommendedTokens: 32768,
+    description: 'Medium effort balances reasoning depth, latency, and cost.',
+  },
+  [EffortLevel.High]: {
+    recommendedTokens: 32768,
+    description: 'High effort may spend more of the response budget thinking.',
+  },
+  [EffortLevel.XHigh]: {
+    recommendedTokens: 65536,
+    description: 'XHigh effort prioritizes deep reasoning over speed and cost.',
+  },
+  [EffortLevel.Max]: {
+    recommendedTokens: 65536,
+    description: 'Max effort allows the deepest and most expensive reasoning.',
+  },
+}
+
 const ModelConfigurationPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const activeConversation = useSelector(
@@ -74,6 +100,9 @@ const ModelConfigurationPanel: React.FC = () => {
   const allModels = useSelector(
     (state: RootState) => state.conversation.activeModels
   )
+  const messageCount = useSelector(
+    (state: RootState) => state.conversation.activeConversationMessages.length
+  )
   // Wallet capability flags. The BE returns `null` for legacy callers (no
   // wallet_scope param); treat that as "all features supported" so DARE /
   // BYO users see every toggle as before. LITELLM users see only tools/MCP
@@ -102,9 +131,45 @@ const ModelConfigurationPanel: React.FC = () => {
     selectedEntry?.defaultEffort ??
     EffortLevel.High
   const selectedProvider = selectedEntry?.provider?.toLowerCase()
+  const usesAdaptiveThinking = selectedEntry?.supportsAdaptiveThinking ?? false
+  const defaultMaxTokens = usesAdaptiveThinking
+    ? MODEL_CONFIG.adaptiveThinkingMaxTokens
+    : MODEL_CONFIG.maxTokens
+  const effortGuidance = ADAPTIVE_EFFORT_GUIDANCE[effort]
+  const maxTokenCeiling = usesAdaptiveThinking
+    ? MODEL_CONFIG.adaptiveThinkingTokenCeiling
+    : 16384
   const showWebFetch =
     showWebSearch &&
     (selectedProvider === 'claude' || selectedProvider === 'gemini')
+  const automaticDefaultKeyRef = React.useRef<string | null>(null)
+
+  React.useEffect(() => {
+    const selectionKey = `${activeConversation?.conversationId ?? 'none'}:${selectedEntry?.id ?? 'none'}`
+    if (automaticDefaultKeyRef.current === selectionKey) return
+    automaticDefaultKeyRef.current = selectionKey
+
+    if (
+      activeConversation &&
+      usesAdaptiveThinking &&
+      messageCount === 0 &&
+      activeConversation.maxTokens <= MODEL_CONFIG.maxTokens
+    ) {
+      dispatch(updateMaxTokens(MODEL_CONFIG.adaptiveThinkingMaxTokens))
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { maxTokens: MODEL_CONFIG.adaptiveThinkingMaxTokens },
+        })
+      )
+    }
+  }, [
+    activeConversation,
+    dispatch,
+    messageCount,
+    selectedEntry?.id,
+    usesAdaptiveThinking,
+  ])
 
   const handleTemperatureChange = (values: number[]) => {
     dispatch(updateTemperature(values[0]))
@@ -253,7 +318,7 @@ const ModelConfigurationPanel: React.FC = () => {
     if (activeConversation) {
       dispatch(updateTemperature(MODEL_CONFIG.temperature))
       dispatch(updateEffort(null))
-      dispatch(updateMaxTokens(MODEL_CONFIG.maxTokens))
+      dispatch(updateMaxTokens(defaultMaxTokens))
       dispatch(updateHistoryLimit(MODEL_CONFIG.historyLimit))
       dispatch(updateWebSearchEnabled(false))
       dispatch(updateWebFetchEnabled(false))
@@ -267,7 +332,7 @@ const ModelConfigurationPanel: React.FC = () => {
           updates: {
             temperature: MODEL_CONFIG.temperature,
             effort: null,
-            maxTokens: MODEL_CONFIG.maxTokens,
+            maxTokens: defaultMaxTokens,
             historyLimit: MODEL_CONFIG.historyLimit,
             webSearchEnabled: false,
             webFetchEnabled: false,
@@ -292,7 +357,10 @@ const ModelConfigurationPanel: React.FC = () => {
             <Settings className='h-5 w-5 text-muted-foreground' />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className='w-80 border border-border bg-popover p-4'>
+        <PopoverContent
+          collisionPadding={8}
+          className='max-h-[var(--radix-popover-content-available-height)] w-80 max-w-[calc(100vw-1rem)] touch-pan-y touch-pinch-zoom [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto overscroll-contain border border-border bg-popover p-4'
+        >
           <div className='flex flex-col justify-center gap-4 text-foreground'>
             {activeConversation?.conversationId && (
               <div className='flex items-center justify-between border-b border-border pb-2'>
@@ -626,12 +694,25 @@ const ModelConfigurationPanel: React.FC = () => {
 
               <Slider
                 value={[maxTokens]}
-                min={1}
-                max={16384}
+                min={256}
+                max={maxTokenCeiling}
                 step={256}
                 onValueChange={handleMaxTokensChange}
                 className='my-4 cursor-pointer'
               />
+              {usesAdaptiveThinking && (
+                <p className='text-xs text-muted-foreground'>
+                  This ceiling is shared by hidden thinking and visible text.
+                  {` ${effortGuidance.description} Start with ${effortGuidance.recommendedTokens.toLocaleString()} tokens.`}
+                </p>
+              )}
+              {usesAdaptiveThinking &&
+                maxTokens < effortGuidance.recommendedTokens && (
+                  <p className='text-xs text-destructive'>
+                    {EffortLevelLabels[effort]} effort with this ceiling can
+                    leave too little room for the visible answer.
+                  </p>
+                )}
             </div>
 
             <div className='space-y-4 border-t border-border pt-2'>

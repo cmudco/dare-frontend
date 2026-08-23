@@ -33,11 +33,22 @@ import {
   AudioTranscriptionSettings,
   ToolCallStatus,
   WalletMeta,
+  RagMode,
+  MemoryWriteData,
 } from './types/conversation'
-import { ServerSlug, ToolCallOrigin } from '@/utils/constants/dareTools'
+import { ToolCallOrigin, ToolLoopState } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
+import type {
+  ToolCallPendingEvent,
+  ToolCallArgsProgressEvent,
+  ToolCallExecutingEvent,
+  ToolCallResultEvent,
+  ToolRoundsCappedEvent,
+  ContextTraceEvent,
+} from './types/toolEvents'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
+import { SharedLibrary } from './types/library'
 import { Prompt } from './types/prompt'
 import {
   selectAppropriateModel,
@@ -113,6 +124,18 @@ export const conversationSlice = createSlice({
         )
       }
     },
+    loadSelectedLibrariesFromIds(
+      state,
+      action: PayloadAction<{
+        libraries: SharedLibrary[]
+        selectedLibraryIds: number[]
+      }>
+    ) {
+      const { libraries, selectedLibraryIds } = action.payload
+      state.selectedLibraries = libraries.filter((library) =>
+        selectedLibraryIds.includes(library.id)
+      )
+    },
     updateSelectedModel(state, action: PayloadAction<string | null>) {
       state.selectedModel = action.payload
       const selectedEntry = state.pickerEntries.find(
@@ -140,6 +163,9 @@ export const conversationSlice = createSlice({
     },
     updateSelectedFolders(state, action: PayloadAction<MyFolder[]>) {
       state.selectedFolders = action.payload
+    },
+    updateSelectedLibraries(state, action: PayloadAction<SharedLibrary[]>) {
+      state.selectedLibraries = action.payload
     },
     updateMemoryEnabled(state, action: PayloadAction<boolean>) {
       state.memoryEnabled = action.payload
@@ -197,6 +223,11 @@ export const conversationSlice = createSlice({
     updateDocumentSimilarityThreshold(state, action: PayloadAction<number>) {
       if (state.activeConversation) {
         state.activeConversation.documentSimilarityThreshold = action.payload
+      }
+    },
+    updateRagMode(state, action: PayloadAction<RagMode>) {
+      if (state.activeConversation) {
+        state.activeConversation.ragMode = action.payload
       }
     },
     updateHistoryLimit(state, action: PayloadAction<number>) {
@@ -391,6 +422,7 @@ export const conversationSlice = createSlice({
       state.selectedEmbeddings = []
       state.selectedTags = []
       state.selectedFolders = []
+      state.selectedLibraries = []
       state.memoryEnabled = false
       state.conversationInput = ''
       state.referencedConversations = []
@@ -894,6 +926,14 @@ export const conversationSlice = createSlice({
               ...state.activeConversationMessages[existingIndex],
               ...action.payload,
             }
+            const message = state.activeConversationMessages[existingIndex]
+            if (
+              !message.streaming &&
+              message.toolLoopState !== ToolLoopState.INTERRUPTED
+            ) {
+              message.toolLoopState = undefined
+              message.toolLoopNotice = undefined
+            }
           } else {
             // New message - add it
             state.activeConversationMessages.push(action.payload)
@@ -968,197 +1008,261 @@ export const conversationSlice = createSlice({
           }
         }
       )
-      // Tool Call - external MCP or provider-native tool starts executing
+      // Tool Call Pending - the model started writing a tool call.
+      // Also absorbs throttled args-progress updates for the same call.
       .addMatcher(
         (
           action
         ): action is {
           type: string
-          payload: {
-            messageId: number
-            toolCallId: string
-            toolName: string
-            serverSlug: string
-            origin?: ToolCallOrigin
-            status: ToolCallStatus
-          }
+          payload: ToolCallPendingEvent | ToolCallArgsProgressEvent
         } =>
-          action.type === 'socket/mcp_tool_call' ||
-          action.type === 'socket/tool_call',
+          action.type === 'socket/tool_call_pending' ||
+          action.type === 'socket/tool_call_args_progress',
         (state, action) => {
-          const {
-            messageId,
-            toolCallId,
-            toolName,
-            serverSlug,
-            status,
-            origin,
-          } = action.payload
-          const toolOrigin =
-            origin ??
-            (action.type === 'socket/tool_call'
-              ? ToolCallOrigin.PROVIDER
-              : ToolCallOrigin.MCP)
+          const { messageId, toolCallId } = action.payload
+          if (messageId == null) return
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
-          if (msg) {
-            // Initialize toolCalls array if not present
-            if (!msg.mcpToolCalls) {
-              msg.mcpToolCalls = []
+          // Silently drop events for messages not in the store
+          if (!msg) return
+          if (!msg.toolCalls) {
+            msg.toolCalls = []
+          }
+          msg.toolLoopState = ToolLoopState.ACTIVE
+          msg.toolLoopNotice = undefined
+          const existing = msg.toolCalls.find((tc) => tc.id === toolCallId)
+          if (existing) {
+            // Only update argsChars, and only while still PENDING —
+            // late throttled updates must never undo EXECUTING
+            if (
+              existing.status === ToolCallStatus.PENDING &&
+              'argsChars' in action.payload
+            ) {
+              existing.argsChars = action.payload.argsChars
             }
-            // Add new tool call entry using the ID from backend
-            msg.mcpToolCalls.push({
-              id: toolCallId,
-              toolName,
-              serverSlug,
-              origin: toolOrigin,
-              status,
+            return
+          }
+          // Only the full pending event carries tool identity — never
+          // create an entry from an args-progress event alone
+          if (action.type === 'socket/tool_call_pending') {
+            const payload = action.payload as ToolCallPendingEvent
+            msg.toolCalls.push({
+              id: payload.toolCallId,
+              toolName: payload.toolName,
+              serverSlug: payload.serverSlug,
+              origin: payload.origin,
+              status: ToolCallStatus.PENDING,
+              round: payload.round,
             })
           }
         }
       )
-      // Tool Result - external MCP or provider-native tool completes
+      // Tool Call Executing - arguments complete, tool is running
       .addMatcher(
-        (
-          action
-        ): action is {
-          type: string
-          payload: {
-            messageId: number
-            toolCallId: string
-            toolName: string
-            serverSlug: string
-            origin?: ToolCallOrigin
-            status: 'success' | 'error'
-            result?: unknown
-            error?: string
-          }
-        } =>
-          action.type === 'socket/mcp_tool_result' ||
-          action.type === 'socket/tool_result',
+        (action): action is { type: string; payload: ToolCallExecutingEvent } =>
+          action.type === 'socket/tool_call_executing',
         (state, action) => {
-          const { messageId, toolCallId, status, result, error, origin } =
+          const { messageId, toolCallId } = action.payload
+          if (messageId == null) return
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (!msg) return
+          if (!msg.toolCalls) {
+            msg.toolCalls = []
+          }
+          msg.toolLoopState = ToolLoopState.ACTIVE
+          msg.toolLoopNotice = undefined
+          // Find the matching tool call by unique id only
+          // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
+          let toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId)
+          if (
+            toolCall?.status === ToolCallStatus.COMPLETED ||
+            toolCall?.status === ToolCallStatus.FAILED
+          ) {
+            return
+          }
+          if (!toolCall) {
+            // Defensive upsert in case the pending event was missed
+            toolCall = {
+              id: action.payload.toolCallId,
+              toolName: action.payload.toolName,
+              serverSlug: action.payload.serverSlug,
+              origin: action.payload.origin,
+              status: ToolCallStatus.EXECUTING,
+              round: action.payload.round,
+            }
+            msg.toolCalls.push(toolCall)
+          }
+          toolCall.status = ToolCallStatus.EXECUTING
+          toolCall.arguments = action.payload.arguments
+        }
+      )
+      // Tool Call Result - tool finished (completed or failed)
+      .addMatcher(
+        (action): action is { type: string; payload: ToolCallResultEvent } =>
+          action.type === 'socket/tool_call_result',
+        (state, action) => {
+          const { messageId, toolCallId, status, origin, error } =
             action.payload
+          if (messageId == null) return
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
-          if (msg && msg.mcpToolCalls) {
-            // Find the matching tool call by unique id only
-            // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
-            const toolCall = msg.mcpToolCalls.find((tc) => tc.id === toolCallId)
-            if (toolCall) {
-              toolCall.status =
-                status === 'success'
-                  ? ToolCallStatus.COMPLETED
-                  : ToolCallStatus.FAILED
-              if (result) {
-                const toolOrigin =
-                  origin ?? toolCall.origin ?? ToolCallOrigin.MCP
-                if (toolOrigin === ToolCallOrigin.PROVIDER) {
-                  toolCall.providerResult =
-                    result as import('@/redux/types/dareToolResults').ProviderToolResult
-                } else {
-                  // Store as mcpResult (MCP tools use this field)
-                  toolCall.mcpResult = result
-                }
-              }
-              if (error) {
-                toolCall.error = error
-              }
+          if (!msg) return
+          if (!msg.toolCalls) {
+            msg.toolCalls = []
+          }
+          // Find the matching tool call by unique id only
+          // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
+          let toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId)
+          if (!toolCall) {
+            // Defensive upsert in case pending/executing events were missed
+            toolCall = {
+              id: action.payload.toolCallId,
+              toolName: action.payload.toolName,
+              serverSlug: action.payload.serverSlug,
+              origin: action.payload.origin,
+              status,
+              round: action.payload.round,
             }
+            msg.toolCalls.push(toolCall)
+          }
+          toolCall.status =
+            status === ToolCallStatus.COMPLETED
+              ? ToolCallStatus.COMPLETED
+              : ToolCallStatus.FAILED
+          // Exactly one result field is set, keyed by origin
+          switch (origin) {
+            case ToolCallOrigin.DARE:
+              toolCall.dareResult = action.payload.dareResult
+              // If the DARE result indicates failure, also surface its error
+              if (
+                action.payload.dareResult &&
+                action.payload.dareResult.success === false &&
+                action.payload.dareResult.error
+              ) {
+                toolCall.error = action.payload.dareResult.error
+                toolCall.status = ToolCallStatus.FAILED
+              }
+              break
+            case ToolCallOrigin.MCP:
+              toolCall.mcpResult = action.payload.mcpResult
+              break
+            case ToolCallOrigin.PROVIDER:
+              toolCall.providerResult = action.payload.providerResult
+              break
+          }
+          if (error) {
+            toolCall.error = error
           }
         }
       )
-      // DARE Tool Call - tool starts executing
+      // Context Trace - how the turn's prompt was assembled (once, pre-round-1)
+      .addMatcher(
+        (action): action is { type: string; payload: ContextTraceEvent } =>
+          action.type === 'socket/context_trace',
+        (state, action) => {
+          const { messageId } = action.payload
+          if (messageId == null) return
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          // Silently drop events for messages not in the store — the trace
+          // is also persisted on the message, so a refresh recovers it.
+          if (!msg) return
+          msg.contextTrace = action.payload.trace
+        }
+      )
       .addMatcher(
         (
           action
         ): action is {
           type: string
-          payload: {
-            messageId: number
-            toolCall: {
-              id: string
-              toolName: string
-              toolSlug: string
-              serverSlug: string
-              origin?: ToolCallOrigin
-              status: ToolCallStatus
-              arguments?: Record<string, unknown>
-            }
-          }
-        } => action.type === 'socket/dareToolCall',
+          payload: MemoryWriteData & { messageId: string | number }
+        } => action.type === 'socket/memory_written',
         (state, action) => {
-          const { messageId, toolCall } = action.payload
+          const { messageId, ...write } = action.payload
           const msg = state.activeConversationMessages.find(
             (m) => m.id.toString() === messageId.toString()
           )
-          if (msg) {
-            // Initialize toolCalls array if not present
-            if (!msg.mcpToolCalls) {
-              msg.mcpToolCalls = []
-            }
-            // Add new tool call entry
-            msg.mcpToolCalls.push({
-              id: toolCall.id,
-              toolName: toolCall.toolName,
-              serverSlug: toolCall.serverSlug || ServerSlug.DARE,
-              origin: toolCall.origin || ToolCallOrigin.DARE,
-              status: toolCall.status,
-            })
-          }
+          // The writer runs long after the reply, so the conversation may
+          // already be closed. Dropping is safe — this is stored on the
+          // message too, and reopening the thread brings it back.
+          if (!msg) return
+          msg.memoryWriteData = write
         }
       )
-      // DARE Tool Result - tool completes (success or error)
+      .addMatcher(
+        (action): action is { type: string; payload: ToolRoundsCappedEvent } =>
+          action.type === 'socket/tool_rounds_capped',
+        (state, action) => {
+          const { messageId } = action.payload
+          if (messageId == null) return
+          const message = state.activeConversationMessages.find(
+            (item) => item.id.toString() === messageId.toString()
+          )
+          if (!message) return
+          message.toolLoopState = ToolLoopState.CAPPED
+          message.toolLoopNotice =
+            'The research limit was reached. DARE is preparing the best available answer.'
+        }
+      )
       .addMatcher(
         (
           action
         ): action is {
           type: string
-          payload: {
-            messageId: number
-            toolCall: {
-              id: string
-              toolName: string
-              toolSlug: string
-              serverSlug: string
-              origin?: ToolCallOrigin
-              status: 'completed' | 'failed'
-              result?: Record<string, unknown>
-              arguments?: Record<string, unknown>
-            }
-          }
-        } => action.type === 'socket/dareToolResult',
+          payload: { artifactId: number; messageId?: number }
+        } => action.type === 'socket/artifact_created',
         (state, action) => {
-          const { messageId, toolCall } = action.payload
-          const msg = state.activeConversationMessages.find(
-            (m) => m.id.toString() === messageId.toString()
+          const { artifactId, messageId } = action.payload
+          if (messageId == null) return
+          const message = state.activeConversationMessages.find(
+            (item) => item.id.toString() === messageId.toString()
           )
-          if (msg && msg.mcpToolCalls) {
-            // Find the matching tool call by unique id only
-            // (DO NOT fallback to toolName - multiple calls of same tool would match the wrong entry)
-            const existingToolCall = msg.mcpToolCalls.find(
-              (tc) => tc.id === toolCall.id
-            )
-            if (existingToolCall) {
-              existingToolCall.status =
-                toolCall.status === 'completed'
-                  ? ToolCallStatus.COMPLETED
-                  : ToolCallStatus.FAILED
-              if (toolCall.result) {
-                // Store as dareResult (DARE tools use this field)
-                // Result is already parsed and camelCased from BE
-                existingToolCall.dareResult =
-                  toolCall.result as unknown as import('@/redux/types/dareToolResults').DareToolResult
+          if (!message) return
+          const ids = message.artifactIds?.length
+            ? message.artifactIds
+            : message.artifactId != null
+              ? [message.artifactId]
+              : []
+          message.artifactIds = Array.from(new Set([...ids, artifactId]))
+          message.artifactId ??= artifactId
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: { error?: string; message?: string }
+        } =>
+          action.type === 'socket/error' || action.type === 'websocket/error',
+        (state, action) => {
+          const notice =
+            action.payload?.message ||
+            action.payload?.error ||
+            'The connection was interrupted before the tool could finish.'
 
-                // If result indicates failure, also set error
-                if (!toolCall.result.success && toolCall.result.error) {
-                  existingToolCall.error = toolCall.result.error as string
-                }
-              }
-            }
-          }
+          state.activeConversationMessages.forEach((message) => {
+            const activeCalls = message.toolCalls?.filter(
+              (toolCall) =>
+                toolCall.status === ToolCallStatus.PENDING ||
+                toolCall.status === ToolCallStatus.EXECUTING
+            )
+            if (!message.streaming && !activeCalls?.length) return
+
+            message.streaming = false
+            message.toolLoopState = ToolLoopState.INTERRUPTED
+            message.toolLoopNotice = notice
+            activeCalls?.forEach((toolCall) => {
+              toolCall.status = ToolCallStatus.FAILED
+              toolCall.error = notice
+            })
+          })
         }
       )
   },
@@ -1173,6 +1277,7 @@ export const {
   updateSelectedMediaFiles,
   updateSelectedTags,
   updateSelectedFolders,
+  updateSelectedLibraries,
   updateMemoryEnabled,
   updateTemperature,
   updateEffort,
@@ -1188,6 +1293,7 @@ export const {
   setIsTranscribingAudio,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
+  updateRagMode,
   toggleDropdown,
   setHoveredModel,
   updateConversationInput,
@@ -1207,6 +1313,7 @@ export const {
   updateReferencedConversationHistoryLimit,
   updateReferencedSummaries,
   loadSelectedFilesFromIds,
+  loadSelectedLibrariesFromIds,
   saveDraftForConversation,
   loadDraftForConversation,
   clearDraftForConversation,

@@ -3,6 +3,7 @@ import ConversationSettingsForm from '@/components/Auth/ConversationSettingsForm
 import ApiKeysManagement from '@/components/Settings/ApiKeysManagement'
 import AppearanceSettings from '@/components/Settings/AppearanceSettings'
 import AvatarSettings from '@/components/Settings/AvatarSettings'
+import DataAccountSettings from '@/components/Settings/DataAccountSettings'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { motion } from 'framer-motion'
 import { Settings as SettingsIcon } from 'lucide-react'
@@ -27,6 +28,7 @@ const Settings = () => {
       : []),
     { key: 'conversation', component: <ConversationSettingsForm /> },
     { key: 'password', component: <ChangePasswordForm /> },
+    { key: 'data', component: <DataAccountSettings /> },
   ]
 
   return (

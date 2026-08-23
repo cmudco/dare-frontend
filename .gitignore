@@ -23,6 +23,12 @@ docs-site/next-env.d.ts
 !.vscode/extensions.json
 .cursor/
 
+# AI coding agents — per-developer state. The shared config (AGENTS.md, CLAUDE.md,
+# .agents/skills/, .claude/skills/) is committed; see .agents/README.md.
+.claude/settings.local.json
+.claude/*.local.json
+CLAUDE.local.md
+
 .idea
 .DS_Store
 *.suo

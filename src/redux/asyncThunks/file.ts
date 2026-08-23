@@ -115,6 +115,7 @@ export const checkJobStatuses = createAsyncThunk(
         status: item.statusCode,
         jobId: item.jobId,
         jobStatus: item.jobStatus,
+        processingStage: item.processingStage,
       }))
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)

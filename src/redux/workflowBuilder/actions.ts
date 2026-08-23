@@ -3,10 +3,20 @@ import type {
   WorkflowRun,
   RouteOption,
   PendingValidationContext,
+  WorkflowStepArtifact,
   WorkflowStepSnippet,
+  WorkflowStepToolCall,
   WorkflowStepWebSearchSource,
 } from '../types/workflow'
 import type { BatchFileStatus } from '../types/workflowBuilder'
+import type {
+  WorkflowToolCallPendingEvent,
+  WorkflowToolCallExecutingEvent,
+  WorkflowToolCallResultEvent,
+  WorkflowContextTraceEvent,
+  WorkflowArtifactCreatedEvent,
+  WorkflowArtifactUpdatedEvent,
+} from '@/schemas/workflowSocket'
 
 // ════════════════════════════════════════════════════════════════════════════
 // WEBSOCKET CONNECTION ACTIONS
@@ -59,9 +69,55 @@ export const stepCompleted = createAction<{
   metadata?: {
     snippets: WorkflowStepSnippet[]
     webSearchSources: WorkflowStepWebSearchSource[]
+    toolCalls?: WorkflowStepToolCall[]
+    artifacts?: WorkflowStepArtifact[]
+    retrievalTrace?: unknown
+    contextTrace?: unknown
   }
   workflowRunId?: number
 }>('workflowSocket/step_completed')
+
+// ════════════════════════════════════════════════════════════════════════════
+// TOOL-LOOP EVENTS (unified vocabulary shared with chat)
+// ════════════════════════════════════════════════════════════════════════════
+
+export const workflowToolCallPending =
+  createAction<WorkflowToolCallPendingEvent>('workflowSocket/tool_call_pending')
+
+export const workflowToolCallArgsProgress = createAction<{
+  workflowRunId: number
+  nodeId: string
+  toolCallId: string
+  argsChars: number
+}>('workflowSocket/tool_call_args_progress')
+
+export const workflowToolCallExecuting =
+  createAction<WorkflowToolCallExecutingEvent>(
+    'workflowSocket/tool_call_executing'
+  )
+
+export const workflowToolCallResult = createAction<WorkflowToolCallResultEvent>(
+  'workflowSocket/tool_call_result'
+)
+
+export const workflowToolRoundsCapped = createAction<{
+  workflowRunId: number
+  nodeId: string
+  round: number
+}>('workflowSocket/tool_rounds_capped')
+
+export const workflowContextTrace = createAction<WorkflowContextTraceEvent>(
+  'workflowSocket/context_trace'
+)
+
+// Artifact events use chat's `socket/*` action types on purpose: the shared
+// artifactSlice hydrates its store (and opens the sidecar) from the exact
+// same actions, whichever socket they arrived on.
+export const workflowArtifactCreated =
+  createAction<WorkflowArtifactCreatedEvent>('socket/artifact_created')
+
+export const workflowArtifactUpdated =
+  createAction<WorkflowArtifactUpdatedEvent>('socket/artifact_updated')
 
 export const executionComplete = createAction<{
   status: string

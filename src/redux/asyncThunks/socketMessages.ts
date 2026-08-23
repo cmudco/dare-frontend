@@ -8,6 +8,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { AppDispatch, RootState } from '../store'
 import type { Message } from '../types/conversation'
+import { RagMode } from '../types/conversation'
 import {
   socketSendMessage,
   socketEditMessage,
@@ -40,6 +41,7 @@ export const sendSocketMessage = createAsyncThunk<
       selectedMediaFiles,
       selectedTags,
       selectedFolders,
+      selectedLibraries,
       memoryEnabled,
       referencedConversations,
       referencedConversationHistoryLimit,
@@ -76,6 +78,7 @@ export const sendSocketMessage = createAsyncThunk<
       media_ids: selectedMediaFiles.map((file) => file.id),
       tag_ids: selectedTags.map((tag) => tag.id),
       folder_ids: selectedFolders.map((folder) => folder.id),
+      library_ids: (selectedLibraries || []).map((library) => library.id),
       use_memory: memoryEnabled,
       referenced_conversation_ids: referencedConversations.map(
         (conv) => conv.conversationId
@@ -92,6 +95,7 @@ export const sendSocketMessage = createAsyncThunk<
       max_context_snippets: activeConversation.maxContextSnippets,
       document_similarity_threshold:
         activeConversation.documentSimilarityThreshold,
+      rag_mode: activeConversation.ragMode ?? RagMode.ADVANCED,
       history_limit: activeConversation.historyLimit,
       web_search_enabled: webSearchEnabled,
       web_fetch_enabled:
@@ -177,10 +181,19 @@ export const regenerateSocketResponse = createAsyncThunk<
       selectedFiles,
       selectedEmbeddings,
       selectedMediaFiles,
+      selectedTags,
+      selectedFolders,
+      selectedLibraries,
+      memoryEnabled,
+      referencedConversations,
+      referencedConversationHistoryLimit,
+      referencedSummaries,
       selectedModel,
       webSearchEnabled,
+      webFetchEnabled,
       audioTranscriptionEnabled,
       audioTranscriptionSettings,
+      artifactsEnabled,
     } = conversation
 
     if (!activeConversation) {
@@ -191,6 +204,15 @@ export const regenerateSocketResponse = createAsyncThunk<
       file_ids: selectedFiles.map((file) => file.id),
       embedding_ids: selectedEmbeddings.map((file) => file.id),
       media_ids: selectedMediaFiles.map((file) => file.id),
+      tag_ids: selectedTags.map((tag) => tag.id),
+      folder_ids: selectedFolders.map((folder) => folder.id),
+      library_ids: selectedLibraries.map((library) => library.id),
+      use_memory: memoryEnabled,
+      referenced_conversation_ids: referencedConversations.map(
+        (conv) => conv.conversationId
+      ),
+      referenced_conversation_history_limit: referencedConversationHistoryLimit,
+      referenced_summary_ids: referencedSummaries.map((summary) => summary.id),
       // Opaque dispatch id — the BE inverts the encoding in
       // `parse_model_id` (DB-PK string or `litellm:<key>:<model>`).
       model_id: selectedModel,
@@ -201,12 +223,17 @@ export const regenerateSocketResponse = createAsyncThunk<
       max_context_snippets: activeConversation.maxContextSnippets,
       document_similarity_threshold:
         activeConversation.documentSimilarityThreshold,
+      rag_mode: activeConversation.ragMode ?? RagMode.ADVANCED,
       history_limit: activeConversation.historyLimit,
       web_search_enabled: webSearchEnabled,
+      web_fetch_enabled: activeConversation.webFetchEnabled ?? webFetchEnabled,
       audio_transcription_enabled: audioTranscriptionEnabled,
       audio_transcription_settings: {
         language: audioTranscriptionSettings.language,
       },
+      artifacts_enabled: artifactsEnabled,
+      mcp_server_ids: activeConversation.selectedMcpServerIds || [],
+      dare_tool_slugs: activeConversation.selectedDareToolSlugs || [],
     }
 
     dispatch(

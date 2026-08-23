@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { FileStatus } from './file'
+import { FileProcessingStage } from '@/redux/types/files'
 import {
   Loader2,
   CheckCircle,
@@ -15,6 +16,7 @@ import {
   FileTextIcon,
   FileJsonIcon,
   FileArchiveIcon,
+  ScanLine,
 } from 'lucide-react'
 
 export const getJobStatusDisplay = (jobStatus?: string) => {
@@ -32,12 +34,27 @@ export const getJobStatusDisplay = (jobStatus?: string) => {
   }
 }
 
-export const getStatusDisplay = (status: FileStatus, errorMessage?: string) => {
+const PROCESSING_STAGE_LABELS: Record<FileProcessingStage, string> = {
+  parsing: 'Analyzing document',
+  enriching: 'Describing visuals',
+  embedding: 'Creating embeddings',
+  indexing: 'Storing search index',
+  complete: 'Processing',
+}
+
+export const getStatusDisplay = (
+  status: FileStatus,
+  errorMessage?: string,
+  processingStage?: FileProcessingStage
+) => {
   switch (status) {
     case FileStatus.PROCESSING:
       return (
         <Badge variant='secondary'>
-          <Loader2 className='mr-1 h-4 w-4 animate-spin' /> Processing
+          <Loader2 className='mr-1 h-4 w-4 animate-spin' />{' '}
+          {processingStage
+            ? PROCESSING_STAGE_LABELS[processingStage]
+            : 'Processing'}
         </Badge>
       )
     case FileStatus.PROCESSED:
@@ -87,6 +104,31 @@ export const getStatusDisplay = (status: FileStatus, errorMessage?: string) => {
       }
 
       return failedBadge
+    }
+    case FileStatus.NEEDS_OCR: {
+      const needsOcrBadge = (
+        <Badge variant='yellow' className='cursor-pointer'>
+          <ScanLine className='mr-1 h-4 w-4' /> Needs OCR
+        </Badge>
+      )
+
+      // The backend explains which pages were scans; show that rather than a
+      // generic "no text found", which reads like a failure.
+      if (!errorMessage?.trim()) return needsOcrBadge
+
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>{needsOcrBadge}</TooltipTrigger>
+            <TooltipContent className='max-w-sm p-3' side='top'>
+              <div className='space-y-1'>
+                <p className='text-sm font-medium'>Scanned document</p>
+                <p className='text-xs text-muted-foreground'>{errorMessage}</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )
     }
     default:
       return <Badge variant='outline'>Unknown</Badge>

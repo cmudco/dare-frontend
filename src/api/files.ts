@@ -1,6 +1,12 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
-import { MyFile, MyFolder } from '@/redux/types/files'
+import {
+  FileProcessingStage,
+  FileProcessingJourneyResponse,
+  FileStructure,
+  MyFile,
+  MyFolder,
+} from '@/redux/types/files'
 import { FileStatus } from '@/utils/constants/file'
 
 export const getFilesAPI = async (): Promise<{ results: MyFile[] }> => {
@@ -30,6 +36,51 @@ export const uploadFileAPI = async (data: FormData): Promise<MyFile[]> => {
   })
 }
 
+/**
+ * Fetch the parsed document model for a file.
+ *
+ * Pass `pageNo` to get only that page's elements — a long document has
+ * hundreds, and the structure view only ever renders one page at a time.
+ */
+export const getFileStructureAPI = async (
+  id: number,
+  pageNo?: number | null
+): Promise<FileStructure> => {
+  return await baseRequest<FileStructure>({
+    url: `api/files/${id}/structure/`,
+    method: METHOD.GET,
+    params: pageNo != null ? { page_no: pageNo } : undefined,
+  })
+}
+
+export const getFileProcessingJourneyAPI = async (
+  id: number
+): Promise<FileProcessingJourneyResponse> => {
+  return await baseRequest<FileProcessingJourneyResponse>({
+    url: `api/files/${id}/processing-journey/`,
+    method: METHOD.GET,
+  })
+}
+
+/**
+ * Render one element of a document as an image.
+ *
+ * `order` is the element's reading-order index from the structure endpoint;
+ * the backend crops that region out of the original on demand.
+ */
+export const getElementImageAPI = async (
+  id: number,
+  order: number
+): Promise<Blob> => {
+  const { blob } = await baseRequest({
+    url: `api/files/${id}/element-image/`,
+    method: METHOD.GET,
+    params: { order },
+    responseType: 'blob',
+  })
+  return blob
+}
+
 export const deleteFileAPI = async (id: number): Promise<void> => {
   await baseRequest<void>({
     url: `api/files/${id}/`,
@@ -56,6 +107,7 @@ export const checkJobStatusesAPI = async (
     jobId?: string
     statusCode: FileStatus
     jobStatus: string
+    processingStage?: FileProcessingStage
   }[]
 > => {
   return await baseRequest<
@@ -65,6 +117,7 @@ export const checkJobStatusesAPI = async (
       jobId?: string
       statusCode: FileStatus
       jobStatus: string
+      processingStage?: FileProcessingStage
     }[]
   >({
     url: 'api/files/job-statuses/',

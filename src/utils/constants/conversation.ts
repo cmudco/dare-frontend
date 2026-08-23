@@ -15,6 +15,16 @@ export enum FeedbackType {
   DISLIKE = 'dislike',
 }
 
+/**
+ * Retrieval mode for document RAG.
+ * Matches the backend `rag_mode` values.
+ */
+export enum RagMode {
+  NAIVE = 'naive',
+  ADVANCED = 'advanced',
+  AGENTIC = 'agentic',
+}
+
 // ─────────────────────────────────────────────────────────────
 // Conversation Sharing
 // ─────────────────────────────────────────────────────────────

@@ -3,7 +3,8 @@
   "defaultOpen": true,
   "pages": [
     "index",
-    "install",
+    "quickstart",
+    "deployment",
     "configuration",
     "architecture",
     "contributing",

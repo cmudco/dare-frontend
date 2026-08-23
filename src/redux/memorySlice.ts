@@ -6,13 +6,20 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialMemoryState } from './initialState/memory'
 import {
+  applyMemoryProposal,
   getMemoryItems,
+  getMemorySweep,
+  getRetiredMemoryItems,
   deleteMemoryItem,
+  updateMemoryItem,
   searchMemory,
   clearAllMemory,
-  seedMemory,
+  searchSessions,
+  exportMemory,
+  importMemory,
+  importForeignMemory,
 } from './asyncThunks/memory'
-import { MemoryItem, MemorySearchResult } from './types/memory'
+import { MemoryItem, MemorySearchResult, MemorySweep } from './types/memory'
 
 const memorySlice = createSlice({
   name: 'memory',
@@ -24,9 +31,70 @@ const memorySlice = createSlice({
     clearSearchResults: (state) => {
       state.searchResults = null
     },
+    // The search surface below the layer cards is ONE surface with two
+    // modes; entering session mode clears the other mode's results so a
+    // stale semantic result can never render under a session header.
+    setSessionMode: (state, action: PayloadAction<boolean>) => {
+      state.sessionMode = action.payload
+      if (action.payload) {
+        state.searchResults = null
+      } else {
+        state.sessionResults = null
+      }
+    },
+    clearSessionResults: (state) => {
+      state.sessionResults = null
+    },
   },
   extraReducers: (builder) => {
     builder
+      // Transcript (session) search
+      .addCase(searchSessions.pending, (state) => {
+        state.sessionLoading = true
+        state.error = null
+      })
+      .addCase(searchSessions.fulfilled, (state, action) => {
+        state.sessionLoading = false
+        state.sessionResults = action.payload
+      })
+      .addCase(searchSessions.rejected, (state, action) => {
+        state.sessionLoading = false
+        state.error = action.payload as string
+      })
+      // Export / import
+      .addCase(exportMemory.pending, (state) => {
+        state.exporting = true
+        state.error = null
+      })
+      .addCase(exportMemory.fulfilled, (state) => {
+        state.exporting = false
+      })
+      .addCase(exportMemory.rejected, (state, action) => {
+        state.exporting = false
+        state.error = action.payload as string
+      })
+      .addCase(importMemory.pending, (state) => {
+        state.importing = true
+        state.error = null
+      })
+      .addCase(importMemory.fulfilled, (state) => {
+        state.importing = false
+      })
+      .addCase(importMemory.rejected, (state, action) => {
+        state.importing = false
+        state.error = action.payload as string
+      })
+      .addCase(importForeignMemory.pending, (state) => {
+        state.importing = true
+        state.error = null
+      })
+      .addCase(importForeignMemory.fulfilled, (state) => {
+        state.importing = false
+      })
+      .addCase(importForeignMemory.rejected, (state, action) => {
+        state.importing = false
+        state.error = action.payload as string
+      })
       // Get Memory Items
       .addCase(getMemoryItems.pending, (state) => {
         state.itemsLoading = true
@@ -44,6 +112,57 @@ const memorySlice = createSlice({
         state.error = action.payload as string
       })
 
+      // Retired memories — fetched on demand, when the archive is opened
+      .addCase(getRetiredMemoryItems.pending, (state) => {
+        state.retiredLoading = true
+      })
+      .addCase(
+        getRetiredMemoryItems.fulfilled,
+        (state, action: PayloadAction<MemoryItem[]>) => {
+          state.retiredLoading = false
+          state.retired = action.payload
+        }
+      )
+      .addCase(getRetiredMemoryItems.rejected, (state, action) => {
+        state.retiredLoading = false
+        state.error = action.payload as string
+      })
+
+      // The tidy-up sweep
+      .addCase(getMemorySweep.pending, (state) => {
+        state.sweepLoading = true
+      })
+      .addCase(
+        getMemorySweep.fulfilled,
+        (state, action: PayloadAction<MemorySweep>) => {
+          state.sweepLoading = false
+          state.sweep = action.payload
+        }
+      )
+      .addCase(getMemorySweep.rejected, (state, action) => {
+        state.sweepLoading = false
+        state.error = action.payload as string
+      })
+
+      .addCase(applyMemoryProposal.pending, (state, action) => {
+        state.applyingProposal = action.meta.arg.recordId
+      })
+      .addCase(applyMemoryProposal.fulfilled, (state, action) => {
+        state.applyingProposal = null
+        // Drop the one just applied rather than refetching: the rest of the
+        // sweep is still valid, and re-running it would reshuffle the list
+        // under the person mid-review.
+        if (state.sweep) {
+          state.sweep.proposals = state.sweep.proposals.filter(
+            (item) => item.recordId !== action.payload.proposal.recordId
+          )
+        }
+      })
+      .addCase(applyMemoryProposal.rejected, (state, action) => {
+        state.applyingProposal = null
+        state.error = action.payload as string
+      })
+
       // Delete Memory Item
       .addCase(deleteMemoryItem.pending, (state) => {
         state.error = null
@@ -51,11 +170,39 @@ const memorySlice = createSlice({
       .addCase(
         deleteMemoryItem.fulfilled,
         (state, action: PayloadAction<string>) => {
-          // Remove the deleted item from the list
+          // Remove the deleted item from the list and any live search results
           state.items = state.items.filter((item) => item.id !== action.payload)
+          if (state.searchResults) {
+            state.searchResults.items = state.searchResults.items.filter(
+              (item) => item.id !== action.payload
+            )
+          }
         }
       )
       .addCase(deleteMemoryItem.rejected, (state, action) => {
+        state.error = action.payload as string
+      })
+
+      // Update Memory Item
+      .addCase(updateMemoryItem.pending, (state, action) => {
+        state.savingId = action.meta.arg.id
+        state.error = null
+      })
+      .addCase(updateMemoryItem.fulfilled, (state, action) => {
+        state.savingId = null
+        // A rewritten profile line gets a new content-derived id, so the
+        // edited row is matched on the id that was SENT, not the one that
+        // came back.
+        const editedId = action.meta.arg.id
+        const replace = (item: MemoryItem) =>
+          item.id === editedId ? { ...item, ...action.payload } : item
+        state.items = state.items.map(replace)
+        if (state.searchResults) {
+          state.searchResults.items = state.searchResults.items.map(replace)
+        }
+      })
+      .addCase(updateMemoryItem.rejected, (state, action) => {
+        state.savingId = null
         state.error = action.payload as string
       })
 
@@ -90,22 +237,13 @@ const memorySlice = createSlice({
         state.clearing = false
         state.error = action.payload as string
       })
-
-      // Seed Memory
-      .addCase(seedMemory.pending, (state) => {
-        state.seeding = true
-        state.error = null
-      })
-      .addCase(seedMemory.fulfilled, (state) => {
-        state.seeding = false
-        // Items will be refreshed by a subsequent getMemoryItems call
-      })
-      .addCase(seedMemory.rejected, (state, action) => {
-        state.seeding = false
-        state.error = action.payload as string
-      })
   },
 })
 
-export const { clearMemoryError, clearSearchResults } = memorySlice.actions
+export const {
+  clearMemoryError,
+  clearSearchResults,
+  setSessionMode,
+  clearSessionResults,
+} = memorySlice.actions
 export default memorySlice.reducer

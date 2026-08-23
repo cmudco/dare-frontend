@@ -111,6 +111,12 @@ const ResearchWorkspaceView = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section])
 
+  // Every section is one scroll container, so arriving from a long tab (Context
+  // especially) left the new one already scrolled past its own heading.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }, [section])
+
   // Poll while any in-flight run isn't already covered by the scout/critic
   // pollers below — chiefly queued artifact runs — so their generating rows and
   // statuses stay live across tab switches (this view stays mounted).
@@ -248,11 +254,13 @@ const ResearchWorkspaceView = ({
       case 'memory':
         return (
           <ContextHub
+            projectId={projectId}
             knowledgeItems={knowledgeItems}
             sources={sources}
             soulFile={soulFile}
             projectMemory={projectMemory}
             memoryProposals={memoryProposals}
+            onMemoryDecided={refresh}
           />
         )
       case 'graph':
@@ -276,6 +284,7 @@ const ResearchWorkspaceView = ({
       onNavigate={setSection}
       pendingCount={pending.length}
       approvedCount={knowledgeItems.length}
+      memoryPendingCount={memoryProposals.length}
       center={center()}
       context={
         <ContextPanel
