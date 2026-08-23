@@ -16,14 +16,11 @@ import {
   Notification,
   NotificationStats,
   CreateNotificationData,
+  NotificationQueryParams,
 } from '@/redux/types/notification'
 export const fetchNotifications = createAsyncThunk<
   Notification[],
-  {
-    status?: string
-    type?: string
-    exclude_expired?: boolean
-  } | void,
+  NotificationQueryParams | void,
   { rejectValue: string }
 >('notification/fetchNotifications', async (params, thunkAPI) => {
   try {

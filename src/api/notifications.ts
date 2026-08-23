@@ -4,21 +4,25 @@ import {
   Notification,
   NotificationStats,
   CreateNotificationData,
+  NotificationQueryParams,
   PaginatedResponse,
 } from '@/redux/types/notification'
 
-export const getNotifications = async (params?: {
-  status?: string
-  type?: string
-
-  exclude_expired?: boolean
-}): Promise<PaginatedResponse<Notification>> => {
+export const getNotifications = async (
+  params?: NotificationQueryParams
+): Promise<PaginatedResponse<Notification>> => {
   const queryParams = new URLSearchParams()
   if (params?.status) queryParams.append('status', params.status)
-  if (params?.type) queryParams.append('type', params.type)
+  if (params?.deliveryType) {
+    queryParams.append('delivery_type', params.deliveryType)
+  }
+  if (params?.category) queryParams.append('category', params.category)
 
-  if (params?.exclude_expired !== undefined) {
-    queryParams.append('exclude_expired', params.exclude_expired.toString())
+  if (params?.excludeExpired !== undefined) {
+    queryParams.append('exclude_expired', params.excludeExpired.toString())
+  }
+  if (params?.includeRead !== undefined) {
+    queryParams.append('include_read', params.includeRead.toString())
   }
 
   const url = `api/notifications/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
