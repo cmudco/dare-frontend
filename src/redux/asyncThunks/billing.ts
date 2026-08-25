@@ -4,6 +4,7 @@ import {
   GetTransactionsOptions,
   getBillingModelStatsAPI,
   getEnergyStatsAPI,
+  getLiteLLMStatsAPI,
   getWalletsAPI,
   setActiveWalletAPI,
   createLiteLLMKeyAPI,
@@ -64,6 +65,18 @@ export const getEnergyStats = createAsyncThunk(
   async (period: string = 'all', thunkAPI) => {
     try {
       const response = await getEnergyStatsAPI(period)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getLiteLLMStats = createAsyncThunk(
+  'billing/getLiteLLMStats',
+  async (_, thunkAPI) => {
+    try {
+      const response = await getLiteLLMStatsAPI()
       return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
