@@ -187,6 +187,9 @@ export interface UpsertUserOverrideResponse {
 export interface Transaction {
   id: number
   displayAmount: string
+  /** What the call would have cost at DARE rates. Null when nothing was
+   *  charged and no DARE-side model matches, or when DARE did the billing. */
+  displayReferenceAmount: string | null
   type: string
   source?: string
   relatedGroupCode?: string | null
