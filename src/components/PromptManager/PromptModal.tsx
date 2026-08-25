@@ -32,11 +32,13 @@ const PromptUploadModal: React.FC = () => {
   )
   const user = useSelector((state: RootState) => state.user.user)
   const isEditMode = !!selectedPrompt
+  const isCurrentDefault =
+    isEditMode && selectedPrompt?.id === user?.defaultPrompt?.id
 
   const initialValues = {
     title: selectedPrompt?.title || '',
     content: selectedPrompt?.content || '',
-    isDefault: isEditMode && selectedPrompt?.id === user?.defaultPrompt?.id,
+    isDefault: isCurrentDefault,
   }
 
   const handleClose = () => {
@@ -54,11 +56,7 @@ const PromptUploadModal: React.FC = () => {
       const promptData = {
         title: values.title,
         content: values.content,
-        isDefault:
-          values.isDefault ||
-          (isEditMode &&
-            selectedPrompt?.id === user?.defaultPrompt?.id &&
-            bumpVersion),
+        isDefault: values.isDefault,
       }
       await dispatch(
         createOrUpdatePrompt({
@@ -168,12 +166,14 @@ const PromptUploadModal: React.FC = () => {
                     }
                   />
                 </div>
-                {currentDefaultTitle && values.isDefault && (
-                  <p className='text-xs text-yellow-600'>
-                    You already have '{currentDefaultTitle}' as default prompt.
-                    Setting this will override it.
-                  </p>
-                )}
+                {currentDefaultTitle &&
+                  values.isDefault &&
+                  !isCurrentDefault && (
+                    <p className='text-xs text-yellow-600'>
+                      You already have '{currentDefaultTitle}' as default
+                      prompt. Setting this will override it.
+                    </p>
+                  )}
               </div>
 
               <DialogFooter className='flex justify-end gap-2 pt-4'>
