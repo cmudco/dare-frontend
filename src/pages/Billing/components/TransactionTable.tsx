@@ -66,7 +66,18 @@ export const TransactionTable = ({
         ) : (
           transactions.map((transaction) => (
             <TableRow key={transaction.id}>
-              {showAmount && <TableCell>{transaction.displayAmount}</TableCell>}
+              {showAmount && (
+                <TableCell>
+                  <div className='flex flex-col'>
+                    <span>{transaction.displayAmount}</span>
+                    {transaction.displayReferenceAmount && (
+                      <span className='text-xs text-muted-foreground'>
+                        {transaction.displayReferenceAmount} at DARE rates
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
+              )}
               <TableCell>{transaction.message}</TableCell>
               <TableCell>{transaction.llmName || 'N/A'}</TableCell>
               <TableCell>

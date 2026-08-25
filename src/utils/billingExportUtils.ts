@@ -8,6 +8,7 @@ export const useExportToCSV = () => {
 
     const headers = [
       'Amount',
+      'Reference Cost',
       'Message',
       'LLM',
       'Input Tokens',
@@ -19,6 +20,7 @@ export const useExportToCSV = () => {
 
     const data = transactions.map((transaction) => [
       transaction.displayAmount,
+      transaction.displayReferenceAmount || 'N/A',
       transaction.message,
       transaction.llm?.name || 'N/A',
       transaction.inputTokens?.toString() || 'N/A',
