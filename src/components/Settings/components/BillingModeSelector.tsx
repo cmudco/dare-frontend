@@ -43,7 +43,9 @@ export const BillingModeSelector: React.FC = () => {
     }
   }
 
-  const currentMode = billingMode || 'wallet'
+  // A mode the backend knows but this screen doesn't must not blank the page.
+  const currentMode =
+    billingMode && billingMode in BILLING_MODE_INFO ? billingMode : 'wallet'
   const modeInfo = BILLING_MODE_INFO[currentMode]
   const variant =
     billingMode === 'wallet' ? ('success' as const) : ('warning' as const)

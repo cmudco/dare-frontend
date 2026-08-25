@@ -11,7 +11,7 @@ export enum Provider {
 
 export type ProviderType = 'openai' | 'claude' | 'gemini' | 'llama'
 
-export type BillingModeType = 'wallet' | 'own_api'
+export type BillingModeType = 'wallet' | 'own_api' | 'litellm'
 
 export interface UserProviderApiKey {
   id: number
