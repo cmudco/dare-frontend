@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/Table'
 import { LiteLLMOverallStats } from '@/redux/types/billing'
 import { motion } from 'framer-motion'
-import { AlertCircle, Network } from 'lucide-react'
+import { AlertCircle, Brain, Coins, Network, Radio, Type } from 'lucide-react'
 
 const formatNumber = (value: number) => value.toLocaleString()
 
@@ -24,28 +24,32 @@ const cards = [
   {
     key: 'calls',
     label: 'Calls',
-    emoji: '📡',
+    icon: Radio,
+    iconClass: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
     borderColor: 'border-sky-200/50',
     getValue: (s: LiteLLMOverallStats) => formatNumber(s.totalCalls),
   },
   {
     key: 'tokens',
     label: 'Total Tokens',
-    emoji: '🔤',
+    icon: Type,
+    iconClass: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
     borderColor: 'border-purple-200/50',
     getValue: (s: LiteLLMOverallStats) => formatNumber(s.totalTokens),
   },
   {
     key: 'spend',
     label: 'Estimated Cost',
-    emoji: '🧮',
+    icon: Coins,
+    iconClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     borderColor: 'border-amber-200/50',
     getValue: (s: LiteLLMOverallStats) => s.totalReferenceCostDisplay,
   },
   {
     key: 'models',
     label: 'Models Used',
-    emoji: '🧠',
+    icon: Brain,
+    iconClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
     borderColor: 'border-emerald-200/50',
     getValue: (s: LiteLLMOverallStats) => formatNumber(s.modelCount),
   },
@@ -85,34 +89,41 @@ const LiteLLMDashboard = () => {
       </p>
 
       <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
-        {cards.map(({ key, label, emoji, borderColor, getValue }, index) => (
-          <motion.div
-            key={key}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: index * 0.05 }}
-          >
-            <Card
-              className={`relative overflow-hidden border-border/60 bg-card shadow-xs transition-all duration-300 hover:shadow-lg ${borderColor}`}
+        {cards.map(
+          (
+            { key, label, icon: Icon, iconClass, borderColor, getValue },
+            index
+          ) => (
+            <motion.div
+              key={key}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
             >
-              <CardContent className='p-4'>
-                <div className='mb-2 flex items-center gap-2'>
-                  <span className='text-lg'>{emoji}</span>
-                  <span className='text-xs font-bold tracking-widest text-muted-foreground/60 uppercase'>
-                    {label}
-                  </span>
-                </div>
-                {litellmStatsLoading && !overall ? (
-                  <Skeleton className='h-8 w-24' />
-                ) : (
-                  <div className='text-2xl font-black tracking-tight text-foreground'>
-                    {overall ? getValue(overall) : '—'}
+              <Card
+                className={`relative overflow-hidden border-border/60 bg-card shadow-xs transition-all duration-300 hover:shadow-lg ${borderColor}`}
+              >
+                <CardContent className='p-4'>
+                  <div className='mb-2 flex items-center gap-2'>
+                    <span className={`rounded-md p-1.5 ${iconClass}`}>
+                      <Icon className='h-4 w-4' />
+                    </span>
+                    <span className='text-xs font-bold tracking-widest text-muted-foreground/60 uppercase'>
+                      {label}
+                    </span>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+                  {litellmStatsLoading && !overall ? (
+                    <Skeleton className='h-8 w-24' />
+                  ) : (
+                    <div className='text-2xl font-black tracking-tight text-foreground'>
+                      {overall ? getValue(overall) : '—'}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )
+        )}
       </div>
 
       {(overall?.unpricedCalls ?? 0) > 0 && (

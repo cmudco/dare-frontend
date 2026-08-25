@@ -310,7 +310,8 @@ export interface RelatableStats {
 }
 
 export interface EnergyModelBreakdown {
-  llmId: number
+  /** Null once the model has been retired; the energy it used still counts. */
+  llmId: number | null
   llmName: string
   llmIdentifier: string
   llmProvider: string
