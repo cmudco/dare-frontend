@@ -89,12 +89,14 @@ export const setActiveWalletAPI = async (
 export const createLiteLLMKeyAPI = async (
   label: string,
   baseUrl: string,
-  apiKey: string
+  apiKey: string,
+  titleModel: string,
+  memoryModel: string
 ): Promise<LiteLLMKeyResponse> => {
   return await baseRequest<LiteLLMKeyResponse>({
     url: 'api/billing/wallets/litellm/',
     method: METHOD.POST,
-    data: { label, baseUrl, apiKey },
+    data: { label, baseUrl, apiKey, titleModel, memoryModel },
   })
 }
 

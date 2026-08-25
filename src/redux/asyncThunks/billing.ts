@@ -195,16 +195,31 @@ export const setActiveWallet = createAsyncThunk<
 
 export const addLiteLLMKey = createAsyncThunk<
   LiteLLMKeyResponse,
-  { label: string; baseUrl: string; apiKey: string }
->('billing/addLiteLLMKey', async ({ label, baseUrl, apiKey }, thunkAPI) => {
-  try {
-    const created = await createLiteLLMKeyAPI(label, baseUrl, apiKey)
-    thunkAPI.dispatch(getWallets())
-    return created
-  } catch (error) {
-    return thunkAPI.rejectWithValue((error as Error).message)
+  {
+    label: string
+    baseUrl: string
+    apiKey: string
+    titleModel: string
+    memoryModel: string
   }
-})
+>(
+  'billing/addLiteLLMKey',
+  async ({ label, baseUrl, apiKey, titleModel, memoryModel }, thunkAPI) => {
+    try {
+      const created = await createLiteLLMKeyAPI(
+        label,
+        baseUrl,
+        apiKey,
+        titleModel,
+        memoryModel
+      )
+      thunkAPI.dispatch(getWallets())
+      return created
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
 
 export const renameLiteLLMKey = createAsyncThunk<
   LiteLLMKeyResponse,
