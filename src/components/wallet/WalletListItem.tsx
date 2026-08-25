@@ -207,6 +207,14 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
               Routes each request to your matching provider key — DARE wallet
               not charged.
             </span>
+          ) : wallet.source === 'ADMIN_GROUP' ? (
+            <span>
+              Billed to your group's gateway — your DARE wallet is not charged.
+            </span>
+          ) : wallet.source === 'ADMIN_GROUP' ? (
+            <span>
+              Billed to your group's gateway — your DARE wallet is not charged.
+            </span>
           ) : (
             <span>External billing</span>
           )}
