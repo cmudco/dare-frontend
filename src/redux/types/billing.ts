@@ -46,6 +46,9 @@ export interface WalletStatusBalance {
 
 export interface WalletStatusExternal {
   kind: 'EXTERNAL'
+  /** Cumulative reference cost through this key, in USD. Reporting only —
+   *  the user pays their proxy account directly, so nothing here is charged. */
+  spend?: string
 }
 
 /**
