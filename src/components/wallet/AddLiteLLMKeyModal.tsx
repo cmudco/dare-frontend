@@ -46,9 +46,25 @@ interface FormValues {
   label: string
   baseUrl: string
   apiKey: string
+  titleModel: string
+  memoryModel: string
 }
 
-const initialValues: FormValues = { label: '', baseUrl: '', apiKey: '' }
+const initialValues: FormValues = {
+  label: '',
+  baseUrl: '',
+  apiKey: '',
+  titleModel: '',
+  memoryModel: '',
+}
+
+/** Jobs a conversation needs but the user never asks for. Left blank, DARE
+ *  picks its own model — which a proxy may not serve under the same name. */
+const AUXILIARY_JOBS: { name: 'titleModel' | 'memoryModel'; label: string }[] =
+  [
+    { name: 'titleModel', label: 'Model for naming conversations' },
+    { name: 'memoryModel', label: 'Model for writing memory' },
+  ]
 
 export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
   open,
@@ -195,13 +211,39 @@ export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
               </div>
 
               {probe.kind === 'ok' && probe.models.length > 0 && (
-                <div className='rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 text-xs text-muted-foreground'>
-                  <p className='wrap-break-word'>
-                    {probe.models.slice(0, 8).join(', ')}
-                    {probe.models.length > 8 &&
-                      ` + ${probe.models.length - 8} more`}
+                <>
+                  <div className='rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 text-xs text-muted-foreground'>
+                    <p className='wrap-break-word'>
+                      {probe.models.slice(0, 8).join(', ')}
+                      {probe.models.length > 8 &&
+                        ` + ${probe.models.length - 8} more`}
+                    </p>
+                  </div>
+
+                  {AUXILIARY_JOBS.map((job) => (
+                    <div key={job.name} className='space-y-1'>
+                      <Label htmlFor={job.name}>{job.label}</Label>
+                      <Field
+                        as='select'
+                        id={job.name}
+                        name={job.name}
+                        className='flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm'
+                      >
+                        <option value=''>Use the DARE default</option>
+                        {probe.models.map((model) => (
+                          <option key={model} value={model}>
+                            {model}
+                          </option>
+                        ))}
+                      </Field>
+                    </div>
+                  ))}
+                  <p className='text-xs text-muted-foreground'>
+                    These run on your proxy and bill to it. Left on the DARE
+                    default, they use DARE&apos;s own model — which this proxy
+                    may not serve under the same name.
                   </p>
-                </div>
+                </>
               )}
               {probe.kind === 'fail' && (
                 <div className='rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground'>
