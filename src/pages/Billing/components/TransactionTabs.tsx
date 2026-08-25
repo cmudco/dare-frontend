@@ -63,6 +63,7 @@ export const TransactionTabs = ({
             activeTab !== TransactionTab.OWN_API &&
             activeTab !== TransactionTab.LITELLM
           }
+          showReferenceAmount={activeTab === TransactionTab.LITELLM}
           showBillingMode={activeTab === TransactionTab.ALL}
           showPlatform={showPlatformColumn}
         />
