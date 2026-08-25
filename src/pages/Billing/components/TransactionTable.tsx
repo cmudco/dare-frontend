@@ -15,6 +15,7 @@ interface TransactionTableProps {
   transactions: Transaction[]
   loading: boolean
   showAmount?: boolean
+  showReferenceAmount?: boolean
   showBillingMode?: boolean
   showPlatform?: boolean
 }
@@ -23,6 +24,7 @@ export const TransactionTable = ({
   transactions,
   loading,
   showAmount = true,
+  showReferenceAmount = false,
   showBillingMode = false,
   showPlatform = false,
 }: TransactionTableProps) => {
@@ -39,6 +41,7 @@ export const TransactionTable = ({
   // base columns: message, llm, tokens, date
   const columnCount =
     (showAmount ? 1 : 0) +
+    (showReferenceAmount ? 1 : 0) +
     (showBillingMode ? 1 : 0) +
     (showPlatform ? 1 : 0) +
     4
@@ -48,6 +51,7 @@ export const TransactionTable = ({
       <TableHeader>
         <TableRow>
           {showAmount && <TableHead>Amount</TableHead>}
+          {showReferenceAmount && <TableHead>Est. Cost</TableHead>}
           <TableHead>Message</TableHead>
           <TableHead>LLM</TableHead>
           <TableHead>Tokens</TableHead>
@@ -76,6 +80,20 @@ export const TransactionTable = ({
                       </span>
                     )}
                   </div>
+                </TableCell>
+              )}
+              {showReferenceAmount && (
+                <TableCell>
+                  {transaction.displayReferenceAmount ? (
+                    <div className='flex flex-col'>
+                      <span>{transaction.displayReferenceAmount}</span>
+                      <span className='text-xs text-muted-foreground'>
+                        at DARE rates, not charged
+                      </span>
+                    </div>
+                  ) : (
+                    <span className='text-muted-foreground'>N/A</span>
+                  )}
                 </TableCell>
               )}
               <TableCell>{transaction.message}</TableCell>
