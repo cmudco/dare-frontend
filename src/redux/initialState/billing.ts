@@ -14,6 +14,8 @@ export const initialBillingState: BillingState = {
   energyStats: null,
   energyStatsLoading: false,
   energyStatsPeriod: 'all',
+  litellmStats: null,
+  litellmStatsLoading: false,
   ownedGroups: [],
   ownedGroupsLoading: false,
   ownedGroupsLoaded: false,

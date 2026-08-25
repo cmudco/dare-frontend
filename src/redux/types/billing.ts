@@ -22,6 +22,8 @@ export interface BillingState {
   energyStats: EnergyStatsResponse | null
   energyStatsLoading: boolean
   energyStatsPeriod: string
+  litellmStats: LiteLLMStatsResponse | null
+  litellmStatsLoading: boolean
   ownedGroups: OwnedGroupResponse[]
   ownedGroupsLoading: boolean
   ownedGroupsLoaded: boolean
@@ -210,7 +212,8 @@ export interface Transaction {
 }
 
 export interface BillingModelStats {
-  llmId: number
+  /** Null for proxy-routed models — they have no DARE model row. */
+  llmId: number | null
   llmName: string
   llmIdentifier: string
   llmProvider: string
@@ -219,12 +222,18 @@ export interface BillingModelStats {
   totalTokens: number
   totalCost: string
   totalCostDecimal: number
+  /** True when the cost is a reference figure DARE never charged. */
+  isEstimated: boolean
   transactionCount: number
 }
 
 export interface OverallStats {
   totalCost: string
   totalCostDecimal: number
+  /** Reference cost of proxy-routed calls. Kept apart from totalCost — the
+   *  two are different quantities and must never be added together. */
+  estimatedCost: string
+  estimatedCostDecimal: number
   totalInputTokens: number
   totalOutputTokens: number
   totalTokens: number
@@ -234,6 +243,49 @@ export interface OverallStats {
 export interface BillingModelStatsResponse {
   modelsBillingStats: BillingModelStats[]
   overallStats: OverallStats
+}
+
+// ─────────────────────────────────────────────────────────────
+// LiteLLM usage types
+// ─────────────────────────────────────────────────────────────
+
+export interface LiteLLMOverallStats {
+  totalCalls: number
+  totalInputTokens: number
+  totalOutputTokens: number
+  totalTokens: number
+  totalReferenceCost: string
+  totalReferenceCostDisplay: string
+  /** Calls the price registry had no entry for — excluded from the cost. */
+  unpricedCalls: number
+  modelCount: number
+}
+
+export interface LiteLLMModelBreakdown {
+  modelName: string
+  inputTokens: number
+  outputTokens: number
+  totalTokens: number
+  callCount: number
+  referenceCost: string
+  referenceCostDisplay: string
+  unpricedCalls: number
+}
+
+export interface LiteLLMKeyBreakdown {
+  keyId: string
+  label: string
+  source: LiteLLMSource
+  groupName: string | null
+  callCount: number
+  referenceCost: string
+  referenceCostDisplay: string
+}
+
+export interface LiteLLMStatsResponse {
+  overallStats: LiteLLMOverallStats
+  modelsBreakdown: LiteLLMModelBreakdown[]
+  keysBreakdown: LiteLLMKeyBreakdown[]
 }
 
 // ─────────────────────────────────────────────────────────────

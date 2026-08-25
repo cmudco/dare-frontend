@@ -3,6 +3,7 @@ import {
   TransactionSummary,
   BillingModelStatsResponse,
   EnergyStatsResponse,
+  LiteLLMStatsResponse,
   WalletsListResponse,
   WalletType,
   LiteLLMKeyResponse,
@@ -60,6 +61,13 @@ export const getEnergyStatsAPI = async (
 ): Promise<EnergyStatsResponse> => {
   return await baseRequest<EnergyStatsResponse>({
     url: `api/billing/energy-stats/?period=${period}`,
+    method: METHOD.GET,
+  })
+}
+
+export const getLiteLLMStatsAPI = async (): Promise<LiteLLMStatsResponse> => {
+  return await baseRequest<LiteLLMStatsResponse>({
+    url: 'api/billing/litellm-stats/',
     method: METHOD.GET,
   })
 }

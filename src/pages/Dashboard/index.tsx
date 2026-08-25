@@ -29,6 +29,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TokenBreakdownModal from '@/components/Dashboard/TokenBreakdownModal'
 import EnergyDashboard from '@/components/Dashboard/EnergyDashboard'
+import LiteLLMDashboard from '@/components/Dashboard/LiteLLMDashboard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Tooltip,
@@ -46,6 +47,9 @@ const Dashboard = () => {
     (state) => state.billing
   )
   const dareWallet = wallets.find((w) => w.type === 'DARE')
+  // The tab is only meaningful to someone routing through a proxy; wallet-only
+  // users would get an empty panel explaining a feature they do not have.
+  const hasLiteLLMKey = wallets.some((w) => w.type === 'LITELLM')
   const dareBalance =
     dareWallet?.status.kind === 'BALANCE'
       ? `$${parseFloat(dareWallet.status.balance).toFixed(2)}`
@@ -169,6 +173,9 @@ const Dashboard = () => {
             <TabsList data-tour='dashboard-tabs'>
               <TabsTrigger value='overview'>Overview</TabsTrigger>
               <TabsTrigger value='energy'>Environmental Impact</TabsTrigger>
+              {hasLiteLLMKey && (
+                <TabsTrigger value='litellm'>LiteLLM</TabsTrigger>
+              )}
             </TabsList>
           </div>
 
@@ -361,6 +368,12 @@ const Dashboard = () => {
           <TabsContent value='energy' className='mt-6'>
             <EnergyDashboard />
           </TabsContent>
+
+          {hasLiteLLMKey && (
+            <TabsContent value='litellm' className='mt-6'>
+              <LiteLLMDashboard />
+            </TabsContent>
+          )}
         </Tabs>
 
         <TokenBreakdownModal
