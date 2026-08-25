@@ -5,6 +5,16 @@ on:
     branches:
       - dev
 
+# Every deploy SSHes into the same staging box and builds the same docs-site
+# directory, and `next build` refuses to run twice there — merging a few PRs
+# in a row was enough to fail one on "Another next build process is already
+# running". Queue instead of cancelling: an in-flight deploy is midway through
+# a remote build, so killing it would leave the server half-updated. Pending
+# runs still collapse, so only the newest commit waits.
+concurrency:
+  group: deploy-staging-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   deploy-staging:
     runs-on: ubuntu-latest
