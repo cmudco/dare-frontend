@@ -111,6 +111,18 @@ export const renameLiteLLMKeyAPI = async (
   })
 }
 
+export const updateLiteLLMKeyModelsAPI = async (
+  id: string,
+  titleModel: string,
+  memoryModel: string
+): Promise<LiteLLMKeyResponse> => {
+  return await baseRequest<LiteLLMKeyResponse>({
+    url: `api/billing/wallets/litellm/${id}/`,
+    method: METHOD.PATCH,
+    data: { titleModel, memoryModel },
+  })
+}
+
 export const deleteLiteLLMKeyAPI = async (id: string): Promise<void> => {
   return await baseRequest<void>({
     url: `api/billing/wallets/litellm/${id}/`,
