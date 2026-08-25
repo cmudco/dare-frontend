@@ -48,7 +48,7 @@ export const BillingModeSelector: React.FC = () => {
     billingMode && billingMode in BILLING_MODE_INFO ? billingMode : 'wallet'
   const modeInfo = BILLING_MODE_INFO[currentMode]
   const variant =
-    billingMode === 'wallet' ? ('success' as const) : ('warning' as const)
+    currentMode === 'wallet' ? ('success' as const) : ('warning' as const)
   const currentStyle = ALERT_STYLES[variant]
 
   return (
@@ -81,7 +81,7 @@ export const BillingModeSelector: React.FC = () => {
           </Tooltip>
         </div>
         <Select
-          value={billingMode}
+          value={currentMode}
           onValueChange={handleBillingModeChange}
           disabled={updating}
         >
@@ -165,6 +165,13 @@ export const BillingModeSelector: React.FC = () => {
                   </Tooltip>
                 )}
               </div>
+            </SelectItem>
+            <SelectItem
+              value='litellm'
+              className='text-popover-foreground hover:bg-accent'
+              disabled
+            >
+              LiteLLM Proxy (managed in Wallets)
             </SelectItem>
           </SelectContent>
         </Select>

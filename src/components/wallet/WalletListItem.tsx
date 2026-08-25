@@ -218,7 +218,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
             <span>External billing</span>
           )}
           {wallet.status.kind === 'EXTERNAL' && wallet.status.spend && (
-            <span>Spent ${parseFloat(wallet.status.spend).toFixed(4)}</span>
+            <span>Est. cost ${parseFloat(wallet.status.spend).toFixed(4)}</span>
           )}
           {wallet.expiresAt && (
             <span className='inline-flex items-center gap-1'>
