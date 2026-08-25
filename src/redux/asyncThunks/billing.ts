@@ -8,6 +8,7 @@ import {
   setActiveWalletAPI,
   createLiteLLMKeyAPI,
   renameLiteLLMKeyAPI,
+  updateLiteLLMKeyModelsAPI,
   deleteLiteLLMKeyAPI,
 } from '../../api/billing'
 import { getAvailableModels } from './conversation'
@@ -215,6 +216,26 @@ export const addLiteLLMKey = createAsyncThunk<
       )
       thunkAPI.dispatch(getWallets())
       return created
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateLiteLLMKeyModels = createAsyncThunk<
+  LiteLLMKeyResponse,
+  { id: string; titleModel: string; memoryModel: string }
+>(
+  'billing/updateLiteLLMKeyModels',
+  async ({ id, titleModel, memoryModel }, thunkAPI) => {
+    try {
+      const updated = await updateLiteLLMKeyModelsAPI(
+        id,
+        titleModel,
+        memoryModel
+      )
+      thunkAPI.dispatch(getWallets())
+      return updated
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

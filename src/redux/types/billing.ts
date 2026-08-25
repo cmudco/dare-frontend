@@ -65,6 +65,8 @@ export interface UnifiedWallet {
   // LITELLM only:
   source?: LiteLLMSource
   groupName?: string | null
+  titleModel?: string
+  memoryModel?: string
   expiresAt?: string | null
   baseUrl?: string
 }
