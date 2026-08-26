@@ -54,7 +54,12 @@ export const PROVIDER_CHART_COLORS: Record<string, string> = {
   deepseek: '#2563eb',
 }
 
-export const getProviderChartColor = (provider: string): string => {
+/** Chart colour for a provider. Retiring a model nulls the provider on every
+ *  message it produced, so this is reached with no provider at all. */
+export const getProviderChartColor = (
+  provider: string | null | undefined
+): string => {
+  if (!provider) return '#6B7280'
   return PROVIDER_CHART_COLORS[provider.toLowerCase()] || '#6B7280'
 }
 

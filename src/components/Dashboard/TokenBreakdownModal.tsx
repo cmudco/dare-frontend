@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/Table'
+import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Activity, Inbox, Send } from 'lucide-react'
@@ -205,9 +206,19 @@ const TokenBreakdownModal = ({
                             : 0
 
                         return (
-                          <TableRow key={modelStat.llmId}>
+                          <TableRow key={modelStat.llmIdentifier}>
                             <TableCell className='font-medium'>
-                              {modelStat.llmName}
+                              <div className='flex flex-wrap items-center gap-2'>
+                                <span>{modelStat.llmName}</span>
+                                {modelStat.isEstimated && (
+                                  <Badge
+                                    variant='outline'
+                                    className='text-[10px]'
+                                  >
+                                    LiteLLM
+                                  </Badge>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell className='text-right'>
                               {formatNumber(tokens)}
@@ -228,7 +239,10 @@ const TokenBreakdownModal = ({
                               </div>
                             </TableCell>
                             <TableCell className='text-right'>
-                              {modelStat.totalCost}
+                              {modelStat.isEstimated &&
+                              modelStat.totalCostDecimal > 0
+                                ? `~${modelStat.totalCost}`
+                                : modelStat.totalCost}
                             </TableCell>
                             <TableCell className='text-right'>
                               {formatNumber(modelStat.transactionCount)}

@@ -29,6 +29,13 @@ export const BILLING_MODE_INFO = {
     helperText:
       'Your own API keys are used and you pay the providers directly. No wallet charges.',
   },
+  litellm: {
+    title: 'Using a LiteLLM Proxy',
+    description:
+      'Requests are routed through your LiteLLM proxy key. You pay that account directly. No wallet charges apply.',
+    helperText:
+      'A LiteLLM proxy key is used and you pay that account directly. No wallet charges.',
+  },
 }
 
 export const INFO_MESSAGES = {

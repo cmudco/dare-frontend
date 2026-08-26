@@ -4,10 +4,12 @@ import {
   GetTransactionsOptions,
   getBillingModelStatsAPI,
   getEnergyStatsAPI,
+  getLiteLLMStatsAPI,
   getWalletsAPI,
   setActiveWalletAPI,
   createLiteLLMKeyAPI,
   renameLiteLLMKeyAPI,
+  updateLiteLLMKeyModelsAPI,
   deleteLiteLLMKeyAPI,
 } from '../../api/billing'
 import { getAvailableModels } from './conversation'
@@ -63,6 +65,18 @@ export const getEnergyStats = createAsyncThunk(
   async (period: string = 'all', thunkAPI) => {
     try {
       const response = await getEnergyStatsAPI(period)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const getLiteLLMStats = createAsyncThunk(
+  'billing/getLiteLLMStats',
+  async (_, thunkAPI) => {
+    try {
+      const response = await getLiteLLMStatsAPI()
       return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
@@ -195,16 +209,51 @@ export const setActiveWallet = createAsyncThunk<
 
 export const addLiteLLMKey = createAsyncThunk<
   LiteLLMKeyResponse,
-  { label: string; baseUrl: string; apiKey: string }
->('billing/addLiteLLMKey', async ({ label, baseUrl, apiKey }, thunkAPI) => {
-  try {
-    const created = await createLiteLLMKeyAPI(label, baseUrl, apiKey)
-    thunkAPI.dispatch(getWallets())
-    return created
-  } catch (error) {
-    return thunkAPI.rejectWithValue((error as Error).message)
+  {
+    label: string
+    baseUrl: string
+    apiKey: string
+    titleModel: string
+    memoryModel: string
   }
-})
+>(
+  'billing/addLiteLLMKey',
+  async ({ label, baseUrl, apiKey, titleModel, memoryModel }, thunkAPI) => {
+    try {
+      const created = await createLiteLLMKeyAPI(
+        label,
+        baseUrl,
+        apiKey,
+        titleModel,
+        memoryModel
+      )
+      thunkAPI.dispatch(getWallets())
+      return created
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateLiteLLMKeyModels = createAsyncThunk<
+  LiteLLMKeyResponse,
+  { id: string; titleModel: string; memoryModel: string }
+>(
+  'billing/updateLiteLLMKeyModels',
+  async ({ id, titleModel, memoryModel }, thunkAPI) => {
+    try {
+      const updated = await updateLiteLLMKeyModelsAPI(
+        id,
+        titleModel,
+        memoryModel
+      )
+      thunkAPI.dispatch(getWallets())
+      return updated
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
 
 export const renameLiteLLMKey = createAsyncThunk<
   LiteLLMKeyResponse,

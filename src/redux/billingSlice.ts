@@ -5,6 +5,7 @@ import {
   getTransactions,
   getBillingModelStats,
   getEnergyStats,
+  getLiteLLMStats,
   fetchOwnedGroups,
   refreshGroupMembers,
   updateGroupPolicy,
@@ -18,6 +19,7 @@ import {
   AllocateResponse,
   BillingModelStatsResponse,
   EnergyStatsResponse,
+  LiteLLMStatsResponse,
   GroupWallet,
   OwnedGroupMember,
   OwnedGroupResponse,
@@ -105,6 +107,21 @@ const billingSlice = createSlice({
       )
       .addCase(getEnergyStats.rejected, (state, action) => {
         state.energyStatsLoading = false
+        state.error = action.payload as string
+      })
+      .addCase(getLiteLLMStats.pending, (state) => {
+        state.litellmStatsLoading = true
+        state.error = null
+      })
+      .addCase(
+        getLiteLLMStats.fulfilled,
+        (state, action: PayloadAction<LiteLLMStatsResponse>) => {
+          state.litellmStatsLoading = false
+          state.litellmStats = action.payload
+        }
+      )
+      .addCase(getLiteLLMStats.rejected, (state, action) => {
+        state.litellmStatsLoading = false
         state.error = action.payload as string
       })
       // Owned groups ─────────────────────────────────────────

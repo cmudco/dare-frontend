@@ -3,6 +3,7 @@ import {
   TransactionSummary,
   BillingModelStatsResponse,
   EnergyStatsResponse,
+  LiteLLMStatsResponse,
   WalletsListResponse,
   WalletType,
   LiteLLMKeyResponse,
@@ -64,6 +65,13 @@ export const getEnergyStatsAPI = async (
   })
 }
 
+export const getLiteLLMStatsAPI = async (): Promise<LiteLLMStatsResponse> => {
+  return await baseRequest<LiteLLMStatsResponse>({
+    url: 'api/billing/litellm-stats/',
+    method: METHOD.GET,
+  })
+}
+
 // ─────────────────────────────────────────────────────────────
 // Multi-wallet endpoints (popover + Billing page)
 // ─────────────────────────────────────────────────────────────
@@ -89,12 +97,14 @@ export const setActiveWalletAPI = async (
 export const createLiteLLMKeyAPI = async (
   label: string,
   baseUrl: string,
-  apiKey: string
+  apiKey: string,
+  titleModel: string,
+  memoryModel: string
 ): Promise<LiteLLMKeyResponse> => {
   return await baseRequest<LiteLLMKeyResponse>({
     url: 'api/billing/wallets/litellm/',
     method: METHOD.POST,
-    data: { label, baseUrl, apiKey },
+    data: { label, baseUrl, apiKey, titleModel, memoryModel },
   })
 }
 
@@ -106,6 +116,18 @@ export const renameLiteLLMKeyAPI = async (
     url: `api/billing/wallets/litellm/${id}/`,
     method: METHOD.PATCH,
     data: { label },
+  })
+}
+
+export const updateLiteLLMKeyModelsAPI = async (
+  id: string,
+  titleModel: string,
+  memoryModel: string
+): Promise<LiteLLMKeyResponse> => {
+  return await baseRequest<LiteLLMKeyResponse>({
+    url: `api/billing/wallets/litellm/${id}/`,
+    method: METHOD.PATCH,
+    data: { titleModel, memoryModel },
   })
 }
 

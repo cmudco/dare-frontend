@@ -27,10 +27,12 @@ import {
   MoreVertical,
   Pencil,
   Plug,
+  SlidersHorizontal,
   Trash2,
   Clock,
 } from 'lucide-react'
 import { testLiteLLMSavedAPI } from '@/api/billing'
+import { EditLiteLLMModelsModal } from './EditLiteLLMModelsModal'
 import { toast } from '@/utils/toast'
 
 interface WalletListItemProps {
@@ -82,6 +84,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
   const [draftLabel, setDraftLabel] = useState(wallet.label)
   const [showDelete, setShowDelete] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [editingModels, setEditingModels] = useState(false)
 
   const Icon = ICON_FOR_TYPE[wallet.type]
   const adminIssued = isAdminIssued(wallet)
@@ -207,8 +210,15 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
               Routes each request to your matching provider key — DARE wallet
               not charged.
             </span>
+          ) : wallet.source === 'ADMIN_GROUP' ? (
+            <span>
+              Billed to your group's gateway — your DARE wallet is not charged.
+            </span>
           ) : (
             <span>External billing</span>
+          )}
+          {wallet.status.kind === 'EXTERNAL' && wallet.status.spend && (
+            <span>Est. cost ${parseFloat(wallet.status.spend).toFixed(4)}</span>
           )}
           {wallet.expiresAt && (
             <span className='inline-flex items-center gap-1'>
@@ -278,6 +288,10 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
               <Pencil className='mr-2 h-3.5 w-3.5' />
               Rename
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setEditingModels(true)}>
+              <SlidersHorizontal className='mr-2 h-3.5 w-3.5' />
+              Models
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setShowDelete(true)}
               className='text-destructive focus:text-destructive'
@@ -288,6 +302,12 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+
+      <EditLiteLLMModelsModal
+        isOpen={editingModels}
+        onClose={() => setEditingModels(false)}
+        wallet={wallet}
+      />
 
       <DeleteConfirmation
         isOpen={showDelete}
