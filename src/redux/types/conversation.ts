@@ -26,7 +26,7 @@ import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
 import { SharedLibrary } from './library'
-import { EffortLevel } from '@/utils/constants/model'
+import { EffortLevel, ReasoningLevel } from '@/utils/constants/model'
 
 /**
  * Voice recording state enum for push-to-talk voice input
@@ -392,6 +392,7 @@ export interface LLMModel {
   inputTokenRatePerMillion: number | null
   outputTokenRatePerMillion: number | null
   tier: string | null
+  reasoningLevel: ReasoningLevel
 }
 
 // Chat-picker entry — `id` is opaque to the FE because LiteLLM-routed
@@ -418,6 +419,7 @@ export interface PickerModel {
   inputTokenRatePerMillion: number | null
   outputTokenRatePerMillion: number | null
   tier: string | null
+  reasoningLevel: ReasoningLevel
 }
 
 export interface WalletMeta {
