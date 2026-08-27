@@ -7,13 +7,19 @@ const lastCaptureByKey = new Map<string, number>()
 
 interface SocketContext {
   active?: boolean
+  attempt?: number
   reason?: string
   transport?: string
 }
 
 export function recordSocketLifecycle(
   channel: SocketChannel,
-  state: 'connected' | 'disconnected' | 'reconnect_attempt' | 'reconnected',
+  state:
+    | 'connected'
+    | 'disconnected'
+    | 'reconnect_attempt'
+    | 'reconnected'
+    | 'reconnect_exhausted',
   context: SocketContext = {}
 ) {
   Sentry.addBreadcrumb({
@@ -26,7 +32,12 @@ export function recordSocketLifecycle(
 
 export function captureSocketFailure(
   channel: SocketChannel,
-  phase: 'connect' | 'reconnect' | 'send' | 'forced_disconnect',
+  phase:
+    | 'connect'
+    | 'reconnect'
+    | 'reconnect_exhausted'
+    | 'send'
+    | 'forced_disconnect',
   error: Error,
   context: SocketContext = {}
 ) {
