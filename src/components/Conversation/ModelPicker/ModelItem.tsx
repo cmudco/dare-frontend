@@ -2,10 +2,19 @@ import React from 'react'
 import { Check } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { PickerModel } from '@/redux/types/conversation'
-import { ModelTier, ModelTierColors } from '@/utils/constants/model'
+import {
+  ModelTier,
+  ModelTierColors,
+  ReasoningLevel,
+} from '@/utils/constants/model'
 import { getProviderBrand } from '@/utils/providerColors'
 import { categorizeEntry } from '@/utils/modelGroupingUtils'
 import TierEmoji from './TierEmoji'
+import ReasoningLevelIndicator from './ReasoningLevelIndicator'
+
+// Tooltip for the reasoning dot (shown for cost_predictable or plain reasoning models).
+const REASONING_TOOLTIP =
+  'Reasoning model. Token use stays proportional to the task.'
 
 interface ModelItemProps {
   entry: PickerModel
@@ -56,9 +65,18 @@ const ModelItem: React.FC<ModelItemProps> = ({
             {entry.name}
           </span>
           <TierEmoji type={categorizeEntry(entry)} />
-          {entry.isReasoning && (
-            <div className='h-1.5 w-1.5 animate-pulse rounded-full bg-purple-500' />
-          )}
+          {/* Single glyph per row, in precedence order: cost_unconstrained
+              warns; otherwise cost_predictable or reasoning models
+              get the purple dot; everything else shows nothing. */}
+          {entry.reasoningLevel === ReasoningLevel.CostUnconstrained ? (
+            <ReasoningLevelIndicator level={entry.reasoningLevel} />
+          ) : entry.reasoningLevel === ReasoningLevel.CostPredictable ||
+            entry.isReasoning ? (
+            <div
+              title={REASONING_TOOLTIP}
+              className='h-1.5 w-1.5 animate-pulse rounded-full bg-purple-500'
+            />
+          ) : null}
           {isLiteLLM && (
             <span className='ml-1 rounded-full bg-accent/40 px-1.5 py-0.5 text-[9px] font-medium tracking-wide text-muted-foreground uppercase'>
               LiteLLM

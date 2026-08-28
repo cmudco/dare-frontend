@@ -73,6 +73,14 @@ export enum ReasoningStatus {
   No = 'no',
 }
 
+// How a model decides its reasoning depth, and thus how predictable its token
+// spend is. Matches the backend `reasoningLevel` field on the picker payload.
+export enum ReasoningLevel {
+  None = 'none',
+  CostPredictable = 'cost_predictable',
+  CostUnconstrained = 'cost_unconstrained',
+}
+
 export const ReasoningStatusColors = {
   [ReasoningStatus.Yes]: {
     bg: 'bg-emerald-100 dark:bg-emerald-950/50',

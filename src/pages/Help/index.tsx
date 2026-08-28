@@ -44,6 +44,7 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { getSlugFromModelName, hasModelCardData } from '@/utils/modelCard'
+import ReasoningLevelIndicator from '@/components/Conversation/ModelPicker/ReasoningLevelIndicator'
 
 const tierIcons = {
   [ModelTier.Premium]: Crown,
@@ -366,6 +367,9 @@ const Help = () => {
                                     ) : (
                                       model.name
                                     )}
+                                    <ReasoningLevelIndicator
+                                      level={model.reasoningLevel}
+                                    />
                                   </div>
                                 </TableCell>
                                 <TableCell className='font-mono text-xs text-muted-foreground'>
