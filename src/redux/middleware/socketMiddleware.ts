@@ -23,7 +23,12 @@ interface SocketActionWithPayload {
 }
 import { io, Socket } from 'socket.io-client'
 import { config } from '@/config/environment'
+import { SOCKET_RECONNECT_POLICY } from '@/config/socket'
 import { debugLog } from '@/utils/debugLogger'
+import {
+  captureSocketFailure,
+  recordSocketLifecycle,
+} from '@/utils/socketObservability'
 
 // ════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -238,14 +243,21 @@ export function createSocketMiddleware(): Middleware {
           auth: { token: jwtToken },
           transports: ['websocket', 'polling'],
           reconnection: true,
-          reconnectionAttempts: Infinity,
-          reconnectionDelay: 1000,
-          reconnectionDelayMax: 30000,
+          reconnectionAttempts: SOCKET_RECONNECT_POLICY.maxAttempts,
+          reconnectionDelay: SOCKET_RECONNECT_POLICY.initialDelayMs,
+          reconnectionDelayMax: SOCKET_RECONNECT_POLICY.maxDelayMs,
         }) as TypedSocket
 
         // Connection events
         socket.on('connect', () => {
           debugLog('🔌 Socket.IO connected')
+          recordSocketLifecycle(
+            'chat',
+            socket?.recovered ? 'reconnected' : 'connected',
+            {
+              transport: socket?.io.engine?.transport.name,
+            }
+          )
           dispatch({ type: 'websocket/connected' })
 
           // Re-subscribe after reconnect
@@ -260,11 +272,59 @@ export function createSocketMiddleware(): Middleware {
 
         socket.on('disconnect', (reason) => {
           debugLog('🔌 Socket.IO disconnected:', reason)
+          const active = socket?.active ?? false
+          recordSocketLifecycle('chat', 'disconnected', { reason, active })
           dispatch({ type: 'websocket/disconnected', payload: { reason } })
+
+          // A server-forced namespace disconnect disables Socket.IO's normal
+          // reconnection loop. Restore the connection explicitly; manual app
+          // disconnects still stay disconnected.
+          if (reason === 'io server disconnect') {
+            captureSocketFailure(
+              'chat',
+              'forced_disconnect',
+              new Error('Chat socket was disconnected by the server'),
+              { reason, active }
+            )
+            socket?.connect()
+          }
         })
 
         socket.on('connect_error', (error) => {
           console.error('🔌 Socket.IO error:', error.message)
+          captureSocketFailure('chat', 'connect', error, {
+            active: socket?.active,
+            transport: socket?.io.engine?.transport.name,
+          })
+          dispatch({
+            type: 'websocket/error',
+            payload: { error: error.message },
+          })
+        })
+
+        socket.io.on('reconnect_attempt', (attempt) => {
+          recordSocketLifecycle('chat', 'reconnect_attempt', {
+            attempt,
+          })
+        })
+
+        socket.io.on('reconnect_error', (error) => {
+          captureSocketFailure('chat', 'reconnect', error, {
+            active: socket?.active,
+          })
+        })
+
+        socket.io.on('reconnect_failed', () => {
+          const error = new Error(
+            `Chat socket could not reconnect after ${SOCKET_RECONNECT_POLICY.maxAttempts} attempts`
+          )
+          recordSocketLifecycle('chat', 'reconnect_exhausted', {
+            attempt: SOCKET_RECONNECT_POLICY.maxAttempts,
+          })
+          captureSocketFailure('chat', 'reconnect_exhausted', error, {
+            active: socket?.active,
+            attempt: SOCKET_RECONNECT_POLICY.maxAttempts,
+          })
           dispatch({
             type: 'websocket/error',
             payload: { error: error.message },
@@ -348,6 +408,16 @@ export function createSocketMiddleware(): Middleware {
       case SOCKET_SEND_MESSAGE: {
         if (!socket?.connected) {
           console.warn('Cannot send: not connected')
+          const error = new Error(
+            'Chat message send attempted while disconnected'
+          )
+          captureSocketFailure('chat', 'send', error, {
+            active: socket?.active,
+          })
+          dispatch({
+            type: 'websocket/error',
+            payload: { error: 'Socket is not connected' },
+          })
           return next(typedAction)
         }
 

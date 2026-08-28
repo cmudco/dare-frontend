@@ -20,7 +20,12 @@
 import { createAction, type Middleware } from '@reduxjs/toolkit'
 import { io, Socket } from 'socket.io-client'
 import { config } from '@/config/environment'
+import { SOCKET_RECONNECT_POLICY } from '@/config/socket'
 import { debugLog } from '@/utils/debugLogger'
+import {
+  captureSocketFailure,
+  recordSocketLifecycle,
+} from '@/utils/socketObservability'
 import {
   WorkflowEventSchema,
   WorkflowStatusSchema,
@@ -243,14 +248,19 @@ export function createWorkflowSocketMiddleware(): Middleware {
         auth: { token: jwtToken },
         transports: ['websocket', 'polling'],
         reconnection: true,
-        reconnectionAttempts: Infinity,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 30000,
+        reconnectionAttempts: SOCKET_RECONNECT_POLICY.maxAttempts,
+        reconnectionDelay: SOCKET_RECONNECT_POLICY.initialDelayMs,
+        reconnectionDelayMax: SOCKET_RECONNECT_POLICY.maxDelayMs,
       }) as TypedWorkflowSocket
 
       // Connection events
       socket.on('connect', () => {
         debugLog('🔧 Workflow Socket.IO connected')
+        recordSocketLifecycle(
+          'workflow',
+          socket?.recovered ? 'reconnected' : 'connected',
+          { transport: socket?.io.engine?.transport.name }
+        )
         dispatch(wsConnected())
 
         // Re-subscribe after reconnect
@@ -265,11 +275,53 @@ export function createWorkflowSocketMiddleware(): Middleware {
 
       socket.on('disconnect', (reason) => {
         debugLog('🔧 Workflow Socket.IO disconnected:', reason)
+        const active = socket?.active ?? false
+        recordSocketLifecycle('workflow', 'disconnected', { reason, active })
         dispatch(wsDisconnected())
+
+        if (reason === 'io server disconnect') {
+          captureSocketFailure(
+            'workflow',
+            'forced_disconnect',
+            new Error('Workflow socket was disconnected by the server'),
+            { reason, active }
+          )
+          socket?.connect()
+        }
       })
 
       socket.on('connect_error', (error) => {
         console.error('🔧 Workflow Socket.IO error:', error.message)
+        captureSocketFailure('workflow', 'connect', error, {
+          active: socket?.active,
+          transport: socket?.io.engine?.transport.name,
+        })
+      })
+
+      socket.io.on('reconnect_attempt', (attempt) => {
+        recordSocketLifecycle('workflow', 'reconnect_attempt', {
+          attempt,
+        })
+      })
+
+      socket.io.on('reconnect_error', (error) => {
+        captureSocketFailure('workflow', 'reconnect', error, {
+          active: socket?.active,
+        })
+      })
+
+      socket.io.on('reconnect_failed', () => {
+        const error = new Error(
+          `Workflow socket could not reconnect after ${SOCKET_RECONNECT_POLICY.maxAttempts} attempts`
+        )
+        recordSocketLifecycle('workflow', 'reconnect_exhausted', {
+          attempt: SOCKET_RECONNECT_POLICY.maxAttempts,
+        })
+        captureSocketFailure('workflow', 'reconnect_exhausted', error, {
+          active: socket?.active,
+          attempt: SOCKET_RECONNECT_POLICY.maxAttempts,
+        })
+        dispatch(wsDisconnected())
       })
 
       // Incoming workflow events → validate with Zod, then dispatch as Redux actions
