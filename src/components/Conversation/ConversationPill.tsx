@@ -28,13 +28,14 @@ import ImagePreview from './ImagePreview'
 import ImageGenerationPanel from './ImageGenerationPanel'
 import AudioTranscriptionPanel from './AudioTranscriptionPanel'
 import VoiceModeButton from './VoiceModeButton'
-import { AlertCircle, ArrowUp, Pencil, X } from 'lucide-react'
+import { AlertCircle, ArrowUp, Pencil, Square, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { MCPServerSelector } from '@/components/MCP/MCPServerSelector'
 import { DareToolSelector } from '@/components/DareTools/DareToolSelector'
 import { QuillPicker } from './QuillPicker'
+import { useSocket } from '@/hooks/useSocket'
 
 const QUILLMARK_SERVER_SLUG = 'quillmark'
 
@@ -55,6 +56,12 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const conversationInput = useSelector(
     (state: RootState) => state.conversation.conversationInput
   )
+  const { stopGeneration } = useSocket()
+  const streamingMessageId = useSelector((state: RootState) => {
+    const messages = state.conversation.activeConversationMessages || []
+    const last = messages[messages.length - 1]
+    return last?.streaming ? last.id : undefined
+  })
   const enableMcp = useFeatureFlag('enableMcp')
   const enableArtifacts = useFeatureFlag('enableArtifacts')
   const activeConversation = useSelector(
@@ -180,6 +187,11 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
         )
       }
     }
+  }
+
+  const handleStopGeneration = () => {
+    if (!activeConversation?.conversationId) return
+    stopGeneration(activeConversation.conversationId, streamingMessageId)
   }
 
   const handleSendMessage = () => {
@@ -357,19 +369,30 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
           <div className='absolute top-1/2 right-[16px] flex -translate-y-1/2 items-center gap-2'>
             {/* Voice Mode Button */}
             <VoiceModeButton disabled={disabled} />
-            {/* Send Button */}
-            <div
-              className={clsx(
-                'flex h-6 w-6 items-center justify-center rounded-full transition-colors',
-                disabled
-                  ? 'cursor-not-allowed bg-muted text-muted-foreground'
-                  : 'cursor-pointer bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              )}
-              onClick={disabled ? undefined : handleSendMessage}
-              aria-label='Send message'
-            >
-              <ArrowUp className='h-4 w-4' />
-            </div>
+            {/* Send / Stop Button */}
+            {streamingMessageId && !disabled ? (
+              <div
+                className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-colors hover:bg-secondary/80'
+                onClick={handleStopGeneration}
+                aria-label='Stop generating'
+                title='Stop generating'
+              >
+                <Square className='h-3 w-3 fill-current' />
+              </div>
+            ) : (
+              <div
+                className={clsx(
+                  'flex h-8 w-8 items-center justify-center rounded-full transition-colors',
+                  disabled
+                    ? 'cursor-not-allowed bg-muted text-muted-foreground'
+                    : 'cursor-pointer bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                )}
+                onClick={disabled ? undefined : handleSendMessage}
+                aria-label='Send message'
+              >
+                <ArrowUp className='h-4 w-4' />
+              </div>
+            )}
           </div>
         </div>
 

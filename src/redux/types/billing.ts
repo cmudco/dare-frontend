@@ -205,6 +205,7 @@ export interface Transaction {
   llmName: string
   inputTokens: number
   outputTokens: number
+  cachedInputTokens?: number | null
   billingMode: string
   platform: string
   createdAt: string

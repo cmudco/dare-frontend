@@ -31,6 +31,7 @@ import {
   socketRegenerate,
   socketContinueArtifact,
   socketPauseArtifact,
+  socketStopGeneration,
 } from '../redux/middleware/socketMiddleware'
 
 /**
@@ -114,6 +115,13 @@ export function useSocket() {
     [dispatch]
   )
 
+  const stopGeneration = useCallback(
+    (conversationId: string, messageId?: string) => {
+      dispatch(socketStopGeneration(conversationId, messageId))
+    },
+    [dispatch]
+  )
+
   return {
     // State
     isConnected,
@@ -131,6 +139,7 @@ export function useSocket() {
     regenerate,
     continueArtifact,
     pauseArtifact,
+    stopGeneration,
   }
 }
 
