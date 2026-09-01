@@ -183,6 +183,8 @@ export interface Message {
   contextTrace?: ContextTrace | null
 }
 
+export type EstimatedUsageField = 'inputTokens' | 'outputTokens'
+
 export interface MessageUsageDetail {
   round: number
   inputTokens: number
@@ -192,6 +194,7 @@ export interface MessageUsageDetail {
   cachedInputTokens?: number
   cacheWriteInputTokens?: number
   estimated?: boolean
+  estimatedFields?: EstimatedUsageField[]
   stopReason?: string
   requestMaxTokens?: number
   effort?: EffortLevel

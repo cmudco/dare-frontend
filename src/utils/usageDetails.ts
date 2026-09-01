@@ -1,4 +1,8 @@
-import type { Message, MessageUsageDetail } from '../redux/types/conversation'
+import type {
+  EstimatedUsageField,
+  Message,
+  MessageUsageDetail,
+} from '../redux/types/conversation'
 
 type NumericUsageKey =
   | 'thinkingTokens'
@@ -7,7 +11,7 @@ type NumericUsageKey =
   | 'cacheWriteInputTokens'
 
 export function usageRounds(message: Message): MessageUsageDetail[] {
-  return Array.isArray(message.usageDetails) ? message.usageDetails : []
+  return message.usageDetails ?? []
 }
 
 export function sumUsage(message: Message, key: NumericUsageKey): number {
@@ -17,6 +21,11 @@ export function sumUsage(message: Message, key: NumericUsageKey): number {
   )
 }
 
-export function isEstimatedUsage(message: Message): boolean {
-  return usageRounds(message).some((round) => round.estimated)
+/** Token counts tokenized locally because the stream was stopped before the provider reported them. */
+export function estimatedUsageFields(
+  message: Message
+): Set<EstimatedUsageField> {
+  return new Set(
+    usageRounds(message).flatMap((round) => round.estimatedFields ?? [])
+  )
 }

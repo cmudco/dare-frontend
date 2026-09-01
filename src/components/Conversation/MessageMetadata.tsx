@@ -46,7 +46,7 @@ import {
   DatabaseZap,
 } from 'lucide-react'
 import {
-  isEstimatedUsage,
+  estimatedUsageFields,
   sumUsage,
   usageRounds,
 } from '../../utils/usageDetails'
@@ -81,7 +81,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
   const visibleOutputTokens = sumUsage(message, 'visibleOutputTokens')
   const cachedInputTokens = sumUsage(message, 'cachedInputTokens')
   const cacheWriteTokens = sumUsage(message, 'cacheWriteInputTokens')
-  const isEstimated = isEstimatedUsage(message)
+  const estimatedFields = estimatedUsageFields(message)
   const finalUsage = usageDetails[usageDetails.length - 1]
 
   // Resolve the dispatch model's display name from the message's persisted
@@ -340,11 +340,14 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                       </div>
                     )}
 
-                    {isEstimated && (
+                    {estimatedFields.size > 0 && (
                       <p className='rounded-md bg-muted p-3 text-xs text-muted-foreground'>
-                        This response was stopped before the provider reported
-                        usage, so the token counts are estimated from the
-                        request and the streamed text.
+                        {estimatedFields.has('inputTokens') &&
+                        estimatedFields.has('outputTokens')
+                          ? 'This response was stopped before the provider reported usage. Input tokens are tokenized from the request and output tokens from the streamed text.'
+                          : estimatedFields.has('outputTokens')
+                            ? 'This response was stopped mid-stream. Input tokens are the provider\u2019s count; output tokens are tokenized from the streamed text because the provider only reports output usage at the end.'
+                            : 'This response was stopped mid-stream. Output tokens are the provider\u2019s running count; input tokens are tokenized from the request.'}
                       </p>
                     )}
 
