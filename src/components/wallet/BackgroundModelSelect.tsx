@@ -1,5 +1,4 @@
 import React from 'react'
-import { Sparkles } from 'lucide-react'
 
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
@@ -7,7 +6,7 @@ import { cn } from '@/lib/utils'
 interface BackgroundModelSelectProps {
   id: string
   models: string[]
-  suggestedModel: string | null
+  recommendedModels: string[]
   value: string
   onChange: (model: string) => void
 }
@@ -16,11 +15,11 @@ interface BackgroundModelSelectProps {
 export const BackgroundModelSelect: React.FC<BackgroundModelSelectProps> = ({
   id,
   models,
-  suggestedModel,
+  recommendedModels,
   value,
   onChange,
 }) => {
-  const isRecommended = Boolean(suggestedModel && value === suggestedModel)
+  const isRecommended = recommendedModels.includes(value)
 
   return (
     <div
@@ -34,12 +33,40 @@ export const BackgroundModelSelect: React.FC<BackgroundModelSelectProps> = ({
       <div className='flex items-center justify-between gap-3'>
         <Label htmlFor={id}>Background model</Label>
         {isRecommended && (
-          <span className='inline-flex items-center gap-1 text-xs font-medium text-primary'>
-            <Sparkles className='h-3.5 w-3.5' />
-            Recommended
-          </span>
+          <span className='text-xs font-medium text-primary'>Recommended</span>
         )}
       </div>
+      {recommendedModels.length > 0 && (
+        <div className='space-y-1.5'>
+          <p className='text-xs font-medium text-muted-foreground'>
+            Top recommendations
+          </p>
+          <div className='flex flex-wrap gap-1.5'>
+            {recommendedModels.map((model, index) => {
+              const isSelected = value === model
+              return (
+                <button
+                  key={model}
+                  type='button'
+                  aria-pressed={isSelected}
+                  title={model}
+                  onClick={() => onChange(model)}
+                  className={cn(
+                    'max-w-full rounded-md border px-2 py-1 text-left text-xs transition-colors',
+                    isSelected
+                      ? 'border-primary/50 bg-primary/10 text-primary'
+                      : 'border-border bg-background text-muted-foreground hover:border-primary/35 hover:text-foreground'
+                  )}
+                >
+                  <span className='break-all'>
+                    {index + 1}. {model}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
       <select
         id={id}
         value={value}
@@ -50,7 +77,7 @@ export const BackgroundModelSelect: React.FC<BackgroundModelSelectProps> = ({
         {models.map((model) => (
           <option key={model} value={model}>
             {model}
-            {model === suggestedModel ? ' — Recommended' : ''}
+            {recommendedModels.includes(model) ? ' — Recommended' : ''}
           </option>
         ))}
       </select>

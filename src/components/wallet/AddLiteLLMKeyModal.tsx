@@ -23,7 +23,7 @@ import { BackgroundModelSelect } from './BackgroundModelSelect'
 type ProbeState =
   | { kind: 'idle' }
   | { kind: 'pending' }
-  | { kind: 'ok'; models: string[]; suggestedModel: string | null }
+  | { kind: 'ok'; models: string[]; recommendedModels: string[] }
   | { kind: 'fail'; error: string }
 
 interface AddLiteLLMKeyModalProps {
@@ -170,12 +170,13 @@ export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
                         setProbe({
                           kind: 'ok',
                           models: res.models,
-                          suggestedModel: res.suggestedModel,
+                          recommendedModels: res.recommendedModels,
                         })
-                        if (!values.backgroundModel && res.suggestedModel) {
+                        const firstRecommendation = res.recommendedModels[0]
+                        if (!values.backgroundModel && firstRecommendation) {
                           await setFieldValue(
                             'backgroundModel',
-                            res.suggestedModel
+                            firstRecommendation
                           )
                         }
                       } else setProbe({ kind: 'fail', error: res.error })
@@ -225,7 +226,7 @@ export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
                   <BackgroundModelSelect
                     id='litellm-background-model'
                     models={probe.models}
-                    suggestedModel={probe.suggestedModel}
+                    recommendedModels={probe.recommendedModels}
                     value={values.backgroundModel}
                     onChange={(model) =>
                       void setFieldValue('backgroundModel', model)

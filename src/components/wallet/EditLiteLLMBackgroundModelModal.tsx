@@ -30,7 +30,7 @@ export const EditLiteLLMBackgroundModelModal: React.FC<Props> = ({
 }) => {
   const dispatch = useDispatch<AppDispatch>()
   const [models, setModels] = useState<string[]>([])
-  const [suggestedModel, setSuggestedModel] = useState<string | null>(null)
+  const [recommendedModels, setRecommendedModels] = useState<string[]>([])
   const [backgroundModel, setBackgroundModel] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -41,6 +41,7 @@ export const EditLiteLLMBackgroundModelModal: React.FC<Props> = ({
     if (!isOpen || !wallet.refId) return
 
     setBackgroundModel(wallet.backgroundModel ?? '')
+    setRecommendedModels([])
     setError(null)
     setLoading(true)
     testLiteLLMSavedAPI(wallet.refId)
@@ -51,9 +52,9 @@ export const EditLiteLLMBackgroundModelModal: React.FC<Props> = ({
         }
 
         setModels(response.models)
-        setSuggestedModel(response.suggestedModel)
+        setRecommendedModels(response.recommendedModels)
         setBackgroundModel(
-          (current) => current || response.suggestedModel || ''
+          (current) => current || response.recommendedModels[0] || ''
         )
       })
       .catch((caught) =>
@@ -92,8 +93,8 @@ export const EditLiteLLMBackgroundModelModal: React.FC<Props> = ({
         <DialogHeader>
           <DialogTitle>Background model for {wallet.label}</DialogTitle>
           <DialogDescription>
-            DARE recommends one capable, efficient model for work that happens
-            outside the chat.
+            Choose from DARE's ranked recommendations or any model exposed by
+            your proxy.
           </DialogDescription>
         </DialogHeader>
 
@@ -111,7 +112,7 @@ export const EditLiteLLMBackgroundModelModal: React.FC<Props> = ({
           <BackgroundModelSelect
             id='litellm-background-model'
             models={models}
-            suggestedModel={suggestedModel}
+            recommendedModels={recommendedModels}
             value={backgroundModel}
             onChange={setBackgroundModel}
           />
