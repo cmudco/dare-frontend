@@ -18,11 +18,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CheckCircle2, Loader2, Plug, XCircle } from 'lucide-react'
 import { toast } from '@/utils/toast'
+import { BackgroundModelSelect } from './BackgroundModelSelect'
 
 type ProbeState =
   | { kind: 'idle' }
   | { kind: 'pending' }
-  | { kind: 'ok'; models: string[] }
+  | { kind: 'ok'; models: string[]; suggestedModel: string | null }
   | { kind: 'fail'; error: string }
 
 interface AddLiteLLMKeyModalProps {
@@ -46,25 +47,15 @@ interface FormValues {
   label: string
   baseUrl: string
   apiKey: string
-  titleModel: string
-  memoryModel: string
+  backgroundModel: string
 }
 
 const initialValues: FormValues = {
   label: '',
   baseUrl: '',
   apiKey: '',
-  titleModel: '',
-  memoryModel: '',
+  backgroundModel: '',
 }
-
-/** Jobs a conversation needs but the user never asks for. Left blank, DARE
- *  picks its own model — which a proxy may not serve under the same name. */
-const AUXILIARY_JOBS: { name: 'titleModel' | 'memoryModel'; label: string }[] =
-  [
-    { name: 'titleModel', label: 'Model for naming conversations' },
-    { name: 'memoryModel', label: 'Model for writing memory' },
-  ]
 
 export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
   open,
@@ -112,7 +103,7 @@ export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
             }
           }}
         >
-          {({ errors, touched, isSubmitting, values }) => (
+          {({ errors, touched, isSubmitting, setFieldValue, values }) => (
             <Form className='space-y-4'>
               <div className='space-y-1.5'>
                 <Label htmlFor='litellm-label'>Label</Label>
@@ -175,8 +166,19 @@ export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
                         values.baseUrl,
                         values.apiKey
                       )
-                      if (res.ok) setProbe({ kind: 'ok', models: res.models })
-                      else setProbe({ kind: 'fail', error: res.error })
+                      if (res.ok) {
+                        setProbe({
+                          kind: 'ok',
+                          models: res.models,
+                          suggestedModel: res.suggestedModel,
+                        })
+                        if (!values.backgroundModel && res.suggestedModel) {
+                          await setFieldValue(
+                            'backgroundModel',
+                            res.suggestedModel
+                          )
+                        }
+                      } else setProbe({ kind: 'fail', error: res.error })
                     } catch (err) {
                       setProbe({
                         kind: 'fail',
@@ -220,29 +222,15 @@ export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
                     </p>
                   </div>
 
-                  {AUXILIARY_JOBS.map((job) => (
-                    <div key={job.name} className='space-y-1'>
-                      <Label htmlFor={job.name}>{job.label}</Label>
-                      <Field
-                        as='select'
-                        id={job.name}
-                        name={job.name}
-                        className='flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm'
-                      >
-                        <option value=''>Use the DARE default</option>
-                        {probe.models.map((model) => (
-                          <option key={model} value={model}>
-                            {model}
-                          </option>
-                        ))}
-                      </Field>
-                    </div>
-                  ))}
-                  <p className='text-xs text-muted-foreground'>
-                    These run on your proxy and bill to it. Left on the DARE
-                    default, they use DARE&apos;s own model — which this proxy
-                    may not serve under the same name.
-                  </p>
+                  <BackgroundModelSelect
+                    id='litellm-background-model'
+                    models={probe.models}
+                    suggestedModel={probe.suggestedModel}
+                    value={values.backgroundModel}
+                    onChange={(model) =>
+                      void setFieldValue('backgroundModel', model)
+                    }
+                  />
                 </>
               )}
               {probe.kind === 'fail' && (

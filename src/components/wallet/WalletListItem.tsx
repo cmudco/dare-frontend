@@ -32,7 +32,7 @@ import {
   Clock,
 } from 'lucide-react'
 import { testLiteLLMSavedAPI } from '@/api/billing'
-import { EditLiteLLMModelsModal } from './EditLiteLLMModelsModal'
+import { EditLiteLLMBackgroundModelModal } from './EditLiteLLMBackgroundModelModal'
 import { toast } from '@/utils/toast'
 
 interface WalletListItemProps {
@@ -84,7 +84,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
   const [draftLabel, setDraftLabel] = useState(wallet.label)
   const [showDelete, setShowDelete] = useState(false)
   const [testing, setTesting] = useState(false)
-  const [editingModels, setEditingModels] = useState(false)
+  const [editingBackgroundModel, setEditingBackgroundModel] = useState(false)
 
   const Icon = ICON_FOR_TYPE[wallet.type]
   const adminIssued = isAdminIssued(wallet)
@@ -288,9 +288,9 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
               <Pencil className='mr-2 h-3.5 w-3.5' />
               Rename
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setEditingModels(true)}>
+            <DropdownMenuItem onClick={() => setEditingBackgroundModel(true)}>
               <SlidersHorizontal className='mr-2 h-3.5 w-3.5' />
-              Models
+              Background model
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setShowDelete(true)}
@@ -303,9 +303,9 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
         </DropdownMenu>
       )}
 
-      <EditLiteLLMModelsModal
-        isOpen={editingModels}
-        onClose={() => setEditingModels(false)}
+      <EditLiteLLMBackgroundModelModal
+        isOpen={editingBackgroundModel}
+        onClose={() => setEditingBackgroundModel(false)}
         wallet={wallet}
       />
 
