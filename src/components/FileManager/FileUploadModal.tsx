@@ -314,7 +314,7 @@ const FileUploadModal: React.FC = () => {
               id='fileInput'
               type='file'
               multiple
-              accept='.pdf,.doc,.docx,.txt,.md,.json,.csv,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff,.svg,.mp4,.webm,.mov,.avi,.mpeg,.ogg,.mp3,.wav,.m4a,.flac,.aac,.wma,.opus'
+              accept='.pdf,.doc,.docx,.txt,.md,.json,.csv,.xls,.xlsx,.ipynb,.jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff,.svg,.mp4,.webm,.mov,.avi,.mpeg,.ogg,.mp3,.wav,.m4a,.flac,.aac,.wma,.opus'
               onChange={handleFileChange}
               className='hidden'
             />

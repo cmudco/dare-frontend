@@ -252,6 +252,9 @@ const AttemptStatusBadge = ({
     )
   }
   if (attempt.status === 'failed') return <Badge variant='red'>Failed</Badge>
+  if (attempt.outcome === 'awaiting_ocr_approval') {
+    return <Badge variant='yellow'>Awaiting approval</Badge>
+  }
   if (attempt.outcome === 'needs ocr') {
     return <Badge variant='yellow'>Needs OCR</Badge>
   }

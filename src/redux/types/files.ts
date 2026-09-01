@@ -36,6 +36,33 @@ export interface MyFile {
   pagesWithoutText?: number
   parserName?: string | null
   structureCounts?: DocumentCounts | null
+  ocr?: FileOcrPlan | null
+}
+
+export type FileOcrStatus =
+  | 'awaiting_approval'
+  | 'approved'
+  | 'processing'
+  | 'complete'
+  | 'partial'
+  | 'unavailable'
+
+export interface FileOcrPlan {
+  status: FileOcrStatus
+  statusLabel: string
+  detectedPages: number
+  pageLimit: number
+  maxPageLimit: number
+  selectablePages: number
+  automaticPageLimit: number
+  processedPages: number
+  remainingPages?: number
+  canContinue?: boolean
+  estimatedCostPerPage: string
+  estimatedSelectedCost: string
+  estimatedMaxCost: string
+  modelIdentifier: string
+  approvedAt?: string | null
 }
 
 export interface DocumentCounts {
