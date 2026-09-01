@@ -81,6 +81,10 @@ export interface ClientToServerEvents {
     data: { conversationId: string; artifactId: number },
     callback: (response: SocketResponse) => void
   ) => void
+  stop_generation: (
+    data: { conversationId: string; messageId?: string },
+    callback: (response: SocketResponse) => void
+  ) => void
 }
 
 export interface SocketResponse {
@@ -108,6 +112,7 @@ export const SOCKET_EDIT_MESSAGE = 'socket/editMessage'
 export const SOCKET_REGENERATE = 'socket/regenerate'
 export const SOCKET_CONTINUE_ARTIFACT = 'socket/continueArtifact'
 export const SOCKET_PAUSE_ARTIFACT = 'socket/pauseArtifact'
+export const SOCKET_STOP_GENERATION = 'socket/stopGeneration'
 
 // ════════════════════════════════════════════════════════════════════════════
 // ACTION CREATORS
@@ -174,6 +179,14 @@ export const socketPauseArtifact = (
   payload: { conversationId, artifactId },
 })
 
+export const socketStopGeneration = (
+  conversationId: string,
+  messageId?: string
+) => ({
+  type: SOCKET_STOP_GENERATION as typeof SOCKET_STOP_GENERATION,
+  payload: { conversationId, messageId },
+})
+
 export const socketSendVoiceMessage = (
   conversationId: string,
   audioBlob: Blob,
@@ -195,6 +208,7 @@ export type SocketAction =
   | ReturnType<typeof socketRegenerate>
   | ReturnType<typeof socketContinueArtifact>
   | ReturnType<typeof socketPauseArtifact>
+  | ReturnType<typeof socketStopGeneration>
 
 // ════════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE
@@ -510,6 +524,21 @@ export function createSocketMiddleware(): Middleware {
                 type: 'socket/artifactError',
                 payload: { error: response.error },
               })
+            }
+          }
+        )
+        break
+      }
+
+      case SOCKET_STOP_GENERATION: {
+        if (!socket?.connected) return next(typedAction)
+
+        socket.emit(
+          'stop_generation',
+          typedAction.payload as { conversationId: string; messageId?: string },
+          (response) => {
+            if (!response.success) {
+              console.warn('[Socket] stop_generation not applied', response)
             }
           }
         )

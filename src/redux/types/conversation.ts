@@ -189,6 +189,9 @@ export interface MessageUsageDetail {
   outputTokens: number
   thinkingTokens?: number
   visibleOutputTokens?: number
+  cachedInputTokens?: number
+  cacheWriteInputTokens?: number
+  estimated?: boolean
   stopReason?: string
   requestMaxTokens?: number
   effort?: EffortLevel

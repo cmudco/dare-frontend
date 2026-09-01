@@ -7,7 +7,7 @@ import {
   TableRow,
 } from '@/components/ui/Table'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Wallet as WalletIcon, Key, Network } from 'lucide-react'
+import { Wallet as WalletIcon, Key, Network, DatabaseZap } from 'lucide-react'
 import { Transaction } from '@/redux/types/billing'
 import { BillingMode, PlatformFilter } from '@/utils/constants/billing'
 
@@ -52,9 +52,9 @@ export const TransactionTable = ({
         <TableRow>
           {showAmount && <TableHead>Amount</TableHead>}
           {showReferenceAmount && <TableHead>Est. Cost</TableHead>}
-          <TableHead>Message</TableHead>
+          <TableHead className='w-[32%]'>Message</TableHead>
           <TableHead>LLM</TableHead>
-          <TableHead>Tokens</TableHead>
+          <TableHead className='min-w-[140px]'>Tokens</TableHead>
           {showBillingMode && <TableHead>Billing Mode</TableHead>}
           {showPlatform && <TableHead>Platform</TableHead>}
           <TableHead>Date</TableHead>
@@ -96,7 +96,11 @@ export const TransactionTable = ({
                   )}
                 </TableCell>
               )}
-              <TableCell>{transaction.message}</TableCell>
+              <TableCell className='max-w-[420px]'>
+                <span className='line-clamp-2 text-sm' title={transaction.message}>
+                  {transaction.message}
+                </span>
+              </TableCell>
               <TableCell>{transaction.llmName || 'N/A'}</TableCell>
               <TableCell>
                 <div className='flex flex-col'>
@@ -116,6 +120,17 @@ export const TransactionTable = ({
                       {transaction.outputTokens}
                     </span>
                   </div>
+                  {(transaction.cachedInputTokens ?? 0) > 0 && (
+                    <div
+                      className='flex items-center justify-center gap-1 text-amber-600'
+                      title='Input tokens served from the provider prompt cache'
+                    >
+                      <DatabaseZap size={12} />
+                      <span className='text-xs'>
+                        {transaction.cachedInputTokens?.toLocaleString()} cached
+                      </span>
+                    </div>
+                  )}
                 </div>
               </TableCell>
               {showBillingMode && (
