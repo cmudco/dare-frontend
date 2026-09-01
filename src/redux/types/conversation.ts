@@ -192,6 +192,7 @@ export interface MessageUsageDetail {
   cachedInputTokens?: number
   cacheWriteInputTokens?: number
   estimated?: boolean
+  estimatedFields?: Array<'inputTokens' | 'outputTokens'>
   stopReason?: string
   requestMaxTokens?: number
   effort?: EffortLevel
