@@ -47,7 +47,6 @@ import {
 } from 'lucide-react'
 import {
   estimatedUsageFields,
-  isEstimatedUsage,
   sumUsage,
   usageRounds,
 } from '../../utils/usageDetails'
@@ -82,7 +81,6 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
   const visibleOutputTokens = sumUsage(message, 'visibleOutputTokens')
   const cachedInputTokens = sumUsage(message, 'cachedInputTokens')
   const cacheWriteTokens = sumUsage(message, 'cacheWriteInputTokens')
-  const isEstimated = isEstimatedUsage(message)
   const estimatedFields = estimatedUsageFields(message)
   const finalUsage = usageDetails[usageDetails.length - 1]
 
@@ -342,7 +340,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                       </div>
                     )}
 
-                    {isEstimated && (
+                    {estimatedFields.size > 0 && (
                       <p className='rounded-md bg-muted p-3 text-xs text-muted-foreground'>
                         {estimatedFields.has('inputTokens') &&
                         estimatedFields.has('outputTokens')

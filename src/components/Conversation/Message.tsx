@@ -26,7 +26,7 @@ import {
   DatabaseZap,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { isEstimatedUsage, sumUsage } from '../../utils/usageDetails'
+import { estimatedUsageFields, sumUsage } from '../../utils/usageDetails'
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
 import rehypeKatex from 'rehype-katex'
@@ -154,8 +154,7 @@ const Message: React.FC<MessageProps> = ({
   const userInitial = user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'
 
   const cachedInputTokens = sumUsage(message, 'cachedInputTokens')
-  const usageIsEstimated = isEstimatedUsage(message)
-
+  const usageIsEstimated = estimatedUsageFields(message).size > 0
 
   const toggleSnippets = () => setIsSnippetsOpen(!isSnippetsOpen)
   const toggleVersion = () => {
@@ -724,8 +723,8 @@ const Message: React.FC<MessageProps> = ({
                     : undefined
                 }
               >
-                {cachedInputTokens > 0 && <DatabaseZap className='h-3 w-3' />}
-                ${parseFloat(message.cost).toFixed(4)}
+                {cachedInputTokens > 0 && <DatabaseZap className='h-3 w-3' />}$
+                {parseFloat(message.cost).toFixed(4)}
               </span>
             )}
             {usageIsEstimated && (
