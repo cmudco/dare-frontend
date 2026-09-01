@@ -26,6 +26,7 @@ import {
   DatabaseZap,
 } from 'lucide-react'
 import clsx from 'clsx'
+import { isEstimatedUsage, sumUsage } from '../../utils/usageDetails'
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
 import rehypeKatex from 'rehype-katex'
@@ -152,14 +153,8 @@ const Message: React.FC<MessageProps> = ({
   const llmName = llm ? llm.name : (message.litellmModelName ?? 'Unknown LLM')
   const userInitial = user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'
 
-  const usageRounds = Array.isArray(message.usageDetails)
-    ? message.usageDetails
-    : []
-  const cachedInputTokens = usageRounds.reduce(
-    (total, round) => total + (round.cachedInputTokens ?? 0),
-    0
-  )
-  const isEstimatedUsage = usageRounds.some((round) => round.estimated)
+  const cachedInputTokens = sumUsage(message, 'cachedInputTokens')
+  const usageIsEstimated = isEstimatedUsage(message)
 
 
   const toggleSnippets = () => setIsSnippetsOpen(!isSnippetsOpen)
@@ -733,7 +728,7 @@ const Message: React.FC<MessageProps> = ({
                 ${parseFloat(message.cost).toFixed(4)}
               </span>
             )}
-            {isEstimatedUsage && (
+            {usageIsEstimated && (
               <span
                 className='ml-2 text-muted-foreground'
                 title='Stopped before the provider reported usage; tokens estimated'

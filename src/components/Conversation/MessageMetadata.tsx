@@ -45,6 +45,11 @@ import {
   Route,
   DatabaseZap,
 } from 'lucide-react'
+import {
+  isEstimatedUsage,
+  sumUsage,
+  usageRounds,
+} from '../../utils/usageDetails'
 import RetrievalTraceStages from './RetrievalTracePanel'
 import {
   formatEnergy,
@@ -71,26 +76,12 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
   const allModels = useSelector(
     (state: RootState) => state.conversation.allModels
   )
-  const usageDetails = Array.isArray(message.usageDetails)
-    ? message.usageDetails
-    : []
-  const thinkingTokens = usageDetails.reduce(
-    (total, round) => total + (round.thinkingTokens ?? 0),
-    0
-  )
-  const visibleOutputTokens = usageDetails.reduce(
-    (total, round) => total + (round.visibleOutputTokens ?? 0),
-    0
-  )
-  const cachedInputTokens = usageDetails.reduce(
-    (total, round) => total + (round.cachedInputTokens ?? 0),
-    0
-  )
-  const cacheWriteTokens = usageDetails.reduce(
-    (total, round) => total + (round.cacheWriteInputTokens ?? 0),
-    0
-  )
-  const isEstimated = usageDetails.some((round) => round.estimated)
+  const usageDetails = usageRounds(message)
+  const thinkingTokens = sumUsage(message, 'thinkingTokens')
+  const visibleOutputTokens = sumUsage(message, 'visibleOutputTokens')
+  const cachedInputTokens = sumUsage(message, 'cachedInputTokens')
+  const cacheWriteTokens = sumUsage(message, 'cacheWriteInputTokens')
+  const isEstimated = isEstimatedUsage(message)
   const finalUsage = usageDetails[usageDetails.length - 1]
 
   // Resolve the dispatch model's display name from the message's persisted
