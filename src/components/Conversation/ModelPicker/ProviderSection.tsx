@@ -10,16 +10,22 @@ interface ProviderSectionProps {
   providerGroup: ProviderGroup
   isExpanded: boolean
   onToggle: () => void
-  selectedId: string | null
+  selectedIds: string[]
   onSelect: (entry: PickerModel) => void
+  multi?: boolean
+  chairmanId?: string | null
+  onMakeChairman?: (entry: PickerModel) => void
 }
 
 const ProviderSection: React.FC<ProviderSectionProps> = ({
   providerGroup,
   isExpanded,
   onToggle,
-  selectedId,
+  selectedIds,
   onSelect,
+  multi = false,
+  chairmanId = null,
+  onMakeChairman,
 }) => {
   const brand = getProviderBrand(providerGroup.provider)
 
@@ -73,8 +79,15 @@ const ProviderSection: React.FC<ProviderSectionProps> = ({
                       <ModelItem
                         key={entry.id}
                         entry={entry}
-                        isSelected={entry.id === selectedId}
+                        isSelected={selectedIds.includes(entry.id)}
                         onClick={() => onSelect(entry)}
+                        multi={multi}
+                        isChairman={entry.id === chairmanId}
+                        onMakeChairman={
+                          onMakeChairman
+                            ? () => onMakeChairman(entry)
+                            : undefined
+                        }
                       />
                     ))}
                   </div>

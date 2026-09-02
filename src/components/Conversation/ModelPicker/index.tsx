@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -18,7 +18,12 @@ import {
 } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
 import { AppDispatch, RootState } from '@/redux/store'
-import { updateSelectedModel } from '@/redux/conversationSlice'
+import {
+  updateSelectedModel,
+  setEnsembleDepth,
+  setEnsembleChairman,
+  toggleEnsembleResponder,
+} from '@/redux/conversationSlice'
 import {
   getAvailableModels,
   getAllModels,
@@ -33,6 +38,8 @@ import {
   ModelGroup,
   categorizeEntry,
 } from '@/utils/modelGroupingUtils'
+import { DEPTH_META, formatEstimateCost } from '@/utils/ensemble'
+import { useEnsembleEstimate } from '@/hooks/useEnsembleEstimate'
 
 import ModeButton from './ModeButton'
 import ModelSkeleton from './ModelSkeleton'
@@ -40,6 +47,9 @@ import ProviderSection from './ProviderSection'
 import CostSection from './CostSection'
 import ModelItem from './ModelItem'
 import TypeIcon from './TypeIcon'
+import DepthDial from './DepthDial'
+import EnsembleBar from './EnsembleBar'
+import StackedLogos from './StackedLogos'
 
 const Spinner = ({ className }: { className?: string }) => (
   <svg
@@ -69,6 +79,12 @@ const ModelPicker: React.FC = () => {
   const { pickerEntries, loading, selectedModel } = useSelector(
     (state: RootState) => state.conversation
   )
+  const { ensemble, responders, chairman, active, estimate } =
+    useEnsembleEstimate()
+  const chairmanId = chairman?.id ?? null
+  const handleMakeChairman = (entry: PickerModel) =>
+    dispatch(setEnsembleChairman(entry.id))
+  const multi = ensemble.depth !== 'single'
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [groupingMode, setGroupingMode] = useState<
@@ -83,23 +99,40 @@ const ModelPicker: React.FC = () => {
     dispatch(getAvailableModels())
   }, [dispatch])
 
-  // Initialize expanded states: only expand the group containing the selected entry
+  // Bench mode toggles membership; single mode picks one and closes.
+  const selectedIds = useMemo(
+    () =>
+      multi ? ensemble.responderIds : selectedModel ? [selectedModel] : [],
+    [multi, ensemble.responderIds, selectedModel]
+  )
+
+  // Open only the groups holding a selection when the catalog or the view
+  // changes. The selection is read through a ref so toggling a responder
+  // does not snap the accordion state.
+  const selectedIdsRef = useRef(selectedIds)
+  selectedIdsRef.current = selectedIds
   useEffect(() => {
     if (pickerEntries.length > 0) {
       const initial: Record<string, boolean> = {}
-      const selectedEntry = pickerEntries.find((e) => e.id === selectedModel)
-      if (selectedEntry) {
-        if (groupingMode === 'provider') {
-          initial[selectedEntry.provider] = true
-        } else if (groupingMode === 'cost') {
-          initial[categorizeEntry(selectedEntry)] = true
-        }
-      }
+      pickerEntries
+        .filter((e) => selectedIdsRef.current.includes(e.id))
+        .forEach((entry) => {
+          if (groupingMode === 'provider') {
+            initial[entry.provider] = true
+          } else if (groupingMode === 'cost') {
+            initial[categorizeEntry(entry)] = true
+          }
+        })
       setExpandedGroups(initial)
     }
-  }, [pickerEntries, groupingMode, selectedModel])
+  }, [pickerEntries, groupingMode, selectedModel, multi])
 
   const handleModelSelect = (entry: PickerModel) => {
+    if (multi) {
+      if (entry.id.startsWith('litellm:')) return
+      dispatch(toggleEnsembleResponder(entry.id))
+      return
+    }
     dispatch(updateSelectedModel(entry.id))
     setOpen(false)
   }
@@ -153,6 +186,14 @@ const ModelPicker: React.FC = () => {
     ? ModelTierColors[selectedEntry.tier as ModelTier]
     : null
 
+  const triggerTone = multi
+    ? active
+      ? 'border-primary/30 bg-primary/10 text-primary'
+      : 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+    : selectedTierColors
+      ? `${selectedTierColors.border} border shadow-xs`
+      : 'border border-transparent'
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -160,25 +201,45 @@ const ModelPicker: React.FC = () => {
           data-tour='model-picker'
           layout
           whileTap={{ scale: 0.98 }}
-          className={`group flex h-9 min-w-0 max-w-full items-center gap-2 rounded-full px-3 font-medium transition-all focus:ring-2 focus:ring-offset-1 focus:ring-offset-background focus:outline-hidden sm:px-4 ${open ? 'bg-accent/50 ring-2 ring-primary' : 'bg-accent/30 hover:bg-accent/60'} ${selectedTierColors ? `${selectedTierColors.border} border shadow-xs` : 'border border-transparent'} `}
+          className={`group flex h-9 max-w-full min-w-0 items-center gap-2 rounded-full border px-3 font-medium transition-all focus:ring-2 focus:ring-offset-1 focus:ring-offset-background focus:outline-hidden sm:px-4 ${open ? 'ring-2 ring-primary' : ''} ${multi ? '' : open ? 'bg-accent/50' : 'bg-accent/30 hover:bg-accent/60'} ${triggerTone}`}
         >
-          {selectedBrand?.logo ? (
-            <img
-              src={selectedBrand.logo}
-              alt={selectedBrand.name}
-              className='h-4 w-4 object-contain'
-            />
+          {multi ? (
+            <>
+              <StackedLogos entries={responders} max={3} />
+              <span className='text-sm whitespace-nowrap'>
+                {DEPTH_META[ensemble.depth].label}
+                {' · '}
+                {responders.length}
+              </span>
+              {active && (
+                <span className='hidden text-xs whitespace-nowrap tabular-nums opacity-70 lg:inline'>
+                  {formatEstimateCost(estimate.costUsd)}
+                </span>
+              )}
+            </>
           ) : (
-            <TypeIcon
-              type={selectedEntry ? categorizeEntry(selectedEntry) : 'Premium'}
-              className={`h-4 w-4 ${selectedTierColors ? selectedTierColors.icon : 'text-muted-foreground transition-colors group-hover:text-foreground'}`}
-            />
+            <>
+              {selectedBrand?.logo ? (
+                <img
+                  src={selectedBrand.logo}
+                  alt={selectedBrand.name}
+                  className='h-4 w-4 object-contain'
+                />
+              ) : (
+                <TypeIcon
+                  type={
+                    selectedEntry ? categorizeEntry(selectedEntry) : 'Premium'
+                  }
+                  className={`h-4 w-4 ${selectedTierColors ? selectedTierColors.icon : 'text-muted-foreground transition-colors group-hover:text-foreground'}`}
+                />
+              )}
+              <span
+                className={`max-w-[110px] truncate text-sm transition-colors sm:max-w-[140px] ${selectedTierColors ? selectedTierColors.text : 'text-muted-foreground group-hover:text-foreground'}`}
+              >
+                {selectedEntry ? selectedEntry.name : 'Select Model'}
+              </span>
+            </>
           )}
-          <span
-            className={`max-w-[110px] truncate text-sm transition-colors sm:max-w-[140px] ${selectedTierColors ? selectedTierColors.text : 'text-muted-foreground group-hover:text-foreground'}`}
-          >
-            {selectedEntry ? selectedEntry.name : 'Select Model'}
-          </span>
         </motion.button>
       </PopoverTrigger>
 
@@ -190,7 +251,7 @@ const ModelPicker: React.FC = () => {
         <motion.div layout className='flex h-full max-h-[85vh] flex-col'>
           {/* Header & Modes */}
           <div className='flex-none p-4 pb-2'>
-            <div className='mb-4 flex items-center justify-between'>
+            <div className='mb-3 flex items-center justify-between'>
               <h2 className='text-xl font-bold tracking-tight text-foreground'>
                 Models
               </h2>
@@ -221,6 +282,13 @@ const ModelPicker: React.FC = () => {
                   label='Latest'
                 />
               </div>
+            </div>
+
+            <div className='mb-3'>
+              <DepthDial
+                value={ensemble.depth}
+                onChange={(depth) => dispatch(setEnsembleDepth(depth))}
+              />
             </div>
 
             <div className='relative'>
@@ -260,8 +328,11 @@ const ModelPicker: React.FC = () => {
                         providerGroup={pg}
                         isExpanded={!!expandedGroups[pg.provider]}
                         onToggle={() => toggleGroup(pg.provider)}
-                        selectedId={selectedModel}
+                        selectedIds={selectedIds}
                         onSelect={handleModelSelect}
+                        multi={multi}
+                        chairmanId={chairmanId}
+                        onMakeChairman={handleMakeChairman}
                       />
                     ))}
 
@@ -272,8 +343,11 @@ const ModelPicker: React.FC = () => {
                         group={cg}
                         isExpanded={!!expandedGroups[cg.type]}
                         onToggle={() => toggleGroup(cg.type)}
-                        selectedId={selectedModel}
+                        selectedIds={selectedIds}
                         onSelect={handleModelSelect}
+                        multi={multi}
+                        chairmanId={chairmanId}
+                        onMakeChairman={handleMakeChairman}
                       />
                     ))}
 
@@ -283,9 +357,12 @@ const ModelPicker: React.FC = () => {
                         <ModelItem
                           key={entry.id}
                           entry={entry}
-                          isSelected={entry.id === selectedModel}
+                          isSelected={selectedIds.includes(entry.id)}
                           onClick={() => handleModelSelect(entry)}
                           showProvider
+                          multi={multi}
+                          isChairman={entry.id === chairmanId}
+                          onMakeChairman={() => handleMakeChairman(entry)}
                         />
                       ))}
                     </div>
@@ -301,15 +378,19 @@ const ModelPicker: React.FC = () => {
           </div>
 
           {/* Footer Area */}
-          <div className='flex-none border-t border-accent/20 bg-accent/10 p-2 backdrop-blur-md'>
-            <Link
-              to='/help'
-              className='group flex w-full items-center justify-center gap-2 rounded-lg py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-accent/30 hover:text-foreground'
-            >
-              <HelpCircle className='h-3.5 w-3.5 transition-transform group-hover:scale-110' />
-              <span>Model Documentation</span>
-            </Link>
-          </div>
+          {multi ? (
+            <EnsembleBar onDone={() => setOpen(false)} />
+          ) : (
+            <div className='flex-none border-t border-accent/20 bg-accent/10 p-2 backdrop-blur-md'>
+              <Link
+                to='/help'
+                className='group flex w-full items-center justify-center gap-2 rounded-lg py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-accent/30 hover:text-foreground'
+              >
+                <HelpCircle className='h-3.5 w-3.5 transition-transform group-hover:scale-110' />
+                <span>Model Documentation</span>
+              </Link>
+            </div>
+          )}
         </motion.div>
       </PopoverContent>
     </Popover>

@@ -35,6 +35,7 @@ import {
   WalletMeta,
   RagMode,
   MemoryWriteData,
+  EnsembleDepth,
 } from './types/conversation'
 import { ToolCallOrigin, ToolLoopState } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
@@ -45,6 +46,7 @@ import type {
   ToolCallResultEvent,
   ToolRoundsCappedEvent,
   ContextTraceEvent,
+  DeliberationEvent,
 } from './types/toolEvents'
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
@@ -148,6 +150,30 @@ export const conversationSlice = createSlice({
       ) {
         state.activeConversation.effort = selectedEntry.defaultEffort
       }
+    },
+    setEnsembleDepth(state, action: PayloadAction<EnsembleDepth>) {
+      state.ensemble.depth = action.payload
+      if (action.payload === 'single') return
+      // Leaving single mode seeds the panel with the current model so the
+      // picker never opens on an empty bench.
+      if (!state.ensemble.responderIds.length && state.selectedModel) {
+        state.ensemble.responderIds = [state.selectedModel]
+      }
+      if (!state.ensemble.chairmanId) {
+        state.ensemble.chairmanId = state.selectedModel
+      }
+    },
+    toggleEnsembleResponder(state, action: PayloadAction<string>) {
+      const ids = state.ensemble.responderIds
+      const index = ids.indexOf(action.payload)
+      if (index === -1) ids.push(action.payload)
+      else ids.splice(index, 1)
+    },
+    setEnsembleChairman(state, action: PayloadAction<string | null>) {
+      state.ensemble.chairmanId = action.payload
+    },
+    clearEnsemble(state) {
+      state.ensemble = { depth: 'single', responderIds: [], chairmanId: null }
     },
     updateSelectedFiles(state, action: PayloadAction<MyFile[]>) {
       state.selectedFiles = action.payload
@@ -583,6 +609,9 @@ export const conversationSlice = createSlice({
             (m) => !m.isImageGenerator && !m.isAudioTranscriber
           )
           state.activeWalletMeta = action.payload.wallet
+          state.ensemble.responderIds = state.ensemble.responderIds.filter(
+            (id) => state.pickerEntries.some((entry) => entry.id === id)
+          )
           // Reconcile selectedModel: if the previously selected id is no
           // longer in the wallet's catalog (e.g. user just toggled wallet),
           // fall back to the first available so the next chat send uses a
@@ -1176,6 +1205,20 @@ export const conversationSlice = createSlice({
           msg.contextTrace = action.payload.trace
         }
       )
+      // Deliberation - the multi-model panel/council behind the turn (snapshots)
+      .addMatcher(
+        (action): action is { type: string; payload: DeliberationEvent } =>
+          action.type === 'socket/deliberation',
+        (state, action) => {
+          const { messageId } = action.payload
+          if (messageId == null) return
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (!msg) return
+          msg.deliberation = action.payload.deliberation
+        }
+      )
       .addMatcher(
         (
           action
@@ -1269,6 +1312,10 @@ export const conversationSlice = createSlice({
 })
 
 export const {
+  setEnsembleDepth,
+  toggleEnsembleResponder,
+  setEnsembleChairman,
+  clearEnsemble,
   updateSearchQuery,
   updateActiveConversation,
   updateSelectedModel,

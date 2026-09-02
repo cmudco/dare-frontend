@@ -181,6 +181,15 @@ export interface Message {
    * on the message for refresh.
    */
   contextTrace?: ContextTrace | null
+  /**
+   * Multi-model deliberation behind this answer (panel or council): every
+   * responder's draft, the peer reviews when a council ran, and the chairman
+   * that fused them. Arrives live as `deliberation` socket snapshots and
+   * persists on the message for refresh.
+   */
+  deliberation?: Deliberation | null
+  /** The ensemble workflow run behind a panel or council answer. */
+  workflowRunId?: number | null
 }
 
 export type EstimatedUsageField = 'inputTokens' | 'outputTokens'
@@ -286,6 +295,62 @@ export interface ContextTraceStage {
 export interface ContextTrace {
   totalMs: number
   stages: ContextTraceStage[]
+}
+
+// ---------------------------------------------------------------------------
+// Ensemble (multi-model chat)
+// ---------------------------------------------------------------------------
+
+/**
+ * How deep a turn deliberates. `single` is one model. `panel` fans the prompt
+ * out to several responders and a chairman fuses them. `council` adds a
+ * peer-review stage between the responders and the chairman.
+ */
+export type EnsembleDepth = 'single' | 'panel' | 'council'
+
+export interface EnsembleConfig {
+  depth: EnsembleDepth
+  /** Picker ids of the responders (same encoding as `selectedModel`). */
+  responderIds: string[]
+  /** Picker id of the chairman; null falls back to `selectedModel`. */
+  chairmanId: string | null
+}
+
+export type DeliberationStatus =
+  | 'pending'
+  | 'streaming'
+  | 'done'
+  | 'failed'
+  | 'dropped'
+
+export interface DeliberationParticipant {
+  modelId: string
+  modelName: string
+  provider: string
+  tier?: string | null
+  status: DeliberationStatus
+  /** Accumulated draft text; empty for the chairman. */
+  text: string
+  ms?: number | null
+  cost?: string | null
+}
+
+export interface DeliberationEvaluation {
+  evaluatorName: string
+  /** Responder model names, best first. */
+  ranking: string[]
+  notes?: string | null
+}
+
+export interface Deliberation {
+  depth: Exclude<EnsembleDepth, 'single'>
+  responders: DeliberationParticipant[]
+  evaluations?: DeliberationEvaluation[]
+  chairman: DeliberationParticipant
+  totalMs?: number | null
+  cost?: string | null
+  /** One-line chairman verdict, e.g. "2 agreed, 1 dissented". */
+  verdict?: string | null
 }
 
 /** Check if a message was sent by the user (not the AI). */
@@ -499,6 +564,9 @@ export interface ConversationState {
   activeConversationMessages: Message[]
   // Opaque dispatch id from the picker — echoed back to the BE on send.
   selectedModel: string | null
+  // Multi-model composition from the picker. Inactive until depth leaves
+  // 'single' and at least two responders are picked.
+  ensemble: EnsembleConfig
   // Picker catalog (uniform flat shape) plus the wallet metadata block for
   // capability toggles.
   pickerEntries: PickerModel[]

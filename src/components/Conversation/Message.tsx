@@ -47,6 +47,7 @@ import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
 import { MessageActivity } from './MessageActivity/MessageActivity'
 import ThinkingSummary from './ThinkingSummary'
+import { DeliberationPanel } from './Deliberation/DeliberationPanel'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { debugLog } from '@/utils/debugLogger'
 
@@ -344,6 +345,11 @@ const Message: React.FC<MessageProps> = ({
               : 'border border-border bg-card'
           } inline-block hover:z-20`}
         >
+          {/* Above the pulsing wrapper on purpose: the drafts are the live
+              content while the answer is still empty. */}
+          {!isSenderMessage(message) && message.deliberation && (
+            <DeliberationPanel message={message} />
+          )}
           <div
             className={`font-normal text-wrap ${
               message.streaming ? 'animate-pulse' : ''

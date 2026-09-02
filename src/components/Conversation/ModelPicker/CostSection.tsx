@@ -10,16 +10,22 @@ interface CostSectionProps {
   group: ModelGroup
   isExpanded: boolean
   onToggle: () => void
-  selectedId: string | null
+  selectedIds: string[]
   onSelect: (entry: PickerModel) => void
+  multi?: boolean
+  chairmanId?: string | null
+  onMakeChairman?: (entry: PickerModel) => void
 }
 
 const CostSection: React.FC<CostSectionProps> = ({
   group,
   isExpanded,
   onToggle,
-  selectedId,
+  selectedIds,
   onSelect,
+  multi = false,
+  chairmanId = null,
+  onMakeChairman,
 }) => {
   return (
     <div className='overflow-hidden rounded-xl border border-accent/20 bg-accent/5 shadow-xs'>
@@ -54,8 +60,13 @@ const CostSection: React.FC<CostSectionProps> = ({
                 <ModelItem
                   key={entry.id}
                   entry={entry}
-                  isSelected={entry.id === selectedId}
+                  isSelected={selectedIds.includes(entry.id)}
                   onClick={() => onSelect(entry)}
+                  multi={multi}
+                  isChairman={entry.id === chairmanId}
+                  onMakeChairman={
+                    onMakeChairman ? () => onMakeChairman(entry) : undefined
+                  }
                   showProvider
                 />
               ))}

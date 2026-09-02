@@ -16,6 +16,7 @@ export const initialState: ConversationState = {
   searchQuery: '',
   activeConversationMessages: [],
   selectedModel: null,
+  ensemble: { depth: 'single', responderIds: [], chairmanId: null },
   pickerEntries: [],
   activeWalletMeta: null,
   selectedFiles: [] as MyFile[],
