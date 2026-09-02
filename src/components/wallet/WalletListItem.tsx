@@ -23,6 +23,7 @@ import {
   Wallet as WalletIcon,
   KeyRound,
   Network,
+  AlertTriangle,
   CheckCircle2,
   MoreVertical,
   Pencil,
@@ -34,6 +35,7 @@ import {
 import { testLiteLLMSavedAPI } from '@/api/billing'
 import { EditLiteLLMBackgroundModelModal } from './EditLiteLLMBackgroundModelModal'
 import { toast } from '@/utils/toast'
+import { needsBackgroundModel } from '@/utils/wallets'
 
 interface WalletListItemProps {
   wallet: UnifiedWallet
@@ -197,6 +199,19 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
             <Badge variant='outline' className='text-[10px]'>
               Admin-issued
             </Badge>
+          )}
+          {needsBackgroundModel(wallet) && (
+            <button
+              type='button'
+              onClick={(e) => {
+                e.stopPropagation()
+                setEditingBackgroundModel(true)
+              }}
+              className='inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:bg-amber-500/20 dark:text-amber-400'
+            >
+              <AlertTriangle className='h-3 w-3' />
+              Choose background model
+            </button>
           )}
         </div>
 
