@@ -18,6 +18,9 @@ import {
   exportMemory,
   importMemory,
   importForeignMemory,
+  getMemoryBackfill,
+  startMemoryBackfill,
+  stopMemoryBackfill,
 } from './asyncThunks/memory'
 import { MemoryItem, MemorySearchResult, MemorySweep } from './types/memory'
 
@@ -94,6 +97,43 @@ const memorySlice = createSlice({
       .addCase(importForeignMemory.rejected, (state, action) => {
         state.importing = false
         state.error = action.payload as string
+      })
+      // Historical conversations -> ordinary memory writer
+      .addCase(getMemoryBackfill.pending, (state) => {
+        state.backfillLoading = true
+        state.backfillError = null
+      })
+      .addCase(getMemoryBackfill.fulfilled, (state, action) => {
+        state.backfillLoading = false
+        state.backfillRun = action.payload.run
+      })
+      .addCase(getMemoryBackfill.rejected, (state, action) => {
+        state.backfillLoading = false
+        state.backfillError = action.payload as string
+      })
+      .addCase(startMemoryBackfill.pending, (state) => {
+        state.backfillStarting = true
+        state.backfillError = null
+      })
+      .addCase(startMemoryBackfill.fulfilled, (state, action) => {
+        state.backfillStarting = false
+        state.backfillRun = action.payload.run
+      })
+      .addCase(startMemoryBackfill.rejected, (state, action) => {
+        state.backfillStarting = false
+        state.backfillError = action.payload as string
+      })
+      .addCase(stopMemoryBackfill.pending, (state) => {
+        state.backfillStopping = true
+        state.backfillError = null
+      })
+      .addCase(stopMemoryBackfill.fulfilled, (state, action) => {
+        state.backfillStopping = false
+        state.backfillRun = action.payload.run
+      })
+      .addCase(stopMemoryBackfill.rejected, (state, action) => {
+        state.backfillStopping = false
+        state.backfillError = action.payload as string
       })
       // Get Memory Items
       .addCase(getMemoryItems.pending, (state) => {

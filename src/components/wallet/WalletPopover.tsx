@@ -13,8 +13,11 @@ import { Separator } from '@/components/ui/separator'
 import { WalletPickerList } from './WalletPickerList'
 import { AddLiteLLMKeyModal } from './AddLiteLLMKeyModal'
 import { AddBYOKeyModal } from './AddBYOKeyModal'
+import { EditLiteLLMBackgroundModelModal } from './EditLiteLLMBackgroundModelModal'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
+import { needsBackgroundModel } from '@/utils/wallets'
 import {
+  AlertTriangle,
   CreditCard as CreditCardIcon,
   ChevronDown,
   Plus,
@@ -42,8 +45,10 @@ export const WalletPopover: React.FC = () => {
   const [open, setOpen] = useState(false)
   const [showLite, setShowLite] = useState(false)
   const [showByo, setShowByo] = useState(false)
+  const [showModel, setShowModel] = useState(false)
 
   const active = wallets.find((w) => w.isActive)
+  const missingModel = active !== undefined && needsBackgroundModel(active)
 
   useEffect(() => {
     dispatch(getWallets())
@@ -64,8 +69,14 @@ export const WalletPopover: React.FC = () => {
             aria-label={`Wallet: ${triggerLabel} (${triggerSecondary})`}
             className='group inline-flex cursor-pointer items-center gap-2 rounded-full border border-dare/20 bg-background py-0.5 pr-3 pl-0.5 text-sm font-medium text-foreground shadow-xs transition-all hover:border-dare/50 hover:shadow-md'
           >
-            <span className='flex h-7 w-7 items-center justify-center rounded-full bg-dare-gradient text-white shadow-inner'>
+            <span className='relative flex h-7 w-7 items-center justify-center rounded-full bg-dare-gradient text-white shadow-inner'>
               <CreditCardIcon className='h-3.5 w-3.5' />
+              {missingModel && (
+                <span
+                  aria-label='Background model not chosen'
+                  className='absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-amber-500'
+                />
+              )}
             </span>
             <span className='font-semibold text-foreground tabular-nums'>
               {triggerSecondary}
@@ -105,6 +116,27 @@ export const WalletPopover: React.FC = () => {
               </Button>
             </div>
           </div>
+
+          {missingModel && active && (
+            <div className='flex items-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-xs'>
+              <AlertTriangle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400' />
+              <p className='min-w-0 flex-1 text-foreground'>
+                Choose a background model for titles, summaries, memory and
+                retrieval analysis. Until then they run on the DARE default.
+              </p>
+              <Button
+                size='sm'
+                variant='outline'
+                className='h-7 shrink-0 border-amber-500/40 text-xs'
+                onClick={() => {
+                  setOpen(false)
+                  setShowModel(true)
+                }}
+              >
+                Choose model
+              </Button>
+            </div>
+          )}
 
           {/* Wallet picker */}
           <div className='max-h-[320px] overflow-y-auto px-3 py-3'>
@@ -158,6 +190,13 @@ export const WalletPopover: React.FC = () => {
 
       <AddLiteLLMKeyModal open={showLite} onClose={() => setShowLite(false)} />
       <AddBYOKeyModal open={showByo} onClose={() => setShowByo(false)} />
+      {active && (
+        <EditLiteLLMBackgroundModelModal
+          isOpen={showModel}
+          onClose={() => setShowModel(false)}
+          wallet={active}
+        />
+      )}
     </>
   )
 }

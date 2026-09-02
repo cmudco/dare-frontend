@@ -15,6 +15,8 @@ import type {
   MemoryExportBundle,
   MemoryImportResult,
   ForeignImportResult,
+  MemoryBackfillResponse,
+  MemoryBackfillRange,
 } from '@/redux/types/memory'
 
 // API Functions
@@ -170,6 +172,35 @@ export const importForeignMemoryAPI = async (
     data: { text },
   })
 }
+
+/** Read the latest historical-chat memory build, if the user has one. */
+export const getMemoryBackfillAPI =
+  async (): Promise<MemoryBackfillResponse> => {
+    return await baseRequest<MemoryBackfillResponse>({
+      url: 'api/memory/v2/backfill/',
+      method: METHOD.GET,
+    })
+  }
+
+/** Queue old conversations through the ordinary memory writer. */
+export const startMemoryBackfillAPI = async (
+  range: MemoryBackfillRange
+): Promise<MemoryBackfillResponse> => {
+  return await baseRequest<MemoryBackfillResponse>({
+    url: 'api/memory/v2/backfill/',
+    method: METHOD.POST,
+    data: range,
+  })
+}
+
+/** Stop an active build; turns already completed remain in memory. */
+export const stopMemoryBackfillAPI =
+  async (): Promise<MemoryBackfillResponse> => {
+    return await baseRequest<MemoryBackfillResponse>({
+      url: 'api/memory/v2/backfill/',
+      method: METHOD.DELETE,
+    })
+  }
 
 /**
  * Clear all memory items for the authenticated user

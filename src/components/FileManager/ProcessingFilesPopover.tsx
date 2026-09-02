@@ -6,7 +6,7 @@ import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Loader2 } from 'lucide-react'
 import { FileStatus } from '@/utils/constants/file'
-import { getJobStatusDisplay } from '@/utils/constants/files'
+import { getStatusDisplay } from '@/utils/constants/files'
 
 const ProcessingFilesPopover: React.FC = () => {
   const { files, jobStatuses } = useSelector((state: RootState) => state.files)
@@ -34,7 +34,11 @@ const ProcessingFilesPopover: React.FC = () => {
             {processingFiles.map((file) => (
               <li key={file.id} className='flex items-center space-x-2'>
                 <span className='truncate text-sm'>{file.name}</span>
-                {getJobStatusDisplay(jobStatuses[file.id]?.jobStatus)}
+                {getStatusDisplay(
+                  file.status,
+                  file.errorMessage,
+                  jobStatuses[file.id]?.processingStage ?? file.processingStage
+                )}
               </li>
             ))}
           </ul>

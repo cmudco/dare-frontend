@@ -70,8 +70,7 @@ export interface UnifiedWallet {
   // LITELLM only:
   source?: LiteLLMSource
   groupName?: string | null
-  titleModel?: string
-  memoryModel?: string
+  backgroundModel?: string
   expiresAt?: string | null
   baseUrl?: string
 }
@@ -92,6 +91,7 @@ export interface LiteLLMKeyResponse {
   baseUrl: string
   source: LiteLLMSource
   groupName: string | null
+  backgroundModel: string
   expiresAt: string | null
   createdAt: string
   updatedAt: string
@@ -104,6 +104,7 @@ export interface SetActiveWalletResponse {
 export interface LiteLLMTestResponse {
   ok: boolean
   models: string[]
+  recommendedModels: string[]
   error: string
 }
 

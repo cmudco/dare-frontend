@@ -6,6 +6,8 @@ import {
   FileStructure,
   MyFile,
   MyFolder,
+  VisionModelCatalog,
+  VisionModelCandidate,
 } from '@/redux/types/files'
 import { FileStatus } from '@/utils/constants/file'
 
@@ -38,13 +40,50 @@ export const uploadFileAPI = async (data: FormData): Promise<MyFile[]> => {
 
 export const startFileOcrRunAPI = async (
   id: number,
-  pageLimit: number
+  pageLimit: number,
+  modelIdentifier: string
 ): Promise<MyFile> => {
   return await baseRequest<MyFile>({
     url: `api/files/${id}/approve-ocr/`,
     method: METHOD.POST,
-    data: { pageLimit },
+    data: { pageLimit, modelIdentifier },
   })
+}
+
+interface VisionModelCatalogResponse {
+  models: (Omit<VisionModelCandidate, 'estimatedCostPerPage'> & {
+    estimatedCostPerPage: string
+  })[]
+  selected: string
+}
+
+const parseVisionModelCatalog = (
+  response: VisionModelCatalogResponse
+): VisionModelCatalog => ({
+  selected: response.selected,
+  models: response.models.map((model) => ({
+    ...model,
+    estimatedCostPerPage: Number(model.estimatedCostPerPage),
+  })),
+})
+
+export const getVisionModelsAPI = async (): Promise<VisionModelCatalog> => {
+  const response = await baseRequest<VisionModelCatalogResponse>({
+    url: 'api/files/vision-models/',
+    method: METHOD.GET,
+  })
+  return parseVisionModelCatalog(response)
+}
+
+export const updateVisionModelAPI = async (
+  modelIdentifier: string
+): Promise<VisionModelCatalog> => {
+  const response = await baseRequest<VisionModelCatalogResponse>({
+    url: 'api/files/vision-models/',
+    method: METHOD.PATCH,
+    data: { modelIdentifier },
+  })
+  return parseVisionModelCatalog(response)
 }
 
 /**

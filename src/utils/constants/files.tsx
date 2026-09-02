@@ -19,21 +19,6 @@ import {
   ScanLine,
 } from 'lucide-react'
 
-export const getJobStatusDisplay = (jobStatus?: string) => {
-  switch (jobStatus) {
-    case 'queued':
-      return <Badge variant='secondary'>Queued</Badge>
-    case 'started':
-      return <Badge variant='secondary'>Started</Badge>
-    case 'finished':
-      return <Badge variant='green'>Finished</Badge>
-    case 'failed':
-      return <Badge variant='destructive'>Failed</Badge>
-    default:
-      return <Badge variant='outline'>Pending</Badge>
-  }
-}
-
 const PROCESSING_STAGE_LABELS: Record<FileProcessingStage, string> = {
   parsing: 'Analyzing document',
   enriching: 'Describing visuals',

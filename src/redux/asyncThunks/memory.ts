@@ -4,7 +4,7 @@
  * Thunks for cross-conversation memory API operations.
  */
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import type { MemoryProposal } from '../types/memory'
+import type { MemoryBackfillRange, MemoryProposal } from '../types/memory'
 import {
   applyMemoryProposalAPI,
   getMemoryItemsAPI,
@@ -18,6 +18,9 @@ import {
   importMemoryAPI,
   importForeignMemoryAPI,
   clearAllMemoryAPI,
+  getMemoryBackfillAPI,
+  startMemoryBackfillAPI,
+  stopMemoryBackfillAPI,
 } from '../../api/memory'
 
 /**
@@ -184,6 +187,42 @@ export const importForeignMemory = createAsyncThunk(
   async (text: string, thunkAPI) => {
     try {
       return await importForeignMemoryAPI(text)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Read persisted progress for a historical-chat memory build. */
+export const getMemoryBackfill = createAsyncThunk(
+  'memory/getMemoryBackfill',
+  async (_, thunkAPI) => {
+    try {
+      return await getMemoryBackfillAPI()
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Start an idempotent historical-chat memory build. */
+export const startMemoryBackfill = createAsyncThunk(
+  'memory/startMemoryBackfill',
+  async (range: MemoryBackfillRange, thunkAPI) => {
+    try {
+      return await startMemoryBackfillAPI(range)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Stop an active historical-chat memory build. */
+export const stopMemoryBackfill = createAsyncThunk(
+  'memory/stopMemoryBackfill',
+  async (_, thunkAPI) => {
+    try {
+      return await stopMemoryBackfillAPI()
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

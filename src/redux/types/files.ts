@@ -59,10 +59,20 @@ export interface FileOcrPlan {
   remainingPages?: number
   canContinue?: boolean
   estimatedCostPerPage: string
-  estimatedSelectedCost: string
-  estimatedMaxCost: string
   modelIdentifier: string
   approvedAt?: string | null
+}
+
+export interface VisionModelCandidate {
+  identifier: string
+  name: string
+  estimatedCostPerPage: number
+  recommended: boolean
+}
+
+export interface VisionModelCatalog {
+  models: VisionModelCandidate[]
+  selected: string
 }
 
 export interface DocumentCounts {
@@ -290,6 +300,8 @@ export interface FileState {
   activeTab: 'my-files' | 'shared'
   shareModalFileId: number | null
   shareModalFileName: string
+  visionModels: VisionModelCatalog | null
+  visionModelsError: string | null
 }
 
 export interface FolderHeaderProps {

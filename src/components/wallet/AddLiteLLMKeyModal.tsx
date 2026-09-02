@@ -16,14 +16,13 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CheckCircle2, Loader2, Plug, XCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react'
 import { toast } from '@/utils/toast'
+import { BackgroundModelSelect } from './BackgroundModelSelect'
 
-type ProbeState =
-  | { kind: 'idle' }
-  | { kind: 'pending' }
-  | { kind: 'ok'; models: string[] }
-  | { kind: 'fail'; error: string }
+type Step =
+  | { kind: 'connection'; error?: string }
+  | { kind: 'model'; models: string[]; recommendedModels: string[] }
 
 interface AddLiteLLMKeyModalProps {
   open: boolean
@@ -46,51 +45,72 @@ interface FormValues {
   label: string
   baseUrl: string
   apiKey: string
-  titleModel: string
-  memoryModel: string
+  backgroundModel: string
 }
 
 const initialValues: FormValues = {
   label: '',
   baseUrl: '',
   apiKey: '',
-  titleModel: '',
-  memoryModel: '',
+  backgroundModel: '',
 }
 
-/** Jobs a conversation needs but the user never asks for. Left blank, DARE
- *  picks its own model — which a proxy may not serve under the same name. */
-const AUXILIARY_JOBS: { name: 'titleModel' | 'memoryModel'; label: string }[] =
-  [
-    { name: 'titleModel', label: 'Model for naming conversations' },
-    { name: 'memoryModel', label: 'Model for writing memory' },
-  ]
-
+/**
+ * Two steps: the connection is tested when the user continues, and the
+ * background model is chosen from the models that test found. Saving a key
+ * without a working connection is not possible.
+ */
 export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
   open,
   onClose,
 }) => {
   const dispatch = useDispatch<AppDispatch>()
-  const [probe, setProbe] = useState<ProbeState>({ kind: 'idle' })
+  const [step, setStep] = useState<Step>({ kind: 'connection' })
+  const [testing, setTesting] = useState(false)
 
-  const reset = () => setProbe({ kind: 'idle' })
   const handleClose = () => {
-    reset()
+    setStep({ kind: 'connection' })
     onClose()
+  }
+
+  const testConnection = async (values: FormValues) => {
+    setTesting(true)
+    try {
+      const res = await testLiteLLMUnsavedAPI(values.baseUrl, values.apiKey)
+      return res.ok
+        ? { models: res.models, recommendedModels: res.recommendedModels }
+        : { error: res.error || 'Connection failed — check the proxy.' }
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : 'Request failed.',
+      }
+    } finally {
+      setTesting(false)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle>Add LiteLLM Key</DialogTitle>
+          <DialogTitle>
+            {step.kind === 'connection'
+              ? 'Add LiteLLM Key'
+              : 'Choose a background model'}
+          </DialogTitle>
           <DialogDescription>
-            Route LLM calls through your LiteLLM proxy. Tip: include{' '}
-            <code className='rounded-sm bg-muted px-1 py-0.5 text-[11px]'>
-              /v1
-            </code>{' '}
-            in the base URL (e.g. <code>http://host:4000/v1</code>). The key is
-            encrypted at rest and never returned in API responses.
+            {step.kind === 'connection' ? (
+              <>
+                Route LLM calls through your LiteLLM proxy. Tip: include{' '}
+                <code className='rounded-sm bg-muted px-1 py-0.5 text-[11px]'>
+                  /v1
+                </code>{' '}
+                in the base URL (e.g. <code>http://host:4000/v1</code>). The key
+                is encrypted at rest and never returned in API responses.
+              </>
+            ) : (
+              'Used for titles, summaries, memory extraction, and retrieval query analysis. You can change it later from the wallet menu.'
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -112,162 +132,157 @@ export const AddLiteLLMKeyModal: React.FC<AddLiteLLMKeyModalProps> = ({
             }
           }}
         >
-          {({ errors, touched, isSubmitting, values }) => (
+          {({
+            errors,
+            touched,
+            isSubmitting,
+            setFieldValue,
+            values,
+            validateForm,
+            setTouched,
+          }) => (
             <Form className='space-y-4'>
-              <div className='space-y-1.5'>
-                <Label htmlFor='litellm-label'>Label</Label>
-                <Field
-                  as={Input}
-                  id='litellm-label'
-                  name='label'
-                  placeholder='Personal, PHIL 101 - Spring 2026, …'
-                  autoFocus
-                />
-                {touched.label && errors.label && (
-                  <p className='text-xs text-destructive'>{errors.label}</p>
-                )}
-              </div>
-
-              <div className='space-y-1.5'>
-                <Label htmlFor='litellm-base-url'>Base URL</Label>
-                <Field
-                  as={Input}
-                  id='litellm-base-url'
-                  name='baseUrl'
-                  type='url'
-                  placeholder='https://litellm-proxy.example.com'
-                />
-                {touched.baseUrl && errors.baseUrl && (
-                  <p className='text-xs text-destructive'>{errors.baseUrl}</p>
-                )}
-              </div>
-
-              <div className='space-y-1.5'>
-                <Label htmlFor='litellm-api-key'>API Key</Label>
-                <Field
-                  as={Input}
-                  id='litellm-api-key'
-                  name='apiKey'
-                  type='password'
-                  autoComplete='new-password'
-                  placeholder='sk-…'
-                />
-                {touched.apiKey && errors.apiKey && (
-                  <p className='text-xs text-destructive'>{errors.apiKey}</p>
-                )}
-              </div>
-
-              <div className='flex items-center justify-between gap-2 border-t pt-3'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='sm'
-                  disabled={
-                    isSubmitting ||
-                    probe.kind === 'pending' ||
-                    !values.baseUrl ||
-                    !values.apiKey
-                  }
-                  onClick={async () => {
-                    setProbe({ kind: 'pending' })
-                    try {
-                      const res = await testLiteLLMUnsavedAPI(
-                        values.baseUrl,
-                        values.apiKey
-                      )
-                      if (res.ok) setProbe({ kind: 'ok', models: res.models })
-                      else setProbe({ kind: 'fail', error: res.error })
-                    } catch (err) {
-                      setProbe({
-                        kind: 'fail',
-                        error:
-                          err instanceof Error
-                            ? err.message
-                            : 'Request failed.',
-                      })
-                    }
-                  }}
-                >
-                  {probe.kind === 'pending' ? (
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  ) : (
-                    <Plug className='mr-2 h-4 w-4' />
-                  )}
-                  Test connection
-                </Button>
-                {probe.kind === 'ok' && (
-                  <span className='inline-flex items-center gap-1 truncate text-xs font-medium text-emerald-700 dark:text-emerald-400'>
-                    <CheckCircle2 className='h-3.5 w-3.5 shrink-0' />
-                    {probe.models.length}{' '}
-                    {probe.models.length === 1 ? 'model' : 'models'} found
-                  </span>
-                )}
-                {probe.kind === 'fail' && (
-                  <span className='inline-flex items-center gap-1 truncate text-xs font-medium text-destructive'>
-                    <XCircle className='h-3.5 w-3.5 shrink-0' />
-                    Connection failed
-                  </span>
-                )}
-              </div>
-
-              {probe.kind === 'ok' && probe.models.length > 0 && (
+              {step.kind === 'connection' && (
                 <>
-                  <div className='rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 text-xs text-muted-foreground'>
-                    <p className='wrap-break-word'>
-                      {probe.models.slice(0, 8).join(', ')}
-                      {probe.models.length > 8 &&
-                        ` + ${probe.models.length - 8} more`}
-                    </p>
+                  <div className='space-y-1.5'>
+                    <Label htmlFor='litellm-label'>Label</Label>
+                    <Field
+                      as={Input}
+                      id='litellm-label'
+                      name='label'
+                      placeholder='Personal, PHIL 101 - Spring 2026, …'
+                      autoFocus
+                    />
+                    {touched.label && errors.label && (
+                      <p className='text-xs text-destructive'>{errors.label}</p>
+                    )}
                   </div>
 
-                  {AUXILIARY_JOBS.map((job) => (
-                    <div key={job.name} className='space-y-1'>
-                      <Label htmlFor={job.name}>{job.label}</Label>
-                      <Field
-                        as='select'
-                        id={job.name}
-                        name={job.name}
-                        className='flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm'
-                      >
-                        <option value=''>Use the DARE default</option>
-                        {probe.models.map((model) => (
-                          <option key={model} value={model}>
-                            {model}
-                          </option>
-                        ))}
-                      </Field>
+                  <div className='space-y-1.5'>
+                    <Label htmlFor='litellm-base-url'>Base URL</Label>
+                    <Field
+                      as={Input}
+                      id='litellm-base-url'
+                      name='baseUrl'
+                      type='url'
+                      placeholder='https://litellm-proxy.example.com'
+                    />
+                    {touched.baseUrl && errors.baseUrl && (
+                      <p className='text-xs text-destructive'>
+                        {errors.baseUrl}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className='space-y-1.5'>
+                    <Label htmlFor='litellm-api-key'>API Key</Label>
+                    <Field
+                      as={Input}
+                      id='litellm-api-key'
+                      name='apiKey'
+                      type='password'
+                      autoComplete='new-password'
+                      placeholder='sk-…'
+                    />
+                    {touched.apiKey && errors.apiKey && (
+                      <p className='text-xs text-destructive'>
+                        {errors.apiKey}
+                      </p>
+                    )}
+                  </div>
+
+                  {step.error && (
+                    <div className='rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground'>
+                      <p className='wrap-break-word'>{step.error}</p>
                     </div>
-                  ))}
-                  <p className='text-xs text-muted-foreground'>
-                    These run on your proxy and bill to it. Left on the DARE
-                    default, they use DARE&apos;s own model — which this proxy
-                    may not serve under the same name.
-                  </p>
+                  )}
                 </>
               )}
-              {probe.kind === 'fail' && (
-                <div className='rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground'>
-                  <p className='wrap-break-word'>
-                    {probe.error || 'Unknown error.'}
+
+              {step.kind === 'model' && (
+                <>
+                  <p className='inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400'>
+                    <CheckCircle2 className='h-3.5 w-3.5 shrink-0' />
+                    Connected to {values.label} — {step.models.length}{' '}
+                    {step.models.length === 1 ? 'model' : 'models'} available
                   </p>
-                </div>
+                  <BackgroundModelSelect
+                    id='litellm-background-model'
+                    models={step.models}
+                    recommendedModels={step.recommendedModels}
+                    value={values.backgroundModel}
+                    onChange={(model) =>
+                      void setFieldValue('backgroundModel', model)
+                    }
+                  />
+                </>
               )}
 
               <DialogFooter>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={handleClose}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type='submit' disabled={isSubmitting}>
-                  {isSubmitting && (
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  )}
-                  Save
-                </Button>
+                {step.kind === 'connection' ? (
+                  <>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      onClick={handleClose}
+                      disabled={testing}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type='button'
+                      disabled={testing}
+                      onClick={async () => {
+                        const validation = await validateForm()
+                        if (Object.keys(validation).length > 0) {
+                          await setTouched({
+                            label: true,
+                            baseUrl: true,
+                            apiKey: true,
+                          })
+                          return
+                        }
+                        const result = await testConnection(values)
+                        if ('error' in result) {
+                          setStep({ kind: 'connection', error: result.error })
+                          return
+                        }
+                        if (!values.backgroundModel) {
+                          await setFieldValue(
+                            'backgroundModel',
+                            result.recommendedModels[0] ?? ''
+                          )
+                        }
+                        setStep({ kind: 'model', ...result })
+                      }}
+                    >
+                      {testing ? (
+                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      ) : (
+                        <ArrowRight className='mr-2 h-4 w-4' />
+                      )}
+                      {testing ? 'Testing connection…' : 'Next'}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      onClick={() => setStep({ kind: 'connection' })}
+                      disabled={isSubmitting}
+                    >
+                      <ArrowLeft className='mr-2 h-4 w-4' />
+                      Back
+                    </Button>
+                    <Button type='submit' disabled={isSubmitting}>
+                      {isSubmitting && (
+                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      )}
+                      Save
+                    </Button>
+                  </>
+                )}
               </DialogFooter>
             </Form>
           )}
