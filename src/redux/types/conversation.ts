@@ -322,6 +322,7 @@ export type DeliberationStatus =
   | 'done'
   | 'failed'
   | 'dropped'
+  | 'stopped'
 
 export interface DeliberationParticipant {
   modelId: string

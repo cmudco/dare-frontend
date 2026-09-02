@@ -30,6 +30,7 @@ const STATUS: Record<
   done: { label: 'done', variant: 'green' },
   dropped: { label: 'timed out', variant: 'yellow' },
   failed: { label: 'failed', variant: 'red' },
+  stopped: { label: 'stopped', variant: 'gray' },
 }
 
 const formatCost = (cost: string): string => {
@@ -124,7 +125,9 @@ const ResponderCard: React.FC<{
                 ? 'Took too long; the chairman went on without it.'
                 : responder.status === 'failed'
                   ? 'Couldn’t answer this one.'
-                  : ''}
+                  : responder.status === 'stopped'
+                    ? 'Stopped before it finished.'
+                    : ''}
           {streaming && (
             <span
               aria-hidden='true'
@@ -162,7 +165,8 @@ export const DeliberationPanel: React.FC<DeliberationPanelProps> = ({
   const live = responderLive || chairmanLive
   const doneCount = responders.filter((r) => r.status === 'done').length
   const troubled = responders.filter(
-    (r) => r.status === 'dropped' || r.status === 'failed'
+    (r) =>
+      r.status === 'dropped' || r.status === 'failed' || r.status === 'stopped'
   ).length
 
   // Open while the models work, then fold away once the answer is the
