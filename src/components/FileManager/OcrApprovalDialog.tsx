@@ -39,6 +39,7 @@ const OcrApprovalDialog = ({ file, onClose }: OcrApprovalDialogProps) => {
   const dispatch = useAppDispatch()
   const plan = file?.ocr
   const visionModels = useAppSelector((state) => state.files.visionModels)
+  const activeWallet = useAppSelector((state) => state.billing.activeWallet)
   const [pageLimit, setPageLimit] = useState(10)
   const [modelIdentifier, setModelIdentifier] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -46,7 +47,7 @@ const OcrApprovalDialog = ({ file, onClose }: OcrApprovalDialogProps) => {
 
   useEffect(() => {
     dispatch(fetchVisionModels())
-  }, [dispatch])
+  }, [dispatch, activeWallet.type, activeWallet.refId])
 
   useEffect(() => {
     if (plan) {

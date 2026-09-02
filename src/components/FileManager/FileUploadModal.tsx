@@ -54,6 +54,9 @@ const FileUploadModal: React.FC = () => {
 
   const { selectedTags, isModalOpen, loading, error, visionModels } =
     useSelector((state: RootState) => state.files)
+  const activeWallet = useSelector(
+    (state: RootState) => state.billing.activeWallet
+  )
 
   useEffect(() => {
     dispatch(getTags())
@@ -64,7 +67,7 @@ const FileUploadModal: React.FC = () => {
       dispatch(fetchChunkSettings())
       dispatch(fetchVisionModels())
     }
-  }, [dispatch, isModalOpen])
+  }, [dispatch, isModalOpen, activeWallet.type, activeWallet.refId])
 
   const handleVisionModelChange = async (identifier: string) => {
     const result = await dispatch(updateVisionModel(identifier))
