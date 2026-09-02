@@ -13,6 +13,7 @@ import { ArrowRight, Loader2, MessagesSquare, Search, X } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { searchSessions } from '@/redux/asyncThunks/memory'
 import { clearSessionResults } from '@/redux/memorySlice'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -103,20 +104,24 @@ const SessionSearch = ({
         </div>
         <div className='flex flex-wrap items-center gap-2 px-1 text-xs text-muted-foreground'>
           <span>Between</span>
-          <Input
-            type='date'
+          <DatePicker
             value={since}
-            onChange={(event) => onSinceChange(event.target.value)}
+            onChange={onSinceChange}
+            max={until || undefined}
+            size='sm'
+            placeholder='Any date'
             aria-label='From date'
-            className='h-8 w-auto rounded-lg bg-card text-xs'
+            className='w-36'
           />
           <span>and</span>
-          <Input
-            type='date'
+          <DatePicker
             value={until}
-            onChange={(event) => onUntilChange(event.target.value)}
+            onChange={onUntilChange}
+            min={since || undefined}
+            size='sm'
+            placeholder='Any date'
             aria-label='To date'
-            className='h-8 w-auto rounded-lg bg-card text-xs'
+            className='w-36'
           />
           <span className='text-muted-foreground/70'>
             — both optional; dates alone answer &ldquo;what did we talk about

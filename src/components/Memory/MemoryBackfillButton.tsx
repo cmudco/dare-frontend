@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { format, subDays } from 'date-fns'
 import { History, Loader2, Square } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -10,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
@@ -24,6 +25,12 @@ import { MemoryBackfillStatus } from '@/redux/types/memory'
 import { toast } from '@/utils/toast'
 
 const POLL_INTERVAL_MS = 3000
+const ISO_DATE = 'yyyy-MM-dd'
+const RANGE_PRESETS = [
+  { label: 'Last 7 days', days: 7 },
+  { label: 'Last 30 days', days: 30 },
+  { label: 'Last 90 days', days: 90 },
+]
 
 const MemoryBackfillButton = () => {
   const dispatch = useAppDispatch()
@@ -37,6 +44,12 @@ const MemoryBackfillButton = () => {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [since, setSince] = useState('')
   const [until, setUntil] = useState('')
+  const today = format(new Date(), ISO_DATE)
+
+  const applyPreset = (days: number) => {
+    setSince(format(subDays(new Date(), days - 1), ISO_DATE))
+    setUntil(today)
+  }
 
   const inProgress =
     run?.status === MemoryBackfillStatus.QUEUED ||
@@ -178,26 +191,56 @@ const MemoryBackfillButton = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <div className='space-y-1.5'>
-              <Label htmlFor='memory-backfill-since'>From (optional)</Label>
-              <Input
-                id='memory-backfill-since'
-                type='date'
-                value={since}
-                max={until || undefined}
-                onChange={(event) => setSince(event.target.value)}
-              />
+          <div className='space-y-4'>
+            <div className='grid gap-4 sm:grid-cols-2'>
+              <div className='space-y-1.5'>
+                <Label htmlFor='memory-backfill-since'>
+                  From{' '}
+                  <span className='font-normal text-muted-foreground'>
+                    (optional)
+                  </span>
+                </Label>
+                <DatePicker
+                  id='memory-backfill-since'
+                  value={since}
+                  max={until || today}
+                  placeholder='First chat'
+                  onChange={setSince}
+                />
+              </div>
+              <div className='space-y-1.5'>
+                <Label htmlFor='memory-backfill-until'>
+                  To{' '}
+                  <span className='font-normal text-muted-foreground'>
+                    (optional)
+                  </span>
+                </Label>
+                <DatePicker
+                  id='memory-backfill-until'
+                  value={until}
+                  min={since || undefined}
+                  max={today}
+                  placeholder='Latest chat'
+                  onChange={setUntil}
+                />
+              </div>
             </div>
-            <div className='space-y-1.5'>
-              <Label htmlFor='memory-backfill-until'>To (optional)</Label>
-              <Input
-                id='memory-backfill-until'
-                type='date'
-                value={until}
-                min={since || undefined}
-                onChange={(event) => setUntil(event.target.value)}
-              />
+            <div className='flex flex-wrap items-center gap-1.5'>
+              <span className='mr-1 text-xs text-muted-foreground'>
+                Quick ranges
+              </span>
+              {RANGE_PRESETS.map((preset) => (
+                <Button
+                  key={preset.days}
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  className='h-7 rounded-full px-3 text-xs'
+                  onClick={() => applyPreset(preset.days)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
             </div>
           </div>
 
