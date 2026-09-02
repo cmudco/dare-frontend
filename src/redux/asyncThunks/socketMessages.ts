@@ -90,7 +90,9 @@ export const sendSocketMessage = createAsyncThunk<
       // Opaque dispatch id — the BE inverts the encoding in
       // `parse_model_id` (DB-PK string or `litellm:<key>:<model>`).
       model_id: selectedModel,
-      ensemble: ensemblePayload(ensemble, selectedModel),
+      ensemble: state.featureFlags.flags.enableEnsemble
+        ? ensemblePayload(ensemble, selectedModel)
+        : undefined,
       prompt_id: activeConversation.prompt?.id,
       temperature: activeConversation.temperature,
       effort: activeConversation.effort,
@@ -219,7 +221,9 @@ export const regenerateSocketResponse = createAsyncThunk<
       // Opaque dispatch id — the BE inverts the encoding in
       // `parse_model_id` (DB-PK string or `litellm:<key>:<model>`).
       model_id: selectedModel,
-      ensemble: ensemblePayload(conversation.ensemble, selectedModel),
+      ensemble: state.featureFlags.flags.enableEnsemble
+        ? ensemblePayload(conversation.ensemble, selectedModel)
+        : undefined,
       prompt_id: activeConversation.prompt?.id,
       temperature: activeConversation.temperature,
       effort: activeConversation.effort,

@@ -40,6 +40,7 @@ import {
 } from '@/utils/modelGroupingUtils'
 import { DEPTH_META, formatEstimateCost } from '@/utils/ensemble'
 import { useEnsembleEstimate } from '@/hooks/useEnsembleEstimate'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
 import ModeButton from './ModeButton'
 import ModelSkeleton from './ModelSkeleton'
@@ -81,10 +82,13 @@ const ModelPicker: React.FC = () => {
   )
   const { ensemble, responders, chairman, active, estimate } =
     useEnsembleEstimate()
+  // Off by default: without the flag the picker is the single-model picker
+  // it always was, and no ensemble payload can leave the composer.
+  const enableEnsemble = useFeatureFlag('enableEnsemble')
   const chairmanId = chairman?.id ?? null
   const handleMakeChairman = (entry: PickerModel) =>
     dispatch(setEnsembleChairman(entry.id))
-  const multi = ensemble.depth !== 'single'
+  const multi = enableEnsemble && ensemble.depth !== 'single'
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [groupingMode, setGroupingMode] = useState<
@@ -284,12 +288,14 @@ const ModelPicker: React.FC = () => {
               </div>
             </div>
 
-            <div className='mb-3'>
-              <DepthDial
-                value={ensemble.depth}
-                onChange={(depth) => dispatch(setEnsembleDepth(depth))}
-              />
-            </div>
+            {enableEnsemble && (
+              <div className='mb-3'>
+                <DepthDial
+                  value={ensemble.depth}
+                  onChange={(depth) => dispatch(setEnsembleDepth(depth))}
+                />
+              </div>
+            )}
 
             <div className='relative'>
               <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
