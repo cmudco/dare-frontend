@@ -7,6 +7,7 @@ import {
   MyFile,
   MyFolder,
   VisionModelCatalog,
+  VisionModelCandidate,
 } from '@/redux/types/files'
 import { FileStatus } from '@/utils/constants/file'
 
@@ -49,21 +50,40 @@ export const startFileOcrRunAPI = async (
   })
 }
 
+interface VisionModelCatalogResponse {
+  models: (Omit<VisionModelCandidate, 'estimatedCostPerPage'> & {
+    estimatedCostPerPage: string
+  })[]
+  selected: string
+}
+
+const parseVisionModelCatalog = (
+  response: VisionModelCatalogResponse
+): VisionModelCatalog => ({
+  selected: response.selected,
+  models: response.models.map((model) => ({
+    ...model,
+    estimatedCostPerPage: Number(model.estimatedCostPerPage),
+  })),
+})
+
 export const getVisionModelsAPI = async (): Promise<VisionModelCatalog> => {
-  return await baseRequest<VisionModelCatalog>({
+  const response = await baseRequest<VisionModelCatalogResponse>({
     url: 'api/files/vision-models/',
     method: METHOD.GET,
   })
+  return parseVisionModelCatalog(response)
 }
 
 export const updateVisionModelAPI = async (
   modelIdentifier: string
 ): Promise<VisionModelCatalog> => {
-  return await baseRequest<VisionModelCatalog>({
+  const response = await baseRequest<VisionModelCatalogResponse>({
     url: 'api/files/vision-models/',
     method: METHOD.PATCH,
     data: { modelIdentifier },
   })
+  return parseVisionModelCatalog(response)
 }
 
 /**

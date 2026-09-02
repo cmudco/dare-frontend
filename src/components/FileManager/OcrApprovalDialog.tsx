@@ -39,7 +39,9 @@ const OcrApprovalDialog = ({ file, onClose }: OcrApprovalDialogProps) => {
   const dispatch = useAppDispatch()
   const plan = file?.ocr
   const visionModels = useAppSelector((state) => state.files.visionModels)
-  const activeWallet = useAppSelector((state) => state.billing.activeWallet)
+  const visionModelsError = useAppSelector(
+    (state) => state.files.visionModelsError
+  )
   const [pageLimit, setPageLimit] = useState(10)
   const [modelIdentifier, setModelIdentifier] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -47,7 +49,7 @@ const OcrApprovalDialog = ({ file, onClose }: OcrApprovalDialogProps) => {
 
   useEffect(() => {
     dispatch(fetchVisionModels())
-  }, [dispatch, activeWallet.type, activeWallet.refId])
+  }, [dispatch])
 
   useEffect(() => {
     if (plan) {
@@ -83,9 +85,8 @@ const OcrApprovalDialog = ({ file, onClose }: OcrApprovalDialogProps) => {
   const selectedModel = visionModels?.models.find(
     (model) => model.identifier === modelIdentifier
   )
-  const costPerPage = Number(
-    selectedModel?.estimatedCostPerPage ?? plan.estimatedCostPerPage
-  )
+  const costPerPage =
+    selectedModel?.estimatedCostPerPage ?? Number(plan.estimatedCostPerPage)
   const estimate = costPerPage * pageLimit
   const deferredPages = Math.max(remainingPages - pageLimit, 0)
 
@@ -160,6 +161,9 @@ const OcrApprovalDialog = ({ file, onClose }: OcrApprovalDialogProps) => {
               onChange={setModelIdentifier}
               disabled={!visionModels || isSubmitting}
             />
+            {visionModelsError && (
+              <p className='text-xs text-destructive'>{visionModelsError}</p>
+            )}
           </div>
 
           <div className='space-y-2'>

@@ -16,13 +16,13 @@ interface VisionModelSelectProps {
   disabled?: boolean
 }
 
-const formatPerPage = (value: string) =>
+const formatPerPage = (value: number) =>
   `${new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 5,
-  }).format(Number(value))}/page`
+  }).format(value)}/page`
 
 const VisionModelSelect = ({
   id,

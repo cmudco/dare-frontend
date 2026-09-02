@@ -165,6 +165,11 @@ const fileSlice = createSlice({
       })
       .addCase(fetchVisionModels.fulfilled, (state, action) => {
         state.visionModels = action.payload
+        state.visionModelsError = null
+      })
+      .addCase(fetchVisionModels.rejected, (state, action) => {
+        state.visionModelsError =
+          (action.payload as string) || 'Could not load vision models'
       })
       .addCase(updateVisionModel.fulfilled, (state, action) => {
         state.visionModels = action.payload

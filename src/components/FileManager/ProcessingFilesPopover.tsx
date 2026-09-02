@@ -36,7 +36,7 @@ const ProcessingFilesPopover: React.FC = () => {
                 <span className='truncate text-sm'>{file.name}</span>
                 {getStatusDisplay(
                   file.status,
-                  file.errorMessage ?? undefined,
+                  file.errorMessage,
                   jobStatuses[file.id]?.processingStage ?? file.processingStage
                 )}
               </li>

@@ -24,4 +24,5 @@ export const initialState: FileState = {
   shareModalFileId: null,
   shareModalFileName: '',
   visionModels: null,
+  visionModelsError: null,
 }

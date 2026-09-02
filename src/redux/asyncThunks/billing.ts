@@ -13,6 +13,7 @@ import {
   deleteLiteLLMKeyAPI,
 } from '../../api/billing'
 import { getAvailableModels } from './conversation'
+import { fetchVisionModels } from './file'
 import {
   allocateToMemberAPI,
   clearUserOverrideAPI,
@@ -198,11 +199,13 @@ export const setActiveWallet = createAsyncThunk<
     // so refresh it whenever the active wallet changes — otherwise the user
     // sees a stale list until they reopen the picker.
     thunkAPI.dispatch(getAvailableModels())
+    thunkAPI.dispatch(fetchVisionModels())
     return response
   } catch (error) {
     // Rollback optimistic update by re-fetching.
     thunkAPI.dispatch(getWallets())
     thunkAPI.dispatch(getAvailableModels())
+    thunkAPI.dispatch(fetchVisionModels())
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })

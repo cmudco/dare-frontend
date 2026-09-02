@@ -391,7 +391,6 @@ export interface LLMModel {
   supportsTemperature: boolean
   supportsEffort: boolean
   supportsAdaptiveThinking: boolean
-  supportsVision: boolean
   defaultEffort: EffortLevel
   defaultAdaptiveThinkingEnabled: boolean
   isImageGenerator?: boolean

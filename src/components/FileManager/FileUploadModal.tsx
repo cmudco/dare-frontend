@@ -52,11 +52,14 @@ const FileUploadModal: React.FC = () => {
   const [isChunkPopoverOpen, setIsChunkPopoverOpen] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
 
-  const { selectedTags, isModalOpen, loading, error, visionModels } =
-    useSelector((state: RootState) => state.files)
-  const activeWallet = useSelector(
-    (state: RootState) => state.billing.activeWallet
-  )
+  const {
+    selectedTags,
+    isModalOpen,
+    loading,
+    error,
+    visionModels,
+    visionModelsError,
+  } = useSelector((state: RootState) => state.files)
 
   useEffect(() => {
     dispatch(getTags())
@@ -67,7 +70,7 @@ const FileUploadModal: React.FC = () => {
       dispatch(fetchChunkSettings())
       dispatch(fetchVisionModels())
     }
-  }, [dispatch, isModalOpen, activeWallet.type, activeWallet.refId])
+  }, [dispatch, isModalOpen])
 
   const handleVisionModelChange = async (identifier: string) => {
     const result = await dispatch(updateVisionModel(identifier))
@@ -368,6 +371,9 @@ const FileUploadModal: React.FC = () => {
               onChange={handleVisionModelChange}
               disabled={!visionModels}
             />
+            {visionModelsError && (
+              <p className='text-xs text-destructive'>{visionModelsError}</p>
+            )}
           </div>
           <div className='flex items-center justify-between text-xs text-muted-foreground'>
             <span>
