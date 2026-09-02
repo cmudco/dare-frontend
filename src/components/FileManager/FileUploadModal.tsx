@@ -8,7 +8,14 @@ import {
   updateRemoveTag,
   setError,
 } from '../../redux/fileSlice'
-import { getFiles, uploadNewFile } from '../../redux/asyncThunks/file'
+import {
+  fetchVisionModels,
+  getFiles,
+  updateVisionModel,
+  uploadNewFile,
+} from '../../redux/asyncThunks/file'
+import VisionModelSelect from './VisionModelSelect'
+import { toast } from '@/utils/toast'
 import { addTag, getTags } from '../../redux/asyncThunks/tag'
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
 import { Settings, Info } from 'lucide-react'
@@ -23,6 +30,7 @@ import {
 } from '../ui/dialog'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
+import { Label } from '../ui/label'
 import {
   Select,
   SelectTrigger,
@@ -44,9 +52,8 @@ const FileUploadModal: React.FC = () => {
   const [isChunkPopoverOpen, setIsChunkPopoverOpen] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
 
-  const { selectedTags, isModalOpen, loading, error } = useSelector(
-    (state: RootState) => state.files
-  )
+  const { selectedTags, isModalOpen, loading, error, visionModels } =
+    useSelector((state: RootState) => state.files)
 
   useEffect(() => {
     dispatch(getTags())
@@ -55,8 +62,20 @@ const FileUploadModal: React.FC = () => {
   useEffect(() => {
     if (isModalOpen) {
       dispatch(fetchChunkSettings())
+      dispatch(fetchVisionModels())
     }
   }, [dispatch, isModalOpen])
+
+  const handleVisionModelChange = async (identifier: string) => {
+    const result = await dispatch(updateVisionModel(identifier))
+    if (updateVisionModel.fulfilled.match(result)) {
+      toast.success('Vision model saved.')
+    } else {
+      toast.error(
+        (result.payload as string) || 'Could not save the vision model'
+      )
+    }
+  }
   const { tags } = useSelector((state: RootState) => state.tags)
   const { chunkSettings } = useSelector((state: RootState) => state.user)
 
@@ -332,6 +351,21 @@ const FileUploadModal: React.FC = () => {
               </ul>
             </div>
           )}
+          <div className='space-y-1.5'>
+            <div className='flex items-baseline justify-between gap-3'>
+              <Label htmlFor='upload-vision-model'>Vision model</Label>
+              <span className='text-xs text-muted-foreground'>
+                Reads scanned pages and figures
+              </span>
+            </div>
+            <VisionModelSelect
+              id='upload-vision-model'
+              models={visionModels?.models ?? []}
+              value={visionModels?.selected ?? ''}
+              onChange={handleVisionModelChange}
+              disabled={!visionModels}
+            />
+          </div>
           <div className='flex items-center justify-between text-xs text-muted-foreground'>
             <span>
               Chunk size: {chunkSettings?.chunkSize ?? 1000}, overlap:{' '}

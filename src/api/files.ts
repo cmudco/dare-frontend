@@ -6,6 +6,7 @@ import {
   FileStructure,
   MyFile,
   MyFolder,
+  VisionModelCatalog,
 } from '@/redux/types/files'
 import { FileStatus } from '@/utils/constants/file'
 
@@ -38,12 +39,30 @@ export const uploadFileAPI = async (data: FormData): Promise<MyFile[]> => {
 
 export const startFileOcrRunAPI = async (
   id: number,
-  pageLimit: number
+  pageLimit: number,
+  modelIdentifier: string
 ): Promise<MyFile> => {
   return await baseRequest<MyFile>({
     url: `api/files/${id}/approve-ocr/`,
     method: METHOD.POST,
-    data: { pageLimit },
+    data: { pageLimit, modelIdentifier },
+  })
+}
+
+export const getVisionModelsAPI = async (): Promise<VisionModelCatalog> => {
+  return await baseRequest<VisionModelCatalog>({
+    url: 'api/files/vision-models/',
+    method: METHOD.GET,
+  })
+}
+
+export const updateVisionModelAPI = async (
+  modelIdentifier: string
+): Promise<VisionModelCatalog> => {
+  return await baseRequest<VisionModelCatalog>({
+    url: 'api/files/vision-models/',
+    method: METHOD.PATCH,
+    data: { modelIdentifier },
   })
 }
 

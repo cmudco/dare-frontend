@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FileText, Loader2 } from 'lucide-react'
 
-import { startFileOcrRun } from '@/redux/asyncThunks/file'
-import { useAppDispatch } from '@/redux/hooks'
+import { fetchVisionModels, startFileOcrRun } from '@/redux/asyncThunks/file'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { MyFile } from '@/redux/types/files'
 import { Button } from '@/components/ui/button'
+import VisionModelSelect from './VisionModelSelect'
 import {
   Dialog,
   DialogContent,
@@ -37,12 +38,21 @@ const formatEstimatedCost = (value: number) =>
 const OcrApprovalDialog = ({ file, onClose }: OcrApprovalDialogProps) => {
   const dispatch = useAppDispatch()
   const plan = file?.ocr
+  const visionModels = useAppSelector((state) => state.files.visionModels)
   const [pageLimit, setPageLimit] = useState(10)
+  const [modelIdentifier, setModelIdentifier] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (plan) setPageLimit(plan.pageLimit)
+    dispatch(fetchVisionModels())
+  }, [dispatch])
+
+  useEffect(() => {
+    if (plan) {
+      setPageLimit(plan.pageLimit)
+      setModelIdentifier(plan.modelIdentifier)
+    }
     setError(null)
   }, [plan])
 
@@ -69,14 +79,22 @@ const OcrApprovalDialog = ({ file, onClose }: OcrApprovalDialogProps) => {
   const remainingPages =
     plan.remainingPages ??
     Math.max(plan.detectedPages - (plan.processedPages ?? 0), 0)
-  const estimate = Number(plan.estimatedCostPerPage) * pageLimit
+  const selectedModel = visionModels?.models.find(
+    (model) => model.identifier === modelIdentifier
+  )
+  const costPerPage = Number(
+    selectedModel?.estimatedCostPerPage ?? plan.estimatedCostPerPage
+  )
+  const estimate = costPerPage * pageLimit
   const deferredPages = Math.max(remainingPages - pageLimit, 0)
 
   const handleApprove = async () => {
     setIsSubmitting(true)
     setError(null)
     try {
-      await dispatch(startFileOcrRun({ fileId: file.id, pageLimit })).unwrap()
+      await dispatch(
+        startFileOcrRun({ fileId: file.id, pageLimit, modelIdentifier })
+      ).unwrap()
       onClose()
     } catch (approvalError) {
       setError(
@@ -121,19 +139,26 @@ const OcrApprovalDialog = ({ file, onClose }: OcrApprovalDialogProps) => {
         </DialogHeader>
 
         <div className='space-y-4'>
-          <div className='grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/40 p-4 text-sm'>
-            <div>
-              <p className='text-muted-foreground'>Vision model</p>
-              <p className='mt-1 font-medium text-foreground'>
-                {plan.modelIdentifier}
-              </p>
+          <div className='space-y-2'>
+            <div className='flex items-baseline justify-between gap-3'>
+              <label
+                htmlFor='ocr-vision-model'
+                className='text-sm font-medium text-foreground'
+              >
+                Vision model
+              </label>
+              <span className='text-xs text-muted-foreground'>
+                {remainingPages} {remainingPages === 1 ? 'page' : 'pages'}{' '}
+                remaining
+              </span>
             </div>
-            <div>
-              <p className='text-muted-foreground'>Pages remaining</p>
-              <p className='mt-1 font-medium text-foreground'>
-                {remainingPages}
-              </p>
-            </div>
+            <VisionModelSelect
+              id='ocr-vision-model'
+              models={visionModels?.models ?? []}
+              value={modelIdentifier}
+              onChange={setModelIdentifier}
+              disabled={!visionModels || isSubmitting}
+            />
           </div>
 
           <div className='space-y-2'>
@@ -190,13 +215,13 @@ const OcrApprovalDialog = ({ file, onClose }: OcrApprovalDialogProps) => {
                   All {plan.selectablePages} remaining pages allowed this run
                 </span>
                 <span className='font-medium text-foreground'>
-                  {formatEstimatedCost(Number(plan.estimatedMaxCost))}
+                  {formatEstimatedCost(costPerPage * plan.selectablePages)}
                 </span>
               </div>
             )}
             <p className='mt-2 text-xs text-muted-foreground'>
-              Estimate based on the configured model and expected tokens per
-              page. The final charge follows actual token usage.
+              Estimate based on the selected model and expected tokens per page.
+              The final charge follows actual token usage.
             </p>
           </div>
 

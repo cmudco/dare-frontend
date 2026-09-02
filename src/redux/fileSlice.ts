@@ -15,6 +15,8 @@ import {
   updateFileTags,
   getSharedFiles,
   importSharedFile,
+  fetchVisionModels,
+  updateVisionModel,
   shareFileWithUser,
   togglePublicShare,
   startFileOcrRun,
@@ -160,6 +162,12 @@ const fileSlice = createSlice({
       })
       .addCase(startFileOcrRun.rejected, (state, action) => {
         state.error = action.payload as string
+      })
+      .addCase(fetchVisionModels.fulfilled, (state, action) => {
+        state.visionModels = action.payload
+      })
+      .addCase(updateVisionModel.fulfilled, (state, action) => {
+        state.visionModels = action.payload
       })
       .addCase(uploadFolder.pending, (state) => {
         state.loading = true

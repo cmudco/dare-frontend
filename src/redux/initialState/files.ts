@@ -23,4 +23,5 @@ export const initialState: FileState = {
   activeTab: 'my-files',
   shareModalFileId: null,
   shareModalFileName: '',
+  visionModels: null,
 }

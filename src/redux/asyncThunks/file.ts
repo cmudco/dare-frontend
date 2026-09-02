@@ -18,6 +18,8 @@ import {
   shareFileWithUserAPI,
   togglePublicShareAPI,
   startFileOcrRunAPI,
+  getVisionModelsAPI,
+  updateVisionModelAPI,
 } from '../../api/files'
 import { MyFile } from '../types/files'
 
@@ -26,11 +28,37 @@ const BATCH_SIZE = 5
 export const startFileOcrRun = createAsyncThunk(
   'files/startFileOcrRun',
   async (
-    { fileId, pageLimit }: { fileId: number; pageLimit: number },
+    {
+      fileId,
+      pageLimit,
+      modelIdentifier,
+    }: { fileId: number; pageLimit: number; modelIdentifier: string },
     thunkAPI
   ) => {
     try {
-      return await startFileOcrRunAPI(fileId, pageLimit)
+      return await startFileOcrRunAPI(fileId, pageLimit, modelIdentifier)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const fetchVisionModels = createAsyncThunk(
+  'files/fetchVisionModels',
+  async (_, thunkAPI) => {
+    try {
+      return await getVisionModelsAPI()
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const updateVisionModel = createAsyncThunk(
+  'files/updateVisionModel',
+  async (modelIdentifier: string, thunkAPI) => {
+    try {
+      return await updateVisionModelAPI(modelIdentifier)
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }
