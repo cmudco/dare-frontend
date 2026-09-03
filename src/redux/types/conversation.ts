@@ -308,12 +308,35 @@ export interface ContextTrace {
  */
 export type EnsembleDepth = 'single' | 'panel' | 'council'
 
+export type EnsembleRole = 'responder' | 'evaluator' | 'chairman'
+
+/**
+ * What each role is told. `null` for a role keeps its default prompt;
+ * `angles` is positional, aligned with `responderIds` ('' = no angle).
+ */
+export interface EnsembleBriefs {
+  responder: string | null
+  evaluator: string | null
+  chairman: string | null
+  angles: string[]
+}
+
 export interface EnsembleConfig {
   depth: EnsembleDepth
   /** Picker ids of the responders (same encoding as `selectedModel`). */
   responderIds: string[]
   /** Picker id of the chairman; null falls back to `selectedModel`. */
   chairmanId: string | null
+  briefs: EnsembleBriefs
+}
+
+export interface EnsemblePreset {
+  id: number
+  name: string
+  responder: string
+  evaluator: string
+  chairman: string
+  angles: string[]
 }
 
 export type DeliberationStatus =
@@ -334,6 +357,14 @@ export interface DeliberationParticipant {
   text: string
   ms?: number | null
   cost?: string | null
+  /** The seat's assigned angle, when the person gave it one. */
+  angle?: string | null
+}
+
+export interface DeliberationBrief {
+  text: string
+  /** Written by the person for this turn rather than the role's default. */
+  custom: boolean
 }
 
 export interface DeliberationEvaluation {
@@ -352,6 +383,12 @@ export interface Deliberation {
   cost?: string | null
   /** One-line chairman verdict, e.g. "2 agreed, 1 dissented". */
   verdict?: string | null
+  /** The instructions each role ran under, verbatim. */
+  briefs?: {
+    responder: DeliberationBrief
+    evaluator?: DeliberationBrief
+    chairman: DeliberationBrief
+  } | null
 }
 
 /** Check if a message was sent by the user (not the AI). */

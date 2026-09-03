@@ -6,6 +6,7 @@ import { SharedLibrary } from '../types/library'
 import { loadDraftsFromLocalStorage } from '../../utils/draftStorage'
 import { DEFAULT_IMAGE_SETTINGS } from '../../utils/constants/imageGeneration'
 import { DEFAULT_TRANSCRIPTION_SETTINGS } from '../../utils/constants/audioTranscription'
+import { EMPTY_BRIEFS } from '../../utils/ensemble'
 
 export const initialState: ConversationState = {
   conversations: [],
@@ -16,7 +17,12 @@ export const initialState: ConversationState = {
   searchQuery: '',
   activeConversationMessages: [],
   selectedModel: null,
-  ensemble: { depth: 'single', responderIds: [], chairmanId: null },
+  ensemble: {
+    depth: 'single',
+    responderIds: [],
+    chairmanId: null,
+    briefs: EMPTY_BRIEFS,
+  },
   pickerEntries: [],
   activeWalletMeta: null,
   selectedFiles: [] as MyFile[],

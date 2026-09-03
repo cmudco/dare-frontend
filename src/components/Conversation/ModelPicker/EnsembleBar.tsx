@@ -8,6 +8,7 @@ import {
   ENSEMBLE_MIN_RESPONDERS,
   formatEstimateCost,
   formatEstimateLatency,
+  hasCustomBriefs,
 } from '@/utils/ensemble'
 import StackedLogos from './StackedLogos'
 
@@ -84,6 +85,7 @@ const EnsembleBar: React.FC<EnsembleBarProps> = ({ onDone }) => {
         <span className='hidden sm:inline'>
           {estimate.calls} call{estimate.calls === 1 ? '' : 's'}
           {ensemble.depth === 'council' && ' · peer review'}
+          {hasCustomBriefs(ensemble.briefs) && ' · custom briefs'}
         </span>
         <button
           type='button'
