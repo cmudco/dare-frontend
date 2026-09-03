@@ -95,10 +95,26 @@ export const installDeliberationDevTools = (store: Store<RootState>) => {
       })
     }
 
+    const defaults = store.getState().ensemble.defaults
     const deliberation: Deliberation = {
       depth,
-      responders: models.map(participant),
+      responders: models.map((model, i) => ({
+        ...participant(model),
+        angle: state.ensemble.briefs.angles[i] || null,
+      })),
       chairman: participant(chairmanModel),
+      briefs: defaults
+        ? {
+            responder: {
+              text: state.ensemble.briefs.responder ?? defaults.responder,
+              custom: state.ensemble.briefs.responder !== null,
+            },
+            chairman: {
+              text: state.ensemble.briefs.chairman ?? defaults.chairman,
+              custom: state.ensemble.briefs.chairman !== null,
+            },
+          }
+        : null,
     }
     const emit = () =>
       store.dispatch({

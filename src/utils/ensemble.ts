@@ -1,10 +1,25 @@
 import type {
+  EnsembleBriefs,
   EnsembleConfig,
   EnsembleDepth,
   PickerModel,
 } from '@/redux/types/conversation'
 
 export const ENSEMBLE_MIN_RESPONDERS = 2
+
+export const EMPTY_BRIEFS: EnsembleBriefs = {
+  responder: null,
+  evaluator: null,
+  chairman: null,
+  angles: [],
+}
+
+/** True when any role brief or seat angle differs from the defaults. */
+export const hasCustomBriefs = (briefs: EnsembleBriefs): boolean =>
+  briefs.responder !== null ||
+  briefs.evaluator !== null ||
+  briefs.chairman !== null ||
+  briefs.angles.some((angle) => angle.trim().length > 0)
 
 export const DEPTH_META: Record<
   EnsembleDepth,
@@ -29,14 +44,23 @@ export const isEnsembleActive = (ensemble: EnsembleConfig): boolean =>
 export const ensemblePayload = (
   ensemble: EnsembleConfig,
   selectedModel: string | null
-) =>
-  isEnsembleActive(ensemble)
-    ? {
-        depth: ensemble.depth,
-        responder_ids: ensemble.responderIds,
-        chairman_id: ensemble.chairmanId ?? selectedModel,
-      }
-    : undefined
+) => {
+  if (!isEnsembleActive(ensemble)) return undefined
+  const { briefs } = ensemble
+  return {
+    depth: ensemble.depth,
+    responder_ids: ensemble.responderIds,
+    chairman_id: ensemble.chairmanId ?? selectedModel,
+    briefs: hasCustomBriefs(briefs)
+      ? {
+          responder: briefs.responder ?? undefined,
+          evaluator: briefs.evaluator ?? undefined,
+          chairman: briefs.chairman ?? undefined,
+          angles: ensemble.responderIds.map((_, i) => briefs.angles[i] ?? ''),
+        }
+      : undefined,
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Cost and latency preview
