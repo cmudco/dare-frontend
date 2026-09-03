@@ -14,6 +14,7 @@ import {
   applyMemoryProposal,
   getMemoryItems,
   getMemorySweep,
+  getMemoryBackfill,
   getRetiredMemoryItems,
   searchMemory,
   updateMemoryItem,
@@ -23,7 +24,7 @@ import {
   clearSearchResults,
   setSessionMode,
 } from '@/redux/memorySlice'
-import { MemoryType } from '@/redux/types/memory'
+import { MemoryBackfillStatus, MemoryType } from '@/redux/types/memory'
 import type { MemoryProposal } from '@/redux/types/memory'
 import { toast } from '@/utils/toast'
 import { formatRelativeDate } from '@/utils/dateUtils'
@@ -31,6 +32,7 @@ import { Button } from '@/components/ui/button'
 import {
   ClearMemoryDialog,
   MemoryArchive,
+  MemoryBackfillButton,
   MemoryCommandBar,
   MemoryExplainer,
   MemoryFeed,
@@ -65,6 +67,10 @@ const MemoryScreen = () => {
   const clearing = useAppSelector((state) => state.memory.clearing)
   const savingId = useAppSelector((state) => state.memory.savingId)
   const error = useAppSelector((state) => state.memory.error)
+  const backfillRun = useAppSelector((state) => state.memory.backfillRun)
+  const backfillInProgress =
+    backfillRun?.status === MemoryBackfillStatus.QUEUED ||
+    backfillRun?.status === MemoryBackfillStatus.RUNNING
 
   useEffect(() => {
     dispatch(getMemoryItems())
@@ -72,6 +78,7 @@ const MemoryScreen = () => {
     // "2 retired" says something about the store that "expand to find out"
     // does not.
     dispatch(getRetiredMemoryItems())
+    dispatch(getMemoryBackfill())
   }, [dispatch])
 
   useEffect(() => {
@@ -192,16 +199,18 @@ const MemoryScreen = () => {
               </p>
             </div>
           </div>
-          <div className='flex shrink-0 items-center gap-2'>
+          <div className='flex flex-wrap items-center gap-2 sm:justify-end'>
             <Button variant='outline' onClick={() => setExplainerOpen(true)}>
               <BookOpen className='h-4 w-4' />
               How it works
             </Button>
+            <MemoryBackfillButton />
             <MemoryPortability memoryCount={items.length} />
             {items.length > 0 && (
               <ClearMemoryDialog
                 memoryCount={items.length}
                 clearing={clearing}
+                disabled={backfillInProgress}
                 onConfirm={handleClearAll}
               />
             )}

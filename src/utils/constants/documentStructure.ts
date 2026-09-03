@@ -21,6 +21,7 @@ export const ELEMENT_LABEL_TEXT: Record<string, string> = {
   document_index: 'Contents',
   formula: 'Formula',
   code: 'Code',
+  code_output: 'Output',
   form: 'Form',
 }
 
@@ -64,6 +65,10 @@ export const ELEMENT_TYPE_GROUPS: {
       { label: 'picture', description: 'A figure, chart, photograph or logo' },
       { label: 'formula', description: 'A mathematical expression' },
       { label: 'code', description: 'A block of code' },
+      {
+        label: 'code_output',
+        description: 'The recorded result of running a block of code',
+      },
       { label: 'document_index', description: 'A table of contents' },
       { label: 'form', description: 'A form region with fields' },
     ],

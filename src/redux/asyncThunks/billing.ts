@@ -9,10 +9,11 @@ import {
   setActiveWalletAPI,
   createLiteLLMKeyAPI,
   renameLiteLLMKeyAPI,
-  updateLiteLLMKeyModelsAPI,
+  updateLiteLLMKeyBackgroundModelAPI,
   deleteLiteLLMKeyAPI,
 } from '../../api/billing'
 import { getAvailableModels } from './conversation'
+import { fetchVisionModels } from './file'
 import {
   allocateToMemberAPI,
   clearUserOverrideAPI,
@@ -198,11 +199,13 @@ export const setActiveWallet = createAsyncThunk<
     // so refresh it whenever the active wallet changes — otherwise the user
     // sees a stale list until they reopen the picker.
     thunkAPI.dispatch(getAvailableModels())
+    thunkAPI.dispatch(fetchVisionModels())
     return response
   } catch (error) {
     // Rollback optimistic update by re-fetching.
     thunkAPI.dispatch(getWallets())
     thunkAPI.dispatch(getAvailableModels())
+    thunkAPI.dispatch(fetchVisionModels())
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })
@@ -213,19 +216,17 @@ export const addLiteLLMKey = createAsyncThunk<
     label: string
     baseUrl: string
     apiKey: string
-    titleModel: string
-    memoryModel: string
+    backgroundModel: string
   }
 >(
   'billing/addLiteLLMKey',
-  async ({ label, baseUrl, apiKey, titleModel, memoryModel }, thunkAPI) => {
+  async ({ label, baseUrl, apiKey, backgroundModel }, thunkAPI) => {
     try {
       const created = await createLiteLLMKeyAPI(
         label,
         baseUrl,
         apiKey,
-        titleModel,
-        memoryModel
+        backgroundModel
       )
       thunkAPI.dispatch(getWallets())
       return created
@@ -235,17 +236,16 @@ export const addLiteLLMKey = createAsyncThunk<
   }
 )
 
-export const updateLiteLLMKeyModels = createAsyncThunk<
+export const updateLiteLLMKeyBackgroundModel = createAsyncThunk<
   LiteLLMKeyResponse,
-  { id: string; titleModel: string; memoryModel: string }
+  { id: string; backgroundModel: string }
 >(
-  'billing/updateLiteLLMKeyModels',
-  async ({ id, titleModel, memoryModel }, thunkAPI) => {
+  'billing/updateLiteLLMKeyBackgroundModel',
+  async ({ id, backgroundModel }, thunkAPI) => {
     try {
-      const updated = await updateLiteLLMKeyModelsAPI(
+      const updated = await updateLiteLLMKeyBackgroundModelAPI(
         id,
-        titleModel,
-        memoryModel
+        backgroundModel
       )
       thunkAPI.dispatch(getWallets())
       return updated

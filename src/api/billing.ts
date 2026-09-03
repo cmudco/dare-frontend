@@ -98,13 +98,12 @@ export const createLiteLLMKeyAPI = async (
   label: string,
   baseUrl: string,
   apiKey: string,
-  titleModel: string,
-  memoryModel: string
+  backgroundModel: string
 ): Promise<LiteLLMKeyResponse> => {
   return await baseRequest<LiteLLMKeyResponse>({
     url: 'api/billing/wallets/litellm/',
     method: METHOD.POST,
-    data: { label, baseUrl, apiKey, titleModel, memoryModel },
+    data: { label, baseUrl, apiKey, backgroundModel },
   })
 }
 
@@ -119,15 +118,14 @@ export const renameLiteLLMKeyAPI = async (
   })
 }
 
-export const updateLiteLLMKeyModelsAPI = async (
+export const updateLiteLLMKeyBackgroundModelAPI = async (
   id: string,
-  titleModel: string,
-  memoryModel: string
+  backgroundModel: string
 ): Promise<LiteLLMKeyResponse> => {
   return await baseRequest<LiteLLMKeyResponse>({
     url: `api/billing/wallets/litellm/${id}/`,
     method: METHOD.PATCH,
-    data: { titleModel, memoryModel },
+    data: { backgroundModel },
   })
 }
 

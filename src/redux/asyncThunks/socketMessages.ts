@@ -9,6 +9,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { AppDispatch, RootState } from '../store'
 import type { Message } from '../types/conversation'
 import { RagMode } from '../types/conversation'
+import { ensemblePayload } from '@/utils/ensemble'
 import {
   socketSendMessage,
   socketEditMessage,
@@ -47,6 +48,7 @@ export const sendSocketMessage = createAsyncThunk<
       referencedConversationHistoryLimit,
       referencedSummaries,
       selectedModel,
+      ensemble,
       attachedImages,
       webSearchEnabled,
       imageGenerationEnabled,
@@ -88,6 +90,9 @@ export const sendSocketMessage = createAsyncThunk<
       // Opaque dispatch id — the BE inverts the encoding in
       // `parse_model_id` (DB-PK string or `litellm:<key>:<model>`).
       model_id: selectedModel,
+      ensemble: state.featureFlags.flags.enableEnsemble
+        ? ensemblePayload(ensemble, selectedModel)
+        : undefined,
       prompt_id: activeConversation.prompt?.id,
       temperature: activeConversation.temperature,
       effort: activeConversation.effort,
@@ -216,6 +221,9 @@ export const regenerateSocketResponse = createAsyncThunk<
       // Opaque dispatch id — the BE inverts the encoding in
       // `parse_model_id` (DB-PK string or `litellm:<key>:<model>`).
       model_id: selectedModel,
+      ensemble: state.featureFlags.flags.enableEnsemble
+        ? ensemblePayload(conversation.ensemble, selectedModel)
+        : undefined,
       prompt_id: activeConversation.prompt?.id,
       temperature: activeConversation.temperature,
       effort: activeConversation.effort,

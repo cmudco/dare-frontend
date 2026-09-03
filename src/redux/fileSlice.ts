@@ -15,8 +15,11 @@ import {
   updateFileTags,
   getSharedFiles,
   importSharedFile,
+  fetchVisionModels,
+  updateVisionModel,
   shareFileWithUser,
   togglePublicShare,
+  startFileOcrRun,
 } from './asyncThunks/file'
 import { initialState } from './initialState/files'
 import { MediaTypeFilter, FileView } from './types/files'
@@ -142,6 +145,34 @@ const fileSlice = createSlice({
       .addCase(uploadNewFile.rejected, (state, action) => {
         state.loading = false
         state.error = (action.payload as string) || 'Failed to upload files'
+      })
+      .addCase(startFileOcrRun.pending, (state) => {
+        state.error = null
+      })
+      .addCase(startFileOcrRun.fulfilled, (state, action) => {
+        const index = state.files.findIndex(
+          (file) => file.id === action.payload.id
+        )
+        if (index !== -1) state.files[index] = action.payload
+        state.jobStatuses[action.payload.id] = {
+          status: action.payload.status,
+          jobId: action.payload.jobId,
+          processingStage: action.payload.processingStage,
+        }
+      })
+      .addCase(startFileOcrRun.rejected, (state, action) => {
+        state.error = action.payload as string
+      })
+      .addCase(fetchVisionModels.fulfilled, (state, action) => {
+        state.visionModels = action.payload
+        state.visionModelsError = null
+      })
+      .addCase(fetchVisionModels.rejected, (state, action) => {
+        state.visionModelsError =
+          (action.payload as string) || 'Could not load vision models'
+      })
+      .addCase(updateVisionModel.fulfilled, (state, action) => {
+        state.visionModels = action.payload
       })
       .addCase(uploadFolder.pending, (state) => {
         state.loading = true

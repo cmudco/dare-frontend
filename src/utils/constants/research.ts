@@ -212,6 +212,8 @@ export const ACCEPTED_SOURCE_EXTENSIONS = [
   'xls',
   'xlsx',
   'json',
+  // Notebooks
+  'ipynb',
   // Web / markup
   'html',
   'htm',

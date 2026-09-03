@@ -114,6 +114,37 @@ export interface ForeignImportResult {
   conversationId: string
 }
 
+export enum MemoryBackfillStatus {
+  QUEUED = 'queued',
+  RUNNING = 'running',
+  COMPLETED = 'completed',
+  STOPPED = 'stopped',
+  FAILED = 'failed',
+}
+
+export interface MemoryBackfillRange {
+  since?: string
+  until?: string
+}
+
+/** One durable, user-requested pass over conversations that predate memory. */
+export interface MemoryBackfillRun {
+  id: string
+  status: MemoryBackfillStatus
+  totalTurns: number
+  processedTurns: number
+  since: string | null
+  until: string | null
+  createdAt: string
+  startedAt: string | null
+  completedAt: string | null
+  errorMessage: string
+}
+
+export interface MemoryBackfillResponse {
+  run: MemoryBackfillRun | null
+}
+
 /** Response from clear endpoint */
 export interface ClearMemoryResponse {
   success: boolean
@@ -144,6 +175,12 @@ export interface MemoryState {
   sessionLoading: boolean
   exporting: boolean
   importing: boolean
+  /** Latest historical-chat memory build and its independent request state. */
+  backfillRun: MemoryBackfillRun | null
+  backfillLoading: boolean
+  backfillStarting: boolean
+  backfillStopping: boolean
+  backfillError: string | null
   /** Whether clearing is in progress */
   clearing: boolean
   /** Id of the memory currently being saved, if any */

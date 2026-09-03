@@ -36,6 +36,43 @@ export interface MyFile {
   pagesWithoutText?: number
   parserName?: string | null
   structureCounts?: DocumentCounts | null
+  ocr?: FileOcrPlan | null
+}
+
+export type FileOcrStatus =
+  | 'awaiting_approval'
+  | 'approved'
+  | 'processing'
+  | 'complete'
+  | 'partial'
+  | 'unavailable'
+
+export interface FileOcrPlan {
+  status: FileOcrStatus
+  statusLabel: string
+  detectedPages: number
+  pageLimit: number
+  maxPageLimit: number
+  selectablePages: number
+  automaticPageLimit: number
+  processedPages: number
+  remainingPages?: number
+  canContinue?: boolean
+  estimatedCostPerPage: string
+  modelIdentifier: string
+  approvedAt?: string | null
+}
+
+export interface VisionModelCandidate {
+  identifier: string
+  name: string
+  estimatedCostPerPage: number
+  recommended: boolean
+}
+
+export interface VisionModelCatalog {
+  models: VisionModelCandidate[]
+  selected: string
 }
 
 export interface DocumentCounts {
@@ -263,6 +300,8 @@ export interface FileState {
   activeTab: 'my-files' | 'shared'
   shareModalFileId: number | null
   shareModalFileName: string
+  visionModels: VisionModelCatalog | null
+  visionModelsError: string | null
 }
 
 export interface FolderHeaderProps {

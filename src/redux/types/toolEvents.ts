@@ -8,7 +8,7 @@
  */
 
 import { ToolCallOrigin, ToolCallStatus } from '@/utils/constants/dareTools'
-import type { ContextTrace } from '@/redux/types/conversation'
+import type { ContextTrace, Deliberation } from '@/redux/types/conversation'
 import type {
   DareToolResult,
   McpToolResult,
@@ -91,4 +91,13 @@ export interface ToolRoundsCappedEvent extends ToolEventCorrelation {
  */
 export interface ContextTraceEvent extends ToolEventCorrelation {
   trace: ContextTrace
+}
+
+/**
+ * `deliberation` — a snapshot of the multi-model deliberation behind a turn.
+ * Sent whenever any participant's status or text changes; the latest
+ * snapshot wins.
+ */
+export interface DeliberationEvent extends ToolEventCorrelation {
+  deliberation: Deliberation
 }

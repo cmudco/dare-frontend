@@ -23,7 +23,10 @@ import {
   ThumbsDown,
   Info,
   Trash2,
+  DatabaseZap,
 } from 'lucide-react'
+import clsx from 'clsx'
+import { estimatedUsageFields, sumUsage } from '../../utils/usageDetails'
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
 import rehypeKatex from 'rehype-katex'
@@ -44,6 +47,7 @@ import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
 import { MessageActivity } from './MessageActivity/MessageActivity'
 import ThinkingSummary from './ThinkingSummary'
+import { DeliberationPanel } from './Deliberation/DeliberationPanel'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { debugLog } from '@/utils/debugLogger'
 
@@ -149,6 +153,9 @@ const Message: React.FC<MessageProps> = ({
       : undefined
   const llmName = llm ? llm.name : (message.litellmModelName ?? 'Unknown LLM')
   const userInitial = user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'
+
+  const cachedInputTokens = sumUsage(message, 'cachedInputTokens')
+  const usageIsEstimated = estimatedUsageFields(message).size > 0
 
   const toggleSnippets = () => setIsSnippetsOpen(!isSnippetsOpen)
   const toggleVersion = () => {
@@ -338,6 +345,11 @@ const Message: React.FC<MessageProps> = ({
               : 'border border-border bg-card'
           } inline-block hover:z-20`}
         >
+          {/* Above the pulsing wrapper on purpose: the drafts are the live
+              content while the answer is still empty. */}
+          {!isSenderMessage(message) && message.deliberation && (
+            <DeliberationPanel message={message} />
+          )}
           <div
             className={`font-normal text-wrap ${
               message.streaming ? 'animate-pulse' : ''
@@ -705,8 +717,28 @@ const Message: React.FC<MessageProps> = ({
           <div className='mt-1 pl-0 text-left text-xs text-muted-foreground sm:pl-10'>
             <span>{llmName}</span>
             {message.cost && (
-              <span className='ml-2 font-medium text-green-600'>
-                ${parseFloat(message.cost).toFixed(4)}
+              <span
+                className={clsx(
+                  'ml-2 font-medium text-green-600',
+                  cachedInputTokens > 0 &&
+                    'inline-flex items-center gap-1 rounded-md bg-green-500/10 px-1.5 py-0.5'
+                )}
+                title={
+                  cachedInputTokens > 0
+                    ? `${cachedInputTokens.toLocaleString()} of ${(message.inputTokens ?? 0).toLocaleString()} input tokens served from the prompt cache`
+                    : undefined
+                }
+              >
+                {cachedInputTokens > 0 && <DatabaseZap className='h-3 w-3' />}$
+                {parseFloat(message.cost).toFixed(4)}
+              </span>
+            )}
+            {usageIsEstimated && (
+              <span
+                className='ml-2 text-muted-foreground'
+                title='Stopped before the provider reported usage; tokens estimated'
+              >
+                est.
               </span>
             )}
           </div>

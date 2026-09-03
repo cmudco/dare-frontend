@@ -43,7 +43,13 @@ import {
   Car,
   Thermometer,
   Route,
+  DatabaseZap,
 } from 'lucide-react'
+import {
+  estimatedUsageFields,
+  sumUsage,
+  usageRounds,
+} from '../../utils/usageDetails'
 import RetrievalTraceStages from './RetrievalTracePanel'
 import {
   formatEnergy,
@@ -70,17 +76,12 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
   const allModels = useSelector(
     (state: RootState) => state.conversation.allModels
   )
-  const usageDetails = Array.isArray(message.usageDetails)
-    ? message.usageDetails
-    : []
-  const thinkingTokens = usageDetails.reduce(
-    (total, round) => total + (round.thinkingTokens ?? 0),
-    0
-  )
-  const visibleOutputTokens = usageDetails.reduce(
-    (total, round) => total + (round.visibleOutputTokens ?? 0),
-    0
-  )
+  const usageDetails = usageRounds(message)
+  const thinkingTokens = sumUsage(message, 'thinkingTokens')
+  const visibleOutputTokens = sumUsage(message, 'visibleOutputTokens')
+  const cachedInputTokens = sumUsage(message, 'cachedInputTokens')
+  const cacheWriteTokens = sumUsage(message, 'cacheWriteInputTokens')
+  const estimatedFields = estimatedUsageFields(message)
   const finalUsage = usageDetails[usageDetails.length - 1]
 
   // Resolve the dispatch model's display name from the message's persisted
@@ -299,11 +300,55 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                           </div>
                         </div>
                         <p className='text-xs text-muted-foreground md:col-span-2'>
-                          Anthropic bills thinking inside total output. The
-                          non-thinking value is total output minus reported
-                          thinking tokens.
+                          Reasoning models bill thinking inside total output.
+                          The non-thinking value is total output minus the
+                          thinking tokens the provider reported.
                         </p>
                       </div>
+                    )}
+
+                    {cachedInputTokens > 0 && (
+                      <div className='grid grid-cols-1 gap-4 rounded-md bg-muted p-3 md:grid-cols-2'>
+                        <div>
+                          <label className='text-sm font-medium text-muted-foreground'>
+                            Cached Input Tokens
+                          </label>
+                          <div className='flex items-center gap-2'>
+                            <DatabaseZap className='h-4 w-4 text-amber-500' />
+                            <span className='font-mono text-sm'>
+                              {cachedInputTokens.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <label className='text-sm font-medium text-muted-foreground'>
+                            Cache Hit
+                          </label>
+                          <p className='font-mono text-sm'>
+                            {message.inputTokens
+                              ? `${Math.round((cachedInputTokens / message.inputTokens) * 100)}%`
+                              : 'N/A'}
+                            {cacheWriteTokens > 0 &&
+                              ` · ${cacheWriteTokens.toLocaleString()} written`}
+                          </p>
+                        </div>
+                        <p className='text-xs text-muted-foreground md:col-span-2'>
+                          Part of the prompt was served from the provider&apos;s
+                          prompt cache. Cached tokens are included in the input
+                          total above.
+                        </p>
+                      </div>
+                    )}
+
+                    {estimatedFields.size > 0 && (
+                      <p className='rounded-md bg-muted p-3 text-xs text-muted-foreground'>
+                        {estimatedFields.has('inputTokens') &&
+                        estimatedFields.has('outputTokens')
+                          ? 'This response was stopped before the provider reported usage. Input tokens are tokenized from the request and output tokens from the streamed text.'
+                          : estimatedFields.has('outputTokens')
+                            ? 'This response was stopped mid-stream. Input tokens are the provider\u2019s count; output tokens are tokenized from the streamed text because the provider only reports output usage at the end.'
+                            : 'This response was stopped mid-stream. Output tokens are the provider\u2019s running count; input tokens are tokenized from the request.'}
+                      </p>
                     )}
 
                     {message.outputTokens && usageDetails.length === 0 && (

@@ -20,10 +20,16 @@ import { useState } from 'react'
 interface Props {
   memoryCount: number
   clearing: boolean
+  disabled?: boolean
   onConfirm: () => Promise<void>
 }
 
-const ClearMemoryDialog = ({ memoryCount, clearing, onConfirm }: Props) => {
+const ClearMemoryDialog = ({
+  memoryCount,
+  clearing,
+  disabled = false,
+  onConfirm,
+}: Props) => {
   const [open, setOpen] = useState(false)
 
   const handleConfirm = async () => {
@@ -36,6 +42,8 @@ const ClearMemoryDialog = ({ memoryCount, clearing, onConfirm }: Props) => {
       <DialogTrigger asChild>
         <Button
           variant='outline'
+          disabled={disabled}
+          title={disabled ? 'Wait for memory building to finish' : undefined}
           className='text-destructive hover:bg-destructive/10 hover:text-destructive'
         >
           <Trash2 className='h-4 w-4' />
