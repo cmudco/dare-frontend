@@ -35,10 +35,13 @@ import {
   WalletMeta,
   RagMode,
   MemoryWriteData,
+  EnsembleBriefs,
   EnsembleDepth,
+  EnsembleRole,
 } from './types/conversation'
 import { ToolCallOrigin, ToolLoopState } from '@/utils/constants/dareTools'
 import { ConversationTab } from '@/utils/constants/conversation'
+import { EMPTY_BRIEFS } from '@/utils/ensemble'
 import type {
   ToolCallPendingEvent,
   ToolCallArgsProgressEvent,
@@ -164,16 +167,47 @@ export const conversationSlice = createSlice({
       }
     },
     toggleEnsembleResponder(state, action: PayloadAction<string>) {
-      const ids = state.ensemble.responderIds
-      const index = ids.indexOf(action.payload)
-      if (index === -1) ids.push(action.payload)
-      else ids.splice(index, 1)
+      const { responderIds, briefs } = state.ensemble
+      const index = responderIds.indexOf(action.payload)
+      // Angles are positional: a seat's angle leaves with the seat, and a
+      // preset's spare angles wait for the next seat to be filled.
+      if (index === -1) {
+        responderIds.push(action.payload)
+      } else {
+        responderIds.splice(index, 1)
+        if (index < briefs.angles.length) briefs.angles.splice(index, 1)
+      }
     },
     setEnsembleChairman(state, action: PayloadAction<string | null>) {
       state.ensemble.chairmanId = action.payload
     },
+    setEnsembleBrief(
+      state,
+      action: PayloadAction<{ role: EnsembleRole; text: string | null }>
+    ) {
+      state.ensemble.briefs[action.payload.role] = action.payload.text
+    },
+    setEnsembleAngle(
+      state,
+      action: PayloadAction<{ seat: number; text: string }>
+    ) {
+      const { angles } = state.ensemble.briefs
+      while (angles.length <= action.payload.seat) angles.push('')
+      angles[action.payload.seat] = action.payload.text
+    },
+    applyEnsembleBriefs(state, action: PayloadAction<EnsembleBriefs>) {
+      state.ensemble.briefs = {
+        ...action.payload,
+        angles: [...action.payload.angles],
+      }
+    },
     clearEnsemble(state) {
-      state.ensemble = { depth: 'single', responderIds: [], chairmanId: null }
+      state.ensemble = {
+        depth: 'single',
+        responderIds: [],
+        chairmanId: null,
+        briefs: EMPTY_BRIEFS,
+      }
     },
     updateSelectedFiles(state, action: PayloadAction<MyFile[]>) {
       state.selectedFiles = action.payload
@@ -609,8 +643,14 @@ export const conversationSlice = createSlice({
             (m) => !m.isImageGenerator && !m.isAudioTranscriber
           )
           state.activeWalletMeta = action.payload.wallet
+          const seated = state.ensemble.responderIds.map((id) =>
+            state.pickerEntries.some((entry) => entry.id === id)
+          )
           state.ensemble.responderIds = state.ensemble.responderIds.filter(
-            (id) => state.pickerEntries.some((entry) => entry.id === id)
+            (_, i) => seated[i]
+          )
+          state.ensemble.briefs.angles = state.ensemble.briefs.angles.filter(
+            (_, i) => seated[i] ?? true
           )
           // Reconcile selectedModel: if the previously selected id is no
           // longer in the wallet's catalog (e.g. user just toggled wallet),
@@ -1315,6 +1355,9 @@ export const {
   setEnsembleDepth,
   toggleEnsembleResponder,
   setEnsembleChairman,
+  setEnsembleBrief,
+  setEnsembleAngle,
+  applyEnsembleBriefs,
   clearEnsemble,
   updateSearchQuery,
   updateActiveConversation,

@@ -7,11 +7,14 @@ import {
   ChevronRight,
   CircleAlert,
   ClipboardCheck,
+  Compass,
+  FileText,
   Gavel,
   Loader2,
   Users,
 } from 'lucide-react'
 import type {
+  DeliberationBrief,
   DeliberationParticipant,
   DeliberationStatus,
   Message,
@@ -104,6 +107,16 @@ const ResponderCard: React.FC<{
         </Badge>
       </div>
 
+      {responder.angle && (
+        <p
+          title='The angle this seat was asked to take'
+          className='mt-1 flex items-start gap-1 text-[11px] text-primary'
+        >
+          <Compass className='mt-px h-3 w-3 shrink-0' />
+          <span className='line-clamp-2'>{responder.angle}</span>
+        </p>
+      )}
+
       <button
         type='button'
         onClick={() => hasText && setExpanded((v) => !v)}
@@ -140,6 +153,44 @@ const ResponderCard: React.FC<{
   )
 }
 
+/** The instructions one role ran under, verbatim, flagged when the person wrote them. */
+const BriefRow: React.FC<{ title: string; brief: DeliberationBrief }> = ({
+  title,
+  brief,
+}) => {
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <li className='min-w-0 text-xs'>
+      <button
+        type='button'
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        className='flex w-full items-center gap-1.5 text-left'
+      >
+        <span className='font-medium text-foreground'>{title}</span>
+        <Badge
+          variant={brief.custom ? 'blue' : 'gray'}
+          className='px-1.5 py-0 text-[10px] font-medium'
+        >
+          {brief.custom ? 'custom' : 'default'}
+        </Badge>
+        {expanded ? (
+          <ChevronDown className='ml-auto h-3 w-3 shrink-0 text-muted-foreground' />
+        ) : (
+          <ChevronRight className='ml-auto h-3 w-3 shrink-0 text-muted-foreground' />
+        )}
+      </button>
+      <p
+        className={`mt-0.5 [overflow-wrap:anywhere] whitespace-pre-wrap text-muted-foreground ${
+          expanded ? '' : 'line-clamp-2'
+        }`}
+      >
+        {brief.text}
+      </p>
+    </li>
+  )
+}
+
 interface DeliberationPanelProps {
   message: Message
 }
@@ -160,6 +211,14 @@ export const DeliberationPanel: React.FC<DeliberationPanelProps> = ({
   const responders = deliberation?.responders ?? []
   const chairman = deliberation?.chairman
   const evaluations = deliberation?.evaluations ?? []
+  const briefs = deliberation?.briefs
+  const customBriefs =
+    !!briefs &&
+    (briefs.responder.custom ||
+      briefs.chairman.custom ||
+      !!briefs.evaluator?.custom ||
+      responders.some((r) => !!r.angle))
+  const [showBriefs, setShowBriefs] = useState(false)
   const responderLive = responders.some((r) => isLive(r.status))
   const chairmanLive = !!chairman && isLive(chairman.status)
   const live = responderLive || chairmanLive
@@ -200,6 +259,7 @@ export const DeliberationPanel: React.FC<DeliberationPanelProps> = ({
     ]
     if (deliberation.totalMs != null) parts.push(formatMs(deliberation.totalMs))
     if (deliberation.verdict) parts.push(deliberation.verdict)
+    if (customBriefs) parts.push('custom briefs')
     return parts.join(' · ')
   }
 
@@ -335,6 +395,37 @@ export const DeliberationPanel: React.FC<DeliberationPanelProps> = ({
               </span>
             )}
           </section>
+
+          {briefs && (
+            <section>
+              <button
+                type='button'
+                onClick={() => setShowBriefs((v) => !v)}
+                aria-expanded={showBriefs}
+                className='flex items-center gap-1.5 text-xs font-medium text-foreground'
+              >
+                <FileText className='h-3.5 w-3.5 text-muted-foreground' />
+                Briefs
+                <span className='font-normal text-muted-foreground'>
+                  {customBriefs ? 'what each seat was told' : 'defaults'}
+                </span>
+                {showBriefs ? (
+                  <ChevronDown className='h-3 w-3 text-muted-foreground' />
+                ) : (
+                  <ChevronRight className='h-3 w-3 text-muted-foreground' />
+                )}
+              </button>
+              {showBriefs && (
+                <ul className='mt-1.5 space-y-2 rounded-md border border-border bg-card p-2'>
+                  <BriefRow title='Responders' brief={briefs.responder} />
+                  {briefs.evaluator && (
+                    <BriefRow title='Reviewers' brief={briefs.evaluator} />
+                  )}
+                  <BriefRow title='Chairman' brief={briefs.chairman} />
+                </ul>
+              )}
+            </section>
+          )}
         </div>
       )}
     </div>
