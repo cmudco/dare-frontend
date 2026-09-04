@@ -84,6 +84,8 @@ export interface DocumentCounts {
   contentChars: number
   describedFigures?: number
   transcribedPages?: number
+  processedPages?: number
+  blankPages?: number
   enrichmentFailures?: number
 }
 
@@ -306,4 +308,81 @@ export interface FileState {
 
 export interface FolderHeaderProps {
   onToggleView: (view: FileView) => void
+}
+
+export type DocumentMapChunkKind =
+  | 'text'
+  | 'table'
+  | 'figure'
+  | 'page_transcription'
+  | 'flat'
+
+export interface DocumentMapSection {
+  order: number
+  level: number
+  number?: string | null
+  text: string
+  pageNo: number | null
+  parentOrder: number | null
+  chunkCount: number
+  children: DocumentMapSection[]
+}
+
+export interface DocumentMapEntity {
+  kind: string
+  text: string
+  key: string
+  mentions: number
+  otherDocuments: number
+}
+
+export interface DocumentMapChunk {
+  chunkIndex: number
+  elementKind: DocumentMapChunkKind
+  pageStart: number | null
+  pageEnd: number | null
+  sectionOrder: number | null
+  section: string
+  orderStart: number | null
+  orderEnd: number | null
+  preview: string
+  previewTruncated: boolean
+  charCount: number
+  wordCount: number
+  entities?: DocumentMapEntity[]
+}
+
+export interface DocumentMapChunkDetail {
+  chunkIndex: number
+  text: string
+  charCount: number
+  wordCount: number
+}
+
+export interface DocumentMapReference {
+  id: number
+  sourceChunkIndex: number
+  kind: 'section' | 'figure' | 'table' | 'chapter' | 'appendix' | 'page'
+  key: string
+  rawText: string
+  targetOrder: number | null
+  targetChunkIndex: number | null
+  resolved: boolean
+}
+
+export interface DocumentMap {
+  id: number
+  name: string
+  structured: boolean
+  sections: DocumentMapSection[]
+  chunks: DocumentMapChunk[]
+  references: DocumentMapReference[]
+  counts: {
+    sections: number
+    chunks: number
+    references: number
+    resolved: number
+    entities?: number
+    linkedEntities?: number
+  }
 }

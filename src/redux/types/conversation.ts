@@ -233,7 +233,18 @@ export interface RetrievalTraceEntry {
   /** Rank at the previous stage, for showing rank movement (null if new/unranked). */
   prevRank: number | null
   preview: string
+  /** Page and nearest heading of a document chunk; absent for libraries and older traces. */
+  pageNo?: number | null
+  section?: string
+  /** Raw pointer text when the chunk was pulled in by the expand stage. */
+  via?: string | null
+  /** How `via` was followed: 'entity' for a shared-entity hop, otherwise the pointer kind. */
+  viaKind?: string | null
 }
+
+/** Whether a hop followed a pointer or was pulled in through a shared entity. */
+export const hopVerb = (viaKind?: string | null): 'shares' | 'followed' =>
+  viaKind === 'entity' ? 'shares' : 'followed'
 
 /** How an answer was retrieved, stage by stage (matches backend RetrievalTrace.to_payload). */
 export interface RetrievalTrace {
@@ -250,6 +261,9 @@ export interface RetrievalTrace {
   } | null
   hybrid: { poolSize: number; topCandidates: RetrievalTraceEntry[] }
   rerank: { applied: boolean; results: RetrievalTraceEntry[] }
+  /** Graph expand stage: in-document references followed, and shared-entity links,
+   *  one hop out (absent on older traces). */
+  expand?: { applied: boolean; added: RetrievalTraceEntry[] }
   mmr: { applied: boolean; reason: string }
   grounding: {
     answerFound: boolean
