@@ -6,24 +6,15 @@ import {
   type RetrievalTraceEntry,
 } from '@/redux/types/conversation'
 
-/** The snippets a retrieval source actually kept for the prompt. */
-const keptSnippets = (source: RetrievalTrace): RetrievalTraceEntry[] => {
-  const entries = source.rerank.applied
-    ? source.rerank.results
-    : source.hybrid.topCandidates
-  return entries.slice(0, source.finalSize)
-}
-
 /**
- * Calibrated rerank scores are tiny near-equal values (0.0002–0.006) — as
- * numbers they read as garbage ("0.000"), so the row shows one only when it
- * carries meaning (naive similarity scores, ~0.2–0.9). The relative bar
- * always communicates ranking.
+ * Hide numeric labels that round to zero; relative bars still show ranking.
+ * These relevance scores are not probabilities of answer correctness.
  */
 const MIN_MEANINGFUL_SCORE = 0.01
 
 interface SnippetRowProps {
   rank: number
+  citationId?: string | null
   refLabel: string
   preview: string
   score: number
@@ -38,6 +29,7 @@ interface SnippetRowProps {
 /** One kept snippet, one compact line: rank, source, preview, relevance bar. */
 const SnippetRow: React.FC<SnippetRowProps> = ({
   rank,
+  citationId,
   refLabel,
   preview,
   score,
@@ -50,8 +42,8 @@ const SnippetRow: React.FC<SnippetRowProps> = ({
   return (
     <div className='py-0.5 text-xs leading-tight'>
       <div className='flex items-center gap-2'>
-        <span className='w-4 shrink-0 text-right font-mono text-muted-foreground'>
-          {rank}.
+        <span className='min-w-4 shrink-0 text-right font-mono text-muted-foreground'>
+          {citationId ? `[${citationId}]` : `${rank}.`}
         </span>
         <span className='max-w-[30%] shrink-0 truncate font-medium text-foreground'>
           {refLabel}
@@ -98,7 +90,7 @@ export const SourceSnippets: React.FC<{ source: RetrievalTrace }> = ({
   source,
 }) => {
   const label = source.source === 'libraries' ? 'Shared libraries' : 'Documents'
-  const kept = keptSnippets(source)
+  const kept = source.finalEvidence ?? []
   const maxScore = Math.max(0, ...kept.map((entry) => entry.score))
   return (
     <div className='mt-1.5 space-y-0.5'>
@@ -108,10 +100,16 @@ export const SourceSnippets: React.FC<{ source: RetrievalTrace }> = ({
           pool {source.hybrid.poolSize} → kept {source.finalSize}
         </span>
       </div>
+      {source.finalEvidence === undefined && (
+        <p className='text-xs text-muted-foreground'>
+          Final evidence was not recorded for this older response.
+        </p>
+      )}
       {kept.map((entry, index) => (
         <SnippetRow
           key={`${entry.sourceRef}-${entry.chunkIndex}`}
           rank={index + 1}
+          citationId={entry.citationId}
           refLabel={entry.sourceRef}
           preview={entry.preview}
           score={entry.score}

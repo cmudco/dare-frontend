@@ -14,6 +14,7 @@ import {
   RetrievalTraceEntry,
 } from '@/redux/types/conversation'
 import { StepHeader, TimelineStep } from './Timeline'
+import { SourceSnippets } from './MessageActivity/SnippetList'
 
 interface RetrievalTraceStagesProps {
   trace: RetrievalTrace
@@ -205,7 +206,7 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
       key: 'grounding',
       icon: <ShieldCheck className='h-3.5 w-3.5' />,
       content: (
-        <StepHeader title='Grounding'>
+        <StepHeader title='Retrieval confidence'>
           <span
             className={`rounded px-1.5 py-0.5 text-xs font-medium ${
               trace.grounding.answerFound
@@ -213,7 +214,7 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
                 : 'bg-muted text-muted-foreground'
             }`}
           >
-            {trace.grounding.answerFound ? 'answer found' : 'not in sources'}
+            {trace.grounding.answerFound ? 'higher relevance' : 'low relevance'}
           </span>
           <span className='font-mono font-normal [overflow-wrap:anywhere] break-words text-muted-foreground'>
             top {fmtScore(trace.grounding.topScore)} /{' '}
@@ -223,6 +224,17 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
       ),
     })
   }
+
+  steps.push({
+    key: 'final-evidence',
+    icon: <Search className='h-3.5 w-3.5' />,
+    content: (
+      <>
+        <StepHeader title='Evidence sent to the model' />
+        <SourceSnippets source={trace} />
+      </>
+    ),
+  })
 
   return (
     <div className='min-w-0 overflow-hidden'>
