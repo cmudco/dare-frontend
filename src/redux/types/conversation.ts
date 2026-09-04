@@ -226,6 +226,7 @@ export const retrievalTraces = (
 
 /** One chunk as it appeared at a single RAG pipeline stage. */
 export interface RetrievalTraceEntry {
+  citationId?: string | null
   sourceRef: string
   chunkIndex: number
   score: number
@@ -271,6 +272,8 @@ export interface RetrievalTrace {
     threshold: number
   } | null
   finalSize: number
+  /** Exact post-budget evidence; absent on historical traces. */
+  finalEvidence?: RetrievalTraceEntry[]
 }
 
 /** One timed stage of a turn's context assembly. */
