@@ -1,6 +1,8 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import {
+  DocumentMap,
+  DocumentMapChunkDetail,
   FileProcessingStage,
   FileProcessingJourneyResponse,
   FileStructure,
@@ -100,6 +102,25 @@ export const getFileStructureAPI = async (
     url: `api/files/${id}/structure/`,
     method: METHOD.GET,
     params: pageNo != null ? { page_no: pageNo } : undefined,
+  })
+}
+
+/** The document map: section tree, embedded chunks and in-document references. */
+export const getFileMapAPI = async (id: number): Promise<DocumentMap> => {
+  return await baseRequest<DocumentMap>({
+    url: `api/files/${id}/map/`,
+    method: METHOD.GET,
+  })
+}
+
+/** Complete text for one Map chunk; fetched only when the user selects it. */
+export const getFileMapChunkAPI = async (
+  id: number,
+  chunkIndex: number
+): Promise<DocumentMapChunkDetail> => {
+  return await baseRequest<DocumentMapChunkDetail>({
+    url: `api/files/${id}/map/chunks/${chunkIndex}/`,
+    method: METHOD.GET,
   })
 }
 
