@@ -186,6 +186,7 @@ const RoleCard: React.FC<RoleCardProps> = ({
         <div className='space-y-2 border-t border-border px-3 py-2'>
           <Textarea
             value={text}
+            maxLength={4000}
             onChange={(e) => {
               const next = e.target.value
               onChange(next.trim() === defaultText.trim() ? null : next)
@@ -224,9 +225,8 @@ const RoleCard: React.FC<RoleCardProps> = ({
 const BriefsSection: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { ensemble, responders } = useEnsembleEstimate()
-  const { defaults, presets, loaded, saving } = useSelector(
-    (s: RootState) => s.ensemble
-  )
+  const { defaults, presets, loaded, loading, saving, deleting, error } =
+    useSelector((s: RootState) => s.ensemble)
   const { briefs } = ensemble
   const [openRole, setOpenRole] = useState<EnsembleRole | null>('responder')
   const [presetId, setPresetId] = useState('builtin:default')
@@ -234,8 +234,8 @@ const BriefsSection: React.FC = () => {
   const [presetName, setPresetName] = useState('')
 
   useEffect(() => {
-    if (!loaded) dispatch(fetchEnsembleBriefs())
-  }, [dispatch, loaded])
+    if (!loaded && !loading && !error) dispatch(fetchEnsembleBriefs())
+  }, [dispatch, loaded, loading, error])
 
   const custom = hasCustomBriefs(briefs)
   const userPreset = presetId.startsWith('user:')
@@ -288,8 +288,35 @@ const BriefsSection: React.FC = () => {
   const toggle = (role: EnsembleRole) =>
     setOpenRole((current) => (current === role ? null : role))
 
+  if (!loaded) {
+    return (
+      <div className='px-3 py-2 text-xs text-muted-foreground' role='status'>
+        {error ? (
+          <>
+            <p role='alert'>{error}</p>
+            <button
+              type='button'
+              disabled={loading}
+              onClick={() => dispatch(fetchEnsembleBriefs())}
+              className='mt-2 text-primary underline'
+            >
+              Retry loading briefs
+            </button>
+          </>
+        ) : (
+          'Loading briefs…'
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className='space-y-2 px-2 pb-2'>
+      {error && (
+        <p role='alert' className='text-xs text-destructive'>
+          {error}
+        </p>
+      )}
       <div className='flex items-center gap-2'>
         <span className='text-[11px] font-medium tracking-wide text-muted-foreground uppercase'>
           Briefs
@@ -336,9 +363,14 @@ const BriefsSection: React.FC = () => {
               type='button'
               title={`Delete “${userPreset.name}”`}
               aria-label={`Delete preset ${userPreset.name}`}
-              onClick={() => {
-                dispatch(removeEnsemblePreset(userPreset.id))
-                setPresetId('builtin:custom')
+              disabled={deleting}
+              onClick={async () => {
+                const result = await dispatch(
+                  removeEnsemblePreset(userPreset.id)
+                )
+                if (removeEnsemblePreset.fulfilled.match(result)) {
+                  setPresetId('builtin:custom')
+                }
               }}
               className='flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-destructive'
             >

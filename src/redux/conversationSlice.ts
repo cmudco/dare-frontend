@@ -61,6 +61,7 @@ import {
   syncModelsWithAudioTranscriptionState,
 } from './utils/modelSyncHelpers'
 import { EffortLevel } from '@/utils/constants/model'
+import { userLogin, userLogout } from './asyncThunks/user'
 
 export const conversationSlice = createSlice({
   name: 'conversation',
@@ -609,6 +610,13 @@ export const conversationSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder
+      .addCase(userLogout.pending, (state) => {
+        state.ensemble = initialState.ensemble
+      })
+      .addCase(userLogin.pending, (state) => {
+        state.ensemble = initialState.ensemble
+      })
     builder
       .addCase(getConversations.pending, (state) => {
         state.conversationListStatus = 'pending'
