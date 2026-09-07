@@ -10,7 +10,11 @@ import {
   openShareModal,
 } from '../../redux/fileSlice'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
-import { TABLE_HEAD } from '../../utils/constants/file'
+import {
+  DOCUMENT_PARSER_LABELS,
+  FileStatus,
+  TABLE_HEAD,
+} from '@/utils/constants/file'
 import { formatFileSize } from '@/utils/files'
 import { SortDirection, sortFiles } from '@/utils/sortUtils'
 import {
@@ -56,6 +60,7 @@ import {
   Globe,
   Users,
   ScanText,
+  RefreshCw,
 } from 'lucide-react'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getStatusDisplay } from '@/utils/constants/files'
@@ -66,7 +71,7 @@ import TagsDisplay from './TagsDisplay'
 import { formatDate } from '@/utils/constants/prompts'
 import OcrApprovalDialog from './OcrApprovalDialog'
 import FileReprocessingDialog from './FileReprocessingDialog'
-import { FileStatus } from '@/utils/constants/file'
+import { Badge } from '../ui/badge'
 
 const FileTable = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -310,6 +315,7 @@ const FileTable = () => {
                 id,
                 name,
                 fileType,
+                parserName,
                 size,
                 tags,
                 status,
@@ -353,6 +359,17 @@ const FileTable = () => {
                         </span>
                       )}
                     </div>
+                    {!isMedia && (
+                      <Badge
+                        variant='outline'
+                        className='mt-1 font-normal text-muted-foreground'
+                        title='Parser used for the current document content'
+                      >
+                        {parserName
+                          ? DOCUMENT_PARSER_LABELS[parserName]
+                          : 'Parser not recorded'}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className='max-w-[150px] p-4'>
                     <div className='truncate' title={fileType || 'Unknown'}>
@@ -394,16 +411,13 @@ const FileTable = () => {
                   </TableCell>
                   <TableCell className='p-4 text-center'>
                     <DropdownMenu>
-                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-accent'>
+                      <DropdownMenuTrigger
+                        aria-label={`Actions for ${name || 'Unnamed file'}`}
+                        className='rounded-md p-2 hover:bg-accent'
+                      >
                         <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        <DropdownMenuItem
-                          disabled={status === FileStatus.PROCESSING || isMedia}
-                          onClick={() => setReprocessFileId(id)}
-                        >
-                          Reprocess document
-                        </DropdownMenuItem>
                         {(ocr?.status === 'awaiting_approval' ||
                           ocr?.status === 'partial') && (
                           <DropdownMenuItem
@@ -447,6 +461,14 @@ const FileTable = () => {
                             <span>Share</span>
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem
+                          className='cursor-pointer'
+                          disabled={status === FileStatus.PROCESSING || isMedia}
+                          onClick={() => setReprocessFileId(id)}
+                        >
+                          <RefreshCw className='mr-2 h-4 w-4' />
+                          <span>Reprocess document</span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() => handleDelete(id, name)}

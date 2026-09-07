@@ -15,6 +15,7 @@ import {
   uploadNewFile,
 } from '../../redux/asyncThunks/file'
 import VisionModelSelect from './VisionModelSelect'
+import DocumentProcessingSelect from './DocumentProcessingSelect'
 import { toast } from '@/utils/toast'
 import { addTag, getTags } from '../../redux/asyncThunks/tag'
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
@@ -44,7 +45,6 @@ import {
   MAX_FILE_SIZE,
   MAX_FILE_SIZE_MB,
   DocumentProcessingMode,
-  DOCUMENT_PROCESSING_OPTIONS,
 } from '@/utils/constants/file'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { fetchChunkSettings } from '@/redux/asyncThunks/user'
@@ -182,7 +182,7 @@ const FileUploadModal: React.FC = () => {
         }
       }}
     >
-      <DialogContent className='mx-auto w-[90vw] max-w-md rounded-lg bg-card p-6 shadow-lg'>
+      <DialogContent className='mx-auto max-h-[90vh] w-[90vw] max-w-md overflow-y-auto rounded-lg bg-card p-6 shadow-lg'>
         {/* Header */}
         <DialogHeader>
           <div className='flex items-start justify-between gap-3'>
@@ -309,39 +309,16 @@ const FileUploadModal: React.FC = () => {
             </div>
           </div>
 
-          <fieldset className='space-y-2'>
-            <legend className='text-sm font-medium'>Upload processing</legend>
-            <div className='grid grid-cols-2 gap-2'>
-              {Object.values(DocumentProcessingMode).map((mode) => (
-                <label
-                  key={mode}
-                  className='flex cursor-pointer items-start gap-2 rounded-md border border-border bg-background p-3 text-sm'
-                >
-                  <input
-                    type='radio'
-                    name='processingMode'
-                    value={mode}
-                    checked={processingMode === mode}
-                    onChange={() => setProcessingMode(mode)}
-                    className='mt-1 accent-primary'
-                  />
-                  <span>
-                    <span className='block font-medium'>
-                      {DOCUMENT_PROCESSING_OPTIONS[mode].label}
-                    </span>
-                    <span className='text-xs text-muted-foreground'>
-                      {DOCUMENT_PROCESSING_OPTIONS[mode].description}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
+          <div className='space-y-2'>
+            <DocumentProcessingSelect
+              legend='Upload processing'
+              value={processingMode}
+              onChange={setProcessingMode}
+            />
             <p className='text-xs text-muted-foreground'>
-              Applies to documents in this upload. Plain-text formats use text
-              extraction; audio, video, and standalone images keep their usual
-              handling.
+              Applies to documents. Other file types keep their usual handling.
             </p>
-          </fieldset>
+          </div>
 
           <div
             className={`border-2 border-dashed ${
@@ -400,14 +377,14 @@ const FileUploadModal: React.FC = () => {
               </ul>
             </div>
           )}
-          <div className='space-y-1.5'>
-            <div className='flex items-baseline justify-between gap-3'>
-              <Label htmlFor='upload-vision-model'>Vision model</Label>
-              <span className='text-xs text-muted-foreground'>
-                Reads scanned pages and figures
-              </span>
-            </div>
-            {processingMode === DocumentProcessingMode.Advanced && (
+          {processingMode === DocumentProcessingMode.Advanced && (
+            <div className='space-y-1.5'>
+              <div className='flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1'>
+                <Label htmlFor='upload-vision-model'>Vision model</Label>
+                <span className='text-xs text-muted-foreground'>
+                  Reads scanned pages and figures
+                </span>
+              </div>
               <VisionModelSelect
                 id='upload-vision-model'
                 models={visionModels?.models ?? []}
@@ -415,11 +392,11 @@ const FileUploadModal: React.FC = () => {
                 onChange={handleVisionModelChange}
                 disabled={!visionModels}
               />
-            )}
-            {visionModelsError && (
-              <p className='text-xs text-destructive'>{visionModelsError}</p>
-            )}
-          </div>
+              {visionModelsError && (
+                <p className='text-xs text-destructive'>{visionModelsError}</p>
+              )}
+            </div>
+          )}
           <div className='flex items-center justify-between text-xs text-muted-foreground'>
             <span>
               Chunk size: {chunkSettings?.chunkSize ?? 1000}, overlap:{' '}

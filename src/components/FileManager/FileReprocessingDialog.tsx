@@ -5,7 +5,6 @@ import { MyFile } from '@/redux/types/files'
 import {
   DocumentProcessingMode,
   DocumentReprocessingAction,
-  DOCUMENT_PROCESSING_OPTIONS,
 } from '@/utils/constants/file'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import DocumentProcessingSelect from './DocumentProcessingSelect'
 
 interface Props {
   file: MyFile
@@ -59,34 +59,12 @@ export default function FileReprocessingDialog({ file, onClose }: Props) {
             stays available until a replacement is ready.
           </DialogDescription>
         </DialogHeader>
-        <fieldset disabled={busy} className='space-y-3'>
-          <legend className='mb-2 text-sm font-medium'>Processing mode</legend>
-          {[DocumentProcessingMode.Basic, DocumentProcessingMode.Advanced].map(
-            (value) => (
-              <label
-                key={value}
-                className='flex items-start gap-3 rounded-md border p-3'
-              >
-                <input
-                  type='radio'
-                  name='reprocessing-mode'
-                  value={value}
-                  checked={mode === value}
-                  onChange={() => setMode(value)}
-                  className='mt-1'
-                />
-                <span>
-                  <span className='block font-medium'>
-                    {DOCUMENT_PROCESSING_OPTIONS[value].label}
-                  </span>
-                  <span className='text-sm text-muted-foreground'>
-                    {DOCUMENT_PROCESSING_OPTIONS[value].description}
-                  </span>
-                </span>
-              </label>
-            )
-          )}
-        </fieldset>
+        <DocumentProcessingSelect
+          legend='Processing mode'
+          value={mode}
+          onChange={setMode}
+          disabled={busy}
+        />
         <p className='text-sm text-muted-foreground'>
           Reprocessing generates embeddings again. Advanced may also use paid
           vision calls through your selected wallet. Scanned-page approval
