@@ -31,6 +31,7 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip'
 import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
+import { cn } from '@/lib/utils'
 import { EffortLevel, EffortLevelLabels } from '@/utils/constants/model'
 
 const ADAPTIVE_EFFORT_GUIDANCE: Record<
@@ -126,11 +127,21 @@ const ModelConfigurationPanel: React.FC = () => {
   )
   const showTemperature = selectedEntry?.supportsTemperature ?? true
   const showEffort = selectedEntry?.supportsEffort ?? false
-  const effort =
+  const requestedEffort =
     activeConversation?.effort ??
     selectedEntry?.defaultEffort ??
     EffortLevel.High
   const selectedProvider = selectedEntry?.provider?.toLowerCase()
+  const isGemini = selectedProvider === 'gemini'
+  const effort =
+    isGemini &&
+    (requestedEffort === EffortLevel.XHigh ||
+      requestedEffort === EffortLevel.Max)
+      ? EffortLevel.High
+      : requestedEffort
+  const effortOptions = isGemini
+    ? [EffortLevel.Low, EffortLevel.Medium, EffortLevel.High]
+    : Object.values(EffortLevel)
   const usesAdaptiveThinking = selectedEntry?.supportsAdaptiveThinking ?? false
   const defaultMaxTokens = usesAdaptiveThinking
     ? MODEL_CONFIG.adaptiveThinkingMaxTokens
@@ -598,8 +609,13 @@ const ModelConfigurationPanel: React.FC = () => {
                     {EffortLevelLabels[effort]}
                   </span>
                 </div>
-                <div className='grid grid-cols-5 gap-1'>
-                  {Object.values(EffortLevel).map((value) => (
+                <div
+                  className={cn(
+                    'grid gap-1',
+                    isGemini ? 'grid-cols-3' : 'grid-cols-5'
+                  )}
+                >
+                  {effortOptions.map((value) => (
                     <Button
                       key={value}
                       type='button'

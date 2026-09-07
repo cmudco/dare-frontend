@@ -1,14 +1,20 @@
 import React from 'react'
 import {
   ArrowUp,
+  CornerDownRight,
   Search,
   ShieldCheck,
   Shuffle,
   Split,
   Trophy,
 } from 'lucide-react'
-import { RetrievalTrace, RetrievalTraceEntry } from '@/redux/types/conversation'
+import {
+  hopVerb,
+  RetrievalTrace,
+  RetrievalTraceEntry,
+} from '@/redux/types/conversation'
 import { StepHeader, TimelineStep } from './Timeline'
+import { SourceSnippets } from './MessageActivity/SnippetList'
 
 interface RetrievalTraceStagesProps {
   trace: RetrievalTrace
@@ -119,6 +125,49 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
     ),
   })
 
+  if (trace.expand?.applied) {
+    steps.push({
+      key: 'expand',
+      icon: <CornerDownRight className='h-3.5 w-3.5' />,
+      content: (
+        <>
+          <StepHeader title='Graph expand'>
+            <span className='font-normal text-muted-foreground'>
+              {trace.expand.added.length === 0
+                ? '· nothing added'
+                : `· added ${trace.expand.added.length} linked ${
+                    trace.expand.added.length === 1 ? 'chunk' : 'chunks'
+                  }`}
+            </span>
+          </StepHeader>
+          {trace.expand.added.length > 0 && (
+            <div className='mt-1 min-w-0 overflow-hidden'>
+              {trace.expand.added.map((e) => {
+                const locationParts = [
+                  e.pageNo != null ? `p. ${e.pageNo}` : '',
+                  e.section ?? '',
+                  e.via ? `${hopVerb(e.viaKind)} "${e.via}"` : '',
+                ].filter(Boolean)
+                const locationLine = locationParts.join(' · ')
+
+                return (
+                  <div key={`x-${e.sourceRef}-${e.chunkIndex}`}>
+                    <EntryRow entry={e} />
+                    {locationLine && (
+                      <div className='pl-4 text-[11px] text-muted-foreground'>
+                        {locationLine}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </>
+      ),
+    })
+  }
+
   if (trace.rerank.applied && trace.rerank.results.length > 0) {
     steps.push({
       key: 'rerank',
@@ -157,7 +206,7 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
       key: 'grounding',
       icon: <ShieldCheck className='h-3.5 w-3.5' />,
       content: (
-        <StepHeader title='Grounding'>
+        <StepHeader title='Retrieval confidence'>
           <span
             className={`rounded px-1.5 py-0.5 text-xs font-medium ${
               trace.grounding.answerFound
@@ -165,7 +214,7 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
                 : 'bg-muted text-muted-foreground'
             }`}
           >
-            {trace.grounding.answerFound ? 'answer found' : 'not in sources'}
+            {trace.grounding.answerFound ? 'higher relevance' : 'low relevance'}
           </span>
           <span className='font-mono font-normal [overflow-wrap:anywhere] break-words text-muted-foreground'>
             top {fmtScore(trace.grounding.topScore)} /{' '}
@@ -175,6 +224,17 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
       ),
     })
   }
+
+  steps.push({
+    key: 'final-evidence',
+    icon: <Search className='h-3.5 w-3.5' />,
+    content: (
+      <>
+        <StepHeader title='Evidence sent to the model' />
+        <SourceSnippets source={trace} />
+      </>
+    ),
+  })
 
   return (
     <div className='min-w-0 overflow-hidden'>

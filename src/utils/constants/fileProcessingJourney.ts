@@ -32,6 +32,8 @@ export const JOURNEY_DETAIL_LABELS: Record<string, string> = {
   cacheHits: 'Cache hits',
   describedFigures: 'Figures described',
   transcribedPages: 'Pages transcribed',
+  processedPages: 'Scanned pages handled',
+  blankPages: 'Blank pages skipped',
   detectedTextlessPages: 'Scanned pages found',
   selectedTextlessPages: 'Scanned pages selected',
   deferredTextlessPages: 'Scanned pages deferred',

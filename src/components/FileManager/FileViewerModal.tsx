@@ -6,6 +6,7 @@ import { FileText, AlertCircle, Download, ExternalLink } from 'lucide-react'
 import axios from 'axios'
 import FileStructurePanel from './FileStructurePanel'
 import FileProcessingJourneyPanel from './FileProcessingJourneyPanel'
+import FileMapPanel from './FileMapPanel'
 
 interface FileViewerModalProps {
   isOpen: boolean
@@ -259,6 +260,7 @@ const FileViewerModal = ({
           <TabsList className='self-start'>
             <TabsTrigger value='document'>Document</TabsTrigger>
             <TabsTrigger value='structure'>Structure</TabsTrigger>
+            <TabsTrigger value='map'>Map</TabsTrigger>
             <TabsTrigger value='metadata'>Metadata</TabsTrigger>
           </TabsList>
 
@@ -274,6 +276,13 @@ const FileViewerModal = ({
             className='mt-3 flex-1 overflow-y-auto data-[state=inactive]:hidden'
           >
             <FileStructurePanel fileId={fileId} onOpenPage={openPage} />
+          </TabsContent>
+
+          <TabsContent
+            value='map'
+            className='mt-3 flex-1 overflow-hidden data-[state=inactive]:hidden'
+          >
+            <FileMapPanel fileId={fileId} onOpenPage={openPage} />
           </TabsContent>
 
           <TabsContent
