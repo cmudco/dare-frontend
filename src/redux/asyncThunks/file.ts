@@ -1,4 +1,3 @@
-import type { DocumentProcessingMode } from '@/utils/constants/file'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   uploadFileAPI,
@@ -23,6 +22,7 @@ import {
   updateVisionModelAPI,
 } from '../../api/files'
 import { MyFile } from '../types/files'
+import { DocumentProcessingMode } from '@/utils/constants/file'
 
 const BATCH_SIZE = 5
 
@@ -99,7 +99,7 @@ export const uploadNewFile = createAsyncThunk(
     {
       files,
       tags,
-      processingMode = 'advanced',
+      processingMode = DocumentProcessingMode.Advanced,
     }: {
       files: File[]
       tags: number[]

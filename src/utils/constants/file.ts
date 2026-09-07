@@ -130,4 +130,34 @@ export const FILE_TABLE_HEADER_TO_KEY = {
   Action: null,
 } as const
 
-export type DocumentProcessingMode = 'basic' | 'advanced'
+export enum DocumentProcessingMode {
+  Basic = 'basic',
+  Advanced = 'advanced',
+}
+
+export const DOCUMENT_PROCESSING_OPTIONS: Record<
+  DocumentProcessingMode,
+  { label: string; description: string }
+> = {
+  [DocumentProcessingMode.Basic]: {
+    label: 'Basic',
+    description: 'Text only. No images or document layout.',
+  },
+  [DocumentProcessingMode.Advanced]: {
+    label: 'Advanced',
+    description: 'Docling: preserves tables, images, and document structure.',
+  },
+}
+
+// Parser identifiers describe the actual extractor, separately from upload mode.
+export enum DocumentParser {
+  Legacy = 'legacy',
+  Docling = 'docling',
+  Notebook = 'notebook',
+}
+
+export const DOCUMENT_PARSER_LABELS: Record<DocumentParser, string> = {
+  [DocumentParser.Legacy]: 'Basic (text only)',
+  [DocumentParser.Docling]: 'Advanced (Docling)',
+  [DocumentParser.Notebook]: 'Notebook',
+}

@@ -1,4 +1,8 @@
-import { FileStatus, type DocumentProcessingMode } from '@/utils/constants/file'
+import {
+  FileStatus,
+  type DocumentProcessingMode,
+  type DocumentParser,
+} from '@/utils/constants/file'
 import { VectorDbSource } from '@/utils/constants/user'
 
 export interface MyFile {
@@ -35,7 +39,7 @@ export interface MyFile {
   pageCount?: number | null
   pagesWithoutText?: number
   processingMode?: DocumentProcessingMode
-  parserName?: string | null
+  parserName?: DocumentParser | null
   structureCounts?: DocumentCounts | null
   ocr?: FileOcrPlan | null
 }
@@ -139,7 +143,7 @@ export interface FileProcessingJourneyResponse {
   processingStage: FileProcessingStage
   stageLabel: string
   errorMessage?: string | null
-  parserName?: string | null
+  parserName?: DocumentParser | null
   pageCount?: number | null
   journey: FileProcessingJourney
   createdAt: string

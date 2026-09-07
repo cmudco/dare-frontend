@@ -43,15 +43,17 @@ import { getTagColor, isAllowedFileType } from '@/utils/files'
 import {
   MAX_FILE_SIZE,
   MAX_FILE_SIZE_MB,
-  type DocumentProcessingMode,
+  DocumentProcessingMode,
+  DOCUMENT_PROCESSING_OPTIONS,
 } from '@/utils/constants/file'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { fetchChunkSettings } from '@/redux/asyncThunks/user'
 import { ChunkSettingsForm } from '@/components/Auth/ChunkSettingsForm'
 
 const FileUploadModal: React.FC = () => {
-  const [processingMode, setProcessingMode] =
-    useState<DocumentProcessingMode>('advanced')
+  const [processingMode, setProcessingMode] = useState<DocumentProcessingMode>(
+    DocumentProcessingMode.Advanced
+  )
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [fileErrors, setFileErrors] = useState<string[]>([])
   const [newTag, setNewTag] = useState<string>('')
@@ -310,7 +312,7 @@ const FileUploadModal: React.FC = () => {
           <fieldset className='space-y-2'>
             <legend className='text-sm font-medium'>Upload processing</legend>
             <div className='grid grid-cols-2 gap-2'>
-              {(['basic', 'advanced'] as const).map((mode) => (
+              {Object.values(DocumentProcessingMode).map((mode) => (
                 <label
                   key={mode}
                   className='flex cursor-pointer items-start gap-2 rounded-md border border-border bg-background p-3 text-sm'
@@ -325,12 +327,10 @@ const FileUploadModal: React.FC = () => {
                   />
                   <span>
                     <span className='block font-medium'>
-                      {mode === 'basic' ? 'Basic' : 'Advanced'}
+                      {DOCUMENT_PROCESSING_OPTIONS[mode].label}
                     </span>
                     <span className='text-xs text-muted-foreground'>
-                      {mode === 'basic'
-                        ? 'Text only. No images or document layout.'
-                        : 'Docling: preserves tables, images, and document structure.'}
+                      {DOCUMENT_PROCESSING_OPTIONS[mode].description}
                     </span>
                   </span>
                 </label>
@@ -407,7 +407,7 @@ const FileUploadModal: React.FC = () => {
                 Reads scanned pages and figures
               </span>
             </div>
-            {processingMode === 'advanced' && (
+            {processingMode === DocumentProcessingMode.Advanced && (
               <VisionModelSelect
                 id='upload-vision-model'
                 models={visionModels?.models ?? []}

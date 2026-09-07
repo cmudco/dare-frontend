@@ -20,7 +20,7 @@ import {
   ProcessingJourneyStage,
   ProcessingJourneyStageStatus,
 } from '@/redux/types/files'
-import { FileStatus } from '@/utils/constants/file'
+import { FileStatus, DOCUMENT_PARSER_LABELS } from '@/utils/constants/file'
 import {
   JOURNEY_DETAIL_LABELS,
   STAGE_ICONS,
@@ -117,11 +117,9 @@ const FileProcessingJourneyPanel = ({
           <JourneyMetric
             label='Parser'
             value={
-              data.parserName === 'legacy'
-                ? 'Basic (text only)'
-                : data.parserName === 'docling'
-                  ? 'Advanced (Docling)'
-                  : data.parserName || 'Not recorded'
+              data.parserName
+                ? (DOCUMENT_PARSER_LABELS[data.parserName] ?? data.parserName)
+                : 'Not recorded'
             }
           />
           <JourneyMetric
