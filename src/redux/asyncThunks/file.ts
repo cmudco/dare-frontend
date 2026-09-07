@@ -1,5 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
+  getFileViewerCapabilitiesAPI,
+  reprocessFileAPI,
   uploadFileAPI,
   deleteFileAPI,
   deleteMultipleFilesAPI,
@@ -21,7 +23,8 @@ import {
   getVisionModelsAPI,
   updateVisionModelAPI,
 } from '../../api/files'
-import { MyFile } from '../types/files'
+import { MyFile, FileReprocessingRequest } from '../types/files'
+import { DocumentProcessingMode } from '@/utils/constants/file'
 
 const BATCH_SIZE = 5
 
@@ -94,7 +97,18 @@ export const updateFileTags = createAsyncThunk(
 
 export const uploadNewFile = createAsyncThunk(
   'files/uploadNewFile',
-  async ({ files, tags }: { files: File[]; tags: number[] }, thunkAPI) => {
+  async (
+    {
+      files,
+      tags,
+      processingMode = DocumentProcessingMode.Advanced,
+    }: {
+      files: File[]
+      tags: number[]
+      processingMode?: DocumentProcessingMode
+    },
+    thunkAPI
+  ) => {
     try {
       const batches: File[][] = []
       for (let i = 0; i < files.length; i += BATCH_SIZE) {
@@ -104,6 +118,7 @@ export const uploadNewFile = createAsyncThunk(
       const responses: MyFile[] = []
       for (const batch of batches) {
         const formData = new FormData()
+        formData.append('processing_mode', processingMode)
         batch.forEach((file) => {
           formData.append('files', file)
           formData.append('names', file.name)
@@ -319,6 +334,22 @@ export const togglePublicShare = createAsyncThunk(
     try {
       const response = await togglePublicShareAPI(fileId, shareWithEveryone)
       return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const fetchFileViewerCapabilities = createAsyncThunk(
+  'files/fetchFileViewerCapabilities',
+  async (fileId: number) => getFileViewerCapabilitiesAPI(fileId)
+)
+
+export const reprocessFile = createAsyncThunk(
+  'files/reprocessFile',
+  async (request: FileReprocessingRequest, thunkAPI) => {
+    try {
+      return await reprocessFileAPI(request)
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

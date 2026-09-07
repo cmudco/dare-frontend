@@ -7,6 +7,8 @@ import axios from 'axios'
 import FileStructurePanel from './FileStructurePanel'
 import FileProcessingJourneyPanel from './FileProcessingJourneyPanel'
 import FileMapPanel from './FileMapPanel'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { fetchFileViewerCapabilities } from '@/redux/asyncThunks/file'
 
 interface FileViewerModalProps {
   isOpen: boolean
@@ -30,6 +32,18 @@ const FileViewerModal = ({
   fileName,
   fileType,
 }: FileViewerModalProps) => {
+  const dispatch = useAppDispatch()
+  const capabilities = useAppSelector((state) =>
+    fileId === null ? undefined : state.files.viewerCapabilities[fileId]
+  )
+
+  useEffect(() => {
+    if (isOpen && fileId !== null) {
+      const request = dispatch(fetchFileViewerCapabilities(fileId))
+      return () => request.abort()
+    }
+  }, [dispatch, isOpen, fileId])
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
@@ -253,14 +267,21 @@ const FileViewerModal = ({
         </DialogHeader>
 
         <Tabs
-          value={tab}
+          value={
+            (tab === 'structure' && !capabilities?.structure) ||
+            (tab === 'map' && !capabilities?.map)
+              ? 'document'
+              : tab
+          }
           onValueChange={setTab}
           className='flex h-[70vh] flex-1 flex-col'
         >
           <TabsList className='self-start'>
             <TabsTrigger value='document'>Document</TabsTrigger>
-            <TabsTrigger value='structure'>Structure</TabsTrigger>
-            <TabsTrigger value='map'>Map</TabsTrigger>
+            {capabilities?.structure && (
+              <TabsTrigger value='structure'>Structure</TabsTrigger>
+            )}
+            {capabilities?.map && <TabsTrigger value='map'>Map</TabsTrigger>}
             <TabsTrigger value='metadata'>Metadata</TabsTrigger>
           </TabsList>
 
@@ -271,19 +292,23 @@ const FileViewerModal = ({
             {renderContent()}
           </TabsContent>
 
-          <TabsContent
-            value='structure'
-            className='mt-3 flex-1 overflow-y-auto data-[state=inactive]:hidden'
-          >
-            <FileStructurePanel fileId={fileId} onOpenPage={openPage} />
-          </TabsContent>
+          {capabilities?.structure && (
+            <TabsContent
+              value='structure'
+              className='mt-3 flex-1 overflow-y-auto data-[state=inactive]:hidden'
+            >
+              <FileStructurePanel fileId={fileId} onOpenPage={openPage} />
+            </TabsContent>
+          )}
 
-          <TabsContent
-            value='map'
-            className='mt-3 flex-1 overflow-hidden data-[state=inactive]:hidden'
-          >
-            <FileMapPanel fileId={fileId} onOpenPage={openPage} />
-          </TabsContent>
+          {capabilities?.map && (
+            <TabsContent
+              value='map'
+              className='mt-3 flex-1 overflow-hidden data-[state=inactive]:hidden'
+            >
+              <FileMapPanel fileId={fileId} onOpenPage={openPage} />
+            </TabsContent>
+          )}
 
           <TabsContent
             value='metadata'

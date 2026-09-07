@@ -1,3 +1,4 @@
+import { DOCUMENT_PARSER_LABELS } from '@/utils/constants/file'
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -393,6 +394,11 @@ const ConversationFileSelect: React.FC = () => {
                         <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
                         <span className='flex-1 text-sm text-foreground'>
                           {file.name}
+                          {file.parserName && (
+                            <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
+                              {DOCUMENT_PARSER_LABELS[file.parserName]}
+                            </span>
+                          )}
                         </span>
                         {isShared && (
                           <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
@@ -434,6 +440,11 @@ const ConversationFileSelect: React.FC = () => {
                           className={`flex-1 text-sm ${selectedFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'}`}
                         >
                           {file.name}
+                          {file.parserName && (
+                            <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
+                              {DOCUMENT_PARSER_LABELS[file.parserName]}
+                            </span>
+                          )}
                         </span>
                         {isShared && (
                           <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
@@ -475,6 +486,11 @@ const ConversationFileSelect: React.FC = () => {
                           className={`flex-1 text-sm ${selectedMediaFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'}`}
                         >
                           {file.name}
+                          {file.parserName && (
+                            <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
+                              {DOCUMENT_PARSER_LABELS[file.parserName]}
+                            </span>
+                          )}
                         </span>
                         <span className='ml-1 text-xs text-muted-foreground'>
                           ({file.mediaType})

@@ -99,7 +99,7 @@ const FileManagerLayout = () => {
                 )}
 
                 {activeTab === 'my-files' || !isSyftboxUser ? (
-                  <FileTable />
+                  <FileTable key={user?.id ?? 'anonymous'} />
                 ) : (
                   <SharedFilesTable />
                 )}
@@ -114,7 +114,7 @@ const FileManagerLayout = () => {
             {currentView === 'media' && (
               <>
                 <FileHeader onToggleView={handleToggleView} />
-                <FileTable />
+                <FileTable key={user?.id ?? 'anonymous'} />
               </>
             )}
             {currentView === 'libraries' && (

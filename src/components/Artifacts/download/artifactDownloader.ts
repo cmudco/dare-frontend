@@ -16,7 +16,7 @@ import {
   generateRasterPdfFromSvg,
   generateSvgPdfBlob,
 } from './svgExport'
-import { generateDocxBlob } from '../renderers/DocxRenderer'
+import { generateDocxBlob } from './docxGeneration'
 
 interface DownloadArtifactParams {
   artifactId: number

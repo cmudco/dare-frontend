@@ -129,3 +129,40 @@ export const FILE_TABLE_HEADER_TO_KEY = {
   Status: 'status',
   Action: null,
 } as const
+
+export enum DocumentProcessingMode {
+  Basic = 'basic',
+  Advanced = 'advanced',
+}
+
+export const DOCUMENT_PROCESSING_OPTIONS: Record<
+  DocumentProcessingMode,
+  { label: string; description: string }
+> = {
+  [DocumentProcessingMode.Basic]: {
+    label: 'Basic',
+    description: 'Text only. No images or document layout.',
+  },
+  [DocumentProcessingMode.Advanced]: {
+    label: 'Advanced',
+    description: 'Docling: preserves tables, images, and document structure.',
+  },
+}
+
+// Parser identifiers match the backend; migration 0025 normalizes historical files.
+export enum DocumentParser {
+  Basic = 'basic',
+  Advanced = 'docling',
+  Notebook = 'notebook',
+}
+
+export const DOCUMENT_PARSER_LABELS: Record<DocumentParser, string> = {
+  [DocumentParser.Basic]: 'Basic (text only)',
+  [DocumentParser.Advanced]: 'Advanced (Docling)',
+  [DocumentParser.Notebook]: 'Notebook',
+}
+
+export enum DocumentReprocessingAction {
+  Reparse = 'reparse',
+  RetryImages = 'retry_images',
+}

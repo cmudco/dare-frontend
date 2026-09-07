@@ -45,7 +45,7 @@ const ArtifactVersionDropdown: React.FC<ArtifactVersionDropdownProps> = ({
 
     // Sort by version number (descending - newest first)
     return versions.sort((a, b) => (b.version ?? 1) - (a.version ?? 1))
-  }, [artifacts, artifact.artifactGroupId])
+  }, [artifacts, artifact])
 
   // Don't show dropdown if only one version
   if (groupVersions.length <= 1) {

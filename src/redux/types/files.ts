@@ -1,7 +1,13 @@
-import { FileStatus } from '@/utils/constants/file'
+import {
+  FileStatus,
+  type DocumentProcessingMode,
+  type DocumentParser,
+  type DocumentReprocessingAction,
+} from '@/utils/constants/file'
 import { VectorDbSource } from '@/utils/constants/user'
 
 export interface MyFile {
+  failedImageCount?: number
   id: number
   user: string
   name: string
@@ -34,7 +40,8 @@ export interface MyFile {
   // from the dedicated structure endpoint.
   pageCount?: number | null
   pagesWithoutText?: number
-  parserName?: string | null
+  processingMode?: DocumentProcessingMode
+  parserName?: DocumentParser | null
   structureCounts?: DocumentCounts | null
   ocr?: FileOcrPlan | null
 }
@@ -138,7 +145,7 @@ export interface FileProcessingJourneyResponse {
   processingStage: FileProcessingStage
   stageLabel: string
   errorMessage?: string | null
-  parserName?: string | null
+  parserName?: DocumentParser | null
   pageCount?: number | null
   journey: FileProcessingJourney
   createdAt: string
@@ -272,7 +279,18 @@ export type MediaTypeFilter =
 /** The view modes of the Sources page toggle. */
 export type FileView = 'files' | 'folders' | 'media' | 'libraries'
 
+export interface FileViewerCapabilities {
+  structure: boolean
+  map: boolean
+}
+
 export interface FileState {
+  reprocessingRequests: Record<
+    number,
+    { pending: boolean; error: string | null } | undefined
+  >
+  viewerCapabilityRequests: Record<number, string | undefined>
+  viewerCapabilities: Record<number, FileViewerCapabilities | undefined>
   files: MyFile[]
   folders: MyFolder[]
   loading: boolean
@@ -385,4 +403,10 @@ export interface DocumentMap {
     entities?: number
     linkedEntities?: number
   }
+}
+
+export interface FileReprocessingRequest {
+  fileId: number
+  action: DocumentReprocessingAction
+  processingMode?: DocumentProcessingMode
 }

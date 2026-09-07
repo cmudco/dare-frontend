@@ -1,9 +1,6 @@
 import type { ArtifactType } from '@/redux/types/artifact'
 import type { DocxDocumentConfig } from '@/redux/types/dareToolResults'
-import {
-  generateDocxHtml,
-  generateDocxPlainText,
-} from '../renderers/DocxRenderer'
+import { generateDocxHtml, generateDocxPlainText } from './docxGeneration'
 
 export async function copyArtifactContent(
   artifactType: ArtifactType,
