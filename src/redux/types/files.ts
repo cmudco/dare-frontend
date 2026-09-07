@@ -2,10 +2,12 @@ import {
   FileStatus,
   type DocumentProcessingMode,
   type DocumentParser,
+  type DocumentReprocessingAction,
 } from '@/utils/constants/file'
 import { VectorDbSource } from '@/utils/constants/user'
 
 export interface MyFile {
+  failedImageCount?: number
   id: number
   user: string
   name: string
@@ -283,6 +285,10 @@ export interface FileViewerCapabilities {
 }
 
 export interface FileState {
+  reprocessingRequests: Record<
+    number,
+    { pending: boolean; error: string | null } | undefined
+  >
   viewerCapabilityRequests: Record<number, string | undefined>
   viewerCapabilities: Record<number, FileViewerCapabilities | undefined>
   files: MyFile[]
@@ -397,4 +403,10 @@ export interface DocumentMap {
     entities?: number
     linkedEntities?: number
   }
+}
+
+export interface FileReprocessingRequest {
+  fileId: number
+  action: DocumentReprocessingAction
+  processingMode?: DocumentProcessingMode
 }

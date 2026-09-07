@@ -2,6 +2,7 @@ import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import {
   FileViewerCapabilities,
+  FileReprocessingRequest,
   DocumentMap,
   DocumentMapChunkDetail,
   FileProcessingStage,
@@ -345,3 +346,13 @@ export const getFileViewerCapabilitiesAPI = async (
     method: METHOD.GET,
   })
 }
+
+export const reprocessFileAPI = async ({
+  fileId,
+  ...data
+}: FileReprocessingRequest): Promise<MyFile> =>
+  baseRequest<MyFile>({
+    url: `api/files/${fileId}/reprocess/`,
+    method: METHOD.POST,
+    data,
+  })

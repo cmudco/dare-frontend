@@ -65,6 +65,8 @@ import FileViewerModal from './FileViewerModal'
 import TagsDisplay from './TagsDisplay'
 import { formatDate } from '@/utils/constants/prompts'
 import OcrApprovalDialog from './OcrApprovalDialog'
+import FileReprocessingDialog from './FileReprocessingDialog'
+import { FileStatus } from '@/utils/constants/file'
 
 const FileTable = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -106,6 +108,8 @@ const FileTable = () => {
   const [viewFileId, setViewFileId] = useState<number | null>(null)
   const [viewFileName, setViewFileName] = useState<string>('')
   const [viewFileType, setViewFileType] = useState<string>('')
+  const [reprocessFileId, setReprocessFileId] = useState<number | null>(null)
+  const reprocessTarget = files.find((file) => file.id === reprocessFileId)
   const [ocrReviewFileId, setOcrReviewFileId] = useState<number | null>(null)
 
   const actionableOcrFiles = useMemo(
@@ -310,8 +314,10 @@ const FileTable = () => {
                 tags,
                 status,
                 errorMessage,
+                failedImageCount,
                 processingStage,
                 ocr,
+                isMedia,
                 isSharedByMe,
                 isSharedPublicly,
                 createdAt,
@@ -372,6 +378,19 @@ const FileTable = () => {
                   </TableCell>
                   <TableCell className='p-4'>
                     {getStatusDisplay(status, errorMessage, processingStage)}
+                    {status === FileStatus.PROCESSED && errorMessage && (
+                      <p
+                        role='status'
+                        className='mt-1 max-w-xs text-xs text-destructive'
+                      >
+                        {errorMessage}
+                      </p>
+                    )}
+                    {!!failedImageCount && status !== FileStatus.PROCESSING && (
+                      <p className='mt-1 text-xs text-muted-foreground'>
+                        {failedImageCount} image descriptions failed
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell className='p-4 text-center'>
                     <DropdownMenu>
@@ -379,6 +398,12 @@ const FileTable = () => {
                         <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
+                        <DropdownMenuItem
+                          disabled={status === FileStatus.PROCESSING || isMedia}
+                          onClick={() => setReprocessFileId(id)}
+                        >
+                          Reprocess document
+                        </DropdownMenuItem>
                         {(ocr?.status === 'awaiting_approval' ||
                           ocr?.status === 'partial') && (
                           <DropdownMenuItem
@@ -524,6 +549,13 @@ const FileTable = () => {
         fileType={viewFileType}
       />
 
+      {reprocessTarget && (
+        <FileReprocessingDialog
+          key={reprocessTarget.id}
+          file={reprocessTarget}
+          onClose={() => setReprocessFileId(null)}
+        />
+      )}
       <OcrApprovalDialog
         file={ocrReviewFile}
         onClose={() => setOcrReviewFileId(null)}

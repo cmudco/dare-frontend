@@ -161,3 +161,8 @@ export const DOCUMENT_PARSER_LABELS: Record<DocumentParser, string> = {
   [DocumentParser.Advanced]: 'Advanced (Docling)',
   [DocumentParser.Notebook]: 'Notebook',
 }
+
+export enum DocumentReprocessingAction {
+  Reparse = 'reparse',
+  RetryImages = 'retry_images',
+}
