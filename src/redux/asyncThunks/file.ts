@@ -1,3 +1,4 @@
+import type { DocumentProcessingMode } from '@/utils/constants/file'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   uploadFileAPI,
@@ -94,7 +95,18 @@ export const updateFileTags = createAsyncThunk(
 
 export const uploadNewFile = createAsyncThunk(
   'files/uploadNewFile',
-  async ({ files, tags }: { files: File[]; tags: number[] }, thunkAPI) => {
+  async (
+    {
+      files,
+      tags,
+      processingMode = 'advanced',
+    }: {
+      files: File[]
+      tags: number[]
+      processingMode?: DocumentProcessingMode
+    },
+    thunkAPI
+  ) => {
     try {
       const batches: File[][] = []
       for (let i = 0; i < files.length; i += BATCH_SIZE) {
@@ -104,6 +116,7 @@ export const uploadNewFile = createAsyncThunk(
       const responses: MyFile[] = []
       for (const batch of batches) {
         const formData = new FormData()
+        formData.append('processing_mode', processingMode)
         batch.forEach((file) => {
           formData.append('files', file)
           formData.append('names', file.name)

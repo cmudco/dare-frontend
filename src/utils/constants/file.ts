@@ -129,3 +129,5 @@ export const FILE_TABLE_HEADER_TO_KEY = {
   Status: 'status',
   Action: null,
 } as const
+
+export type DocumentProcessingMode = 'basic' | 'advanced'

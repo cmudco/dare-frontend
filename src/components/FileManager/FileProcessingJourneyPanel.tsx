@@ -116,7 +116,13 @@ const FileProcessingJourneyPanel = ({
           <JourneyMetric label='Attempts' value={String(attempts.length)} />
           <JourneyMetric
             label='Parser'
-            value={data.parserName || 'Not recorded'}
+            value={
+              data.parserName === 'legacy'
+                ? 'Basic (text only)'
+                : data.parserName === 'docling'
+                  ? 'Advanced (Docling)'
+                  : data.parserName || 'Not recorded'
+            }
           />
           <JourneyMetric
             label='Pages'

@@ -40,12 +40,18 @@ import {
 } from '../ui/select'
 import { Badge } from '../ui/badge'
 import { getTagColor, isAllowedFileType } from '@/utils/files'
-import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from '@/utils/constants/file'
+import {
+  MAX_FILE_SIZE,
+  MAX_FILE_SIZE_MB,
+  type DocumentProcessingMode,
+} from '@/utils/constants/file'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { fetchChunkSettings } from '@/redux/asyncThunks/user'
 import { ChunkSettingsForm } from '@/components/Auth/ChunkSettingsForm'
 
 const FileUploadModal: React.FC = () => {
+  const [processingMode, setProcessingMode] =
+    useState<DocumentProcessingMode>('advanced')
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [fileErrors, setFileErrors] = useState<string[]>([])
   const [newTag, setNewTag] = useState<string>('')
@@ -91,6 +97,7 @@ const FileUploadModal: React.FC = () => {
         uploadNewFile({
           files: selectedFiles,
           tags: selectedTags,
+          processingMode,
         })
       ).unwrap()
       dispatch(resetSelectedTags())
@@ -300,6 +307,42 @@ const FileUploadModal: React.FC = () => {
             </div>
           </div>
 
+          <fieldset className='space-y-2'>
+            <legend className='text-sm font-medium'>Upload processing</legend>
+            <div className='grid grid-cols-2 gap-2'>
+              {(['basic', 'advanced'] as const).map((mode) => (
+                <label
+                  key={mode}
+                  className='flex cursor-pointer items-start gap-2 rounded-md border border-border bg-background p-3 text-sm'
+                >
+                  <input
+                    type='radio'
+                    name='processingMode'
+                    value={mode}
+                    checked={processingMode === mode}
+                    onChange={() => setProcessingMode(mode)}
+                    className='mt-1 accent-primary'
+                  />
+                  <span>
+                    <span className='block font-medium'>
+                      {mode === 'basic' ? 'Basic' : 'Advanced'}
+                    </span>
+                    <span className='text-xs text-muted-foreground'>
+                      {mode === 'basic'
+                        ? 'Text only. No images or document layout.'
+                        : 'Docling: preserves tables, images, and document structure.'}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className='text-xs text-muted-foreground'>
+              Applies to documents in this upload. Plain-text formats use text
+              extraction; audio, video, and standalone images keep their usual
+              handling.
+            </p>
+          </fieldset>
+
           <div
             className={`border-2 border-dashed ${
               error
@@ -364,13 +407,15 @@ const FileUploadModal: React.FC = () => {
                 Reads scanned pages and figures
               </span>
             </div>
-            <VisionModelSelect
-              id='upload-vision-model'
-              models={visionModels?.models ?? []}
-              value={visionModels?.selected ?? ''}
-              onChange={handleVisionModelChange}
-              disabled={!visionModels}
-            />
+            {processingMode === 'advanced' && (
+              <VisionModelSelect
+                id='upload-vision-model'
+                models={visionModels?.models ?? []}
+                value={visionModels?.selected ?? ''}
+                onChange={handleVisionModelChange}
+                disabled={!visionModels}
+              />
+            )}
             {visionModelsError && (
               <p className='text-xs text-destructive'>{visionModelsError}</p>
             )}

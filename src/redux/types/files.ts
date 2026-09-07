@@ -1,4 +1,4 @@
-import { FileStatus } from '@/utils/constants/file'
+import { FileStatus, type DocumentProcessingMode } from '@/utils/constants/file'
 import { VectorDbSource } from '@/utils/constants/user'
 
 export interface MyFile {
@@ -34,6 +34,7 @@ export interface MyFile {
   // from the dedicated structure endpoint.
   pageCount?: number | null
   pagesWithoutText?: number
+  processingMode?: DocumentProcessingMode
   parserName?: string | null
   structureCounts?: DocumentCounts | null
   ocr?: FileOcrPlan | null

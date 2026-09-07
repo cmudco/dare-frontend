@@ -1,3 +1,5 @@
+import { getFromLocalStorage, saveToLocalStorage } from '@/utils/localStorage'
+import { getFileProp } from '@/utils/sortUtils'
 import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
@@ -82,9 +84,21 @@ const FileTable = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [deleteFileId, setDeleteFileId] = useState<number | null>(null)
   const [deleteFileName, setDeleteFileName] = useState<string>('')
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortDirection, setSortDirection] = useState<SortDirection>(
-    SortDirectionEnum.ASC
+  const sortStorageKey = `dare_sources_sort_v1_${user?.id ?? 'anonymous'}`
+  const [{ column: sortColumn, direction: sortDirection }, setSort] = useState(
+    () => {
+      const saved = getFromLocalStorage<{
+        column: string | null
+        direction: SortDirection
+      }>(sortStorageKey, { column: null, direction: SortDirectionEnum.ASC })
+      return saved &&
+        typeof saved.column === 'string' &&
+        getFileProp(saved.column) &&
+        (saved.direction === SortDirectionEnum.ASC ||
+          saved.direction === SortDirectionEnum.DESC)
+        ? saved
+        : { column: null, direction: SortDirectionEnum.ASC }
+    }
   )
   const [tagFileId, setTagFileId] = useState<number | null>(null)
   const [tagFileName, setTagFileName] = useState<string>('')
@@ -175,16 +189,16 @@ const FileTable = () => {
   }
 
   const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection((prev) =>
-        prev === SortDirectionEnum.ASC
+    const next = {
+      column,
+      direction:
+        sortColumn === column && sortDirection === SortDirectionEnum.ASC
           ? SortDirectionEnum.DESC
-          : SortDirectionEnum.ASC
-      )
-    } else {
-      setSortColumn(column)
-      setSortDirection(SortDirectionEnum.ASC)
+          : SortDirectionEnum.ASC,
     }
+    setSort(next)
+    saveToLocalStorage(sortStorageKey, next)
+    setCurrentPage(1)
   }
 
   return (
