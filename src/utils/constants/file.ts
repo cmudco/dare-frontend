@@ -149,15 +149,16 @@ export const DOCUMENT_PROCESSING_OPTIONS: Record<
   },
 }
 
-// Parser identifiers describe the actual extractor, separately from upload mode.
+// Basic/Advanced match the upload terminology. Values preserve existing API parser
+// identifiers; changing them would misread previously processed files.
 export enum DocumentParser {
-  Legacy = 'legacy',
-  Docling = 'docling',
+  Basic = 'legacy',
+  Advanced = 'docling',
   Notebook = 'notebook',
 }
 
 export const DOCUMENT_PARSER_LABELS: Record<DocumentParser, string> = {
-  [DocumentParser.Legacy]: 'Basic (text only)',
-  [DocumentParser.Docling]: 'Advanced (Docling)',
+  [DocumentParser.Basic]: 'Basic (text only)',
+  [DocumentParser.Advanced]: 'Advanced (Docling)',
   [DocumentParser.Notebook]: 'Notebook',
 }

@@ -122,7 +122,9 @@ const Message: React.FC<MessageProps> = ({
         source: 'auto',
       })
     }
-  }, [shouldShowAutoFeedback, feedbackModalState.isOpen])
+    // Only the parent signal opens this modal; closing it must not trigger another open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowAutoFeedback])
 
   // Function to get font size classes based on user preference
   const getFontSizeClasses = () => {

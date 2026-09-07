@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AppDispatch, RootState } from '../../redux/store'
@@ -116,8 +116,7 @@ const ActiveConversation: React.FC = () => {
 
   // Refs
   const hasCheckedAutoFeedback = useRef(false)
-  const prevActiveConversationIdRef = useRef<string | null>(null)
-  const activeConversationId = activeConversation?.conversationId ?? null
+  const prevActiveConversationRef = useRef<typeof activeConversation>(null)
 
   // Hooks
   const {
@@ -150,11 +149,13 @@ const ActiveConversation: React.FC = () => {
 
   // Clear conversation state when switching
   useEffect(() => {
-    if (activeConversationId) {
+    if (activeConversation) {
       dispatch(clearConversation())
       dispatch(updateConversationInput(''))
     }
-  }, [activeConversationId, dispatch])
+    // Metadata changes must not clear the composer; reset only when the conversation ID changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConversation?.conversationId, dispatch])
 
   // Navigate to conversation URL
   useEffect(() => {
@@ -170,30 +171,43 @@ const ActiveConversation: React.FC = () => {
 
   // Draft save/load on conversation switch
   useEffect(() => {
-    const previousId = prevActiveConversationIdRef.current
-    const currentId = activeConversationId
+    const prevConversation = prevActiveConversationRef.current
+    const currentConversation = activeConversation
 
-    if (previousId !== currentId) {
+    if (
+      prevConversation?.conversationId !== currentConversation?.conversationId
+    ) {
       // Save draft for previous conversation
-      if (previousId && autoSaveEnabled && conversationInput.trim()) {
+      if (prevConversation && autoSaveEnabled && conversationInput.trim()) {
         dispatch(
           saveDraftForConversation({
-            conversationId: previousId,
+            conversationId: prevConversation.conversationId,
             text: conversationInput,
           })
         )
       }
 
       // Load draft for current conversation
-      if (currentId) {
-        dispatch(loadDraftForConversation(currentId))
+      if (currentConversation) {
+        dispatch(loadDraftForConversation(currentConversation.conversationId))
       }
 
-      prevActiveConversationIdRef.current = currentId
+      prevActiveConversationRef.current = currentConversation
     }
-  }, [activeConversationId, autoSaveEnabled, conversationInput, dispatch])
+    // Draft ownership changes by ID; metadata object identity is not a conversation-switch signal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    activeConversation?.conversationId,
+    autoSaveEnabled,
+    conversationInput,
+    dispatch,
+  ])
 
   // Auto-trigger feedback modal
+  const lastMessageStreaming = useMemo(
+    () => conversationHistory[conversationHistory.length - 1]?.streaming,
+    [conversationHistory]
+  )
 
   useEffect(() => {
     if (
@@ -231,7 +245,14 @@ const ActiveConversation: React.FC = () => {
       setShouldShowAutoFeedbackModal(true)
       setTimeout(() => setShouldShowAutoFeedbackModal(false), 0)
     }
-  }, [conversationHistory, activeConversation, dispatch])
+    // History dependencies track count and streaming completion, rather than every token update.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    conversationHistory.length,
+    activeConversation,
+    lastMessageStreaming,
+    dispatch,
+  ])
 
   // Reset auto-feedback check on conversation switch
   useEffect(() => {

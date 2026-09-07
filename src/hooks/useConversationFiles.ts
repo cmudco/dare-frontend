@@ -51,32 +51,20 @@ export function useConversationFiles(
     effectiveOwnerId
   )
 
-  const conversationId = conversation?.conversationId
-  const selectedFileIds = conversation?.selectedFileIds
-  const selectedEmbeddingIds = conversation?.selectedEmbeddingIds
-  const selectedMediaIds = conversation?.selectedMediaIds
-  const selectedLibraryIds = conversation?.selectedLibraryIds
-
   useEffect(() => {
-    if (conversationId && allFiles.length > 0 && !isLoading) {
+    if (conversation && allFiles.length > 0 && !isLoading) {
       dispatch(
         loadSelectedFilesFromIds({
           files: allFiles,
-          selectedFileIds: selectedFileIds || [],
-          selectedEmbeddingIds: selectedEmbeddingIds || [],
-          selectedMediaIds: selectedMediaIds || [],
+          selectedFileIds: conversation.selectedFileIds || [],
+          selectedEmbeddingIds: conversation.selectedEmbeddingIds || [],
+          selectedMediaIds: conversation.selectedMediaIds || [],
         })
       )
     }
-  }, [
-    conversationId,
-    selectedFileIds,
-    selectedEmbeddingIds,
-    selectedMediaIds,
-    allFiles,
-    isLoading,
-    dispatch,
-  ])
+    // Hydrate on conversation/catalog readiness; later metadata updates must not overwrite local picks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation?.conversationId, allFiles, isLoading, dispatch])
 
   // Re-hydrate selected shared libraries once the catalog is available.
   useEffect(() => {
@@ -84,15 +72,17 @@ export function useConversationFiles(
       dispatch(getSharedLibraries())
       return
     }
-    if (conversationId) {
+    if (conversation) {
       dispatch(
         loadSelectedLibrariesFromIds({
           libraries,
-          selectedLibraryIds: selectedLibraryIds || [],
+          selectedLibraryIds: conversation.selectedLibraryIds || [],
         })
       )
     }
-  }, [conversationId, selectedLibraryIds, librariesLoaded, libraries, dispatch])
+    // Hydrate libraries on entry/readiness, preserving local selection edits afterwards.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation?.conversationId, librariesLoaded, libraries, dispatch])
 
   return { allFiles, ownerFiles, isLoading }
 }
