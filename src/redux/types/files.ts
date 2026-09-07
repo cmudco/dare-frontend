@@ -277,7 +277,14 @@ export type MediaTypeFilter =
 /** The view modes of the Sources page toggle. */
 export type FileView = 'files' | 'folders' | 'media' | 'libraries'
 
+export interface FileViewerCapabilities {
+  structure: boolean
+  map: boolean
+}
+
 export interface FileState {
+  viewerCapabilityRequests: Record<number, string | undefined>
+  viewerCapabilities: Record<number, FileViewerCapabilities | undefined>
   files: MyFile[]
   folders: MyFolder[]
   loading: boolean

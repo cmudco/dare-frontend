@@ -149,10 +149,9 @@ export const DOCUMENT_PROCESSING_OPTIONS: Record<
   },
 }
 
-// Basic/Advanced match the upload terminology. Values preserve existing API parser
-// identifiers; changing them would misread previously processed files.
+// Parser identifiers match the backend; migration 0025 normalizes historical files.
 export enum DocumentParser {
-  Basic = 'legacy',
+  Basic = 'basic',
   Advanced = 'docling',
   Notebook = 'notebook',
 }

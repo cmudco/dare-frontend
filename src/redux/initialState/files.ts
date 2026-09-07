@@ -1,6 +1,8 @@
 import { FileState } from '../types/files'
 
 export const initialState: FileState = {
+  viewerCapabilities: {},
+  viewerCapabilityRequests: {},
   files: [],
   folders: [],
   loading: false,

@@ -1,5 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
+  getFileViewerCapabilitiesAPI,
   uploadFileAPI,
   deleteFileAPI,
   deleteMultipleFilesAPI,
@@ -336,4 +337,9 @@ export const togglePublicShare = createAsyncThunk(
       return thunkAPI.rejectWithValue((error as Error).message)
     }
   }
+)
+
+export const fetchFileViewerCapabilities = createAsyncThunk(
+  'files/fetchFileViewerCapabilities',
+  async (fileId: number) => getFileViewerCapabilitiesAPI(fileId)
 )

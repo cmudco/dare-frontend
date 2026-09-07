@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
+  fetchFileViewerCapabilities,
   getFiles,
   deleteFile,
   deleteMultipleFiles,
@@ -115,6 +116,29 @@ const fileSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder
+      .addCase(fetchFileViewerCapabilities.pending, (state, action) => {
+        state.viewerCapabilityRequests[action.meta.arg] = action.meta.requestId
+        delete state.viewerCapabilities[action.meta.arg]
+      })
+      .addCase(fetchFileViewerCapabilities.fulfilled, (state, action) => {
+        if (
+          state.viewerCapabilityRequests[action.meta.arg] !==
+          action.meta.requestId
+        )
+          return
+        delete state.viewerCapabilityRequests[action.meta.arg]
+        state.viewerCapabilities[action.meta.arg] = action.payload
+      })
+      .addCase(fetchFileViewerCapabilities.rejected, (state, action) => {
+        if (
+          state.viewerCapabilityRequests[action.meta.arg] !==
+          action.meta.requestId
+        )
+          return
+        delete state.viewerCapabilityRequests[action.meta.arg]
+        delete state.viewerCapabilities[action.meta.arg]
+      })
     builder
       .addCase(getFiles.pending, (state) => {
         state.loading = true
