@@ -122,7 +122,7 @@ const Message: React.FC<MessageProps> = ({
         source: 'auto',
       })
     }
-  }, [shouldShowAutoFeedback])
+  }, [shouldShowAutoFeedback, feedbackModalState.isOpen])
 
   // Function to get font size classes based on user preference
   const getFontSizeClasses = () => {

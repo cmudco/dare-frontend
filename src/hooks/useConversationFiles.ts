@@ -51,18 +51,32 @@ export function useConversationFiles(
     effectiveOwnerId
   )
 
+  const conversationId = conversation?.conversationId
+  const selectedFileIds = conversation?.selectedFileIds
+  const selectedEmbeddingIds = conversation?.selectedEmbeddingIds
+  const selectedMediaIds = conversation?.selectedMediaIds
+  const selectedLibraryIds = conversation?.selectedLibraryIds
+
   useEffect(() => {
-    if (conversation && allFiles.length > 0 && !isLoading) {
+    if (conversationId && allFiles.length > 0 && !isLoading) {
       dispatch(
         loadSelectedFilesFromIds({
           files: allFiles,
-          selectedFileIds: conversation.selectedFileIds || [],
-          selectedEmbeddingIds: conversation.selectedEmbeddingIds || [],
-          selectedMediaIds: conversation.selectedMediaIds || [],
+          selectedFileIds: selectedFileIds || [],
+          selectedEmbeddingIds: selectedEmbeddingIds || [],
+          selectedMediaIds: selectedMediaIds || [],
         })
       )
     }
-  }, [conversation?.conversationId, allFiles, isLoading, dispatch])
+  }, [
+    conversationId,
+    selectedFileIds,
+    selectedEmbeddingIds,
+    selectedMediaIds,
+    allFiles,
+    isLoading,
+    dispatch,
+  ])
 
   // Re-hydrate selected shared libraries once the catalog is available.
   useEffect(() => {
@@ -70,16 +84,15 @@ export function useConversationFiles(
       dispatch(getSharedLibraries())
       return
     }
-    if (conversation) {
+    if (conversationId) {
       dispatch(
         loadSelectedLibrariesFromIds({
           libraries,
-          selectedLibraryIds: conversation.selectedLibraryIds || [],
+          selectedLibraryIds: selectedLibraryIds || [],
         })
       )
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation?.conversationId, librariesLoaded, libraries, dispatch])
+  }, [conversationId, selectedLibraryIds, librariesLoaded, libraries, dispatch])
 
   return { allFiles, ownerFiles, isLoading }
 }

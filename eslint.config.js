@@ -32,5 +32,9 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
     },
+  },
+  {
+    files: ['docs-site/**/*.{ts,tsx}'],
+    rules: reactRefresh.configs.next.rules,
   }
 )

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react'
+import React, { useCallback, useEffect, useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AppDispatch, RootState } from '../../redux/store'
@@ -116,7 +116,8 @@ const ActiveConversation: React.FC = () => {
 
   // Refs
   const hasCheckedAutoFeedback = useRef(false)
-  const prevActiveConversationRef = useRef<typeof activeConversation>(null)
+  const prevActiveConversationIdRef = useRef<string | null>(null)
+  const activeConversationId = activeConversation?.conversationId ?? null
 
   // Hooks
   const {
@@ -149,11 +150,11 @@ const ActiveConversation: React.FC = () => {
 
   // Clear conversation state when switching
   useEffect(() => {
-    if (activeConversation) {
+    if (activeConversationId) {
       dispatch(clearConversation())
       dispatch(updateConversationInput(''))
     }
-  }, [activeConversation?.conversationId, dispatch])
+  }, [activeConversationId, dispatch])
 
   // Navigate to conversation URL
   useEffect(() => {
@@ -169,41 +170,30 @@ const ActiveConversation: React.FC = () => {
 
   // Draft save/load on conversation switch
   useEffect(() => {
-    const prevConversation = prevActiveConversationRef.current
-    const currentConversation = activeConversation
+    const previousId = prevActiveConversationIdRef.current
+    const currentId = activeConversationId
 
-    if (
-      prevConversation?.conversationId !== currentConversation?.conversationId
-    ) {
+    if (previousId !== currentId) {
       // Save draft for previous conversation
-      if (prevConversation && autoSaveEnabled && conversationInput.trim()) {
+      if (previousId && autoSaveEnabled && conversationInput.trim()) {
         dispatch(
           saveDraftForConversation({
-            conversationId: prevConversation.conversationId,
+            conversationId: previousId,
             text: conversationInput,
           })
         )
       }
 
       // Load draft for current conversation
-      if (currentConversation) {
-        dispatch(loadDraftForConversation(currentConversation.conversationId))
+      if (currentId) {
+        dispatch(loadDraftForConversation(currentId))
       }
 
-      prevActiveConversationRef.current = currentConversation
+      prevActiveConversationIdRef.current = currentId
     }
-  }, [
-    activeConversation?.conversationId,
-    autoSaveEnabled,
-    conversationInput,
-    dispatch,
-  ])
+  }, [activeConversationId, autoSaveEnabled, conversationInput, dispatch])
 
   // Auto-trigger feedback modal
-  const lastMessageStreaming = useMemo(
-    () => conversationHistory[conversationHistory.length - 1]?.streaming,
-    [conversationHistory]
-  )
 
   useEffect(() => {
     if (
@@ -241,12 +231,7 @@ const ActiveConversation: React.FC = () => {
       setShouldShowAutoFeedbackModal(true)
       setTimeout(() => setShouldShowAutoFeedbackModal(false), 0)
     }
-  }, [
-    conversationHistory.length,
-    activeConversation,
-    lastMessageStreaming,
-    dispatch,
-  ])
+  }, [conversationHistory, activeConversation, dispatch])
 
   // Reset auto-feedback check on conversation switch
   useEffect(() => {
