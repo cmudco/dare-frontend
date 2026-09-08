@@ -756,9 +756,9 @@ const Message: React.FC<MessageProps> = ({
               className='flex items-center text-sm text-muted-foreground hover:text-foreground'
             >
               {isSnippetsOpen ? (
-                <ChevronUp className='mr-1 h-4 w-4' />
-              ) : (
                 <ChevronDown className='mr-1 h-4 w-4' />
+              ) : (
+                <ChevronUp className='mr-1 h-4 w-4' />
               )}
               {isSnippetsOpen
                 ? 'Hide Matched Snippets'
