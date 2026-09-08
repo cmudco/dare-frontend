@@ -3,16 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   ChatBubbleLeftEllipsisIcon,
-  MoonIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '../ui/tooltip'
-import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
 import {
   DndContext,
   closestCenter,
@@ -29,6 +21,7 @@ import { AppDispatch, RootState } from '../../redux/store'
 import { Conversation } from '../../redux/types/conversation'
 import {
   updateActiveConversation,
+  resetConversation,
   updateConversationOrder,
   toggleConversationSelection,
   clearSelectedConversations,
@@ -43,7 +36,6 @@ import {
   forkConversation,
   fetchConversationMessages,
 } from '@/redux/asyncThunks/conversation'
-import { selectResolvedMode, toggleMode } from '../../redux/themeSlice'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import SortableConversationItem from './SortableConversationItem'
 import ForkConfirmDialog from '../shared/ForkConfirmDialog'
@@ -79,6 +71,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Conversation | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -90,20 +83,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
   const selectedConversations = useSelector(
     (state: RootState) => state.conversation.selectedConversations
   )
-  const isDarkMode = useSelector(selectResolvedMode) === 'dark'
-
   const sensors = useDragSensors()
-
-  const bottomItems = [
-    { name: 'Clear Conversation', icon: TrashIcon, action: 'clear' },
-    {
-      name: isDarkMode ? 'Light Mode' : 'Dark Mode',
-      icon: MoonIcon,
-      action: 'darkMode',
-      disabled: false,
-      currentTheme: isDarkMode ? 'dark' : 'light',
-    },
-  ]
 
   const displayConversations = isSharedTab ? sharedConversations : conversations
   const filteredConversations = filterConversations(
@@ -161,25 +141,35 @@ const ConversationList: React.FC<ConversationListProps> = ({
   }
 
   const handleDeleteConfirm = async () => {
-    if (selectedConversations.length > 0) {
-      await dispatch(deleteMultipleConversations(selectedConversations))
-      navigate('/conversation')
-    } else if (activeConversation) {
-      await dispatch(deleteConversation(activeConversation.conversationId))
-      navigate('/conversation')
+    if (deleteTarget) {
+      const result = await dispatch(
+        deleteConversation(deleteTarget.conversationId)
+      )
+      if (
+        deleteConversation.fulfilled.match(result) &&
+        activeConversation?.conversationId === deleteTarget.conversationId
+      ) {
+        dispatch(resetConversation())
+        navigate('/conversation')
+      }
+    } else if (selectedConversations.length > 0) {
+      const result = await dispatch(
+        deleteMultipleConversations(selectedConversations)
+      )
+      if (
+        deleteMultipleConversations.fulfilled.match(result) &&
+        activeConversation &&
+        selectedConversations.includes(activeConversation.conversationId)
+      ) {
+        dispatch(resetConversation())
+        navigate('/conversation')
+      }
     }
   }
 
-  const handleBottomItemClick = (action?: string) => {
-    if (action === 'clear') {
-      if (selectedConversations.length > 0) {
-        setIsDeleteConfirmOpen(true)
-      } else if (activeConversation) {
-        setIsDeleteConfirmOpen(true)
-      }
-    } else if (action === 'darkMode') {
-      dispatch(toggleMode())
-    }
+  const handleDeleteClick = (conversation: Conversation) => {
+    setDeleteTarget(conversation)
+    setIsDeleteConfirmOpen(true)
   }
 
   const handleEditClick = (conversation: Conversation) => {
@@ -288,7 +278,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
   }
 
   return (
-    <TooltipProvider>
+    <>
       <nav className='flex h-full flex-col gap-1 font-sans text-base font-normal text-foreground'>
         <DndContext
           sensors={sensors}
@@ -353,6 +343,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       onConversationClick={handleConversationClick}
                       onEditClick={handleEditClick}
                       onCloneClick={handleCloneClick}
+                      onDeleteClick={handleDeleteClick}
                       onFavoriteClick={handleFavoriteClick}
                       onSharingClick={handleSharingClick}
                       onEditChange={handleEditChange}
@@ -385,107 +376,30 @@ const ConversationList: React.FC<ConversationListProps> = ({
             ) : null}
           </DragOverlay>
         </DndContext>
-        <hr className='mt-4 border-border' />
-        <div className='space-y-1'>
-          {bottomItems.map((item) => {
-            const hasSelectedConversations = selectedConversations.length > 0
-            const isDisabled =
-              item.action === 'clear' &&
-              ((!activeConversation && !hasSelectedConversations) ||
-                activeConversation?.isOwner === false)
-            const buttonText =
-              item.action === 'clear' && hasSelectedConversations
-                ? 'Clear Selected Conversations'
-                : item.name
-
-            return item.action === 'clear' ? (
-              <Tooltip key={item.name}>
-                <TooltipTrigger asChild>
-                  <div
-                    onClick={() =>
-                      !isDisabled && handleBottomItemClick(item.action)
-                    }
-                    className={`flex w-full items-center rounded-md p-3 text-start leading-tight font-normal text-foreground outline-hidden transition-all ${
-                      location.pathname === item.name
-                        ? 'bg-primary/10 text-primary'
-                        : 'hover:bg-accent hover:text-accent-foreground'
-                    } ${
-                      isDisabled
-                        ? 'cursor-not-allowed text-muted-foreground line-through opacity-50'
-                        : 'cursor-pointer'
-                    }`}
-                  >
-                    <item.icon
-                      className={`mr-4 h-5 w-5 font-bold ${
-                        isDisabled ? 'text-muted-foreground' : 'text-foreground'
-                      }`}
-                    />
-                    <span className='text-foreground'>{buttonText}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent className='max-w-xs'>
-                  <div className='space-y-2'>
-                    <p className='font-semibold'>
-                      {TOOLTIP_CONTENT.conversations.clearConversation.title}
-                    </p>
-                    <p className='text-sm'>
-                      {
-                        TOOLTIP_CONTENT.conversations.clearConversation
-                          .description
-                      }
-                    </p>
-                    <p className='text-xs text-muted-foreground'>
-                      💡 {TOOLTIP_CONTENT.conversations.clearConversation.tip}
-                    </p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <div
-                key={item.name}
-                onClick={() =>
-                  !isDisabled && handleBottomItemClick(item.action)
-                }
-                className={`flex w-full items-center rounded-md p-3 text-start leading-tight font-normal text-foreground outline-hidden transition-all ${
-                  location.pathname === item.name
-                    ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-accent hover:text-accent-foreground'
-                } ${
-                  isDisabled
-                    ? 'cursor-not-allowed text-muted-foreground line-through opacity-50'
-                    : 'cursor-pointer'
-                }`}
-              >
-                <item.icon
-                  className={`mr-4 h-5 w-5 font-bold ${
-                    isDisabled ? 'text-muted-foreground' : 'text-foreground'
-                  }`}
-                />
-                <span className='text-foreground'>{buttonText}</span>
-              </div>
-            )
-          })}
-        </div>
+        {!isSharedTab && selectedConversations.length > 0 && (
+          <button
+            className='flex items-center gap-3 rounded-md p-3 text-destructive hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring'
+            onClick={() => {
+              setDeleteTarget(null)
+              setIsDeleteConfirmOpen(true)
+            }}
+          >
+            <TrashIcon className='h-5 w-5' />
+            Delete selected conversations ({selectedConversations.length})
+          </button>
+        )}
 
         <DeleteConfirmation
           isOpen={isDeleteConfirmOpen}
           onClose={() => setIsDeleteConfirmOpen(false)}
           onDelete={handleDeleteConfirm}
-          title={
-            selectedConversations.length > 0
-              ? 'Delete Conversations'
-              : 'Clear Conversation'
-          }
+          title={deleteTarget ? 'Delete conversation' : 'Delete conversations'}
           description={
-            selectedConversations.length > 0
-              ? `Are you sure you want to delete ${selectedConversations.length} selected conversation${selectedConversations.length > 1 ? 's' : ''}? This action cannot be undone.`
-              : 'Are you sure you want to delete this conversation? This action cannot be undone.'
+            deleteTarget
+              ? 'Are you sure you want to delete this conversation? This action cannot be undone.'
+              : `Delete ${selectedConversations.length} selected conversations? This action cannot be undone.`
           }
-          itemName={
-            selectedConversations.length > 0
-              ? `${selectedConversations.length} conversation${selectedConversations.length > 1 ? 's' : ''}`
-              : activeConversation?.title || 'New Chat'
-          }
+          itemName={deleteTarget ? deleteTarget.title || 'New Chat' : undefined}
           confirmText='Delete'
         />
 
@@ -502,7 +416,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
           onCancel={handleCancelFork}
         />
       </nav>
-    </TooltipProvider>
+    </>
   )
 }
 

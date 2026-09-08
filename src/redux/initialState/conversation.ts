@@ -8,6 +8,8 @@ import { DEFAULT_IMAGE_SETTINGS } from '../../utils/constants/imageGeneration'
 import { DEFAULT_TRANSCRIPTION_SETTINGS } from '../../utils/constants/audioTranscription'
 
 export const initialState: ConversationState = {
+  conversationListStatus: 'idle',
+  modelCatalogStatus: 'idle',
   conversations: [],
   conversationSummaries: [],
   activeConversation: null,

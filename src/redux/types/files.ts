@@ -408,5 +408,6 @@ export interface DocumentMap {
 export interface FileReprocessingRequest {
   fileId: number
   action: DocumentReprocessingAction
+  modelIdentifier?: string
   processingMode?: DocumentProcessingMode
 }

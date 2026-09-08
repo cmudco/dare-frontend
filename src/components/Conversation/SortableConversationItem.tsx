@@ -1,7 +1,15 @@
 import React from 'react'
 import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline'
 import { useSortable } from '@dnd-kit/sortable'
-import { Pencil, Copy, MoreVertical, GitFork, Share2, Star } from 'lucide-react'
+import {
+  Pencil,
+  Copy,
+  MoreVertical,
+  GitFork,
+  Share2,
+  Star,
+  Trash2,
+} from 'lucide-react'
 import { SortableConversationItemProps } from '../../redux/types/conversation'
 import {
   createDragStyle,
@@ -27,6 +35,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   onConversationClick,
   onEditClick,
   onCloneClick,
+  onDeleteClick,
   onFavoriteClick,
   onSharingClick,
   onForkClick,
@@ -116,7 +125,7 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
               </span>
             )}
             {/* 3-dot dropdown menu */}
-            <div className='absolute top-1/2 right-0 flex -translate-y-1/2 gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100'>
+            <div className='absolute top-1/2 right-0 flex -translate-y-1/2 gap-1 opacity-100 transition-opacity duration-150 focus-within:opacity-100 sm:opacity-0 sm:group-hover:opacity-100'>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -183,6 +192,18 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                         />
                         {conversation.isFavorite ? 'Unfavorite' : 'Favorite'}
                       </DropdownMenuItem>
+                      {onDeleteClick && conversation.isOwner !== false && (
+                        <DropdownMenuItem
+                          className='text-destructive focus:text-destructive'
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onDeleteClick(conversation)
+                          }}
+                        >
+                          <Trash2 className='mr-2 h-4 w-4' />
+                          Delete conversation
+                        </DropdownMenuItem>
+                      )}
                     </>
                   )}
                 </DropdownMenuContent>

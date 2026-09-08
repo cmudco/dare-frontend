@@ -77,6 +77,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   )
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const [showModelWarning, setShowModelWarning] = useState(false)
+  const [modelPickerRequest, setModelPickerRequest] = useState(0)
   const [selectedQuill, setSelectedQuill] = useState<string | null>(null)
   const mcpServers = useSelector((state: RootState) => state.mcp.servers)
   const mcpConnections = useSelector(
@@ -199,6 +200,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
 
     if (selectedModel === null) {
       setShowModelWarning(true)
+      setModelPickerRequest((request) => request + 1)
       return
     }
 
@@ -408,7 +410,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <div className='h-8 w-[2px] shrink-0 rounded-lg bg-border'></div>
             <ConversationReferenceSelect />
 
-            <ModelPicker />
+            <ModelPicker openRequest={modelPickerRequest} />
             {enableMcp && (
               <MCPServerSelector
                 selectedIds={activeConversation?.selectedMcpServerIds || []}
