@@ -1,5 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
+  fetchFileViewerCapabilities,
+  reprocessFile,
   getFiles,
   deleteFile,
   deleteMultipleFiles,
@@ -115,6 +117,58 @@ const fileSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder
+      .addCase(reprocessFile.pending, (state, action) => {
+        state.reprocessingRequests[action.meta.arg.fileId] = {
+          pending: true,
+          error: null,
+        }
+      })
+      .addCase(reprocessFile.fulfilled, (state, action) => {
+        state.reprocessingRequests[action.meta.arg.fileId] = {
+          pending: false,
+          error: null,
+        }
+        const index = state.files.findIndex(
+          (file) => file.id === action.payload.id
+        )
+        if (index !== -1) state.files[index] = action.payload
+        delete state.viewerCapabilities[action.payload.id]
+        state.jobStatuses[action.payload.id] = {
+          status: action.payload.status,
+          jobId: action.payload.jobId,
+          processingStage: action.payload.processingStage,
+        }
+      })
+      .addCase(reprocessFile.rejected, (state, action) => {
+        state.reprocessingRequests[action.meta.arg.fileId] = {
+          pending: false,
+          error: (action.payload as string) || 'Could not start processing.',
+        }
+      })
+    builder
+      .addCase(fetchFileViewerCapabilities.pending, (state, action) => {
+        state.viewerCapabilityRequests[action.meta.arg] = action.meta.requestId
+        delete state.viewerCapabilities[action.meta.arg]
+      })
+      .addCase(fetchFileViewerCapabilities.fulfilled, (state, action) => {
+        if (
+          state.viewerCapabilityRequests[action.meta.arg] !==
+          action.meta.requestId
+        )
+          return
+        delete state.viewerCapabilityRequests[action.meta.arg]
+        state.viewerCapabilities[action.meta.arg] = action.payload
+      })
+      .addCase(fetchFileViewerCapabilities.rejected, (state, action) => {
+        if (
+          state.viewerCapabilityRequests[action.meta.arg] !==
+          action.meta.requestId
+        )
+          return
+        delete state.viewerCapabilityRequests[action.meta.arg]
+        delete state.viewerCapabilities[action.meta.arg]
+      })
     builder
       .addCase(getFiles.pending, (state) => {
         state.loading = true

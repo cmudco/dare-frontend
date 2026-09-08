@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Box,
@@ -28,6 +28,7 @@ import {
   getAvailableModels,
   getAllModels,
 } from '@/redux/asyncThunks/conversation'
+import { isModelPickerReady } from '@/redux/utils/modelSyncHelpers'
 import { PickerModel } from '@/redux/types/conversation'
 import { ModelTier, ModelTierColors } from '@/utils/constants/model'
 import { getProviderBrand } from '@/utils/providerColors'
@@ -75,11 +76,16 @@ const Spinner = ({ className }: { className?: string }) => (
   </svg>
 )
 
-const ModelPicker: React.FC = () => {
+const ModelPicker: React.FC<{ openRequest: number }> = ({ openRequest }) => {
   const dispatch = useDispatch<AppDispatch>()
-  const { pickerEntries, loading, selectedModel } = useSelector(
-    (state: RootState) => state.conversation
-  )
+  const {
+    pickerEntries,
+    modelCatalogStatus,
+    conversationListStatus,
+    conversations,
+    selectedModel,
+    activeConversation,
+  } = useSelector((state: RootState) => state.conversation)
   const { ensemble, responders, chairman, active, estimate } =
     useEnsembleEstimate()
   // Off by default: without the flag the picker is the single-model picker
@@ -89,7 +95,33 @@ const ModelPicker: React.FC = () => {
   const handleMakeChairman = (entry: PickerModel) =>
     dispatch(setEnsembleChairman(entry.id))
   const multi = enableEnsemble && ensemble.depth !== 'single'
+  const { id: routeConversationId } = useParams<{ id: string }>()
+  const loading = modelCatalogStatus === 'pending'
   const [open, setOpen] = useState(false)
+  const promptedConversation = useRef<string | null>(null)
+  const conversationKey = activeConversation?.conversationId ?? 'draft'
+  const readyToPrompt = isModelPickerReady({
+    conversationListStatus,
+    modelCatalogStatus,
+    routeConversationId,
+    activeConversationId: activeConversation?.conversationId,
+    conversationCount: conversations.length,
+  })
+
+  useEffect(() => {
+    if (!readyToPrompt || promptedConversation.current === conversationKey)
+      return
+    promptedConversation.current = conversationKey
+    setOpen(selectedModel === null)
+  }, [readyToPrompt, conversationKey, selectedModel])
+
+  useEffect(() => {
+    if (selectedModel !== null) setOpen(false)
+  }, [selectedModel])
+
+  useEffect(() => {
+    if (openRequest > 0) setOpen(true)
+  }, [openRequest])
   const [searchQuery, setSearchQuery] = useState('')
   const [groupingMode, setGroupingMode] = useState<
     'provider' | 'cost' | 'all' | 'latest'

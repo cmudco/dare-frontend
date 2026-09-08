@@ -153,6 +153,8 @@ const ActiveConversation: React.FC = () => {
       dispatch(clearConversation())
       dispatch(updateConversationInput(''))
     }
+    // Metadata changes must not clear the composer; reset only when the conversation ID changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConversation?.conversationId, dispatch])
 
   // Navigate to conversation URL
@@ -192,6 +194,8 @@ const ActiveConversation: React.FC = () => {
 
       prevActiveConversationRef.current = currentConversation
     }
+    // Draft ownership changes by ID; metadata object identity is not a conversation-switch signal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     activeConversation?.conversationId,
     autoSaveEnabled,
@@ -241,6 +245,8 @@ const ActiveConversation: React.FC = () => {
       setShouldShowAutoFeedbackModal(true)
       setTimeout(() => setShouldShowAutoFeedbackModal(false), 0)
     }
+    // History dependencies track count and streaming completion, rather than every token update.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     conversationHistory.length,
     activeConversation,

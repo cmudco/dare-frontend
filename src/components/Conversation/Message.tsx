@@ -122,6 +122,8 @@ const Message: React.FC<MessageProps> = ({
         source: 'auto',
       })
     }
+    // Only the parent signal opens this modal; closing it must not trigger another open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShowAutoFeedback])
 
   // Function to get font size classes based on user preference
@@ -754,9 +756,9 @@ const Message: React.FC<MessageProps> = ({
               className='flex items-center text-sm text-muted-foreground hover:text-foreground'
             >
               {isSnippetsOpen ? (
-                <ChevronUp className='mr-1 h-4 w-4' />
-              ) : (
                 <ChevronDown className='mr-1 h-4 w-4' />
+              ) : (
+                <ChevronUp className='mr-1 h-4 w-4' />
               )}
               {isSnippetsOpen
                 ? 'Hide Matched Snippets'

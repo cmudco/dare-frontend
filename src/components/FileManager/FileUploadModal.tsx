@@ -15,6 +15,7 @@ import {
   uploadNewFile,
 } from '../../redux/asyncThunks/file'
 import VisionModelSelect from './VisionModelSelect'
+import DocumentProcessingSelect from './DocumentProcessingSelect'
 import { toast } from '@/utils/toast'
 import { addTag, getTags } from '../../redux/asyncThunks/tag'
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
@@ -40,12 +41,19 @@ import {
 } from '../ui/select'
 import { Badge } from '../ui/badge'
 import { getTagColor, isAllowedFileType } from '@/utils/files'
-import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from '@/utils/constants/file'
+import {
+  MAX_FILE_SIZE,
+  MAX_FILE_SIZE_MB,
+  DocumentProcessingMode,
+} from '@/utils/constants/file'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { fetchChunkSettings } from '@/redux/asyncThunks/user'
 import { ChunkSettingsForm } from '@/components/Auth/ChunkSettingsForm'
 
 const FileUploadModal: React.FC = () => {
+  const [processingMode, setProcessingMode] = useState<DocumentProcessingMode>(
+    DocumentProcessingMode.Advanced
+  )
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [fileErrors, setFileErrors] = useState<string[]>([])
   const [newTag, setNewTag] = useState<string>('')
@@ -91,6 +99,7 @@ const FileUploadModal: React.FC = () => {
         uploadNewFile({
           files: selectedFiles,
           tags: selectedTags,
+          processingMode,
         })
       ).unwrap()
       dispatch(resetSelectedTags())
@@ -173,7 +182,7 @@ const FileUploadModal: React.FC = () => {
         }
       }}
     >
-      <DialogContent className='mx-auto w-[90vw] max-w-md rounded-lg bg-card p-6 shadow-lg'>
+      <DialogContent className='mx-auto max-h-[90vh] w-[90vw] max-w-md overflow-y-auto rounded-lg bg-card p-6 shadow-lg'>
         {/* Header */}
         <DialogHeader>
           <div className='flex items-start justify-between gap-3'>
@@ -300,6 +309,17 @@ const FileUploadModal: React.FC = () => {
             </div>
           </div>
 
+          <div className='space-y-2'>
+            <DocumentProcessingSelect
+              legend='Upload processing'
+              value={processingMode}
+              onChange={setProcessingMode}
+            />
+            <p className='text-xs text-muted-foreground'>
+              Applies to documents. Other file types keep their usual handling.
+            </p>
+          </div>
+
           <div
             className={`border-2 border-dashed ${
               error
@@ -357,24 +377,26 @@ const FileUploadModal: React.FC = () => {
               </ul>
             </div>
           )}
-          <div className='space-y-1.5'>
-            <div className='flex items-baseline justify-between gap-3'>
-              <Label htmlFor='upload-vision-model'>Vision model</Label>
-              <span className='text-xs text-muted-foreground'>
-                Reads scanned pages and figures
-              </span>
+          {processingMode === DocumentProcessingMode.Advanced && (
+            <div className='space-y-1.5'>
+              <div className='flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1'>
+                <Label htmlFor='upload-vision-model'>Vision model</Label>
+                <span className='text-xs text-muted-foreground'>
+                  Reads scanned pages and figures
+                </span>
+              </div>
+              <VisionModelSelect
+                id='upload-vision-model'
+                models={visionModels?.models ?? []}
+                value={visionModels?.selected ?? ''}
+                onChange={handleVisionModelChange}
+                disabled={!visionModels}
+              />
+              {visionModelsError && (
+                <p className='text-xs text-destructive'>{visionModelsError}</p>
+              )}
             </div>
-            <VisionModelSelect
-              id='upload-vision-model'
-              models={visionModels?.models ?? []}
-              value={visionModels?.selected ?? ''}
-              onChange={handleVisionModelChange}
-              disabled={!visionModels}
-            />
-            {visionModelsError && (
-              <p className='text-xs text-destructive'>{visionModelsError}</p>
-            )}
-          </div>
+          )}
           <div className='flex items-center justify-between text-xs text-muted-foreground'>
             <span>
               Chunk size: {chunkSettings?.chunkSize ?? 1000}, overlap:{' '}

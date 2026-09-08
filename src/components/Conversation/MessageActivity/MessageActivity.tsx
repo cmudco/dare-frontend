@@ -22,7 +22,8 @@ import { getStatusIcon } from '../ToolActivity/toolStatusIcon'
 import { StepHeader, TimelineStep } from '../Timeline'
 import { contextStageSteps, type ActivityStep } from './ContextStages'
 import { contextSummaryPieces, formatMs } from './activitySummary'
-import { MemoryWriteStep, memoryWriteSummary } from './MemoryWriteStep'
+import { MemoryWriteStep } from './MemoryWriteStep'
+import { memoryWriteSummary } from './memoryWriteSummary'
 
 interface MessageActivityProps {
   message: Message

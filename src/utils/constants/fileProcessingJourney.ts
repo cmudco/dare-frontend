@@ -28,7 +28,7 @@ export const JOURNEY_DETAIL_LABELS: Record<string, string> = {
   model: 'Vision model',
   attemptedCalls: 'Visual operations',
   visualOperations: 'Visual operations',
-  providerRequests: 'Fresh Gemini requests',
+  providerRequests: 'Fresh vision requests',
   cacheHits: 'Cache hits',
   describedFigures: 'Figures described',
   transcribedPages: 'Pages transcribed',

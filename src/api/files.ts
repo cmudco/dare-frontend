@@ -1,6 +1,8 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import {
+  FileViewerCapabilities,
+  FileReprocessingRequest,
   DocumentMap,
   DocumentMapChunkDetail,
   FileProcessingStage,
@@ -335,3 +337,22 @@ export const unshareFileAPI = async (
     data: { email },
   })
 }
+
+export const getFileViewerCapabilitiesAPI = async (
+  id: number
+): Promise<FileViewerCapabilities> => {
+  return await baseRequest<FileViewerCapabilities>({
+    url: `api/files/${id}/viewer-capabilities/`,
+    method: METHOD.GET,
+  })
+}
+
+export const reprocessFileAPI = async ({
+  fileId,
+  ...data
+}: FileReprocessingRequest): Promise<MyFile> =>
+  baseRequest<MyFile>({
+    url: `api/files/${fileId}/reprocess/`,
+    method: METHOD.POST,
+    data,
+  })

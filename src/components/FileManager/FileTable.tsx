@@ -1,3 +1,5 @@
+import { getFromLocalStorage, saveToLocalStorage } from '@/utils/localStorage'
+import { getFileProp } from '@/utils/sortUtils'
 import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../../redux/store'
@@ -8,7 +10,11 @@ import {
   openShareModal,
 } from '../../redux/fileSlice'
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid'
-import { TABLE_HEAD } from '../../utils/constants/file'
+import {
+  DOCUMENT_PARSER_LABELS,
+  FileStatus,
+  TABLE_HEAD,
+} from '@/utils/constants/file'
 import { formatFileSize } from '@/utils/files'
 import { SortDirection, sortFiles } from '@/utils/sortUtils'
 import {
@@ -54,6 +60,7 @@ import {
   Globe,
   Users,
   ScanText,
+  RefreshCw,
 } from 'lucide-react'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { getStatusDisplay } from '@/utils/constants/files'
@@ -63,6 +70,8 @@ import FileViewerModal from './FileViewerModal'
 import TagsDisplay from './TagsDisplay'
 import { formatDate } from '@/utils/constants/prompts'
 import OcrApprovalDialog from './OcrApprovalDialog'
+import FileReprocessingDialog from './FileReprocessingDialog'
+import { Badge } from '../ui/badge'
 
 const FileTable = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -82,9 +91,21 @@ const FileTable = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [deleteFileId, setDeleteFileId] = useState<number | null>(null)
   const [deleteFileName, setDeleteFileName] = useState<string>('')
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortDirection, setSortDirection] = useState<SortDirection>(
-    SortDirectionEnum.ASC
+  const sortStorageKey = `dare_sources_sort_v1_${user?.id ?? 'anonymous'}`
+  const [{ column: sortColumn, direction: sortDirection }, setSort] = useState(
+    () => {
+      const saved = getFromLocalStorage<{
+        column: string | null
+        direction: SortDirection
+      }>(sortStorageKey, { column: null, direction: SortDirectionEnum.ASC })
+      return saved &&
+        typeof saved.column === 'string' &&
+        getFileProp(saved.column) &&
+        (saved.direction === SortDirectionEnum.ASC ||
+          saved.direction === SortDirectionEnum.DESC)
+        ? saved
+        : { column: null, direction: SortDirectionEnum.ASC }
+    }
   )
   const [tagFileId, setTagFileId] = useState<number | null>(null)
   const [tagFileName, setTagFileName] = useState<string>('')
@@ -92,6 +113,8 @@ const FileTable = () => {
   const [viewFileId, setViewFileId] = useState<number | null>(null)
   const [viewFileName, setViewFileName] = useState<string>('')
   const [viewFileType, setViewFileType] = useState<string>('')
+  const [reprocessFileId, setReprocessFileId] = useState<number | null>(null)
+  const reprocessTarget = files.find((file) => file.id === reprocessFileId)
   const [ocrReviewFileId, setOcrReviewFileId] = useState<number | null>(null)
 
   const actionableOcrFiles = useMemo(
@@ -175,16 +198,16 @@ const FileTable = () => {
   }
 
   const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection((prev) =>
-        prev === SortDirectionEnum.ASC
+    const next = {
+      column,
+      direction:
+        sortColumn === column && sortDirection === SortDirectionEnum.ASC
           ? SortDirectionEnum.DESC
-          : SortDirectionEnum.ASC
-      )
-    } else {
-      setSortColumn(column)
-      setSortDirection(SortDirectionEnum.ASC)
+          : SortDirectionEnum.ASC,
     }
+    setSort(next)
+    saveToLocalStorage(sortStorageKey, next)
+    setCurrentPage(1)
   }
 
   return (
@@ -292,12 +315,15 @@ const FileTable = () => {
                 id,
                 name,
                 fileType,
+                parserName,
                 size,
                 tags,
                 status,
                 errorMessage,
+                failedImageCount,
                 processingStage,
                 ocr,
+                isMedia,
                 isSharedByMe,
                 isSharedPublicly,
                 createdAt,
@@ -333,6 +359,17 @@ const FileTable = () => {
                         </span>
                       )}
                     </div>
+                    {!isMedia && (
+                      <Badge
+                        variant='outline'
+                        className='mt-1 font-normal text-muted-foreground'
+                        title='Parser used for the current document content'
+                      >
+                        {parserName
+                          ? DOCUMENT_PARSER_LABELS[parserName]
+                          : 'Parser not recorded'}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className='max-w-[150px] p-4'>
                     <div className='truncate' title={fileType || 'Unknown'}>
@@ -358,10 +395,26 @@ const FileTable = () => {
                   </TableCell>
                   <TableCell className='p-4'>
                     {getStatusDisplay(status, errorMessage, processingStage)}
+                    {status === FileStatus.PROCESSED && errorMessage && (
+                      <p
+                        role='status'
+                        className='mt-1 max-w-xs text-xs text-destructive'
+                      >
+                        {errorMessage}
+                      </p>
+                    )}
+                    {!!failedImageCount && status !== FileStatus.PROCESSING && (
+                      <p className='mt-1 text-xs text-muted-foreground'>
+                        {failedImageCount} image descriptions failed
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell className='p-4 text-center'>
                     <DropdownMenu>
-                      <DropdownMenuTrigger className='rounded-md p-2 hover:bg-accent'>
+                      <DropdownMenuTrigger
+                        aria-label={`Actions for ${name || 'Unnamed file'}`}
+                        className='rounded-md p-2 hover:bg-accent'
+                      >
                         <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
@@ -408,6 +461,14 @@ const FileTable = () => {
                             <span>Share</span>
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem
+                          className='cursor-pointer'
+                          disabled={status === FileStatus.PROCESSING || isMedia}
+                          onClick={() => setReprocessFileId(id)}
+                        >
+                          <RefreshCw className='mr-2 h-4 w-4' />
+                          <span>Reprocess document</span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() => handleDelete(id, name)}
@@ -510,6 +571,13 @@ const FileTable = () => {
         fileType={viewFileType}
       />
 
+      {reprocessTarget && (
+        <FileReprocessingDialog
+          key={reprocessTarget.id}
+          file={reprocessTarget}
+          onClose={() => setReprocessFileId(null)}
+        />
+      )}
       <OcrApprovalDialog
         file={ocrReviewFile}
         onClose={() => setOcrReviewFileId(null)}

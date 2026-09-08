@@ -62,6 +62,8 @@ export function useConversationFiles(
         })
       )
     }
+    // Hydrate on conversation/catalog readiness; later metadata updates must not overwrite local picks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation?.conversationId, allFiles, isLoading, dispatch])
 
   // Re-hydrate selected shared libraries once the catalog is available.
@@ -78,6 +80,7 @@ export function useConversationFiles(
         })
       )
     }
+    // Hydrate libraries on entry/readiness, preserving local selection edits afterwards.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation?.conversationId, librariesLoaded, libraries, dispatch])
 
