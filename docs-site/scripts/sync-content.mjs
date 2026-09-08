@@ -10,6 +10,13 @@ const contentRoot = path.join(docsSite, 'content', 'docs')
 
 const pages = [
   {
+    from: path.join(frontendRoot, 'docs', 'document-processing.md'),
+    to: 'document-processing.mdx',
+    title: 'Document processing in DARE',
+    description:
+      'Basic and Advanced processing, vision models, and failed-image retries.',
+  },
+  {
     from: path.join(frontendRoot, 'README.md'),
     to: 'platform-overview.mdx',
     title: 'Platform Overview',
@@ -422,6 +429,7 @@ async function writeMeta() {
           '---Start Here---',
           'getting-started',
           'platform-overview',
+          'document-processing',
           'api-reference',
           '---Technical Docs---',
           'frontend',

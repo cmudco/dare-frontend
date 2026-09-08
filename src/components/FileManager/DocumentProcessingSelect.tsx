@@ -1,4 +1,10 @@
 import { useId } from 'react'
+import { Info } from 'lucide-react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   DocumentProcessingMode,
   DOCUMENT_PROCESSING_OPTIONS,
@@ -22,6 +28,32 @@ export default function DocumentProcessingSelect({
   return (
     <fieldset disabled={disabled} className='space-y-2'>
       <legend className='text-sm font-medium'>{legend}</legend>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type='button'
+            className='inline-flex items-center gap-1 rounded-sm text-xs text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring'
+            aria-label='How DARE processes documents with Docling'
+          >
+            <Info className='h-4 w-4' /> About document processing
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className='space-y-2 text-sm'>
+          <p>
+            Advanced uses Docling to extract document structure, with separate
+            vision-model calls for scanned pages and figure descriptions. DARE
+            supports a subset of Docling’s features.
+          </p>
+          <a
+            href='/docs/document-processing/'
+            target='_blank'
+            rel='noreferrer'
+            className='block text-primary underline'
+          >
+            How document processing works in DARE (opens in a new tab)
+          </a>
+        </PopoverContent>
+      </Popover>
       <div className='grid grid-cols-2 gap-1 rounded-lg bg-muted p-1'>
         {Object.values(DocumentProcessingMode).map((mode) => (
           <label key={mode} className='relative'>

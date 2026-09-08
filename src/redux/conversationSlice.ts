@@ -100,6 +100,8 @@ export const conversationSlice = createSlice({
         } else {
           syncModelsWithImageGenerationState(state, false, desired)
         }
+        // Preserve the saved choice until the catalog arrives and validates it.
+        if (!state.pickerEntries.length) state.selectedModel = desired
       }
     },
     loadSelectedFilesFromIds(
@@ -450,6 +452,7 @@ export const conversationSlice = createSlice({
       state.selectedFolders = []
       state.selectedLibraries = []
       state.memoryEnabled = false
+      state.ensemble = { ...initialState.ensemble, responderIds: [] }
       state.conversationInput = ''
       state.referencedConversations = []
 
@@ -574,21 +577,25 @@ export const conversationSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getConversations.pending, (state) => {
+        state.conversationListStatus = 'pending'
         state.loading = true
         state.error = null
       })
       .addCase(
         getConversations.fulfilled,
         (state, action: PayloadAction<Conversation[]>) => {
+          state.conversationListStatus = 'succeeded'
           state.loading = false
           state.conversations = action.payload
         }
       )
       .addCase(getConversations.rejected, (state, action) => {
+        state.conversationListStatus = 'failed'
         state.loading = false
         state.error = action.payload as string
       })
       .addCase(getAvailableModels.pending, (state) => {
+        state.modelCatalogStatus = 'pending'
         state.loading = true
         state.error = null
       })
@@ -601,6 +608,7 @@ export const conversationSlice = createSlice({
             wallet: WalletMeta | null
           }>
         ) => {
+          state.modelCatalogStatus = 'succeeded'
           state.loading = false
           // Strip image-gen / audio-transcription models from the chat
           // picker (they belong on dedicated toggles). LiteLLM entries
@@ -613,9 +621,7 @@ export const conversationSlice = createSlice({
             (id) => state.pickerEntries.some((entry) => entry.id === id)
           )
           // Reconcile selectedModel: if the previously selected id is no
-          // longer in the wallet's catalog (e.g. user just toggled wallet),
-          // fall back to the first available so the next chat send uses a
-          // model the active wallet actually serves.
+          // longer in the wallet catalog, require a new explicit choice.
           state.selectedModel = selectAppropriateModel(
             state.selectedModel,
             state.pickerEntries
@@ -633,6 +639,7 @@ export const conversationSlice = createSlice({
         }
       )
       .addCase(getAvailableModels.rejected, (state, action) => {
+        state.modelCatalogStatus = 'failed'
         state.loading = false
         state.error = action.payload as string
         console.error('Failed to load models:', action.payload)

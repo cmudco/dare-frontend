@@ -573,6 +573,8 @@ export interface AudioTranscriptionSettings {
 }
 
 export interface ConversationState {
+  conversationListStatus: 'idle' | 'pending' | 'succeeded' | 'failed'
+  modelCatalogStatus: 'idle' | 'pending' | 'succeeded' | 'failed'
   conversations: Conversation[]
   conversationSummaries: ConversationSummary[]
   activeConversation: Conversation | null
@@ -675,6 +677,7 @@ export interface SortableConversationItemProps {
   ) => void
   onEditClick: (conversation: Conversation) => void
   onCloneClick: (conversation: Conversation) => void
+  onDeleteClick?: (conversation: Conversation) => void
   onFavoriteClick?: (conversation: Conversation) => void
   onSharingClick?: (conversation: Conversation) => void
   onForkClick?: (conversation: Conversation) => void

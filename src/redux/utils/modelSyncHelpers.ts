@@ -10,7 +10,7 @@
  * the encoding — it just compares ids by equality.
  */
 
-import { PickerModel } from '../types/conversation'
+import { ConversationState, PickerModel } from '../types/conversation'
 
 const isImageOrAudioModel = (m: PickerModel): boolean =>
   Boolean(m.isImageGenerator || m.isAudioTranscriber)
@@ -39,15 +39,14 @@ export const filterModelsByAudioTranscription =
 
 /**
  * Pick a dispatch id for the current mode: keep the desired one if it's
- * still in the filtered entries, otherwise fall back to the first available,
- * otherwise null.
+ * still in the filtered entries, otherwise require an explicit selection.
  */
 export const selectAppropriateModel = (
   desired: string | null | undefined,
   entries: PickerModel[]
 ): string | null => {
   if (desired && entries.some((e) => e.id === desired)) return desired
-  return entries[0]?.id ?? null
+  return null
 }
 
 export const syncModelsWithImageGenerationState = <
@@ -79,3 +78,21 @@ export const syncModelsWithAudioTranscriptionState = <
   state.pickerEntries = filtered
   state.selectedModel = selectAppropriateModel(desired, filtered)
 }
+
+/** Wait for the route's conversation and catalog before prompting for a model. */
+export const isModelPickerReady = ({
+  conversationListStatus,
+  modelCatalogStatus,
+  routeConversationId,
+  activeConversationId,
+  conversationCount,
+}: Pick<ConversationState, 'conversationListStatus' | 'modelCatalogStatus'> & {
+  routeConversationId?: string
+  activeConversationId?: string
+  conversationCount: number
+}): boolean =>
+  conversationListStatus === 'succeeded' &&
+  modelCatalogStatus === 'succeeded' &&
+  (routeConversationId
+    ? activeConversationId === routeConversationId
+    : !activeConversationId && conversationCount === 0)
