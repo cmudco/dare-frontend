@@ -1,0 +1,29 @@
+{
+  "name": "@cmudco/chat-socket-contract",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./fixtures": "./fixtures.json",
+    "./conformance": "./conformance.mjs"
+  },
+  "files": [
+    "dist",
+    "fixtures.json",
+    "README.md",
+    "LICENSE",
+    "src",
+    "conformance.mjs"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
+}

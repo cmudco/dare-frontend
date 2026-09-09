@@ -1,0 +1,15 @@
+{
+  "valid": [
+    {"name":"numeric cumulative stream","frame":{"type":"ai_stream","id":12,"message":"Hello","isComplete":false},"expected":{"id":12,"message":"Hello","streaming":true}},
+    {"name":"string completion","frame":{"type":"ai_stream","id":"12","message":"Hello there","isComplete":true,"streaming":true},"expected":{"id":"12","message":"Hello there","streaming":false}},
+    {"name":"persisted usage","frame":{"type":"message","id":12,"message":"Done","senderType":2,"streaming":false,"cost":"0.000012345","inputTokens":30,"outputTokens":4,"llm":29,"snippets":[{"id":1,"text":"Evidence"}],"retrievalTrace":{"traces":[]},"webSearchSources":[{"url":"https://example.com"}]},"expected":{"cost":"0.000012345","streaming":false,"llm":29,"snippets":[{"id":1,"text":"Evidence"}],"retrievalTrace":{"traces":[]},"webSearchSources":[{"url":"https://example.com"}]}},
+    {"name":"history aliases","frame":{"type":"conversation_history","conversationHistory":[{"id":12,"message":null,"senderType":2,"sender":"Assistant","cost":null,"llm":null,"litellmModelName":"vendor/model"}]},"expected":{"conversationHistory":[{"id":12,"message":"","senderType":2,"sender":"Assistant","senderName":"Assistant","cost":null,"llm":null,"litellmModelName":"vendor/model"}]}},
+    {"name":"tool result","frame":{"type":"tool_call_result","messageId":12,"toolCallId":"call-1","toolName":"search_documents","status":"completed","origin":"dare","dareResult":{"hits":2}},"expected":{"dareResult":{"hits":2}}},
+    {"name":"context trace","frame":{"type":"context_trace","messageId":"12","trace":{"stages":[]}},"expected":{"trace":{"stages":[]}}},
+    {"name":"progress","frame":{"type":"progress_stream","conversationId":"room","messageId":12,"chunk":"Learning"},"expected":{"chunk":"Learning"}},
+    {"name":"error","frame":{"type":"error","errorCode":"MODEL_ERROR","errorMessage":"Unavailable"},"expected":{"errorMessage":"Unavailable"}},
+    {"name":"forward compatible extension","frame":{"type":"artifact_update","artifactId":7,"content":"text"},"expected":{"artifactId":7,"content":"text"}},
+    {"name":"null delta usage","frame":{"type":"ai_stream","id":12,"message":"","inputTokens":null,"outputTokens":null,"cost":null},"expected":{"streaming":true,"cost":null}}
+  ],
+  "invalid": [null,{}, {"type":"message","id":null},{"type":"ai_stream","id":12,"message":{}},{"type":"message","id":12,"streaming":"false"},{"type":"conversation_history","conversationHistory":[{"id":1,"senderType":"ASSISTANT"}]},{"type":"tool_call_result","messageId":12,"toolCallId":"call"},{"type":"context_trace","messageId":12,"trace":null}]
+}

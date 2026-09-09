@@ -1,3 +1,14 @@
+import {
+  CHAT_SOCKET_NAMESPACE,
+  CHAT_SOCKET_PATH,
+  CHAT_TRANSPORTS,
+  createChatSendPayload,
+  parseChatEvent,
+  type ChatClientEvents,
+  type ChatSendOptions,
+  type ChatWireMessage,
+  type SocketResponse,
+} from '@cmudco/chat-socket-contract'
 /**
  * Socket.IO Redux Middleware
  *
@@ -17,10 +28,6 @@
 import type { Middleware } from '@reduxjs/toolkit'
 
 // Internal action type for middleware
-interface SocketActionWithPayload {
-  type: string
-  payload?: Record<string, unknown>
-}
 import { io, Socket } from 'socket.io-client'
 import { config } from '@/config/environment'
 import { SOCKET_RECONNECT_POLICY } from '@/config/socket'
@@ -43,19 +50,7 @@ export interface ServerToClientEvents {
 }
 
 // Socket.IO event types to backend
-export interface ClientToServerEvents {
-  subscribe_conversation: (
-    data: { conversationId: string; platform?: string },
-    callback: (response: SocketResponse) => void
-  ) => void
-  unsubscribe_conversation: (
-    data: { conversationId: string },
-    callback: (response: SocketResponse) => void
-  ) => void
-  send_message: (
-    data: Record<string, unknown>,
-    callback: (response: SocketResponse) => void
-  ) => void
+export interface ClientToServerEvents extends ChatClientEvents {
   send_voice_message: (
     data: {
       conversationId: string
@@ -63,14 +58,6 @@ export interface ClientToServerEvents {
       audioFormat: string
       language: string
     },
-    callback: (response: SocketResponse) => void
-  ) => void
-  edit_message: (
-    data: { conversationId: string; messageId: string; message: string },
-    callback: (response: SocketResponse) => void
-  ) => void
-  regenerate_response: (
-    data: Record<string, unknown>,
     callback: (response: SocketResponse) => void
   ) => void
   continue_artifact: (
@@ -81,22 +68,10 @@ export interface ClientToServerEvents {
     data: { conversationId: string; artifactId: number },
     callback: (response: SocketResponse) => void
   ) => void
-  stop_generation: (
-    data: { conversationId: string; messageId?: string },
-    callback: (response: SocketResponse) => void
-  ) => void
 }
 
-export interface SocketResponse {
-  success: boolean
-  error?: string
-  conversationId?: string
-}
-
-export interface SocketMessage {
-  type: string
-  [key: string]: unknown
-}
+export type { SocketResponse } from '@cmudco/chat-socket-contract'
+export type SocketMessage = ChatWireMessage
 
 // ════════════════════════════════════════════════════════════════════════════
 // ACTION TYPES
@@ -139,10 +114,10 @@ export const socketUnsubscribe = (conversationId: string) => ({
 
 export const socketSendMessage = (
   conversationId: string,
-  payload: Record<string, unknown>
+  payload: ChatSendOptions
 ) => ({
   type: SOCKET_SEND_MESSAGE as typeof SOCKET_SEND_MESSAGE,
-  payload: { conversationId, ...payload },
+  payload: createChatSendPayload(conversationId, payload),
 })
 
 export const socketEditMessage = (
@@ -157,10 +132,13 @@ export const socketEditMessage = (
 export const socketRegenerate = (
   conversationId: string,
   messageId: string,
-  options: Record<string, unknown>
+  options: ChatSendOptions
 ) => ({
   type: SOCKET_REGENERATE as typeof SOCKET_REGENERATE,
-  payload: { conversationId, message_id: messageId, ...options },
+  payload: {
+    ...createChatSendPayload(conversationId, options),
+    message_id: messageId,
+  },
 })
 
 export const socketContinueArtifact = (
@@ -230,7 +208,7 @@ export function createSocketMiddleware(): Middleware {
   const subscriptions = new Set<string>()
 
   return (store) => (next) => (action: unknown) => {
-    const typedAction = action as SocketActionWithPayload
+    const typedAction = action as SocketAction
     const dispatch = store.dispatch
 
     switch (typedAction.type) {
@@ -249,13 +227,13 @@ export function createSocketMiddleware(): Middleware {
 
         // Build URL with /chat namespace
         const baseUrl = config.apiUrl.replace(/\/api\/?$/, '')
-        const socketUrl = `${baseUrl}/chat`
+        const socketUrl = `${baseUrl}${CHAT_SOCKET_NAMESPACE}`
 
         // Create socket connecting to /chat namespace
         socket = io(socketUrl, {
-          path: '/socket.io/',
+          path: CHAT_SOCKET_PATH,
           auth: { token: jwtToken },
-          transports: ['websocket', 'polling'],
+          transports: [...CHAT_TRANSPORTS],
           reconnection: true,
           reconnectionAttempts: SOCKET_RECONNECT_POLICY.maxAttempts,
           reconnectionDelay: SOCKET_RECONNECT_POLICY.initialDelayMs,
@@ -346,8 +324,13 @@ export function createSocketMiddleware(): Middleware {
         })
 
         // Incoming messages → dispatch as actions
-        socket.on('message', (data) => {
-          dispatch({ type: `socket/${data.type}`, payload: data })
+        socket.on('message', (raw) => {
+          const parsed = parseChatEvent(raw)
+          if (!parsed.success) {
+            console.warn('[Socket] Invalid chat event', parsed.issues)
+            return
+          }
+          dispatch({ type: `socket/${parsed.data.type}`, payload: parsed.data })
         })
 
         break
@@ -368,10 +351,7 @@ export function createSocketMiddleware(): Middleware {
       // ─────────────────────────────────────────────────────────────────────
 
       case SOCKET_SUBSCRIBE: {
-        const { conversationId, platform } = typedAction.payload as {
-          conversationId: string
-          platform?: string
-        }
+        const { conversationId } = typedAction.payload
 
         if (!socket?.connected) {
           console.warn('Cannot subscribe: not connected')
@@ -380,7 +360,7 @@ export function createSocketMiddleware(): Middleware {
 
         socket.emit(
           'subscribe_conversation',
-          { conversationId, platform },
+          { conversationId },
           (response) => {
             if (response.success) {
               subscriptions.add(conversationId)
@@ -435,18 +415,14 @@ export function createSocketMiddleware(): Middleware {
           return next(typedAction)
         }
 
-        socket.emit(
-          'send_message',
-          typedAction.payload as Record<string, unknown>,
-          (response) => {
-            if (!response.success) {
-              dispatch({
-                type: 'socket/sendError',
-                payload: { error: response.error },
-              })
-            }
+        socket.emit('send_message', typedAction.payload, (response) => {
+          if (!response.success) {
+            dispatch({
+              type: 'socket/sendError',
+              payload: { error: response.error },
+            })
           }
-        )
+        })
         break
       }
 
@@ -475,18 +451,14 @@ export function createSocketMiddleware(): Middleware {
       case SOCKET_REGENERATE: {
         if (!socket?.connected) return next(typedAction)
 
-        socket.emit(
-          'regenerate_response',
-          typedAction.payload as Record<string, unknown>,
-          (response) => {
-            if (!response.success) {
-              dispatch({
-                type: 'socket/regenerateError',
-                payload: { error: response.error },
-              })
-            }
+        socket.emit('regenerate_response', typedAction.payload, (response) => {
+          if (!response.success) {
+            dispatch({
+              type: 'socket/regenerateError',
+              payload: { error: response.error },
+            })
           }
-        )
+        })
         break
       }
 
