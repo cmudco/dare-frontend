@@ -26,6 +26,7 @@ import {
   DatabaseZap,
 } from 'lucide-react'
 import clsx from 'clsx'
+import { resolveMediaUrl } from '@/utils/files'
 import { estimatedUsageFields, sumUsage } from '../../utils/usageDetails'
 import { RootState } from '@/redux/store'
 import mermaid from 'mermaid'
@@ -489,12 +490,12 @@ const Message: React.FC<MessageProps> = ({
                       {uploadedImages.map((file) => (
                         <div
                           key={file.id}
-                          className='relative rounded-lg border border-border'
+                          className='relative max-w-full rounded-lg border border-border'
                         >
                           <img
-                            src={`${import.meta.env.VITE_DJANGO_BACKEND_URL}${file.file}`}
+                            src={resolveMediaUrl(file.file)}
                             alt={file.name}
-                            className='max-h-64 max-w-xs rounded-lg object-contain'
+                            className='max-h-64 max-w-full rounded-lg object-contain sm:max-w-xs'
                           />
                         </div>
                       ))}
@@ -511,7 +512,7 @@ const Message: React.FC<MessageProps> = ({
                   return (
                     <div className='not-prose mt-4'>
                       <img
-                        src={`${import.meta.env.VITE_DJANGO_BACKEND_URL}${message.generatedImage.fileUrl}`}
+                        src={resolveMediaUrl(message.generatedImage.fileUrl)}
                         alt={message.generatedImage.prompt}
                         className='max-w-full rounded-lg shadow-md'
                       />
@@ -548,7 +549,7 @@ const Message: React.FC<MessageProps> = ({
                       {generatedImages.map((file) => (
                         <div key={file.id} className='not-prose mt-4'>
                           <img
-                            src={`${import.meta.env.VITE_DJANGO_BACKEND_URL}${file.file}`}
+                            src={resolveMediaUrl(file.file)}
                             alt={file.generationPrompt || file.name}
                             className='max-w-full rounded-lg shadow-md'
                           />
