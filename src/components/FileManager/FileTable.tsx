@@ -97,14 +97,17 @@ const FileTable = () => {
       const saved = getFromLocalStorage<{
         column: string | null
         direction: SortDirection
-      }>(sortStorageKey, { column: null, direction: SortDirectionEnum.ASC })
+      }>(sortStorageKey, {
+        column: 'Date Created',
+        direction: SortDirectionEnum.DESC,
+      })
       return saved &&
         typeof saved.column === 'string' &&
         getFileProp(saved.column) &&
         (saved.direction === SortDirectionEnum.ASC ||
           saved.direction === SortDirectionEnum.DESC)
         ? saved
-        : { column: null, direction: SortDirectionEnum.ASC }
+        : { column: 'Date Created', direction: SortDirectionEnum.DESC }
     }
   )
   const [tagFileId, setTagFileId] = useState<number | null>(null)
