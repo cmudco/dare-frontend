@@ -46,6 +46,12 @@ export const JOURNEY_DETAIL_LABELS: Record<string, string> = {
   vectors: 'Vectors generated',
   attemptedVectors: 'Writes attempted',
   acknowledgedVectors: 'Writes acknowledged',
+  expectedVectors: 'Chunks expected',
+  generatedVectors: 'Embeddings generated',
+  verifiedVectors: 'Vectors verified',
+  verifiedAt: 'Verified at',
+  verificationSeconds: 'Verification time (seconds)',
+  generation: 'Index generation',
   chunkingStrategy: 'Chunking method',
   reason: 'Note',
 }
