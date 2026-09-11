@@ -292,6 +292,9 @@ const fileSlice = createSlice({
             state.files[fileIndex].status = item.status
             state.files[fileIndex].jobId = item.jobId
             state.files[fileIndex].processingStage = item.processingStage
+            if (item.parserName !== undefined) {
+              state.files[fileIndex].parserName = item.parserName
+            }
           }
         })
       })

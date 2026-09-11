@@ -43,7 +43,16 @@ export const JOURNEY_DETAIL_LABELS: Record<string, string> = {
   chunkSize: 'Chunk size',
   overlapSize: 'Chunk overlap',
   backend: 'Search backend',
-  vectors: 'Vectors stored',
+  vectors: 'Vectors generated',
+  attemptedVectors: 'Writes attempted',
+  acknowledgedVectors: 'Writes acknowledged',
+  expectedVectors: 'Chunks expected',
+  generatedVectors: 'Embeddings generated',
+  verifiedVectors: 'Vectors verified',
+  verifiedAt: 'Verified at',
+  verificationSeconds: 'Verification time (seconds)',
+  generation: 'Index generation',
+  chunkingStrategy: 'Chunking method',
   reason: 'Note',
 }
 

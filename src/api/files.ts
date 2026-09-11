@@ -180,6 +180,7 @@ export const checkJobStatusesAPI = async (
     jobId?: string
     statusCode: FileStatus
     jobStatus: string
+    parserName?: MyFile['parserName']
     processingStage?: FileProcessingStage
   }[]
 > => {
@@ -190,6 +191,7 @@ export const checkJobStatusesAPI = async (
       jobId?: string
       statusCode: FileStatus
       jobStatus: string
+      parserName?: MyFile['parserName']
       processingStage?: FileProcessingStage
     }[]
   >({

@@ -362,15 +362,13 @@ const FileTable = () => {
                         </span>
                       )}
                     </div>
-                    {!isMedia && (
+                    {!isMedia && parserName && (
                       <Badge
                         variant='outline'
                         className='mt-1 font-normal text-muted-foreground'
                         title='Parser used for the current document content'
                       >
-                        {parserName
-                          ? DOCUMENT_PARSER_LABELS[parserName]
-                          : 'Parser not recorded'}
+                        {DOCUMENT_PARSER_LABELS[parserName]}
                       </Badge>
                     )}
                   </TableCell>
