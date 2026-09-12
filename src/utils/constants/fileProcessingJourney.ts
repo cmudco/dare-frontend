@@ -23,7 +23,7 @@ export const JOURNEY_DETAIL_LABELS: Record<string, string> = {
   tables: 'Tables',
   pictures: 'Images found',
   classifiedPictures: 'Images classified',
-  parserReportedSeconds: 'Docling reported time',
+  parserReportedSeconds: 'Parser reported time',
   outcome: 'Result',
   model: 'Vision model',
   attemptedCalls: 'Visual operations',
@@ -66,8 +66,8 @@ export const JOURNEY_DETAIL_LABELS: Record<string, string> = {
   entitiesFound: 'Names & identifiers found',
   entityLanes: 'Entity extractors',
   entitiesError: 'Entity extraction failed',
-  memoryMb: 'Memory after stage (MB)',
-  peakMemoryMb: 'Peak memory so far (MB)',
+  memoryMb: 'Worker memory after stage (MB)',
+  peakMemoryMb: 'Worker peak memory, this attempt (MB)',
   reason: 'Note',
 }
 
