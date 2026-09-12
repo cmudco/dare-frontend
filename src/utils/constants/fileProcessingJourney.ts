@@ -66,6 +66,8 @@ export const JOURNEY_DETAIL_LABELS: Record<string, string> = {
   entitiesFound: 'Names & identifiers found',
   entityLanes: 'Entity extractors',
   entitiesError: 'Entity extraction failed',
+  memoryMb: 'Memory after stage (MB)',
+  peakMemoryMb: 'Peak memory so far (MB)',
   reason: 'Note',
 }
 
