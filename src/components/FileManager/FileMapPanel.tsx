@@ -6,11 +6,18 @@ import {
   ChevronRight,
   CornerDownRight,
   Image as ImageIcon,
+  Loader2,
+  RefreshCw,
   ScanLine,
   Table as TableIcon,
 } from 'lucide-react'
 
-import { getFileMapAPI, getFileMapChunkAPI } from '@/api/files'
+import {
+  getFileIndexHealthAPI,
+  getFileMapAPI,
+  getFileMapChunkAPI,
+} from '@/api/files'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   DocumentMap,
@@ -18,7 +25,9 @@ import {
   DocumentMapChunkDetail,
   DocumentMapReference,
   DocumentMapSection,
+  IndexHealth,
 } from '@/redux/types/files'
+import { formatDateTime } from '@/utils/dateUtils'
 import { cn } from '@/lib/utils'
 
 interface FileMapPanelProps {
@@ -69,6 +78,97 @@ const entityKindLabel = (kind: string): string => {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1)
 }
 
+/** One line per health state: what the vector database holds right now. */
+const INDEX_HEALTH_COPY: Record<
+  IndexHealth['state'],
+  { label: string; variant: 'green' | 'red' | 'yellow' | 'blue' | 'gray' }
+> = {
+  verified: { label: 'Search index verified', variant: 'green' },
+  incomplete: { label: 'Search index incomplete', variant: 'red' },
+  missing: { label: 'Search index missing', variant: 'red' },
+  unavailable: { label: 'Could not check the search index', variant: 'yellow' },
+  unverifiable: { label: 'Search index present', variant: 'gray' },
+  not_indexed: { label: 'Not in the search index', variant: 'gray' },
+  processing: { label: 'Still processing', variant: 'blue' },
+}
+
+const indexHealthDetail = (health: IndexHealth): string => {
+  const checked = formatDateTime(health.checkedAt)
+  const suffix = checked ? ` · checked ${checked}` : ''
+  switch (health.state) {
+    case 'verified':
+      return `${health.present} of ${health.expected} chunks are in the search index right now${suffix}`
+    case 'incomplete':
+      return `${health.present} of ${health.expected} chunks are in the search index; ${health.missingCount} missing${
+        health.unexpected ? `, ${health.unexpected} unexpected` : ''
+      }. Reprocess this file to rebuild it${suffix}`
+    case 'missing':
+      return `None of the ${health.expected} chunks are in the search index. Reprocess this file to rebuild it${suffix}`
+    case 'unavailable':
+      return `${health.error || 'The vector database could not be reached.'} This says nothing about the index itself${suffix}`
+    case 'unverifiable':
+      return `${health.present} chunks are stored, but this file was indexed before chunk records existed, so completeness cannot be confirmed${suffix}`
+    case 'not_indexed':
+      return 'This file has no searchable content.'
+    case 'processing':
+      return 'The search index is still being built.'
+  }
+}
+
+const IndexHealthBanner = ({
+  health,
+  loading,
+  failed,
+  onRecheck,
+}: {
+  health: IndexHealth | null
+  loading: boolean
+  failed: boolean
+  onRecheck: () => void
+}) => {
+  const copy = health ? INDEX_HEALTH_COPY[health.state] : null
+  return (
+    <div
+      className='mt-2 flex flex-wrap items-center gap-2 rounded-md border p-2 text-xs'
+      role='status'
+    >
+      {copy && health ? (
+        <>
+          <Badge variant={copy.variant}>{copy.label}</Badge>
+          <span className='min-w-0 flex-1 text-muted-foreground'>
+            {indexHealthDetail(health)}
+          </span>
+        </>
+      ) : failed ? (
+        <>
+          <Badge variant='yellow'>Could not check the search index</Badge>
+          <span className='min-w-0 flex-1 text-muted-foreground'>
+            The health check request failed. Try again.
+          </span>
+        </>
+      ) : (
+        <span className='min-w-0 flex-1 text-muted-foreground'>
+          Checking the search index…
+        </span>
+      )}
+      <Button
+        size='sm'
+        variant='outline'
+        onClick={onRecheck}
+        disabled={loading}
+        aria-label='Check the search index again'
+      >
+        {loading ? (
+          <Loader2 className='mr-1.5 h-3.5 w-3.5 animate-spin' />
+        ) : (
+          <RefreshCw className='mr-1.5 h-3.5 w-3.5' />
+        )}
+        Check again
+      </Button>
+    </div>
+  )
+}
+
 const pageLabel = (start: number | null, end: number | null): string => {
   if (start == null) return ''
   if (end == null || end === start) return `p. ${start}`
@@ -104,6 +204,23 @@ const FileMapPanel = ({ fileId, onOpenPage }: FileMapPanelProps) => {
   const [chunkDetailLoading, setChunkDetailLoading] = useState(false)
   const [chunkDetailError, setChunkDetailError] = useState(false)
   const [chunkDetailAttempt, setChunkDetailAttempt] = useState(0)
+  const [health, setHealth] = useState<IndexHealth | null>(null)
+  const [healthLoading, setHealthLoading] = useState(false)
+  const [healthFailed, setHealthFailed] = useState(false)
+
+  const fetchHealth = useCallback(async () => {
+    if (!fileId) return
+    setHealthLoading(true)
+    setHealthFailed(false)
+    try {
+      setHealth(await getFileIndexHealthAPI(fileId))
+    } catch {
+      setHealth(null)
+      setHealthFailed(true)
+    } finally {
+      setHealthLoading(false)
+    }
+  }, [fileId])
 
   const fetchMap = useCallback(async () => {
     if (!fileId) return
@@ -123,8 +240,18 @@ const FileMapPanel = ({ fileId, onOpenPage }: FileMapPanelProps) => {
     setSelection(null)
     setCollapsed(new Set())
     setChunkDetail(null)
+    setHealth(null)
+    setHealthFailed(false)
     fetchMap()
-  }, [fetchMap])
+    fetchHealth()
+  }, [fetchHealth, fetchMap])
+
+  const missingFromIndex = useMemo(
+    () => new Set(health?.missingChunks ?? []),
+    [health?.missingChunks]
+  )
+  const chunkMissing = (chunkIndex: number) =>
+    health?.state === 'missing' || missingFromIndex.has(chunkIndex)
 
   const selectedChunkIndex =
     selection?.kind === 'chunk' ? selection.chunkIndex : null
@@ -272,6 +399,14 @@ const FileMapPanel = ({ fileId, onOpenPage }: FileMapPanelProps) => {
             {chunk.chunkIndex + 1}
           </span>
         </button>
+        {chunkMissing(chunk.chunkIndex) && (
+          <span
+            title='This chunk is not in the search index right now'
+            className='shrink-0 rounded-full bg-destructive/10 px-1.5 text-[11px] text-destructive'
+          >
+            not in index
+          </span>
+        )}
         {inbound.length > 0 && (
           <span className='shrink-0 rounded-full bg-primary/10 px-1.5 text-[11px] text-primary'>
             ← {inbound.length}
@@ -560,6 +695,12 @@ const FileMapPanel = ({ fileId, onOpenPage }: FileMapPanelProps) => {
           {map.counts.linkedEntities ?? 0} shared across files
         </span>
       </div>
+      <IndexHealthBanner
+        health={health}
+        loading={healthLoading}
+        failed={healthFailed}
+        onRecheck={fetchHealth}
+      />
       {!map.structured && (
         <div className='mt-2 flex items-center gap-2 rounded-md border border-dashed p-2 text-xs text-muted-foreground'>
           <AlertCircle className='h-3.5 w-3.5 shrink-0' />
