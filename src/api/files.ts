@@ -8,6 +8,7 @@ import {
   FileProcessingStage,
   FileProcessingJourneyResponse,
   FileStructure,
+  IndexHealth,
   MyFile,
   MyFolder,
   VisionModelCatalog,
@@ -122,6 +123,16 @@ export const getFileMapChunkAPI = async (
 ): Promise<DocumentMapChunkDetail> => {
   return await baseRequest<DocumentMapChunkDetail>({
     url: `api/files/${id}/map/chunks/${chunkIndex}/`,
+    method: METHOD.GET,
+  })
+}
+
+/** Live check of the search index against the stored map rows. */
+export const getFileIndexHealthAPI = async (
+  id: number
+): Promise<IndexHealth> => {
+  return await baseRequest<IndexHealth>({
+    url: `api/files/${id}/index-health/`,
     method: METHOD.GET,
   })
 }
