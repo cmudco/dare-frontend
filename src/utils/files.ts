@@ -5,6 +5,10 @@ import {
 } from './constants/file'
 import { formatDurationSeconds } from './dateUtils'
 
+/** Socket events use relative paths; REST history may return absolute URLs. */
+export const resolveMediaUrl = (fileUrl: string): string =>
+  new URL(fileUrl, `${import.meta.env.VITE_DJANGO_BACKEND_URL}/`).href
+
 /** Journey durations: an absent value means the step is still running. */
 export const formatJourneyDuration = (seconds?: number): string =>
   seconds == null ? 'In progress' : formatDurationSeconds(seconds)

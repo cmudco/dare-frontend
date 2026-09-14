@@ -316,7 +316,7 @@ const FileUploadModal: React.FC = () => {
               onChange={setProcessingMode}
             />
             <p className='text-xs text-muted-foreground'>
-              Applies to documents. Other file types keep their usual handling.
+              Applies to documents only.
             </p>
           </div>
 
@@ -325,7 +325,16 @@ const FileUploadModal: React.FC = () => {
               error
                 ? 'border-destructive/50 bg-destructive/10'
                 : 'border-border bg-muted hover:bg-accent'
-            } cursor-pointer rounded-lg p-4 text-center transition`}
+            } cursor-pointer rounded-lg p-4 text-center transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none`}
+            role='button'
+            tabIndex={0}
+            aria-label='Choose files to upload'
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                document.getElementById('fileInput')?.click()
+              }
+            }}
             onClick={() => document.getElementById('fileInput')?.click()}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -366,6 +375,21 @@ const FileUploadModal: React.FC = () => {
             <span className='mt-2 block text-xs text-muted-foreground'>
               Maximum size per file: {MAX_FILE_SIZE_MB} MB
             </span>
+          </div>
+          <div className='flex items-start gap-3 rounded-lg border border-border bg-muted/50 p-3'>
+            <Info
+              aria-hidden='true'
+              className='mt-0.5 h-4 w-4 shrink-0 text-muted-foreground'
+            />
+            <div className='space-y-1'>
+              <p className='text-sm font-medium text-foreground'>
+                Media stays as uploaded
+              </p>
+              <p className='text-xs leading-relaxed text-muted-foreground'>
+                Images, videos, and audio are uploaded as is, without
+                processing. Find them in the Media tab after uploading.
+              </p>
+            </div>
           </div>
           {fileErrors.length > 0 && (
             <div className='text-center text-sm text-destructive'>
@@ -451,7 +475,7 @@ const FileUploadModal: React.FC = () => {
             onClick={handleUploadClick}
             disabled={selectedFiles.length === 0 || loading}
           >
-            {loading ? 'Saving...' : 'Save'}
+            {loading ? 'Uploading...' : 'Upload files'}
           </Button>
         </DialogFooter>
       </DialogContent>

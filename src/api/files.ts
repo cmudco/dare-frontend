@@ -8,6 +8,7 @@ import {
   FileProcessingStage,
   FileProcessingJourneyResponse,
   FileStructure,
+  IndexHealth,
   MyFile,
   MyFolder,
   VisionModelCatalog,
@@ -126,6 +127,16 @@ export const getFileMapChunkAPI = async (
   })
 }
 
+/** Live check of the search index against the stored map rows. */
+export const getFileIndexHealthAPI = async (
+  id: number
+): Promise<IndexHealth> => {
+  return await baseRequest<IndexHealth>({
+    url: `api/files/${id}/index-health/`,
+    method: METHOD.GET,
+  })
+}
+
 export const getFileProcessingJourneyAPI = async (
   id: number
 ): Promise<FileProcessingJourneyResponse> => {
@@ -180,6 +191,7 @@ export const checkJobStatusesAPI = async (
     jobId?: string
     statusCode: FileStatus
     jobStatus: string
+    parserName?: MyFile['parserName']
     processingStage?: FileProcessingStage
   }[]
 > => {
@@ -190,6 +202,7 @@ export const checkJobStatusesAPI = async (
       jobId?: string
       statusCode: FileStatus
       jobStatus: string
+      parserName?: MyFile['parserName']
       processingStage?: FileProcessingStage
     }[]
   >({

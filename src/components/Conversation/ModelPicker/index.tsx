@@ -6,10 +6,12 @@ import {
   Box,
   Clock,
   Coins,
+  FileText,
   HelpCircle,
   Layers,
   LayoutGrid,
   Search,
+  Users,
 } from 'lucide-react'
 import {
   Popover,
@@ -39,7 +41,11 @@ import {
   ModelGroup,
   categorizeEntry,
 } from '@/utils/modelGroupingUtils'
-import { DEPTH_META, formatEstimateCost } from '@/utils/ensemble'
+import {
+  DEPTH_META,
+  formatEstimateCost,
+  hasCustomBriefs,
+} from '@/utils/ensemble'
 import { useEnsembleEstimate } from '@/hooks/useEnsembleEstimate'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 
@@ -52,6 +58,7 @@ import TypeIcon from './TypeIcon'
 import DepthDial from './DepthDial'
 import EnsembleBar from './EnsembleBar'
 import StackedLogos from './StackedLogos'
+import BriefsSection from './BriefsSection'
 
 const Spinner = ({ className }: { className?: string }) => (
   <svg
@@ -122,6 +129,11 @@ const ModelPicker: React.FC<{ openRequest: number }> = ({ openRequest }) => {
   useEffect(() => {
     if (openRequest > 0) setOpen(true)
   }, [openRequest])
+
+  // Bench: who answers. Briefs: what each seat is told.
+  const [view, setView] = useState<'bench' | 'briefs'>('bench')
+  const showBriefs = multi && view === 'briefs'
+  const customBriefs = hasCustomBriefs(ensemble.briefs)
   const [searchQuery, setSearchQuery] = useState('')
   const [groupingMode, setGroupingMode] = useState<
     'provider' | 'cost' | 'all' | 'latest'
@@ -329,20 +341,45 @@ const ModelPicker: React.FC<{ openRequest: number }> = ({ openRequest }) => {
               </div>
             )}
 
-            <div className='relative'>
-              <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
-              <Input
-                placeholder='Search models or providers...'
-                className='h-10 border-none bg-accent/40 pl-10 focus-visible:ring-1 focus-visible:ring-ring'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            {multi && (
+              <div
+                role='tablist'
+                aria-label='Panel setup'
+                className='mb-3 flex items-center gap-1 rounded-lg bg-accent/40 p-1'
+              >
+                <ModeButton
+                  active={view === 'bench'}
+                  onClick={() => setView('bench')}
+                  icon={Users}
+                  label='Bench'
+                />
+                <ModeButton
+                  active={view === 'briefs'}
+                  onClick={() => setView('briefs')}
+                  icon={FileText}
+                  label={customBriefs ? 'Briefs · custom' : 'Briefs'}
+                />
+              </div>
+            )}
+
+            {!showBriefs && (
+              <div className='relative'>
+                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                <Input
+                  placeholder='Search models or providers...'
+                  className='h-10 border-none bg-accent/40 pl-10 focus-visible:ring-1 focus-visible:ring-ring'
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Dynamic Content */}
           <div className='custom-scrollbar min-h-[300px] flex-1 overflow-y-auto px-2 pt-2 pb-4'>
-            {loading && pickerEntries.length === 0 ? (
+            {showBriefs ? (
+              <BriefsSection />
+            ) : loading && pickerEntries.length === 0 ? (
               <ModelSkeleton />
             ) : filteredEntries.length === 0 ? (
               <div className='flex flex-col items-center justify-center py-10 text-center text-muted-foreground'>

@@ -388,6 +388,29 @@ export interface DocumentMapReference {
   resolved: boolean
 }
 
+export type IndexHealthState =
+  | 'verified'
+  | 'incomplete'
+  | 'missing'
+  | 'unavailable'
+  | 'unverifiable'
+  | 'not_indexed'
+  | 'processing'
+
+/** What the vector database holds for this file right now, versus its map rows. */
+export interface IndexHealth {
+  state: IndexHealthState
+  expected: number | null
+  present: number
+  missingCount: number
+  missingChunks: number[]
+  unexpected: number
+  generation: string
+  backend: string | null
+  checkedAt: string
+  error: string
+}
+
 export interface DocumentMap {
   id: number
   name: string

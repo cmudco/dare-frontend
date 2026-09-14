@@ -97,14 +97,17 @@ const FileTable = () => {
       const saved = getFromLocalStorage<{
         column: string | null
         direction: SortDirection
-      }>(sortStorageKey, { column: null, direction: SortDirectionEnum.ASC })
+      }>(sortStorageKey, {
+        column: 'Date Created',
+        direction: SortDirectionEnum.DESC,
+      })
       return saved &&
         typeof saved.column === 'string' &&
         getFileProp(saved.column) &&
         (saved.direction === SortDirectionEnum.ASC ||
           saved.direction === SortDirectionEnum.DESC)
         ? saved
-        : { column: null, direction: SortDirectionEnum.ASC }
+        : { column: 'Date Created', direction: SortDirectionEnum.DESC }
     }
   )
   const [tagFileId, setTagFileId] = useState<number | null>(null)
@@ -359,15 +362,13 @@ const FileTable = () => {
                         </span>
                       )}
                     </div>
-                    {!isMedia && (
+                    {!isMedia && parserName && (
                       <Badge
                         variant='outline'
                         className='mt-1 font-normal text-muted-foreground'
                         title='Parser used for the current document content'
                       >
-                        {parserName
-                          ? DOCUMENT_PARSER_LABELS[parserName]
-                          : 'Parser not recorded'}
+                        {DOCUMENT_PARSER_LABELS[parserName]}
                       </Badge>
                     )}
                   </TableCell>

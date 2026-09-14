@@ -56,6 +56,11 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const conversationInput = useSelector(
     (state: RootState) => state.conversation.conversationInput
   )
+  const hasAttachedImages = useSelector(
+    (state: RootState) => state.conversation.attachedImages.length > 0
+  )
+  const hasMessageContent =
+    conversationInput.trim().length > 0 || hasAttachedImages
   const { stopGeneration } = useSocket()
   const streamingMessageId = useSelector((state: RootState) => {
     const messages = state.conversation.activeConversationMessages || []
@@ -145,7 +150,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   }
 
   useEffect(() => {
-    if (pendingMessage && isSocketConnected && activeConversation) {
+    if (pendingMessage !== null && isSocketConnected && activeConversation) {
       const newMessage: Partial<Message> = {
         message: pendingMessage,
       }
@@ -196,7 +201,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   }
 
   const handleSendMessage = () => {
-    if (disabled || conversationInput.trim() === '') return
+    if (disabled || !hasMessageContent || pendingMessage !== null) return
 
     if (selectedModel === null) {
       setShowModelWarning(true)
@@ -358,7 +363,9 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             placeholder={
               disabled
                 ? 'Select a conversation to start chatting'
-                : 'Type message'
+                : hasAttachedImages
+                  ? 'Add a message (optional)'
+                  : 'Type message'
             }
             disabled={disabled}
             className={clsx(
@@ -373,27 +380,32 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             <VoiceModeButton disabled={disabled} />
             {/* Send / Stop Button */}
             {streamingMessageId && !disabled ? (
-              <div
-                className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-colors hover:bg-secondary/80'
+              <button
+                type='button'
+                className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-colors hover:bg-secondary/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none'
                 onClick={handleStopGeneration}
                 aria-label='Stop generating'
                 title='Stop generating'
               >
                 <Square className='h-3 w-3 fill-current' />
-              </div>
+              </button>
             ) : (
-              <div
+              <button
+                type='button'
+                disabled={
+                  disabled || !hasMessageContent || pendingMessage !== null
+                }
                 className={clsx(
-                  'flex h-8 w-8 items-center justify-center rounded-full transition-colors',
-                  disabled
+                  'flex h-8 w-8 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
+                  disabled || !hasMessageContent || pendingMessage !== null
                     ? 'cursor-not-allowed bg-muted text-muted-foreground'
                     : 'cursor-pointer bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 )}
-                onClick={disabled ? undefined : handleSendMessage}
+                onClick={handleSendMessage}
                 aria-label='Send message'
               >
                 <ArrowUp className='h-4 w-4' />
-              </div>
+              </button>
             )}
           </div>
         </div>

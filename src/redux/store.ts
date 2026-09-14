@@ -27,6 +27,7 @@ import researchReducer from './researchSlice'
 import libraryReducer from './librarySlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
+import ensembleReducer from './ensembleSlice'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
 import { debugLog, setDebugLogsAccessor } from '@/utils/debugLogger'
 
@@ -59,6 +60,7 @@ export const store = configureStore({
     featureFlags: featureFlagsReducer,
     research: researchReducer,
     library: libraryReducer,
+    ensemble: ensembleReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware
