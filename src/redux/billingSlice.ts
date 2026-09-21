@@ -23,8 +23,6 @@ import {
   GroupWallet,
   OwnedGroupMember,
   OwnedGroupResponse,
-  Transaction,
-  TransactionSummary,
   UpsertUserOverrideResponse,
   WalletsListResponse,
 } from './types/billing'
@@ -49,31 +47,18 @@ const billingSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(getTransactions.pending, (state) => {
+      .addCase(getTransactions.pending, (state, action) => {
+        state.transactionsRequestId = action.meta.requestId
         state.loading = true
         state.error = null
       })
-      .addCase(
-        getTransactions.fulfilled,
-        (
-          state,
-          action: PayloadAction<{
-            count: number
-            next: string | null
-            previous: string | null
-            results: Transaction[]
-            summary: TransactionSummary
-          }>
-        ) => {
-          state.loading = false
-          state.transactions = action.payload.results
-          state.transactionCount = action.payload.count
-          state.transactionSummary = action.payload.summary
-          state.nextPage = action.payload.next
-          state.previousPage = action.payload.previous
-        }
-      )
+      .addCase(getTransactions.fulfilled, (state, action) => {
+        if (state.transactionsRequestId !== action.meta.requestId) return
+        state.loading = false
+        state.transactions = action.payload.results
+      })
       .addCase(getTransactions.rejected, (state, action) => {
+        if (state.transactionsRequestId !== action.meta.requestId) return
         state.loading = false
         state.error = action.payload as string
       })

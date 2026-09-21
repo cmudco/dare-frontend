@@ -24,6 +24,7 @@ export interface TransactionsResponse {
 
 export interface GetTransactionsOptions {
   page?: number
+  pageSize?: number
   platform?: PlatformFilter
   billingMode?: 'wallet' | 'own_api' | 'litellm' | null
 }
@@ -33,11 +34,13 @@ export const getTransactionsAPI = async (
 ): Promise<TransactionsResponse> => {
   const {
     page = 1,
+    pageSize = 10,
     platform = PlatformFilter.ALL,
     billingMode = null,
   } = options
   const params = new URLSearchParams({
     page: String(page),
+    page_size: String(pageSize),
     platform,
   })
   if (billingMode) params.append('billing_mode', billingMode)

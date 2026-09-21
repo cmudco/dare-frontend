@@ -1,3 +1,4 @@
+import { collectTransactionHistory } from '@/utils/transactionHistory'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   getTransactionsAPI,
@@ -41,7 +42,10 @@ export const getTransactions = createAsyncThunk(
   'billing/getTransactions',
   async (options: GetTransactionsOptions = {}, thunkAPI) => {
     try {
-      const response = await getTransactionsAPI(options)
+      const response = await collectTransactionHistory(
+        (page) => getTransactionsAPI({ ...options, page, pageSize: 500 }),
+        thunkAPI.signal
+      )
       return response
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)

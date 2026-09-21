@@ -9,11 +9,8 @@ export interface TransactionSummary {
 }
 
 export interface BillingState {
+  transactionsRequestId: string | null
   transactions: Transaction[]
-  transactionCount: number
-  transactionSummary: TransactionSummary
-  nextPage: string | null
-  previousPage: string | null
   loading: boolean
   error: string | null
   modelStats: BillingModelStats[]
@@ -194,6 +191,8 @@ export interface UpsertUserOverrideResponse {
 
 export interface Transaction {
   id: number
+  amount: string
+  referenceAmount: string | null
   displayAmount: string
   /** What the call would have cost at DARE rates. Null when nothing was
    *  charged and no DARE-side model matches, or when DARE did the billing. */
