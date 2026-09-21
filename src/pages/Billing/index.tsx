@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CreditCard, FileSpreadsheet } from 'lucide-react'
+import { ChevronDown, CreditCard, FileSpreadsheet } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { getTransactions } from '@/redux/asyncThunks/billing'
 import {
@@ -17,6 +17,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { downloadTransactions } from '@/utils/billingExportUtils'
 import {
   PlatformFilter,
@@ -107,25 +113,31 @@ const BillingScreen = () => {
                 Explore and export your complete transaction history.
               </CardDescription>
             </div>
-            <div className='flex flex-wrap gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                disabled={unavailable || transactions.length === 0}
-                onClick={() => downloadTransactions(transactions, 'xml')}
-              >
-                <FileSpreadsheet className='mr-2 h-4 w-4' />
-                Export Excel (.xml)
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                disabled={unavailable || transactions.length === 0}
-                onClick={() => downloadTransactions(transactions, 'csv')}
-              >
-                Export CSV
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={unavailable || transactions.length === 0}
+                >
+                  <FileSpreadsheet className='h-4 w-4' />
+                  Export
+                  <ChevronDown className='h-4 w-4' />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem
+                  onSelect={() => downloadTransactions(transactions, 'csv')}
+                >
+                  CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => downloadTransactions(transactions, 'xml')}
+                >
+                  Excel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
             <label className='space-y-1 text-sm'>
