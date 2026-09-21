@@ -3,7 +3,6 @@ import type { Transaction } from '@/redux/types/billing'
 const headers = [
   'Transaction ID',
   'Amount (USD)',
-  'Reference Cost (USD)',
   'Type',
   'Source',
   'Message',
@@ -13,15 +12,24 @@ const headers = [
   'Cached Tokens',
   'Billing Mode',
   'Platform',
-  'Related Group',
-  'Timestamp (ISO 8601)',
+  'Timestamp (UTC)',
 ]
+
+const timestampFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'UTC',
+  year: 'numeric',
+  month: 'short',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+})
 
 function transactionRows(transactions: Transaction[]) {
   return transactions.map((t) => [
     t.id,
     t.amount,
-    t.referenceAmount,
     t.type,
     t.source ?? '',
     t.message,
@@ -31,8 +39,7 @@ function transactionRows(transactions: Transaction[]) {
     t.cachedInputTokens ?? 0,
     t.billingMode,
     t.platform,
-    t.relatedGroupCode ?? '',
-    t.createdAt,
+    `${timestampFormatter.format(new Date(t.createdAt))} UTC`,
   ])
 }
 
@@ -73,10 +80,16 @@ export function transactionsToExcel(transactions: Transaction[]) {
   const heading = `<Row>${headers.map((header) => `<Cell ss:StyleID="Header"><Data ss:Type="String">${xml(header)}</Data></Cell>`).join('')}</Row>`
   const rows = transactionRows(transactions)
     .map(
-      (row) =>
+      (row, rowIndex) =>
         `<Row>${row
           .map((value, index) => {
-            const money = index === 1 || index === 2
+            if (index === headers.length - 1) {
+              const timestamp = new Date(transactions[rowIndex].createdAt)
+                .toISOString()
+                .replace(/Z$/, '')
+              return `<Cell ss:StyleID="Timestamp"><Data ss:Type="DateTime">${timestamp}</Data></Cell>`
+            }
+            const money = index === 1
             const numeric =
               value != null && (money || typeof value === 'number')
             return `<Cell${money ? ' ss:StyleID="Money"' : ''}><Data ss:Type="${numeric ? 'Number' : 'String'}">${xml(value)}</Data></Cell>`
@@ -86,8 +99,8 @@ export function transactionsToExcel(transactions: Transaction[]) {
     .join('')
   return `<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-<Styles><Style ss:ID="Header"><Font ss:Bold="1"/></Style><Style ss:ID="Money"><NumberFormat ss:Format="0.000000"/></Style></Styles>
-<Worksheet ss:Name="Transactions"><Table><Column ss:Width="130" ss:Span="13"/>${heading}${rows}</Table></Worksheet></Workbook>`
+<Styles><Style ss:ID="Header"><Font ss:Bold="1"/></Style><Style ss:ID="Money"><NumberFormat ss:Format="0.000000"/></Style><Style ss:ID="Timestamp"><NumberFormat ss:Format="dd mmm yyyy hh:mm:ss &quot;UTC&quot;"/></Style></Styles>
+<Worksheet ss:Name="Transactions"><Table><Column ss:Width="130" ss:Span="${headers.length - 2}"/><Column ss:Width="190"/>${heading}${rows}</Table></Worksheet></Workbook>`
 }
 
 export function downloadTransactions(

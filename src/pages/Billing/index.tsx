@@ -15,7 +15,8 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
+import { Label } from '@/components/ui/label'
 import { downloadTransactions } from '@/utils/billingExportUtils'
 import {
   PlatformFilter,
@@ -156,24 +157,30 @@ const BillingScreen = () => {
                 ))}
               </select>
             </label>
-            <label className='space-y-1 text-sm'>
-              From date
-              <Input
-                type='date'
+            <div className='space-y-1'>
+              <Label className='block leading-5' htmlFor='transactions-from'>
+                From date
+              </Label>
+              <DatePicker
+                id='transactions-from'
                 value={filters.startDate}
                 max={filters.endDate || undefined}
-                onChange={(e) => updateFilter('from', e.target.value)}
+                placeholder='First transaction'
+                onChange={(value) => updateFilter('from', value)}
               />
-            </label>
-            <label className='space-y-1 text-sm'>
-              Through date
-              <Input
-                type='date'
+            </div>
+            <div className='space-y-1'>
+              <Label className='block leading-5' htmlFor='transactions-to'>
+                Through date
+              </Label>
+              <DatePicker
+                id='transactions-to'
                 value={filters.endDate}
                 min={filters.startDate || undefined}
-                onChange={(e) => updateFilter('to', e.target.value)}
+                placeholder='Latest transaction'
+                onChange={(value) => updateFilter('to', value)}
               />
-            </label>
+            </div>
           </div>
           <div className='flex flex-wrap items-center justify-between gap-2 text-sm'>
             <p className='text-muted-foreground' role='status'>
@@ -202,7 +209,7 @@ const BillingScreen = () => {
           <p className='text-xs text-muted-foreground'>
             Excel preserves six decimal places for costs. CSV contains the same
             values, but your spreadsheet app controls how they are displayed.
-            Dates use your local time.
+            Date filters use your local time; exported timestamps use UTC.
           </p>
           {invalidDates && (
             <p role='alert' className='text-sm text-destructive'>

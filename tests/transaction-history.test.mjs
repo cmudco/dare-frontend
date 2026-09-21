@@ -127,14 +127,20 @@ test('filters all rows with inclusive local dates and counts tabs before mode fi
 
 test('exports unrounded numeric costs, zero tokens, proxy model names and full timestamps', () => {
   const csv = transactionsToCSV([row(1)])
-  assert.ok(csv.includes('"0.000001","0.012345"'))
+  assert.ok(csv.includes('"0.000001"'))
+  assert.ok(!csv.includes('Reference Cost'))
+  assert.ok(!csv.includes('Related Group'))
   assert.ok(csv.includes('"Proxy model","0","2","0"'))
-  assert.ok(csv.includes('2026-09-21T12:34:56Z'))
+  assert.ok(csv.includes('Sep 21, 2026, 12:34:56 UTC'))
+  assert.ok(!csv.includes('2026-09-21T12:34:56Z'))
   assert.ok(csv.includes('A, ""quoted"" message\nsecond line'))
   const excel = transactionsToExcel([row(1)])
   assert.ok(excel.includes('ss:Format="0.000000"'))
   assert.ok(excel.includes('<Data ss:Type="Number">0.000001</Data>'))
-  assert.ok(excel.includes('<Data ss:Type="Number">0.012345</Data>'))
+  assert.ok(!excel.includes('Reference Cost'))
+  assert.ok(!excel.includes('Related Group'))
+  assert.ok(excel.includes('ss:Type="DateTime">2026-09-21T12:34:56.000'))
+  assert.ok(excel.includes('dd mmm yyyy hh:mm:ss &quot;UTC&quot;'))
   assert.ok(
     !transactionsToExcel([row(2, { referenceAmount: null })]).includes('>null<')
   )
@@ -155,5 +161,15 @@ test('rejects a truncated history instead of exporting a partial file', async ()
   await assert.rejects(
     collectTransactionHistory(async () => page([row(1)])),
     /history changed/
+  )
+})
+
+test('normalizes timestamp offsets to UTC in both exports', () => {
+  const transactions = [row(1, { createdAt: '2026-09-22T01:30:00+05:00' })]
+  assert.ok(
+    transactionsToCSV(transactions).includes('Sep 21, 2026, 20:30:00 UTC')
+  )
+  assert.ok(
+    transactionsToExcel(transactions).includes('2026-09-21T20:30:00.000')
   )
 })
