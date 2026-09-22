@@ -6,5 +6,6 @@ export function triggerBrowserDownload(blob: Blob, filename: string) {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  // Safari starts the download asynchronously; revoking now loses the filename.
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

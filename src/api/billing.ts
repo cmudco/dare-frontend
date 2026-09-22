@@ -1,3 +1,4 @@
+import { addDays, parseISO } from 'date-fns'
 import {
   Transaction,
   TransactionSummary,
@@ -9,8 +10,9 @@ import {
   LiteLLMKeyResponse,
   LiteLLMTestResponse,
   SetActiveWalletResponse,
+  TransactionHistoryFilters,
 } from '@/redux/types/billing'
-import { PlatformFilter } from '@/utils/constants/billing'
+import { tabToBillingModeParam } from '@/utils/constants/billing'
 import { METHOD } from '@/utils/constants/requests'
 import { baseRequest } from '@/utils/requests'
 
@@ -20,31 +22,49 @@ export interface TransactionsResponse {
   previous: string | null
   results: Transaction[]
   summary: TransactionSummary
+  models: string[]
 }
 
 export interface GetTransactionsOptions {
-  page?: number
-  platform?: PlatformFilter
-  billingMode?: 'wallet' | 'own_api' | 'litellm' | null
+  page: number
+  filters: TransactionHistoryFilters
 }
 
-export const getTransactionsAPI = async (
-  options: GetTransactionsOptions = {}
-): Promise<TransactionsResponse> => {
-  const {
-    page = 1,
-    platform = PlatformFilter.ALL,
-    billingMode = null,
-  } = options
-  const params = new URLSearchParams({
-    page: String(page),
-    platform,
-  })
-  if (billingMode) params.append('billing_mode', billingMode)
+// The backend filters by instant, so a local date range becomes the span
+// from the first day's local midnight to the midnight after the last day.
+const transactionQueryParams = ({
+  platform,
+  tab,
+  model,
+  from,
+  to,
+}: TransactionHistoryFilters) => ({
+  platform,
+  billing_mode: tabToBillingModeParam(tab),
+  model,
+  created_after: from && parseISO(from).toISOString(),
+  created_before: to && addDays(parseISO(to), 1).toISOString(),
+})
 
+export const getTransactionsAPI = async ({
+  page,
+  filters,
+}: GetTransactionsOptions): Promise<TransactionsResponse> => {
   return await baseRequest<TransactionsResponse>({
-    url: `api/billing/transactions/?${params.toString()}`,
+    url: 'api/billing/transactions/',
     method: METHOD.GET,
+    params: { page, ...transactionQueryParams(filters) },
+  })
+}
+
+export const exportTransactionsAPI = async (
+  filters: TransactionHistoryFilters
+): Promise<{ blob: Blob; filename: string }> => {
+  return await baseRequest({
+    url: 'api/billing/transactions/export/',
+    method: METHOD.GET,
+    params: transactionQueryParams(filters),
+    responseType: 'blob',
   })
 }
 
