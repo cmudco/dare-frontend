@@ -1,8 +1,8 @@
-import { collectTransactionHistory } from '@/utils/transactionHistory'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   getTransactionsAPI,
   GetTransactionsOptions,
+  exportTransactionsAPI,
   getBillingModelStatsAPI,
   getEnergyStatsAPI,
   getLiteLLMStatsAPI,
@@ -31,22 +31,38 @@ import {
   OwnedGroupMember,
   OwnedGroupResponse,
   SetActiveWalletResponse,
+  TransactionHistoryFilters,
   UpdateGroupPolicyPayload,
   UpsertUserOverridePayload,
   UpsertUserOverrideResponse,
   WalletType,
   WalletsListResponse,
 } from '../types/billing'
+import { triggerBrowserDownload } from '@/utils/download'
 
 export const getTransactions = createAsyncThunk(
   'billing/getTransactions',
-  async (options: GetTransactionsOptions = {}, thunkAPI) => {
+  async (options: GetTransactionsOptions, thunkAPI) => {
     try {
-      const response = await collectTransactionHistory(
-        (page) => getTransactionsAPI({ ...options, page, pageSize: 500 }),
-        thunkAPI.signal
-      )
+      const response = await getTransactionsAPI(options)
       return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const exportTransactions = createAsyncThunk(
+  'billing/exportTransactions',
+  async (filters: TransactionHistoryFilters, thunkAPI) => {
+    try {
+      const { blob, filename } = await exportTransactionsAPI(filters)
+      // Cross-origin responses hide Content-Disposition, so name it here.
+      const today = new Date().toISOString().slice(0, 10)
+      triggerBrowserDownload(
+        blob,
+        filename || `transaction-history-${today}.csv`
+      )
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

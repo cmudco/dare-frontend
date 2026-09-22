@@ -1,12 +1,10 @@
 import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronDown, CreditCard, FileSpreadsheet } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { getTransactions } from '@/redux/asyncThunks/billing'
 import {
-  selectFilteredTransactions,
-  selectTransactionModels,
-} from '@/redux/selectors/transactionHistory'
+  exportTransactions,
+  getTransactions,
+} from '@/redux/asyncThunks/billing'
 import {
   Card,
   CardHeader,
@@ -15,29 +13,36 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { DatePicker } from '@/components/ui/date-picker'
-import { Label } from '@/components/ui/label'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { downloadTransactions } from '@/utils/billingExportUtils'
-import {
-  PlatformFilter,
-  PLATFORM_LABELS,
-  TransactionTab,
-} from '@/utils/constants/billing'
-import { TransactionTabs } from './components'
+import { FileSpreadsheet, CreditCard } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { TransactionFilters, TransactionTabs } from './components'
 import { WalletSection } from './components/WalletSection'
+import { PlatformFilter, TransactionTab } from '@/utils/constants/billing'
+import { TransactionHistoryFilters } from '@/redux/types/billing'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
+import { toast } from '@/utils/toast'
 
-const PAGE_SIZE = 25
 const BillingScreen = () => {
   const dispatch = useAppDispatch()
+  const {
+    transactions,
+    transactionCount,
+    transactionSummary,
+    transactionModels,
+    nextPage,
+    previousPage,
+    loading,
+    transactionsExporting,
+  } = useAppSelector((state) => state.billing)
   const [params, setParams] = useSearchParams()
-  const { loading, error } = useAppSelector((state) => state.billing)
-  const filters = useMemo(
+
+  const filters = useMemo<TransactionHistoryFilters>(
     () => ({
       platform:
         Object.values(PlatformFilter).find(
@@ -46,243 +51,143 @@ const BillingScreen = () => {
       tab:
         Object.values(TransactionTab).find((t) => t === params.get('tab')) ??
         TransactionTab.ALL,
-      model: params.get('model') ?? '',
-      startDate: params.get('from') ?? '',
-      endDate: params.get('to') ?? '',
+      model: params.get('model'),
+      from: params.get('from'),
+      to: params.get('to'),
     }),
     [params]
   )
-  const { transactions, summary } = useAppSelector((state) =>
-    selectFilteredTransactions(state, filters)
-  )
-  const models = useAppSelector(selectTransactionModels)
-  const pageCount = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE))
-  const page = Math.min(
-    pageCount,
-    Math.max(1, Math.floor(Number(params.get('page')) || 1))
-  )
-  const invalidDates = Boolean(
-    filters.startDate && filters.endDate && filters.startDate > filters.endDate
-  )
-  const unavailable = loading || Boolean(error) || invalidDates
-  const updateFilter = (key: string, value: string) => {
-    setParams((current) => {
-      const next = new URLSearchParams(current)
-      if (value) next.set(key, value)
-      else next.delete(key)
-      next.delete('page')
-      return next
-    })
-  }
-  const changePage = (value: number) =>
-    setParams((current) => {
-      const next = new URLSearchParams(current)
-      next.set('page', String(value))
-      return next
-    })
+  const page = Number(params.get('page')) || 1
 
   useEffect(() => {
-    const request = dispatch(getTransactions({}))
+    const request = dispatch(getTransactions({ page, filters }))
     return () => request.abort()
-  }, [dispatch])
+  }, [dispatch, page, filters])
 
-  const selectClass =
-    'h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+  const updateParams = (changes: Record<string, string | null>) =>
+    setParams((current) => {
+      const next = new URLSearchParams(current)
+      Object.entries(changes).forEach(([key, value]) =>
+        value ? next.set(key, value) : next.delete(key)
+      )
+      return next
+    })
+  // A filter change resets to the first page.
+  const handleFilterChange = (
+    key: keyof TransactionHistoryFilters,
+    value: string | null
+  ) => updateParams({ [key]: value, page: null })
+
+  const handleExport = () =>
+    dispatch(exportTransactions(filters))
+      .unwrap()
+      .catch(() => toast.error('Could not export transactions. Try again.'))
+
   return (
-    <div className='container mx-auto space-y-6 p-4 sm:p-6'>
-      <div className='flex items-center gap-3'>
-        <div className='rounded-lg bg-muted p-2'>
-          <CreditCard className='h-6 w-6 text-primary' />
-        </div>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Cost Tracking</h1>
-          <p className='text-sm text-muted-foreground'>
-            View your wallet balance and transaction history.
-          </p>
-        </div>
-      </div>
-      <div data-tour='billing-overview'>
-        <WalletSection />
-      </div>
-      <Card className='overflow-hidden'>
-        <CardHeader className='space-y-4'>
-          <div className='flex flex-wrap items-center justify-between gap-3'>
+    <TooltipProvider>
+      <div className='container mx-auto space-y-6 p-6'>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className='flex flex-col space-y-1'
+        >
+          <div className='flex items-center gap-3'>
+            <div className='rounded-lg bg-teal-50 p-2 dark:bg-teal-900/20'>
+              <CreditCard className='h-6 w-6 text-teal-600 dark:text-teal-400' />
+            </div>
             <div>
-              <CardTitle>Transaction History</CardTitle>
-              <CardDescription>
-                Explore and export your complete transaction history.
-              </CardDescription>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  disabled={unavailable || transactions.length === 0}
-                >
-                  <FileSpreadsheet className='h-4 w-4' />
-                  Export
-                  <ChevronDown className='h-4 w-4' />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuItem
-                  onSelect={() => downloadTransactions(transactions, 'csv')}
-                >
-                  CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => downloadTransactions(transactions, 'xml')}
-                >
-                  Excel
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
-            <label className='space-y-1 text-sm'>
-              Platform
-              <select
-                className={selectClass}
-                value={filters.platform}
-                onChange={(e) => updateFilter('platform', e.target.value)}
-              >
-                {Object.values(PlatformFilter).map((p) => (
-                  <option key={p} value={p}>
-                    {PLATFORM_LABELS[p]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className='space-y-1 text-sm'>
-              Model
-              <select
-                className={selectClass}
-                value={filters.model}
-                onChange={(e) => updateFilter('model', e.target.value)}
-              >
-                <option value=''>All models</option>
-                {models.map((model) => (
-                  <option key={model} value={model}>
-                    {model}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className='space-y-1'>
-              <Label className='block leading-5' htmlFor='transactions-from'>
-                From date
-              </Label>
-              <DatePicker
-                id='transactions-from'
-                value={filters.startDate}
-                max={filters.endDate || undefined}
-                placeholder='First transaction'
-                onChange={(value) => updateFilter('from', value)}
-              />
-            </div>
-            <div className='space-y-1'>
-              <Label className='block leading-5' htmlFor='transactions-to'>
-                Through date
-              </Label>
-              <DatePicker
-                id='transactions-to'
-                value={filters.endDate}
-                min={filters.startDate || undefined}
-                placeholder='Latest transaction'
-                onChange={(value) => updateFilter('to', value)}
-              />
+              <h1 className='text-3xl font-bold tracking-tight'>
+                Cost Tracking
+              </h1>
+              <p className='text-sm text-muted-foreground'>
+                View your wallet balance and transaction history.
+              </p>
             </div>
           </div>
-          <div className='flex flex-wrap items-center justify-between gap-2 text-sm'>
-            <p className='text-muted-foreground' role='status'>
-              {loading
-                ? 'Loading complete transaction history…'
-                : error
-                  ? 'Transaction history could not be loaded.'
-                  : `${transactions.length} matching transactions. Exports include every matching row across all pages.`}
-            </p>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() =>
-                setParams((current) => {
-                  const next = new URLSearchParams(current)
-                  ;['platform', 'tab', 'model', 'from', 'to', 'page'].forEach(
-                    (key) => next.delete(key)
-                  )
-                  return next
-                })
-              }
-            >
-              Clear filters
-            </Button>
-          </div>
-          <p className='text-xs text-muted-foreground'>
-            Excel preserves six decimal places for costs. CSV contains the same
-            values, but your spreadsheet app controls how they are displayed.
-            Date filters use your local time; exported timestamps use UTC.
-          </p>
-          {invalidDates && (
-            <p role='alert' className='text-sm text-destructive'>
-              The end date must be on or after the start date.
-            </p>
-          )}
-          {error && !loading && (
-            <div
-              role='alert'
-              className='flex items-center gap-3 text-sm text-destructive'
-            >
-              Unable to load the complete history. Please try again.
+        </motion.div>
+
+        <div data-tour='billing-overview'>
+          <WalletSection />
+        </div>
+
+        <Card className='overflow-hidden'>
+          <CardHeader className='space-y-4'>
+            <div className='flex items-center justify-between gap-3'>
+              <div>
+                <CardTitle>Transaction History</CardTitle>
+                <CardDescription>Your recent transactions</CardDescription>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleExport}
+                    variant='outline'
+                    size='sm'
+                    className='h-8 gap-1'
+                    disabled={
+                      transactionCount === 0 || loading || transactionsExporting
+                    }
+                  >
+                    <FileSpreadsheet size={16} />
+                    <span>
+                      {transactionsExporting ? 'Exporting…' : 'Export CSV'}
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className='max-w-xs'>
+                  <div className='space-y-2'>
+                    <p className='font-semibold'>
+                      {TOOLTIP_CONTENT.billing2.exportCSV.title}
+                    </p>
+                    <p className='text-sm'>
+                      {TOOLTIP_CONTENT.billing2.exportCSV.description}
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      💡 {TOOLTIP_CONTENT.billing2.exportCSV.tip}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <TransactionFilters
+              filters={filters}
+              models={transactionModels}
+              onFilterChange={handleFilterChange}
+            />
+          </CardHeader>
+          <CardContent>
+            <TransactionTabs
+              transactions={transactions}
+              summary={transactionSummary}
+              loading={loading}
+              activeTab={filters.tab}
+              onTabChange={(tab) => handleFilterChange('tab', tab)}
+              showPlatformColumn={filters.platform === PlatformFilter.ALL}
+            />
+          </CardContent>
+          {transactionCount > 0 && (
+            <div className='flex justify-between p-4'>
               <Button
                 variant='outline'
-                size='sm'
-                onClick={() => dispatch(getTransactions({}))}
+                disabled={!previousPage}
+                onClick={() => updateParams({ page: String(page - 1) })}
               >
-                Retry
+                Previous
+              </Button>
+              <Button
+                variant='outline'
+                disabled={!nextPage}
+                onClick={() => updateParams({ page: String(page + 1) })}
+              >
+                Next
               </Button>
             </div>
           )}
-        </CardHeader>
-        <CardContent className='overflow-x-auto'>
-          <div className='min-w-[600px]'>
-            <TransactionTabs
-              transactions={
-                unavailable
-                  ? []
-                  : transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-              }
-              summary={summary}
-              loading={loading}
-              activeTab={filters.tab}
-              onTabChange={(tab) => updateFilter('tab', tab)}
-              showPlatformColumn={filters.platform === PlatformFilter.ALL}
-            />
-          </div>
-        </CardContent>
-        {!unavailable && transactions.length > 0 && (
-          <div className='flex items-center justify-between gap-2 p-4'>
-            <Button
-              variant='outline'
-              disabled={page <= 1}
-              onClick={() => changePage(page - 1)}
-            >
-              Previous
-            </Button>
-            <span className='text-sm text-muted-foreground'>
-              Page {page} of {pageCount}
-            </span>
-            <Button
-              variant='outline'
-              disabled={page >= pageCount}
-              onClick={() => changePage(page + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        )}
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </TooltipProvider>
   )
 }
+
 export default BillingScreen
