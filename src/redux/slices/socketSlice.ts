@@ -16,15 +16,32 @@ export interface SocketState {
   connected: boolean
   subscribedConversations: string[]
   error: string | null
-  creditError: CreditError | null
+  billingError: BillingError | null
 }
 
-export interface CreditError {
-  type: string
-  message: string
-  currentBalance: string
-  requiredAmount: string
+export enum BillingErrorCode {
+  INSUFFICIENT_CREDITS = 'insufficient_credits',
+  INSUFFICIENT_BALANCE = 'insufficient_balance',
+  SPEND_LIMIT_REACHED = 'spend_limit_reached',
 }
+
+/** A chat send the backend refused for billing reasons. */
+export interface BillingError {
+  code: BillingErrorCode
+  message: string
+}
+
+/** Wire shape of a chat `error` event (WebSocketResponseService.format_error). */
+interface SocketErrorEvent {
+  type: 'error'
+  errorCode: string
+  errorMessage: string
+}
+
+const BILLING_ERROR_CODES = new Set<string>(Object.values(BillingErrorCode))
+
+const isBillingErrorCode = (code: string): code is BillingErrorCode =>
+  BILLING_ERROR_CODES.has(code)
 
 export interface RawArtifact {
   id: number | string
@@ -74,7 +91,7 @@ const initialState: SocketState = {
   connected: false,
   subscribedConversations: [],
   error: null,
-  creditError: null,
+  billingError: null,
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -88,8 +105,8 @@ export const socketSlice = createSlice({
     clearError: (state) => {
       state.error = null
     },
-    clearCreditError: (state) => {
-      state.creditError = null
+    clearBillingError: (state) => {
+      state.billingError = null
     },
   },
   extraReducers: (builder) => {
@@ -124,35 +141,20 @@ export const socketSlice = createSlice({
       .addCase(socketSubscribeError, (state, action) => {
         state.error = action.payload.error || 'Failed to subscribe'
       })
-      // Handle credit errors from socket messages
       .addMatcher(
-        (
-          action
-        ): action is {
-          type: string
-          payload: {
-            error: string
-            message: string
-            current_balance: string
-            required_amount: string
-          }
-        } =>
-          action.type === 'socket/error' &&
-          (action.payload?.error === 'insufficient_balance' ||
-            action.payload?.error === 'insufficient_credits'),
+        (action): action is { type: string; payload: SocketErrorEvent } =>
+          action.type === 'socket/error',
         (state, action) => {
-          state.creditError = {
-            type: action.payload.error,
-            message: action.payload.message,
-            currentBalance: action.payload.current_balance,
-            requiredAmount: action.payload.required_amount,
+          const { errorCode, errorMessage } = action.payload
+          if (isBillingErrorCode(errorCode)) {
+            state.billingError = { code: errorCode, message: errorMessage }
           }
         }
       )
   },
 })
 
-export const { clearError, clearCreditError } = socketSlice.actions
+export const { clearError, clearBillingError } = socketSlice.actions
 export default socketSlice.reducer
 
 // ════════════════════════════════════════════════════════════════════════════

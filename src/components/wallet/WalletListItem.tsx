@@ -35,7 +35,7 @@ import {
 import { testLiteLLMSavedAPI } from '@/api/billing'
 import { EditLiteLLMBackgroundModelModal } from './EditLiteLLMBackgroundModelModal'
 import { toast } from '@/utils/toast'
-import { needsBackgroundModel } from '@/utils/wallets'
+import { formatUsd, needsBackgroundModel } from '@/utils/wallets'
 
 interface WalletListItemProps {
   wallet: UnifiedWallet
@@ -232,9 +232,25 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
           ) : (
             <span>External billing</span>
           )}
-          {wallet.status.kind === 'EXTERNAL' && wallet.status.spend && (
-            <span>Est. cost ${parseFloat(wallet.status.spend).toFixed(4)}</span>
-          )}
+          {wallet.status.kind === 'EXTERNAL' &&
+            (wallet.status.spendLimit ? (
+              <span
+                className={
+                  wallet.status.spendLimit.isReached
+                    ? 'font-medium text-destructive'
+                    : undefined
+                }
+              >
+                Used {formatUsd(wallet.status.spendLimit.used)} of{' '}
+                {formatUsd(wallet.status.spendLimit.limit)} allowance
+              </span>
+            ) : (
+              wallet.status.spend && (
+                <span>
+                  Est. cost ${parseFloat(wallet.status.spend).toFixed(4)}
+                </span>
+              )
+            ))}
           {wallet.expiresAt && (
             <span className='inline-flex items-center gap-1'>
               <Clock className='h-3 w-3' />

@@ -8,8 +8,9 @@ import {
 } from '@/components/ui/Table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { OwnedGroupMember } from '@/redux/types/billing'
+import { OwnedGroupMember, SpendLimit } from '@/redux/types/billing'
 import { POLICY_SOURCE_BADGE_VARIANT } from '@/utils/constants/groupWallet'
+import { formatUsd } from '@/utils/wallets'
 
 interface MemberBalancesTableProps {
   members: OwnedGroupMember[]
@@ -23,10 +24,24 @@ const displayName = (m: OwnedGroupMember) => {
   return name || m.email
 }
 
-const formatAmount = (amount: string) => {
-  const n = Number(amount)
-  if (!Number.isFinite(n)) return amount
-  return `$${n.toFixed(2)}`
+const SpendLimitCell = ({ spendLimit }: { spendLimit: SpendLimit | null }) => {
+  if (spendLimit === null) {
+    return <span className='text-xs text-muted-foreground'>No limit</span>
+  }
+  return (
+    <div className='flex flex-wrap items-center gap-2'>
+      <span className='font-medium'>
+        {formatUsd(spendLimit.used)} / {formatUsd(spendLimit.limit)}
+      </span>
+      {spendLimit.isReached ? (
+        <Badge variant='destructive'>Limit reached</Badge>
+      ) : (
+        <Badge variant={POLICY_SOURCE_BADGE_VARIANT[spendLimit.source]}>
+          {spendLimit.source}
+        </Badge>
+      )}
+    </div>
+  )
 }
 
 const MemberBalancesTable = ({
@@ -50,6 +65,7 @@ const MemberBalancesTable = ({
           <TableHead>Member</TableHead>
           <TableHead>Balance</TableHead>
           <TableHead>Effective refill</TableHead>
+          <TableHead>Gateway allowance</TableHead>
           <TableHead className='text-right'>Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -75,13 +91,24 @@ const MemberBalancesTable = ({
               <TableCell>
                 <div className='flex flex-wrap items-center gap-2'>
                   <Badge variant={amountVariant} className='font-medium'>
-                    {formatAmount(policy.amount)} · {policy.amountSource}
+                    {formatUsd(policy.amount)} · {policy.amountSource}
                   </Badge>
                   <span className='text-xs text-muted-foreground'>every</span>
                   <Badge variant={periodVariant} className='font-medium'>
                     {policy.periodDays}d · {policy.periodSource}
                   </Badge>
+                  {policy.cap !== null && (
+                    <Badge
+                      variant={POLICY_SOURCE_BADGE_VARIANT[policy.capSource]}
+                      className='font-medium'
+                    >
+                      up to {formatUsd(policy.cap)} · {policy.capSource}
+                    </Badge>
+                  )}
                 </div>
+              </TableCell>
+              <TableCell>
+                <SpendLimitCell spendLimit={member.spendLimit} />
               </TableCell>
               <TableCell className='text-right'>
                 <div className='inline-flex flex-wrap justify-end gap-2'>
