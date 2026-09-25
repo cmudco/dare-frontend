@@ -62,6 +62,9 @@ export interface Conversation {
   // Conversation persists the *real* LLM FK only — LiteLLM-routed models are
   // never persisted at conversation level (they're per-message audit fields).
   selectedModel?: number | null
+  /** Picker id to preselect, derived from the last answer. Covers LiteLLM
+   *  models (`litellm:<key>:<model>`), which `selectedModel` cannot. */
+  selectedModelRef?: string | null
   selectedMediaIds?: number[]
   prompt?: Prompt | null
   promptId?: number | null
