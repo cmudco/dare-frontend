@@ -1,6 +1,8 @@
+import type { MyFile } from '@/redux/types/files'
 import {
   ALLOWED_FILE_EXTENSIONS,
   ALLOWED_FILE_TYPES,
+  FileStatus,
   TAG_COLORS,
 } from './constants/file'
 import { formatDurationSeconds } from './dateUtils'
@@ -65,3 +67,13 @@ export function isAllowedFileType(file: File): boolean {
 
   return hasValidExtension || hasValidMimeType
 }
+
+/** Files the user has to act on: failed, scanned pages waiting on OCR, or
+ *  processed with a warning or failed figure descriptions. */
+export const needsAttention = (file: MyFile): boolean =>
+  file.status === FileStatus.FAILED ||
+  file.status === FileStatus.NEEDS_OCR ||
+  file.ocr?.status === 'awaiting_approval' ||
+  file.ocr?.status === 'partial' ||
+  (file.status === FileStatus.PROCESSED &&
+    (!!file.errorMessage || !!file.failedImageCount))

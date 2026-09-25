@@ -1,4 +1,4 @@
-import { MyFile, MyFolder, MediaTypeFilter } from '@/redux/types/files'
+import { MyFile, MediaTypeFilter } from '@/redux/types/files'
 import { VectorDbSource } from '@/utils/constants/user'
 
 export interface FilterOptions {
@@ -69,18 +69,6 @@ export const filterFiles = (
   })
 }
 
-export const filterFolders = (
-  folders: MyFolder[],
-  searchQuery: string
-): MyFolder[] => {
-  if (!searchQuery) return folders
-
-  return folders.filter((folder) => {
-    const folderName = folder.name?.toLowerCase() || ''
-    return folderName.includes(searchQuery.toLowerCase())
-  })
-}
-
 export const paginateItems = <T>(
   items: T[],
   pagination: PaginationState
@@ -109,44 +97,6 @@ export const generatePageItems = () => [
   { value: '10', label: '10' },
   { value: '20', label: '20' },
 ]
-
-export const handleSelectAllItems = (
-  isSelected: boolean,
-  currentPageItems: { id: number }[],
-  selectedItems: number[],
-  onAdd: (id: number) => void,
-  onRemove: (id: number) => void
-) => {
-  const currentPageIds = currentPageItems.map((item) => item.id)
-
-  if (isSelected) {
-    currentPageIds.forEach((id) => {
-      if (!selectedItems.includes(id)) {
-        onAdd(id)
-      }
-    })
-  } else {
-    currentPageIds.forEach((id) => {
-      if (selectedItems.includes(id)) {
-        onRemove(id)
-      }
-    })
-  }
-}
-
-export const getSelectionState = (
-  currentPageItems: { id: number }[],
-  selectedItems: number[]
-) => {
-  const currentPageIds = currentPageItems.map((item) => item.id)
-  const isAllSelected =
-    currentPageIds.length > 0 &&
-    currentPageIds.every((id) => selectedItems.includes(id))
-  const isIndeterminate =
-    currentPageIds.some((id) => selectedItems.includes(id)) && !isAllSelected
-
-  return { isAllSelected, isIndeterminate }
-}
 
 export const createFilterConfig = (
   searchQuery: string,

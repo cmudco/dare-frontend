@@ -1,5 +1,5 @@
-import FileManagerLayout from '../../components/FileManager/FileManagerLayout'
 import ProcessingFilesPopover from '../../components/FileManager/ProcessingFilesPopover'
+import SourcesLayout from '../../components/Sources/SourcesLayout'
 import { motion } from 'framer-motion'
 import { FileText } from 'lucide-react'
 
@@ -27,7 +27,7 @@ const Files = () => {
         <ProcessingFilesPopover />
       </motion.div>
 
-      <FileManagerLayout />
+      <SourcesLayout />
     </div>
   )
 }

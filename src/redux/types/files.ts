@@ -276,8 +276,15 @@ export type MediaTypeFilter =
   | 'document'
   | 'generated_image'
 
-/** The view modes of the Sources page toggle. */
-export type FileView = 'files' | 'folders' | 'media' | 'libraries'
+/** Where the Sources library is browsing; mirrored in the `in` search param. */
+export type SourceLocation =
+  | { kind: 'home' }
+  | { kind: 'all' }
+  | { kind: 'unfiled' }
+  | { kind: 'attention' }
+  | { kind: 'libraries' }
+  | { kind: 'shared' }
+  | { kind: 'folder'; folderId: number }
 
 export interface FileViewerCapabilities {
   structure: boolean
@@ -300,7 +307,6 @@ export interface FileState {
   isModalOpen: boolean
   filename: string
   foldername: string
-  expandedFolders: { [folderId: number]: boolean }
   jobStatuses: {
     [fileId: number]: {
       status: FileStatus
@@ -311,21 +317,15 @@ export interface FileState {
   }
   searchQuery: string
   selectedItems: number[]
-  currentView: FileView
   isMoveModalOpen: boolean
   mediaTypeFilter: MediaTypeFilter
   sharedFiles: MyFile[]
   sharedFilesLoading: boolean
   sharedFilesError: string | null
-  activeTab: 'my-files' | 'shared'
   shareModalFileId: number | null
   shareModalFileName: string
   visionModels: VisionModelCatalog | null
   visionModelsError: string | null
-}
-
-export interface FolderHeaderProps {
-  onToggleView: (view: FileView) => void
 }
 
 export type DocumentMapChunkKind =

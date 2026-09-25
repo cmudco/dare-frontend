@@ -117,7 +117,7 @@ const MoveFilesModal = () => {
                       htmlFor={`folder-${folder.id}`}
                       className={`flex cursor-pointer items-center space-x-3 rounded-lg border p-3 transition-colors hover:bg-accent ${
                         selectedFolderId === folder.id.toString()
-                          ? 'border-blue-300 bg-blue-50'
+                          ? 'border-primary bg-primary/10'
                           : 'border-border'
                       }`}
                     >
@@ -127,20 +127,14 @@ const MoveFilesModal = () => {
                         className='shrink-0'
                       />
                       <div className='flex min-w-0 flex-1 items-center space-x-3'>
-                        <FolderIcon
-                          className={`h-5 w-5 shrink-0 ${
-                            selectedFolderId === folder.id.toString()
-                              ? 'text-blue-600'
-                              : 'text-blue-500'
-                          }`}
-                        />
+                        <FolderIcon className='h-5 w-5 shrink-0 text-primary' />
                         <div className='min-w-0 flex-1'>
                           <div className='flex items-center space-x-2'>
                             <span className='truncate font-medium'>
                               {folder.name}
                             </span>
                             {fileCount > 0 && (
-                              <span className='shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800'>
+                              <span className='shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground'>
                                 {fileCount} {fileCount === 1 ? 'file' : 'files'}
                               </span>
                             )}
