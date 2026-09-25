@@ -87,6 +87,10 @@ const MemberBalancesTable = ({
               </TableCell>
               <TableCell className='font-medium'>
                 {member.displayBalance}
+                <span className='font-normal text-muted-foreground'>
+                  {' '}
+                  / {formatUsd(policy.cap)}
+                </span>
               </TableCell>
               <TableCell>
                 <div className='flex flex-wrap items-center gap-2'>
@@ -97,14 +101,6 @@ const MemberBalancesTable = ({
                   <Badge variant={periodVariant} className='font-medium'>
                     {policy.periodDays}d · {policy.periodSource}
                   </Badge>
-                  {policy.cap !== null && (
-                    <Badge
-                      variant={POLICY_SOURCE_BADGE_VARIANT[policy.capSource]}
-                      className='font-medium'
-                    >
-                      up to {formatUsd(policy.cap)} · {policy.capSource}
-                    </Badge>
-                  )}
                 </div>
               </TableCell>
               <TableCell>

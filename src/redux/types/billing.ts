@@ -43,6 +43,8 @@ export type LiteLLMSource = 'USER' | 'ADMIN_USER' | 'ADMIN_GROUP'
 export interface WalletStatusBalance {
   kind: 'BALANCE'
   balance: string
+  /** The balance scheduled refills top up to; refills never go past it. */
+  ceiling: string
   lastRefillAt: string | null
 }
 
@@ -119,8 +121,8 @@ export interface EffectivePolicy {
   periodDays: number
   amountSource: PolicySource
   periodSource: PolicySource
-  /** Balance scheduled refills stop at; null when refills are uncapped. */
-  cap: string | null
+  /** Balance scheduled refills top up to: the cap, else the refill amount. */
+  cap: string
   capSource: PolicySource
 }
 

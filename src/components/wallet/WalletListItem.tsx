@@ -35,7 +35,11 @@ import {
 import { testLiteLLMSavedAPI } from '@/api/billing'
 import { EditLiteLLMBackgroundModelModal } from './EditLiteLLMBackgroundModelModal'
 import { toast } from '@/utils/toast'
-import { formatUsd, needsBackgroundModel } from '@/utils/wallets'
+import {
+  formatBalanceOfCeiling,
+  formatUsd,
+  needsBackgroundModel,
+} from '@/utils/wallets'
 
 interface WalletListItemProps {
   wallet: UnifiedWallet
@@ -217,9 +221,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
 
         <div className='mt-0.5 flex items-center gap-2 text-xs text-muted-foreground'>
           {wallet.status.kind === 'BALANCE' ? (
-            <span>
-              Balance: ${parseFloat(wallet.status.balance).toFixed(2)}
-            </span>
+            <span>Balance: {formatBalanceOfCeiling(wallet.status)}</span>
           ) : wallet.type === 'BYO' ? (
             <span>
               Routes each request to your matching provider key — DARE wallet

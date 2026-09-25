@@ -100,9 +100,10 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
       <CardHeader>
         <CardTitle className='text-lg font-medium'>Refill Policy</CardTitle>
         <CardDescription>
-          Configure the per-member refill amount and cadence for this group. A
-          cap stops refills from topping a wallet up past that balance. Leave a
-          field blank to inherit the system default.
+          Configure the per-member refill amount and cadence for this group.
+          Refills top a wallet up to the cap, which defaults to the refill
+          amount, so balances never stack. Leave a field blank to inherit the
+          system default.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -170,7 +171,7 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
               <Input
                 id='refillCap'
                 inputMode='decimal'
-                placeholder='e.g. 15.00 (leave blank to inherit)'
+                placeholder='blank = refill amount'
                 className={`mt-1 h-10 ${
                   formik.touched.refillCap && formik.errors.refillCap
                     ? 'border-red-500'

@@ -1,4 +1,4 @@
-import { UnifiedWallet } from '@/redux/types/billing'
+import { UnifiedWallet, WalletStatusBalance } from '@/redux/types/billing'
 
 /** User-owned LiteLLM keys run background jobs on the DARE default until a model is chosen. */
 export const needsBackgroundModel = (wallet: UnifiedWallet): boolean =>
@@ -12,6 +12,10 @@ export const formatUsd = (amount: string): string => {
   const value = Number(amount)
   return value > 0 && value < 0.01 ? '<$0.01' : `$${value.toFixed(2)}`
 }
+
+/** "$4.00 of $5.00": a DARE balance against the ceiling refills top it up to. */
+export const formatBalanceOfCeiling = (status: WalletStatusBalance): string =>
+  `${formatUsd(status.balance)} of ${formatUsd(status.ceiling)}`
 
 /** Four-decimal USD for spend comparisons, where cents hide the difference. */
 export const formatUsdPrecise = (amount: string): string =>
