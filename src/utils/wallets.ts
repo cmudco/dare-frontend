@@ -13,6 +13,10 @@ export const formatUsd = (amount: string): string => {
   return value > 0 && value < 0.01 ? '<$0.01' : `$${value.toFixed(2)}`
 }
 
+/** Four-decimal USD for spend comparisons, where cents hide the difference. */
+export const formatUsdPrecise = (amount: string): string =>
+  `$${Number(amount).toFixed(4)}`
+
 /** Form value for an optional API amount: "15.000000" → "15", null → "". */
 export const toAmountInput = (amount: string | null): string =>
   amount === null ? '' : String(Number(amount))

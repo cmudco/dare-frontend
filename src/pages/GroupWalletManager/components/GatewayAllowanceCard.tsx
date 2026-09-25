@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { updateGroupPolicy } from '@/redux/asyncThunks/billing'
 import { GatewayKey, GroupWallet } from '@/redux/types/billing'
-import { formatUsd, toAmountInput } from '@/utils/wallets'
+import { formatUsd, formatUsdPrecise, toAmountInput } from '@/utils/wallets'
 import { toast } from '@/utils/toast'
 
 interface AllowanceFormValues {
@@ -38,7 +38,7 @@ const GatewayKeyReport = ({ gatewayKey }: { gatewayKey: GatewayKey }) => (
         <dd className='font-medium'>
           {gatewayKey.gatewaySpend === null
             ? 'No calls reported yet'
-            : `${formatUsd(gatewayKey.gatewaySpend)} spent`}
+            : `${formatUsdPrecise(gatewayKey.gatewaySpend)} spent`}
           {gatewayKey.gatewayMaxBudget !== null &&
             ` of ${formatUsd(gatewayKey.gatewayMaxBudget)} budget`}
         </dd>
@@ -47,7 +47,9 @@ const GatewayKeyReport = ({ gatewayKey }: { gatewayKey: GatewayKey }) => (
         <dt className='text-xs text-muted-foreground uppercase'>
           DARE estimate (all members)
         </dt>
-        <dd className='font-medium'>{formatUsd(gatewayKey.dareEstimate)}</dd>
+        <dd className='font-medium'>
+          {formatUsdPrecise(gatewayKey.dareEstimate)}
+        </dd>
       </div>
     </dl>
     {gatewayKey.gatewayReportedAt && (
