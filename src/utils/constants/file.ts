@@ -165,3 +165,6 @@ export const MEDIA_TYPE_OPTIONS: { value: MediaTypeFilter; label: string }[] = [
   { value: 'audio', label: 'Audio' },
   { value: 'generated_image', label: 'Generated images' },
 ]
+
+/** Matches the server's minimum for content search. */
+export const CONTENT_SEARCH_MIN_LENGTH = 3

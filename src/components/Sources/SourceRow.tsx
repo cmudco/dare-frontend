@@ -17,13 +17,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import TagsDisplay from '@/components/FileManager/TagsDisplay'
-import { MyFile, MyFolder } from '@/redux/types/files'
+import { useAppSelector } from '@/redux/hooks'
+import { ContentMatch, MyFile, MyFolder } from '@/redux/types/files'
 import { Tag } from '@/redux/types/tags'
 import { FileStatus } from '@/utils/constants/file'
 import { getFileIcon } from '@/utils/constants/files'
 import { formatRelativeDate } from '@/utils/dateUtils'
 import { formatFileSize } from '@/utils/files'
 import { cn } from '@/lib/utils'
+import MatchSnippet from './MatchSnippet'
 import SourceStatusBadge from './SourceStatusBadge'
 
 export type SourceRowAction =
@@ -38,6 +40,7 @@ export type SourceRowAction =
 interface SourceRowProps {
   file: MyFile
   folders: MyFolder[]
+  match?: ContentMatch
   allTags: Tag[]
   selected: boolean
   canShare: boolean
@@ -49,6 +52,7 @@ interface SourceRowProps {
 const SourceRow = ({
   file,
   folders,
+  match,
   allTags,
   selected,
   canShare,
@@ -56,6 +60,7 @@ const SourceRow = ({
   onSelectedChange,
   onAction,
 }: SourceRowProps) => {
+  const searchQuery = useAppSelector((state) => state.files.searchQuery.trim())
   const name = file.name || 'Unnamed'
   const ocrActionable =
     file.ocr?.status === 'awaiting_approval' || file.ocr?.status === 'partial'
@@ -63,99 +68,102 @@ const SourceRow = ({
   return (
     <li
       className={cn(
-        'group flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-accent/50',
+        'flex flex-col gap-1 px-3 py-2.5 transition-colors hover:bg-accent/50',
         selected && 'bg-primary/5'
       )}
     >
-      <input
-        type='checkbox'
-        aria-label={`Select ${name}`}
-        className='h-4 w-4 shrink-0 rounded-sm border-border text-primary focus:ring-primary'
-        checked={selected}
-        onChange={(e) => onSelectedChange(file.id, e.target.checked)}
-      />
-      <button
-        type='button'
-        className='flex min-w-0 items-center gap-2.5 rounded-sm text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
-        onClick={() => onAction('view', file)}
-      >
-        <span className='shrink-0'>{getFileIcon(file.fileType)}</span>
-        <span className='truncate text-sm font-medium' title={name}>
-          {name}
-        </span>
-      </button>
-      <div className='flex min-w-0 flex-wrap items-center gap-1.5 [&>*]:whitespace-nowrap'>
-        {folders.map((folder) => (
-          <Badge key={folder.id} variant='outline' className='font-normal'>
-            {folder.name}
-          </Badge>
-        ))}
-        <TagsDisplay
-          tags={file.tags}
-          allTags={allTags}
-          fileId={file.id}
-          maxVisible={2}
+      <div className='flex items-center gap-3'>
+        <input
+          type='checkbox'
+          aria-label={`Select ${name}`}
+          className='h-4 w-4 shrink-0 rounded-sm border-border text-primary focus:ring-primary'
+          checked={selected}
+          onChange={(e) => onSelectedChange(file.id, e.target.checked)}
         />
-        <SourceStatusBadge file={file} />
-      </div>
-      <span className='ml-auto hidden shrink-0 text-xs whitespace-nowrap text-muted-foreground sm:block'>
-        {formatFileSize(file.size)} · {formatRelativeDate(file.createdAt)}
-      </span>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          aria-label={`Actions for ${name}`}
-          className='shrink-0 rounded-md p-1.5 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
+        <button
+          type='button'
+          className='flex min-w-0 shrink items-center gap-2.5 rounded-sm text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
+          onClick={() => onAction('view', file)}
         >
-          <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align='end'>
-          {ocrActionable && (
-            <DropdownMenuItem onClick={() => onAction('reviewOcr', file)}>
-              <ScanText className='mr-2 h-4 w-4' />
-              {file.ocr?.status === 'partial'
-                ? 'Continue transcription'
-                : 'Review transcription'}
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onClick={() => onAction('view', file)}>
-            <Eye className='mr-2 h-4 w-4' />
-            View
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onAction('tag', file)}>
-            <TagIcon className='mr-2 h-4 w-4' />
-            {file.tags.length === 0 ? 'Add tags' : 'Edit tags'}
-          </DropdownMenuItem>
-          {canShare && (
-            <DropdownMenuItem onClick={() => onAction('share', file)}>
-              <Share2 className='mr-2 h-4 w-4' />
-              Share
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem
-            disabled={file.status === FileStatus.PROCESSING || file.isMedia}
-            onClick={() => onAction('reprocess', file)}
+          <span className='shrink-0'>{getFileIcon(file.fileType)}</span>
+          <span className='truncate text-sm font-medium' title={name}>
+            {name}
+          </span>
+        </button>
+        <div className='flex shrink-0 items-center gap-1.5 [&>*]:whitespace-nowrap'>
+          {folders.map((folder) => (
+            <Badge key={folder.id} variant='outline' className='font-normal'>
+              {folder.name}
+            </Badge>
+          ))}
+          <TagsDisplay
+            tags={file.tags}
+            allTags={allTags}
+            fileId={file.id}
+            maxVisible={2}
+          />
+          <SourceStatusBadge file={file} />
+        </div>
+        <span className='ml-auto hidden shrink-0 text-xs whitespace-nowrap text-muted-foreground sm:block'>
+          {formatFileSize(file.size)} · {formatRelativeDate(file.createdAt)}
+        </span>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label={`Actions for ${name}`}
+            className='shrink-0 rounded-md p-1.5 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
           >
-            <RefreshCw className='mr-2 h-4 w-4' />
-            Reprocess document
-          </DropdownMenuItem>
-          {canRemoveFromFolder && (
+            <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end'>
+            {ocrActionable && (
+              <DropdownMenuItem onClick={() => onAction('reviewOcr', file)}>
+                <ScanText className='mr-2 h-4 w-4' />
+                {file.ocr?.status === 'partial'
+                  ? 'Continue transcription'
+                  : 'Review transcription'}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => onAction('view', file)}>
+              <Eye className='mr-2 h-4 w-4' />
+              View
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAction('tag', file)}>
+              <TagIcon className='mr-2 h-4 w-4' />
+              {file.tags.length === 0 ? 'Add tags' : 'Edit tags'}
+            </DropdownMenuItem>
+            {canShare && (
+              <DropdownMenuItem onClick={() => onAction('share', file)}>
+                <Share2 className='mr-2 h-4 w-4' />
+                Share
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
-              onClick={() => onAction('removeFromFolder', file)}
+              disabled={file.status === FileStatus.PROCESSING || file.isMedia}
+              onClick={() => onAction('reprocess', file)}
             >
-              <FolderMinus className='mr-2 h-4 w-4' />
-              Remove from folder
+              <RefreshCw className='mr-2 h-4 w-4' />
+              Reprocess document
             </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className='text-destructive focus:text-destructive'
-            onClick={() => onAction('delete', file)}
-          >
-            <Trash2 className='mr-2 h-4 w-4' />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            {canRemoveFromFolder && (
+              <DropdownMenuItem
+                onClick={() => onAction('removeFromFolder', file)}
+              >
+                <FolderMinus className='mr-2 h-4 w-4' />
+                Remove from folder
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className='text-destructive focus:text-destructive'
+              onClick={() => onAction('delete', file)}
+            >
+              <Trash2 className='mr-2 h-4 w-4' />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {match && <MatchSnippet match={match} query={searchQuery} />}
     </li>
   )
 }

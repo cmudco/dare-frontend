@@ -1,6 +1,10 @@
 import { useMemo } from 'react'
 import { useAppSelector } from '@/redux/hooks'
-import { selectFoldersByFileId, selectLibraryFiles } from '@/redux/fileSlice'
+import {
+  selectContentMatches,
+  selectFoldersByFileId,
+  selectLibraryFiles,
+} from '@/redux/fileSlice'
 import { MyFile, MyFolder, SourceLocation } from '@/redux/types/files'
 import { needsAttention } from '@/utils/files'
 import { createFilterConfig, filterFiles } from '@/utils/tableUtils'
@@ -25,11 +29,12 @@ const isInLocation = (
 }
 
 /** Library files at a location, narrowed by the toolbar filters, newest first.
- *  Search matches file names and tag labels. */
+ *  Search matches file names, tag labels, and indexed file text. */
 export const useSourceFiles = (location: SourceLocation): MyFile[] => {
   const files = useAppSelector(selectLibraryFiles)
   const foldersByFile = useAppSelector(selectFoldersByFileId)
   const tags = useAppSelector((state) => state.tags.tags)
+  const contentMatches = useAppSelector(selectContentMatches)
   const { searchQuery, selectedTags, mediaTypeFilter } = useAppSelector(
     (state) => state.files
   )
@@ -40,7 +45,10 @@ export const useSourceFiles = (location: SourceLocation): MyFile[] => {
     const matchesQuery = (file: MyFile) =>
       !query ||
       file.name.toLowerCase().includes(query) ||
-      file.tags.some((id) => tagLabels.get(id)?.toLowerCase().includes(query))
+      file.tags.some((id) =>
+        tagLabels.get(id)?.toLowerCase().includes(query)
+      ) ||
+      contentMatches.has(file.id)
 
     return filterFiles(
       files,
@@ -55,6 +63,7 @@ export const useSourceFiles = (location: SourceLocation): MyFile[] => {
     files,
     foldersByFile,
     tags,
+    contentMatches,
     searchQuery,
     selectedTags,
     mediaTypeFilter,

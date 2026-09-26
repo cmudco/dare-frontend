@@ -23,6 +23,7 @@ export const initialState: FileState = {
   sharedFilesError: null,
   shareModalFileId: null,
   shareModalFileName: '',
+  contentSearch: { query: '', matches: [] },
   visionModels: null,
   visionModelsError: null,
 }

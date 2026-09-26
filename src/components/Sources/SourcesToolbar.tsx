@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { ChevronDown, FolderUp, Search, Tags, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,14 +16,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useDebounce } from '@/hooks/useDebounce'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { searchFileContents } from '@/redux/asyncThunks/file'
 import {
   openModal,
   setMediaTypeFilter,
   setSearchQuery,
   setSelectedTags,
 } from '@/redux/fileSlice'
-import { MEDIA_TYPE_OPTIONS } from '@/utils/constants/file'
+import {
+  CONTENT_SEARCH_MIN_LENGTH,
+  MEDIA_TYPE_OPTIONS,
+} from '@/utils/constants/file'
 
 interface SourcesToolbarProps {
   onUploadFolder: () => void
@@ -34,6 +40,14 @@ const SourcesToolbar = ({ onUploadFolder }: SourcesToolbarProps) => {
     (state) => state.files
   )
   const tags = useAppSelector((state) => state.tags.tags)
+  const contentQuery = useDebounce(searchQuery.trim(), 300)
+
+  // Name and tag matches are instant; text matches arrive from the server.
+  useEffect(() => {
+    if (contentQuery.length >= CONTENT_SEARCH_MIN_LENGTH) {
+      dispatch(searchFileContents(contentQuery))
+    }
+  }, [dispatch, contentQuery])
 
   const toggleTag = (tagId: number, checked: boolean) =>
     dispatch(
@@ -51,7 +65,7 @@ const SourcesToolbar = ({ onUploadFolder }: SourcesToolbarProps) => {
         <Input
           type='search'
           aria-label='Search sources'
-          placeholder='Search names and tags'
+          placeholder='Search names, tags, and text'
           className='pl-9'
           value={searchQuery}
           onChange={(e) => dispatch(setSearchQuery(e.target.value))}

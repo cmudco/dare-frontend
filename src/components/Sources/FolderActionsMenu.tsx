@@ -6,11 +6,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { DeleteConfirmation } from '@/components/DeleteConfirmation'
 import EditFolderModal from '@/components/FolderManager/EditFolderModal'
-import { useAppDispatch } from '@/redux/hooks'
-import { deleteFolder } from '@/redux/asyncThunks/file'
 import { MyFolder } from '@/redux/types/files'
+import FolderDeleteDialog from './FolderDeleteDialog'
 
 interface FolderActionsMenuProps {
   folder: MyFolder
@@ -18,15 +16,8 @@ interface FolderActionsMenuProps {
 }
 
 const FolderActionsMenu = ({ folder, onDeleted }: FolderActionsMenuProps) => {
-  const dispatch = useAppDispatch()
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
-
-  const handleDelete = async () => {
-    await dispatch(deleteFolder(folder.id)).unwrap()
-    setDeleting(false)
-    onDeleted()
-  }
 
   return (
     <>
@@ -56,14 +47,11 @@ const FolderActionsMenu = ({ folder, onDeleted }: FolderActionsMenuProps) => {
         onClose={() => setRenaming(false)}
         folder={folder}
       />
-      <DeleteConfirmation
+      <FolderDeleteDialog
+        folder={folder}
         isOpen={deleting}
         onClose={() => setDeleting(false)}
-        onDelete={handleDelete}
-        title='Delete folder'
-        description='The folder is removed. Its files stay in your library.'
-        itemName={folder.name}
-        confirmText='Delete folder'
+        onDeleted={onDeleted}
       />
     </>
   )

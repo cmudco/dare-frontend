@@ -286,6 +286,22 @@ export type SourceLocation =
   | { kind: 'shared' }
   | { kind: 'folder'; folderId: number }
 
+/** The first passage in a file that contains the content-search query. */
+export interface ContentMatch {
+  fileId: number
+  snippet: string
+  page: number | null
+}
+
+export interface BulkTagRequest {
+  fileIds: number[]
+  tagIds: number[]
+}
+
+export interface BulkTagResponse {
+  files: { id: number; tags: number[] }[]
+}
+
 export interface FileViewerCapabilities {
   structure: boolean
   map: boolean
@@ -324,6 +340,8 @@ export interface FileState {
   sharedFilesError: string | null
   shareModalFileId: number | null
   shareModalFileName: string
+  /** Matches for `contentSearch.query`; stale once the search box changes. */
+  contentSearch: { query: string; matches: ContentMatch[] }
   visionModels: VisionModelCatalog | null
   visionModelsError: string | null
 }

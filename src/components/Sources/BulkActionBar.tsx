@@ -1,15 +1,27 @@
 import { useState } from 'react'
-import { FolderInput, Trash2, X } from 'lucide-react'
+import { FolderInput, Tag as TagIcon, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { DeleteConfirmation } from '@/components/DeleteConfirmation'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { deleteMultipleFiles, getFolders } from '@/redux/asyncThunks/file'
+import {
+  bulkTagFiles,
+  deleteMultipleFiles,
+  getFolders,
+} from '@/redux/asyncThunks/file'
 import { clearSelectedItems, openMoveModal } from '@/redux/fileSlice'
 
 const BulkActionBar = () => {
   const dispatch = useAppDispatch()
   const selectedItems = useAppSelector((state) => state.files.selectedItems)
+  const tags = useAppSelector((state) => state.tags.tags)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [tagging, setTagging] = useState(false)
   const count = selectedItems.length
 
   if (count === 0) return null
@@ -19,6 +31,17 @@ const BulkActionBar = () => {
     dispatch(getFolders())
     dispatch(clearSelectedItems())
     setConfirmingDelete(false)
+  }
+
+  const handleTag = async (tagId: number) => {
+    setTagging(true)
+    try {
+      await dispatch(
+        bulkTagFiles({ fileIds: selectedItems, tagIds: [tagId] })
+      ).unwrap()
+    } finally {
+      setTagging(false)
+    }
   }
 
   return (
@@ -36,6 +59,31 @@ const BulkActionBar = () => {
         <FolderInput className='h-4 w-4' />
         Add to folder
       </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant='outline' size='sm' disabled={tagging}>
+            <TagIcon className='h-4 w-4' />
+            Add tag
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align='center'
+          side='top'
+          className='max-h-72 overflow-y-auto'
+        >
+          {tags.length === 0 ? (
+            <p className='px-2 py-1.5 text-sm text-muted-foreground'>
+              No tags yet. Add one from a file's menu.
+            </p>
+          ) : (
+            tags.map((tag) => (
+              <DropdownMenuItem key={tag.id} onClick={() => handleTag(tag.id)}>
+                {tag.label}
+              </DropdownMenuItem>
+            ))
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
       <Button
         variant='outline'
         size='sm'

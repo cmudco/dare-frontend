@@ -22,11 +22,13 @@ import {
   shareFileWithUser,
   togglePublicShare,
   startFileOcrRun,
+  bulkTagFiles,
+  searchFileContents,
 } from './asyncThunks/file'
 import { initialState } from './initialState/files'
 import { needsAttention } from '@/utils/files'
 import type { RootState } from './store'
-import { MediaTypeFilter, MyFolder } from './types/files'
+import { ContentMatch, MediaTypeFilter, MyFolder } from './types/files'
 
 const fileSlice = createSlice({
   name: 'files',
@@ -443,6 +445,22 @@ const fileSlice = createSlice({
           state.files[index].isSharedByMe = true
         }
       })
+      .addCase(bulkTagFiles.fulfilled, (state, action) => {
+        const tagsById = new Map(
+          action.payload.files.map((file) => [file.id, file.tags])
+        )
+        for (const file of state.files) {
+          file.tags = tagsById.get(file.id) ?? file.tags
+        }
+      })
+      .addCase(searchFileContents.fulfilled, (state, action) => {
+        // A slower, older search must not replace the current one.
+        if (action.meta.arg !== state.searchQuery.trim()) return
+        state.contentSearch = {
+          query: action.meta.arg,
+          matches: action.payload,
+        }
+      })
       .addCase(togglePublicShare.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
@@ -512,6 +530,20 @@ export const selectSourceCounts = createSelector(
     unfiled: files.filter((file) => !foldersByFile.has(file.id)).length,
     attention: files.filter(needsAttention).length,
   })
+)
+
+/** Content-search matches by file id, empty until they answer the current search. */
+export const selectContentMatches = createSelector(
+  [
+    (state: RootState) => state.files.contentSearch,
+    (state: RootState) => state.files.searchQuery,
+  ],
+  (search, searchQuery) =>
+    new Map<number, ContentMatch>(
+      search.query === searchQuery.trim()
+        ? search.matches.map((match) => [match.fileId, match])
+        : []
+    )
 )
 
 export default fileSlice.reducer

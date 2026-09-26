@@ -17,6 +17,7 @@ import {
   addSelectedItem,
   openShareModal,
   removeSelectedItem,
+  selectContentMatches,
   selectFoldersByFileId,
   setSelectedItems,
 } from '@/redux/fileSlice'
@@ -44,6 +45,7 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
   )
   const allTags = useAppSelector((state) => state.tags.tags)
   const foldersByFile = useAppSelector(selectFoldersByFileId)
+  const contentMatches = useAppSelector(selectContentMatches)
   const isSyftboxUser = useAppSelector(
     (state) => state.user.user?.isSyftboxFileStorage ?? false
   )
@@ -133,6 +135,7 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
             key={file.id}
             file={file}
             folders={foldersByFile.get(file.id) ?? []}
+            match={contentMatches.get(file.id)}
             allTags={allTags}
             selected={selectedItems.includes(file.id)}
             canShare={isSyftboxUser}
