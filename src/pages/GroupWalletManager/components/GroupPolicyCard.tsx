@@ -15,20 +15,23 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { updateGroupPolicy } from '@/redux/asyncThunks/billing'
 import { GroupWallet } from '@/redux/types/billing'
 import { toast } from '@/utils/toast'
+import { toAmountInput } from '@/utils/wallets'
 
 interface PolicyFormValues {
   refillAmount: string
   refillPeriodDays: string
+  refillCap: string
   isActive: boolean
 }
 
+const optionalAmount = Yup.string().matches(
+  /^$|^\d+(\.\d{1,2})?$/,
+  'Amount must be a number with up to 2 decimals'
+)
+
 const policyValidationSchema = Yup.object({
-  refillAmount: Yup.string()
-    .matches(
-      /^$|^\d+(\.\d{1,2})?$/,
-      'Amount must be a number with up to 2 decimals'
-    )
-    .test('non-negative', 'Amount must be >= 0', (v) => !v || Number(v) >= 0),
+  refillAmount: optionalAmount,
+  refillCap: optionalAmount,
   refillPeriodDays: Yup.string()
     .matches(/^$|^\d+$/, 'Period must be a whole number of days')
     .test(
@@ -48,11 +51,12 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
 
   const formik = useFormik<PolicyFormValues>({
     initialValues: {
-      refillAmount: groupWallet.refillAmount ?? '',
+      refillAmount: toAmountInput(groupWallet.refillAmount),
       refillPeriodDays:
         groupWallet.refillPeriodDays != null
           ? String(groupWallet.refillPeriodDays)
           : '',
+      refillCap: toAmountInput(groupWallet.refillCap),
       isActive: groupWallet.isActive,
     },
     enableReinitialize: true,
@@ -60,6 +64,7 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
     onSubmit: async (values) => {
       const clearAmount = values.refillAmount.trim() === ''
       const clearPeriod = values.refillPeriodDays.trim() === ''
+      const clearRefillCap = values.refillCap.trim() === ''
       try {
         await dispatch(
           updateGroupPolicy({
@@ -69,8 +74,10 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
               refillPeriodDays: clearPeriod
                 ? undefined
                 : Number(values.refillPeriodDays),
+              refillCap: clearRefillCap ? undefined : values.refillCap,
               clearAmount,
               clearPeriod,
+              clearRefillCap,
               isActive: values.isActive,
             },
           })
@@ -85,6 +92,7 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
   const handleUseSystemDefault = () => {
     formik.setFieldValue('refillAmount', '')
     formik.setFieldValue('refillPeriodDays', '')
+    formik.setFieldValue('refillCap', '')
   }
 
   return (
@@ -93,12 +101,14 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
         <CardTitle className='text-lg font-medium'>Refill Policy</CardTitle>
         <CardDescription>
           Configure the per-member refill amount and cadence for this group.
-          Leave either field blank to inherit the system default.
+          Refills top a wallet up to the cap, which defaults to the refill
+          amount, so balances never stack. Leave a field blank to inherit the
+          system default.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={formik.handleSubmit} className='space-y-4 text-sm'>
-          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
             <div>
               <Label
                 htmlFor='refillAmount'
@@ -112,13 +122,13 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
                 placeholder='e.g. 5.00 (leave blank to inherit)'
                 className={`mt-1 h-10 ${
                   formik.touched.refillAmount && formik.errors.refillAmount
-                    ? 'border-red-500'
+                    ? 'border-destructive'
                     : ''
                 }`}
                 {...formik.getFieldProps('refillAmount')}
               />
               {formik.touched.refillAmount && formik.errors.refillAmount && (
-                <p className='mt-1 text-xs text-red-500'>
+                <p className='mt-1 text-xs text-destructive'>
                   {formik.errors.refillAmount}
                 </p>
               )}
@@ -138,17 +148,42 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
                 className={`mt-1 h-10 ${
                   formik.touched.refillPeriodDays &&
                   formik.errors.refillPeriodDays
-                    ? 'border-red-500'
+                    ? 'border-destructive'
                     : ''
                 }`}
                 {...formik.getFieldProps('refillPeriodDays')}
               />
               {formik.touched.refillPeriodDays &&
                 formik.errors.refillPeriodDays && (
-                  <p className='mt-1 text-xs text-red-500'>
+                  <p className='mt-1 text-xs text-destructive'>
                     {formik.errors.refillPeriodDays}
                   </p>
                 )}
+            </div>
+
+            <div>
+              <Label
+                htmlFor='refillCap'
+                className='text-xs font-medium uppercase'
+              >
+                Refill cap (USD)
+              </Label>
+              <Input
+                id='refillCap'
+                inputMode='decimal'
+                placeholder='blank = refill amount'
+                className={`mt-1 h-10 ${
+                  formik.touched.refillCap && formik.errors.refillCap
+                    ? 'border-destructive'
+                    : ''
+                }`}
+                {...formik.getFieldProps('refillCap')}
+              />
+              {formik.touched.refillCap && formik.errors.refillCap && (
+                <p className='mt-1 text-xs text-destructive'>
+                  {formik.errors.refillCap}
+                </p>
+              )}
             </div>
           </div>
 
@@ -171,7 +206,7 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
               onClick={handleUseSystemDefault}
               disabled={isSaving}
             >
-              Use system default for both
+              Use system defaults
             </Button>
             <Button
               type='submit'

@@ -46,8 +46,8 @@ export function useSocket() {
     (state: RootState) => state.socket.subscribedConversations
   )
   const error = useSelector((state: RootState) => state.socket.error)
-  const creditError = useSelector(
-    (state: RootState) => state.socket.creditError
+  const billingError = useSelector(
+    (state: RootState) => state.socket.billingError
   )
 
   // Actions
@@ -127,7 +127,7 @@ export function useSocket() {
     isConnected,
     subscriptions,
     error,
-    creditError,
+    billingError,
 
     // Actions
     connect,
