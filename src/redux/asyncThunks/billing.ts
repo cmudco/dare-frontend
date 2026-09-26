@@ -118,6 +118,8 @@ export const updateGroupPolicy = createAsyncThunk<
 >('billing/updateGroupPolicy', async ({ groupWalletId, payload }, thunkAPI) => {
   try {
     const groupWallet = await updateGroupPolicyAPI(groupWalletId, payload)
+    // Members' effective refill and spend limit inherit from the group.
+    thunkAPI.dispatch(refreshGroupMembers(groupWalletId))
     return { groupWalletId, groupWallet }
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message)

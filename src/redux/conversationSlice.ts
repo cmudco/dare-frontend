@@ -88,12 +88,7 @@ export const conversationSlice = createSlice({
         state.artifactsEnabled = action.payload.artifactsEnabled ?? false
         state.memoryEnabled = action.payload.memoryEnabled ?? false
 
-        // Conversation persists only the DB-backed LLM PK (integer);
-        // stringify to match the picker's opaque-id shape.
-        const desired =
-          action.payload.selectedModel != null
-            ? String(action.payload.selectedModel)
-            : null
+        const desired = action.payload.selectedModelRef ?? null
 
         // Sync picker entries based on the active mode (priority: audio >
         // image > text).

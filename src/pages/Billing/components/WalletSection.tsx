@@ -9,6 +9,7 @@ import { WalletPickerList } from '@/components/wallet/WalletPickerList'
 import { AddLiteLLMKeyModal } from '@/components/wallet/AddLiteLLMKeyModal'
 import { AddBYOKeyModal } from '@/components/wallet/AddBYOKeyModal'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
+import { formatBalanceOfCeiling } from '@/utils/wallets'
 
 /**
  * Top-of-Billing-page section that surfaces every configured wallet, the
@@ -52,7 +53,7 @@ export const WalletSection: React.FC = () => {
                     <>
                       {' · Balance '}
                       <span className='font-semibold text-white'>
-                        ${parseFloat(active.status.balance).toFixed(2)}
+                        {formatBalanceOfCeiling(active.status)}
                       </span>
                     </>
                   )}
