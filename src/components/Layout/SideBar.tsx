@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { Fragment, useState, useEffect, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   RectangleGroupIcon,
@@ -9,6 +9,7 @@ import {
   CreditCardIcon,
   AcademicCapIcon,
   BeakerIcon,
+  RectangleStackIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
@@ -21,6 +22,7 @@ import {
 } from '@/redux/conversationTourSlice'
 import { UsersIcon } from '@heroicons/react/24/outline'
 import { getTourPageKeyFromPath } from '@/components/ConversationTour/pageTourSteps'
+import SidebarProjectList from './SidebarProjectList'
 
 const PromptsIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -114,6 +116,9 @@ const MemoryIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+// Nav items whose sub-routes (a chat, a project) keep the item highlighted.
+const NESTED_ROUTE_PATHS = ['/conversation', '/projects']
+
 const Sidebar = () => {
   const location = useLocation()
   const dispatch = useAppDispatch()
@@ -161,6 +166,7 @@ const Sidebar = () => {
   const menuItems: MenuItem[] = [
     { name: 'Dashboard', icon: RectangleGroupIcon, path: '/dashboard' },
     { name: 'Conversations', icon: ChatBubbleLeftIcon, path: '/conversation' },
+    { name: 'Projects', icon: RectangleStackIcon, path: '/projects' },
     { name: 'Sources', icon: FolderOpenIcon, path: '/files' },
     { name: 'Prompts', icon: PromptsIcon, path: '/prompts' },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
@@ -206,48 +212,53 @@ const Sidebar = () => {
         </div>
         <nav className='flex grow flex-col gap-1 p-2 font-sans text-base font-normal'>
           {menuItems.map((item) => {
-            const isActive =
-              item.path === '/conversation'
-                ? location.pathname.startsWith('/conversation')
-                : location.pathname === item.path
+            const isActive = NESTED_ROUTE_PATHS.includes(item.path)
+              ? location.pathname.startsWith(item.path)
+              : location.pathname === item.path
             return (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-hidden transition-all ${
-                  isActive
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                    : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground'
-                }`}
-              >
-                <div className={`${isCollapsed ? 'mx-auto' : 'mr-2'} relative`}>
-                  {isActive ? (
-                    <item.icon
-                      className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
-                      style={{
-                        fill: 'none',
-                        stroke: 'var(--dare)',
-                        color: 'var(--dare)',
-                      }}
-                    />
-                  ) : (
-                    <item.icon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
-                  )}
-                </div>
-                <span
-                  className={`whitespace-nowrap transition-all duration-300 ${
-                    isCollapsed
-                      ? 'w-0 overflow-hidden opacity-0'
-                      : 'w-auto opacity-100'
+              <Fragment key={item.name}>
+                <Link
+                  to={item.path}
+                  className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-hidden transition-all ${
+                    isActive
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground'
                   }`}
                 >
-                  {isActive ? (
-                    <span className='text-dare'>{item.name}</span>
-                  ) : (
-                    item.name
-                  )}
-                </span>
-              </Link>
+                  <div
+                    className={`${isCollapsed ? 'mx-auto' : 'mr-2'} relative`}
+                  >
+                    {isActive ? (
+                      <item.icon
+                        className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
+                        style={{
+                          fill: 'none',
+                          stroke: 'var(--dare)',
+                          color: 'var(--dare)',
+                        }}
+                      />
+                    ) : (
+                      <item.icon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
+                    )}
+                  </div>
+                  <span
+                    className={`whitespace-nowrap transition-all duration-300 ${
+                      isCollapsed
+                        ? 'w-0 overflow-hidden opacity-0'
+                        : 'w-auto opacity-100'
+                    }`}
+                  >
+                    {isActive ? (
+                      <span className='text-dare'>{item.name}</span>
+                    ) : (
+                      item.name
+                    )}
+                  </span>
+                </Link>
+                {item.path === '/projects' && !isCollapsed && (
+                  <SidebarProjectList />
+                )}
+              </Fragment>
             )
           })}
 

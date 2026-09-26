@@ -2,6 +2,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   Conversation,
   ConversationSummary,
+  CreateConversationRequest,
   ConversationSortOrder,
   Message,
   MessageReaction,
@@ -28,6 +29,7 @@ import {
 } from '../../api/conversation'
 import { AppDispatch, RootState } from '../store'
 import { sendSocketMessage } from './socketMessages'
+import { fetchProjects } from './project'
 import { LLMModel, PickerModel, WalletMeta } from '../types/conversation'
 
 interface PickerModelsPayload {
@@ -108,11 +110,14 @@ export const fetchConversationById = createAsyncThunk<
 
 export const createConversation = createAsyncThunk<
   Conversation,
-  void,
+  CreateConversationRequest | void,
   { rejectValue: string }
->('conversation/createConversation', async (_, thunkAPI) => {
+>('conversation/createConversation', async (request, thunkAPI) => {
   try {
-    const newConversation = await createConversationAPI()
+    const newConversation = await createConversationAPI(request ?? {})
+    if (newConversation.project !== null) {
+      thunkAPI.dispatch(fetchProjects())
+    }
     return newConversation
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message)

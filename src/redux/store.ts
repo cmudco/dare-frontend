@@ -25,6 +25,7 @@ import conversationTourReducer from './conversationTourSlice'
 import featureFlagsReducer from './featureFlagsSlice'
 import researchReducer from './researchSlice'
 import libraryReducer from './librarySlice'
+import projectReducer from './projectSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
 import ensembleReducer from './ensembleSlice'
@@ -60,6 +61,7 @@ export const store = configureStore({
     featureFlags: featureFlagsReducer,
     research: researchReducer,
     library: libraryReducer,
+    project: projectReducer,
     ensemble: ensembleReducer,
   },
   middleware: (getDefaultMiddleware) => {

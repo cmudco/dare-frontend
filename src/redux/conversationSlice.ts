@@ -24,6 +24,10 @@ import {
   fetchConversationMessages,
 } from './asyncThunks/conversation'
 import {
+  deleteProject,
+  moveConversationsToProject,
+} from './asyncThunks/project'
+import {
   Message,
   Conversation,
   ConversationSummary,
@@ -764,6 +768,39 @@ export const conversationSlice = createSlice({
       .addCase(updateConversation.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
+      })
+      .addCase(moveConversationsToProject.fulfilled, (state, action) => {
+        action.payload.moved.forEach((moved) => {
+          const index = state.conversations.findIndex(
+            (conv) => conv.conversationId === moved.conversationId
+          )
+          if (index !== -1) {
+            state.conversations[index] = moved
+          }
+          if (
+            state.activeConversation?.conversationId === moved.conversationId
+          ) {
+            state.activeConversation = moved
+          }
+        })
+      })
+      .addCase(deleteProject.fulfilled, (state, action) => {
+        const { projectId, deleteConversations } = action.payload
+        if (deleteConversations) {
+          state.conversations = state.conversations.filter(
+            (conv) => conv.project !== projectId
+          )
+          if (state.activeConversation?.project === projectId) {
+            state.activeConversation = null
+          }
+          return
+        }
+        state.conversations.forEach((conv) => {
+          if (conv.project === projectId) conv.project = null
+        })
+        if (state.activeConversation?.project === projectId) {
+          state.activeConversation.project = null
+        }
       })
       .addCase(updateMessageThunk.fulfilled, (state, action) => {
         const messageIndex = state.activeConversationMessages.findIndex(

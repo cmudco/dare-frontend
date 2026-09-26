@@ -77,6 +77,7 @@ export interface Conversation {
   feedbackLastPromptMessageCount?: number // Message # when last shown
   feedbackLastPromptTimestamp?: string // When last shown (ISO datetime string)
   isFavorite?: boolean
+  project: number | null // Personal project the conversation is filed under
   // Sharing fields
   isPublished?: boolean
   publishedAt?: string | null
@@ -86,6 +87,10 @@ export interface Conversation {
   ownerEmail?: string | null
   ownerUserId?: number | null // Owner's user ID for shared conversations (to fetch their files)
   fileOwnerId?: number | null // Original file owner's user ID for forked conversations
+}
+
+export interface CreateConversationRequest {
+  project?: number
 }
 
 export interface MemoryContextItem {
@@ -718,6 +723,11 @@ export interface SortableConversationItemProps {
   onFavoriteClick?: (conversation: Conversation) => void
   onSharingClick?: (conversation: Conversation) => void
   onForkClick?: (conversation: Conversation) => void
+  onMoveToProject?: (
+    conversation: Conversation,
+    projectId: number | null
+  ) => void
+  onCreateProjectFor?: (conversation: Conversation) => void
   onEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onEditBlur: () => void
   onEditKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
