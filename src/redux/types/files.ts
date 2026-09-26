@@ -276,8 +276,31 @@ export type MediaTypeFilter =
   | 'document'
   | 'generated_image'
 
-/** The view modes of the Sources page toggle. */
-export type FileView = 'files' | 'folders' | 'media' | 'libraries'
+/** Where the Sources library is browsing; mirrored in the `in` search param. */
+export type SourceLocation =
+  | { kind: 'home' }
+  | { kind: 'all' }
+  | { kind: 'unfiled' }
+  | { kind: 'attention' }
+  | { kind: 'libraries' }
+  | { kind: 'shared' }
+  | { kind: 'folder'; folderId: number }
+
+/** The first passage in a file that contains the content-search query. */
+export interface ContentMatch {
+  fileId: number
+  snippet: string
+  page: number | null
+}
+
+export interface BulkTagRequest {
+  fileIds: number[]
+  tagIds: number[]
+}
+
+export interface BulkTagResponse {
+  files: { id: number; tags: number[] }[]
+}
 
 export interface FileViewerCapabilities {
   structure: boolean
@@ -300,7 +323,6 @@ export interface FileState {
   isModalOpen: boolean
   filename: string
   foldername: string
-  expandedFolders: { [folderId: number]: boolean }
   jobStatuses: {
     [fileId: number]: {
       status: FileStatus
@@ -311,21 +333,17 @@ export interface FileState {
   }
   searchQuery: string
   selectedItems: number[]
-  currentView: FileView
   isMoveModalOpen: boolean
   mediaTypeFilter: MediaTypeFilter
   sharedFiles: MyFile[]
   sharedFilesLoading: boolean
   sharedFilesError: string | null
-  activeTab: 'my-files' | 'shared'
   shareModalFileId: number | null
   shareModalFileName: string
+  /** Matches for `contentSearch.query`; stale once the search box changes. */
+  contentSearch: { query: string; matches: ContentMatch[] }
   visionModels: VisionModelCatalog | null
   visionModelsError: string | null
-}
-
-export interface FolderHeaderProps {
-  onToggleView: (view: FileView) => void
 }
 
 export type DocumentMapChunkKind =

@@ -1,6 +1,9 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import {
+  BulkTagRequest,
+  BulkTagResponse,
+  ContentMatch,
   FileViewerCapabilities,
   FileReprocessingRequest,
   DocumentMap,
@@ -368,4 +371,22 @@ export const reprocessFileAPI = async ({
     url: `api/files/${fileId}/reprocess/`,
     method: METHOD.POST,
     data,
+  })
+
+export const bulkTagFilesAPI = async (
+  request: BulkTagRequest
+): Promise<BulkTagResponse> =>
+  await baseRequest<BulkTagResponse>({
+    url: 'api/files/bulk-tags/',
+    method: METHOD.POST,
+    data: request,
+  })
+
+export const searchFileContentsAPI = async (
+  query: string
+): Promise<{ results: ContentMatch[] }> =>
+  await baseRequest<{ results: ContentMatch[] }>({
+    url: 'api/files/content-search/',
+    method: METHOD.GET,
+    params: { q: query },
   })
