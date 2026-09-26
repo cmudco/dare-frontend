@@ -72,19 +72,19 @@ const SourcesLayout = () => {
   }
 
   return (
-    <div className='flex grow flex-col gap-6 overflow-auto px-10 py-6 md:flex-row'>
+    <div className='flex grow flex-col gap-6 overflow-auto px-4 py-6 md:flex-row md:px-10'>
       <SourcesNav
         location={location}
         goTo={goTo}
         onNewFolder={() => setCreatingFolder(true)}
       />
-      <main className='flex min-w-0 grow flex-col gap-5'>
+      <div className='flex min-w-0 grow flex-col gap-5'>
         {showToolbar && (
           <SourcesToolbar onUploadFolder={() => setUploadingFolder(true)} />
         )}
         {renderContent()}
         <BulkActionBar />
-      </main>
+      </div>
 
       <FileUploadModal />
       <FileStatusPoller />

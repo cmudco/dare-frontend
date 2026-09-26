@@ -66,11 +66,15 @@ const fileSlice = createSlice({
     setError: (state, action: PayloadAction<string>) => {
       state.error = action.payload
     },
+    // Narrowing the list clears the selection, so bulk actions never reach
+    // files the user can no longer see.
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload
+      state.selectedItems = []
     },
     setSelectedTags: (state, action: PayloadAction<number[]>) => {
       state.selectedTags = action.payload
+      state.selectedItems = []
     },
     addSelectedItem: (state, action: PayloadAction<number>) => {
       const itemId = action.payload
@@ -96,6 +100,7 @@ const fileSlice = createSlice({
     },
     setMediaTypeFilter: (state, action: PayloadAction<MediaTypeFilter>) => {
       state.mediaTypeFilter = action.payload
+      state.selectedItems = []
     },
     openShareModal: (
       state,

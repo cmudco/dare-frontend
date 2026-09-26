@@ -40,6 +40,11 @@ const FolderDeleteDialog = ({
   ).length
   const fileLabel = `${fileIds.length} ${fileIds.length === 1 ? 'file' : 'files'}`
 
+  const close = () => {
+    setFailed(false)
+    onClose()
+  }
+
   const handleDelete = async (mode: DeleteMode) => {
     setPending(mode)
     setFailed(false)
@@ -60,7 +65,7 @@ const FolderDeleteDialog = ({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && close()}>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Delete “{folder.name}”?</DialogTitle>
@@ -78,7 +83,7 @@ const FolderDeleteDialog = ({
           </p>
         )}
         <DialogFooter className='gap-2 sm:gap-0 sm:space-x-2'>
-          <Button variant='outline' onClick={onClose} disabled={!!pending}>
+          <Button variant='outline' onClick={close} disabled={!!pending}>
             Cancel
           </Button>
           <Button

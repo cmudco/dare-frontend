@@ -1,4 +1,5 @@
 import { ChevronRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useAppSelector } from '@/redux/hooks'
 import { SourceLocation } from '@/redux/types/files'
 import { useSourceFiles } from '@/hooks/useSourceFiles'
@@ -35,6 +36,25 @@ const SourcesListView = ({ location, goTo }: SourcesListViewProps) => {
       ? state.files.folders.find((f) => f.id === location.folderId)
       : undefined
   )
+  const loading = useAppSelector((state) => state.files.loading)
+
+  if (location.kind === 'folder' && !folder && !loading) {
+    return (
+      <div className='flex flex-col items-center gap-3 rounded-lg border border-dashed border-border p-10 text-center'>
+        <p className='text-sm text-muted-foreground'>
+          This folder no longer exists.
+        </p>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => goTo({ kind: 'home' })}
+        >
+          Back to Sources
+        </Button>
+      </div>
+    )
+  }
+
   const title =
     location.kind === 'folder'
       ? (folder?.name ?? 'Folder')
@@ -60,6 +80,8 @@ const SourcesListView = ({ location, goTo }: SourcesListViewProps) => {
         )}
       </div>
       <SourceList
+        // A new location starts from the first page.
+        key={location.kind === 'folder' ? location.folderId : location.kind}
         files={files}
         folderId={folder?.id}
         emptyState={

@@ -9,6 +9,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,12 +74,12 @@ const SourceRow = ({
       )}
     >
       <div className='flex items-center gap-3'>
-        <input
-          type='checkbox'
+        <Checkbox
           aria-label={`Select ${name}`}
-          className='h-4 w-4 shrink-0 rounded-sm border-border text-primary focus:ring-primary'
           checked={selected}
-          onChange={(e) => onSelectedChange(file.id, e.target.checked)}
+          onCheckedChange={(checked) =>
+            onSelectedChange(file.id, checked === true)
+          }
         />
         <button
           type='button'

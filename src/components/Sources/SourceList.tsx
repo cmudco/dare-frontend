@@ -1,5 +1,6 @@
 import { ReactNode, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DeleteConfirmation } from '@/components/DeleteConfirmation'
 import FileReprocessingDialog from '@/components/FileManager/FileReprocessingDialog'
@@ -19,9 +20,11 @@ import {
   removeSelectedItem,
   selectContentMatches,
   selectFoldersByFileId,
+  selectLibraryFiles,
   setSelectedItems,
 } from '@/redux/fileSlice'
 import { MyFile } from '@/redux/types/files'
+import { toast } from '@/utils/toast'
 import SourceRow, { SourceRowAction } from './SourceRow'
 
 const PAGE_SIZE = 50
@@ -43,6 +46,9 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
   const { loading, error, selectedItems } = useAppSelector(
     (state) => state.files
   )
+  // The slice's loading and error flags are shared by every file request, so
+  // they only describe this list while the library itself is still empty.
+  const libraryEmpty = useAppSelector(selectLibraryFiles).length === 0
   const allTags = useAppSelector((state) => state.tags.tags)
   const foldersByFile = useAppSelector(selectFoldersByFileId)
   const contentMatches = useAppSelector(selectContentMatches)
@@ -57,7 +63,7 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
     : undefined
 
   if (files.length === 0) {
-    if (loading) {
+    if (libraryEmpty && loading) {
       return (
         <div className='flex flex-col gap-2' aria-busy='true'>
           {Array.from({ length: 4 }, (_, i) => (
@@ -66,7 +72,7 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
         </div>
       )
     }
-    if (error) {
+    if (libraryEmpty && error) {
       return (
         <div className='flex flex-col items-center gap-3 rounded-lg border border-border p-8 text-center'>
           <p className='text-sm text-muted-foreground'>
@@ -88,23 +94,39 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
   const visibleFiles = files.slice(0, visibleCount)
   const allSelected = files.every((file) => selectedItems.includes(file.id))
 
+  const removeFromFolder = async (file: MyFile) => {
+    if (folderId === undefined) return
+    try {
+      await dispatch(
+        removeFileFromFolder({ fileId: file.id, folderId })
+      ).unwrap()
+      dispatch(getFolders())
+    } catch {
+      toast.error(`Couldn't remove ${file.name} from the folder.`)
+    }
+  }
+
   const handleAction = (action: SourceRowAction, file: MyFile) => {
-    if (action === 'share') {
-      dispatch(openShareModal({ id: file.id, name: file.name }))
-    } else if (action === 'removeFromFolder' && folderId !== undefined) {
-      dispatch(removeFileFromFolder({ fileId: file.id, folderId })).then(() =>
-        dispatch(getFolders())
-      )
-    } else if (action !== 'removeFromFolder') {
-      setDialog({ action, fileId: file.id })
+    switch (action) {
+      case 'share':
+        dispatch(openShareModal({ id: file.id, name: file.name }))
+        break
+      case 'removeFromFolder':
+        removeFromFolder(file)
+        break
+      default:
+        setDialog({ action, fileId: file.id })
     }
   }
 
   const handleDeleteConfirm = async () => {
     if (!dialogFile) return
-    await dispatch(deleteFile(dialogFile.id)).unwrap()
-    dispatch(getFolders())
-    setDialog(null)
+    try {
+      await dispatch(deleteFile(dialogFile.id)).unwrap()
+      dispatch(getFolders())
+    } catch {
+      toast.error(`Couldn't delete ${dialogFile.name}.`)
+    }
   }
 
   const closeDialog = () => setDialog(null)
@@ -112,15 +134,13 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
   return (
     <div className='flex flex-col'>
       <div className='flex items-center gap-3 px-3 pb-2 text-xs text-muted-foreground'>
-        <input
-          type='checkbox'
+        <Checkbox
           aria-label='Select all'
-          className='h-4 w-4 rounded-sm border-border text-primary focus:ring-primary'
           checked={allSelected}
-          onChange={(e) =>
+          onCheckedChange={(checked) =>
             dispatch(
               setSelectedItems(
-                e.target.checked ? files.map((file) => file.id) : []
+                checked === true ? files.map((file) => file.id) : []
               )
             )
           }

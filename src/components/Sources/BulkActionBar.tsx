@@ -15,6 +15,7 @@ import {
   getFolders,
 } from '@/redux/asyncThunks/file'
 import { clearSelectedItems, openMoveModal } from '@/redux/fileSlice'
+import { toast } from '@/utils/toast'
 
 const BulkActionBar = () => {
   const dispatch = useAppDispatch()
@@ -27,10 +28,12 @@ const BulkActionBar = () => {
   if (count === 0) return null
 
   const handleDelete = async () => {
-    await dispatch(deleteMultipleFiles(selectedItems)).unwrap()
-    dispatch(getFolders())
-    dispatch(clearSelectedItems())
-    setConfirmingDelete(false)
+    try {
+      await dispatch(deleteMultipleFiles(selectedItems)).unwrap()
+      dispatch(getFolders())
+    } catch {
+      toast.error("Couldn't delete the selected files.")
+    }
   }
 
   const handleTag = async (tagId: number) => {
@@ -39,6 +42,8 @@ const BulkActionBar = () => {
       await dispatch(
         bulkTagFiles({ fileIds: selectedItems, tagIds: [tagId] })
       ).unwrap()
+    } catch {
+      toast.error("Couldn't tag the selected files.")
     } finally {
       setTagging(false)
     }
