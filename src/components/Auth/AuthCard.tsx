@@ -68,7 +68,7 @@ const AuthCard = <T extends FormikValues>({
         )}
 
         <div className='relative -top-10 flex h-[60px] items-center'>
-          <Logo size='lg' orientation='vertical' showTagline />
+          <Logo size='lg' orientation='vertical' showTagline animated />
         </div>
 
         <h1 className='text-center text-2xl font-black text-foreground'>
