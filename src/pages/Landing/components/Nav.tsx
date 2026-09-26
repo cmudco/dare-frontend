@@ -40,7 +40,7 @@ export const Nav: React.FC = () => {
       <Container className='flex h-16 items-center justify-between'>
         {/* Brand lockup */}
         <Link to='/' className='flex items-center' aria-label='DARE — home'>
-          <Logo size='sm' showTagline />
+          <Logo size='sm' showTagline animated />
         </Link>
 
         {/* Desktop nav */}

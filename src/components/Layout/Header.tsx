@@ -37,7 +37,7 @@ const Header: React.FC = () => {
   return (
     <header className='top-0 right-0 left-0 flex h-[80px] w-full items-center justify-between border-b border-border bg-background p-1 px-2'>
       <div className='mx-2 flex items-center'>
-        <Logo size='md' showTagline />
+        <Logo size='md' showTagline animated />
       </div>
 
       <div className='mr-3 flex items-center gap-4'>
