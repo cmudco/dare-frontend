@@ -1,12 +1,4 @@
-export const TABLE_HEAD = [
-  'File Name',
-  'File Type',
-  'Size',
-  'Date Created',
-  'Tags',
-  'Status',
-  'Action',
-]
+import type { MediaTypeFilter } from '@/redux/types/files'
 
 export const TAG_COLORS: {
   [key: string]: 'yellow' | 'red' | 'blue' | 'green' | 'purple' | 'gray'
@@ -118,8 +110,6 @@ export enum FileStatus {
   NEEDS_OCR = 3,
 }
 
-export const FOLDER_TABLE_HEAD = ['Folder Name', 'Last Updated', 'Action']
-
 export const FILE_TABLE_HEADER_TO_KEY = {
   'File Name': 'name',
   'File Type': 'fileType',
@@ -166,3 +156,15 @@ export enum DocumentReprocessingAction {
   Reparse = 'reparse',
   RetryImages = 'retry_images',
 }
+
+export const MEDIA_TYPE_OPTIONS: { value: MediaTypeFilter; label: string }[] = [
+  { value: 'all', label: 'All types' },
+  { value: 'document', label: 'Documents' },
+  { value: 'image', label: 'Images' },
+  { value: 'video', label: 'Videos' },
+  { value: 'audio', label: 'Audio' },
+  { value: 'generated_image', label: 'Generated images' },
+]
+
+/** Matches the server's minimum for content search. */
+export const CONTENT_SEARCH_MIN_LENGTH = 3
