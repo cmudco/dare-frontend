@@ -6,10 +6,11 @@ import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { useAppSelector } from '@/redux/hooks'
 import type { Project } from '@/redux/types/project'
 import { ProjectMemoryScope } from '@/utils/constants/project'
+import type { ProjectSettingsSection } from './ProjectSettingsDialog'
 
 interface Props {
   project: Project
-  onEditSettings: () => void
+  onEditSettings: (section: ProjectSettingsSection) => void
   onPinWorkflows: () => void
   onUnpinWorkflow: (workflowId: number) => void
 }
@@ -58,12 +59,12 @@ const ProjectSettingsRail = ({
     enableMemory && project.memoryEnabled && 'memory',
   ].filter(Boolean)
 
-  const editButton = (label: string) => (
+  const editButton = (label: string, section: ProjectSettingsSection) => (
     <Button
       variant='outline'
       size='sm'
       className='h-8 rounded-full px-3'
-      onClick={onEditSettings}
+      onClick={() => onEditSettings(section)}
     >
       {label}
     </Button>
@@ -76,21 +77,24 @@ const ProjectSettingsRail = ({
     >
       <Section
         title='Instructions'
-        action={editButton(project.instructions ? 'Edit' : 'Add')}
+        action={editButton(
+          project.instructions ? 'Edit' : 'Add',
+          'instructions'
+        )}
       >
         <p className='line-clamp-3 whitespace-pre-line'>
           {project.instructions ||
             'Tell DARE how to respond in this project. Saved as a prompt you can reuse.'}
         </p>
       </Section>
-      <Section title='Chat defaults' action={editButton('Edit')}>
+      <Section title='Chat defaults' action={editButton('Edit', 'defaults')}>
         <p>
           {modelName ?? 'Model chosen per chat'}
           {tools.length > 0 && ` · ${tools.join(', ')}`}
         </p>
       </Section>
       {enableMemory && (
-        <Section title='Memory' action={editButton('Edit')}>
+        <Section title='Memory' action={editButton('Edit', 'memory')}>
           <p>
             {project.memoryScope === ProjectMemoryScope.PROJECT
               ? 'Project-only: recalls what was learned here.'

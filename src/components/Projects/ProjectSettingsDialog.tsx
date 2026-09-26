@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -31,9 +31,22 @@ import {
 import { persistableModels } from './projectModels'
 import ProjectNameField from './ProjectNameField'
 
+export type ProjectSettingsSection = 'instructions' | 'defaults' | 'memory'
+
+// The control each rail shortcut lands on when the dialog opens.
+const SECTION_TARGET: Record<ProjectSettingsSection, string> = {
+  instructions: 'settings-project-instructions',
+  defaults: 'settings-project-model',
+  memory: 'settings-project-memory',
+}
+
+const HIGHLIGHT_MS = 1600
+
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Section to scroll to and focus on open; omit to open at the top. */
+  section?: ProjectSettingsSection
   project: Project
   onSave: (update: ProjectUpdate) => Promise<void>
   onDelete: () => void
@@ -88,10 +101,22 @@ const MEMORY_HELP: Record<ProjectMemoryScope, string> = {
 
 const SettingsForm = ({
   project,
+  section,
   onSave,
   onDelete,
   onClose,
 }: Omit<Props, 'open' | 'onOpenChange'> & { onClose: () => void }) => {
+  const [highlighted, setHighlighted] = useState(section)
+  useEffect(() => {
+    if (!highlighted) return
+    const timer = setTimeout(() => setHighlighted(undefined), HIGHLIGHT_MS)
+    return () => clearTimeout(timer)
+  }, [highlighted])
+  const sectionClass = (key: ProjectSettingsSection, base: string) =>
+    `${base} -mx-2 rounded-lg px-2 py-1 transition-colors duration-500 ${
+      highlighted === key ? 'bg-primary/10' : 'bg-transparent'
+    }`
+
   const prompts = useAppSelector((state) => state.prompt.prompts)
   const pickerEntries = useAppSelector(
     (state) => state.conversation.pickerEntries
@@ -171,7 +196,7 @@ const SettingsForm = ({
           />
         </div>
 
-        <div className='flex flex-col gap-1.5'>
+        <div className={sectionClass('instructions', 'flex flex-col gap-1.5')}>
           <div className='flex items-center justify-between gap-2'>
             <Label htmlFor='settings-project-instructions'>Instructions</Label>
             <Select
@@ -232,7 +257,7 @@ const SettingsForm = ({
           </p>
         </div>
 
-        <div className='flex flex-col gap-3'>
+        <div className={sectionClass('defaults', 'flex flex-col gap-3')}>
           <div className='flex flex-col gap-1.5'>
             <Label htmlFor='settings-project-model'>Model</Label>
             <Select
@@ -299,7 +324,7 @@ const SettingsForm = ({
         </div>
 
         {enableMemory && (
-          <div className='flex flex-col gap-1.5'>
+          <div className={sectionClass('memory', 'flex flex-col gap-1.5')}>
             <Label htmlFor='settings-project-memory'>Memory</Label>
             <Select
               value={draft.memoryScope}
@@ -363,7 +388,17 @@ const SettingsForm = ({
 
 const ProjectSettingsDialog = ({ open, onOpenChange, ...rest }: Props) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className='max-w-lg rounded-2xl'>
+    <DialogContent
+      className='max-w-lg rounded-2xl'
+      onOpenAutoFocus={(event) => {
+        const target =
+          rest.section && document.getElementById(SECTION_TARGET[rest.section])
+        if (!target) return
+        event.preventDefault()
+        target.scrollIntoView({ block: 'center' })
+        target.focus({ preventScroll: true })
+      }}
+    >
       <SettingsForm {...rest} onClose={() => onOpenChange(false)} />
     </DialogContent>
   </Dialog>

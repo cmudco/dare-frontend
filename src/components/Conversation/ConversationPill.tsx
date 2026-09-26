@@ -12,6 +12,7 @@ import {
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker/index'
+import { selectProjectById } from '@/redux/projectSlice'
 import PromptSet from './PromptSet'
 import { Message } from '../../redux/types/conversation'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -80,6 +81,9 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const selectedModel = useSelector(
     (state: RootState) => state.conversation.selectedModel
+  )
+  const project = useSelector((state: RootState) =>
+    selectProjectById(state, activeConversation?.project)
   )
   const modelCatalogStatus = useSelector(
     (state: RootState) => state.conversation.modelCatalogStatus
@@ -388,7 +392,9 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
                 ? 'Select a conversation to start chatting'
                 : hasAttachedImages
                   ? 'Add a message (optional)'
-                  : 'Type message'
+                  : project
+                    ? `Ask anything in ${project.name}`
+                    : 'Type message'
             }
             disabled={disabled}
             className={clsx(

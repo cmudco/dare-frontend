@@ -22,5 +22,3 @@ export enum ProjectIconKey {
   HEART = 'heart',
   CALENDAR = 'calendar',
 }
-
-export const SIDEBAR_RECENT_PROJECTS = 5

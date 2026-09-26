@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   RectangleGroupIcon,
@@ -22,7 +22,6 @@ import {
 } from '@/redux/conversationTourSlice'
 import { UsersIcon } from '@heroicons/react/24/outline'
 import { getTourPageKeyFromPath } from '@/components/ConversationTour/pageTourSteps'
-import SidebarProjectList from './SidebarProjectList'
 
 const PromptsIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -216,49 +215,43 @@ const Sidebar = () => {
               ? location.pathname.startsWith(item.path)
               : location.pathname === item.path
             return (
-              <Fragment key={item.name}>
-                <Link
-                  to={item.path}
-                  className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-hidden transition-all ${
-                    isActive
-                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                      : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground'
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-hidden transition-all ${
+                  isActive
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground'
+                }`}
+              >
+                <div className={`${isCollapsed ? 'mx-auto' : 'mr-2'} relative`}>
+                  {isActive ? (
+                    <item.icon
+                      className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
+                      style={{
+                        fill: 'none',
+                        stroke: 'var(--dare)',
+                        color: 'var(--dare)',
+                      }}
+                    />
+                  ) : (
+                    <item.icon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
+                  )}
+                </div>
+                <span
+                  className={`whitespace-nowrap transition-all duration-300 ${
+                    isCollapsed
+                      ? 'w-0 overflow-hidden opacity-0'
+                      : 'w-auto opacity-100'
                   }`}
                 >
-                  <div
-                    className={`${isCollapsed ? 'mx-auto' : 'mr-2'} relative`}
-                  >
-                    {isActive ? (
-                      <item.icon
-                        className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
-                        style={{
-                          fill: 'none',
-                          stroke: 'var(--dare)',
-                          color: 'var(--dare)',
-                        }}
-                      />
-                    ) : (
-                      <item.icon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
-                    )}
-                  </div>
-                  <span
-                    className={`whitespace-nowrap transition-all duration-300 ${
-                      isCollapsed
-                        ? 'w-0 overflow-hidden opacity-0'
-                        : 'w-auto opacity-100'
-                    }`}
-                  >
-                    {isActive ? (
-                      <span className='text-dare'>{item.name}</span>
-                    ) : (
-                      item.name
-                    )}
-                  </span>
-                </Link>
-                {item.path === '/projects' && !isCollapsed && (
-                  <SidebarProjectList />
-                )}
-              </Fragment>
+                  {isActive ? (
+                    <span className='text-dare'>{item.name}</span>
+                  ) : (
+                    item.name
+                  )}
+                </span>
+              </Link>
             )
           })}
 

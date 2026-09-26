@@ -24,7 +24,9 @@ import PinWorkflowsDialog from '@/components/Projects/PinWorkflowsDialog'
 import ProjectChatList from '@/components/Projects/ProjectChatList'
 import ProjectComposer from '@/components/Projects/ProjectComposer'
 import ProjectIcon from '@/components/Projects/ProjectIcon'
-import ProjectSettingsDialog from '@/components/Projects/ProjectSettingsDialog'
+import ProjectSettingsDialog, {
+  type ProjectSettingsSection,
+} from '@/components/Projects/ProjectSettingsDialog'
 import ProjectSettingsRail from '@/components/Projects/ProjectSettingsRail'
 import ProjectSourceList from '@/components/Projects/ProjectSourceList'
 import ProjectSourcesDialog from '@/components/Projects/ProjectSourcesDialog'
@@ -44,6 +46,7 @@ import { getFiles, getFolders, uploadNewFile } from '@/redux/asyncThunks/file'
 import { getSharedLibraries } from '@/redux/asyncThunks/library'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import {
+  fetchProjects,
   deleteProject,
   moveConversationsToProject,
   updateProject,
@@ -107,6 +110,12 @@ const ProjectDetail = () => {
   const [chatSort, setChatSort] = useState(ChatSort.NEWEST)
   const [uploading, setUploading] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsSection, setSettingsSection] =
+    useState<ProjectSettingsSection>()
+  const openSettings = (section?: ProjectSettingsSection) => {
+    setSettingsSection(section)
+    setSettingsOpen(true)
+  }
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [sourcesOpen, setSourcesOpen] = useState(false)
   const [addChatsOpen, setAddChatsOpen] = useState(false)
@@ -180,7 +189,15 @@ const ProjectDetail = () => {
         state: { initialMessage: message },
       })
     } catch {
-      toast.error('Could not start a chat. Try again.')
+      // The project list loads once per session, so it may be gone already.
+      const projects = await dispatch(fetchProjects())
+        .unwrap()
+        .catch(() => null)
+      toast.error(
+        projects && !projects.some((p) => p.id === projectId)
+          ? 'This project was deleted.'
+          : 'Could not start a chat. Try again.'
+      )
     }
   }
 
@@ -275,7 +292,7 @@ const ProjectDetail = () => {
                 variant='outline'
                 className='rounded-full'
                 aria-label='Project settings'
-                onClick={() => setSettingsOpen(true)}
+                onClick={() => openSettings()}
               >
                 <Settings2 className='h-4 w-4' />
                 <span className='hidden sm:inline'>Settings</span>
@@ -412,7 +429,7 @@ const ProjectDetail = () => {
           <div className='sticky top-8'>
             <ProjectSettingsRail
               project={project}
-              onEditSettings={() => setSettingsOpen(true)}
+              onEditSettings={openSettings}
               onPinWorkflows={() => setWorkflowsOpen(true)}
               onUnpinWorkflow={(workflowId) =>
                 saveQuietly({
@@ -429,6 +446,7 @@ const ProjectDetail = () => {
       <ProjectSettingsDialog
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
+        section={settingsSection}
         project={project}
         onSave={saveUpdate}
         onDelete={() => {

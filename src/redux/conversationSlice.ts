@@ -234,6 +234,9 @@ export const conversationSlice = createSlice({
     updateSelectedLibraries(state, action: PayloadAction<SharedLibrary[]>) {
       state.selectedLibraries = action.payload
     },
+    setSourcePickerOpen(state, action: PayloadAction<boolean>) {
+      state.sourcePickerOpen = action.payload
+    },
     updateMemoryEnabled(state, action: PayloadAction<boolean>) {
       state.memoryEnabled = action.payload
     },
@@ -1420,6 +1423,7 @@ export const {
   updateSelectedTags,
   updateSelectedFolders,
   updateSelectedLibraries,
+  setSourcePickerOpen,
   updateMemoryEnabled,
   updateTemperature,
   updateEffort,

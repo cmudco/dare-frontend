@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, FileText } from 'lucide-react'
 import { useProjects } from '@/hooks/useProjects'
-import { useAppSelector } from '@/redux/hooks'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { setSourcePickerOpen } from '@/redux/conversationSlice'
 import { selectProjectById } from '@/redux/projectSlice'
 import { ProjectMemoryScope } from '@/utils/constants/project'
 import ProjectIcon from './ProjectIcon'
@@ -15,6 +16,14 @@ const ProjectContextBar = () => {
   const project = useAppSelector((state) => selectProjectById(state, projectId))
   const memoryEnabled = useAppSelector(
     (state) => state.conversation.activeConversation?.memoryEnabled ?? false
+  )
+  const dispatch = useAppDispatch()
+  const sourceCount = useAppSelector(
+    ({ conversation }) =>
+      conversation.selectedEmbeddings.length +
+      conversation.selectedFiles.length +
+      conversation.selectedFolders.length +
+      conversation.selectedLibraries.length
   )
 
   if (!project) return null
@@ -37,6 +46,16 @@ const ProjectContextBar = () => {
           Memory limited to this project
         </span>
       )}
+      <button
+        type='button'
+        onClick={() => dispatch(setSourcePickerOpen(true))}
+        className='ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+      >
+        <FileText className='h-3.5 w-3.5' />
+        {sourceCount === 0
+          ? 'No sources'
+          : `${sourceCount} ${sourceCount === 1 ? 'source' : 'sources'}`}
+      </button>
     </div>
   )
 }

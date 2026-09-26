@@ -639,6 +639,7 @@ export interface ConversationState {
   selectedTags: Tag[]
   selectedFolders: MyFolder[]
   selectedLibraries: SharedLibrary[]
+  sourcePickerOpen: boolean
   memoryEnabled: boolean
   selectedConversations: string[]
   referencedConversations: Conversation[]
