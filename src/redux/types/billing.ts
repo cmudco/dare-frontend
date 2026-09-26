@@ -130,7 +130,6 @@ export interface EffectivePolicy {
 export interface SpendLimit {
   limit: string
   used: string
-  remaining: string
   source: PolicySource
   isReached: boolean
 }

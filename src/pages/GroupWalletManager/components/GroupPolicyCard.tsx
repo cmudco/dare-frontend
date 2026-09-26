@@ -122,13 +122,13 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
                 placeholder='e.g. 5.00 (leave blank to inherit)'
                 className={`mt-1 h-10 ${
                   formik.touched.refillAmount && formik.errors.refillAmount
-                    ? 'border-red-500'
+                    ? 'border-destructive'
                     : ''
                 }`}
                 {...formik.getFieldProps('refillAmount')}
               />
               {formik.touched.refillAmount && formik.errors.refillAmount && (
-                <p className='mt-1 text-xs text-red-500'>
+                <p className='mt-1 text-xs text-destructive'>
                   {formik.errors.refillAmount}
                 </p>
               )}
@@ -148,14 +148,14 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
                 className={`mt-1 h-10 ${
                   formik.touched.refillPeriodDays &&
                   formik.errors.refillPeriodDays
-                    ? 'border-red-500'
+                    ? 'border-destructive'
                     : ''
                 }`}
                 {...formik.getFieldProps('refillPeriodDays')}
               />
               {formik.touched.refillPeriodDays &&
                 formik.errors.refillPeriodDays && (
-                  <p className='mt-1 text-xs text-red-500'>
+                  <p className='mt-1 text-xs text-destructive'>
                     {formik.errors.refillPeriodDays}
                   </p>
                 )}
@@ -174,13 +174,13 @@ const GroupPolicyCard = ({ groupWallet }: GroupPolicyCardProps) => {
                 placeholder='blank = refill amount'
                 className={`mt-1 h-10 ${
                   formik.touched.refillCap && formik.errors.refillCap
-                    ? 'border-red-500'
+                    ? 'border-destructive'
                     : ''
                 }`}
                 {...formik.getFieldProps('refillCap')}
               />
               {formik.touched.refillCap && formik.errors.refillCap && (
-                <p className='mt-1 text-xs text-red-500'>
+                <p className='mt-1 text-xs text-destructive'>
                   {formik.errors.refillCap}
                 </p>
               )}

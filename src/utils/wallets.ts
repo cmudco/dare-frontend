@@ -13,9 +13,12 @@ export const formatUsd = (amount: string): string => {
   return value > 0 && value < 0.01 ? '<$0.01' : `$${value.toFixed(2)}`
 }
 
-/** "$4.00 of $5.00": a DARE balance against the ceiling refills top it up to. */
+/** "$4.00 of $5.00": a DARE balance against the ceiling refills top it up to.
+ *  A balance above the ceiling (a purchase or allocation) shows alone. */
 export const formatBalanceOfCeiling = (status: WalletStatusBalance): string =>
-  `${formatUsd(status.balance)} of ${formatUsd(status.ceiling)}`
+  Number(status.balance) > Number(status.ceiling)
+    ? formatUsd(status.balance)
+    : `${formatUsd(status.balance)} of ${formatUsd(status.ceiling)}`
 
 /** Four-decimal USD for spend comparisons, where cents hide the difference. */
 export const formatUsdPrecise = (amount: string): string =>
