@@ -29,6 +29,7 @@ import ImageDropOverlay from './ImageDropOverlay'
 import MessageList from './MessageList'
 import { ArtifactSidecar } from '../Artifacts'
 import { useConversationFiles } from '@/hooks/useConversationFiles'
+import ProjectContextBar from '../Projects/ProjectContextBar'
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -318,6 +319,7 @@ const ActiveConversation: React.FC = () => {
         >
           <ImageDropOverlay isVisible={isDragging} />
           <div className='flex min-h-0 min-w-0 flex-1 flex-col justify-between'>
+            <ProjectContextBar />
             {!activeConversation && <NewConversation />}
             {activeConversation && conversationHistory.length === 0 && (
               <EmptyConversation />

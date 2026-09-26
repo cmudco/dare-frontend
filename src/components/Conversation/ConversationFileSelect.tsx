@@ -20,6 +20,7 @@ import {
   updateSelectedTags,
   updateSelectedFolders,
   updateSelectedLibraries,
+  setSourcePickerOpen,
 } from '@/redux/conversationSlice'
 import {
   selectAddedLibraries,
@@ -33,6 +34,7 @@ import type { SharedLibrary } from '@/redux/types/library'
 import { useDebounce } from '@/utils/debounce'
 import { useOwnerFiles } from '@/hooks/useOwnerFiles'
 import { getConversationFileOwnerId } from '@/hooks/useConversationFiles'
+import { selectProjectById } from '@/redux/projectSlice'
 
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -77,11 +79,21 @@ const ConversationFileSelect: React.FC = () => {
     (state: RootState) => state.conversation.activeConversation
   )
   const user = useSelector((state: RootState) => state.user.user)
+  const project = useSelector((state: RootState) =>
+    selectProjectById(state, activeConversation?.project)
+  )
 
-  const [open, setOpen] = useState(false)
+  const open = useSelector(
+    (state: RootState) => state.conversation.sourcePickerOpen
+  )
+  const setOpen = useCallback(
+    (next: boolean) => dispatch(setSourcePickerOpen(next)),
+    [dispatch]
+  )
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectionDirty, setSelectionDirty] = useState(false)
+  const [showAllSources, setShowAllSources] = useState(false)
   const [activeTab, setActiveTab] = useState<
     'files' | 'embeddings' | 'media' | 'tags' | 'folders' | 'libraries'
   >('embeddings')
@@ -94,7 +106,27 @@ const ConversationFileSelect: React.FC = () => {
 
   useEffect(() => {
     setSelectionDirty(false)
-  }, [activeConversation?.conversationId])
+    setShowAllSources(false)
+    setOpen(false)
+  }, [activeConversation?.conversationId, setOpen])
+
+  // A project chat lists only the project's sources, plus anything already
+  // selected so it can still be unchecked. Media and tags are never scoped.
+  const projectScope = useMemo(() => {
+    if (!project) return null
+    const { fileIds, folderIds, libraryIds } = project
+    if (fileIds.length + folderIds.length + libraryIds.length === 0) return null
+    const fileSet = new Set(fileIds)
+    folders
+      .filter((folder) => folderIds.includes(folder.id))
+      .forEach((folder) => folder.files.forEach((f) => fileSet.add(f.id)))
+    return {
+      fileIds: fileSet,
+      folderIds: new Set(folderIds),
+      libraryIds: new Set(libraryIds),
+    }
+  }, [project, folders])
+  const scope = showAllSources ? null : projectScope
 
   // Fetch and merge owner files for forked or shared conversations
   const effectiveOwnerId = getConversationFileOwnerId(activeConversation)
@@ -163,9 +195,24 @@ const ConversationFileSelect: React.FC = () => {
         isOwnerFile || file.vectorDbSource === user.vectorDb
       const isProcessed = file.status === FileStatus.PROCESSED
       const isNotMedia = !file.isMedia // Exclude media files from document tabs
-      return matchesSearch && matchesVectorDb && isProcessed && isNotMedia
+      const inScope =
+        !scope ||
+        scope.fileIds.has(file.id) ||
+        selectedEmbeddings.some((f) => f.id === file.id) ||
+        selectedFiles.some((f) => f.id === file.id)
+      return (
+        matchesSearch && matchesVectorDb && isProcessed && isNotMedia && inScope
+      )
     })
-  }, [allFiles, ownerFiles, searchQuery, user])
+  }, [
+    allFiles,
+    ownerFiles,
+    searchQuery,
+    user,
+    scope,
+    selectedEmbeddings,
+    selectedFiles,
+  ])
 
   const filteredMediaFiles = useMemo(() => {
     return allFiles.filter((file) => {
@@ -185,16 +232,24 @@ const ConversationFileSelect: React.FC = () => {
   }, [tags, searchQuery])
 
   const filteredFolders = useMemo(() => {
-    return folders.filter((folder) =>
-      folder.name.toLowerCase().includes(searchQuery.toLowerCase())
+    return folders.filter(
+      (folder) =>
+        folder.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        (!scope ||
+          scope.folderIds.has(folder.id) ||
+          selectedFolders.some((f) => f.id === folder.id))
     )
-  }, [folders, searchQuery])
+  }, [folders, searchQuery, scope, selectedFolders])
 
   const filteredLibraries = useMemo(() => {
-    return addedLibraries.filter((library) =>
-      library.name.toLowerCase().includes(searchQuery.toLowerCase())
+    return addedLibraries.filter(
+      (library) =>
+        library.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        (!scope ||
+          scope.libraryIds.has(library.id) ||
+          selectedLibraries.some((l) => l.id === library.id))
     )
-  }, [addedLibraries, searchQuery])
+  }, [addedLibraries, searchQuery, scope, selectedLibraries])
 
   const handleToggleFile = (file: MyFile) => {
     const newSelectedFiles = selectedFiles.some((f) => f.id === file.id)
@@ -322,6 +377,24 @@ const ConversationFileSelect: React.FC = () => {
                 </SettingsPopoverContent>
               </SettingsPopover>
             </div>
+
+            {projectScope && project && (
+              <div className='flex items-center justify-between gap-2 text-xs text-muted-foreground'>
+                <span className='truncate'>
+                  {showAllSources
+                    ? 'Showing all your sources'
+                    : `Showing sources in ${project.name}`}
+                </span>
+                <Button
+                  variant='link'
+                  size='sm'
+                  onClick={() => setShowAllSources((v) => !v)}
+                  className='h-auto shrink-0 p-0 text-xs'
+                >
+                  {showAllSources ? 'Project only' : 'Show all'}
+                </Button>
+              </div>
+            )}
 
             <Tabs
               value={activeTab}
