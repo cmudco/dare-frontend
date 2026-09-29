@@ -115,13 +115,14 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
     setRenaming(false)
   }
 
+  // The dialog opens only once the affected bots are known, so nobody can
+  // confirm a removal without seeing what it turns off.
   const openDelete = async () => {
-    setDependentBots([])
-    setShowDelete(true)
     if (!wallet.refId) return
     try {
       const { bots } = await getLiteLLMKeyDependentsAPI(wallet.refId)
       setDependentBots(bots.map((bot) => bot.botTitle))
+      setShowDelete(true)
     } catch {
       toast.error("Couldn't check which Socratic bots use this key.")
     }
@@ -364,9 +365,9 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
           dependentBots.length
             ? `${dependentBots.length} Socratic bot${
                 dependentBots.length === 1 ? ' uses' : 's use'
-              } this key (${dependentBots.join(
-                ', '
-              )}). Removing it turns them off until you pick another model for them.`
+              } this key (${dependentBots.join(', ')}). Removing it turns ${
+                dependentBots.length === 1 ? 'it' : 'them'
+              } off until you pick another model.`
             : undefined
         }
         itemName={wallet.label}
