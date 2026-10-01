@@ -1,4 +1,5 @@
 import { LLMModel } from './conversation'
+import { PlatformFilter, TransactionTab } from '@/utils/constants/billing'
 import { PolicySource } from '@/utils/constants/groupWallet'
 
 export interface TransactionSummary {
@@ -8,12 +9,23 @@ export interface TransactionSummary {
   litellm: number
 }
 
+/** Transaction-history filters, owned by the Billing page URL. Dates are local `yyyy-MM-dd`. */
+export interface TransactionHistoryFilters {
+  platform: PlatformFilter
+  tab: TransactionTab
+  model: string | null
+  from: string | null
+  to: string | null
+}
+
 export interface BillingState {
   transactions: Transaction[]
   transactionCount: number
   transactionSummary: TransactionSummary
+  transactionModels: string[]
   nextPage: string | null
   previousPage: string | null
+  transactionsExporting: boolean
   loading: boolean
   error: string | null
   modelStats: BillingModelStats[]

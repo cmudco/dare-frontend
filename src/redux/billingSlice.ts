@@ -3,6 +3,7 @@ import { initialBillingState } from './initialState/billing'
 
 import {
   getTransactions,
+  exportTransactions,
   getBillingModelStats,
   getEnergyStats,
   getLiteLLMStats,
@@ -23,8 +24,6 @@ import {
   GroupWallet,
   OwnedGroupMember,
   OwnedGroupResponse,
-  Transaction,
-  TransactionSummary,
   UpsertUserOverrideResponse,
   WalletsListResponse,
 } from './types/billing'
@@ -53,29 +52,29 @@ const billingSlice = createSlice({
         state.loading = true
         state.error = null
       })
-      .addCase(
-        getTransactions.fulfilled,
-        (
-          state,
-          action: PayloadAction<{
-            count: number
-            next: string | null
-            previous: string | null
-            results: Transaction[]
-            summary: TransactionSummary
-          }>
-        ) => {
-          state.loading = false
-          state.transactions = action.payload.results
-          state.transactionCount = action.payload.count
-          state.transactionSummary = action.payload.summary
-          state.nextPage = action.payload.next
-          state.previousPage = action.payload.previous
-        }
-      )
+      .addCase(getTransactions.fulfilled, (state, action) => {
+        state.loading = false
+        state.transactions = action.payload.results
+        state.transactionCount = action.payload.count
+        state.transactionSummary = action.payload.summary
+        state.transactionModels = action.payload.models
+        state.nextPage = action.payload.next
+        state.previousPage = action.payload.previous
+      })
       .addCase(getTransactions.rejected, (state, action) => {
+        // A superseded request was aborted; its replacement owns the state.
+        if (action.meta.aborted) return
         state.loading = false
         state.error = action.payload as string
+      })
+      .addCase(exportTransactions.pending, (state) => {
+        state.transactionsExporting = true
+      })
+      .addCase(exportTransactions.fulfilled, (state) => {
+        state.transactionsExporting = false
+      })
+      .addCase(exportTransactions.rejected, (state) => {
+        state.transactionsExporting = false
       })
       .addCase(getBillingModelStats.pending, (state) => {
         state.modelStatsLoading = true
