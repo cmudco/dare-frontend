@@ -7,6 +7,7 @@ import {
   WalletsListResponse,
   WalletType,
   LiteLLMKeyResponse,
+  LiteLLMKeyDependentsResponse,
   LiteLLMTestResponse,
   SetActiveWalletResponse,
 } from '@/redux/types/billing'
@@ -126,6 +127,15 @@ export const updateLiteLLMKeyBackgroundModelAPI = async (
     url: `api/billing/wallets/litellm/${id}/`,
     method: METHOD.PATCH,
     data: { backgroundModel },
+  })
+}
+
+export const getLiteLLMKeyDependentsAPI = async (
+  id: string
+): Promise<LiteLLMKeyDependentsResponse> => {
+  return await baseRequest<LiteLLMKeyDependentsResponse>({
+    url: `api/billing/wallets/litellm/${id}/dependents/`,
+    method: METHOD.GET,
   })
 }
 

@@ -32,7 +32,7 @@ import {
   Trash2,
   Clock,
 } from 'lucide-react'
-import { testLiteLLMSavedAPI } from '@/api/billing'
+import { getLiteLLMKeyDependentsAPI, testLiteLLMSavedAPI } from '@/api/billing'
 import { EditLiteLLMBackgroundModelModal } from './EditLiteLLMBackgroundModelModal'
 import { toast } from '@/utils/toast'
 import {
@@ -89,6 +89,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
   const [renaming, setRenaming] = useState(false)
   const [draftLabel, setDraftLabel] = useState(wallet.label)
   const [showDelete, setShowDelete] = useState(false)
+  const [dependentBots, setDependentBots] = useState<string[]>([])
   const [testing, setTesting] = useState(false)
   const [editingBackgroundModel, setEditingBackgroundModel] = useState(false)
 
@@ -112,6 +113,19 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
     }
     dispatch(renameLiteLLMKey({ id: wallet.refId, label: draftLabel.trim() }))
     setRenaming(false)
+  }
+
+  // The dialog opens only once the affected bots are known, so nobody can
+  // confirm a removal without seeing what it turns off.
+  const openDelete = async () => {
+    if (!wallet.refId) return
+    try {
+      const { bots } = await getLiteLLMKeyDependentsAPI(wallet.refId)
+      setDependentBots(bots.map((bot) => bot.botTitle))
+      setShowDelete(true)
+    } catch {
+      toast.error("Couldn't check which Socratic bots use this key.")
+    }
   }
 
   const handleDelete = () => {
@@ -326,7 +340,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
               Background model
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => setShowDelete(true)}
+              onClick={openDelete}
               className='text-destructive focus:text-destructive'
             >
               <Trash2 className='mr-2 h-3.5 w-3.5' />
@@ -347,6 +361,15 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
         onClose={() => setShowDelete(false)}
         onDelete={handleDelete}
         title='Remove LiteLLM key'
+        description={
+          dependentBots.length
+            ? `${dependentBots.length} Socratic bot${
+                dependentBots.length === 1 ? ' uses' : 's use'
+              } this key (${dependentBots.join(', ')}). Removing it turns ${
+                dependentBots.length === 1 ? 'it' : 'them'
+              } off until you pick another model.`
+            : undefined
+        }
         itemName={wallet.label}
       />
     </div>

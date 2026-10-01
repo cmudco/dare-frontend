@@ -112,6 +112,18 @@ export interface LiteLLMTestResponse {
   error: string
 }
 
+/** A Socratic bot whose chat model routes through a LiteLLM key. */
+export interface LiteLLMKeyDependentBot {
+  botId: number
+  botTitle: string
+  botGroupTitle: string
+}
+
+export interface LiteLLMKeyDependentsResponse {
+  botCount: number
+  bots: LiteLLMKeyDependentBot[]
+}
+
 // ─────────────────────────────────────────────────────────────
 // Group wallet types (owner-facing)
 // ─────────────────────────────────────────────────────────────
