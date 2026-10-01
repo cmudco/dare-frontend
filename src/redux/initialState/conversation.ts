@@ -33,6 +33,7 @@ export const initialState: ConversationState = {
   selectedTags: [] as Tag[],
   selectedFolders: [] as MyFolder[],
   selectedLibraries: [] as SharedLibrary[],
+  sourcePickerOpen: false,
   memoryEnabled: false,
   selectedConversations: [],
   referencedConversations: [],

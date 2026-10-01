@@ -12,9 +12,10 @@ import {
 } from '../../redux/conversationSlice'
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker/index'
+import { selectProjectById } from '@/redux/projectSlice'
 import PromptSet from './PromptSet'
 import { Message } from '../../redux/types/conversation'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   sendMessage,
   createConversation,
@@ -76,9 +77,16 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     (state: RootState) => state.socket.connected
   )
   const navigate = useNavigate()
+  const location = useLocation()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const selectedModel = useSelector(
     (state: RootState) => state.conversation.selectedModel
+  )
+  const project = useSelector((state: RootState) =>
+    selectProjectById(state, activeConversation?.project)
+  )
+  const modelCatalogStatus = useSelector(
+    (state: RootState) => state.conversation.modelCatalogStatus
   )
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const [showModelWarning, setShowModelWarning] = useState(false)
@@ -148,6 +156,25 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       }
     }
   }
+
+  // A chat started from a project page arrives with its first message saved as
+  // the draft and flagged in route state: send it once the model is known,
+  // otherwise it stays in the input for the user to send after picking one.
+  const initialMessage = (location.state as { initialMessage?: string } | null)
+    ?.initialMessage
+  useEffect(() => {
+    if (!initialMessage || !activeConversation) return
+    if (modelCatalogStatus !== 'succeeded') return
+    navigate(location.pathname, { replace: true, state: null })
+    if (selectedModel !== null) setPendingMessage(initialMessage)
+  }, [
+    initialMessage,
+    activeConversation,
+    modelCatalogStatus,
+    selectedModel,
+    navigate,
+    location.pathname,
+  ])
 
   useEffect(() => {
     if (pendingMessage !== null && isSocketConnected && activeConversation) {
@@ -365,7 +392,9 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
                 ? 'Select a conversation to start chatting'
                 : hasAttachedImages
                   ? 'Add a message (optional)'
-                  : 'Type message'
+                  : project
+                    ? `Ask anything in ${project.name}`
+                    : 'Type message'
             }
             disabled={disabled}
             className={clsx(
