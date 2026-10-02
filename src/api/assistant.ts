@@ -1,5 +1,6 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
+import { ProposalDecision } from '@/utils/constants/assistant'
 import {
   AssistantThreadSchema,
   FileOrganizationProposalSchema,
@@ -25,7 +26,7 @@ export const startAssistantThreadAPI = async (): Promise<AssistantThread> =>
 
 export const decideAssistantProposalAPI = async (
   proposalId: number,
-  decision: 'apply' | 'discard'
+  decision: ProposalDecision
 ): Promise<FileOrganizationProposal> =>
   FileOrganizationProposalSchema.parse(
     await baseRequest<unknown>({

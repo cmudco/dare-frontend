@@ -2,72 +2,18 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { ArrowUp, Loader2, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AssistantMessageStatus } from '@/utils/constants/assistant'
 import { assistantIntroFor } from '@/constants/assistant'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   selectAssistant,
   selectAssistantLimitReached,
-  type AssistantLiveStep,
 } from '@/redux/assistantSlice'
 import {
   assistantSocketSend,
   assistantSocketStop,
 } from '@/redux/middleware/assistantSocketMiddleware'
-import type { AssistantMessage } from '@/schemas/assistantSocket'
-import { AssistantMarkdown } from './AssistantMarkdown'
-import { AssistantSteps, type AssistantStepView } from './AssistantSteps'
-import { ProposalCard } from './ProposalCard'
-
-function MessageBubble({
-  message,
-  liveSteps,
-}: {
-  message: AssistantMessage
-  liveSteps: AssistantLiveStep[]
-}) {
-  if (message.role === 'user') {
-    return (
-      <div className='flex justify-end'>
-        <div className='max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-sm whitespace-pre-wrap text-primary-foreground'>
-          {message.content}
-        </div>
-      </div>
-    )
-  }
-  const isStreaming = message.status === 'streaming'
-  const steps: AssistantStepView[] = isStreaming
-    ? liveSteps.map((step) => ({ ...step, key: step.id }))
-    : message.toolCalls.map((call, index) => ({
-        key: `${message.id}-${index}`,
-        name: call.name,
-        status: call.status,
-        arguments: call.arguments,
-      }))
-  const isRunningTool = steps.some((step) => step.status === 'running')
-  return (
-    <div className='text-sm text-foreground'>
-      <AssistantSteps steps={steps} />
-      {message.content && <AssistantMarkdown content={message.content} />}
-      {isStreaming && !isRunningTool && !message.content && (
-        <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-          <Loader2 className='h-3 w-3 animate-spin' />
-          {steps.length ? 'Reading what I found…' : 'Thinking…'}
-        </div>
-      )}
-      {message.proposals.map((proposal) => (
-        <ProposalCard key={proposal.id} proposal={proposal} />
-      ))}
-      {message.status === 'failed' && (
-        <p className='text-xs text-destructive'>
-          Something went wrong answering this. Please try again.
-        </p>
-      )}
-      {message.status === 'stopped' && (
-        <p className='mt-1 text-xs text-muted-foreground'>Stopped</p>
-      )}
-    </div>
-  )
-}
+import { AssistantMessageBubble } from './AssistantMessageBubble'
 
 export function AssistantChat() {
   const dispatch = useAppDispatch()
@@ -140,14 +86,15 @@ export function AssistantChat() {
           </div>
         )}
         {messages.map((message) => (
-          <MessageBubble
+          <AssistantMessageBubble
             key={message.id}
             message={message}
             liveSteps={liveSteps}
           />
         ))}
         {isAnswering &&
-          messages[messages.length - 1]?.status !== 'streaming' && (
+          messages[messages.length - 1]?.status !==
+            AssistantMessageStatus.STREAMING && (
             <div className='flex items-center gap-2 text-xs text-muted-foreground'>
               <Loader2 className='h-3 w-3 animate-spin' />
               Thinking…

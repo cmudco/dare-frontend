@@ -1,4 +1,8 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import {
+  AssistantMessageStatus,
+  AssistantStepStatus,
+} from '@/utils/constants/assistant'
 import type {
   AssistantEvent,
   AssistantMessage,
@@ -18,7 +22,7 @@ type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed'
 export interface AssistantLiveStep {
   id: string
   name: string
-  status: 'running' | 'completed' | 'failed'
+  status: AssistantStepStatus
   arguments: Record<string, unknown>
 }
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'failed'
@@ -105,7 +109,8 @@ const assistantSlice = createSlice({
             (item) => item.id === event.messageId
           )
           // A late chunk must not overwrite the persisted final reply.
-          if (reply?.status === 'streaming') reply.content = event.content
+          if (reply?.status === AssistantMessageStatus.STREAMING)
+            reply.content = event.content
           break
         }
         case 'tool_call_pending':
@@ -113,7 +118,7 @@ const assistantSlice = createSlice({
             state.liveSteps.push({
               id: event.toolCallId,
               name: event.toolName,
-              status: 'running',
+              status: AssistantStepStatus.RUNNING,
               arguments: {},
             })
           }
@@ -128,7 +133,7 @@ const assistantSlice = createSlice({
             state.liveSteps.push({
               id: event.toolCallId,
               name: event.toolName,
-              status: 'running',
+              status: AssistantStepStatus.RUNNING,
               arguments: event.arguments,
             })
           }

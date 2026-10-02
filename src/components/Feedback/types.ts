@@ -12,6 +12,11 @@ export type FeedbackCategory =
 
 export type FeedbackStep = 'emotion' | 'category' | 'details' | 'thankyou'
 
+export enum HelpTab {
+  ASSISTANT = 'assistant',
+  FEEDBACK = 'feedback',
+}
+
 export interface EmotionOption {
   value: Emotion
   emoji: string

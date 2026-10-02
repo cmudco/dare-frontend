@@ -22,14 +22,15 @@ import {
   captureScreenshot,
   submitFeedback,
 } from '@/redux/feedbackSlice'
-import { FeedbackPanel, type HelpTab } from './FeedbackPanel'
+import { FeedbackPanel } from './FeedbackPanel'
+import { HelpTab } from './types'
 import { fabVariants } from './animations'
 
 export function FeedbackWidget() {
   const feedbackRef = useRef<HTMLDivElement>(null)
   const dispatch = useDispatch<AppDispatch>()
   const location = useLocation()
-  const [tab, setTab] = useState<HelpTab>('assistant')
+  const [tab, setTab] = useState<HelpTab>(HelpTab.ASSISTANT)
   const assistant = useSelector((state: RootState) => state.assistant)
 
   // Hide feedback widget on workflow builder pages (create/edit)
@@ -105,11 +106,11 @@ export function FeedbackWidget() {
   }
 
   const handleToggle = () => {
-    if (!isOpen && tab === 'assistant') prepareAssistant()
+    if (!isOpen && tab === HelpTab.ASSISTANT) prepareAssistant()
     dispatch(toggleFeedback())
   }
   const handleTabChange = (next: HelpTab) => {
-    if (next === 'assistant') prepareAssistant()
+    if (next === HelpTab.ASSISTANT) prepareAssistant()
     setTab(next)
   }
   const handleNewAssistantChat = () => {

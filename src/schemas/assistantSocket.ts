@@ -4,12 +4,18 @@
  */
 
 import { z } from 'zod'
+import {
+  AssistantMessageStatus,
+  AssistantRole,
+  AssistantStepStatus,
+  ProposalStatus,
+} from '@/utils/constants/assistant'
 
 const PlanFileSchema = z.object({ id: z.number(), name: z.string() })
 
 export const FileOrganizationProposalSchema = z.object({
   id: z.number(),
-  status: z.enum(['pending', 'applied', 'discarded']),
+  status: z.enum(ProposalStatus),
   summary: z.string(),
   plan: z.object({
     folders: z.array(
@@ -38,13 +44,16 @@ export const FileOrganizationProposalSchema = z.object({
 
 export const AssistantMessageSchema = z.object({
   id: z.number(),
-  role: z.enum(['user', 'assistant']),
+  role: z.enum(AssistantRole),
   content: z.string(),
-  status: z.enum(['streaming', 'completed', 'stopped', 'failed']),
+  status: z.enum(AssistantMessageStatus),
   toolCalls: z.array(
     z.object({
       name: z.string(),
-      status: z.enum(['completed', 'failed']),
+      status: z.enum([
+        AssistantStepStatus.COMPLETED,
+        AssistantStepStatus.FAILED,
+      ]),
       arguments: z.record(z.string(), z.unknown()),
       round: z.number(),
     })
@@ -90,7 +99,7 @@ export const AssistantEventSchema = z.discriminatedUnion('type', [
     type: z.literal('tool_call_result'),
     toolCallId: z.string(),
     toolName: z.string(),
-    status: z.enum(['completed', 'failed']),
+    status: z.enum([AssistantStepStatus.COMPLETED, AssistantStepStatus.FAILED]),
   }),
   z.object({
     type: z.literal('assistant_message'),

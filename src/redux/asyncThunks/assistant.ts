@@ -1,4 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
+import { ProposalDecision } from '@/utils/constants/assistant'
 import {
   decideAssistantProposalAPI,
   getAssistantThreadAPI,
@@ -37,12 +38,12 @@ export const startAssistantThread = createAsyncThunk<
 
 export const decideAssistantProposal = createAsyncThunk<
   FileOrganizationProposal,
-  { proposalId: number; decision: 'apply' | 'discard' },
+  { proposalId: number; decision: ProposalDecision },
   { rejectValue: string }
 >('assistant/decideProposal', async ({ proposalId, decision }, thunkAPI) => {
   try {
     const proposal = await decideAssistantProposalAPI(proposalId, decision)
-    if (decision === 'apply') {
+    if (decision === ProposalDecision.APPLY) {
       // Folders and tags changed; refresh the Sources views that show them.
       thunkAPI.dispatch(getFiles())
       thunkAPI.dispatch(getFolders())

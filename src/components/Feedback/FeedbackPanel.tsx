@@ -1,7 +1,12 @@
 import type { ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SquarePen, X } from 'lucide-react'
-import type { FeedbackStep, Emotion, FeedbackCategory } from './types'
+import {
+  HelpTab,
+  type FeedbackStep,
+  type Emotion,
+  type FeedbackCategory,
+} from './types'
 import { EmotionStep } from './steps/EmotionStep'
 import { CategoryStep } from './steps/CategoryStep'
 import { DetailsStep } from './steps/DetailsStep'
@@ -12,11 +17,9 @@ import {
   backgroundGradientVariants,
 } from './animations'
 
-export type HelpTab = 'assistant' | 'feedback'
-
 const TABS: { id: HelpTab; label: string }[] = [
-  { id: 'assistant', label: 'Ask DARE' },
-  { id: 'feedback', label: 'Feedback' },
+  { id: HelpTab.ASSISTANT, label: 'Ask DARE' },
+  { id: HelpTab.FEEDBACK, label: 'Feedback' },
 ]
 
 interface FeedbackPanelProps {
@@ -88,7 +91,7 @@ export function FeedbackPanel({
           <motion.div
             variants={backgroundGradientVariants}
             initial='initial'
-            animate={(tab === 'feedback' && emotion) || 'initial'}
+            animate={(tab === HelpTab.FEEDBACK && emotion) || 'initial'}
             className='relative rounded-2xl shadow-2xl shadow-black/40'
           >
             {/* Backdrop blur layer */}
@@ -97,7 +100,9 @@ export function FeedbackPanel({
             {/* Gradient overlay - consistent dare-gradient */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: tab === 'feedback' && emotion ? 0.1 : 0 }}
+              animate={{
+                opacity: tab === HelpTab.FEEDBACK && emotion ? 0.1 : 0,
+              }}
               transition={{ duration: 0.5 }}
               className='absolute inset-0 rounded-2xl bg-dare-gradient'
             />
@@ -132,7 +137,7 @@ export function FeedbackPanel({
                   ))}
                 </div>
                 <div className='flex items-center gap-1'>
-                  {tab === 'assistant' && (
+                  {tab === HelpTab.ASSISTANT && (
                     <button
                       type='button'
                       onClick={onNewAssistantChat}
@@ -155,7 +160,7 @@ export function FeedbackPanel({
                 </div>
               </div>
 
-              {tab === 'assistant' ? (
+              {tab === HelpTab.ASSISTANT ? (
                 <div className='h-[min(560px,calc(100vh-160px))]'>
                   {assistant}
                 </div>
