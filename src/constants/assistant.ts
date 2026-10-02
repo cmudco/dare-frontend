@@ -175,32 +175,38 @@ const DEFAULT_INTRO: AssistantPageIntro = {
 export const assistantIntroFor = (pathname: string): AssistantPageIntro =>
   PAGE_INTROS.find(([pattern]) => pattern.test(pathname))?.[1] ?? DEFAULT_INTRO
 
-export const ASSISTANT_TOOLS: Record<
-  string,
-  { running: string; done: string }
-> = {
+const TOOL_STEPS: Record<string, { running: string; done: string }> = {
   search_platform_docs: {
-    running: 'Searching the DARE docs…',
-    done: 'Searched the docs',
+    running: 'Searching the DARE docs',
+    done: 'Searched the DARE docs',
   },
   get_account_overview: {
-    running: 'Checking your account…',
+    running: 'Checking your account',
     done: 'Checked your account',
   },
-  list_my_files: {
-    running: 'Checking your files…',
-    done: 'Checked your files',
-  },
+  list_my_files: { running: 'Checking your files', done: 'Checked your files' },
   get_conversation: {
-    running: 'Looking at this chat…',
+    running: 'Looking at this chat',
     done: 'Looked at this chat',
   },
   get_project: {
-    running: 'Looking at this project…',
+    running: 'Looking at this project',
     done: 'Looked at this project',
   },
   propose_file_organization: {
-    running: 'Drafting a plan for your files…',
-    done: 'Drafted a plan',
+    running: 'Drafting a plan for your files',
+    done: 'Drafted a plan for your files',
   },
+}
+
+/** One-line description of a tool step, e.g. `Searched the DARE docs for "x"`. */
+export function describeToolStep(
+  name: string,
+  args: Record<string, unknown>,
+  running: boolean
+): string {
+  const step = TOOL_STEPS[name]
+  const base = step ? (running ? step.running : step.done) : 'Using a tool'
+  const query = typeof args.query === 'string' ? args.query : null
+  return query ? `${base} for “${query}”` : base
 }

@@ -44,7 +44,8 @@ export const AssistantMessageSchema = z.object({
   toolCalls: z.array(
     z.object({
       name: z.string(),
-      status: z.string(),
+      status: z.enum(['completed', 'failed']),
+      arguments: z.record(z.string(), z.unknown()),
       round: z.number(),
     })
   ),
@@ -75,12 +76,21 @@ export const AssistantEventSchema = z.discriminatedUnion('type', [
     content: z.string(),
   }),
   z.object({
-    type: z.literal('tool_call_executing'),
+    type: z.literal('tool_call_pending'),
+    toolCallId: z.string(),
     toolName: z.string(),
   }),
   z.object({
-    type: z.literal('tool_call_result'),
+    type: z.literal('tool_call_executing'),
+    toolCallId: z.string(),
     toolName: z.string(),
+    arguments: z.record(z.string(), z.unknown()),
+  }),
+  z.object({
+    type: z.literal('tool_call_result'),
+    toolCallId: z.string(),
+    toolName: z.string(),
+    status: z.enum(['completed', 'failed']),
   }),
   z.object({
     type: z.literal('assistant_message'),
@@ -97,6 +107,7 @@ export type AssistantMessage = z.infer<typeof AssistantMessageSchema>
 export type AssistantUsage = z.infer<typeof AssistantUsageSchema>
 export type AssistantThread = z.infer<typeof AssistantThreadSchema>
 export type AssistantEvent = z.infer<typeof AssistantEventSchema>
+export type AssistantToolCall = AssistantMessage['toolCalls'][number]
 export type FileOrganizationProposal = z.infer<
   typeof FileOrganizationProposalSchema
 >

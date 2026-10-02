@@ -2,11 +2,12 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { ArrowUp, Loader2, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ASSISTANT_TOOLS, assistantIntroFor } from '@/constants/assistant'
+import { assistantIntroFor } from '@/constants/assistant'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   selectAssistant,
   selectAssistantLimitReached,
+  type AssistantLiveStep,
 } from '@/redux/assistantSlice'
 import {
   assistantSocketSend,
@@ -14,14 +15,15 @@ import {
 } from '@/redux/middleware/assistantSocketMiddleware'
 import type { AssistantMessage } from '@/schemas/assistantSocket'
 import { AssistantMarkdown } from './AssistantMarkdown'
+import { AssistantSteps, type AssistantStepView } from './AssistantSteps'
 import { ProposalCard } from './ProposalCard'
 
 function MessageBubble({
   message,
-  activeTool,
+  liveSteps,
 }: {
   message: AssistantMessage
-  activeTool: string | null
+  liveSteps: AssistantLiveStep[]
 }) {
   if (message.role === 'user') {
     return (
@@ -33,31 +35,28 @@ function MessageBubble({
     )
   }
   const isStreaming = message.status === 'streaming'
-  const usedTools = [
-    ...new Set(
-      message.toolCalls
-        .filter((call) => call.status === 'completed')
-        .map((call) => ASSISTANT_TOOLS[call.name]?.done)
-        .filter(Boolean)
-    ),
-  ]
+  const steps: AssistantStepView[] = isStreaming
+    ? liveSteps.map((step) => ({ ...step, key: step.id }))
+    : message.toolCalls.map((call, index) => ({
+        key: `${message.id}-${index}`,
+        name: call.name,
+        status: call.status,
+        arguments: call.arguments,
+      }))
+  const isRunningTool = steps.some((step) => step.status === 'running')
   return (
     <div className='text-sm text-foreground'>
+      <AssistantSteps steps={steps} />
       {message.content && <AssistantMarkdown content={message.content} />}
-      {isStreaming && (
-        <div className='mt-1 flex items-center gap-2 text-xs text-muted-foreground'>
+      {isStreaming && !isRunningTool && !message.content && (
+        <div className='flex items-center gap-2 text-xs text-muted-foreground'>
           <Loader2 className='h-3 w-3 animate-spin' />
-          {(activeTool && ASSISTANT_TOOLS[activeTool]?.running) || 'Thinking…'}
+          {steps.length ? 'Reading what I found…' : 'Thinking…'}
         </div>
       )}
       {message.proposals.map((proposal) => (
         <ProposalCard key={proposal.id} proposal={proposal} />
       ))}
-      {!isStreaming && usedTools.length > 0 && (
-        <p className='mt-1.5 text-[11px] text-muted-foreground'>
-          {usedTools.join(' · ')}
-        </p>
-      )}
       {message.status === 'failed' && (
         <p className='text-xs text-destructive'>
           Something went wrong answering this. Please try again.
@@ -76,7 +75,7 @@ export function AssistantChat() {
   const [draft, setDraft] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  const { messages, usage, threadStatus, isAnswering, activeTool, error } =
+  const { messages, usage, threadStatus, isAnswering, liveSteps, error } =
     useAppSelector(selectAssistant)
   const limitReached = useAppSelector(selectAssistantLimitReached)
   const isLoading = threadStatus === 'loading'
@@ -84,7 +83,7 @@ export function AssistantChat() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
-  }, [messages, activeTool])
+  }, [messages, liveSteps])
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -144,7 +143,7 @@ export function AssistantChat() {
           <MessageBubble
             key={message.id}
             message={message}
-            activeTool={activeTool}
+            liveSteps={liveSteps}
           />
         ))}
         {isAnswering &&

@@ -13,6 +13,14 @@ import {
 import { logout } from './userSlice'
 
 type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed'
+
+/** A tool call in the answer being streamed, keyed by its tool-call id. */
+export interface AssistantLiveStep {
+  id: string
+  name: string
+  status: 'running' | 'completed' | 'failed'
+  arguments: Record<string, unknown>
+}
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'failed'
 
 interface AssistantState {
@@ -21,7 +29,7 @@ interface AssistantState {
   threadStatus: RequestStatus
   connection: ConnectionStatus
   isAnswering: boolean
-  activeTool: string | null
+  liveSteps: AssistantLiveStep[]
   decidingProposalId: number | null
   error: string | null
 }
@@ -32,7 +40,7 @@ const initialState: AssistantState = {
   threadStatus: 'idle',
   connection: 'disconnected',
   isAnswering: false,
-  activeTool: null,
+  liveSteps: [],
   decidingProposalId: null,
   error: null,
 }
@@ -63,7 +71,7 @@ const assistantSlice = createSlice({
     assistantConnectionFailed(state) {
       state.connection = 'failed'
       state.isAnswering = false
-      state.activeTool = null
+      state.liveSteps = []
       state.error = ASSISTANT_CONNECTION_ERROR
     },
     assistantDisconnected(state) {
@@ -86,7 +94,10 @@ const assistantSlice = createSlice({
           )
           upsert(state, event.question)
           upsert(state, event.reply)
-          if (isNewTurn && state.usage) state.usage.usedToday += 1
+          if (isNewTurn) {
+            state.liveSteps = []
+            if (state.usage) state.usage.usedToday += 1
+          }
           break
         }
         case 'assistant_stream': {
@@ -97,20 +108,47 @@ const assistantSlice = createSlice({
           if (reply?.status === 'streaming') reply.content = event.content
           break
         }
-        case 'tool_call_executing':
-          state.activeTool = event.toolName
+        case 'tool_call_pending':
+          if (!state.liveSteps.some((step) => step.id === event.toolCallId)) {
+            state.liveSteps.push({
+              id: event.toolCallId,
+              name: event.toolName,
+              status: 'running',
+              arguments: {},
+            })
+          }
           break
-        case 'tool_call_result':
-          state.activeTool = null
+        case 'tool_call_executing': {
+          const step = state.liveSteps.find(
+            (item) => item.id === event.toolCallId
+          )
+          if (step) {
+            step.arguments = event.arguments
+          } else {
+            state.liveSteps.push({
+              id: event.toolCallId,
+              name: event.toolName,
+              status: 'running',
+              arguments: event.arguments,
+            })
+          }
           break
+        }
+        case 'tool_call_result': {
+          const step = state.liveSteps.find(
+            (item) => item.id === event.toolCallId
+          )
+          if (step) step.status = event.status
+          break
+        }
         case 'assistant_message':
           upsert(state, event.message)
-          state.activeTool = null
+          state.liveSteps = []
           state.isAnswering = false
           break
         case 'assistant_error':
           state.error = event.message
-          state.activeTool = null
+          state.liveSteps = []
           state.isAnswering = false
           break
       }
@@ -133,7 +171,7 @@ const assistantSlice = createSlice({
       .addCase(startAssistantThread.fulfilled, (state, action) => {
         state.messages = action.payload.messages
         state.usage = action.payload.usage
-        state.activeTool = null
+        state.liveSteps = []
         state.error = null
       })
       .addCase(startAssistantThread.rejected, (state) => {
