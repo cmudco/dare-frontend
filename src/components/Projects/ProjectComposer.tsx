@@ -1,12 +1,5 @@
 import React, { useState } from 'react'
-import {
-  ArrowUp,
-  Brain,
-  Globe,
-  Loader2,
-  ScrollText,
-  Sparkles,
-} from 'lucide-react'
+import { ArrowUp, Brain, Cpu, Globe, Loader2, ScrollText } from 'lucide-react'
 import { useAppSelector } from '@/redux/hooks'
 import type { Project } from '@/redux/types/project'
 import { ProjectMemoryScope } from '@/utils/constants/project'
@@ -80,7 +73,7 @@ const ProjectComposer = ({ project, onStart }: Props) => {
       <div className='flex items-center gap-2 px-3 pt-1 pb-3'>
         <div className='flex min-w-0 flex-1 flex-wrap items-center gap-1.5 pl-2'>
           {modelName && (
-            <Chip icon={<Sparkles className='h-3 w-3' />}>{modelName}</Chip>
+            <Chip icon={<Cpu className='h-3 w-3' />}>{modelName}</Chip>
           )}
           {project.instructions && (
             <Chip icon={<ScrollText className='h-3 w-3' />}>Instructions</Chip>
