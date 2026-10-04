@@ -53,6 +53,8 @@ export interface LogoProps extends React.HTMLAttributes<HTMLDivElement> {
   showTagline?: boolean
   /** Play the one-shot shield intro; it rests on the same frame as the static mark. */
   animated?: boolean
+  /** Show only the shield on phone-width screens. */
+  compactOnMobile?: boolean
 }
 
 export const Logo: React.FC<LogoProps> = ({
@@ -60,6 +62,7 @@ export const Logo: React.FC<LogoProps> = ({
   orientation = 'horizontal',
   showTagline = true,
   animated = false,
+  compactOnMobile = false,
   className,
   ...props
 }) => {
@@ -86,7 +89,13 @@ export const Logo: React.FC<LogoProps> = ({
         aria-hidden
         className={cn('h-auto shrink-0', s.shield)}
       />
-      <div className={cn('flex flex-col', isVertical && 'items-center')}>
+      <div
+        className={cn(
+          'flex flex-col',
+          isVertical && 'items-center',
+          compactOnMobile && 'hidden sm:flex'
+        )}
+      >
         <span
           className={cn(
             'font-sans font-extrabold tracking-widest text-foreground uppercase',
