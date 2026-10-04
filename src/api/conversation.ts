@@ -20,6 +20,15 @@ export const getConversationsAPI = async (): Promise<ConversationResponse> => {
   })
 }
 
+export const getProjectConversationsAPI = async (
+  projectId: number
+): Promise<ConversationResponse> =>
+  baseRequest<ConversationResponse>({
+    url: 'api/conversations/',
+    method: METHOD.GET,
+    params: { project: projectId },
+  })
+
 export const createConversationAPI = async (
   request: CreateConversationRequest
 ) => {

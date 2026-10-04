@@ -46,6 +46,7 @@ import { getFiles, getFolders, uploadNewFile } from '@/redux/asyncThunks/file'
 import { getSharedLibraries } from '@/redux/asyncThunks/library'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import {
+  fetchProjectChats,
   fetchProjects,
   deleteProject,
   moveConversationsToProject,
@@ -59,10 +60,7 @@ import {
   updateSelectedTags,
 } from '@/redux/conversationSlice'
 import { selectLibrariesLoaded } from '@/redux/librarySlice'
-import {
-  selectProjectById,
-  selectProjectConversations,
-} from '@/redux/projectSlice'
+import { selectProjectById, selectProjectChats } from '@/redux/projectSlice'
 import type { Conversation } from '@/redux/types/conversation'
 import type { ProjectUpdate } from '@/redux/types/project'
 import { toast } from '@/utils/toast'
@@ -77,6 +75,8 @@ enum ChatSort {
   OLDEST = 'oldest',
   TITLE = 'title',
 }
+
+const NO_CHATS: Conversation[] = []
 
 const sortChats = (conversations: Conversation[], sort: ChatSort) =>
   [...conversations].sort((a, b) => {
@@ -95,12 +95,11 @@ const ProjectDetail = () => {
   const dispatch = useAppDispatch()
   const { status } = useProjects()
   const project = useAppSelector((state) => selectProjectById(state, projectId))
-  const conversations = useAppSelector((state) =>
-    selectProjectConversations(state, projectId)
+  const projectChats = useAppSelector((state) =>
+    selectProjectChats(state, projectId)
   )
-  const chatsStatus = useAppSelector(
-    (state) => state.conversation.conversationListStatus
-  )
+  const conversations = projectChats?.conversations ?? NO_CHATS
+  const chatsStatus = projectChats?.status ?? 'idle'
   const librariesLoaded = useAppSelector(selectLibrariesLoaded)
   const modelCatalogStatus = useAppSelector(
     (state) => state.conversation.modelCatalogStatus
@@ -128,6 +127,10 @@ const ProjectDetail = () => {
     dispatch(getPrompts())
     dispatch(getWorkflows())
   }, [dispatch])
+
+  useEffect(() => {
+    dispatch(fetchProjectChats(projectId))
+  }, [projectId, dispatch])
 
   useEffect(() => {
     if (!librariesLoaded) dispatch(getSharedLibraries())
@@ -252,7 +255,10 @@ const ProjectDetail = () => {
   }
 
   const sourceCount = projectSourceCount(project)
-  const chatsLoading = chatsStatus !== 'succeeded' && conversations.length === 0
+  const chatsLoading =
+    (chatsStatus === 'idle' || chatsStatus === 'loading') &&
+    conversations.length === 0
+  const chatsFailed = chatsStatus === 'failed' && conversations.length === 0
 
   const tabs = [
     { value: ProjectTab.CHATS, label: 'Chats', count: conversations.length },
@@ -393,6 +399,19 @@ const ProjectDetail = () => {
                   {[0, 1, 2].map((key) => (
                     <Skeleton key={key} className='h-14 rounded-xl' />
                   ))}
+                </div>
+              ) : chatsFailed ? (
+                <div className='flex flex-col items-start gap-3 px-3 pt-6'>
+                  <p className='text-sm text-muted-foreground'>
+                    Could not load this project's chats.
+                  </p>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => dispatch(fetchProjectChats(projectId))}
+                  >
+                    Try again
+                  </Button>
                 </div>
               ) : (
                 <>
