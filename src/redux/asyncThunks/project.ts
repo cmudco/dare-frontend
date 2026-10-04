@@ -5,7 +5,11 @@ import {
   getProjectsAPI,
   updateProjectAPI,
 } from '@/api/projects'
-import { updateConversationAPI } from '@/api/conversation'
+import {
+  getProjectConversationsAPI,
+  updateConversationAPI,
+} from '@/api/conversation'
+import type { Conversation } from '../types/conversation'
 import type {
   DeleteProjectRequest,
   MoveConversationsRequest,
@@ -22,6 +26,18 @@ export const fetchProjects = createAsyncThunk<
 >('project/fetchProjects', async (_, thunkAPI) => {
   try {
     return await getProjectsAPI()
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const fetchProjectChats = createAsyncThunk<
+  Conversation[],
+  number,
+  { rejectValue: string }
+>('project/fetchProjectChats', async (projectId, thunkAPI) => {
+  try {
+    return (await getProjectConversationsAPI(projectId)).results
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message)
   }

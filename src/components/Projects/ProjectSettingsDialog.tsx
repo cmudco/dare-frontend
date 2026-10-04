@@ -93,10 +93,9 @@ const changedFields = (draft: Draft, project: Project): ProjectUpdate => {
 }
 
 const MEMORY_HELP: Record<ProjectMemoryScope, string> = {
-  [ProjectMemoryScope.ALL]:
-    'Chats in this project can recall anything DARE remembers about you.',
+  [ProjectMemoryScope.ALL]: 'Memory and past-chat search cover all your chats.',
   [ProjectMemoryScope.PROJECT]:
-    'Chats in this project only recall what was learned in this project. Your profile still applies.',
+    "Memory and past-chat search only cover this project's chats. Your profile preferences still apply.",
 }
 
 const SettingsForm = ({
@@ -325,7 +324,7 @@ const SettingsForm = ({
 
         {enableMemory && (
           <div className={sectionClass('memory', 'flex flex-col gap-1.5')}>
-            <Label htmlFor='settings-project-memory'>Memory</Label>
+            <Label htmlFor='settings-project-memory'>Recall from</Label>
             <Select
               value={draft.memoryScope}
               onValueChange={(value) =>
@@ -342,10 +341,10 @@ const SettingsForm = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={ProjectMemoryScope.ALL}>
-                  Default memory
+                  All chats
                 </SelectItem>
                 <SelectItem value={ProjectMemoryScope.PROJECT}>
-                  Project-only memory
+                  This project only
                 </SelectItem>
               </SelectContent>
             </Select>
