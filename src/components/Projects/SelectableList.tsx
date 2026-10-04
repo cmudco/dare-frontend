@@ -45,14 +45,16 @@ const SelectableList = <Id extends string | number>({
                 onCheckedChange={() => onToggle(row.id)}
               />
               {icon && <span className='text-muted-foreground'>{icon}</span>}
-              <span className='min-w-0 flex-1 truncate text-sm'>
-                {row.label}
-              </span>
-              {row.meta && (
-                <span className='shrink-0 text-xs text-muted-foreground'>
-                  {row.meta}
+              <span className='flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-3'>
+                <span className='min-w-0 truncate text-sm sm:flex-1'>
+                  {row.label}
                 </span>
-              )}
+                {row.meta && (
+                  <span className='min-w-0 truncate text-xs text-muted-foreground sm:max-w-[50%]'>
+                    {row.meta}
+                  </span>
+                )}
+              </span>
             </label>
           </li>
         )

@@ -268,7 +268,7 @@ const ProjectDetail = () => {
   return (
     <div className='h-full overflow-y-auto'>
       <FileStatusPoller />
-      <div className='mx-auto grid max-w-6xl gap-8 px-6 pt-8 pb-16 xl:grid-cols-[minmax(0,1fr)_320px]'>
+      <div className='mx-auto grid max-w-6xl gap-8 px-4 pt-6 pb-16 sm:px-6 sm:pt-8 xl:grid-cols-[minmax(0,1fr)_320px]'>
         <div className='mx-auto w-full max-w-3xl min-w-0'>
           <nav
             aria-label='Breadcrumb'
@@ -283,7 +283,7 @@ const ProjectDetail = () => {
             <div className='flex min-w-0 items-center gap-3'>
               <ProjectIcon icon={project.icon} tile className='h-11 w-11' />
               <div className='min-w-0'>
-                <h1 className='truncate text-3xl font-semibold tracking-tight'>
+                <h1 className='line-clamp-2 text-2xl font-semibold tracking-tight break-words sm:text-3xl'>
                   {project.name}
                 </h1>
                 {project.description && (
@@ -444,8 +444,8 @@ const ProjectDetail = () => {
           </div>
         </div>
 
-        <div className='hidden xl:block'>
-          <div className='sticky top-8'>
+        <div className='mx-auto w-full max-w-3xl min-w-0 xl:max-w-none'>
+          <div className='xl:sticky xl:top-8'>
             <ProjectSettingsRail
               project={project}
               onEditSettings={openSettings}
