@@ -269,9 +269,13 @@ export const deleteMultipleConversations = createAsyncThunk<
 
 export const cloneConversation = createAsyncThunk(
   'conversation/cloneConversation',
-  async (conversationId: string, { rejectWithValue }) => {
+  async (conversationId: string, { dispatch, rejectWithValue }) => {
     try {
-      return await cloneConversationAPI(conversationId)
+      const clone = await cloneConversationAPI(conversationId)
+      if (clone.project !== null) {
+        dispatch(fetchProjects())
+      }
+      return clone
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }
