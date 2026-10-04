@@ -7,6 +7,7 @@ import {
   fetchProjects,
   updateProject,
 } from './asyncThunks/project'
+import { userLogin, userLogout } from './asyncThunks/user'
 
 type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed'
 
@@ -37,6 +38,9 @@ const projectSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Projects are per account; the next user must never see the last one's.
+      .addCase(userLogout.pending, () => initialState)
+      .addCase(userLogin.pending, () => initialState)
       .addCase(fetchProjects.pending, (state) => {
         state.status = 'loading'
         state.error = null
