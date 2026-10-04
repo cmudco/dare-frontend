@@ -97,8 +97,8 @@ const ProjectSettingsRail = ({
         <Section title='Memory' action={editButton('Edit', 'memory')}>
           <p>
             {project.memoryScope === ProjectMemoryScope.PROJECT
-              ? 'Project-only: recalls what was learned here.'
-              : 'Default: shares memory with your other chats.'}
+              ? 'Recalls from this project only.'
+              : 'Recalls from all chats.'}
           </p>
         </Section>
       )}
