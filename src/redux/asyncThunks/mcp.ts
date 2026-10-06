@@ -116,6 +116,9 @@ export const getMcpTools = createAsyncThunk(
       const response = await getMcpToolsAPI(serverSlug)
       return { serverSlug, tools: response.tools }
     } catch (error) {
+      // The failure recorded the connection's new health server-side
+      // (expired vs. not responding); pull it so the UI says which.
+      thunkAPI.dispatch(getMcpConnections())
       return thunkAPI.rejectWithValue((error as Error).message)
     }
   }

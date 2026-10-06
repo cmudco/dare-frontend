@@ -15,6 +15,14 @@ export enum McpTransport {
   STREAMABLE_HTTP = 'streamable_http',
 }
 
+/** Last observed connection health, set by the backend from real tool use. */
+export enum McpHealthStatus {
+  UNKNOWN = 'unknown',
+  HEALTHY = 'healthy',
+  NEEDS_REAUTH = 'needs_reauth',
+  UNREACHABLE = 'unreachable',
+}
+
 export enum McpAuthType {
   CREDENTIALS = 'credentials',
   NONE = 'none',

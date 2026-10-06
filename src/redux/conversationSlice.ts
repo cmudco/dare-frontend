@@ -58,6 +58,7 @@ import type {
 import { MyFile, MyFolder } from './types/files'
 import { Tag } from './types/tags'
 import { SharedLibrary } from './types/library'
+import type { McpConnectionIssue } from './types/mcp'
 import { Prompt } from './types/prompt'
 import {
   selectAppropriateModel,
@@ -1293,6 +1294,24 @@ export const conversationSlice = createSlice({
           // is also persisted on the message, so a refresh recovers it.
           if (!msg) return
           msg.contextTrace = action.payload.trace
+          msg.connectingToolServerIds = undefined
+        }
+      )
+      .addMatcher(
+        (
+          action
+        ): action is {
+          type: string
+          payload: { messageId?: number | string; serverIds: number[] }
+        } => action.type === 'socket/tool_servers_connecting',
+        (state, action) => {
+          const { messageId, serverIds } = action.payload
+          if (messageId == null) return
+          const msg = state.activeConversationMessages.find(
+            (m) => m.id.toString() === messageId.toString()
+          )
+          if (!msg) return
+          msg.connectingToolServerIds = serverIds
         }
       )
       // Deliberation - the multi-model panel/council behind the turn (snapshots)
@@ -1326,6 +1345,22 @@ export const conversationSlice = createSlice({
           // message too, and reopening the thread brings it back.
           if (!msg) return
           msg.memoryWriteData = write
+        }
+      )
+      .addMatcher(
+        (action): action is { type: string; payload: McpConnectionIssue } =>
+          action.type === 'socket/mcp_connection_issue',
+        (state, action) => {
+          const { messageId, ...issue } = action.payload
+          if (messageId == null) return
+          const message = state.activeConversationMessages.find(
+            (item) => item.id.toString() === messageId.toString()
+          )
+          if (!message) return
+          const others = (message.mcpConnectionIssues ?? []).filter(
+            (existing) => existing.serverSlug !== issue.serverSlug
+          )
+          message.mcpConnectionIssues = [...others, issue]
         }
       )
       .addMatcher(

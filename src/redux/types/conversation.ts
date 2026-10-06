@@ -25,6 +25,8 @@ import type { LanguageCode } from '@/utils/constants/audioTranscription'
 import { MyFile, MyFolder } from './files'
 import { Prompt } from './prompt'
 import { Tag } from './tags'
+import type { McpConnectionIssue } from './mcp'
+import type { McpHealthStatus } from '@/utils/constants/mcp'
 import { SharedLibrary } from './library'
 import { EffortLevel, ReasoningLevel } from '@/utils/constants/model'
 
@@ -174,6 +176,9 @@ export interface Message {
   toolCalls?: ToolCall[]
   toolLoopState?: ToolLoopState
   toolLoopNotice?: string
+  mcpConnectionIssues?: McpConnectionIssue[]
+  /** MCP servers being connected before the model starts (live only). */
+  connectingToolServerIds?: number[]
   contentType?: MessageContentType
   contentMetadata?: Record<string, unknown>
   /**
@@ -314,6 +319,17 @@ export interface ContextTraceStage {
   sources?: RetrievalTrace[]
   /** Naive mode: kept snippets (no pipeline trace exists to embed). */
   snippets?: { ref: string; score: number; preview: string }[]
+  /** Tools: per-MCP-server discovery outcome. */
+  servers?: ToolServerReport[]
+}
+
+/** One MCP server's discovery result within the turn's tools stage. */
+export interface ToolServerReport {
+  slug: string
+  name: string
+  status: McpHealthStatus
+  tools: number
+  ms: number
 }
 
 /** How the turn's prompt was assembled, stage by stage. */

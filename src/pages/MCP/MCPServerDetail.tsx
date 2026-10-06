@@ -30,8 +30,13 @@ import {
   ExternalLink,
   ArrowLeft,
   Unplug,
+  PlugZap,
 } from 'lucide-react'
-import { McpAuthType, McpCatalogSlug } from '@/utils/constants/mcp'
+import {
+  McpAuthType,
+  McpCatalogSlug,
+  McpHealthStatus,
+} from '@/utils/constants/mcp'
 import {
   Dialog,
   DialogContent,
@@ -41,6 +46,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from '@/utils/toast'
+import { useMcpReconnect } from '@/hooks/useMcpReconnect'
 
 /**
  * MCPServerDetail - Server detail page with connection management and tools list
@@ -55,6 +61,7 @@ const MCPServerDetail = () => {
     connections,
     toolsByServer,
     toolsLoading,
+    toolsError,
     connectionsLoading,
     testingConnection,
     testResult,
@@ -75,8 +82,11 @@ const MCPServerDetail = () => {
   const isConnected =
     Boolean(connection?.hasCredentials) ||
     (isSyftboxServer && Boolean(user?.isSyftboxFileStorage))
+  const needsReauth = connection?.healthStatus === McpHealthStatus.NEEDS_REAUTH
+  const { reconnect, reconnecting } = useMcpReconnect()
   const tools = serverSlug ? toolsByServer[serverSlug] || [] : []
   const isLoadingTools = serverSlug ? toolsLoading[serverSlug] : false
+  const toolsErrorMessage = serverSlug ? toolsError[serverSlug] : null
 
   // Fetch data on mount
   useEffect(() => {
@@ -86,10 +96,10 @@ const MCPServerDetail = () => {
 
   // Fetch tools when server is connected
   useEffect(() => {
-    if (serverSlug && isConnected) {
+    if (serverSlug && isConnected && !needsReauth) {
       dispatch(getMcpTools(serverSlug))
     }
-  }, [dispatch, serverSlug, isConnected])
+  }, [dispatch, serverSlug, isConnected, needsReauth])
 
   // Initialize credentials when server changes
   useEffect(() => {
@@ -130,6 +140,14 @@ const MCPServerDetail = () => {
     if (createMcpConnection.fulfilled.match(result)) {
       dispatch(getMcpConnections())
     }
+  }
+
+  // The test endpoint probes the server live (skipping the backend's
+  // down-server cooldown), so a recovered server is picked up immediately.
+  const handleRetryTools = async () => {
+    if (!serverSlug) return
+    await dispatch(testMcpConnection(serverSlug))
+    dispatch(getMcpTools(serverSlug))
   }
 
   const handleOAuthConnect = async () => {
@@ -194,10 +212,37 @@ const MCPServerDetail = () => {
         </div>
         {isConnected && (
           <div className='ml-auto flex items-center gap-2'>
-            <span className='flex items-center gap-2 rounded-full bg-green-100 px-3 py-1.5 text-sm font-medium text-green-700 dark:bg-green-900/50 dark:text-green-300'>
-              <CheckCircle2 className='h-4 w-4' />
-              Connected
-            </span>
+            {needsReauth ? (
+              <span className='flex items-center gap-2 rounded-full bg-destructive/10 px-3 py-1.5 text-sm font-medium text-destructive'>
+                <AlertTriangle className='h-4 w-4' />
+                Connection expired
+              </span>
+            ) : toolsErrorMessage ? (
+              <span className='flex items-center gap-2 rounded-full bg-destructive/10 px-3 py-1.5 text-sm font-medium text-destructive'>
+                <XCircle className='h-4 w-4' />
+                Not responding
+              </span>
+            ) : (
+              <span className='flex items-center gap-2 rounded-full bg-green-100 px-3 py-1.5 text-sm font-medium text-green-700 dark:bg-green-900/50 dark:text-green-300'>
+                <CheckCircle2 className='h-4 w-4' />
+                Connected
+              </span>
+            )}
+            {isOAuthServer && (
+              <Button
+                variant={needsReauth ? 'default' : 'outline'}
+                size='sm'
+                onClick={() => reconnect(server.slug, server.authType)}
+                disabled={reconnecting}
+              >
+                {reconnecting ? (
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                ) : (
+                  <PlugZap className='mr-2 h-4 w-4' />
+                )}
+                Reconnect
+              </Button>
+            )}
             {!isSyftboxServer && (
               <Button
                 variant='outline'
@@ -262,7 +307,7 @@ const MCPServerDetail = () => {
       </Dialog>
 
       {/* Connection Section */}
-      {!isConnected && (
+      {(!isConnected || (needsReauth && isCredentialServer)) && (
         <div className='rounded-lg border bg-card p-6'>
           <h3 className='mb-4 text-lg font-medium'>Connect to {server.name}</h3>
 
@@ -432,6 +477,43 @@ const MCPServerDetail = () => {
           {isLoadingTools ? (
             <div className='flex h-32 items-center justify-center'>
               <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
+            </div>
+          ) : needsReauth ? (
+            <div className='flex flex-col items-center gap-3 py-8 text-center'>
+              <AlertTriangle className='h-6 w-6 text-destructive' />
+              <p className='max-w-md text-sm text-foreground'>
+                This connection has expired, so its tools are skipped in chats.
+                {isOAuthServer
+                  ? ' Reconnect to use them again.'
+                  : ' Update the credentials above to use them again.'}
+              </p>
+              {isOAuthServer && (
+                <Button
+                  size='sm'
+                  onClick={() => reconnect(server.slug, server.authType)}
+                  disabled={reconnecting}
+                >
+                  Reconnect
+                </Button>
+              )}
+            </div>
+          ) : toolsErrorMessage ? (
+            <div className='flex flex-col items-center gap-3 py-8 text-center'>
+              <AlertTriangle className='h-6 w-6 text-destructive' />
+              <p className='max-w-md text-sm text-foreground'>
+                {toolsErrorMessage}
+              </p>
+              <p className='max-w-md text-xs text-muted-foreground'>
+                Its tools will be skipped in chats until it responds again.
+              </p>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRetryTools}
+                disabled={isLoadingTools || testingConnection}
+              >
+                Try again
+              </Button>
             </div>
           ) : tools.length === 0 ? (
             <p className='py-8 text-center text-muted-foreground'>

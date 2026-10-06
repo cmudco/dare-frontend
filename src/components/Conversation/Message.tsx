@@ -47,6 +47,7 @@ import MessageMetadata from './MessageMetadata'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
 import { MessageActivity } from './MessageActivity/MessageActivity'
+import { MCPConnectionIssueBanner } from '../MCP/MCPConnectionIssueBanner'
 import ThinkingSummary from './ThinkingSummary'
 import { DeliberationPanel } from './Deliberation/DeliberationPanel'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
@@ -809,6 +810,11 @@ const Message: React.FC<MessageProps> = ({
           memories — live with shimmer status during the turn */}
       {!isSenderMessage(message) && (
         <div className='mt-2 w-full max-w-[95%] min-w-0 pl-0 sm:pl-10'>
+          {message.mcpConnectionIssues?.length ? (
+            <div className='mb-2'>
+              <MCPConnectionIssueBanner issues={message.mcpConnectionIssues} />
+            </div>
+          ) : null}
           <MessageActivity message={message} />
         </div>
       )}

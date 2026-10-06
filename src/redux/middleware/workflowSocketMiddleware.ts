@@ -58,6 +58,8 @@ import {
   workflowToolCallExecuting,
   workflowToolCallResult,
   workflowToolRoundsCapped,
+  workflowToolServersConnecting,
+  workflowMcpConnectionIssue,
   workflowContextTrace,
   workflowArtifactCreated,
   workflowArtifactUpdated,
@@ -192,6 +194,8 @@ const eventDispatchMap: Record<WorkflowEvent['type'], (payload: any) => any> = {
   tool_call_result: workflowToolCallResult,
   tool_rounds_capped: workflowToolRoundsCapped,
   context_trace: workflowContextTrace,
+  tool_servers_connecting: workflowToolServersConnecting,
+  mcp_connection_issue: workflowMcpConnectionIssue,
   artifact_created: workflowArtifactCreated,
   artifact_updated: workflowArtifactUpdated,
 }

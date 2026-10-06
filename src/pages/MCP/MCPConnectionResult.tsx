@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { takeMcpReturnPath } from '@/hooks/useMcpReconnect'
 
 /**
  * MCPConnectionResult — landing page for the MCP OAuth callback return.
@@ -23,6 +24,7 @@ const MCPConnectionResult = () => {
   const message = params.get('message') || ''
 
   const isSuccess = status === 'success'
+  const [returnPath] = useState(() => takeMcpReturnPath(server))
 
   const heading = useMemo(() => {
     if (isSuccess) return 'Connection successful'
@@ -50,7 +52,11 @@ const MCPConnectionResult = () => {
         <p className='mt-2 text-sm text-muted-foreground'>{body}</p>
 
         <div className='mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center'>
-          {isSuccess && server ? (
+          {isSuccess && returnPath ? (
+            <Button onClick={() => navigate(returnPath)}>
+              Return to where you were
+            </Button>
+          ) : isSuccess && server ? (
             <Button onClick={() => navigate(`/mcp/${server}`)}>
               View integration
             </Button>

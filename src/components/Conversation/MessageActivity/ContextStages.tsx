@@ -11,9 +11,11 @@ import {
 } from 'lucide-react'
 import { RagMode } from '@/utils/constants/conversation'
 import type { ContextTraceStage } from '@/redux/types/conversation'
+import { McpHealthStatus } from '@/utils/constants/mcp'
 import { StepHeader } from '../Timeline'
 import { formatChars, formatMs, keptSnippetCount } from './activitySummary'
 import { NaiveSnippets, SourceSnippets } from './SnippetList'
+import { ToolServerRow } from './ToolServerRow'
 
 /** Same vocabulary as the retrieval-mode cards in settings. */
 const MODE_LABELS: Record<string, string> = {
@@ -65,8 +67,17 @@ const stageDetail = (stage: ContextTraceStage): string => {
     case 'summaries':
     case 'memory':
     case 'media':
-    case 'tools':
       return stage.count != null ? `${stage.count}` : ''
+    case 'tools': {
+      const count = stage.count != null ? `${stage.count}` : ''
+      const servers = stage.servers ?? []
+      const failed = servers.filter(
+        (server) => server.status !== McpHealthStatus.HEALTHY
+      ).length
+      return failed
+        ? `${count} · ${failed} server${failed === 1 ? '' : 's'} unavailable`
+        : count
+    }
     case 'files':
       return `${stage.files?.length ?? 0}`
     case 'retrieval': {
@@ -130,6 +141,14 @@ export const contextStageSteps = (
                   {formatChars(file.chars)}
                 </span>
               </div>
+            ))}
+          </div>
+        )}
+
+        {stage.kind === 'tools' && stage.servers && (
+          <div className='mt-1.5 space-y-0.5'>
+            {stage.servers.map((server) => (
+              <ToolServerRow key={server.slug} server={server} />
             ))}
           </div>
         )}

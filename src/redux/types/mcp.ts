@@ -5,6 +5,7 @@
 import {
   ExecutionStatus,
   McpAuthType,
+  McpHealthStatus,
   McpTransport,
 } from '@/utils/constants/mcp'
 
@@ -50,8 +51,21 @@ export interface McpConnection {
   authMetadata: McpAuthMetadata
   isActive: boolean
   lastUsedAt: string | null
+  healthStatus: McpHealthStatus
+  healthError: string
+  healthChangedAt: string | null
   createdAt: string
   updatedAt: string
+}
+
+/** `mcp_connection_issue` socket payload: a selected server's tools couldn't load. */
+export interface McpConnectionIssue {
+  messageId?: number | string
+  serverSlug: string
+  serverName: string
+  authType: McpAuthType
+  status: McpHealthStatus.NEEDS_REAUTH | McpHealthStatus.UNREACHABLE
+  message: string
 }
 
 export interface McpAuthMetadata {
@@ -157,6 +171,7 @@ export interface ExecuteMcpToolResponse {
 export interface TestMcpConnectionResponse {
   success: boolean
   message: string
+  healthStatus?: McpHealthStatus
 }
 
 /**
@@ -188,6 +203,7 @@ export interface McpState {
   // Tools per server (keyed by slug)
   toolsByServer: Record<string, McpTool[]>
   toolsLoading: Record<string, boolean>
+  toolsError: Record<string, string | null>
 
   // Execution
   executing: boolean

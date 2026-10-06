@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '@/redux/hooks'
 import { McpServer } from '@/redux/types/mcp'
-import { McpCatalogSlug } from '@/utils/constants/mcp'
+import { McpCatalogSlug, McpHealthStatus } from '@/utils/constants/mcp'
 import { MCPServerLogo } from './MCPServerLogo'
 
 interface MCPServerCardProps {
@@ -43,7 +43,19 @@ const MCPServerCard = ({ server }: MCPServerCardProps) => {
         </div>
 
         {/* Connection Status Badge */}
-        {isConnected ? (
+        {isConnected &&
+        connection?.healthStatus === McpHealthStatus.NEEDS_REAUTH ? (
+          <span className='flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive'>
+            <span className='h-1.5 w-1.5 rounded-full bg-destructive' />
+            Reconnect needed
+          </span>
+        ) : isConnected &&
+          connection?.healthStatus === McpHealthStatus.UNREACHABLE ? (
+          <span className='flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive'>
+            <span className='h-1.5 w-1.5 rounded-full bg-destructive' />
+            Not responding
+          </span>
+        ) : isConnected ? (
           <span className='flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/50 dark:text-green-300'>
             <span className='h-1.5 w-1.5 rounded-full bg-green-500' />
             Connected

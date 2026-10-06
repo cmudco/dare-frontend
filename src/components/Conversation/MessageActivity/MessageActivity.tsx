@@ -23,6 +23,7 @@ import { StepHeader, TimelineStep } from '../Timeline'
 import { contextStageSteps, type ActivityStep } from './ContextStages'
 import { contextSummaryPieces, formatMs } from './activitySummary'
 import { MemoryWriteStep } from './MemoryWriteStep'
+import { useAppSelector } from '@/redux/hooks'
 import { memoryWriteSummary } from './memoryWriteSummary'
 
 interface MessageActivityProps {
@@ -97,6 +98,7 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
   message,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
+  const mcpServers = useAppSelector((state) => state.mcp.servers)
 
   const toolCalls = useMemo(() => message.toolCalls ?? [], [message.toolCalls])
   const trace = message.contextTrace
@@ -133,6 +135,11 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
   const hasActive = activeCalls.length > 0
   const hasError = failedCalls.length > 0
   const live = streaming || hasActive
+  // Discovery happens before the trace arrives and can wait on a slow server.
+  const connectingIds =
+    streaming && !trace && !message.message
+      ? (message.connectingToolServerIds ?? [])
+      : []
 
   useEffect(() => {
     if (interrupted || (!hasActive && hasError && !recovered)) {
@@ -141,6 +148,7 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
   }, [hasActive, hasError, interrupted, recovered])
 
   if (
+    !connectingIds.length &&
     !trace?.stages.length &&
     !toolCalls.length &&
     !webSources.length &&
@@ -150,6 +158,14 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
   }
 
   const renderLiveText = () => {
+    if (connectingIds.length) {
+      const names = connectingIds
+        .map((id) => mcpServers.find((server) => server.id === id)?.name)
+        .filter(Boolean)
+      return names.length
+        ? `Connecting to ${names.join(', ')}…`
+        : 'Connecting to your tool servers…'
+    }
     if (activeCalls.length === 1) {
       const active = activeCalls[0]
       const presentation = getToolPresentation(active.toolName)

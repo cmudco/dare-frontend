@@ -9,6 +9,7 @@ import type {
   WorkflowStepWebSearchSource,
 } from '../types/workflow'
 import type { BatchFileStatus } from '../types/workflowBuilder'
+import type { McpConnectionIssue } from '../types/mcp'
 import type {
   WorkflowToolCallPendingEvent,
   WorkflowToolCallExecutingEvent,
@@ -108,6 +109,18 @@ export const workflowToolRoundsCapped = createAction<{
 
 export const workflowContextTrace = createAction<WorkflowContextTraceEvent>(
   'workflowSocket/context_trace'
+)
+
+export const workflowToolServersConnecting = createAction<{
+  workflowRunId: number
+  nodeId: string
+  serverIds: number[]
+}>('workflowSocket/tool_servers_connecting')
+
+// Shares chat's action type so mcpSlice records the connection's health no
+// matter which socket reported it (the chat reducer ignores it: no messageId).
+export const workflowMcpConnectionIssue = createAction<McpConnectionIssue>(
+  'socket/mcp_connection_issue'
 )
 
 // Artifact events use chat's `socket/*` action types on purpose: the shared

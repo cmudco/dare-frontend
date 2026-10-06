@@ -12,6 +12,7 @@ export const initialMcpState: McpState = {
   // Tools per server (keyed by slug)
   toolsByServer: {},
   toolsLoading: {},
+  toolsError: {},
 
   // Execution
   executing: false,

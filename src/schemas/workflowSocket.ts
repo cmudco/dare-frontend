@@ -252,6 +252,26 @@ export const WorkflowContextTraceSchema = z
   })
   .passthrough()
 
+export const WorkflowToolServersConnectingSchema = z
+  .object({
+    type: z.literal('tool_servers_connecting'),
+    ...workflowToolCorrelation,
+    serverIds: z.array(z.number()),
+  })
+  .passthrough()
+
+export const WorkflowMcpConnectionIssueSchema = z
+  .object({
+    type: z.literal('mcp_connection_issue'),
+    ...workflowToolCorrelation,
+    serverSlug: z.string(),
+    serverName: z.string(),
+    authType: z.string(),
+    status: z.string(),
+    message: z.string(),
+  })
+  .passthrough()
+
 // ── Artifact events (same payloads as chat's, with workflow correlation) ────
 
 export const WorkflowArtifactCreatedSchema = z
@@ -359,6 +379,8 @@ export const WorkflowEventSchema = z.discriminatedUnion('type', [
   WorkflowToolCallResultSchema,
   WorkflowToolRoundsCappedSchema,
   WorkflowContextTraceSchema,
+  WorkflowToolServersConnectingSchema,
+  WorkflowMcpConnectionIssueSchema,
   WorkflowArtifactCreatedSchema,
   WorkflowArtifactUpdatedSchema,
 ])

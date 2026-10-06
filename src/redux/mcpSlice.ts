@@ -19,7 +19,21 @@ import {
   McpToolExecution,
   TestMcpConnectionResponse,
   ExecuteMcpToolResponse,
+  McpConnectionIssue,
+  McpState,
 } from './types/mcp'
+import { McpHealthStatus } from '@/utils/constants/mcp'
+
+const setConnectionHealth = (
+  state: McpState,
+  serverSlug: string,
+  healthStatus: McpHealthStatus
+) => {
+  const connection = state.connections.find(
+    (item) => item.server.slug === serverSlug
+  )
+  if (connection) connection.healthStatus = healthStatus
+}
 
 const mcpSlice = createSlice({
   name: 'mcp',
@@ -149,13 +163,17 @@ const mcpSlice = createSlice({
         state.testResult = null
         state.error = null
       })
-      .addCase(
-        testMcpConnection.fulfilled,
-        (state, action: PayloadAction<TestMcpConnectionResponse>) => {
-          state.testingConnection = false
-          state.testResult = action.payload
+      .addCase(testMcpConnection.fulfilled, (state, action) => {
+        state.testingConnection = false
+        state.testResult = action.payload as TestMcpConnectionResponse
+        if (action.payload.healthStatus) {
+          setConnectionHealth(
+            state,
+            action.meta.arg,
+            action.payload.healthStatus
+          )
         }
-      )
+      })
       .addCase(testMcpConnection.rejected, (state, action) => {
         state.testingConnection = false
         state.testResult = { success: false, message: action.payload as string }
@@ -166,6 +184,7 @@ const mcpSlice = createSlice({
       .addCase(getMcpTools.pending, (state, action) => {
         const serverSlug = action.meta.arg
         state.toolsLoading[serverSlug] = true
+        state.toolsError[serverSlug] = null
         state.error = null
       })
       .addCase(
@@ -177,12 +196,15 @@ const mcpSlice = createSlice({
           const { serverSlug, tools } = action.payload
           state.toolsLoading[serverSlug] = false
           state.toolsByServer[serverSlug] = tools
+          setConnectionHealth(state, serverSlug, McpHealthStatus.HEALTHY)
         }
       )
       .addCase(getMcpTools.rejected, (state, action) => {
         const serverSlug = action.meta.arg
         state.toolsLoading[serverSlug] = false
-        state.error = action.payload as string
+        state.toolsByServer[serverSlug] = []
+        state.toolsError[serverSlug] =
+          (action.payload as string) || 'Could not load tools for this server.'
       })
 
       // Start MCP OAuth
@@ -236,6 +258,17 @@ const mcpSlice = createSlice({
         state.executionHistoryLoading = false
         state.error = action.payload as string
       })
+      .addMatcher(
+        (action): action is PayloadAction<McpConnectionIssue> =>
+          action.type === 'socket/mcp_connection_issue',
+        (state, action) => {
+          setConnectionHealth(
+            state,
+            action.payload.serverSlug,
+            action.payload.status
+          )
+        }
+      )
   },
 })
 

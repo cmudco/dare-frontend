@@ -16,6 +16,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { ChevronDown, Loader2, Plug, AlertCircle, Check } from 'lucide-react'
 import { MCPServerLogo } from './MCPServerLogo'
+import { useMcpReconnect } from '@/hooks/useMcpReconnect'
+import { McpHealthStatus } from '@/utils/constants/mcp'
 
 interface MCPServerSelectorProps {
   selectedIds: number[]
@@ -39,6 +41,7 @@ export const MCPServerSelector = ({
     (state) => state.mcp
   )
   const [open, setOpen] = useState(false)
+  const { reconnect, reconnecting } = useMcpReconnect()
 
   useEffect(() => {
     if (servers.length === 0) {
@@ -52,6 +55,13 @@ export const MCPServerSelector = ({
   // Get connection status for a server
   const isConnected = (serverSlug: string) =>
     connections.some((c) => c.server.slug === serverSlug && c.hasCredentials)
+
+  const needsReauth = (serverSlug: string) =>
+    connections.some(
+      (c) =>
+        c.server.slug === serverSlug &&
+        c.healthStatus === McpHealthStatus.NEEDS_REAUTH
+    )
 
   // Filter to only show connected servers
   const connectedServers = servers.filter((s) => isConnected(s.slug))
@@ -136,33 +146,49 @@ export const MCPServerSelector = ({
           <div className='flex flex-col gap-1'>
             {connectedServers.map((server) => {
               const isSelected = selectedIds.includes(server.id)
+              const expired = needsReauth(server.slug)
               return (
-                <button
-                  key={server.id}
-                  className={`flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all ${
-                    isSelected
-                      ? 'border-primary bg-primary/10'
-                      : 'border-transparent bg-transparent hover:border-border hover:bg-accent'
-                  }`}
-                  onClick={() => handleToggle(server.id)}
-                >
-                  <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted'>
-                    <MCPServerLogo slug={server.slug} size={20} />
-                  </div>
-                  <div className='min-w-0 flex-1'>
-                    <div className='mb-0.5 text-[13px] font-medium text-foreground'>
-                      {server.name}
+                <div key={server.id}>
+                  <button
+                    className={`flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all ${
+                      isSelected
+                        ? 'border-primary bg-primary/10'
+                        : 'border-transparent bg-transparent hover:border-border hover:bg-accent'
+                    }`}
+                    onClick={() => handleToggle(server.id)}
+                  >
+                    <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted'>
+                      <MCPServerLogo slug={server.slug} size={20} />
                     </div>
-                    {server.description && (
-                      <div className='line-clamp-2 text-[11px] leading-relaxed text-muted-foreground'>
-                        {server.description}
+                    <div className='min-w-0 flex-1'>
+                      <div className='mb-0.5 text-[13px] font-medium text-foreground'>
+                        {server.name}
                       </div>
-                    )}
-                  </div>
-                  <div className='flex h-5 w-5 shrink-0 items-center justify-center'>
-                    {isSelected && <Check className='h-4 w-4 text-primary' />}
-                  </div>
-                </button>
+                      {server.description && (
+                        <div className='line-clamp-2 text-[11px] leading-relaxed text-muted-foreground'>
+                          {server.description}
+                        </div>
+                      )}
+                    </div>
+                    <div className='flex h-5 w-5 shrink-0 items-center justify-center'>
+                      {isSelected && <Check className='h-4 w-4 text-primary' />}
+                    </div>
+                  </button>
+                  {expired && (
+                    <div className='flex items-center justify-between gap-2 px-2.5 pb-1.5 pl-[52px] text-[11px] text-destructive'>
+                      <span>Connection expired</span>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        className='h-6 px-2 text-[11px]'
+                        disabled={reconnecting}
+                        onClick={() => reconnect(server.slug, server.authType)}
+                      >
+                        Reconnect
+                      </Button>
+                    </div>
+                  )}
+                </div>
               )
             })}
           </div>
