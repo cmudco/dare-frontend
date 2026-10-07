@@ -1,4 +1,5 @@
 import React from 'react'
+import { useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 /**
@@ -50,16 +51,25 @@ export interface LogoProps extends React.HTMLAttributes<HTMLDivElement> {
   orientation?: 'horizontal' | 'vertical'
   /** Show the "A Carnegie Mellon University Project" tagline beneath the wordmark. */
   showTagline?: boolean
+  /** Play the one-shot shield intro; it rests on the same frame as the static mark. */
+  animated?: boolean
+  /** Show only the shield on phone-width screens. */
+  compactOnMobile?: boolean
 }
 
 export const Logo: React.FC<LogoProps> = ({
   size = 'md',
   orientation = 'horizontal',
   showTagline = true,
+  animated = false,
+  compactOnMobile = false,
   className,
   ...props
 }) => {
   const s = SIZES[size]
+  // The SVG's own reduced-motion query doesn't reliably reach an <img>-embedded document.
+  const reduceMotion = useReducedMotion()
+  const playIntro = animated && !reduceMotion
   const isVertical = orientation === 'vertical'
   return (
     <div
@@ -74,12 +84,18 @@ export const Logo: React.FC<LogoProps> = ({
       {...props}
     >
       <img
-        src='/icons/Logo.png'
+        src={playIntro ? '/icons/logo-animated.svg' : '/icons/Logo.png'}
         alt=''
         aria-hidden
         className={cn('h-auto shrink-0', s.shield)}
       />
-      <div className={cn('flex flex-col', isVertical && 'items-center')}>
+      <div
+        className={cn(
+          'flex flex-col',
+          isVertical && 'items-center',
+          compactOnMobile && 'hidden sm:flex'
+        )}
+      >
         <span
           className={cn(
             'font-sans font-extrabold tracking-widest text-foreground uppercase',

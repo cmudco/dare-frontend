@@ -10,6 +10,7 @@ import {
   AcademicCapIcon,
   BeakerIcon,
   ArrowTopRightOnSquareIcon,
+  RectangleStackIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
@@ -119,6 +120,9 @@ const MemoryIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+// Nav items whose sub-routes (a chat, a project) keep the item highlighted.
+const NESTED_ROUTE_PATHS = ['/conversation', '/projects']
+
 const Sidebar = () => {
   const location = useLocation()
   const dispatch = useAppDispatch()
@@ -166,6 +170,7 @@ const Sidebar = () => {
   const menuItems: MenuItem[] = [
     { name: 'Dashboard', icon: RectangleGroupIcon, path: '/dashboard' },
     { name: 'Conversations', icon: ChatBubbleLeftIcon, path: '/conversation' },
+    { name: 'Projects', icon: RectangleStackIcon, path: '/projects' },
     { name: 'Sources', icon: FolderOpenIcon, path: '/files' },
     { name: 'Prompts', icon: PromptsIcon, path: '/prompts' },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
@@ -219,10 +224,9 @@ const Sidebar = () => {
         </div>
         <nav className='flex grow flex-col gap-1 p-2 font-sans text-base font-normal'>
           {menuItems.map((item) => {
-            const isActive =
-              item.path === '/conversation'
-                ? location.pathname.startsWith('/conversation')
-                : location.pathname === item.path
+            const isActive = NESTED_ROUTE_PATHS.includes(item.path)
+              ? location.pathname.startsWith(item.path)
+              : location.pathname === item.path
             return (
               <Link
                 key={item.name}

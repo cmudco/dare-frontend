@@ -1,7 +1,29 @@
-import { UnifiedWallet } from '@/redux/types/billing'
+import { UnifiedWallet, WalletStatusBalance } from '@/redux/types/billing'
 
 /** User-owned LiteLLM keys run background jobs on the DARE default until a model is chosen. */
 export const needsBackgroundModel = (wallet: UnifiedWallet): boolean =>
   wallet.type === 'LITELLM' &&
   wallet.source === 'USER' &&
   !wallet.backgroundModel
+
+/** Two-decimal USD for a decimal string from the billing API. Usage below a
+ *  cent reads as "<$0.01" so it is not mistaken for no usage at all. */
+export const formatUsd = (amount: string): string => {
+  const value = Number(amount)
+  return value > 0 && value < 0.01 ? '<$0.01' : `$${value.toFixed(2)}`
+}
+
+/** "$4.00 of $5.00": a DARE balance against the ceiling refills top it up to.
+ *  A balance above the ceiling (a purchase or allocation) shows alone. */
+export const formatBalanceOfCeiling = (status: WalletStatusBalance): string =>
+  Number(status.balance) > Number(status.ceiling)
+    ? formatUsd(status.balance)
+    : `${formatUsd(status.balance)} of ${formatUsd(status.ceiling)}`
+
+/** Four-decimal USD for spend comparisons, where cents hide the difference. */
+export const formatUsdPrecise = (amount: string): string =>
+  `$${Number(amount).toFixed(4)}`
+
+/** Form value for an optional API amount: "15.000000" → "15", null → "". */
+export const toAmountInput = (amount: string | null): string =>
+  amount === null ? '' : String(Number(amount))

@@ -84,20 +84,20 @@ const FILES_STEPS: PageTourStep[] = [
     placement: 'center',
   },
   {
-    id: 'files-view-toggle',
-    target: '[data-tour="files-view-toggle"]',
-    title: 'Switch Views',
+    id: 'files-nav',
+    target: '[data-tour="files-nav"]',
+    title: 'Browse Your Library',
     description:
-      'Toggle between Files, Folders, and Media views to organize your documents the way you prefer.',
+      'Jump between your folders, unfiled files, anything that needs attention, and shared libraries.',
     icon: FolderOpen,
-    placement: 'bottom',
+    placement: 'right',
   },
   {
     id: 'files-search',
     target: '[data-tour="files-search"]',
-    title: 'Search Files',
+    title: 'Search Sources',
     description:
-      'Quickly find any file by name. Great when you have lots of documents.',
+      'Find any file by its name or tags. Great when you have lots of documents.',
     icon: Search,
     placement: 'bottom',
   },

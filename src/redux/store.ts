@@ -25,8 +25,11 @@ import conversationTourReducer from './conversationTourSlice'
 import featureFlagsReducer from './featureFlagsSlice'
 import researchReducer from './researchSlice'
 import libraryReducer from './librarySlice'
+import projectReducer from './projectSlice'
+import assistantReducer from './assistantSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
+import { assistantSocketMiddleware } from './middleware/assistantSocketMiddleware'
 import ensembleReducer from './ensembleSlice'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
 import { debugLog, setDebugLogsAccessor } from '@/utils/debugLogger'
@@ -60,7 +63,9 @@ export const store = configureStore({
     featureFlags: featureFlagsReducer,
     research: researchReducer,
     library: libraryReducer,
+    project: projectReducer,
     ensemble: ensembleReducer,
+    assistant: assistantReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware
@@ -93,7 +98,10 @@ export const store = configureStore({
     }).concat(draftPersistenceMiddleware)
 
     debugLog('🔌 Socket.IO middleware registered')
-    return middlewares.concat(socketMiddleware).concat(workflowSocketMiddleware)
+    return middlewares
+      .concat(socketMiddleware)
+      .concat(workflowSocketMiddleware)
+      .concat(assistantSocketMiddleware)
   },
   enhancers: (getDefaultEnhancers) =>
     getDefaultEnhancers().concat(sentryReduxEnhancer),

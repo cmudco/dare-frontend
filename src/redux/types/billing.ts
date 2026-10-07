@@ -1,4 +1,5 @@
 import { LLMModel } from './conversation'
+import { PlatformFilter, TransactionTab } from '@/utils/constants/billing'
 import { PolicySource } from '@/utils/constants/groupWallet'
 
 export interface TransactionSummary {
@@ -8,12 +9,23 @@ export interface TransactionSummary {
   litellm: number
 }
 
+/** Transaction-history filters, owned by the Billing page URL. Dates are local `yyyy-MM-dd`. */
+export interface TransactionHistoryFilters {
+  platform: PlatformFilter
+  tab: TransactionTab
+  model: string | null
+  from: string | null
+  to: string | null
+}
+
 export interface BillingState {
   transactions: Transaction[]
   transactionCount: number
   transactionSummary: TransactionSummary
+  transactionModels: string[]
   nextPage: string | null
   previousPage: string | null
+  transactionsExporting: boolean
   loading: boolean
   error: string | null
   modelStats: BillingModelStats[]
@@ -43,6 +55,8 @@ export type LiteLLMSource = 'USER' | 'ADMIN_USER' | 'ADMIN_GROUP'
 export interface WalletStatusBalance {
   kind: 'BALANCE'
   balance: string
+  /** The balance scheduled refills top up to; refills never go past it. */
+  ceiling: string
   lastRefillAt: string | null
 }
 
@@ -51,6 +65,8 @@ export interface WalletStatusExternal {
   /** Cumulative reference cost through this key, in USD. Reporting only —
    *  the user pays their proxy account directly, so nothing here is charged. */
   spend?: string
+  /** Group keys only, when the group limits each member's spend. */
+  spendLimit?: SpendLimit | null
 }
 
 /**
@@ -108,6 +124,18 @@ export interface LiteLLMTestResponse {
   error: string
 }
 
+/** A Socratic bot whose chat model routes through a LiteLLM key. */
+export interface LiteLLMKeyDependentBot {
+  botId: number
+  botTitle: string
+  botGroupTitle: string
+}
+
+export interface LiteLLMKeyDependentsResponse {
+  botCount: number
+  bots: LiteLLMKeyDependentBot[]
+}
+
 // ─────────────────────────────────────────────────────────────
 // Group wallet types (owner-facing)
 // ─────────────────────────────────────────────────────────────
@@ -117,13 +145,37 @@ export interface EffectivePolicy {
   periodDays: number
   amountSource: PolicySource
   periodSource: PolicySource
+  /** Balance scheduled refills top up to: the cap, else the refill amount. */
+  cap: string
+  capSource: PolicySource
+}
+
+/** A member's spend through their group's LiteLLM keys against their limit. */
+export interface SpendLimit {
+  limit: string
+  used: string
+  source: PolicySource
+  isReached: boolean
 }
 
 export interface UserRefillOverride {
   refillAmount: string | null
   refillPeriodDays: number | null
+  refillCap: string | null
+  litellmCap: string | null
   reason: string
   updatedAt: string
+}
+
+/** One of the group's gateway keys: the gateway's own figures beside DARE's. */
+export interface GatewayKey {
+  id: string
+  label: string
+  /** Null until a gateway response has reported the key's spend. */
+  gatewaySpend: string | null
+  gatewayMaxBudget: string | null
+  gatewayReportedAt: string | null
+  dareEstimate: string
 }
 
 export interface GroupWallet {
@@ -132,8 +184,11 @@ export interface GroupWallet {
   displayBudget: string
   refillAmount: string | null
   refillPeriodDays: number | null
+  refillCap: string | null
+  litellmMemberCap: string | null
   isActive: boolean
   memberCount: number
+  gatewayKeys: GatewayKey[]
   createdAt: string
   updatedAt: string
 }
@@ -145,6 +200,8 @@ export interface OwnedGroupMember {
   lastName: string
   displayBalance: string
   effectivePolicy: EffectivePolicy
+  /** Null when no spend limit applies to this member. */
+  spendLimit: SpendLimit | null
   override: UserRefillOverride | null
 }
 
@@ -168,17 +225,25 @@ export interface AllocateToMemberPayload {
 export interface UpdateGroupPolicyPayload {
   refillAmount?: string
   refillPeriodDays?: number
+  refillCap?: string
+  litellmMemberCap?: string
   isActive?: boolean
   clearAmount?: boolean
   clearPeriod?: boolean
+  clearRefillCap?: boolean
+  clearLitellmMemberCap?: boolean
 }
 
 export interface UpsertUserOverridePayload {
   refillAmount?: string | null
   refillPeriodDays?: number | null
+  refillCap?: string
+  litellmCap?: string
   reason?: string
   clearAmount?: boolean
   clearPeriod?: boolean
+  clearRefillCap?: boolean
+  clearLitellmCap?: boolean
 }
 
 export interface AllocateResponse {

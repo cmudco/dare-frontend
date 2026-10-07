@@ -32,10 +32,14 @@ import {
   Trash2,
   Clock,
 } from 'lucide-react'
-import { testLiteLLMSavedAPI } from '@/api/billing'
+import { getLiteLLMKeyDependentsAPI, testLiteLLMSavedAPI } from '@/api/billing'
 import { EditLiteLLMBackgroundModelModal } from './EditLiteLLMBackgroundModelModal'
 import { toast } from '@/utils/toast'
-import { needsBackgroundModel } from '@/utils/wallets'
+import {
+  formatBalanceOfCeiling,
+  formatUsd,
+  needsBackgroundModel,
+} from '@/utils/wallets'
 
 interface WalletListItemProps {
   wallet: UnifiedWallet
@@ -85,6 +89,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
   const [renaming, setRenaming] = useState(false)
   const [draftLabel, setDraftLabel] = useState(wallet.label)
   const [showDelete, setShowDelete] = useState(false)
+  const [dependentBots, setDependentBots] = useState<string[]>([])
   const [testing, setTesting] = useState(false)
   const [editingBackgroundModel, setEditingBackgroundModel] = useState(false)
 
@@ -108,6 +113,19 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
     }
     dispatch(renameLiteLLMKey({ id: wallet.refId, label: draftLabel.trim() }))
     setRenaming(false)
+  }
+
+  // The dialog opens only once the affected bots are known, so nobody can
+  // confirm a removal without seeing what it turns off.
+  const openDelete = async () => {
+    if (!wallet.refId) return
+    try {
+      const { bots } = await getLiteLLMKeyDependentsAPI(wallet.refId)
+      setDependentBots(bots.map((bot) => bot.botTitle))
+      setShowDelete(true)
+    } catch {
+      toast.error("Couldn't check which Socratic bots use this key.")
+    }
   }
 
   const handleDelete = () => {
@@ -217,9 +235,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
 
         <div className='mt-0.5 flex items-center gap-2 text-xs text-muted-foreground'>
           {wallet.status.kind === 'BALANCE' ? (
-            <span>
-              Balance: ${parseFloat(wallet.status.balance).toFixed(2)}
-            </span>
+            <span>Balance: {formatBalanceOfCeiling(wallet.status)}</span>
           ) : wallet.type === 'BYO' ? (
             <span>
               Routes each request to your matching provider key — DARE wallet
@@ -232,9 +248,25 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
           ) : (
             <span>External billing</span>
           )}
-          {wallet.status.kind === 'EXTERNAL' && wallet.status.spend && (
-            <span>Est. cost ${parseFloat(wallet.status.spend).toFixed(4)}</span>
-          )}
+          {wallet.status.kind === 'EXTERNAL' &&
+            (wallet.status.spendLimit ? (
+              <span
+                className={
+                  wallet.status.spendLimit.isReached
+                    ? 'font-medium text-destructive'
+                    : undefined
+                }
+              >
+                Used {formatUsd(wallet.status.spendLimit.used)} of{' '}
+                {formatUsd(wallet.status.spendLimit.limit)} allowance
+              </span>
+            ) : (
+              wallet.status.spend && (
+                <span>
+                  Est. cost ${parseFloat(wallet.status.spend).toFixed(4)}
+                </span>
+              )
+            ))}
           {wallet.expiresAt && (
             <span className='inline-flex items-center gap-1'>
               <Clock className='h-3 w-3' />
@@ -308,7 +340,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
               Background model
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => setShowDelete(true)}
+              onClick={openDelete}
               className='text-destructive focus:text-destructive'
             >
               <Trash2 className='mr-2 h-3.5 w-3.5' />
@@ -329,6 +361,15 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
         onClose={() => setShowDelete(false)}
         onDelete={handleDelete}
         title='Remove LiteLLM key'
+        description={
+          dependentBots.length
+            ? `${dependentBots.length} Socratic bot${
+                dependentBots.length === 1 ? ' uses' : 's use'
+              } this key (${dependentBots.join(', ')}). Removing it turns ${
+                dependentBots.length === 1 ? 'it' : 'them'
+              } off until you pick another model.`
+            : undefined
+        }
         itemName={wallet.label}
       />
     </div>

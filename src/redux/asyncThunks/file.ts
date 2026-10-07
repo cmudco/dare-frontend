@@ -22,8 +22,10 @@ import {
   startFileOcrRunAPI,
   getVisionModelsAPI,
   updateVisionModelAPI,
+  bulkTagFilesAPI,
+  searchFileContentsAPI,
 } from '../../api/files'
-import { MyFile, FileReprocessingRequest } from '../types/files'
+import { BulkTagRequest, MyFile, FileReprocessingRequest } from '../types/files'
 import { DocumentProcessingMode } from '@/utils/constants/file'
 
 const BATCH_SIZE = 5
@@ -354,5 +356,43 @@ export const reprocessFile = createAsyncThunk(
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }
+  }
+)
+
+export const bulkTagFiles = createAsyncThunk(
+  'files/bulkTagFiles',
+  async (request: BulkTagRequest, thunkAPI) => {
+    try {
+      return await bulkTagFilesAPI(request)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const searchFileContents = createAsyncThunk(
+  'files/searchFileContents',
+  async (query: string, thunkAPI) => {
+    try {
+      const { results } = await searchFileContentsAPI(query)
+      return results
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Deletes the files first, so a failure leaves the folder to retry from. */
+export const deleteFolderWithFiles = createAsyncThunk(
+  'files/deleteFolderWithFiles',
+  async (
+    { folderId, fileIds }: { folderId: number; fileIds: number[] },
+    thunkAPI
+  ) => {
+    if (fileIds.length > 0) {
+      await thunkAPI.dispatch(deleteMultipleFiles(fileIds)).unwrap()
+    }
+    await thunkAPI.dispatch(deleteFolder(folderId)).unwrap()
+    await thunkAPI.dispatch(getFolders())
   }
 )
