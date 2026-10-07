@@ -235,17 +235,9 @@ export function sortWorkflows(
     } else {
       if (prop in a && prop in b) {
         aValue = a[prop as keyof Workflow] as
-          | string
-          | number
-          | undefined
-          | null
-          | WorkflowMode
+          string | number | undefined | null | WorkflowMode
         bValue = b[prop as keyof Workflow] as
-          | string
-          | number
-          | undefined
-          | null
-          | WorkflowMode
+          string | number | undefined | null | WorkflowMode
       } else {
         return 0
       }

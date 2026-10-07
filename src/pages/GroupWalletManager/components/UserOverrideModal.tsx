@@ -32,10 +32,7 @@ interface OverrideFormValues {
 }
 
 type ToggleField =
-  | 'amountEnabled'
-  | 'periodEnabled'
-  | 'refillCapEnabled'
-  | 'litellmCapEnabled'
+  'amountEnabled' | 'periodEnabled' | 'refillCapEnabled' | 'litellmCapEnabled'
 type ValueField = 'amount' | 'periodDays' | 'refillCap' | 'litellmCap'
 
 const requiredAmount = (label: string) =>

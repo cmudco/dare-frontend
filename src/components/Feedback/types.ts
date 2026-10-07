@@ -3,12 +3,7 @@
 export type Emotion = 'love' | 'happy' | 'neutral' | 'confused' | 'sad'
 
 export type FeedbackCategory =
-  | 'bug'
-  | 'idea'
-  | 'ui'
-  | 'performance'
-  | 'docs'
-  | 'other'
+  'bug' | 'idea' | 'ui' | 'performance' | 'docs' | 'other'
 
 export type FeedbackStep = 'emotion' | 'category' | 'details' | 'thankyou'
 

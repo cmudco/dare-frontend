@@ -97,18 +97,10 @@ export interface DocumentCounts {
 }
 
 export type FileProcessingStage =
-  | 'parsing'
-  | 'enriching'
-  | 'embedding'
-  | 'indexing'
-  | 'complete'
+  'parsing' | 'enriching' | 'embedding' | 'indexing' | 'complete'
 
 export type ProcessingJourneyStageStatus =
-  | 'running'
-  | 'complete'
-  | 'partial'
-  | 'skipped'
-  | 'failed'
+  'running' | 'complete' | 'partial' | 'skipped' | 'failed'
 
 export interface ProcessingJourneyStage {
   key: 'parsing' | 'enriching' | 'embedding' | 'indexing'
@@ -269,12 +261,7 @@ export interface MyFolder {
 }
 
 export type MediaTypeFilter =
-  | 'all'
-  | 'image'
-  | 'video'
-  | 'audio'
-  | 'document'
-  | 'generated_image'
+  'all' | 'image' | 'video' | 'audio' | 'document' | 'generated_image'
 
 /** Where the Sources library is browsing; mirrored in the `in` search param. */
 export type SourceLocation =
@@ -347,11 +334,7 @@ export interface FileState {
 }
 
 export type DocumentMapChunkKind =
-  | 'text'
-  | 'table'
-  | 'figure'
-  | 'page_transcription'
-  | 'flat'
+  'text' | 'table' | 'figure' | 'page_transcription' | 'flat'
 
 export interface DocumentMapSection {
   order: number

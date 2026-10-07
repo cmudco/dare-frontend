@@ -365,12 +365,7 @@ export interface EnsemblePreset {
 }
 
 export type DeliberationStatus =
-  | 'pending'
-  | 'streaming'
-  | 'done'
-  | 'failed'
-  | 'dropped'
-  | 'stopped'
+  'pending' | 'streaming' | 'done' | 'failed' | 'dropped' | 'stopped'
 
 export interface DeliberationParticipant {
   modelId: string
