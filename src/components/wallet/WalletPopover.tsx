@@ -15,7 +15,7 @@ import { AddLiteLLMKeyModal } from './AddLiteLLMKeyModal'
 import { AddBYOKeyModal } from './AddBYOKeyModal'
 import { EditLiteLLMBackgroundModelModal } from './EditLiteLLMBackgroundModelModal'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
-import { needsBackgroundModel } from '@/utils/wallets'
+import { formatBalanceOfCeiling, needsBackgroundModel } from '@/utils/wallets'
 import {
   AlertTriangle,
   CreditCard as CreditCardIcon,
@@ -100,7 +100,11 @@ export const WalletPopover: React.FC = () => {
                 <p className='mt-0.5 truncate text-base font-semibold'>
                   {triggerLabel}
                 </p>
-                <p className='text-xs text-white/85'>{triggerSecondary}</p>
+                <p className='text-xs text-white/85'>
+                  {active?.status.kind === 'BALANCE'
+                    ? formatBalanceOfCeiling(active.status)
+                    : triggerSecondary}
+                </p>
               </div>
               <Button
                 size='sm'

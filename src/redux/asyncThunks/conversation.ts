@@ -2,6 +2,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   Conversation,
   ConversationSummary,
+  CreateConversationRequest,
   ConversationSortOrder,
   Message,
   MessageReaction,
@@ -28,6 +29,7 @@ import {
 } from '../../api/conversation'
 import { AppDispatch, RootState } from '../store'
 import { sendSocketMessage } from './socketMessages'
+import { fetchProjects } from './project'
 import { LLMModel, PickerModel, WalletMeta } from '../types/conversation'
 
 interface PickerModelsPayload {
@@ -108,28 +110,43 @@ export const fetchConversationById = createAsyncThunk<
 
 export const createConversation = createAsyncThunk<
   Conversation,
-  void,
+  CreateConversationRequest | void,
   { rejectValue: string }
->('conversation/createConversation', async (_, thunkAPI) => {
+>('conversation/createConversation', async (request, thunkAPI) => {
   try {
-    const newConversation = await createConversationAPI()
+    const newConversation = await createConversationAPI(request ?? {})
+    if (newConversation.project !== null) {
+      thunkAPI.dispatch(fetchProjects())
+    }
     return newConversation
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })
 
-export const deleteConversation = createAsyncThunk(
-  'conversation/deleteConversation',
-  async (conversationId: string, thunkAPI) => {
-    try {
-      await deleteConversationAPI(conversationId)
-      return conversationId
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message)
+const anyInProject = (state: RootState, conversationIds: string[]) =>
+  state.conversation.conversations.some(
+    (conversation) =>
+      conversation.project !== null &&
+      conversationIds.includes(conversation.conversationId)
+  )
+
+export const deleteConversation = createAsyncThunk<
+  string,
+  string,
+  { state: RootState; rejectValue: string }
+>('conversation/deleteConversation', async (conversationId, thunkAPI) => {
+  try {
+    const inProject = anyInProject(thunkAPI.getState(), [conversationId])
+    await deleteConversationAPI(conversationId)
+    if (inProject) {
+      thunkAPI.dispatch(fetchProjects())
     }
+    return conversationId
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
   }
-)
+})
 
 export const updateConversation = createAsyncThunk<
   Conversation,
@@ -233,12 +250,16 @@ export const updateConversationSortOrder = createAsyncThunk<
 export const deleteMultipleConversations = createAsyncThunk<
   string[],
   string[],
-  { rejectValue: string }
+  { state: RootState; rejectValue: string }
 >(
   'conversation/deleteMultipleConversations',
   async (conversationIds, thunkAPI) => {
     try {
+      const inProject = anyInProject(thunkAPI.getState(), conversationIds)
       await deleteMultipleConversationsAPI(conversationIds)
+      if (inProject) {
+        thunkAPI.dispatch(fetchProjects())
+      }
       return conversationIds
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
@@ -248,9 +269,13 @@ export const deleteMultipleConversations = createAsyncThunk<
 
 export const cloneConversation = createAsyncThunk(
   'conversation/cloneConversation',
-  async (conversationId: string, { rejectWithValue }) => {
+  async (conversationId: string, { dispatch, rejectWithValue }) => {
     try {
-      return await cloneConversationAPI(conversationId)
+      const clone = await cloneConversationAPI(conversationId)
+      if (clone.project !== null) {
+        dispatch(fetchProjects())
+      }
+      return clone
     } catch (error) {
       return rejectWithValue((error as Error).message)
     }

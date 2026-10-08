@@ -9,6 +9,8 @@ import {
   CreditCardIcon,
   AcademicCapIcon,
   BeakerIcon,
+  ArrowTopRightOnSquareIcon,
+  RectangleStackIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
@@ -21,6 +23,10 @@ import {
 } from '@/redux/conversationTourSlice'
 import { UsersIcon } from '@heroicons/react/24/outline'
 import { getTourPageKeyFromPath } from '@/components/ConversationTour/pageTourSteps'
+import {
+  isResearchToolsEnabled,
+  researchToolsSignInUrl,
+} from '@/utils/researchTools'
 
 const PromptsIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -114,6 +120,9 @@ const MemoryIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+// Nav items whose sub-routes (a chat, a project) keep the item highlighted.
+const NESTED_ROUTE_PATHS = ['/conversation', '/projects']
+
 const Sidebar = () => {
   const location = useLocation()
   const dispatch = useAppDispatch()
@@ -161,6 +170,7 @@ const Sidebar = () => {
   const menuItems: MenuItem[] = [
     { name: 'Dashboard', icon: RectangleGroupIcon, path: '/dashboard' },
     { name: 'Conversations', icon: ChatBubbleLeftIcon, path: '/conversation' },
+    { name: 'Projects', icon: RectangleStackIcon, path: '/projects' },
     { name: 'Sources', icon: FolderOpenIcon, path: '/files' },
     { name: 'Prompts', icon: PromptsIcon, path: '/prompts' },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
@@ -175,6 +185,14 @@ const Sidebar = () => {
       ? [{ name: 'Memory', icon: MemoryIcon, path: '/memory' }]
       : []),
   ]
+
+  // noopener keeps the new tab from reaching back through window.opener --
+  // it is a different origin holding a signed-in session, so it should not be
+  // scriptable from here.
+  const handleGoToResearchTools = () => {
+    const url = researchToolsSignInUrl()
+    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+  }
 
   const bottomItems = [
     { name: 'Cost Tracking', icon: CreditCardIcon, path: '/billing/' },
@@ -206,10 +224,9 @@ const Sidebar = () => {
         </div>
         <nav className='flex grow flex-col gap-1 p-2 font-sans text-base font-normal'>
           {menuItems.map((item) => {
-            const isActive =
-              item.path === '/conversation'
-                ? location.pathname.startsWith('/conversation')
-                : location.pathname === item.path
+            const isActive = NESTED_ROUTE_PATHS.includes(item.path)
+              ? location.pathname.startsWith(item.path)
+              : location.pathname === item.path
             return (
               <Link
                 key={item.name}
@@ -270,6 +287,26 @@ const Sidebar = () => {
                 Tutorial
               </span>
             </button>
+
+            {isResearchToolsEnabled() && (
+              <button
+                onClick={handleGoToResearchTools}
+                className='flex w-full items-center rounded-lg p-3 text-start leading-tight outline-hidden transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
+              >
+                <div className={`${isCollapsed ? 'mx-auto' : 'mr-4'} relative`}>
+                  <ArrowTopRightOnSquareIcon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
+                </div>
+                <span
+                  className={`whitespace-nowrap transition-all duration-300 ${
+                    isCollapsed
+                      ? 'w-0 overflow-hidden opacity-0'
+                      : 'w-auto opacity-100'
+                  }`}
+                >
+                  Research Tools
+                </span>
+              </button>
+            )}
 
             {bottomItems.map((item) => {
               const isActive = location.pathname === item.path

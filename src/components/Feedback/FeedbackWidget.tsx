@@ -1,9 +1,15 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ThumbsUp, X } from 'lucide-react'
+import { MessageCircleQuestion, X } from 'lucide-react'
 import type { AppDispatch, RootState } from '@/redux/store'
+import { AssistantChat } from '@/components/Assistant/AssistantChat'
+import {
+  fetchAssistantThread,
+  startAssistantThread,
+} from '@/redux/asyncThunks/assistant'
+import { assistantSocketConnect } from '@/redux/middleware/assistantSocketMiddleware'
 import {
   toggleFeedback,
   closeFeedback,
@@ -17,12 +23,15 @@ import {
   submitFeedback,
 } from '@/redux/feedbackSlice'
 import { FeedbackPanel } from './FeedbackPanel'
+import { HelpTab } from './types'
 import { fabVariants } from './animations'
 
 export function FeedbackWidget() {
   const feedbackRef = useRef<HTMLDivElement>(null)
   const dispatch = useDispatch<AppDispatch>()
   const location = useLocation()
+  const [tab, setTab] = useState<HelpTab>(HelpTab.ASSISTANT)
+  const assistant = useSelector((state: RootState) => state.assistant)
 
   // Hide feedback widget on workflow builder pages (create/edit)
   const isWorkflowBuilderPage =
@@ -79,7 +88,34 @@ export function FeedbackWidget() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, dispatch])
 
-  const handleToggle = () => dispatch(toggleFeedback())
+  // The assistant loads its thread and opens its socket the first time it is
+  // shown, and retries either on the next show if it failed.
+  const prepareAssistant = () => {
+    if (
+      assistant.threadStatus === 'idle' ||
+      assistant.threadStatus === 'failed'
+    )
+      dispatch(fetchAssistantThread())
+    const token = localStorage.getItem('token')
+    if (
+      token &&
+      (assistant.connection === 'disconnected' ||
+        assistant.connection === 'failed')
+    )
+      dispatch(assistantSocketConnect({ jwtToken: token }))
+  }
+
+  const handleToggle = () => {
+    if (!isOpen && tab === HelpTab.ASSISTANT) prepareAssistant()
+    dispatch(toggleFeedback())
+  }
+  const handleTabChange = (next: HelpTab) => {
+    if (next === HelpTab.ASSISTANT) prepareAssistant()
+    setTab(next)
+  }
+  const handleNewAssistantChat = () => {
+    if (!assistant.isAnswering) dispatch(startAssistantThread())
+  }
   const handleClose = () => dispatch(closeFeedback())
   const handleSetEmotion = (emotion: Parameters<typeof setEmotion>[0]) =>
     dispatch(setEmotion(emotion))
@@ -106,6 +142,10 @@ export function FeedbackWidget() {
       {/* Feedback Panel */}
       <FeedbackPanel
         isOpen={isOpen}
+        tab={tab}
+        onTabChange={handleTabChange}
+        assistant={<AssistantChat />}
+        onNewAssistantChat={handleNewAssistantChat}
         currentStep={currentStep}
         direction={direction}
         emotion={data.emotion}
@@ -133,14 +173,14 @@ export function FeedbackWidget() {
         whileHover='hover'
         whileTap='tap'
         onClick={handleToggle}
-        className={`relative flex h-8 w-8 items-center justify-center rounded-full bg-dare-gradient text-white shadow-md shadow-black/25 transition-shadow duration-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isOpen ? 'shadow-lg shadow-primary/40' : ''} `}
-        aria-label={isOpen ? 'Close feedback' : 'Send feedback'}
+        className={`relative flex h-9 w-9 items-center justify-center rounded-full bg-dare-gradient text-white shadow-md shadow-black/25 transition-shadow duration-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isOpen ? 'shadow-lg shadow-primary/40' : ''} `}
+        aria-label={isOpen ? 'Close help' : 'Ask DARE or send feedback'}
         aria-expanded={isOpen}
       >
         {isOpen ? (
           <X className='h-3.5 w-3.5' />
         ) : (
-          <ThumbsUp className='h-3.5 w-3.5' />
+          <MessageCircleQuestion className='h-4 w-4' />
         )}
       </motion.button>
     </div>

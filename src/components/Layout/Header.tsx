@@ -36,11 +36,11 @@ const Header: React.FC = () => {
 
   return (
     <header className='top-0 right-0 left-0 flex h-[80px] w-full items-center justify-between border-b border-border bg-background p-1 px-2'>
-      <div className='mx-2 flex items-center'>
-        <Logo size='md' showTagline />
+      <div className='mx-2 flex min-w-0 items-center'>
+        <Logo size='md' showTagline animated compactOnMobile />
       </div>
 
-      <div className='mr-3 flex items-center gap-4'>
+      <div className='mr-1 flex shrink-0 items-center gap-1 sm:mr-3 sm:gap-4'>
         <WalletPopover />
 
         <NotificationPopover />
@@ -57,9 +57,13 @@ const Header: React.FC = () => {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='flex items-center gap-x-2 p-0'>
+            <Button
+              variant='ghost'
+              aria-label='Account menu'
+              className='flex items-center gap-x-2 p-0'
+            >
               <Avatar user={user} size='md' />
-              <div className='flex flex-col items-start normal-case'>
+              <div className='hidden flex-col items-start normal-case md:flex'>
                 <span className='text-sm font-medium text-foreground'>
                   {user?.name || 'John Doe'}
                 </span>

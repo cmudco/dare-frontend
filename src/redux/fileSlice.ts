@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
   fetchFileViewerCapabilities,
   reprocessFile,
@@ -22,9 +22,13 @@ import {
   shareFileWithUser,
   togglePublicShare,
   startFileOcrRun,
+  bulkTagFiles,
+  searchFileContents,
 } from './asyncThunks/file'
 import { initialState } from './initialState/files'
-import { MediaTypeFilter, FileView } from './types/files'
+import { needsAttention } from '@/utils/files'
+import type { RootState } from './store'
+import { ContentMatch, MediaTypeFilter, MyFolder } from './types/files'
 
 const fileSlice = createSlice({
   name: 'files',
@@ -62,15 +66,15 @@ const fileSlice = createSlice({
     setError: (state, action: PayloadAction<string>) => {
       state.error = action.payload
     },
-    toggleFolderExpansion: (state, action: PayloadAction<number>) => {
-      const folderId = action.payload
-      state.expandedFolders[folderId] = !state.expandedFolders[folderId]
-    },
+    // Narrowing the list clears the selection, so bulk actions never reach
+    // files the user can no longer see.
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload
+      state.selectedItems = []
     },
     setSelectedTags: (state, action: PayloadAction<number[]>) => {
       state.selectedTags = action.payload
+      state.selectedItems = []
     },
     addSelectedItem: (state, action: PayloadAction<number>) => {
       const itemId = action.payload
@@ -88,10 +92,6 @@ const fileSlice = createSlice({
     setSelectedItems: (state, action: PayloadAction<number[]>) => {
       state.selectedItems = action.payload
     },
-    setCurrentView: (state, action: PayloadAction<FileView>) => {
-      state.currentView = action.payload
-      state.selectedItems = []
-    },
     openMoveModal: (state) => {
       state.isMoveModalOpen = true
     },
@@ -100,9 +100,7 @@ const fileSlice = createSlice({
     },
     setMediaTypeFilter: (state, action: PayloadAction<MediaTypeFilter>) => {
       state.mediaTypeFilter = action.payload
-    },
-    setActiveTab: (state, action: PayloadAction<'my-files' | 'shared'>) => {
-      state.activeTab = action.payload
+      state.selectedItems = []
     },
     openShareModal: (
       state,
@@ -452,6 +450,22 @@ const fileSlice = createSlice({
           state.files[index].isSharedByMe = true
         }
       })
+      .addCase(bulkTagFiles.fulfilled, (state, action) => {
+        const tagsById = new Map(
+          action.payload.files.map((file) => [file.id, file.tags])
+        )
+        for (const file of state.files) {
+          file.tags = tagsById.get(file.id) ?? file.tags
+        }
+      })
+      .addCase(searchFileContents.fulfilled, (state, action) => {
+        // A slower, older search must not replace the current one.
+        if (action.meta.arg !== state.searchQuery.trim()) return
+        state.contentSearch = {
+          query: action.meta.arg,
+          matches: action.payload,
+        }
+      })
       .addCase(togglePublicShare.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
@@ -469,20 +483,72 @@ export const {
   closeModal,
   resetSelectedTags,
   setError,
-  toggleFolderExpansion,
   setSearchQuery,
   setSelectedTags,
   addSelectedItem,
   removeSelectedItem,
   clearSelectedItems,
   setSelectedItems,
-  setCurrentView,
   openMoveModal,
   closeMoveModal,
   setMediaTypeFilter,
-  setActiveTab,
   openShareModal,
   closeShareModal,
 } = fileSlice.actions
+
+const selectFiles = (state: RootState) => state.files.files
+const selectFolders = (state: RootState) => state.files.folders
+const selectUser = (state: RootState) => state.user.user
+
+/** The user's library: documents in their active vector store, plus media. */
+export const selectLibraryFiles = createSelector(
+  [selectFiles, selectUser],
+  (files, user) => {
+    if (!user) return []
+    // SyftBox files carry no vectorDbSource.
+    if (user.isSyftboxFileStorage) return files
+    if (user.vectorDb === undefined) return []
+    return files.filter(
+      (file) => file.isMedia || file.vectorDbSource === user.vectorDb
+    )
+  }
+)
+
+/** A file can sit in several folders. */
+export const selectFoldersByFileId = createSelector(
+  [selectFolders],
+  (folders) => {
+    const byFile = new Map<number, MyFolder[]>()
+    for (const folder of folders) {
+      for (const file of folder.files) {
+        byFile.set(file.id, [...(byFile.get(file.id) ?? []), folder])
+      }
+    }
+    return byFile
+  }
+)
+
+export const selectSourceCounts = createSelector(
+  [selectLibraryFiles, selectFoldersByFileId],
+  (files, foldersByFile) => ({
+    all: files.length,
+    unfiled: files.filter((file) => !foldersByFile.has(file.id)).length,
+    attention: files.filter(needsAttention).length,
+  })
+)
+
+/** Content-search matches by file id, empty until they answer the current search. */
+export const selectContentMatches = createSelector(
+  [
+    (state: RootState) => state.files.contentSearch,
+    (state: RootState) => state.files.searchQuery,
+  ],
+  (search, searchQuery) =>
+    new Map<number, ContentMatch>(
+      search.query === searchQuery.trim()
+        ? search.matches.map((match) => [match.fileId, match])
+        : []
+    )
+)
 
 export default fileSlice.reducer

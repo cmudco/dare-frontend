@@ -21,6 +21,7 @@ import { toast } from '@/utils/toast'
 import {
   AllocateModal,
   BudgetCard,
+  GatewayAllowanceCard,
   GroupPolicyCard,
   MemberBalancesTable,
   OwnedGroupsList,
@@ -131,7 +132,12 @@ const GroupWalletManager = () => {
               />
 
               {selectedGroup.groupWallet ? (
-                <GroupPolicyCard groupWallet={selectedGroup.groupWallet} />
+                <>
+                  <GroupPolicyCard groupWallet={selectedGroup.groupWallet} />
+                  <GatewayAllowanceCard
+                    groupWallet={selectedGroup.groupWallet}
+                  />
+                </>
               ) : (
                 <Card>
                   <CardHeader>
@@ -148,7 +154,8 @@ const GroupWalletManager = () => {
                 <CardHeader>
                   <CardTitle>Members</CardTitle>
                   <CardDescription>
-                    Balances and effective refill policies for everyone in{' '}
+                    Balances, refill policies and gateway allowance use for
+                    everyone in{' '}
                     <span className='font-medium'>
                       {selectedGroup.accessCode}
                     </span>

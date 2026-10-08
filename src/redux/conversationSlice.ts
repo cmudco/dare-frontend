@@ -24,6 +24,10 @@ import {
   fetchConversationMessages,
 } from './asyncThunks/conversation'
 import {
+  deleteProject,
+  moveConversationsToProject,
+} from './asyncThunks/project'
+import {
   Message,
   Conversation,
   ConversationSummary,
@@ -88,12 +92,7 @@ export const conversationSlice = createSlice({
         state.artifactsEnabled = action.payload.artifactsEnabled ?? false
         state.memoryEnabled = action.payload.memoryEnabled ?? false
 
-        // Conversation persists only the DB-backed LLM PK (integer);
-        // stringify to match the picker's opaque-id shape.
-        const desired =
-          action.payload.selectedModel != null
-            ? String(action.payload.selectedModel)
-            : null
+        const desired = action.payload.selectedModelRef ?? null
 
         // Sync picker entries based on the active mode (priority: audio >
         // image > text).
@@ -229,6 +228,9 @@ export const conversationSlice = createSlice({
     },
     updateSelectedLibraries(state, action: PayloadAction<SharedLibrary[]>) {
       state.selectedLibraries = action.payload
+    },
+    setSourcePickerOpen(state, action: PayloadAction<boolean>) {
+      state.sourcePickerOpen = action.payload
     },
     updateMemoryEnabled(state, action: PayloadAction<boolean>) {
       state.memoryEnabled = action.payload
@@ -764,6 +766,39 @@ export const conversationSlice = createSlice({
       .addCase(updateConversation.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
+      })
+      .addCase(moveConversationsToProject.fulfilled, (state, action) => {
+        action.payload.moved.forEach((moved) => {
+          const index = state.conversations.findIndex(
+            (conv) => conv.conversationId === moved.conversationId
+          )
+          if (index !== -1) {
+            state.conversations[index] = moved
+          }
+          if (
+            state.activeConversation?.conversationId === moved.conversationId
+          ) {
+            state.activeConversation = moved
+          }
+        })
+      })
+      .addCase(deleteProject.fulfilled, (state, action) => {
+        const { projectId, deleteConversations } = action.payload
+        if (deleteConversations) {
+          state.conversations = state.conversations.filter(
+            (conv) => conv.project !== projectId
+          )
+          if (state.activeConversation?.project === projectId) {
+            state.activeConversation = null
+          }
+          return
+        }
+        state.conversations.forEach((conv) => {
+          if (conv.project === projectId) conv.project = null
+        })
+        if (state.activeConversation?.project === projectId) {
+          state.activeConversation.project = null
+        }
       })
       .addCase(updateMessageThunk.fulfilled, (state, action) => {
         const messageIndex = state.activeConversationMessages.findIndex(
@@ -1383,6 +1418,7 @@ export const {
   updateSelectedTags,
   updateSelectedFolders,
   updateSelectedLibraries,
+  setSourcePickerOpen,
   updateMemoryEnabled,
   updateTemperature,
   updateEffort,

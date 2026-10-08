@@ -35,6 +35,8 @@ import MCPToolExecute from '@/pages/MCP/MCPToolExecute.tsx'
 import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
 import MCPConnectionResult from '@/pages/MCP/MCPConnectionResult.tsx'
 import MemoryScreen from '@/pages/Memory'
+import ProjectsPage from '@/pages/Projects'
+import ProjectDetail from '@/pages/Projects/ProjectDetail'
 import LandingPage from '../pages/Landing/LandingPage'
 import AboutPage from '../pages/About/AboutPage'
 import ResearchProjects from '../pages/Research/ResearchProjects'
@@ -160,6 +162,8 @@ const AppRoutes = () => {
           >
             <Route path='/conversation' element={<CoversationScreen />} />
             <Route path='/conversation/:id' element={<CoversationScreen />} />
+            <Route path='/projects' element={<ProjectsPage />} />
+            <Route path='/projects/:projectId' element={<ProjectDetail />} />
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/files' element={<Files />} />
             <Route path='/prompts' element={<Prompt />} />

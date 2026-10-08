@@ -23,6 +23,10 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
+import { useAppSelector } from '@/redux/hooks'
+import { selectProjectById } from '@/redux/projectSlice'
+import MoveToProjectSubmenu from '../Projects/MoveToProjectSubmenu'
+import ProjectIcon from '../Projects/ProjectIcon'
 
 const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   conversation,
@@ -39,6 +43,8 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   onFavoriteClick,
   onSharingClick,
   onForkClick,
+  onMoveToProject,
+  onCreateProjectFor,
   onEditChange,
   onEditBlur,
   onEditKeyDown,
@@ -56,6 +62,10 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
   })
 
   const enableSharing = useFeatureFlag('enableSharing')
+  const isOwnTab = !isSharedTab && !isSharedWithMeTab
+  const project = useAppSelector((state) =>
+    selectProjectById(state, isOwnTab ? conversation.project : null)
+  )
   const style = createDragStyle(transform, transition, isDragging)
 
   return (
@@ -118,6 +128,12 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                 </span>
               )}
             </div>
+            {project && (
+              <span className='flex items-center gap-1 truncate pr-8 text-[11px] text-muted-foreground'>
+                <ProjectIcon icon={project.icon} className='h-3 w-3 shrink-0' />
+                <span className='truncate'>{project.name}</span>
+              </span>
+            )}
             {/* Owner email on shared tab */}
             {enableSharing && isSharedTab && conversation.ownerEmail && (
               <span className='block truncate text-[10px] text-muted-foreground'>
@@ -192,6 +208,17 @@ const SortableConversationItem: React.FC<SortableConversationItemProps> = ({
                         />
                         {conversation.isFavorite ? 'Unfavorite' : 'Favorite'}
                       </DropdownMenuItem>
+                      {onMoveToProject && onCreateProjectFor && (
+                        <MoveToProjectSubmenu
+                          currentProjectId={conversation.project}
+                          onMove={(projectId) =>
+                            onMoveToProject(conversation, projectId)
+                          }
+                          onCreateProject={() =>
+                            onCreateProjectFor(conversation)
+                          }
+                        />
+                      )}
                       {onDeleteClick && conversation.isOwner !== false && (
                         <DropdownMenuItem
                           className='text-destructive focus:text-destructive'

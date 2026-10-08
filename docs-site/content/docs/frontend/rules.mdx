@@ -34,6 +34,7 @@ component <- selector       <- slice reducer       <- response/event
 
 - Never copy the same server object into multiple slices.
 - Never persist values that can be derived reliably from canonical state.
+- The backend filters, paginates, and exports server collections; never fetch a whole collection to derive a view.
 - Components dispatch intent; reducers own state transitions.
 - Reducers are pure, deterministic, and idempotent for duplicate socket events.
 - Run-scoped data is reset explicitly on regenerate, retry, conversation change, and logout.

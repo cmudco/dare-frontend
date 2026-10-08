@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getWallets } from '@/redux/asyncThunks/billing'
+import { formatBalanceOfCeiling } from '@/utils/wallets'
 import { getUserStats } from '@/redux/asyncThunks/user'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
@@ -52,7 +53,7 @@ const Dashboard = () => {
   const hasLiteLLMKey = wallets.some((w) => w.type === 'LITELLM')
   const dareBalance =
     dareWallet?.status.kind === 'BALANCE'
-      ? `$${parseFloat(dareWallet.status.balance).toFixed(2)}`
+      ? formatBalanceOfCeiling(dareWallet.status)
       : '$0.00'
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedTokenType, setSelectedTokenType] = useState<

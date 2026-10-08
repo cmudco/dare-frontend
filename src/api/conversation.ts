@@ -1,6 +1,7 @@
 import {
   Conversation,
   ConversationSummaryResponse,
+  CreateConversationRequest,
   ConversationResponse,
   ConversationSortOrder,
   LLMModel,
@@ -19,10 +20,22 @@ export const getConversationsAPI = async (): Promise<ConversationResponse> => {
   })
 }
 
-export const createConversationAPI = async () => {
+export const getProjectConversationsAPI = async (
+  projectId: number
+): Promise<ConversationResponse> =>
+  baseRequest<ConversationResponse>({
+    url: 'api/conversations/',
+    method: METHOD.GET,
+    params: { project: projectId },
+  })
+
+export const createConversationAPI = async (
+  request: CreateConversationRequest
+) => {
   return await baseRequest<Conversation>({
     url: 'api/conversations/',
     method: METHOD.POST,
+    data: request,
   })
 }
 

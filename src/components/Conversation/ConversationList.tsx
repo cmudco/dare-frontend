@@ -43,6 +43,13 @@ import { openSharing } from '@/redux/sharingSlice'
 import { ShareableEntityType } from '@/redux/types/sharing'
 import { toast } from '@/utils/toast'
 import {
+  createProject,
+  moveConversationsToProject,
+} from '@/redux/asyncThunks/project'
+import { useProjects } from '@/hooks/useProjects'
+import type { ProjectDraft } from '@/redux/types/project'
+import CreateProjectDialog from '../Projects/CreateProjectDialog'
+import {
   filterConversations,
   createSortOrderUpdates,
   findConversationIndexes,
@@ -84,6 +91,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
     (state: RootState) => state.conversation.selectedConversations
   )
   const sensors = useDragSensors()
+  const { projects } = useProjects()
+  const [projectFormOpen, setProjectFormOpen] = useState(false)
+  const [projectTarget, setProjectTarget] = useState<Conversation | null>(null)
 
   const displayConversations = isSharedTab ? sharedConversations : conversations
   const filteredConversations = filterConversations(
@@ -242,6 +252,46 @@ const ConversationList: React.FC<ConversationListProps> = ({
     )
   }
 
+  const moveToProject = async (
+    conversation: Conversation,
+    projectId: number | null,
+    projectName?: string
+  ) => {
+    const { failedCount } = await dispatch(
+      moveConversationsToProject({
+        conversationIds: [conversation.conversationId],
+        projectId,
+      })
+    ).unwrap()
+    if (failedCount > 0) {
+      toast.error('Could not move the chat. Try again.')
+    } else {
+      toast.success(
+        projectName ? `Moved to “${projectName}”` : 'Removed from project'
+      )
+    }
+  }
+
+  const handleMoveToProject = (
+    conversation: Conversation,
+    projectId: number | null
+  ) => {
+    const projectName = projects.find((p) => p.id === projectId)?.name
+    moveToProject(conversation, projectId, projectName)
+  }
+
+  const handleCreateProjectFor = (conversation: Conversation) => {
+    setProjectTarget(conversation)
+    setProjectFormOpen(true)
+  }
+
+  const handleCreateProject = async (draft: ProjectDraft) => {
+    const project = await dispatch(createProject(draft)).unwrap()
+    if (projectTarget) {
+      await moveToProject(projectTarget, project.id, project.name)
+    }
+  }
+
   const handleForkClick = (conversation: Conversation) => {
     setForkConversationData(conversation)
   }
@@ -346,6 +396,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       onDeleteClick={handleDeleteClick}
                       onFavoriteClick={handleFavoriteClick}
                       onSharingClick={handleSharingClick}
+                      onMoveToProject={handleMoveToProject}
+                      onCreateProjectFor={handleCreateProjectFor}
                       onEditChange={handleEditChange}
                       onEditBlur={handleEditBlur}
                       onEditKeyDown={handleEditKeyDown}
@@ -401,6 +453,12 @@ const ConversationList: React.FC<ConversationListProps> = ({
           }
           itemName={deleteTarget ? deleteTarget.title || 'New Chat' : undefined}
           confirmText='Delete'
+        />
+
+        <CreateProjectDialog
+          open={projectFormOpen}
+          onOpenChange={setProjectFormOpen}
+          onCreate={handleCreateProject}
         />
 
         <ForkConfirmDialog
