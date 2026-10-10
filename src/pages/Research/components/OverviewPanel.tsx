@@ -6,7 +6,6 @@ import {
   FileText,
   Inbox,
   MessagesSquare,
-  Telescope,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,7 +20,6 @@ interface Props {
   runs: AgentRun[]
   pendingCount: number
   approvedCount: number
-  onGoToScout: () => void
   onGoToChat: () => void
   onGoToReview: () => void
   onGoToRuns: () => void
@@ -35,7 +33,6 @@ const OverviewPanel = ({
   runs,
   pendingCount,
   approvedCount,
-  onGoToScout,
   onGoToChat,
   onGoToReview,
   onGoToRuns,
@@ -123,16 +120,14 @@ const OverviewPanel = ({
           )}
           <Button
             variant={pendingCount > 0 ? 'outline' : 'default'}
-            onClick={onGoToScout}
+            onClick={onGoToChat}
             className='shrink-0'
           >
-            <Telescope className='h-4 w-4' /> Ask Scout
-          </Button>
-          <Button variant='outline' onClick={onGoToChat} className='shrink-0'>
             <MessagesSquare className='h-4 w-4' /> Open chat
           </Button>
           <p className='text-xs text-muted-foreground sm:ml-auto'>
-            Delegate a task, or think live — same agent, same standards.
+            Plan in chat; the agent launches Scouts from the thread and learns
+            from your review notes.
           </p>
         </div>
       </div>

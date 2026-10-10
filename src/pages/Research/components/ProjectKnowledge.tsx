@@ -1,10 +1,64 @@
 import { BookMarked, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import type { KnowledgeItem } from '../types'
+import { REVIEW_REASON_TAGS } from '@/utils/constants/research'
+import { formatRelativeDate } from '@/utils/dateUtils'
+import type { KnowledgeItem, ReviewItem } from '../types'
 import { evidenceMeta, toolLabel } from './signals'
 
-const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
+const tagLabel = (value: string) =>
+  REVIEW_REASON_TAGS.find((tag) => tag.value === value)?.label ?? value
+
+/** What was turned down and why — so a rejection is a record, not a gap. */
+const RejectedSources = ({ items }: { items: ReviewItem[] }) => (
+  <section className='space-y-3 pt-2'>
+    <header>
+      <h3 className='text-sm font-semibold'>Rejected · {items.length}</h3>
+      <p className='mt-0.5 text-xs text-muted-foreground'>
+        Sources you turned down, with your reason. They never become knowledge,
+        but the agent learns from why.
+      </p>
+    </header>
+    {items.map((item) => {
+      const meta = item.reviewMetadata
+      const reason = meta.note || item.rejectionReason
+      const tags = meta.tags ?? []
+      return (
+        <div
+          key={item.id}
+          className='rounded-xl border border-dashed border-border px-5 py-3'
+        >
+          <div className='flex flex-wrap items-baseline gap-x-2'>
+            <h4 className='text-sm font-medium'>{item.title}</h4>
+            <span className='text-xs text-muted-foreground'>
+              {[item.authors, item.venue, item.year]
+                .filter(Boolean)
+                .join(' · ')}
+            </span>
+          </div>
+          <p className='mt-1 text-xs text-muted-foreground'>
+            {tags.map(tagLabel).join(', ')}
+            {tags.length > 0 && reason ? ' · ' : ''}
+            {reason ? (
+              <span className='text-foreground'>“{reason}”</span>
+            ) : (
+              tags.length === 0 && 'No reason given'
+            )}
+            {meta.decidedAt && ` · ${formatRelativeDate(meta.decidedAt)}`}
+          </p>
+        </div>
+      )
+    })}
+  </section>
+)
+
+const ProjectKnowledge = ({
+  items,
+  rejected,
+}: {
+  items: KnowledgeItem[]
+  rejected: ReviewItem[]
+}) => {
   return (
     <div className='space-y-6'>
       <header>
@@ -12,8 +66,8 @@ const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
           Project Knowledge
         </h2>
         <p className='mt-1 text-sm text-muted-foreground'>
-          Sources you have approved. Their rationale, confidence and provenance
-          travel with them.
+          Sources you have approved — their rationale, confidence and provenance
+          travel with them — and, below, what you rejected and why.
         </p>
       </header>
 
@@ -50,7 +104,7 @@ const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
                     {toolLabel(item.provenance?.tool ?? '')}
                   </span>
                 </div>
-                <h3 className='text-[15px] font-semibold leading-snug tracking-tight'>
+                <h3 className='text-[15px] leading-snug font-semibold tracking-tight'>
                   {item.title}
                 </h3>
                 <p className='mt-0.5 text-xs text-muted-foreground'>
@@ -84,6 +138,7 @@ const ProjectKnowledge = ({ items }: { items: KnowledgeItem[] }) => {
           })}
         </div>
       )}
+      {rejected.length > 0 && <RejectedSources items={rejected} />}
     </div>
   )
 }

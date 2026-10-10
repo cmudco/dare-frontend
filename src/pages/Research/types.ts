@@ -4,9 +4,9 @@
 // have a runtime list to validate the `?tab=` query param against.
 export const NAV_SECTIONS = [
   'overview',
-  'scout',
   'chat',
   'review',
+  'learning',
   'memory',
   'graph',
   'artifacts',
@@ -38,5 +38,6 @@ export type {
   ResearchArtifact,
   ResearchSource,
   ReviewItem,
+  ReviewReasonTag,
   SoulFile,
 } from '@/redux/types/research'

@@ -3,15 +3,21 @@ import { METHOD } from '@/utils/constants/requests'
 import { config } from '@/config/environment'
 import type {
   AgentRun,
-  ChatMessage,
   CreateResearchProjectPayload,
   EvidenceGraph,
+  LearningOverview,
+  MemoryLayer,
   OkfBundle,
   ResearchProject,
   ResearchProjectsResponse,
+  ResearchThread,
   ReviewItem,
+  ReviewReasonTag,
   ScoutResult,
+  SoulFile,
   ThesisSourceLink,
+  ThreadDetail,
+  ThreadProposal,
   UpdateResearchProjectPayload,
 } from '@/redux/types/research'
 
@@ -50,20 +56,6 @@ export const updateResearchProjectAPI = async (
     url: `api/research/projects/${id}/`,
     method: METHOD.PATCH,
     data: payload,
-  })
-}
-
-/** Kick off a delegated Scout run (returns immediately; poll the run for status). */
-export const runScoutAPI = async (
-  projectId: number,
-  task: string,
-  depth: 'quick' | 'deep' = 'deep',
-  tools?: string[]
-): Promise<ScoutResult> => {
-  return await baseRequest<ScoutResult>({
-    url: `api/research/projects/${projectId}/scout/`,
-    method: METHOD.POST,
-    data: { task, depth, tools },
   })
 }
 
@@ -135,19 +127,93 @@ export const getAgentMemoryAPI = async (
 }
 
 /**
- * Decide on something the agent wants to remember.
- *
- * Accept promotes it into project memory the scholar owns; reject also removes
- * it from the agent's own memory, so it stops acting on a fact they rejected.
+ * Decide on something the agent wants to remember. Accepting applies it to
+ * `layer` (defaults to the layer the agent suggested) and DARE renders it into
+ * every profile that layer reaches; rejecting saves nothing.
  */
 export const reviewMemoryProposalAPI = async (
   proposalId: number,
-  decision: 'accept' | 'reject'
-): Promise<{ id: number; status: string }> => {
-  return await baseRequest<{ id: number; status: string }>({
+  decision: 'accept' | 'reject',
+  layer?: MemoryLayer
+): Promise<ThreadProposal> => {
+  return await baseRequest<ThreadProposal>({
     url: `api/research/memory-proposals/${proposalId}/review/`,
     method: METHOD.POST,
-    data: { decision },
+    data: { decision, layer },
+  })
+}
+
+/** The project's current SOUL.md (soul file version in force). */
+export const getSoulFileAPI = async (
+  projectId: number
+): Promise<SoulFile | null> => {
+  return await baseRequest<SoulFile | null>({
+    url: `api/research/projects/${projectId}/soul/`,
+    method: METHOD.GET,
+  })
+}
+
+/** Save SOUL.md as a new soul file version. */
+export const saveSoulFileAPI = async (
+  projectId: number,
+  content: string
+): Promise<SoulFile> => {
+  return await baseRequest<SoulFile>({
+    url: `api/research/projects/${projectId}/soul/`,
+    method: METHOD.PUT,
+    data: { content, changeNote: 'Edited in project settings' },
+  })
+}
+
+/** The project's MEMORY.md entries (DARE-owned project memory). */
+export const getProjectMemoryAPI = async (
+  projectId: number
+): Promise<{ entries: string[] }> => {
+  return await baseRequest<{ entries: string[] }>({
+    url: `api/research/projects/${projectId}/memory/`,
+    method: METHOD.GET,
+  })
+}
+
+/** Make the project's memory exactly these entries; renders MEMORY.md. */
+export const saveProjectMemoryAPI = async (
+  projectId: number,
+  entries: string[]
+): Promise<{ entries: string[] }> => {
+  return await baseRequest<{ entries: string[] }>({
+    url: `api/research/projects/${projectId}/memory/`,
+    method: METHOD.PUT,
+    data: { entries },
+  })
+}
+
+/** The scholar's researcher-wide standards (follow them into every project). */
+export const getResearcherStandardsAPI = async (): Promise<{
+  standards: string[]
+}> => {
+  return await baseRequest<{ standards: string[] }>({
+    url: 'api/research/researcher/standards/',
+    method: METHOD.GET,
+  })
+}
+
+export const saveResearcherStandardsAPI = async (
+  standards: string[]
+): Promise<{ standards: string[] }> => {
+  return await baseRequest<{ standards: string[] }>({
+    url: 'api/research/researcher/standards/',
+    method: METHOD.PUT,
+    data: { standards },
+  })
+}
+
+/** What the agent has learned: layers, procedures, pending, timeline, chart. */
+export const getLearningAPI = async (
+  projectId: number
+): Promise<LearningOverview> => {
+  return await baseRequest<LearningOverview>({
+    url: `api/research/projects/${projectId}/learning/`,
+    method: METHOD.GET,
   })
 }
 
@@ -172,42 +238,79 @@ export const cancelAgentRunAPI = async (runId: number): Promise<AgentRun> => {
   })
 }
 
-/** Approve / reject / defer a staged review item. */
+/**
+ * Approve / reject / defer a staged review item. The note and reason tags are
+ * kept on the item and pushed into the chat thread that staged it, where the
+ * agent can learn from them.
+ */
 export const reviewStagingItemAPI = async (
   itemId: number,
   decision: 'approve' | 'reject' | 'later',
-  reason?: string
+  reason?: string,
+  tags?: ReviewReasonTag[]
 ): Promise<ReviewItem> => {
   return await baseRequest<ReviewItem>({
     url: `api/research/staging-items/${itemId}/review/`,
     method: METHOD.POST,
-    data: { decision, reason },
+    data: { decision, reason, tags },
   })
 }
 
-export const getChatHistoryAPI = async (
+/** Stop a thread's Scout and start a replacement that follows `instruction`. */
+export const redirectScoutAPI = async (
+  runId: number,
+  instruction: string
+): Promise<{ runId: number; replacedRunId: number }> => {
+  return await baseRequest<{ runId: number; replacedRunId: number }>({
+    url: `api/research/agent-runs/${runId}/redirect/`,
+    method: METHOD.POST,
+    data: { instruction },
+  })
+}
+
+export const getThreadsAPI = async (
   projectId: number
-): Promise<ChatMessage[]> => {
-  return await baseRequest<ChatMessage[]>({
-    url: `api/research/projects/${projectId}/chat/`,
+): Promise<ResearchThread[]> => {
+  return await baseRequest<ResearchThread[]>({
+    url: `api/research/projects/${projectId}/threads/`,
+    method: METHOD.GET,
+  })
+}
+
+export const createThreadAPI = async (
+  projectId: number,
+  title = ''
+): Promise<ResearchThread> => {
+  return await baseRequest<ResearchThread>({
+    url: `api/research/projects/${projectId}/threads/`,
+    method: METHOD.POST,
+    data: { title },
+  })
+}
+
+export const getThreadAPI = async (threadId: number): Promise<ThreadDetail> => {
+  return await baseRequest<ThreadDetail>({
+    url: `api/research/threads/${threadId}/`,
     method: METHOD.GET,
   })
 }
 
 export interface ChatStreamHandlers {
   onDelta: (delta: string) => void
+  onTool: (tool: string, phase: 'started' | 'completed') => void
   onDone: (payload: { messageId: number; runId: number }) => void
   onError: (message: string) => void
 }
 
 /**
- * Send a chat message and consume the SSE reply stream from the backend
- * (which proxies Hermes `message.delta` events). Uses fetch + a ReadableStream
- * reader so the JWT auth header can be sent (EventSource can't).
+ * Send one scholar message to a thread and consume the SSE reply. Uses fetch +
+ * a ReadableStream reader so the JWT auth header can be sent (EventSource
+ * can't).
  */
-export const streamChatMessage = async (
-  projectId: number,
+export const streamThreadMessage = async (
+  threadId: number,
   message: string,
+  mode: 'chat' | 'scout',
   handlers: ChatStreamHandlers,
   signal?: AbortSignal
 ): Promise<void> => {
@@ -215,7 +318,7 @@ export const streamChatMessage = async (
   let response: Response
   try {
     response = await fetch(
-      `${config.apiUrl}/api/research/projects/${projectId}/chat/`,
+      `${config.apiUrl}/api/research/threads/${threadId}/messages/`,
       {
         method: 'POST',
         headers: {
@@ -223,7 +326,7 @@ export const streamChatMessage = async (
           Accept: 'text/event-stream',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, mode }),
         signal,
       }
     )
@@ -232,6 +335,10 @@ export const streamChatMessage = async (
     return
   }
 
+  if (response.status === 409) {
+    handlers.onError('The agent is still replying in this thread.')
+    return
+  }
   if (!response.ok || !response.body) {
     handlers.onError('The agent is unavailable right now.')
     return
@@ -255,6 +362,7 @@ export const streamChatMessage = async (
       try {
         const event = JSON.parse(payload)
         if (event.type === 'delta') handlers.onDelta(event.delta as string)
+        else if (event.type === 'tool') handlers.onTool(event.tool, event.phase)
         else if (event.type === 'done') handlers.onDone(event)
         else if (event.type === 'error') handlers.onError(event.error as string)
       } catch {

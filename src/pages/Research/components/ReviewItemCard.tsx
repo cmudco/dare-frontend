@@ -9,6 +9,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   ShieldQuestion,
+  MessageSquareText,
+  MessagesSquare,
   ShieldX,
   X,
 } from 'lucide-react'
@@ -16,18 +18,25 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatRelativeDate } from '@/utils/dateUtils'
-import type { ReviewItem } from '../types'
+import type { ReviewItem, ReviewReasonTag } from '../types'
 import ConfidenceBar from './ConfidenceBar'
+import ReviewNotePanel from './ReviewNotePanel'
 import { evidenceMeta, toolLabel } from './signals'
 
 interface Props {
   item: ReviewItem
   /** True while the Critic is assessing this item. */
   critiquing: boolean
-  onApprove: (id: number) => void
-  onReject: (id: number) => void
+  onDecide: (
+    id: number,
+    decision: 'approve' | 'reject',
+    note: string,
+    tags: ReviewReasonTag[]
+  ) => Promise<void>
   onLater: (id: number) => void
   onAskCritic: (id: number) => void
+  /** Open the chat thread whose Scout staged this item. */
+  onOpenThread?: (threadId: number) => void
 }
 
 interface CriticVerdict {
@@ -65,12 +74,28 @@ const CRITIC_META: Record<
 const ReviewItemCard = ({
   item,
   critiquing,
-  onApprove,
-  onReject,
+  onDecide,
   onLater,
   onAskCritic,
+  onOpenThread,
 }: Props) => {
   const [expanded, setExpanded] = useState(false)
+  const [noting, setNoting] = useState<'approve' | 'reject' | null>(null)
+  const [deciding, setDeciding] = useState(false)
+
+  const decide = async (
+    decision: 'approve' | 'reject',
+    note: string,
+    tags: ReviewReasonTag[]
+  ) => {
+    setDeciding(true)
+    try {
+      await onDecide(item.id, decision, note, tags)
+    } finally {
+      setDeciding(false)
+      setNoting(null)
+    }
+  }
   const signal = evidenceMeta(item.evidenceLabel)
   const confidence = Math.round((item.confidence ?? 0) * 100)
   const tool = toolLabel(item.provenance?.tool ?? '')
@@ -96,7 +121,9 @@ const ReviewItemCard = ({
               <span className={cn('h-1.5 w-1.5 rounded-full', signal.dot)} />
               {signal.label}
             </Badge>
-            <span className='text-xs text-muted-foreground'>via {tool}</span>
+            <span className='text-xs text-muted-foreground'>
+              {item.provenance?.kind && `${item.provenance.kind} · `}via {tool}
+            </span>
           </div>
           <h3 className='truncate text-[15px] leading-snug font-semibold tracking-tight'>
             {item.title}
@@ -203,20 +230,59 @@ const ReviewItemCard = ({
         </div>
       )}
 
+      {noting && (
+        <div className='pt-4'>
+          <ReviewNotePanel
+            decision={noting}
+            busy={deciding}
+            onConfirm={(note, tags) => void decide(noting, note, tags)}
+            onCancel={() => setNoting(null)}
+          />
+        </div>
+      )}
+
       <div className='flex flex-wrap items-center gap-2 p-5 pt-4'>
-        <Button size='sm' onClick={() => onApprove(item.id)}>
+        <Button
+          size='sm'
+          disabled={deciding}
+          onClick={() => void decide('approve', '', [])}
+        >
           <Check className='h-4 w-4' /> Approve
         </Button>
-        <Button size='sm' variant='outline' onClick={() => onReject(item.id)}>
+        <Button
+          size='sm'
+          variant='ghost'
+          disabled={deciding}
+          onClick={() => setNoting('approve')}
+          aria-label='Approve with a note'
+        >
+          <MessageSquareText className='h-4 w-4' />
+        </Button>
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={deciding}
+          onClick={() => setNoting('reject')}
+        >
           <X className='h-4 w-4' /> Reject
         </Button>
         <Button size='sm' variant='ghost' onClick={() => onLater(item.id)}>
           <Clock className='h-4 w-4' /> Later
         </Button>
+        {item.threadId && onOpenThread && (
+          <Button
+            size='sm'
+            variant='ghost'
+            className='ml-auto'
+            onClick={() => onOpenThread(item.threadId as number)}
+          >
+            <MessagesSquare className='h-4 w-4' /> Thread
+          </Button>
+        )}
         <Button
           size='sm'
           variant='ghost'
-          className='ml-auto'
+          className={item.threadId && onOpenThread ? '' : 'ml-auto'}
           disabled={critiquing}
           onClick={() => onAskCritic(item.id)}
         >

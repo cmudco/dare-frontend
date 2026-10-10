@@ -6,7 +6,7 @@ import {
   Library,
   MessagesSquare,
   Shapes,
-  Telescope,
+  TrendingDown,
   Waypoints,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -20,9 +20,9 @@ interface NavDef {
 
 const NAV: NavDef[] = [
   { key: 'overview', label: 'Overview', icon: Compass },
-  { key: 'scout', label: 'Ask Scout', icon: Telescope },
   { key: 'chat', label: 'Chat', icon: MessagesSquare },
   { key: 'review', label: 'Review Inbox', icon: Inbox },
+  { key: 'learning', label: 'Learning', icon: TrendingDown },
   { key: 'memory', label: 'Context', icon: Library },
   { key: 'graph', label: 'Maps', icon: Waypoints },
   { key: 'artifacts', label: 'Artifacts', icon: Shapes },
@@ -34,7 +34,7 @@ interface Props {
   onNavigate: (s: NavSection) => void
   pendingCount: number
   approvedCount: number
-  /** Agent facts awaiting a keep/discard decision — badges the Context tab. */
+  /** Agent learning awaiting a decision — badges the Learning tab. */
   memoryPendingCount?: number
   center: React.ReactNode
   context: React.ReactNode
@@ -111,7 +111,7 @@ const WorkspaceShell = ({
               const badge =
                 item.key === 'review'
                   ? pendingCount
-                  : item.key === 'memory'
+                  : item.key === 'learning'
                     ? memoryPendingCount
                     : 0
               return (

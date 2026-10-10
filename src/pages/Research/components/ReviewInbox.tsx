@@ -1,7 +1,7 @@
 import { AnimatePresence } from 'framer-motion'
 import { Compass, Inbox } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { ReviewItem } from '../types'
+import type { ReviewItem, ReviewReasonTag } from '../types'
 import ReviewItemCard from './ReviewItemCard'
 
 interface Props {
@@ -9,10 +9,15 @@ interface Props {
   later: ReviewItem[]
   /** The item currently being assessed by the Critic, if any. */
   criticItemId: number | null
-  onApprove: (id: number) => void
-  onReject: (id: number) => void
+  onDecide: (
+    id: number,
+    decision: 'approve' | 'reject',
+    note: string,
+    tags: ReviewReasonTag[]
+  ) => Promise<void>
   onLater: (id: number) => void
   onAskCritic: (id: number) => void
+  onOpenThread: (threadId: number) => void
   onGoToOverview: () => void
 }
 
@@ -20,10 +25,10 @@ const ReviewInbox = ({
   pending,
   later,
   criticItemId,
-  onApprove,
-  onReject,
+  onDecide,
   onLater,
   onAskCritic,
+  onOpenThread,
   onGoToOverview,
 }: Props) => {
   return (
@@ -32,7 +37,8 @@ const ReviewInbox = ({
         <h2 className='text-xl font-semibold tracking-tight'>Review Inbox</h2>
         <p className='mt-1 text-sm text-muted-foreground'>
           Scout's findings wait here. Nothing becomes project knowledge until
-          you approve it.
+          you approve it — and a quick note on why teaches the agent what you
+          want next time.
         </p>
       </header>
 
@@ -62,10 +68,10 @@ const ReviewInbox = ({
                 key={item.id}
                 item={item}
                 critiquing={criticItemId === item.id}
-                onApprove={onApprove}
-                onReject={onReject}
+                onDecide={onDecide}
                 onLater={onLater}
                 onAskCritic={onAskCritic}
+                onOpenThread={onOpenThread}
               />
             ))}
           </AnimatePresence>
@@ -92,7 +98,7 @@ const ReviewInbox = ({
                 <Button
                   size='sm'
                   variant='ghost'
-                  onClick={() => onApprove(item.id)}
+                  onClick={() => void onDecide(item.id, 'approve', '', [])}
                 >
                   Approve
                 </Button>

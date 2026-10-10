@@ -2,12 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAppDispatch } from '@/redux/hooks'
 import { getResearchProject } from '@/redux/asyncThunks/research'
-import { askCriticAPI, reviewStagingItemAPI, runScoutAPI } from '@/api/research'
-import {
-  AgentRunRole,
-  WEB_SEARCH_TOOL_SLUG,
-  isRunInFlight,
-} from '@/utils/constants/research'
+import { askCriticAPI, reviewStagingItemAPI } from '@/api/research'
+import { WEB_SEARCH_TOOL_SLUG, isRunInFlight } from '@/utils/constants/research'
 import { usePolledRun } from './usePolledRun'
 import { isNavSection } from './types'
 import ContextHub from './components/ContextHub'
@@ -15,8 +11,8 @@ import ContextPanel from './components/ContextPanel'
 import OverviewPanel from './components/OverviewPanel'
 import ReviewInbox from './components/ReviewInbox'
 import { ArtifactsView } from './components/SecondaryViews'
-import AskScoutView from './components/AskScoutView'
-import HandsOnChat from './components/HandsOnChat'
+import ChatHub from './components/chat/ChatHub'
+import LearningView from './components/learning/LearningView'
 import VisualizationView from './components/VisualizationView'
 import RunsView from './components/runs/RunsView'
 import WorkspaceShell from './components/WorkspaceShell'
@@ -29,6 +25,7 @@ import type {
   ResearchArtifact,
   ResearchSource,
   ReviewItem,
+  ReviewReasonTag,
   SoulFile,
 } from './types'
 
@@ -88,12 +85,17 @@ const ResearchWorkspaceView = ({
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const section: NavSection = isNavSection(tabParam) ? tabParam : 'overview'
+  const threadParam = Number(searchParams.get('thread'))
+  const threadId =
+    Number.isInteger(threadParam) && threadParam > 0 ? threadParam : null
   const setSection = useCallback(
     (next: NavSection) => setSearchParams({ tab: next }),
     [setSearchParams]
   )
-  const [runningRunId, setRunningRunId] = useState<number | null>(null)
-  const [scoutStatus, setScoutStatus] = useState('')
+  const openThread = useCallback(
+    (id: number) => setSearchParams({ tab: 'chat', thread: String(id) }),
+    [setSearchParams]
+  )
   const [criticRunId, setCriticRunId] = useState<number | null>(null)
   const [criticItemId, setCriticItemId] = useState<number | null>(null)
 
@@ -117,47 +119,18 @@ const ResearchWorkspaceView = ({
     window.scrollTo({ top: 0, behavior: 'auto' })
   }, [section])
 
-  // Poll while any in-flight run isn't already covered by the scout/critic
-  // pollers below — chiefly queued artifact runs — so their generating rows and
-  // statuses stay live across tab switches (this view stays mounted).
+  // Poll while any run other than the critic (which has its own poller) is in
+  // flight — Scouts launched from chat, artifact runs — so the inbox badge,
+  // run rows and statuses stay live across tabs (this view stays mounted).
   useEffect(() => {
     const hasOther = runs.some(
-      (r) =>
-        isRunInFlight(r.status) && r.id !== runningRunId && r.id !== criticRunId
+      (r) => isRunInFlight(r.status) && r.id !== criticRunId
     )
     if (!hasOther) return
     const timer = setTimeout(refresh, 3000)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runs, runningRunId, criticRunId])
-
-  // Adopt an in-flight Scout run from server state, so the running indicator
-  // survives leaving the page and full reloads (the run lives on the backend).
-  useEffect(() => {
-    if (runningRunId) return
-    const live = runs.find(
-      (r) => r.role === AgentRunRole.SCOUT && isRunInFlight(r.status)
-    )
-    if (live) {
-      setRunningRunId(live.id)
-      setScoutStatus(live.statusDetail || '')
-    }
-  }, [runs, runningRunId])
-
-  // Poll the live run and refetch the project each tick, so the run and its live
-  // status show across every tab (Recent runs, Overview, Runs) — not only here.
-  usePolledRun(
-    runningRunId,
-    (detail) => {
-      setScoutStatus(detail)
-      refresh()
-    },
-    () => {
-      setRunningRunId(null)
-      setScoutStatus('')
-      refresh()
-    }
-  )
+  }, [runs, criticRunId])
 
   usePolledRun(
     criticRunId,
@@ -169,30 +142,13 @@ const ResearchWorkspaceView = ({
     }
   )
 
-  const scoutRunning = runningRunId !== null
-
-  const runScout = async (
-    query: string,
-    depth: 'quick' | 'deep' = 'deep',
-    tools?: string[]
-  ) => {
-    if (!projectId || !query || runningRunId) return
-    setSection('scout')
-    try {
-      const { runId } = await runScoutAPI(projectId, query, depth, tools)
-      setRunningRunId(runId)
-      setScoutStatus('Queued…')
-      refresh() // surface the run immediately — no manual reload
-    } catch {
-      // leaving runningRunId null keeps the composer ready to retry
-    }
-  }
-
   const review = async (
     id: number,
-    decision: 'approve' | 'reject' | 'later'
+    decision: 'approve' | 'reject' | 'later',
+    note = '',
+    tags: ReviewReasonTag[] = []
   ) => {
-    await reviewStagingItemAPI(id, decision)
+    await reviewStagingItemAPI(id, decision, note, tags)
     refresh()
   }
 
@@ -218,36 +174,36 @@ const ResearchWorkspaceView = ({
             runs={runs}
             pendingCount={pending.length}
             approvedCount={knowledgeItems.length}
-            onGoToScout={() => setSection('scout')}
             onGoToChat={() => setSection('chat')}
             onGoToReview={() => setSection('review')}
             onGoToRuns={() => setSection('runs')}
           />
         )
-      case 'scout':
-        return (
-          <AskScoutView
-            tools={enabledTools}
-            runs={runs}
-            scoutRunning={scoutRunning}
-            scoutStatus={scoutStatus}
-            pendingCount={pending.length}
-            onRunScout={runScout}
-            onGoToReview={() => setSection('review')}
-          />
-        )
       case 'chat':
-        return <HandsOnChat projectId={projectId} soulFile={soulFile} />
+        return projectId ? (
+          <ChatHub
+            projectId={projectId}
+            soulFile={soulFile}
+            threadId={threadId}
+            onSelectThread={openThread}
+            onGoToReview={() => setSection('review')}
+            onWorkspaceChanged={refresh}
+          />
+        ) : null
+      case 'learning':
+        return projectId ? (
+          <LearningView projectId={projectId} onChanged={refresh} />
+        ) : null
       case 'review':
         return (
           <ReviewInbox
             pending={pending}
             later={later}
             criticItemId={criticItemId}
-            onApprove={(id) => review(id, 'approve')}
-            onReject={(id) => review(id, 'reject')}
-            onLater={(id) => review(id, 'later')}
+            onDecide={review}
+            onLater={(id) => void review(id, 'later')}
             onAskCritic={askCritic}
+            onOpenThread={openThread}
             onGoToOverview={() => setSection('overview')}
           />
         )
@@ -256,6 +212,7 @@ const ResearchWorkspaceView = ({
           <ContextHub
             projectId={projectId}
             knowledgeItems={knowledgeItems}
+            rejectedItems={reviewItems.filter((i) => i.status === 'rejected')}
             sources={sources}
             soulFile={soulFile}
             projectMemory={projectMemory}
@@ -287,12 +244,14 @@ const ResearchWorkspaceView = ({
       memoryPendingCount={memoryProposals.length}
       center={center()}
       context={
-        <ContextPanel
-          question={question}
-          enabledTools={enabledTools}
-          soulFile={soulFile}
-          projectMemory={projectMemory}
-        />
+        section === 'chat' ? null : (
+          <ContextPanel
+            question={question}
+            enabledTools={enabledTools}
+            soulFile={soulFile}
+            projectMemory={projectMemory}
+          />
+        )
       }
       projectTitle={projectTitle}
       projectMeta={projectMeta}

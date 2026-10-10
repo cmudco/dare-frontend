@@ -10,6 +10,7 @@ import {
 } from '@/api/research'
 import type {
   KnowledgeItem,
+  ReviewItem,
   MemoryProposal,
   ProjectMemory,
   ResearchSource,
@@ -28,6 +29,8 @@ type ContextCard = 'durable' | 'sources' | 'standards' | 'agent'
 interface Props {
   projectId?: number
   knowledgeItems: KnowledgeItem[]
+  /** Rejected review items, shown with the scholar's reason. */
+  rejectedItems: ReviewItem[]
   sources: ResearchSource[]
   soulFile: SoulFile | null
   projectMemory: ProjectMemory[]
@@ -68,6 +71,7 @@ const firstSeenByEntry = (history: AgentMemoryChange[]) => {
 const ContextHub = ({
   projectId,
   knowledgeItems,
+  rejectedItems,
   sources,
   soulFile,
   projectMemory,
@@ -105,7 +109,7 @@ const ContextHub = ({
       // another, so the row of numbers could not be read across.
       count: knowledgeItems.length,
       waiting: 0,
-      desc: 'Approved sources and claims. Nothing lands here without you.',
+      desc: `Approved sources and claims${rejectedItems.length ? `, plus ${rejectedItems.length} rejected with reasons` : ''}. Nothing lands here without you.`,
     },
     {
       key: 'sources' as const,
@@ -187,7 +191,9 @@ const ContextHub = ({
       </div>
 
       <div>
-        {card === 'durable' && <ProjectKnowledge items={knowledgeItems} />}
+        {card === 'durable' && (
+          <ProjectKnowledge items={knowledgeItems} rejected={rejectedItems} />
+        )}
         {card === 'sources' && <SourcesView sources={sources} />}
         {card === 'standards' && (
           <StandardsSection
@@ -335,7 +341,7 @@ const AgentMemorySection = ({
         proposals={proposals}
         onDecided={onDecided}
         title='Waiting on you'
-        note="Keep it and it becomes project memory you own. Discard it and it leaves the agent's memory too, so it stops acting on it."
+        note='Approve it and DARE writes it into the layer you choose. Reject it and nothing is saved.'
       />
 
       <FactGroup
