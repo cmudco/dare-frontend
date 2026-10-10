@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { McpTool } from '@/redux/types/mcp'
 import { Wrench } from 'lucide-react'
+import { INTEGRATIONS_PATH } from '@/routes/paths'
 
 interface MCPToolCardProps {
   tool: McpTool
@@ -20,7 +21,9 @@ const MCPToolCard = ({ tool, serverSlug }: MCPToolCardProps) => {
 
   return (
     <div
-      onClick={() => navigate(`/mcp/${serverSlug}/tools/${tool.name}`)}
+      onClick={() =>
+        navigate(`${INTEGRATIONS_PATH}/${serverSlug}/tools/${tool.name}`)
+      }
       className='group cursor-pointer rounded-lg border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-xs'
     >
       <div className='mb-2 flex items-start justify-between'>

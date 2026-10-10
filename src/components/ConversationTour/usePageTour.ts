@@ -5,6 +5,9 @@ import { getPageTourSteps, type PageTourStep } from './pageTourSteps'
 import type { TargetRect } from './conversationTourSteps'
 
 const SPOTLIGHT_PADDING = 3
+// A step whose element never renders (an empty list, a hidden panel) is
+// skipped, otherwise the overlay would dim the page with no tooltip.
+const MISSING_TARGET_ATTEMPTS = 3
 
 export default function usePageTour() {
   const dispatch = useAppDispatch()
@@ -15,6 +18,7 @@ export default function usePageTour() {
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null)
   const [skipAnimation, setSkipAnimation] = useState(false)
   const rafRef = useRef<number>(0)
+  const directionRef = useRef<'forward' | 'back'>('forward')
 
   const tourSteps: PageTourStep[] = useMemo(
     () => (activePage ? getPageTourSteps(activePage) : []),
@@ -23,6 +27,7 @@ export default function usePageTour() {
 
   // Reset step index when page changes
   useEffect(() => {
+    directionRef.current = 'forward'
     setCurrentStepIndex(0)
     setTargetRect(null)
   }, [activePage])
@@ -81,6 +86,7 @@ export default function usePageTour() {
   const next = useCallback(() => {
     if (currentStepIndex < totalSteps - 1) {
       const nextIndex = currentStepIndex + 1
+      directionRef.current = 'forward'
       setSkipAnimation(false)
       prepareStep(nextIndex)
       setCurrentStepIndex(nextIndex)
@@ -90,6 +96,7 @@ export default function usePageTour() {
   const back = useCallback(() => {
     if (currentStepIndex > 0) {
       const prevIndex = currentStepIndex - 1
+      directionRef.current = 'back'
       setSkipAnimation(false)
       prepareStep(prevIndex)
       setCurrentStepIndex(prevIndex)
@@ -109,6 +116,7 @@ export default function usePageTour() {
 
     let cancelled = false
     let scrolled = false
+    let found = false
     let attempts = 0
     const maxAttempts = 15
 
@@ -117,6 +125,7 @@ export default function usePageTour() {
 
       const el = document.querySelector(target)
       if (el) {
+        found = true
         if (!scrolled) {
           scrolled = true
           const savedScrollY = window.scrollY
@@ -129,6 +138,15 @@ export default function usePageTour() {
       }
 
       attempts++
+      // Don't leave the previous step's spotlight showing this step's text.
+      if (!found) setTargetRect(null)
+      if (!found && attempts >= MISSING_TARGET_ATTEMPTS) {
+        const goingBack = directionRef.current === 'back'
+        const skipTo = currentStepIndex + (goingBack ? -1 : 1)
+        if (skipTo < 0 || skipTo >= totalSteps) close()
+        else setCurrentStepIndex(skipTo)
+        return
+      }
       if (attempts < maxAttempts && !cancelled) {
         setTimeout(tryMeasure, 200)
       }
@@ -139,7 +157,7 @@ export default function usePageTour() {
       cancelled = true
       clearTimeout(timer)
     }
-  }, [currentStepIndex, measureTarget, step?.target])
+  }, [currentStepIndex, totalSteps, close, measureTarget, step?.target])
 
   // Re-measure on resize and scroll
   useEffect(() => {

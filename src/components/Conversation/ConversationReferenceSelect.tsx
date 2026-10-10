@@ -37,6 +37,7 @@ import { Slider } from '../ui/slider'
 import { Badge } from '../ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import ConversationSummarySelect from './ConversationSummarySelect'
+import { MEMORY_PATH } from '@/routes/paths'
 
 const ConversationReferenceSelect: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -274,7 +275,7 @@ const ConversationReferenceSelect: React.FC = () => {
                     </>
                   )}{' '}
                   <Link
-                    to='/memory'
+                    to={MEMORY_PATH}
                     onClick={() => setOpen(false)}
                     className='font-medium text-foreground underline underline-offset-2 hover:text-dare'
                   >

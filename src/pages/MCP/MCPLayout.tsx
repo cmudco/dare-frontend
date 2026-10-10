@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { Plug, History, ChevronRight, Home } from 'lucide-react'
+import { Plug, History, ChevronRight } from 'lucide-react'
+import { INTEGRATIONS_PATH } from '@/routes/paths'
 
 /**
  * MCPLayout - Shared layout for all MCP pages
@@ -12,11 +13,14 @@ const MCPLayout = () => {
   const getBreadcrumbs = () => {
     const path = location.pathname
     const crumbs: { label: string; path: string }[] = [
-      { label: 'Integrations', path: '/mcp' },
+      { label: 'Integrations', path: INTEGRATIONS_PATH },
     ]
 
     // Parse path segments
-    const segments = path.replace('/mcp', '').split('/').filter(Boolean)
+    const segments = path
+      .replace(INTEGRATIONS_PATH, '')
+      .split('/')
+      .filter(Boolean)
 
     if (segments.length > 0) {
       // Server slug
@@ -24,20 +28,20 @@ const MCPLayout = () => {
       if (serverSlug && serverSlug !== 'history') {
         crumbs.push({
           label: serverSlug.charAt(0).toUpperCase() + serverSlug.slice(1),
-          path: `/mcp/${serverSlug}`,
+          path: `${INTEGRATIONS_PATH}/${serverSlug}`,
         })
       }
 
       // History page
       if (serverSlug === 'history') {
-        crumbs.push({ label: 'History', path: '/mcp/history' })
+        crumbs.push({ label: 'History', path: `${INTEGRATIONS_PATH}/history` })
       }
 
       // Tool name
       if (segments.length >= 3 && segments[1] === 'tools') {
         crumbs.push({
           label: segments[2],
-          path: `/mcp/${serverSlug}/tools/${segments[2]}`,
+          path: `${INTEGRATIONS_PATH}/${serverSlug}/tools/${segments[2]}`,
         })
       }
     }
@@ -46,59 +50,59 @@ const MCPLayout = () => {
   }
 
   const breadcrumbs = getBreadcrumbs()
-  const isHistoryPage = location.pathname === '/mcp/history'
+  const isHistoryPage = location.pathname === `${INTEGRATIONS_PATH}/history`
   const isServersPage =
-    location.pathname === '/mcp' ||
-    (!isHistoryPage && location.pathname.startsWith('/mcp'))
+    location.pathname === INTEGRATIONS_PATH ||
+    (!isHistoryPage && location.pathname.startsWith(INTEGRATIONS_PATH))
 
   return (
-    <div className='flex h-full flex-col'>
-      {/* Compact Header - Breadcrumbs + Tabs in single row */}
-      <div className='flex items-center justify-between border-b bg-background px-6 py-3'>
-        {/* Breadcrumbs */}
-        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-          <NavLink
-            to='/mcp'
-            className='flex items-center gap-1 hover:text-foreground'
-          >
-            <Home className='h-4 w-4' />
-          </NavLink>
-          {breadcrumbs.map((crumb, index) => (
-            <span key={crumb.path} className='flex items-center gap-2'>
-              <ChevronRight className='h-4 w-4' />
-              {index === breadcrumbs.length - 1 ? (
-                <span className='font-medium text-foreground'>
-                  {crumb.label}
-                </span>
-              ) : (
-                <NavLink to={crumb.path} className='hover:text-foreground'>
-                  {crumb.label}
-                </NavLink>
-              )}
-            </span>
-          ))}
-        </div>
+    <div className='flex flex-col gap-6'>
+      <div className='flex flex-wrap items-center justify-between gap-3'>
+        {breadcrumbs.length > 1 ? (
+          <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+            {breadcrumbs.map((crumb, index) => (
+              <span key={crumb.path} className='flex items-center gap-2'>
+                {index > 0 && <ChevronRight className='h-4 w-4' />}
+                {index === breadcrumbs.length - 1 ? (
+                  <span className='font-medium text-foreground'>
+                    {crumb.label}
+                  </span>
+                ) : (
+                  <NavLink to={crumb.path} className='hover:text-foreground'>
+                    {crumb.label}
+                  </NavLink>
+                )}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className='text-sm text-muted-foreground'>
+            Connect tool servers so their tools can be used in your chats.
+          </p>
+        )}
 
-        {/* Navigation Tabs */}
-        <div className='flex items-center gap-1'>
+        <div
+          className='flex items-center gap-0.5 rounded-lg bg-muted p-0.5'
+          data-tour='mcp-tabs'
+        >
           <NavLink
-            to='/mcp'
+            to={INTEGRATIONS_PATH}
             end
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-sm transition-colors ${
               isServersPage && !isHistoryPage
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                ? 'bg-background font-medium text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Plug className='h-3.5 w-3.5' />
             Servers
           </NavLink>
           <NavLink
-            to='/mcp/history'
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            to={`${INTEGRATIONS_PATH}/history`}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-sm transition-colors ${
               isHistoryPage
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                ? 'bg-background font-medium text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <History className='h-3.5 w-3.5' />
@@ -107,10 +111,7 @@ const MCPLayout = () => {
         </div>
       </div>
 
-      {/* Page Content */}
-      <div className='flex-1 overflow-auto p-6'>
-        <Outlet />
-      </div>
+      <Outlet />
     </div>
   )
 }

@@ -14,13 +14,14 @@ import {
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
-import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { useCanAccessResearch } from '@/hooks/useCanAccessResearch'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   openConversationTour,
   openPageTour,
 } from '@/redux/conversationTourSlice'
+import { openFeedback } from '@/redux/feedbackSlice'
+import { SETTINGS_PATH, TEMPLATES_PATH } from '@/routes/paths'
 import { UsersIcon } from '@heroicons/react/24/outline'
 import { getTourPageKeyFromPath } from '@/components/ConversationTour/pageTourSteps'
 import {
@@ -63,65 +64,13 @@ const WorkflowsIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
-const AgentsIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns='http://www.w3.org/2000/svg'
-    viewBox='0 0 24 24'
-    fill='none'
-    stroke='currentColor'
-    strokeWidth='2'
-    strokeLinecap='round'
-    strokeLinejoin='round'
-    {...props}
-  >
-    <path d='M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' />
-    <circle cx='9' cy='7' r='4' />
-    <path d='M23 21v-2a4 4 0 0 0-3-3.87' />
-    <path d='M16 3.13a4 4 0 0 1 0 7.75' />
-  </svg>
-)
-
-const IntegrationsIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns='http://www.w3.org/2000/svg'
-    viewBox='0 0 24 24'
-    fill='none'
-    stroke='currentColor'
-    strokeWidth='2'
-    strokeLinecap='round'
-    strokeLinejoin='round'
-    {...props}
-  >
-    <path d='M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z' />
-    <path d='m14.7 6.3-4.4 4.4' />
-    <path d='m6.3 14.7 4.4-4.4' />
-    <path d='m9.3 17.7 4.4-4.4' />
-    <path d='m17.7 9.3-4.4 4.4' />
-  </svg>
-)
-
-const MemoryIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns='http://www.w3.org/2000/svg'
-    viewBox='0 0 24 24'
-    fill='none'
-    stroke='currentColor'
-    strokeWidth='2'
-    strokeLinecap='round'
-    strokeLinejoin='round'
-    {...props}
-  >
-    <path d='M12 2a4 4 0 0 1 4 4v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V6a4 4 0 0 1 4-4z' />
-    <path d='M9.5 8v.5a2.5 2.5 0 0 0 5 0V8' />
-    <path d='M12 2v1' />
-    <path d='M4.6 11a8 8 0 1 0 14.8 0' />
-    <path d='M12 13v9' />
-    <path d='M9 22h6' />
-  </svg>
-)
-
 // Nav items whose sub-routes (a chat, a project) keep the item highlighted.
-const NESTED_ROUTE_PATHS = ['/conversation', '/projects']
+const NESTED_ROUTE_PATHS = [
+  '/conversation',
+  '/projects',
+  TEMPLATES_PATH,
+  SETTINGS_PATH,
+]
 
 const Sidebar = () => {
   const location = useLocation()
@@ -130,13 +79,15 @@ const Sidebar = () => {
   const hasOwnedGroups = useAppSelector(
     (state) => state.billing.ownedGroups.length > 0
   )
-  const enableMcp = useFeatureFlag('enableMcp')
-  const enableMemory = useFeatureFlag('enableMemory')
   const canAccessResearch = useCanAccessResearch()
 
   const handleStartTutorial = useCallback(() => {
     const pageKey = getTourPageKeyFromPath(location.pathname)
-    if (!pageKey) return
+    if (!pageKey) {
+      // No tour for this page: Ask DARE can explain it instead.
+      dispatch(openFeedback())
+      return
+    }
 
     if (pageKey === 'conversation') {
       // Conversation tour uses its own overlay inside ConversationLayout
@@ -172,17 +123,10 @@ const Sidebar = () => {
     { name: 'Conversations', icon: ChatBubbleLeftIcon, path: '/conversation' },
     { name: 'Projects', icon: RectangleStackIcon, path: '/projects' },
     { name: 'Sources', icon: FolderOpenIcon, path: '/files' },
-    { name: 'Prompts', icon: PromptsIcon, path: '/prompts' },
+    { name: 'Templates', icon: PromptsIcon, path: TEMPLATES_PATH },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
-    { name: 'Agents', icon: AgentsIcon, path: '/agents' },
     ...(canAccessResearch
       ? [{ name: 'Research', icon: BeakerIcon, path: '/research' }]
-      : []),
-    ...(enableMcp
-      ? [{ name: 'Integrations', icon: IntegrationsIcon, path: '/mcp' }]
-      : []),
-    ...(enableMemory
-      ? [{ name: 'Memory', icon: MemoryIcon, path: '/memory' }]
       : []),
   ]
 
@@ -200,7 +144,7 @@ const Sidebar = () => {
       ? [{ name: 'Group Wallet', icon: UsersIcon, path: '/group-wallet' }]
       : []),
     { name: 'Help', icon: QuestionMarkCircleIcon, path: '/help' },
-    { name: 'Settings', icon: Cog8ToothIcon, path: '/settings' },
+    { name: 'Settings', icon: Cog8ToothIcon, path: SETTINGS_PATH },
   ]
 
   return (
@@ -309,7 +253,9 @@ const Sidebar = () => {
             )}
 
             {bottomItems.map((item) => {
-              const isActive = location.pathname === item.path
+              const isActive = NESTED_ROUTE_PATHS.includes(item.path)
+                ? location.pathname.startsWith(item.path)
+                : location.pathname === item.path
               return (
                 <Link
                   key={item.name}

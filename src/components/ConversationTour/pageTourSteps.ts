@@ -20,8 +20,27 @@ import {
   TrendingUp,
   Sparkles,
   Zap,
+  FolderKanban,
+  MessageSquarePlus,
+  Settings2,
+  Layers,
+  Fingerprint,
+  Plug,
+  History,
+  FlaskConical,
+  User,
+  Users,
+  Wallet,
 } from 'lucide-react'
 import type { TourPageKey } from '@/redux/conversationTourSlice'
+import {
+  AGENT_TEMPLATES_PATH,
+  INTEGRATIONS_PATH,
+  MEMORY_PATH,
+  PROMPT_TEMPLATES_PATH,
+  SETTINGS_PATH,
+  TEMPLATES_PATH,
+} from '@/routes/paths'
 
 export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right' | 'center'
 
@@ -132,6 +151,15 @@ const PROMPTS_STEPS: PageTourStep[] = [
     placement: 'center',
   },
   {
+    id: 'templates-tabs',
+    target: '[data-tour="templates-tabs"]',
+    title: 'Prompts and Agents',
+    description:
+      'Prompts are reusable instructions. Agents pair a prompt with a model, files and settings, ready to use in chats and workflows.',
+    icon: Bot,
+    placement: 'bottom',
+  },
+  {
     id: 'prompts-search',
     target: '[data-tour="prompts-search"]',
     title: 'Search Prompts',
@@ -208,6 +236,15 @@ const AGENTS_STEPS: PageTourStep[] = [
     placement: 'center',
   },
   {
+    id: 'templates-tabs',
+    target: '[data-tour="templates-tabs"]',
+    title: 'Prompts and Agents',
+    description:
+      'Prompts are reusable instructions. Agents pair a prompt with a model, files and settings, ready to use in chats and workflows.',
+    icon: Bot,
+    placement: 'bottom',
+  },
+  {
     id: 'agents-search',
     target: '[data-tour="agents-search"]',
     title: 'Search Agents',
@@ -235,6 +272,23 @@ const SETTINGS_STEPS: PageTourStep[] = [
       "Customize your DARE experience — avatar, API keys, preferences, and security. Let's walk through each section.",
     icon: Sparkles,
     placement: 'center',
+  },
+  {
+    id: 'settings-sections',
+    target: '[data-tour="settings-sections"]',
+    title: 'Settings Sections',
+    description:
+      'Account, appearance, chat defaults, memory, integrations and your data each have their own tab.',
+    icon: Settings2,
+    placement: 'right',
+  },
+  {
+    id: 'settings-account',
+    target: '[data-tour="settings-account"]',
+    title: 'Your Account',
+    description: 'The name, email and role on your DARE account.',
+    icon: User,
+    placement: 'bottom',
   },
   {
     id: 'settings-avatar',
@@ -333,6 +387,238 @@ const BILLING_STEPS: PageTourStep[] = [
   },
 ]
 
+const PROJECTS_STEPS: PageTourStep[] = [
+  {
+    id: 'welcome',
+    target: null,
+    title: 'Welcome to Projects',
+    description:
+      'Projects keep the chats, files and instructions for one piece of work in one place.',
+    icon: Sparkles,
+    placement: 'center',
+  },
+  {
+    id: 'projects-create',
+    target: '[data-tour="projects-create"]',
+    title: 'Start a Project',
+    description:
+      'Click New to name a project. You can add instructions, sources and a default model once it exists.',
+    icon: Plus,
+    placement: 'bottom',
+  },
+  {
+    id: 'projects-search',
+    target: '[data-tour="projects-search"]',
+    title: 'Find a Project',
+    description: 'Search your projects by name.',
+    icon: Search,
+    placement: 'bottom',
+  },
+  {
+    id: 'projects-list',
+    target: '[data-tour="projects-list"]',
+    title: 'Your Projects',
+    description:
+      'Open a project to see its chats and sources. Sort by last active, name or date created, and use the ⋯ menu to delete one.',
+    icon: FolderKanban,
+    placement: 'top',
+  },
+]
+
+const PROJECT_STEPS: PageTourStep[] = [
+  {
+    id: 'welcome',
+    target: null,
+    title: 'Inside a Project',
+    description:
+      'Every chat started here shares the same instructions, sources and defaults.',
+    icon: Sparkles,
+    placement: 'center',
+  },
+  {
+    id: 'project-composer',
+    target: '[data-tour="project-composer"]',
+    title: 'Start a Project Chat',
+    description:
+      "Type here to start a new chat that already uses this project's instructions and sources.",
+    icon: MessageSquarePlus,
+    placement: 'bottom',
+  },
+  {
+    id: 'project-tabs',
+    target: '[data-tour="project-tabs"]',
+    title: 'Chats and Sources',
+    description:
+      'Chats lists every conversation in the project. Sources holds the files, folders and libraries its chats can search.',
+    icon: FileText,
+    placement: 'bottom',
+  },
+  {
+    id: 'project-settings-rail',
+    target: '[data-tour="project-settings-rail"]',
+    title: 'Project Settings',
+    description:
+      'Instructions, the default model and pinned workflows for every chat in this project. Click Edit to change them.',
+    icon: Settings2,
+    placement: 'left',
+  },
+  {
+    id: 'project-actions',
+    target: '[data-tour="project-actions"]',
+    title: 'More Actions',
+    description:
+      'Open Settings, add existing chats, pin workflows or delete the project.',
+    icon: FolderOpen,
+    placement: 'bottom',
+  },
+]
+
+const MEMORY_STEPS: PageTourStep[] = [
+  {
+    id: 'welcome',
+    target: null,
+    title: 'Welcome to Memory',
+    description:
+      'Everything DARE remembers about you across chats, which you can review, edit and delete.',
+    icon: Fingerprint,
+    placement: 'center',
+  },
+  {
+    id: 'memory-layers',
+    target: '[data-tour="memory-layers"]',
+    title: 'Memory Layers',
+    description:
+      'Profile, Knowledge and Behaviors hold what DARE has learned about you. Sessions searches your past chat transcripts. Click a layer to filter.',
+    icon: Layers,
+    placement: 'bottom',
+  },
+  {
+    id: 'memory-tidy-up',
+    target: '[data-tour="memory-tidy-up"]',
+    title: 'Tidy Up',
+    description:
+      'Ask DARE to check its memories for duplicates and stale labels. It suggests fixes, and nothing changes until you approve one.',
+    icon: Sparkles,
+    placement: 'bottom',
+  },
+  {
+    id: 'memory-search',
+    target: '[data-tour="memory-search"]',
+    title: 'Search Your Memories',
+    description:
+      'Filter memories by text, or run a semantic search to find related ones.',
+    icon: Search,
+    placement: 'bottom',
+  },
+  {
+    id: 'memory-actions',
+    target: '[data-tour="memory-actions"]',
+    title: 'Manage Your Memory',
+    description:
+      'Read how memory works, export or import your memories, or clear them all.',
+    icon: BookOpen,
+    placement: 'bottom',
+  },
+]
+
+const MCP_STEPS: PageTourStep[] = [
+  {
+    id: 'welcome',
+    target: null,
+    title: 'Welcome to Integrations',
+    description:
+      'Connect external tool servers so their tools can be used inside your chats.',
+    icon: Plug,
+    placement: 'center',
+  },
+  {
+    id: 'mcp-servers',
+    target: '[data-tour="mcp-servers"]',
+    title: 'Available Servers',
+    description:
+      'Open a server to connect your account and see the tools it offers.',
+    icon: Plug,
+    placement: 'top',
+  },
+  {
+    id: 'mcp-tabs',
+    target: '[data-tour="mcp-tabs"]',
+    title: 'Servers and History',
+    description:
+      'Switch to History to see every tool call you have run and its result.',
+    icon: History,
+    placement: 'bottom',
+  },
+]
+
+const RESEARCH_STEPS: PageTourStep[] = [
+  {
+    id: 'welcome',
+    target: null,
+    title: 'Welcome to Research',
+    description:
+      'Each research project is a workspace for one line of inquiry, where agents gather and review sources for you.',
+    icon: FlaskConical,
+    placement: 'center',
+  },
+  {
+    id: 'research-create',
+    target: '[data-tour="research-create"]',
+    title: 'Start a Research Project',
+    description:
+      'A short setup walks you through your question, starting sources, standards and the tools the agents may use.',
+    icon: Plus,
+    placement: 'bottom',
+  },
+  {
+    id: 'research-projects',
+    target: '[data-tour="research-projects"]',
+    title: 'Your Research Projects',
+    description:
+      'Open a project to chat with its agents, review the sources they found and follow their runs.',
+    icon: FolderOpen,
+    placement: 'top',
+  },
+]
+
+const GROUP_WALLET_STEPS: PageTourStep[] = [
+  {
+    id: 'welcome',
+    target: null,
+    title: 'Welcome to Group Wallet',
+    description:
+      'Manage the shared budget for groups you own and how it is handed out to members.',
+    icon: Users,
+    placement: 'center',
+  },
+  {
+    id: 'group-wallet-groups',
+    target: '[data-tour="group-wallet-groups"]',
+    title: 'Your Groups',
+    description: 'Pick a group to manage its wallet.',
+    icon: Users,
+    placement: 'right',
+  },
+  {
+    id: 'group-wallet-budget',
+    target: '[data-tour="group-wallet-budget"]',
+    title: 'Group Budget',
+    description:
+      "The group's remaining budget, plus the refill policy and gateway allowance that apply to members.",
+    icon: Wallet,
+    placement: 'left',
+  },
+  {
+    id: 'group-wallet-members',
+    target: '[data-tour="group-wallet-members"]',
+    title: 'Members',
+    description:
+      "Each member's balance and usage. Allocate credit or set a personal override for anyone.",
+    icon: CreditCard,
+    placement: 'top',
+  },
+]
+
 /** Map of page keys to their tour steps */
 const PAGE_TOUR_MAP: Record<TourPageKey, PageTourStep[]> = {
   conversation: [], // handled by the existing conversationTourSteps.ts
@@ -344,6 +630,12 @@ const PAGE_TOUR_MAP: Record<TourPageKey, PageTourStep[]> = {
   settings: SETTINGS_STEPS,
   help: HELP_STEPS,
   billing: BILLING_STEPS,
+  projects: PROJECTS_STEPS,
+  project: PROJECT_STEPS,
+  memory: MEMORY_STEPS,
+  mcp: MCP_STEPS,
+  research: RESEARCH_STEPS,
+  group_wallet: GROUP_WALLET_STEPS,
 }
 
 export function getPageTourSteps(page: TourPageKey): PageTourStep[] {
@@ -355,11 +647,43 @@ export function getTourPageKeyFromPath(pathname: string): TourPageKey | null {
   if (pathname.startsWith('/conversation')) return 'conversation'
   if (pathname.startsWith('/dashboard')) return 'dashboard'
   if (pathname.startsWith('/files')) return 'files'
-  if (pathname.startsWith('/prompts')) return 'prompts'
   if (pathname.startsWith('/workflows')) return 'workflows'
-  if (pathname.startsWith('/agents')) return 'agents'
-  if (pathname.startsWith('/settings')) return 'settings'
   if (pathname.startsWith('/help')) return 'help'
   if (pathname.startsWith('/billing')) return 'billing'
+  if (/^\/projects\/\d+/.test(pathname)) return 'project'
+  if (pathname.startsWith('/projects')) return 'projects'
+  if (pathname.startsWith(MEMORY_PATH)) return 'memory'
+  if (pathname.startsWith(INTEGRATIONS_PATH)) return 'mcp'
+  if (pathname.startsWith(SETTINGS_PATH)) return 'settings'
+  if (pathname.startsWith(AGENT_TEMPLATES_PATH)) return 'agents'
+  if (pathname.startsWith(TEMPLATES_PATH)) return 'prompts'
+  if (/^\/research\/?$/.test(pathname)) return 'research'
+  if (pathname.startsWith('/group-wallet')) return 'group_wallet'
   return null
+}
+
+/** Where each tour the assistant can start lives (assistant page keys). */
+const TOUR_PAGE_PATHS: Record<string, string> = {
+  dashboard: '/dashboard',
+  conversation: '/conversation',
+  projects: '/projects',
+  files: '/files',
+  prompts: PROMPT_TEMPLATES_PATH,
+  workflows: '/workflows',
+  agents: AGENT_TEMPLATES_PATH,
+  research: '/research',
+  memory: MEMORY_PATH,
+  mcp: INTEGRATIONS_PATH,
+  billing: '/billing',
+  group_wallet: '/group-wallet',
+  settings: SETTINGS_PATH,
+  help: '/help',
+}
+
+/** The page an assistant tour request needs open, or null when it is open. */
+export function tourRequestPath(page: string, pathname: string): string | null {
+  const current = getTourPageKeyFromPath(pathname)
+  if (current === page || (page === 'projects' && current === 'project'))
+    return null
+  return TOUR_PAGE_PATHS[page] ?? null
 }

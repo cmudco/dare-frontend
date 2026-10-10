@@ -28,6 +28,7 @@ import { useAppSelector } from '@/redux/hooks'
 import { getPromptsLibrary } from '@/redux/asyncThunks/promptsLibrary'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
+import { PROMPT_TEMPLATES_PATH } from '@/routes/paths'
 
 const RichTextPreview = ({ content }: { content: string }) => {
   const truncateHtml = (html: string, maxLength: number = 150): string => {
@@ -150,7 +151,7 @@ const PromptTabContent = () => {
   }
 
   const handleCreatePrompt = () => {
-    navigate('/prompts')
+    navigate(PROMPT_TEMPLATES_PATH)
     dispatch(openModal())
   }
 

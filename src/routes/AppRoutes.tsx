@@ -12,21 +12,31 @@ import CoversationScreen from '../pages/Conversation/index.tsx'
 import UserView from '../components/Layout/UserView'
 import EmailConfirmationScreen from '../pages/EmailConfirmation'
 import RouteListener from './RouteListener'
-import Prompt from '../pages/Prompts'
 import ProtectedRoute from './ProtectedRoute'
 import Help from '../pages/Help'
-import Settings from '../pages/Settings/index.tsx'
+import AccountSection from '@/pages/Settings/AccountSection'
+import ChatSection from '@/pages/Settings/ChatSection'
+import AppearanceSettings from '@/components/Settings/AppearanceSettings'
+import DataAccountSettings from '@/components/Settings/DataAccountSettings'
 import ResetPasswordScreen from '../pages/ResetPassword'
 import ForgotPasswordSuccess from '../components/Success.tsx'
 import VerifyEmailScreen from '@/components/Auth/VerifyEmail.tsx'
 import Workflows from '@/pages/Workflows/index.tsx'
 import WorkflowEditPage from '@/pages/Workflows/WorkflowEditPage.tsx'
-import ProfileScreen from '@/pages/ProfileScreen/index.tsx'
 import BillingScreen from '@/pages/Billing/index.tsx'
 import GroupWalletManager from '@/pages/GroupWalletManager/index.tsx'
 import OnboardingScreen from '@/pages/Onboarding/index.tsx'
 import WorkflowCreatePage from '@/pages/Workflows/WorkflowCreatePage.tsx'
-import Agents from '@/pages/Agents/index.tsx'
+import Templates from '@/pages/Templates'
+import SettingsLayout from '@/pages/Settings/SettingsLayout'
+import LegacyIntegrationsRedirect from './LegacyIntegrationsRedirect'
+import {
+  AGENT_TEMPLATES_PATH,
+  MEMORY_PATH,
+  PROMPT_TEMPLATES_PATH,
+  SETTINGS_PATH,
+  TEMPLATES_PATH,
+} from './paths'
 import ModelCards from '@/pages/ModelCards'
 import MCPLayout from '@/pages/MCP/MCPLayout.tsx'
 import MCPServerList from '@/pages/MCP/MCPServerList.tsx'
@@ -166,33 +176,57 @@ const AppRoutes = () => {
             <Route path='/projects/:projectId' element={<ProjectDetail />} />
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/files' element={<Files />} />
-            <Route path='/prompts' element={<Prompt />} />
-            <Route path='/agents' element={<Agents />} />
+            <Route
+              path={TEMPLATES_PATH}
+              element={<Navigate to={PROMPT_TEMPLATES_PATH} replace />}
+            />
+            <Route path={`${TEMPLATES_PATH}/:tab`} element={<Templates />} />
+            <Route
+              path='/prompts'
+              element={<Navigate to={PROMPT_TEMPLATES_PATH} replace />}
+            />
+            <Route
+              path='/agents'
+              element={<Navigate to={AGENT_TEMPLATES_PATH} replace />}
+            />
             {canAccessResearch && (
               <Route path='/research' element={<ResearchProjects />} />
             )}
             <Route path='/workflows' element={<Workflows />} />
-            <Route path='/settings' element={<Settings />} />
+            <Route path={SETTINGS_PATH} element={<SettingsLayout />}>
+              <Route index element={<AccountSection />} />
+              <Route path='appearance' element={<AppearanceSettings />} />
+              <Route path='chat' element={<ChatSection />} />
+              <Route path='data' element={<DataAccountSettings />} />
+              {enableMemory && (
+                <Route path='memory' element={<MemoryScreen />} />
+              )}
+              {enableMcp && (
+                <Route path='integrations' element={<MCPLayout />}>
+                  <Route index element={<MCPServerList />} />
+                  <Route path=':serverSlug' element={<MCPServerDetail />} />
+                  <Route
+                    path=':serverSlug/tools/:toolName'
+                    element={<MCPToolExecute />}
+                  />
+                  <Route path='history' element={<MCPExecutionHistory />} />
+                </Route>
+              )}
+            </Route>
             <Route path='/help' element={<Help />} />
             {/* OAuth callback landing — must stay OUTSIDE the enableMcp gate:
                 the flag is false while still loading right after the redirect,
                 which would drop the user on the 404 catch-all. */}
             <Route path='/mcp/callback' element={<MCPConnectionResult />} />
-            {enableMcp && (
-              <Route path='/mcp' element={<MCPLayout />}>
-                <Route index element={<MCPServerList />} />
-                <Route path=':serverSlug' element={<MCPServerDetail />} />
-                <Route
-                  path=':serverSlug/tools/:toolName'
-                  element={<MCPToolExecute />}
-                />
-                <Route path='history' element={<MCPExecutionHistory />} />
-              </Route>
-            )}
-            <Route path='/profile' element={<ProfileScreen />} />
-            {enableMemory && (
-              <Route path='/memory' element={<MemoryScreen />} />
-            )}
+            <Route path='/mcp/*' element={<LegacyIntegrationsRedirect />} />
+            <Route
+              path='/profile'
+              element={<Navigate to={SETTINGS_PATH} replace />}
+            />
+            <Route
+              path='/memory'
+              element={<Navigate to={MEMORY_PATH} replace />}
+            />
             <Route path='/billing/' element={<BillingScreen />} />
             <Route path='/group-wallet' element={<GroupWalletManager />} />
           </Route>
