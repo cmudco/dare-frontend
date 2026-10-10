@@ -91,7 +91,10 @@ const ProjectsPage = () => {
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
           <h1 className='text-3xl font-semibold tracking-tight'>Projects</h1>
           <div className='flex items-center gap-2'>
-            <div className='relative flex-1 sm:w-72 sm:flex-none'>
+            <div
+              className='relative flex-1 sm:w-72 sm:flex-none'
+              data-tour='projects-search'
+            >
               <Search className='pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
               <input
                 value={query}
@@ -104,6 +107,7 @@ const ProjectsPage = () => {
             <Button
               className='h-10 rounded-full px-5'
               onClick={() => setCreating(true)}
+              data-tour='projects-create'
             >
               <Plus className='h-4 w-4' /> New
             </Button>
@@ -178,7 +182,7 @@ const ProjectsPage = () => {
             No projects match “{query.trim()}”.
           </p>
         ) : (
-          <ul className='flex flex-col pt-2'>
+          <ul className='flex flex-col pt-2' data-tour='projects-list'>
             {visibleProjects.map((project) => (
               <li key={project.id} className='group relative'>
                 <button

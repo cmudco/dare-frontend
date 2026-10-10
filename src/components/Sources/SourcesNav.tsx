@@ -8,6 +8,7 @@ import {
   Inbox,
   Library,
   LucideIcon,
+  Trash2,
   Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,9 @@ const SourcesNav = ({ location, goTo, onNewFolder }: SourcesNavProps) => {
   const counts = useAppSelector(selectSourceCounts)
   const folders = useAppSelector((state) => state.files.folders)
   const sharedCount = useAppSelector((state) => state.files.sharedFiles.length)
+  const deletedCount = useAppSelector(
+    (state) => state.files.deletedFiles.length
+  )
   const isSyftboxUser = useAppSelector(
     (state) => state.user.user?.isSyftboxFileStorage ?? false
   )
@@ -107,6 +111,15 @@ const SourcesNav = ({ location, goTo, onNewFolder }: SourcesNavProps) => {
         </h2>
         {item({ kind: 'libraries' }, Library, 'Shared libraries')}
       </section>
+
+      <div className='border-t border-border pt-3'>
+        {item(
+          { kind: 'deleted' },
+          Trash2,
+          'Recently deleted',
+          deletedCount || undefined
+        )}
+      </div>
     </nav>
   )
 }

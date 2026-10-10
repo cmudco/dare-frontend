@@ -24,11 +24,24 @@ import {
   startFileOcrRun,
   bulkTagFiles,
   searchFileContents,
+  getDeletedFiles,
+  purgeDeletedFiles,
+  restoreDeletedFiles,
 } from './asyncThunks/file'
 import { initialState } from './initialState/files'
 import { needsAttention } from '@/utils/files'
 import type { RootState } from './store'
-import { ContentMatch, MediaTypeFilter, MyFolder } from './types/files'
+import {
+  ContentMatch,
+  DeletedFile,
+  MediaTypeFilter,
+  MyFolder,
+} from './types/files'
+
+const withoutIds = (files: DeletedFile[], ids: number[]) => {
+  const gone = new Set(ids)
+  return files.filter((file) => !gone.has(file.id))
+}
 
 const fileSlice = createSlice({
   name: 'files',
@@ -115,6 +128,23 @@ const fileSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder
+      .addCase(getDeletedFiles.pending, (state) => {
+        state.deletedFilesStatus = 'loading'
+      })
+      .addCase(getDeletedFiles.fulfilled, (state, action) => {
+        state.deletedFilesStatus = 'succeeded'
+        state.deletedFiles = action.payload
+      })
+      .addCase(getDeletedFiles.rejected, (state) => {
+        state.deletedFilesStatus = 'failed'
+      })
+      .addCase(restoreDeletedFiles.fulfilled, (state, action) => {
+        state.deletedFiles = withoutIds(state.deletedFiles, action.payload)
+      })
+      .addCase(purgeDeletedFiles.fulfilled, (state, action) => {
+        state.deletedFiles = withoutIds(state.deletedFiles, action.payload)
+      })
     builder
       .addCase(reprocessFile.pending, (state, action) => {
         state.reprocessingRequests[action.meta.arg.fileId] = {

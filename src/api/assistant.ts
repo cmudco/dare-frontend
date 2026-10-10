@@ -1,11 +1,11 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
-import { ProposalDecision } from '@/utils/constants/assistant'
+import { ProposalCommand } from '@/utils/constants/assistant'
 import {
+  AssistantProposalSchema,
   AssistantThreadSchema,
-  FileOrganizationProposalSchema,
+  type AssistantProposal,
   type AssistantThread,
-  type FileOrganizationProposal,
 } from '@/schemas/assistantSocket'
 
 export const getAssistantThreadAPI = async (): Promise<AssistantThread> =>
@@ -24,13 +24,15 @@ export const startAssistantThreadAPI = async (): Promise<AssistantThread> =>
     })
   )
 
-export const decideAssistantProposalAPI = async (
+export const runProposalCommandAPI = async (
   proposalId: number,
-  decision: ProposalDecision
-): Promise<FileOrganizationProposal> =>
-  FileOrganizationProposalSchema.parse(
+  command: ProposalCommand,
+  actionIds?: string[]
+): Promise<AssistantProposal> =>
+  AssistantProposalSchema.parse(
     await baseRequest<unknown>({
-      url: `api/assistant/proposals/${proposalId}/${decision}/`,
+      url: `api/assistant/proposals/${proposalId}/${command}/`,
       method: METHOD.POST,
+      data: actionIds ? { actionIds } : {},
     })
   )

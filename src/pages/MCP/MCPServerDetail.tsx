@@ -41,6 +41,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from '@/utils/toast'
+import { INTEGRATIONS_PATH } from '@/routes/paths'
 
 /**
  * MCPServerDetail - Server detail page with connection management and tools list
@@ -176,7 +177,7 @@ const MCPServerDetail = () => {
       <Button
         variant='ghost'
         size='sm'
-        onClick={() => navigate('/mcp')}
+        onClick={() => navigate(INTEGRATIONS_PATH)}
         className='mb-2'
       >
         <ArrowLeft className='mr-2 h-4 w-4' />

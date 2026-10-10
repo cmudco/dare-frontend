@@ -24,8 +24,16 @@ import {
   updateVisionModelAPI,
   bulkTagFilesAPI,
   searchFileContentsAPI,
+  getDeletedFilesAPI,
+  restoreFilesAPI,
+  purgeFilesAPI,
 } from '../../api/files'
-import { BulkTagRequest, MyFile, FileReprocessingRequest } from '../types/files'
+import {
+  BulkTagRequest,
+  DeletedFile,
+  MyFile,
+  FileReprocessingRequest,
+} from '../types/files'
 import { DocumentProcessingMode } from '@/utils/constants/file'
 
 const BATCH_SIZE = 5
@@ -81,6 +89,47 @@ export const getFiles = createAsyncThunk(
     }
   }
 )
+
+export const getDeletedFiles = createAsyncThunk<
+  DeletedFile[],
+  void,
+  { rejectValue: string }
+>('files/getDeletedFiles', async (_, thunkAPI) => {
+  try {
+    return await getDeletedFilesAPI()
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const restoreDeletedFiles = createAsyncThunk<
+  number[],
+  number[],
+  { rejectValue: string }
+>('files/restoreDeletedFiles', async (fileIds, thunkAPI) => {
+  try {
+    await restoreFilesAPI(fileIds)
+    // Restored files rejoin their folders and tags.
+    thunkAPI.dispatch(getFiles())
+    thunkAPI.dispatch(getFolders())
+    return fileIds
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const purgeDeletedFiles = createAsyncThunk<
+  number[],
+  number[],
+  { rejectValue: string }
+>('files/purgeDeletedFiles', async (fileIds, thunkAPI) => {
+  try {
+    await purgeFilesAPI(fileIds)
+    return fileIds
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
 
 export const updateFileTags = createAsyncThunk(
   'files/updateFileTags',

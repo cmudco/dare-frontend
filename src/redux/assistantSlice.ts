@@ -2,6 +2,8 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import {
   AssistantMessageStatus,
   AssistantStepStatus,
+  ProposalCommand,
+  START_PAGE_TOUR_TOOL,
 } from '@/utils/constants/assistant'
 import type {
   AssistantEvent,
@@ -10,8 +12,8 @@ import type {
 } from '@/schemas/assistantSocket'
 import type { RootState } from './store'
 import {
-  decideAssistantProposal,
   fetchAssistantThread,
+  runProposalCommand,
   startAssistantThread,
 } from './asyncThunks/assistant'
 import { logout } from './userSlice'
@@ -27,6 +29,11 @@ export interface AssistantLiveStep {
 }
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'failed'
 
+/** A tour the assistant asked for, by the assistant's page key. */
+export interface AssistantTourRequest {
+  page: string
+}
+
 interface AssistantState {
   messages: AssistantMessage[]
   usage: AssistantUsage | null
@@ -34,7 +41,13 @@ interface AssistantState {
   connection: ConnectionStatus
   isAnswering: boolean
   liveSteps: AssistantLiveStep[]
-  decidingProposalId: number | null
+  /** The proposal command in flight; actionId null when it covers every action. */
+  busyProposal: {
+    proposalId: number
+    command: ProposalCommand
+    actionId: string | null
+  } | null
+  pendingTour: AssistantTourRequest | null
   error: string | null
 }
 
@@ -45,12 +58,28 @@ const initialState: AssistantState = {
   connection: 'disconnected',
   isAnswering: false,
   liveSteps: [],
-  decidingProposalId: null,
+  busyProposal: null,
+  pendingTour: null,
   error: null,
 }
 
 export const ASSISTANT_CONNECTION_ERROR =
   'Could not reach the assistant. Please try again.'
+
+/** The tour a finished reply opened, if it called start_page_tour. */
+export const tourRequestOf = (
+  message: AssistantMessage
+): AssistantTourRequest | null => {
+  const call = message.toolCalls
+    .filter(
+      (item) =>
+        item.name === START_PAGE_TOUR_TOOL &&
+        item.status === AssistantStepStatus.COMPLETED
+    )
+    .pop()
+  const page = call?.arguments.page
+  return typeof page === 'string' && page ? { page } : null
+}
 
 const upsert = (state: AssistantState, message: AssistantMessage) => {
   const index = state.messages.findIndex((item) => item.id === message.id)
@@ -88,6 +117,12 @@ const assistantSlice = createSlice({
     assistantSendRejected(state, action: PayloadAction<string>) {
       state.isAnswering = false
       state.error = action.payload
+    },
+    assistantTourRequested(state, action: PayloadAction<AssistantTourRequest>) {
+      state.pendingTour = action.payload
+    },
+    assistantTourHandled(state) {
+      state.pendingTour = null
     },
     assistantEventReceived(state, action: PayloadAction<AssistantEvent>) {
       const event = action.payload
@@ -146,11 +181,23 @@ const assistantSlice = createSlice({
           if (step) step.status = event.status
           break
         }
-        case 'assistant_message':
+        case 'assistant_message': {
+          // Only the reply finishing opens its tour, never a repeated event.
+          const wasStreaming =
+            state.messages.find((item) => item.id === event.message.id)
+              ?.status === AssistantMessageStatus.STREAMING
           upsert(state, event.message)
           state.liveSteps = []
           state.isAnswering = false
+          const tour = tourRequestOf(event.message)
+          if (
+            tour &&
+            wasStreaming &&
+            event.message.status === AssistantMessageStatus.COMPLETED
+          )
+            state.pendingTour = tour
           break
+        }
         case 'assistant_error':
           state.error = event.message
           state.liveSteps = []
@@ -182,12 +229,16 @@ const assistantSlice = createSlice({
       .addCase(startAssistantThread.rejected, (state) => {
         state.error = ASSISTANT_CONNECTION_ERROR
       })
-      .addCase(decideAssistantProposal.pending, (state, action) => {
-        state.decidingProposalId = action.meta.arg.proposalId
+      .addCase(runProposalCommand.pending, (state, action) => {
+        state.busyProposal = {
+          proposalId: action.meta.arg.proposalId,
+          command: action.meta.arg.command,
+          actionId: action.meta.arg.actionId ?? null,
+        }
         state.error = null
       })
-      .addCase(decideAssistantProposal.fulfilled, (state, action) => {
-        state.decidingProposalId = null
+      .addCase(runProposalCommand.fulfilled, (state, action) => {
+        state.busyProposal = null
         for (const message of state.messages) {
           const index = message.proposals.findIndex(
             (proposal) => proposal.id === action.payload.id
@@ -195,15 +246,17 @@ const assistantSlice = createSlice({
           if (index !== -1) message.proposals[index] = action.payload
         }
       })
-      .addCase(decideAssistantProposal.rejected, (state) => {
-        state.decidingProposalId = null
-        state.error = 'Could not update your files. Please try again.'
+      .addCase(runProposalCommand.rejected, (state) => {
+        state.busyProposal = null
+        state.error = 'Could not make that change. Please try again.'
       })
       .addCase(logout, () => initialState)
   },
 })
 
 export const {
+  assistantTourRequested,
+  assistantTourHandled,
   assistantConnecting,
   assistantConnected,
   assistantConnectionFailed,

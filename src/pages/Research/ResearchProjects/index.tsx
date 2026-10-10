@@ -49,12 +49,16 @@ const ResearchProjects = () => {
             </p>
           </div>
         </div>
-        <Button onClick={() => navigate('/research/new')} className='shrink-0'>
+        <Button
+          onClick={() => navigate('/research/new')}
+          className='shrink-0'
+          data-tour='research-create'
+        >
           <Plus className='h-4 w-4' /> New project
         </Button>
       </motion.div>
 
-      <div className='px-6 pb-10 pt-6'>
+      <div className='px-6 pt-6 pb-10'>
         {loading && projects.length === 0 ? (
           <div className='flex items-center justify-center px-6 py-20 text-sm text-muted-foreground'>
             Loading projects…
@@ -79,7 +83,10 @@ const ResearchProjects = () => {
             </Button>
           </div>
         ) : (
-          <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-3'>
+          <div
+            className='grid gap-4 sm:grid-cols-2 xl:grid-cols-3'
+            data-tour='research-projects'
+          >
             {projects.map((project) => (
               <ResearchProjectCard
                 key={project.id}

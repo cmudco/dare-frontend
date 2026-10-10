@@ -3,6 +3,7 @@ import { useAppSelector } from '@/redux/hooks'
 import { McpServer } from '@/redux/types/mcp'
 import { McpCatalogSlug } from '@/utils/constants/mcp'
 import { MCPServerLogo } from './MCPServerLogo'
+import { INTEGRATIONS_PATH } from '@/routes/paths'
 
 interface MCPServerCardProps {
   server: McpServer
@@ -24,7 +25,7 @@ const MCPServerCard = ({ server }: MCPServerCardProps) => {
 
   return (
     <div
-      onClick={() => navigate(`/mcp/${server.slug}`)}
+      onClick={() => navigate(`${INTEGRATIONS_PATH}/${server.slug}`)}
       className='group cursor-pointer rounded-xl border bg-card p-5 transition-all hover:border-primary/50 hover:shadow-md'
     >
       {/* Header */}

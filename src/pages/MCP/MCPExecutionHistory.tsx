@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { getMcpExecutions } from '@/redux/asyncThunks/mcp'
 import { MCPExecutionRow } from '@/components/MCP'
 import { Loader2, Clock, AlertCircle } from 'lucide-react'
+import { INTEGRATIONS_PATH } from '@/routes/paths'
 
 /**
  * MCPExecutionHistory - Display execution logs
@@ -47,7 +48,7 @@ const MCPExecutionHistory = () => {
           Execute a tool to see it appear here
         </p>
         <button
-          onClick={() => navigate('/mcp')}
+          onClick={() => navigate(INTEGRATIONS_PATH)}
           className='rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90'
         >
           Browse Servers
