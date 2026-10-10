@@ -4,6 +4,7 @@ import {
   BulkTagRequest,
   BulkTagResponse,
   ContentMatch,
+  DeletedFile,
   FileViewerCapabilities,
   FileReprocessingRequest,
   DocumentMap,
@@ -25,6 +26,32 @@ export const getFilesAPI = async (): Promise<{ results: MyFile[] }> => {
     method: METHOD.GET,
   })
 }
+
+export const getDeletedFilesAPI = async (): Promise<DeletedFile[]> =>
+  (
+    await baseRequest<{ results: DeletedFile[] }>({
+      url: 'api/files/deleted/',
+      method: METHOD.GET,
+    })
+  ).results
+
+export const restoreFilesAPI = async (
+  fileIds: number[]
+): Promise<{ restored: number }> =>
+  baseRequest<{ restored: number }>({
+    url: 'api/files/restore/',
+    method: METHOD.POST,
+    data: { fileIds },
+  })
+
+export const purgeFilesAPI = async (
+  fileIds: number[]
+): Promise<{ deleted: number }> =>
+  baseRequest<{ deleted: number }>({
+    url: 'api/files/purge/',
+    method: METHOD.POST,
+    data: { fileIds },
+  })
 
 export const getFilesByOwnerAPI = async (
   ownerId: number
