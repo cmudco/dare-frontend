@@ -13,6 +13,7 @@ import {
 import { AppDispatch, RootState } from '../../redux/store'
 import ModelPicker from './ModelPicker/index'
 import { selectProjectById } from '@/redux/projectSlice'
+import { isEnsembleActive } from '@/utils/ensemble'
 import PromptSet from './PromptSet'
 import { Message } from '../../redux/types/conversation'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -82,6 +83,14 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const selectedModel = useSelector(
     (state: RootState) => state.conversation.selectedModel
   )
+  const ensemble = useSelector(
+    (state: RootState) => state.conversation.ensemble
+  )
+  const enableEnsemble = useFeatureFlag('enableEnsemble')
+  // A seated panel or council answers through its chairman, so it is a model
+  // choice in its own right.
+  const hasModelChoice =
+    selectedModel !== null || (enableEnsemble && isEnsembleActive(ensemble))
   const project = useSelector((state: RootState) =>
     selectProjectById(state, activeConversation?.project)
   )
@@ -166,12 +175,12 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     if (!initialMessage || !activeConversation) return
     if (modelCatalogStatus !== 'succeeded') return
     navigate(location.pathname, { replace: true, state: null })
-    if (selectedModel !== null) setPendingMessage(initialMessage)
+    if (hasModelChoice) setPendingMessage(initialMessage)
   }, [
     initialMessage,
     activeConversation,
     modelCatalogStatus,
-    selectedModel,
+    hasModelChoice,
     navigate,
     location.pathname,
   ])
@@ -230,7 +239,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const handleSendMessage = () => {
     if (disabled || !hasMessageContent || pendingMessage !== null) return
 
-    if (selectedModel === null) {
+    if (!hasModelChoice) {
       setShowModelWarning(true)
       setModelPickerRequest((request) => request + 1)
       return
@@ -327,10 +336,10 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   }
 
   useEffect(() => {
-    if (selectedModel !== null) {
+    if (hasModelChoice) {
       setShowModelWarning(false)
     }
-  }, [selectedModel])
+  }, [hasModelChoice])
 
   useEffect(() => {
     const textarea = textareaRef.current
