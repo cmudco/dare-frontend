@@ -69,8 +69,9 @@ const ProviderLogo: React.FC<{ provider: string; className?: string }> = ({
 const ResponderCard: React.FC<{
   responder: DeliberationParticipant
   index: number
-}> = ({ responder, index }) => {
-  const [expanded, setExpanded] = useState(false)
+  expanded: boolean
+  onToggle: () => void
+}> = ({ responder, index, expanded, onToggle }) => {
   const tier = (responder.tier as ModelTier) ?? ModelTier.Advanced
   const colors = ModelTierColors[tier] ?? ModelTierColors[ModelTier.Advanced]
   const status = STATUS[responder.status]
@@ -119,7 +120,7 @@ const ResponderCard: React.FC<{
 
       <button
         type='button'
-        onClick={() => hasText && setExpanded((v) => !v)}
+        onClick={() => hasText && onToggle()}
         aria-expanded={expanded}
         className={`mt-1.5 text-left text-xs leading-relaxed text-muted-foreground ${
           hasText ? 'cursor-pointer' : 'cursor-default'
@@ -206,6 +207,9 @@ export const DeliberationPanel: React.FC<DeliberationPanelProps> = ({
 }) => {
   const deliberation = message.deliberation
   const [isExpanded, setIsExpanded] = useState(true)
+  // Drafts are read side by side, so they open and close together: a lone
+  // expanded card next to clipped ones reads as the others having stalled.
+  const [respondersExpanded, setRespondersExpanded] = useState(false)
   const userToggled = useRef(false)
 
   const responders = deliberation?.responders ?? []
@@ -318,6 +322,8 @@ export const DeliberationPanel: React.FC<DeliberationPanelProps> = ({
                   key={responder.modelId}
                   responder={responder}
                   index={index}
+                  expanded={respondersExpanded}
+                  onToggle={() => setRespondersExpanded((v) => !v)}
                 />
               ))}
             </div>
