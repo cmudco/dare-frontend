@@ -111,8 +111,7 @@ const RecentlyDeleted = () => {
           <Trash2 className='h-5 w-5 text-muted-foreground' />
           <p className='text-sm font-medium'>Nothing here</p>
           <p className='max-w-sm text-sm text-muted-foreground'>
-            Files you delete with Ask DARE land here first, so you can bring
-            them back.
+            Files you delete land here first, so you can bring them back.
           </p>
         </div>
       ) : (

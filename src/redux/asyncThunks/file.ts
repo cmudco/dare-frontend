@@ -23,6 +23,7 @@ import {
   getVisionModelsAPI,
   updateVisionModelAPI,
   bulkTagFilesAPI,
+  bulkUntagFilesAPI,
   searchFileContentsAPI,
   getDeletedFilesAPI,
   restoreFilesAPI,
@@ -195,6 +196,7 @@ export const deleteFile = createAsyncThunk(
   async (id: number, thunkAPI) => {
     try {
       await deleteFileAPI(id)
+      thunkAPI.dispatch(getDeletedFiles())
       return id
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
@@ -207,6 +209,7 @@ export const deleteMultipleFiles = createAsyncThunk(
   async (fileIds: number[], thunkAPI) => {
     try {
       await deleteMultipleFilesAPI(fileIds)
+      thunkAPI.dispatch(getDeletedFiles())
       return fileIds
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
@@ -413,6 +416,17 @@ export const bulkTagFiles = createAsyncThunk(
   async (request: BulkTagRequest, thunkAPI) => {
     try {
       return await bulkTagFilesAPI(request)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const bulkUntagFiles = createAsyncThunk(
+  'files/bulkUntagFiles',
+  async (request: BulkTagRequest, thunkAPI) => {
+    try {
+      return await bulkUntagFilesAPI(request)
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

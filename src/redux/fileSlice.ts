@@ -23,11 +23,13 @@ import {
   togglePublicShare,
   startFileOcrRun,
   bulkTagFiles,
+  bulkUntagFiles,
   searchFileContents,
   getDeletedFiles,
   purgeDeletedFiles,
   restoreDeletedFiles,
 } from './asyncThunks/file'
+import { removeTag } from './asyncThunks/tag'
 import { initialState } from './initialState/files'
 import { needsAttention } from '@/utils/files'
 import type { RootState } from './store'
@@ -35,8 +37,20 @@ import {
   ContentMatch,
   DeletedFile,
   MediaTypeFilter,
+  MyFile,
   MyFolder,
 } from './types/files'
+
+/** Copy server tag lists onto the matching files in state. */
+const applyFileTags = (
+  files: MyFile[],
+  updates: { id: number; tags: number[] }[]
+) => {
+  const tagsById = new Map(updates.map((file) => [file.id, file.tags]))
+  for (const file of files) {
+    file.tags = tagsById.get(file.id) ?? file.tags
+  }
+}
 
 const withoutIds = (files: DeletedFile[], ids: number[]) => {
   const gone = new Set(ids)
@@ -481,11 +495,16 @@ const fileSlice = createSlice({
         }
       })
       .addCase(bulkTagFiles.fulfilled, (state, action) => {
-        const tagsById = new Map(
-          action.payload.files.map((file) => [file.id, file.tags])
-        )
+        applyFileTags(state.files, action.payload.files)
+      })
+      .addCase(bulkUntagFiles.fulfilled, (state, action) => {
+        applyFileTags(state.files, action.payload.files)
+      })
+      .addCase(removeTag.fulfilled, (state, action) => {
+        const { id } = action.payload
+        state.selectedTags = state.selectedTags.filter((tag) => tag !== id)
         for (const file of state.files) {
-          file.tags = tagsById.get(file.id) ?? file.tags
+          file.tags = file.tags.filter((tag) => tag !== id)
         }
       })
       .addCase(searchFileContents.fulfilled, (state, action) => {

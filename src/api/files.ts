@@ -409,6 +409,15 @@ export const bulkTagFilesAPI = async (
     data: request,
   })
 
+export const bulkUntagFilesAPI = async (
+  request: BulkTagRequest
+): Promise<BulkTagResponse> =>
+  await baseRequest<BulkTagResponse>({
+    url: 'api/files/bulk-untag/',
+    method: METHOD.POST,
+    data: request,
+  })
+
 export const searchFileContentsAPI = async (
   query: string
 ): Promise<{ results: ContentMatch[] }> =>

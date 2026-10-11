@@ -48,6 +48,7 @@ interface SourceRowProps {
   canRemoveFromFolder: boolean
   onSelectedChange: (fileId: number, selected: boolean) => void
   onAction: (action: SourceRowAction, file: MyFile) => void
+  onRemoveTag: (file: MyFile, tagId: number) => void
 }
 
 const SourceRow = ({
@@ -60,6 +61,7 @@ const SourceRow = ({
   canRemoveFromFolder,
   onSelectedChange,
   onAction,
+  onRemoveTag,
 }: SourceRowProps) => {
   const searchQuery = useAppSelector((state) => state.files.searchQuery.trim())
   const name = file.name || 'Unnamed'
@@ -102,6 +104,7 @@ const SourceRow = ({
             allTags={allTags}
             fileId={file.id}
             maxVisible={2}
+            onRemove={(tagId) => onRemoveTag(file, tagId)}
           />
           <SourceStatusBadge file={file} />
         </div>
