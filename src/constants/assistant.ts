@@ -2,6 +2,7 @@
  * Copy for the "Ask DARE" assistant panel: per-page intros, the labels shown
  * while (and after) each assistant tool runs, and proposed-change titles.
  */
+import { getTourPageKeyFromPath } from '@/components/ConversationTour/tourRoutes'
 import { ProposalActionType } from '@/utils/constants/assistant'
 
 export interface AssistantPageIntro {
@@ -174,8 +175,16 @@ const DEFAULT_INTRO: AssistantPageIntro = {
   ],
 }
 
-export const assistantIntroFor = (pathname: string): AssistantPageIntro =>
-  PAGE_INTROS.find(([pattern]) => pattern.test(pathname))?.[1] ?? DEFAULT_INTRO
+const TOUR_SUGGESTION = 'Walk me through this page'
+
+/** The page's intro; pages with a guided tour lead with an offer to run it. */
+export const assistantIntroFor = (pathname: string): AssistantPageIntro => {
+  const intro =
+    PAGE_INTROS.find(([pattern]) => pattern.test(pathname))?.[1] ??
+    DEFAULT_INTRO
+  if (!getTourPageKeyFromPath(pathname)) return intro
+  return { ...intro, suggestions: [TOUR_SUGGESTION, ...intro.suggestions] }
+}
 
 const TOOL_STEPS: Record<string, { running: string; done: string }> = {
   search_platform_docs: {
