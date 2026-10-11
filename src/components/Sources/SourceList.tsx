@@ -9,7 +9,6 @@ import OcrApprovalDialog from '@/components/FileManager/OcrApprovalDialog'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   bulkUntagFiles,
-  deleteFile,
   getFiles,
   getFolders,
   removeFileFromFolder,
@@ -25,6 +24,7 @@ import {
 } from '@/redux/fileSlice'
 import { MyFile } from '@/redux/types/files'
 import { toast } from '@/utils/toast'
+import MoveToRecentlyDeletedDialog from './MoveToRecentlyDeletedDialog'
 import SourceRow, { SourceRowAction } from './SourceRow'
 
 const PAGE_SIZE = 50
@@ -114,22 +114,8 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
       case 'removeFromFolder':
         removeFromFolder(file)
         break
-      case 'delete':
-        moveToRecentlyDeleted(file)
-        break
       default:
         setDialog({ action, fileId: file.id })
-    }
-  }
-
-  // Deleting is recoverable from Recently deleted, so it needs no confirmation.
-  const moveToRecentlyDeleted = async (file: MyFile) => {
-    try {
-      await dispatch(deleteFile(file.id)).unwrap()
-      dispatch(getFolders())
-      toast.success(`Moved ${file.name} to Recently deleted`)
-    } catch {
-      toast.error(`Couldn't delete ${file.name}.`)
     }
   }
 
@@ -214,6 +200,10 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
           onClose={closeDialog}
         />
       )}
+      <MoveToRecentlyDeletedDialog
+        files={dialog?.action === 'delete' && dialogFile ? [dialogFile] : null}
+        onClose={closeDialog}
+      />
       <OcrApprovalDialog
         file={dialog?.action === 'reviewOcr' ? (dialogFile ?? null) : null}
         onClose={closeDialog}

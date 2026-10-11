@@ -3,8 +3,7 @@ import {
   fetchFileViewerCapabilities,
   reprocessFile,
   getFiles,
-  deleteFile,
-  deleteMultipleFiles,
+  trashFiles,
   uploadNewFile,
   checkJobStatuses,
   getFolders,
@@ -290,30 +289,20 @@ const fileSlice = createSlice({
 
         state.error = (action.payload as string) || 'Failed to upload folder'
       })
-      .addCase(deleteFile.pending, (state) => {
+      .addCase(trashFiles.pending, (state) => {
         state.loading = true
         state.error = null
       })
-      .addCase(deleteFile.fulfilled, (state, action) => {
-        state.loading = false
-        state.files = state.files.filter((file) => file.id !== action.payload)
-      })
-      .addCase(deleteFile.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload as string
-      })
-      .addCase(deleteMultipleFiles.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(deleteMultipleFiles.fulfilled, (state, action) => {
+      .addCase(trashFiles.fulfilled, (state, action) => {
         state.loading = false
         state.files = state.files.filter(
           (file) => !action.payload.includes(file.id)
         )
-        state.selectedItems = []
+        state.selectedItems = state.selectedItems.filter(
+          (id) => !action.payload.includes(id)
+        )
       })
-      .addCase(deleteMultipleFiles.rejected, (state, action) => {
+      .addCase(trashFiles.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

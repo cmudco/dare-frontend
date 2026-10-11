@@ -195,18 +195,10 @@ export const getElementImageAPI = async (
   return blob
 }
 
-export const deleteFileAPI = async (id: number): Promise<void> => {
+/** Move files to Recently deleted, where they can be restored or purged. */
+export const trashFilesAPI = async (fileIds: number[]): Promise<void> => {
   await baseRequest<void>({
-    url: `api/files/${id}/`,
-    method: METHOD.DELETE,
-  })
-}
-
-export const deleteMultipleFilesAPI = async (
-  fileIds: number[]
-): Promise<void> => {
-  await baseRequest<void>({
-    url: 'api/files/bulk-delete/',
+    url: 'api/files/trash/',
     method: METHOD.POST,
     data: { fileIds },
   })

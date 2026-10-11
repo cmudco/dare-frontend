@@ -8,14 +8,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import {
-  bulkTagFiles,
-  bulkUntagFiles,
-  deleteMultipleFiles,
-  getFolders,
-} from '@/redux/asyncThunks/file'
+import { bulkTagFiles, bulkUntagFiles } from '@/redux/asyncThunks/file'
 import { clearSelectedItems, openMoveModal } from '@/redux/fileSlice'
 import { toast } from '@/utils/toast'
+import MoveToRecentlyDeletedDialog from './MoveToRecentlyDeletedDialog'
 
 const BulkActionBar = () => {
   const dispatch = useAppDispatch()
@@ -23,31 +19,19 @@ const BulkActionBar = () => {
   const tags = useAppSelector((state) => state.tags.tags)
   const files = useAppSelector((state) => state.files.files)
   const [tagging, setTagging] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const count = selectedItems.length
   // Only tags some selected file carries can be removed.
-  const selectedTags = useMemo(() => {
+  const selectedFiles = useMemo(() => {
     const selected = new Set(selectedItems)
-    const onSelection = new Set(
-      files.filter((file) => selected.has(file.id)).flatMap((file) => file.tags)
-    )
+    return files.filter((file) => selected.has(file.id))
+  }, [files, selectedItems])
+  const selectedTags = useMemo(() => {
+    const onSelection = new Set(selectedFiles.flatMap((file) => file.tags))
     return tags.filter((tag) => onSelection.has(tag.id))
-  }, [files, selectedItems, tags])
+  }, [selectedFiles, tags])
 
   if (count === 0) return null
-
-  // Recoverable from Recently deleted, so no confirmation.
-  const handleDelete = async () => {
-    try {
-      await dispatch(deleteMultipleFiles(selectedItems)).unwrap()
-      dispatch(getFolders())
-      dispatch(clearSelectedItems())
-      toast.success(
-        `Moved ${count === 1 ? '1 file' : `${count} files`} to Recently deleted`
-      )
-    } catch {
-      toast.error("Couldn't delete the selected files.")
-    }
-  }
 
   const handleUntag = async (tagId: number) => {
     setTagging(true)
@@ -143,7 +127,7 @@ const BulkActionBar = () => {
         variant='outline'
         size='sm'
         className='text-destructive hover:text-destructive'
-        onClick={handleDelete}
+        onClick={() => setConfirmingDelete(true)}
       >
         <Trash2 className='h-4 w-4' />
         Delete
@@ -157,6 +141,10 @@ const BulkActionBar = () => {
       >
         <X className='h-4 w-4' />
       </Button>
+      <MoveToRecentlyDeletedDialog
+        files={confirmingDelete ? selectedFiles : null}
+        onClose={() => setConfirmingDelete(false)}
+      />
     </div>
   )
 }

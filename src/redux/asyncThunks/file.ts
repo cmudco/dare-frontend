@@ -3,8 +3,7 @@ import {
   getFileViewerCapabilitiesAPI,
   reprocessFileAPI,
   uploadFileAPI,
-  deleteFileAPI,
-  deleteMultipleFilesAPI,
+  trashFilesAPI,
   getFilesAPI,
   checkJobStatusesAPI,
   getFoldersAPI,
@@ -191,24 +190,11 @@ export const uploadNewFile = createAsyncThunk(
   }
 )
 
-export const deleteFile = createAsyncThunk(
-  'files/archiveFile',
-  async (id: number, thunkAPI) => {
-    try {
-      await deleteFileAPI(id)
-      thunkAPI.dispatch(getDeletedFiles())
-      return id
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message)
-    }
-  }
-)
-
-export const deleteMultipleFiles = createAsyncThunk(
-  'files/deleteMultipleFiles',
+export const trashFiles = createAsyncThunk(
+  'files/trashFiles',
   async (fileIds: number[], thunkAPI) => {
     try {
-      await deleteMultipleFilesAPI(fileIds)
+      await trashFilesAPI(fileIds)
       thunkAPI.dispatch(getDeletedFiles())
       return fileIds
     } catch (error) {
@@ -453,7 +439,7 @@ export const deleteFolderWithFiles = createAsyncThunk(
     thunkAPI
   ) => {
     if (fileIds.length > 0) {
-      await thunkAPI.dispatch(deleteMultipleFiles(fileIds)).unwrap()
+      await thunkAPI.dispatch(trashFiles(fileIds)).unwrap()
     }
     await thunkAPI.dispatch(deleteFolder(folderId)).unwrap()
     await thunkAPI.dispatch(getFolders())
