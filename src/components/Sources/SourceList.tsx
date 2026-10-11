@@ -2,14 +2,13 @@ import { ReactNode, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
-import { DeleteConfirmation } from '@/components/DeleteConfirmation'
 import FileReprocessingDialog from '@/components/FileManager/FileReprocessingDialog'
 import FileTagModal from '@/components/FileManager/FileTagModal'
 import FileViewerModal from '@/components/FileManager/FileViewerModal'
 import OcrApprovalDialog from '@/components/FileManager/OcrApprovalDialog'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
-  deleteFile,
+  bulkUntagFiles,
   getFiles,
   getFolders,
   removeFileFromFolder,
@@ -25,6 +24,7 @@ import {
 } from '@/redux/fileSlice'
 import { MyFile } from '@/redux/types/files'
 import { toast } from '@/utils/toast'
+import MoveToRecentlyDeletedDialog from './MoveToRecentlyDeletedDialog'
 import SourceRow, { SourceRowAction } from './SourceRow'
 
 const PAGE_SIZE = 50
@@ -119,13 +119,13 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
     }
   }
 
-  const handleDeleteConfirm = async () => {
-    if (!dialogFile) return
+  const removeTag = async (file: MyFile, tagId: number) => {
     try {
-      await dispatch(deleteFile(dialogFile.id)).unwrap()
-      dispatch(getFolders())
+      await dispatch(
+        bulkUntagFiles({ fileIds: [file.id], tagIds: [tagId] })
+      ).unwrap()
     } catch {
-      toast.error(`Couldn't delete ${dialogFile.name}.`)
+      toast.error(`Couldn't remove the tag from ${file.name}.`)
     }
   }
 
@@ -164,6 +164,7 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
               dispatch(selected ? addSelectedItem(id) : removeSelectedItem(id))
             }
             onAction={handleAction}
+            onRemoveTag={removeTag}
           />
         ))}
       </ul>
@@ -199,18 +200,13 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
           onClose={closeDialog}
         />
       )}
+      <MoveToRecentlyDeletedDialog
+        files={dialog?.action === 'delete' && dialogFile ? [dialogFile] : null}
+        onClose={closeDialog}
+      />
       <OcrApprovalDialog
         file={dialog?.action === 'reviewOcr' ? (dialogFile ?? null) : null}
         onClose={closeDialog}
-      />
-      <DeleteConfirmation
-        isOpen={dialog?.action === 'delete' && !!dialogFile}
-        onClose={closeDialog}
-        onDelete={handleDeleteConfirm}
-        title='Delete file'
-        description='This permanently deletes the file and removes it from search.'
-        itemName={dialogFile?.name}
-        confirmText='Delete'
       />
     </div>
   )

@@ -3,8 +3,7 @@ import {
   fetchFileViewerCapabilities,
   reprocessFile,
   getFiles,
-  deleteFile,
-  deleteMultipleFiles,
+  trashFiles,
   uploadNewFile,
   checkJobStatuses,
   getFolders,
@@ -23,12 +22,39 @@ import {
   togglePublicShare,
   startFileOcrRun,
   bulkTagFiles,
+  bulkUntagFiles,
   searchFileContents,
+  getDeletedFiles,
+  purgeDeletedFiles,
+  restoreDeletedFiles,
 } from './asyncThunks/file'
+import { removeTag } from './asyncThunks/tag'
 import { initialState } from './initialState/files'
 import { needsAttention } from '@/utils/files'
 import type { RootState } from './store'
-import { ContentMatch, MediaTypeFilter, MyFolder } from './types/files'
+import {
+  ContentMatch,
+  DeletedFile,
+  MediaTypeFilter,
+  MyFile,
+  MyFolder,
+} from './types/files'
+
+/** Copy server tag lists onto the matching files in state. */
+const applyFileTags = (
+  files: MyFile[],
+  updates: { id: number; tags: number[] }[]
+) => {
+  const tagsById = new Map(updates.map((file) => [file.id, file.tags]))
+  for (const file of files) {
+    file.tags = tagsById.get(file.id) ?? file.tags
+  }
+}
+
+const withoutIds = (files: DeletedFile[], ids: number[]) => {
+  const gone = new Set(ids)
+  return files.filter((file) => !gone.has(file.id))
+}
 
 const fileSlice = createSlice({
   name: 'files',
@@ -115,6 +141,23 @@ const fileSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder
+      .addCase(getDeletedFiles.pending, (state) => {
+        state.deletedFilesStatus = 'loading'
+      })
+      .addCase(getDeletedFiles.fulfilled, (state, action) => {
+        state.deletedFilesStatus = 'succeeded'
+        state.deletedFiles = action.payload
+      })
+      .addCase(getDeletedFiles.rejected, (state) => {
+        state.deletedFilesStatus = 'failed'
+      })
+      .addCase(restoreDeletedFiles.fulfilled, (state, action) => {
+        state.deletedFiles = withoutIds(state.deletedFiles, action.payload)
+      })
+      .addCase(purgeDeletedFiles.fulfilled, (state, action) => {
+        state.deletedFiles = withoutIds(state.deletedFiles, action.payload)
+      })
     builder
       .addCase(reprocessFile.pending, (state, action) => {
         state.reprocessingRequests[action.meta.arg.fileId] = {
@@ -246,30 +289,20 @@ const fileSlice = createSlice({
 
         state.error = (action.payload as string) || 'Failed to upload folder'
       })
-      .addCase(deleteFile.pending, (state) => {
+      .addCase(trashFiles.pending, (state) => {
         state.loading = true
         state.error = null
       })
-      .addCase(deleteFile.fulfilled, (state, action) => {
-        state.loading = false
-        state.files = state.files.filter((file) => file.id !== action.payload)
-      })
-      .addCase(deleteFile.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload as string
-      })
-      .addCase(deleteMultipleFiles.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(deleteMultipleFiles.fulfilled, (state, action) => {
+      .addCase(trashFiles.fulfilled, (state, action) => {
         state.loading = false
         state.files = state.files.filter(
           (file) => !action.payload.includes(file.id)
         )
-        state.selectedItems = []
+        state.selectedItems = state.selectedItems.filter(
+          (id) => !action.payload.includes(id)
+        )
       })
-      .addCase(deleteMultipleFiles.rejected, (state, action) => {
+      .addCase(trashFiles.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })
@@ -451,11 +484,16 @@ const fileSlice = createSlice({
         }
       })
       .addCase(bulkTagFiles.fulfilled, (state, action) => {
-        const tagsById = new Map(
-          action.payload.files.map((file) => [file.id, file.tags])
-        )
+        applyFileTags(state.files, action.payload.files)
+      })
+      .addCase(bulkUntagFiles.fulfilled, (state, action) => {
+        applyFileTags(state.files, action.payload.files)
+      })
+      .addCase(removeTag.fulfilled, (state, action) => {
+        const { id } = action.payload
+        state.selectedTags = state.selectedTags.filter((tag) => tag !== id)
         for (const file of state.files) {
-          file.tags = tagsById.get(file.id) ?? file.tags
+          file.tags = file.tags.filter((tag) => tag !== id)
         }
       })
       .addCase(searchFileContents.fulfilled, (state, action) => {

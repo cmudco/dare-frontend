@@ -117,19 +117,23 @@ const GroupWalletManager = () => {
       </motion.div>
 
       <div className='grid gap-4 lg:grid-cols-[320px_1fr]'>
-        <OwnedGroupsList
-          groups={ownedGroups}
-          selectedGroupId={selectedGroupId}
-          onSelect={setSelectedGroupId}
-        />
+        <div data-tour='group-wallet-groups'>
+          <OwnedGroupsList
+            groups={ownedGroups}
+            selectedGroupId={selectedGroupId}
+            onSelect={setSelectedGroupId}
+          />
+        </div>
 
         <div className='space-y-4'>
           {selectedGroup ? (
             <>
-              <BudgetCard
-                groupWallet={selectedGroup.groupWallet}
-                accessCode={selectedGroup.accessCode}
-              />
+              <div data-tour='group-wallet-budget'>
+                <BudgetCard
+                  groupWallet={selectedGroup.groupWallet}
+                  accessCode={selectedGroup.accessCode}
+                />
+              </div>
 
               {selectedGroup.groupWallet ? (
                 <>
@@ -150,7 +154,7 @@ const GroupWalletManager = () => {
                 </Card>
               )}
 
-              <Card>
+              <Card data-tour='group-wallet-members'>
                 <CardHeader>
                   <CardTitle>Members</CardTitle>
                   <CardDescription>

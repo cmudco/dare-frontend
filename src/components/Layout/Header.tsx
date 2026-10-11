@@ -79,10 +79,10 @@ const Header: React.FC = () => {
             className='w-[200px] border border-border bg-popover p-1'
           >
             <DropdownMenuItem
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/settings')}
               className='cursor-pointer py-3 hover:bg-accent hover:text-accent-foreground'
             >
-              Profile
+              Settings
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigate('/billing')}

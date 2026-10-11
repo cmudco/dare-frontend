@@ -293,7 +293,10 @@ const ProjectDetail = () => {
                 )}
               </div>
             </div>
-            <div className='flex shrink-0 items-center gap-2'>
+            <div
+              className='flex shrink-0 items-center gap-2'
+              data-tour='project-actions'
+            >
               <Button
                 variant='outline'
                 className='rounded-full'
@@ -333,13 +336,16 @@ const ProjectDetail = () => {
             </div>
           </header>
 
-          <ProjectComposer project={project} onStart={handleStartChat} />
+          <div data-tour='project-composer'>
+            <ProjectComposer project={project} onStart={handleStartChat} />
+          </div>
 
           <div className='mt-8 mb-2 flex items-center justify-between gap-3'>
             <div
               role='tablist'
               aria-label='Project content'
               className='flex gap-1'
+              data-tour='project-tabs'
             >
               {tabs.map(({ value, label, count }) => (
                 <button
@@ -445,7 +451,7 @@ const ProjectDetail = () => {
         </div>
 
         <div className='mx-auto w-full max-w-3xl min-w-0 xl:max-w-none'>
-          <div className='xl:sticky xl:top-8'>
+          <div className='xl:sticky xl:top-8' data-tour='project-settings-rail'>
             <ProjectSettingsRail
               project={project}
               onEditSettings={openSettings}

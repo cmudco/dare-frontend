@@ -8,38 +8,28 @@ import {
   AssistantMessageStatus,
   AssistantRole,
   AssistantStepStatus,
+  ProposalActionStatus,
+  ProposalActionType,
   ProposalStatus,
 } from '@/utils/constants/assistant'
 
-const PlanFileSchema = z.object({ id: z.number(), name: z.string() })
+export const ProposalActionSchema = z.object({
+  id: z.string(),
+  type: z.enum(ProposalActionType),
+  name: z.string(),
+  isNew: z.boolean(),
+  description: z.string(),
+  files: z.array(z.object({ id: z.number(), name: z.string() })),
+  conversations: z.array(z.object({ id: z.string(), title: z.string() })),
+  status: z.enum(ProposalActionStatus),
+  notes: z.array(z.string()),
+})
 
-export const FileOrganizationProposalSchema = z.object({
+export const AssistantProposalSchema = z.object({
   id: z.number(),
   status: z.enum(ProposalStatus),
   summary: z.string(),
-  plan: z.object({
-    folders: z.array(
-      z.object({
-        name: z.string(),
-        isNew: z.boolean(),
-        files: z.array(PlanFileSchema),
-      })
-    ),
-    tags: z.array(
-      z.object({
-        label: z.string(),
-        isNew: z.boolean(),
-        files: z.array(PlanFileSchema),
-      })
-    ),
-  }),
-  outcome: z.object({
-    foldersCreated: z.number().optional(),
-    filesFiled: z.number().optional(),
-    tagsCreated: z.number().optional(),
-    filesTagged: z.number().optional(),
-    skipped: z.array(z.string()).optional(),
-  }),
+  actions: z.array(ProposalActionSchema),
 })
 
 export const AssistantMessageSchema = z.object({
@@ -58,7 +48,7 @@ export const AssistantMessageSchema = z.object({
       round: z.number(),
     })
   ),
-  proposals: z.array(FileOrganizationProposalSchema),
+  proposals: z.array(AssistantProposalSchema),
   createdAt: z.string(),
 })
 
@@ -117,6 +107,5 @@ export type AssistantUsage = z.infer<typeof AssistantUsageSchema>
 export type AssistantThread = z.infer<typeof AssistantThreadSchema>
 export type AssistantEvent = z.infer<typeof AssistantEventSchema>
 export type AssistantToolCall = AssistantMessage['toolCalls'][number]
-export type FileOrganizationProposal = z.infer<
-  typeof FileOrganizationProposalSchema
->
+export type AssistantProposal = z.infer<typeof AssistantProposalSchema>
+export type ProposalAction = z.infer<typeof ProposalActionSchema>

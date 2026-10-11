@@ -379,14 +379,20 @@ const MCPServerList = () => {
 
       {/* Server Grid */}
       {servers.length === 0 ? (
-        <div className='flex h-64 flex-col items-center justify-center rounded-lg border border-dashed'>
+        <div
+          className='flex h-64 flex-col items-center justify-center rounded-lg border border-dashed'
+          data-tour='mcp-servers'
+        >
           <p className='text-muted-foreground'>No integrations available</p>
           <p className='text-sm text-muted-foreground'>
             Contact your admin to add MCP servers
           </p>
         </div>
       ) : (
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+        <div
+          className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+          data-tour='mcp-servers'
+        >
           {servers.map((server) => (
             <MCPServerCard key={server.slug} server={server} />
           ))}

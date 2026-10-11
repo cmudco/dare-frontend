@@ -35,6 +35,7 @@ export const ALLOWED_FILE_EXTENSIONS = [
   '.gif',
   '.webp',
   '.bmp',
+  '.tif',
   '.tiff',
   '.svg',
   // Videos

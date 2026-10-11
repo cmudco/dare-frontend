@@ -19,6 +19,8 @@ export const initialState: FileState = {
   isMoveModalOpen: false,
   mediaTypeFilter: 'all',
   sharedFiles: [],
+  deletedFiles: [],
+  deletedFilesStatus: 'idle',
   sharedFilesLoading: false,
   sharedFilesError: null,
   shareModalFileId: null,

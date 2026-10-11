@@ -7,7 +7,7 @@ import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { changePassword } from '@/redux/asyncThunks/user'
 import { FormikHelpers, useFormik } from 'formik'
-import { changePasswordValidationSchema } from '@/pages/ProfileScreen/validation'
+import { changePasswordValidationSchema } from './changePasswordValidation'
 import { ChangePasswordValues } from '@/redux/types/user'
 
 export const ChangePasswordForm: React.FC = () => {

@@ -7,15 +7,22 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import EditFolderModal from '@/components/FolderManager/EditFolderModal'
+import { cn } from '@/lib/utils'
 import { MyFolder } from '@/redux/types/files'
 import FolderDeleteDialog from './FolderDeleteDialog'
 
 interface FolderActionsMenuProps {
   folder: MyFolder
   onDeleted: () => void
+  /** Extra classes for the trigger, e.g. to reveal it only on hover. */
+  triggerClassName?: string
 }
 
-const FolderActionsMenu = ({ folder, onDeleted }: FolderActionsMenuProps) => {
+const FolderActionsMenu = ({
+  folder,
+  onDeleted,
+  triggerClassName,
+}: FolderActionsMenuProps) => {
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -24,7 +31,10 @@ const FolderActionsMenu = ({ folder, onDeleted }: FolderActionsMenuProps) => {
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label={`Actions for folder ${folder.name}`}
-          className='rounded-md p-1.5 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
+          className={cn(
+            'rounded-md p-1.5 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+            triggerClassName
+          )}
         >
           <EllipsisVerticalIcon className='h-4 w-4 text-muted-foreground' />
         </DropdownMenuTrigger>

@@ -1,5 +1,12 @@
-import { useEffect } from 'react'
-import { ChevronDown, FolderUp, Search, Tags, Upload } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import {
+  ChevronDown,
+  FolderUp,
+  Search,
+  Settings2,
+  Tags,
+  Upload,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -7,6 +14,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -29,6 +37,7 @@ import {
   CONTENT_SEARCH_MIN_LENGTH,
   MEDIA_TYPE_OPTIONS,
 } from '@/utils/constants/file'
+import ManageTagsDialog from './ManageTagsDialog'
 
 interface SourcesToolbarProps {
   onUploadFolder: () => void
@@ -36,6 +45,7 @@ interface SourcesToolbarProps {
 
 const SourcesToolbar = ({ onUploadFolder }: SourcesToolbarProps) => {
   const dispatch = useAppDispatch()
+  const [managingTags, setManagingTags] = useState(false)
   const { searchQuery, selectedTags, mediaTypeFilter } = useAppSelector(
     (state) => state.files
   )
@@ -116,8 +126,14 @@ const SourcesToolbar = ({ onUploadFolder }: SourcesToolbarProps) => {
               </DropdownMenuCheckboxItem>
             ))
           )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setManagingTags(true)}>
+            <Settings2 className='mr-2 h-4 w-4' />
+            Manage tags…
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <ManageTagsDialog open={managingTags} onOpenChange={setManagingTags} />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

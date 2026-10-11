@@ -30,6 +30,7 @@ import {
 } from '@/utils/constants/project'
 import { persistableModels } from './projectModels'
 import ProjectNameField from './ProjectNameField'
+import { PROMPT_TEMPLATES_PATH } from '@/routes/paths'
 
 export type ProjectSettingsSection = 'instructions' | 'defaults' | 'memory'
 
@@ -247,7 +248,7 @@ const SettingsForm = ({
               ? `Saved in your Prompts library as “${linkedPrompt.title}”. Edits save a new version.`
               : 'Saved to your Prompts library so you can reuse it.'}
             <Link
-              to='/prompts'
+              to={PROMPT_TEMPLATES_PATH}
               className='inline-flex items-center hover:text-foreground'
               aria-label='Open Prompts library'
             >

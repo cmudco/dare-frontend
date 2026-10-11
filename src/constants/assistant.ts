@@ -1,7 +1,9 @@
 /**
- * Copy for the "Ask DARE" assistant panel: per-page intros and the labels
- * shown while (and after) each assistant tool runs.
+ * Copy for the "Ask DARE" assistant panel: per-page intros, the labels shown
+ * while (and after) each assistant tool runs, and proposed-change titles.
  */
+import { getTourPageKeyFromPath } from '@/components/ConversationTour/tourRoutes'
+import { ProposalActionType } from '@/utils/constants/assistant'
 
 export interface AssistantPageIntro {
   title: string
@@ -59,6 +61,7 @@ const PAGE_INTROS: [RegExp, AssistantPageIntro][] = [
     {
       title: 'Organising work into projects?',
       suggestions: [
+        'Sort my chats and files into projects',
         'How do projects work?',
         'What does a project share with its chats?',
       ],
@@ -86,28 +89,6 @@ const PAGE_INTROS: [RegExp, AssistantPageIntro][] = [
     },
   ],
   [
-    /^\/prompts/,
-    {
-      title: 'Working with prompts?',
-      suggestions: [
-        'How do I create a reusable prompt?',
-        'How do prompt variables work?',
-        'Can I share a prompt with others?',
-      ],
-    },
-  ],
-  [
-    /^\/agents/,
-    {
-      title: 'Setting up an agent?',
-      suggestions: [
-        'What is an agent in DARE?',
-        'How do I create an agent?',
-        'How do I use an agent in a workflow?',
-      ],
-    },
-  ],
-  [
     /^\/research/,
     {
       title: 'Doing research in DARE?',
@@ -119,7 +100,40 @@ const PAGE_INTROS: [RegExp, AssistantPageIntro][] = [
     },
   ],
   [
-    /^\/mcp/,
+    /^\/billing|^\/group-wallet/,
+    {
+      title: 'Questions about billing?',
+      suggestions: [
+        "What's my wallet balance?",
+        'How is my usage billed?',
+        'What is a LiteLLM key?',
+      ],
+    },
+  ],
+  [
+    /^\/templates\/agents/,
+    {
+      title: 'Setting up an agent?',
+      suggestions: [
+        'What is an agent in DARE?',
+        'How do I create an agent?',
+        'How do I use an agent in a workflow?',
+      ],
+    },
+  ],
+  [
+    /^\/templates(\/prompts)?\/?$/,
+    {
+      title: 'Working with prompts?',
+      suggestions: [
+        'How do I create a reusable prompt?',
+        'How do prompt variables work?',
+        'Can I share a prompt with others?',
+      ],
+    },
+  ],
+  [
+    /^\/settings\/integrations/,
     {
       title: 'Connecting integrations?',
       suggestions: [
@@ -130,24 +144,13 @@ const PAGE_INTROS: [RegExp, AssistantPageIntro][] = [
     },
   ],
   [
-    /^\/memory/,
+    /^\/settings\/memory/,
     {
       title: 'Questions about memory?',
       suggestions: [
         'What are the four memory layers?',
         'How do I turn memory off?',
         'Can I import memory from another assistant?',
-      ],
-    },
-  ],
-  [
-    /^\/billing|^\/group-wallet/,
-    {
-      title: 'Questions about billing?',
-      suggestions: [
-        "What's my wallet balance?",
-        'How is my usage billed?',
-        'What is a LiteLLM key?',
       ],
     },
   ],
@@ -172,8 +175,16 @@ const DEFAULT_INTRO: AssistantPageIntro = {
   ],
 }
 
-export const assistantIntroFor = (pathname: string): AssistantPageIntro =>
-  PAGE_INTROS.find(([pattern]) => pattern.test(pathname))?.[1] ?? DEFAULT_INTRO
+const TOUR_SUGGESTION = 'Walk me through this page'
+
+/** The page's intro; pages with a guided tour lead with an offer to run it. */
+export const assistantIntroFor = (pathname: string): AssistantPageIntro => {
+  const intro =
+    PAGE_INTROS.find(([pattern]) => pattern.test(pathname))?.[1] ??
+    DEFAULT_INTRO
+  if (!getTourPageKeyFromPath(pathname)) return intro
+  return { ...intro, suggestions: [TOUR_SUGGESTION, ...intro.suggestions] }
+}
 
 const TOOL_STEPS: Record<string, { running: string; done: string }> = {
   search_platform_docs: {
@@ -193,9 +204,21 @@ const TOOL_STEPS: Record<string, { running: string; done: string }> = {
     running: 'Looking at this project',
     done: 'Looked at this project',
   },
-  propose_file_organization: {
-    running: 'Drafting a plan for your files',
-    done: 'Drafted a plan for your files',
+  list_my_projects: {
+    running: 'Checking your projects',
+    done: 'Checked your projects',
+  },
+  list_my_conversations: {
+    running: 'Checking your chats',
+    done: 'Checked your chats',
+  },
+  propose_changes: {
+    running: 'Drafting the changes',
+    done: 'Drafted the changes',
+  },
+  start_page_tour: {
+    running: 'Getting the tour ready',
+    done: 'Opened the page tour',
   },
 }
 
@@ -210,3 +233,26 @@ export function describeToolStep(
   const query = typeof args.query === 'string' ? args.query : null
   return query ? `${base} for “${query}”` : base
 }
+
+const ACTION_TITLES: Record<ProposalActionType, (name: string) => string> = {
+  [ProposalActionType.ADD_TO_FOLDER]: (name) => `Add to folder “${name}”`,
+  [ProposalActionType.REMOVE_FROM_FOLDER]: (name) =>
+    `Remove from folder “${name}”`,
+  [ProposalActionType.ADD_TAG]: (name) => `Tag with “${name}”`,
+  [ProposalActionType.REMOVE_TAG]: (name) => `Remove tag “${name}”`,
+  [ProposalActionType.DELETE_FILES]: () => 'Delete files',
+  [ProposalActionType.CREATE_PROJECT]: (name) => `Create project “${name}”`,
+  [ProposalActionType.ADD_TO_PROJECT]: (name) => `Add to project “${name}”`,
+  [ProposalActionType.REMOVE_FROM_PROJECT]: (name) =>
+    `Remove from project “${name}”`,
+  [ProposalActionType.DELETE_PROJECT]: (name) => `Delete project “${name}”`,
+  [ProposalActionType.DELETE_CONVERSATIONS]: () => 'Delete chats',
+}
+
+export const proposalActionTitle = (type: ProposalActionType, name: string) =>
+  ACTION_TITLES[type](name)
+
+export const isDeleteAction = (type: ProposalActionType) =>
+  type === ProposalActionType.DELETE_FILES ||
+  type === ProposalActionType.DELETE_PROJECT ||
+  type === ProposalActionType.DELETE_CONVERSATIONS

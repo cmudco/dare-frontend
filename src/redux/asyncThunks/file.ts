@@ -3,8 +3,7 @@ import {
   getFileViewerCapabilitiesAPI,
   reprocessFileAPI,
   uploadFileAPI,
-  deleteFileAPI,
-  deleteMultipleFilesAPI,
+  trashFilesAPI,
   getFilesAPI,
   checkJobStatusesAPI,
   getFoldersAPI,
@@ -23,9 +22,18 @@ import {
   getVisionModelsAPI,
   updateVisionModelAPI,
   bulkTagFilesAPI,
+  bulkUntagFilesAPI,
   searchFileContentsAPI,
+  getDeletedFilesAPI,
+  restoreFilesAPI,
+  purgeFilesAPI,
 } from '../../api/files'
-import { BulkTagRequest, MyFile, FileReprocessingRequest } from '../types/files'
+import {
+  BulkTagRequest,
+  DeletedFile,
+  MyFile,
+  FileReprocessingRequest,
+} from '../types/files'
 import { DocumentProcessingMode } from '@/utils/constants/file'
 
 const BATCH_SIZE = 5
@@ -81,6 +89,47 @@ export const getFiles = createAsyncThunk(
     }
   }
 )
+
+export const getDeletedFiles = createAsyncThunk<
+  DeletedFile[],
+  void,
+  { rejectValue: string }
+>('files/getDeletedFiles', async (_, thunkAPI) => {
+  try {
+    return await getDeletedFilesAPI()
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const restoreDeletedFiles = createAsyncThunk<
+  number[],
+  number[],
+  { rejectValue: string }
+>('files/restoreDeletedFiles', async (fileIds, thunkAPI) => {
+  try {
+    await restoreFilesAPI(fileIds)
+    // Restored files rejoin their folders and tags.
+    thunkAPI.dispatch(getFiles())
+    thunkAPI.dispatch(getFolders())
+    return fileIds
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const purgeDeletedFiles = createAsyncThunk<
+  number[],
+  number[],
+  { rejectValue: string }
+>('files/purgeDeletedFiles', async (fileIds, thunkAPI) => {
+  try {
+    await purgeFilesAPI(fileIds)
+    return fileIds
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
 
 export const updateFileTags = createAsyncThunk(
   'files/updateFileTags',
@@ -141,23 +190,12 @@ export const uploadNewFile = createAsyncThunk(
   }
 )
 
-export const deleteFile = createAsyncThunk(
-  'files/archiveFile',
-  async (id: number, thunkAPI) => {
-    try {
-      await deleteFileAPI(id)
-      return id
-    } catch (error) {
-      return thunkAPI.rejectWithValue((error as Error).message)
-    }
-  }
-)
-
-export const deleteMultipleFiles = createAsyncThunk(
-  'files/deleteMultipleFiles',
+export const trashFiles = createAsyncThunk(
+  'files/trashFiles',
   async (fileIds: number[], thunkAPI) => {
     try {
-      await deleteMultipleFilesAPI(fileIds)
+      await trashFilesAPI(fileIds)
+      thunkAPI.dispatch(getDeletedFiles())
       return fileIds
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
@@ -370,6 +408,17 @@ export const bulkTagFiles = createAsyncThunk(
   }
 )
 
+export const bulkUntagFiles = createAsyncThunk(
+  'files/bulkUntagFiles',
+  async (request: BulkTagRequest, thunkAPI) => {
+    try {
+      return await bulkUntagFilesAPI(request)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
 export const searchFileContents = createAsyncThunk(
   'files/searchFileContents',
   async (query: string, thunkAPI) => {
@@ -390,7 +439,7 @@ export const deleteFolderWithFiles = createAsyncThunk(
     thunkAPI
   ) => {
     if (fileIds.length > 0) {
-      await thunkAPI.dispatch(deleteMultipleFiles(fileIds)).unwrap()
+      await thunkAPI.dispatch(trashFiles(fileIds)).unwrap()
     }
     await thunkAPI.dispatch(deleteFolder(folderId)).unwrap()
     await thunkAPI.dispatch(getFolders())

@@ -112,13 +112,6 @@ const AppearanceSettings: React.FC = () => {
 
   return (
     <div className='space-y-6'>
-      <div>
-        <h2 className='text-xl font-semibold'>Appearance</h2>
-        <p className='mt-1 text-sm text-muted-foreground'>
-          Choose your theme and color mode.
-        </p>
-      </div>
-
       <Card className='p-4 sm:p-6'>
         <div className='mb-6'>
           <Label className='mb-2 block text-sm font-medium'>Color Mode</Label>

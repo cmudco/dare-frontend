@@ -1,0 +1,10 @@
+/** Pages that live under another page's navigation. */
+export const SETTINGS_PATH = '/settings'
+export const MEMORY_PATH = '/settings/memory'
+export const INTEGRATIONS_PATH = '/settings/integrations'
+export const TEMPLATES_PATH = '/templates'
+export const PROMPT_TEMPLATES_PATH = '/templates/prompts'
+export const AGENT_TEMPLATES_PATH = '/templates/agents'
+export const APPEARANCE_PATH = '/settings/appearance'
+export const CHAT_SETTINGS_PATH = '/settings/chat'
+export const DATA_SETTINGS_PATH = '/settings/data'

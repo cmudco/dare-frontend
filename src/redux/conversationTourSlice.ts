@@ -16,6 +16,12 @@ export type TourPageKey =
   | 'settings'
   | 'help'
   | 'billing'
+  | 'projects'
+  | 'project'
+  | 'memory'
+  | 'mcp'
+  | 'research'
+  | 'group_wallet'
 
 interface ConversationTourState {
   showTour: boolean
