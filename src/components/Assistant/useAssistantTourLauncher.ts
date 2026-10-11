@@ -10,7 +10,7 @@ import {
 import {
   getTourPageKeyFromPath,
   tourRequestPath,
-} from '@/components/ConversationTour/pageTourSteps'
+} from '@/components/ConversationTour/tourRoutes'
 
 /** Opens the tour the assistant asked for, visiting its page first if needed. */
 export function useAssistantTourLauncher() {

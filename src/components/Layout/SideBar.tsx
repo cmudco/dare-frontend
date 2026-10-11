@@ -23,7 +23,7 @@ import {
 import { openFeedback } from '@/redux/feedbackSlice'
 import { SETTINGS_PATH, TEMPLATES_PATH } from '@/routes/paths'
 import { UsersIcon } from '@heroicons/react/24/outline'
-import { getTourPageKeyFromPath } from '@/components/ConversationTour/pageTourSteps'
+import { getTourPageKeyFromPath } from '@/components/ConversationTour/tourRoutes'
 import {
   isResearchToolsEnabled,
   researchToolsSignInUrl,
