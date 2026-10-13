@@ -11,6 +11,7 @@ import {
   BeakerIcon,
   ArrowTopRightOnSquareIcon,
   RectangleStackIcon,
+  CpuChipIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
@@ -21,7 +22,11 @@ import {
   openPageTour,
 } from '@/redux/conversationTourSlice'
 import { openFeedback } from '@/redux/feedbackSlice'
-import { SETTINGS_PATH, TEMPLATES_PATH } from '@/routes/paths'
+import {
+  AGENT_TEMPLATES_PATH,
+  PROMPT_TEMPLATES_PATH,
+  SETTINGS_PATH,
+} from '@/routes/paths'
 import { UsersIcon } from '@heroicons/react/24/outline'
 import { getTourPageKeyFromPath } from '@/components/ConversationTour/tourRoutes'
 import {
@@ -68,7 +73,8 @@ const WorkflowsIcon = (props: React.SVGProps<SVGSVGElement>) => (
 const NESTED_ROUTE_PATHS = [
   '/conversation',
   '/projects',
-  TEMPLATES_PATH,
+  PROMPT_TEMPLATES_PATH,
+  AGENT_TEMPLATES_PATH,
   SETTINGS_PATH,
 ]
 
@@ -123,7 +129,8 @@ const Sidebar = () => {
     { name: 'Conversations', icon: ChatBubbleLeftIcon, path: '/conversation' },
     { name: 'Projects', icon: RectangleStackIcon, path: '/projects' },
     { name: 'Sources', icon: FolderOpenIcon, path: '/files' },
-    { name: 'Templates', icon: PromptsIcon, path: TEMPLATES_PATH },
+    { name: 'Prompts', icon: PromptsIcon, path: PROMPT_TEMPLATES_PATH },
+    { name: 'Agents', icon: CpuChipIcon, path: AGENT_TEMPLATES_PATH },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
     ...(canAccessResearch
       ? [{ name: 'Research', icon: BeakerIcon, path: '/research' }]

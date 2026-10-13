@@ -143,15 +143,6 @@ const PROMPTS_STEPS: PageTourStep[] = [
     placement: 'center',
   },
   {
-    id: 'templates-tabs',
-    target: '[data-tour="templates-tabs"]',
-    title: 'Prompts and Agents',
-    description:
-      'Prompts are reusable instructions. Agents pair a prompt with a model, files and settings, ready to use in chats and workflows.',
-    icon: Bot,
-    placement: 'bottom',
-  },
-  {
     id: 'prompts-search',
     target: '[data-tour="prompts-search"]',
     title: 'Search Prompts',
@@ -226,15 +217,6 @@ const AGENTS_STEPS: PageTourStep[] = [
       "Create AI agents with specialized personas and instructions. Deploy them in your conversations. Let's see how.",
     icon: Sparkles,
     placement: 'center',
-  },
-  {
-    id: 'templates-tabs',
-    target: '[data-tour="templates-tabs"]',
-    title: 'Prompts and Agents',
-    description:
-      'Prompts are reusable instructions. Agents pair a prompt with a model, files and settings, ready to use in chats and workflows.',
-    icon: Bot,
-    placement: 'bottom',
   },
   {
     id: 'agents-search',
