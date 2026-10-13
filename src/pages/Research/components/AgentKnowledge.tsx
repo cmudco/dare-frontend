@@ -1,12 +1,25 @@
 import type { ReactNode } from 'react'
 import { formatRelativeDate } from '@/utils/dateUtils'
-import type { AgentMemory } from '@/api/research'
+import {
+  saveProjectMemoryAPI,
+  saveSoulFileAPI,
+  type AgentMemory,
+} from '@/api/research'
+import {
+  MEMORY_MAX_CHARS,
+  buildMemory,
+  memoryEntries,
+} from '../CreateProject/memoryDocument'
+import { SOUL_MAX_CHARS } from '../CreateProject/soulDocument'
 import type { KnowledgeItem, MemoryProposal, ProjectMemory } from '../types'
+import ChatMarkdown from './ChatMarkdown'
+import EditableFile from './EditableFile'
 import EmptyLine from './EmptyLine'
 import MemoryProposalQueue from './MemoryProposalQueue'
 import ThesisSourceLinks from './ThesisSourceLinks'
 
 interface Props {
+  projectId: number
   files: AgentMemory | null
   proposals: MemoryProposal[]
   projectMemory: ProjectMemory[]
@@ -64,6 +77,7 @@ const Row = ({
 // Exactly what the project's agent loads at the start of every run, rendered
 // by DARE from what the user approved. Nothing here is a separate copy.
 const AgentKnowledge = ({
+  projectId,
   files,
   proposals,
   projectMemory,
@@ -87,59 +101,85 @@ const AgentKnowledge = ({
         note='The agent asked to remember these. Approve one and it is added below; reject it and nothing is saved.'
       />
 
-      <Group
+      <EditableFile
         title='Standards'
         file='SOUL.md'
         reach='Who the agent is and the standards it holds to, in this project.'
-      >
-        {files.soul.trim() ? (
-          <pre className='rounded-xl border border-border bg-card p-5 font-sans text-sm leading-relaxed whitespace-pre-wrap text-foreground/90'>
-            {files.soul}
-          </pre>
-        ) : (
-          <EmptyLine>
-            No standards yet. Add them from the project's Edit page.
-          </EmptyLine>
-        )}
-      </Group>
+        value={files.soul}
+        limit={SOUL_MAX_CHARS}
+        placeholder='# Identity'
+        onSave={async (content) => {
+          await saveSoulFileAPI(projectId, content)
+          onDecided()
+        }}
+        preview={
+          files.soul.trim() ? (
+            <div className='rounded-xl border border-border bg-card px-5 py-4'>
+              <ChatMarkdown content={files.soul} />
+            </div>
+          ) : (
+            <EmptyLine>No standards yet.</EmptyLine>
+          )
+        }
+      />
 
-      <Group
+      <EditableFile
         title={`This project · ${memoryRows.length + 1}`}
         file='MEMORY.md'
         reach='Only this project sees these.'
-      >
-        <ul className='space-y-2'>
-          <Row
-            aside={
-              <span className='shrink-0 text-[11px] text-muted-foreground'>
-                from the project's settings
-              </span>
-            }
-          >
-            {projectSection}
-          </Row>
-          {memoryRows.map((m) => (
-            <li
-              key={m.id}
-              className='rounded-lg border border-border bg-card px-4 py-3'
-            >
-              <div className='flex items-baseline gap-3'>
-                <p className='flex-1 text-sm leading-relaxed text-foreground/90'>
-                  {m.detail}
-                </p>
+        value={buildMemory(memoryRows.map((m) => m.detail))}
+        limit={MEMORY_MAX_CHARS}
+        sizeOf={(doc) =>
+          [projectSection, ...memoryEntries(doc)].join('\n§\n').length
+        }
+        placeholder='- Scope: …'
+        hint="One entry per bullet. The Project section above comes from the project's settings and is not edited here."
+        onSave={async (doc) => {
+          await saveProjectMemoryAPI(projectId, memoryEntries(doc))
+          onDecided()
+        }}
+        fixed={
+          <ul className='mb-2'>
+            <Row
+              aside={
                 <span className='shrink-0 text-[11px] text-muted-foreground'>
-                  {m.source === 'proposal'
-                    ? 'approved from the agent'
-                    : 'added by you'}
-                  {' · '}
-                  {formatRelativeDate(m.capturedAt)}
+                  from the project's settings
                 </span>
-              </div>
-              <ThesisSourceLinks thesisId={m.id} sources={knowledgeItems} />
-            </li>
-          ))}
-        </ul>
-      </Group>
+              }
+            >
+              {projectSection}
+            </Row>
+          </ul>
+        }
+        preview={
+          memoryRows.length ? (
+            <ul className='space-y-2'>
+              {memoryRows.map((m) => (
+                <li
+                  key={m.id}
+                  className='rounded-lg border border-border bg-card px-4 py-3'
+                >
+                  <div className='flex items-baseline gap-3'>
+                    <p className='flex-1 text-sm leading-relaxed text-foreground/90'>
+                      {m.detail}
+                    </p>
+                    <span className='shrink-0 text-[11px] text-muted-foreground'>
+                      {m.source === 'proposal'
+                        ? 'approved from the agent'
+                        : 'added by you'}
+                      {' · '}
+                      {formatRelativeDate(m.capturedAt)}
+                    </span>
+                  </div>
+                  <ThesisSourceLinks thesisId={m.id} sources={knowledgeItems} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyLine>Nothing else yet.</EmptyLine>
+          )
+        }
+      />
 
       <Group
         title={`About you · ${userEntries.length}`}

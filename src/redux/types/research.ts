@@ -469,6 +469,16 @@ export interface RunPrompt {
   }
 }
 
+/** One role's brief, as a run of that role is given it. */
+export interface PromptBrief {
+  key: 'chat' | 'scout-now' | 'follow-up' | 'scout' | 'critic' | 'presenter'
+  label: string
+  /** Where it goes in the run: the instructions, or the input. */
+  part: 'instructions' | 'input'
+  when: string
+  text: string
+}
+
 /** One run's full audit, from the single-run endpoint. */
 export interface AgentRunDetail extends AgentRun {
   toolCalls: AgentRunToolCall[]

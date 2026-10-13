@@ -147,8 +147,9 @@ const ContextHub = ({
           <ProjectKnowledge items={knowledgeItems} rejected={rejectedItems} />
         )}
         {card === 'sources' && <SourcesView sources={sources} />}
-        {card === 'agent' && (
+        {card === 'agent' && projectId && (
           <AgentKnowledge
+            projectId={projectId}
             files={agentMemory}
             proposals={memoryProposals}
             projectMemory={projectMemory}

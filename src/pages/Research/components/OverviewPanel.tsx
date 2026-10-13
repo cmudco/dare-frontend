@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatRanAt, roleLabel, runStatusBadge } from '../runFormat'
 import type { AgentRun } from '../types'
-import AgentGuide from './AgentGuide'
+import PromptAnatomy from './PromptAnatomy'
 
 interface Props {
   question: string
@@ -132,8 +132,7 @@ const OverviewPanel = ({
         </div>
       </div>
 
-      {/* What each helper does + its limits */}
-      <AgentGuide />
+      <PromptAnatomy />
 
       {/* Recent activity */}
       <section>

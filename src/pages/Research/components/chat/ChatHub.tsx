@@ -159,6 +159,7 @@ const ChatHub = ({
         }
       },
       onDone: () => void settle(),
+      onPending: () => void settle(),
       onError: (msg) => {
         setSendError(msg)
         void settle()
@@ -263,7 +264,11 @@ const ChatHub = ({
                 <MessageBubble
                   role='assistant'
                   content=''
-                  activity='Catching up on new findings and your notes…'
+                  activity={
+                    detail?.activeTurn?.followup
+                      ? 'Catching up on new findings and your notes…'
+                      : 'Still working on your message…'
+                  }
                   streaming
                 />
               )}
@@ -361,7 +366,7 @@ const ChatHub = ({
             </div>
             <span className='truncate text-xs text-muted-foreground'>
               {followupLive
-                ? 'The agent is responding to new events…'
+                ? 'The agent is still replying…'
                 : `Under ${soulFile ? `soul file v${soulFile.version}` : 'no soul file yet'} · findings go to your inbox · memory needs your approval`}
             </span>
             <Button

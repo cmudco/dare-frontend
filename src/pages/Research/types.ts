@@ -30,6 +30,7 @@ export type {
   AgentRun,
   AgentRunCancellation,
   AgentRunDetail,
+  PromptBrief,
   RunPrompt,
   AgentRunToolCall,
   ChatMessage,

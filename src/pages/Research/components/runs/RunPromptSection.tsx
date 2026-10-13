@@ -31,14 +31,24 @@ const Text = ({ value }: { value: string }) =>
 
 const chars = (value: string) => `${value.length.toLocaleString()} chars`
 
-// Everything the run was sent, in the order the agent reads it: the profile
-// files it loaded, its brief, the earlier turns, then the input.
+// Everything the run was sent, in the order the agent reads it: one system
+// message (files, Hermes's own guidance, the brief), then the conversation.
 const RunPromptSection = ({ prompt }: { prompt: RunPrompt | null }) => (
   <RunSection title='What the agent was sent'>
     {prompt ? (
       <div className='space-y-2'>
+        <p className='pt-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase'>
+          System message
+        </p>
         <Part label='SOUL.md' note={chars(prompt.files['SOUL.md'])}>
           <Text value={prompt.files['SOUL.md']} />
+        </Part>
+        <div className='flex items-baseline justify-between gap-3 rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted-foreground'>
+          <span>Hermes guidance</span>
+          <span className='text-xs'>added by Hermes · not recorded</span>
+        </div>
+        <Part label='Skills' note={`${prompt.files.skills.length} loaded`}>
+          <Text value={prompt.files.skills.join('\n')} />
         </Part>
         <Part label='MEMORY.md' note={chars(prompt.files['MEMORY.md'])}>
           <Text value={prompt.files['MEMORY.md']} />
@@ -46,12 +56,12 @@ const RunPromptSection = ({ prompt }: { prompt: RunPrompt | null }) => (
         <Part label='USER.md' note={chars(prompt.files['USER.md'])}>
           <Text value={prompt.files['USER.md']} />
         </Part>
-        <Part label='Skills' note={`${prompt.files.skills.length} loaded`}>
-          <Text value={prompt.files.skills.join('\n')} />
-        </Part>
         <Part label='Instructions' note={chars(prompt.instructions)}>
           <Text value={prompt.instructions} />
         </Part>
+        <p className='pt-3 text-[11px] font-medium tracking-wide text-muted-foreground uppercase'>
+          Conversation
+        </p>
         <Part label='History' note={`${prompt.history.length} earlier turns`}>
           {prompt.history.length ? (
             <ol className='space-y-2'>

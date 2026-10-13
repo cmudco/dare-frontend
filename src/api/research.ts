@@ -8,6 +8,7 @@ import type {
   LearningOverview,
   MemoryLayer,
   OkfBundle,
+  PromptBrief,
   ResearchProject,
   ResearchProjectsResponse,
   ResearchThread,
@@ -141,7 +142,7 @@ export const saveSoulFileAPI = async (
   return await baseRequest<SoulFile>({
     url: `api/research/projects/${projectId}/soul/`,
     method: METHOD.PUT,
-    data: { content, changeNote: 'Edited in project settings' },
+    data: { content },
   })
 }
 
@@ -164,6 +165,16 @@ export const saveProjectMemoryAPI = async (
     url: `api/research/projects/${projectId}/memory/`,
     method: METHOD.PUT,
     data: { entries },
+  })
+}
+
+/** Every role's brief, exactly as runs are given it. */
+export const getPromptBriefsAPI = async (): Promise<{
+  briefs: PromptBrief[]
+}> => {
+  return await baseRequest<{ briefs: PromptBrief[] }>({
+    url: 'api/research/prompts/',
+    method: METHOD.GET,
   })
 }
 
@@ -271,6 +282,8 @@ export interface ChatStreamHandlers {
   onDelta: (delta: string) => void
   onTool: (tool: string, phase: 'started' | 'completed') => void
   onDone: (payload: { messageId: number; runId: number }) => void
+  /** The reply is still coming; it lands in the thread when Hermes finishes. */
+  onPending: () => void
   onError: (message: string) => void
 }
 
@@ -324,6 +337,7 @@ export const streamThreadMessage = async (
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
+  let ended = false
 
   while (true) {
     const { done, value } = await reader.read()
@@ -340,13 +354,23 @@ export const streamThreadMessage = async (
         const event = JSON.parse(payload)
         if (event.type === 'delta') handlers.onDelta(event.delta as string)
         else if (event.type === 'tool') handlers.onTool(event.tool, event.phase)
-        else if (event.type === 'done') handlers.onDone(event)
-        else if (event.type === 'error') handlers.onError(event.error as string)
+        else if (event.type === 'done') {
+          ended = true
+          handlers.onDone(event)
+        } else if (event.type === 'pending') {
+          ended = true
+          handlers.onPending()
+        } else if (event.type === 'error') {
+          ended = true
+          handlers.onError(event.error as string)
+        }
       } catch {
         // ignore non-JSON keep-alives
       }
     }
   }
+  // A stream cut off mid-reply: the thread shows the reply once it lands.
+  if (!ended) handlers.onPending()
 }
 
 /** The project's evidence graph — nodes/edges for the Graph view. */
