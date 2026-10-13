@@ -4,7 +4,7 @@ import type { AgentRun } from '../../types'
 // The summary tiles above the runs list: totals across every delegated run.
 const RunStats = ({ runs }: { runs: AgentRun[] }) => {
   const spent = runs.reduce((sum, r) => sum + Number(r.cost || 0), 0)
-  const totalCalls = runs.reduce((sum, r) => sum + r.toolCalls.length, 0)
+  const totalCalls = runs.reduce((sum, r) => sum + r.toolCallCount, 0)
   const priced = runs.filter((r) => Number(r.cost || 0) > 0)
   const stats = [
     { label: 'Runs', value: String(runs.length) },

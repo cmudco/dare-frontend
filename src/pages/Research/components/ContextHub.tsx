@@ -1,79 +1,40 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BookMarked, Cpu, FileText, ScrollText } from 'lucide-react'
+import { BookMarked, Cpu, FileText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { formatRelativeDate } from '@/utils/dateUtils'
-import {
-  getAgentMemoryAPI,
-  type AgentMemory,
-  type AgentMemoryChange,
-} from '@/api/research'
+import { getAgentMemoryAPI, type AgentMemory } from '@/api/research'
 import type {
   KnowledgeItem,
-  ReviewItem,
   MemoryProposal,
   ProjectMemory,
   ResearchSource,
-  SoulFile,
+  ReviewItem,
 } from '../types'
-import EmptyLine from './EmptyLine'
-import FactGroup from './FactGroup'
-import MemoryProposalQueue from './MemoryProposalQueue'
-import MemoryTimeline from './MemoryTimeline'
+import AgentKnowledge from './AgentKnowledge'
 import ProjectKnowledge from './ProjectKnowledge'
 import { SourcesView } from './SecondaryViews'
-import ThesisSourceLinks from './ThesisSourceLinks'
 
-type ContextCard = 'durable' | 'sources' | 'standards' | 'agent'
+type ContextCard = 'durable' | 'sources' | 'agent'
 
 interface Props {
   projectId?: number
   knowledgeItems: KnowledgeItem[]
-  /** Rejected review items, shown with the scholar's reason. */
+  /** Rejected review items, shown with the user's reason. */
   rejectedItems: ReviewItem[]
   sources: ResearchSource[]
-  soulFile: SoulFile | null
   projectMemory: ProjectMemory[]
   memoryProposals: MemoryProposal[]
   /** Refetch the project after a memory decision moves something. */
   onMemoryDecided?: () => void
 }
 
-/** The runtime writes one fact per `§`-delimited block; that separator is ours. */
-const splitEntries = (text: string) =>
-  (text ?? '')
-    .split('§')
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-
-/**
- * When each fact was first written, keyed by its text.
- *
- * The files only say what the agent believes now. Walking the snapshots oldest
- * first gives every current fact its own date, which is what the timeline was
- * really being read for — and is why the timeline no longer has to be open.
- */
-const firstSeenByEntry = (history: AgentMemoryChange[]) => {
-  const seen: Record<string, string> = {}
-  for (const change of [...history].reverse()) {
-    for (const file of ['memory', 'user'] as const) {
-      for (const text of change[file].added) {
-        if (!(text in seen)) seen[text] = change.takenAt
-      }
-    }
-  }
-  return seen
-}
-
-// The project's context hub: one place for everything it holds — approved
-// knowledge, raw sources, the standards that govern it, and what the agent
-// learned — each owned by a clear party. Pick a card to reveal that layer.
+// Everything the project holds, each with a clear owner: approved findings,
+// the user's sources, and what the agent loads on every run.
 const ContextHub = ({
   projectId,
   knowledgeItems,
   rejectedItems,
   sources,
-  soulFile,
   projectMemory,
   memoryProposals,
   onMemoryDecided,
@@ -95,18 +56,17 @@ const ContextHub = ({
     onMemoryDecided?.()
   }, [loadAgentMemory, onMemoryDecided])
 
-  const agentFactCount =
-    splitEntries(agentMemory?.memory ?? '').length +
-    splitEntries(agentMemory?.user ?? '').length
+  const agentFactCount = agentMemory
+    ? [agentMemory.memory, agentMemory.user]
+        .flatMap((text) => text.split('§'))
+        .filter((entry) => entry.trim()).length + agentMemory.skills.length
+    : 0
 
   const cards = [
     {
       key: 'durable' as const,
       icon: BookMarked,
       title: 'Durable knowledge',
-      // The count means the same thing on every card: how many things are in
-      // this layer. It used to mean approved items on one and open decisions on
-      // another, so the row of numbers could not be read across.
       count: knowledgeItems.length,
       waiting: 0,
       desc: `Approved sources and claims${rejectedItems.length ? `, plus ${rejectedItems.length} rejected with reasons` : ''}. Nothing lands here without you.`,
@@ -117,23 +77,15 @@ const ContextHub = ({
       title: 'Sources',
       count: sources.length,
       waiting: 0,
-      desc: 'Files you brought in. Scout can read across these.',
-    },
-    {
-      key: 'standards' as const,
-      icon: ScrollText,
-      title: 'Standards & memory',
-      count: projectMemory.length,
-      waiting: 0,
-      desc: 'Your soul file, plus the record of this project that DARE keeps.',
+      desc: 'Files you added to the project. Agents cannot read their contents yet.',
     },
     {
       key: 'agent' as const,
       icon: Cpu,
-      title: 'Agent memory',
+      title: 'What the agent knows',
       count: agentFactCount,
       waiting: memoryProposals.length,
-      desc: 'What Hermes picked up while working. You decide what it keeps.',
+      desc: 'Its standards, memory and skills: exactly what it loads on every run.',
     },
   ]
 
@@ -147,7 +99,7 @@ const ContextHub = ({
         </p>
       </header>
 
-      <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+      <div className='grid gap-3 sm:grid-cols-3'>
         {cards.map((c) => {
           const Icon = c.icon
           const selected = card === c.key
@@ -195,179 +147,16 @@ const ContextHub = ({
           <ProjectKnowledge items={knowledgeItems} rejected={rejectedItems} />
         )}
         {card === 'sources' && <SourcesView sources={sources} />}
-        {card === 'standards' && (
-          <StandardsSection
-            soulFile={soulFile}
-            projectMemory={projectMemory}
-            knowledgeItems={knowledgeItems}
-          />
-        )}
         {card === 'agent' && (
-          <AgentMemorySection
+          <AgentKnowledge
             files={agentMemory}
             proposals={memoryProposals}
             projectMemory={projectMemory}
+            knowledgeItems={knowledgeItems}
             onDecided={afterDecision}
           />
         )}
       </div>
-    </div>
-  )
-}
-
-const StandardsSection = ({
-  soulFile,
-  projectMemory,
-  knowledgeItems,
-}: {
-  soulFile: SoulFile | null
-  projectMemory: ProjectMemory[]
-  knowledgeItems: KnowledgeItem[]
-}) => (
-  <div className='space-y-6'>
-    <section>
-      <h3 className='mb-3 text-sm font-medium'>
-        Soul file{soulFile ? ` · v${soulFile.version}` : ''}
-      </h3>
-      {soulFile ? (
-        <pre className='rounded-xl border border-border bg-card p-5 font-sans text-sm leading-relaxed whitespace-pre-wrap text-foreground/90'>
-          {soulFile.content}
-        </pre>
-      ) : (
-        <EmptyLine>No soul file yet.</EmptyLine>
-      )}
-    </section>
-    <section>
-      <h3 className='mb-1 text-sm font-medium'>Project memory</h3>
-      <p className='mb-3 text-xs text-muted-foreground'>
-        DARE's own record of this project — a database row, not a file the agent
-        can edit. Mostly the same facts as the agent's{' '}
-        <span className='font-mono'>MEMORY.md</span>, on purpose: keeping one
-        copies it here. The difference is what happens next — this copy survives
-        the agent being reset or replaced, gets fed back into every run, and can
-        carry linked sources.
-      </p>
-      {projectMemory.length === 0 ? (
-        <EmptyLine>
-          Nothing yet. Keep a fact from the agent and it lands here.
-        </EmptyLine>
-      ) : (
-        // Same row shape as the agent's fact list, deliberately: these hold
-        // near-identical content, and rendering one as cards and the other as
-        // rows made them look like different kinds of thing.
-        <ul className='space-y-2'>
-          {projectMemory.map((m) => {
-            // The label is derived, not authored — it is the detail's leading
-            // clause ("Method decision: …"), or a truncation when there is no
-            // such clause. So use it as a heading only when the detail actually
-            // carries that clause, and show the rest as the body; otherwise the
-            // card printed the same words twice with an ellipsis in between.
-            const label = m.label?.trim() ?? ''
-            const prefix = `${label}:`
-            const hasClause = !!label && m.detail.trim().startsWith(prefix)
-            const body = hasClause
-              ? m.detail.trim().slice(prefix.length).trim()
-              : m.detail
-            return (
-              <li
-                key={m.id}
-                className='rounded-lg border border-border bg-card px-4 py-3'
-              >
-                <div className='flex items-baseline gap-3'>
-                  <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50' />
-                  <div className='min-w-0 flex-1'>
-                    {hasClause && (
-                      <p className='text-sm font-medium'>{label}</p>
-                    )}
-                    <p className='text-sm leading-relaxed text-foreground/90'>
-                      {body}
-                    </p>
-                  </div>
-                  <span className='shrink-0 text-[11px] text-muted-foreground'>
-                    {m.source === 'proposal'
-                      ? 'kept from the agent'
-                      : 'added by you'}
-                  </span>
-                  <span className='shrink-0 text-[11px] text-muted-foreground'>
-                    {formatRelativeDate(m.capturedAt)}
-                  </span>
-                </div>
-                <ThesisSourceLinks thesisId={m.id} sources={knowledgeItems} />
-              </li>
-            )
-          })}
-        </ul>
-      )}
-    </section>
-  </div>
-)
-
-const AgentMemorySection = ({
-  files,
-  proposals,
-  projectMemory,
-  onDecided,
-}: {
-  files: AgentMemory | null
-  proposals: MemoryProposal[]
-  projectMemory: ProjectMemory[]
-  onDecided: () => void
-}) => {
-  const history = files?.history ?? []
-  const firstSeen = firstSeenByEntry(history)
-  const kept = new Set(projectMemory.map((m) => m.detail.trim()))
-
-  return (
-    <div className='space-y-6'>
-      <p className='flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-border pb-4 text-sm text-muted-foreground'>
-        {files?.isolated ? (
-          <>
-            <span>Private to this project ·</span>
-            <span className='rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground/80'>
-              {files.profile}
-            </span>
-            <span>No other project or person can read it.</span>
-          </>
-        ) : (
-          <span>
-            These live in the shared default profile, so every project on this
-            instance sees the same files.
-          </span>
-        )}
-      </p>
-
-      {/* First, because it is the only thing here that needs you. */}
-      <MemoryProposalQueue
-        proposals={proposals}
-        onDecided={onDecided}
-        title='Waiting on you'
-        note='Approve it and DARE writes it into the layer you choose. Reject it and nothing is saved.'
-      />
-
-      <FactGroup
-        title='About this project'
-        file='MEMORY.md'
-        scope="Stays here. No other project of yours can see these. Anything you keep is copied into DARE's own record under Standards & memory."
-        entries={splitEntries(files?.memory ?? '')}
-        firstSeen={firstSeen}
-        kept={kept}
-      />
-
-      <FactGroup
-        title='About you'
-        file='USER.md'
-        scope='Travels with you — the agent knows these in every project you own.'
-        entries={splitEntries(files?.user ?? '')}
-        firstSeen={firstSeen}
-      />
-
-      <MemoryTimeline history={history} discarded={files?.discarded ?? []} />
-
-      <p className='border-t border-border pt-4 text-xs text-muted-foreground'>
-        {files?.soul?.trim()
-          ? 'Standards come from your soul file, which DARE writes and versions — open Standards & memory to read or change it.'
-          : 'No soul file yet. Set your standards under Standards & memory and the agent picks them up on its next run.'}
-      </p>
     </div>
   )
 }

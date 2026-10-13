@@ -42,7 +42,7 @@ const RunRow = ({ run, onOpen }: RunRowProps) => {
           <span>·</span>
           <span>{run.stagedCount} staged</span>
           <span>·</span>
-          <span>{run.toolCalls.length} tool calls</span>
+          <span>{run.toolCallCount} tool calls</span>
           <span>·</span>
           <span>{formatTokens(run.usage?.totalTokens)}</span>
           {Number(run.cost || 0) > 0 && (

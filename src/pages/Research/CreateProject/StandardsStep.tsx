@@ -28,8 +28,6 @@ import {
 interface Props {
   soul: string
   memory: string
-  /** Already-saved researcher-wide standards, to say what is pre-filled. */
-  savedStandardsCount: number
   onPatch: (patch: Partial<ProjectDraft>) => void
 }
 
@@ -59,12 +57,7 @@ const Card = ({
  * this project (scope, population, decisions). The controls on the left only
  * write into whichever file is open, and both files are saved as shown.
  */
-const StandardsStep = ({
-  soul,
-  memory,
-  savedStandardsCount,
-  onPatch,
-}: Props) => {
+const StandardsStep = ({ soul, memory, onPatch }: Props) => {
   const [active, setActive] = useState<FileKey>('soul')
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const setSoul = (soulContent: string) => onPatch({ soulContent })
@@ -125,8 +118,6 @@ const StandardsStep = ({
                   </span>
                   <span className='block text-xs text-muted-foreground'>
                     {evidence.length} in the file
-                    {savedStandardsCount > 0 &&
-                      ` · ${savedStandardsCount} carried from your other projects`}
                   </span>
                 </span>
                 <ChevronDown
@@ -176,8 +167,9 @@ const StandardsStep = ({
               </div>
             </Card>
             <p className='px-1 text-xs leading-relaxed text-muted-foreground'>
-              MEMORY.md stays in this project. It never follows you into another
-              one — that is what SOUL.md’s evidence standards are for.
+              MEMORY.md stays in this project. What the agent learns about you,
+              once you approve it, goes to USER.md and follows you into every
+              project.
             </p>
           </div>
         )}

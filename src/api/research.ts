@@ -2,7 +2,7 @@ import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import { config } from '@/config/environment'
 import type {
-  AgentRun,
+  AgentRunDetail,
   CreateResearchProjectPayload,
   EvidenceGraph,
   LearningOverview,
@@ -80,43 +80,23 @@ export const askCriticAPI = async (itemId: number): Promise<ScoutResult> => {
   })
 }
 
+/** An approved skill the agent loads. */
+export interface AgentSkill {
+  name: string
+  description: string
+  scope: 'project' | 'researcher'
+}
+
+/** The files this project's agent loads on every run, as DARE renders them. */
 export interface AgentMemory {
+  profile: string
   soul: string
   memory: string
   user: string
-  /** Which Hermes profile these files came from ('default' when unisolated). */
-  profile: string
-  /** True once the project has its own profile, so these files are private to it. */
-  isolated: boolean
-  /** Newest first. How these files got to their current state, one entry per change. */
-  history: AgentMemoryChange[]
-  /**
-   * Facts the scholar rejected. A line the agent dropped otherwise reads as it
-   * forgetting on its own; matching against this names the real cause.
-   */
-  discarded: string[]
-  /** Profiles this scholar's shared USER.md was pushed to on the last read. */
-  sharedTo?: string[]
+  skills: AgentSkill[]
 }
 
-/** What changed in one file between two snapshots. */
-export interface AgentMemoryFileChange {
-  count: number
-  added: string[]
-  removed: string[]
-}
-
-/** One moment the agent's memory changed. */
-export interface AgentMemoryChange {
-  id: number
-  takenAt: string
-  memory: AgentMemoryFileChange
-  user: AgentMemoryFileChange
-  /** The earliest snapshot on record — everything in it counts as newly learned. */
-  isFirst: boolean
-}
-
-/** Read this project's Hermes profile memory files (read-only). */
+/** The files this project's agent loads on every run. */
 export const getAgentMemoryAPI = async (
   projectId: number
 ): Promise<AgentMemory> => {
@@ -187,26 +167,6 @@ export const saveProjectMemoryAPI = async (
   })
 }
 
-/** The scholar's researcher-wide standards (follow them into every project). */
-export const getResearcherStandardsAPI = async (): Promise<{
-  standards: string[]
-}> => {
-  return await baseRequest<{ standards: string[] }>({
-    url: 'api/research/researcher/standards/',
-    method: METHOD.GET,
-  })
-}
-
-export const saveResearcherStandardsAPI = async (
-  standards: string[]
-): Promise<{ standards: string[] }> => {
-  return await baseRequest<{ standards: string[] }>({
-    url: 'api/research/researcher/standards/',
-    method: METHOD.PUT,
-    data: { standards },
-  })
-}
-
 /** What the agent has learned: layers, procedures, pending, timeline, chart. */
 export const getLearningAPI = async (
   projectId: number
@@ -218,8 +178,10 @@ export const getLearningAPI = async (
 }
 
 /** Poll a single agent run's live status (for Scout/Critic progress). */
-export const getAgentRunAPI = async (runId: number): Promise<AgentRun> => {
-  return await baseRequest<AgentRun>({
+export const getAgentRunAPI = async (
+  runId: number
+): Promise<AgentRunDetail> => {
+  return await baseRequest<AgentRunDetail>({
     url: `api/research/agent-runs/${runId}/`,
     method: METHOD.GET,
   })
@@ -231,8 +193,10 @@ export const getAgentRunAPI = async (runId: number): Promise<AgentRun> => {
  * (cancelled / completed / outcome_unknown) is resolved by later polling — do
  * not assume the run is cancelled just because this resolved.
  */
-export const cancelAgentRunAPI = async (runId: number): Promise<AgentRun> => {
-  return await baseRequest<AgentRun>({
+export const cancelAgentRunAPI = async (
+  runId: number
+): Promise<AgentRunDetail> => {
+  return await baseRequest<AgentRunDetail>({
     url: `api/research/agent-runs/${runId}/cancel/`,
     method: METHOD.POST,
   })

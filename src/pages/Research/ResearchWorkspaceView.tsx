@@ -34,17 +34,17 @@ const DEFAULT_TOOLS: string[] = [WEB_SEARCH_TOOL_SLUG]
 interface ResearchWorkspaceViewProps {
   /** The project's id (enables backend-backed views like chat and scout). */
   projectId?: number
-  /** Title shown in the workspace header (defaults to the mock project). */
+  /** Title shown in the workspace header. */
   projectTitle?: string
   /** Secondary line under the title (e.g. the field of study). */
   projectMeta?: string
-  /** The project's research question (defaults to the mock project). */
+  /** The project's research question. */
   question?: string
   /** Number of sources in the project's library. */
   sourceCount?: number
   /** Tool slugs the Scout composer offers (defaults to the web built-in). */
   enabledTools?: string[]
-  /** Agent runs for this project (defaults to the mock preview runs). */
+  /** Agent runs for this project. */
   runs?: AgentRun[]
   /** Sources in the project's library. */
   sources?: ResearchSource[]
@@ -214,7 +214,6 @@ const ResearchWorkspaceView = ({
             knowledgeItems={knowledgeItems}
             rejectedItems={reviewItems.filter((i) => i.status === 'rejected')}
             sources={sources}
-            soulFile={soulFile}
             projectMemory={projectMemory}
             memoryProposals={memoryProposals}
             onMemoryDecided={refresh}

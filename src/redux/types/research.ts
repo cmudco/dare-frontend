@@ -192,13 +192,6 @@ export interface MemoryProposal {
   proposedAt: string
 }
 
-export type ThreadEventType =
-  | 'scouts_launched'
-  | 'scout_finished'
-  | 'review_decision'
-  | 'memory_proposed'
-  | 'memory_decided'
-
 export interface ScoutsLaunchedPayload {
   scouts: { runId: number; focus: string; task: string }[]
 }
@@ -448,16 +441,40 @@ export interface AgentRun {
   completedAt: string | null
   ranAt: string
   hermesRunId: string
-  toolCalls: AgentRunToolCall[]
+  toolCallCount: number
   cancellation: AgentRunCancellation | null
   /** The chat thread this run belongs to or was launched from. */
   thread: number | null
   learning: { applied?: LearningApplied[]; setAside?: LearningSetAside[] }
   /** Short label a thread gave this Scout. */
   focus: string
-  // The agent's exact final response text. Only present on the single-run
-  // detail fetch (getAgentRunAPI), not in list payloads — hence optional.
-  rawOutput?: string
+}
+
+/** One earlier turn sent to the agent as conversation history. */
+export interface RunPromptTurn {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+/** Exactly what a run was sent (the profile files it loaded, then the rest). */
+export interface RunPrompt {
+  instructions: string
+  input: string
+  history: RunPromptTurn[]
+  files: {
+    'SOUL.md': string
+    'MEMORY.md': string
+    'USER.md': string
+    skills: string[]
+  }
+}
+
+/** One run's full audit, from the single-run endpoint. */
+export interface AgentRunDetail extends AgentRun {
+  toolCalls: AgentRunToolCall[]
+  /** Null for runs from before prompts were recorded. */
+  prompt: RunPrompt | null
+  rawOutput: string
 }
 
 /** Working state for the create/edit wizard before it becomes a project. */
@@ -512,7 +529,7 @@ export interface ResearchState {
   loading: boolean
   error: string | null
   /** The run open on the run-details page (fetched + polled via thunks). */
-  currentRun: AgentRun | null
+  currentRun: AgentRunDetail | null
   okfBundle: OkfBundle | null
   okfBundleLoading: boolean
   okfBundleError: string | null

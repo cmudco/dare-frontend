@@ -9,7 +9,7 @@ import {
 } from '@/redux/asyncThunks/research'
 import { clearCurrentRun } from '@/redux/researchSlice'
 import { isRunInFlight } from '@/utils/constants/research'
-import type { AgentRun, NavSection } from '../types'
+import type { AgentRunDetail, NavSection } from '../types'
 import RunDetail from '../components/runs/RunDetail'
 import WorkspaceShell from '../components/WorkspaceShell'
 import ContextPanel from '../components/ContextPanel'
@@ -47,7 +47,7 @@ const RunDetailPage = () => {
     const tick = async () => {
       const result = await dispatch(getAgentRun(id))
       if (!alive) return
-      const fresh = result.payload as AgentRun | undefined
+      const fresh = result.payload as AgentRunDetail | undefined
       if (fresh && isRunInFlight(fresh.status)) timer = setTimeout(tick, 3000)
     }
     tick()

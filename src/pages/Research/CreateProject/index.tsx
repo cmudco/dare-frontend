@@ -10,10 +10,8 @@ import {
 } from '@/redux/asyncThunks/research'
 import {
   getProjectMemoryAPI,
-  getResearcherStandardsAPI,
   getSoulFileAPI,
   saveProjectMemoryAPI,
-  saveResearcherStandardsAPI,
   saveSoulFileAPI,
 } from '@/api/research'
 import { StandardsTemplate } from '@/utils/constants/research'
@@ -25,12 +23,7 @@ import StandardsStep from './StandardsStep'
 import ReviewStep from './ReviewStep'
 import StepRail, { type WizardStepDef } from './StepRail'
 import { buildMemory, memoryEntries } from './memoryDocument'
-import {
-  SOUL_PERSONAS,
-  SOUL_SECTIONS,
-  buildSoul,
-  sectionBullets,
-} from './soulDocument'
+import { SOUL_PERSONAS, buildSoul } from './soulDocument'
 
 const STEPS: WizardStepDef[] = [
   { key: 'define', label: 'Define' },
@@ -78,24 +71,9 @@ const CreateProject = () => {
   const [activeIndex, setActiveIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
   const [submitting, setSubmitting] = useState(false)
-  const [savedStandards, setSavedStandards] = useState<string[]>([])
   const [savedSoul, setSavedSoul] = useState<string | null>(null)
   const [savedMemory, setSavedMemory] = useState<string[]>([])
   const [submitError, setSubmitError] = useState('')
-
-  useEffect(() => {
-    let active = true
-    getResearcherStandardsAPI()
-      .then(({ standards }) => {
-        if (active) setSavedStandards(standards)
-      })
-      .catch(() => {
-        if (active) setSubmitError('Could not load your saved standards.')
-      })
-    return () => {
-      active = false
-    }
-  }, [])
 
   // Editing: the Standards step shows the SOUL.md in force, not a template.
   useEffect(() => {
@@ -147,13 +125,12 @@ const CreateProject = () => {
   const canContinue = activeIndex === 0 ? draft.title.trim().length > 0 : true
 
   const goTo = (index: number) => {
-    // The first visit to Standards drafts SOUL.md from the scholar's saved
-    // evidence standards and the default research voice.
+    // The first visit to Standards drafts SOUL.md in the default voice.
     if (index === STANDARDS_STEP && draft.soulContent === null) {
       patch({
         soulContent: buildSoul({
           persona: SOUL_PERSONAS[0],
-          evidenceStandards: savedStandards,
+          evidenceStandards: [],
         }),
         ...(draft.memoryContent === null && { memoryContent: '' }),
       })
@@ -162,28 +139,9 @@ const CreateProject = () => {
     setFurthestIndex((furthest) => Math.max(furthest, index))
   }
 
-  /** Evidence standards follow the scholar into every project. */
-  const saveStandards = async () => {
-    if (draft.soulContent === null) return
-    const standards = sectionBullets(
-      draft.soulContent,
-      SOUL_SECTIONS.evidence
-    ).map((rule) => rule.trim())
-    if (!sameList(standards, savedStandards)) {
-      await saveResearcherStandardsAPI(standards)
-    }
-  }
-
   const handleSubmit = async () => {
     setSubmitError('')
     setSubmitting(true)
-    try {
-      await saveStandards()
-    } catch {
-      setSubmitting(false)
-      setSubmitError('Could not save your standards. Nothing else was saved.')
-      return
-    }
 
     if (isEditing && editingProject) {
       const result = await dispatch(
@@ -277,7 +235,6 @@ const CreateProject = () => {
           <StandardsStep
             soul={draft.soulContent ?? ''}
             memory={draft.memoryContent ?? ''}
-            savedStandardsCount={savedStandards.length}
             onPatch={patch}
           />
         )

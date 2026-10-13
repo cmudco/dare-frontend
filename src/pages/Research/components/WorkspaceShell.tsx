@@ -38,7 +38,7 @@ interface Props {
   memoryPendingCount?: number
   center: React.ReactNode
   context: React.ReactNode
-  /** Overrides the demo project title (falls back to the mock project). */
+  /** The project's title. */
   projectTitle?: string
   /** Secondary line under the title, e.g. the field of study. */
   projectMeta?: string

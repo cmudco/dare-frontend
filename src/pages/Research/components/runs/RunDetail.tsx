@@ -11,8 +11,9 @@ import {
   runStatusBadge,
 } from '../../runFormat'
 import { AgentRunStatus, isRunInFlight } from '@/utils/constants/research'
-import type { AgentRun, AgentRunToolCall } from '../../types'
+import type { AgentRunDetail, AgentRunToolCall } from '../../types'
 import RoleIcon from './RoleIcon'
+import RunPromptSection from './RunPromptSection'
 import RunSection from './RunSection'
 import MetaItem from './MetaItem'
 import CancellationPanel from './CancellationPanel'
@@ -20,14 +21,14 @@ import ToolCallList from './ToolCallList'
 import ToolCallModal from './ToolCallModal'
 
 interface RunDetailProps {
-  run: AgentRun
+  run: AgentRunDetail
   cancelling: boolean
   onBack: () => void
   onCancel: () => void
 }
 
-// Full audit of one run: metadata, the exact final response, cancellation, and
-// every tool call. Presentational — its owner fetches/polls the run and owns
+// Full audit of one run: metadata, what it was sent, cancellation, its exact
+// final response and every tool call. Presentational — its owner fetches/polls the run and owns
 // the cancel action.
 const RunDetail = ({ run, cancelling, onBack, onCancel }: RunDetailProps) => {
   const [openCall, setOpenCall] = useState<AgentRunToolCall | null>(null)
@@ -106,7 +107,7 @@ const RunDetail = ({ run, cancelling, onBack, onCancel }: RunDetailProps) => {
           <MetaItem label='Staged' value={String(run.stagedCount)} />
           <MetaItem label='Tools' value={run.tools.join(', ') || '—'} />
           <MetaItem label='Standards' value={run.soulFileVersion || '—'} />
-          <MetaItem label='Tool calls' value={String(run.toolCalls.length)} />
+          <MetaItem label='Tool calls' value={String(run.toolCallCount)} />
         </div>
         {run.hermesRunId && (
           <p className='mt-3 font-mono text-xs break-all text-muted-foreground'>
@@ -119,6 +120,8 @@ const RunDetail = ({ run, cancelling, onBack, onCancel }: RunDetailProps) => {
         <CancellationPanel cancellation={run.cancellation} />
       )}
 
+      <RunPromptSection prompt={run.prompt} />
+
       <RunSection title='Final response'>
         {run.rawOutput ? (
           <pre className='max-h-[32rem] overflow-auto rounded-lg bg-muted/40 p-3 text-xs break-words whitespace-pre-wrap'>
@@ -128,7 +131,7 @@ const RunDetail = ({ run, cancelling, onBack, onCancel }: RunDetailProps) => {
           <p className='text-sm text-muted-foreground'>
             {inFlight
               ? 'The agent is still working — its final response will appear here.'
-              : 'No final response captured. The runtime may no longer retain this run’s record.'}
+              : 'No final response captured.'}
           </p>
         )}
       </RunSection>

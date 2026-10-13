@@ -150,46 +150,6 @@ export enum StandardsTemplate {
   CUSTOM = 'custom',
 }
 
-export interface StandardsPreset {
-  key: StandardsTemplate
-  name: string
-  summary: string
-  virtues: string[]
-}
-
-export const STANDARDS_PRESETS: StandardsPreset[] = [
-  {
-    key: StandardsTemplate.RESEARCH_ETHICS,
-    name: 'Research Ethics',
-    summary:
-      'Careful, non-fabricating scholarship. A strong default for ethics, philosophy and policy work.',
-    virtues: [
-      'Never fabricate — every citation must be real and verifiable.',
-      'Signal uncertainty honestly, not reflexively.',
-      'Never overstate what a source actually supports.',
-      'Preserve ethical nuance — respect for persons, beneficence, justice.',
-    ],
-  },
-  {
-    key: StandardsTemplate.EMPIRICAL_RIGOR,
-    name: 'Empirical Rigor',
-    summary:
-      'Methods-first standards for data-heavy fields where reproducibility matters.',
-    virtues: [
-      'Prefer primary sources and pre-registered studies.',
-      'Always surface sample size, method and effect size.',
-      'Flag replication status where known.',
-      'Distinguish correlation from causation explicitly.',
-    ],
-  },
-  {
-    key: StandardsTemplate.CUSTOM,
-    name: 'Start blank',
-    summary: 'Define your own standards later in the workspace soul file.',
-    virtues: [],
-  },
-]
-
 /**
  * Accepted source file extensions for a project. Kept deliberately broad —
  * documents, slides, spreadsheets, web/markup and data files. The backend

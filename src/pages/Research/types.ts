@@ -29,6 +29,8 @@ export interface SoulVirtue {
 export type {
   AgentRun,
   AgentRunCancellation,
+  AgentRunDetail,
+  RunPrompt,
   AgentRunToolCall,
   ChatMessage,
   KnowledgeItem,
