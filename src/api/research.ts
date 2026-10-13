@@ -260,8 +260,16 @@ export const reviewStagingItemAPI = async (
 export const redirectScoutAPI = async (
   runId: number,
   instruction: string
-): Promise<{ runId: number; replacedRunId: number }> => {
-  return await baseRequest<{ runId: number; replacedRunId: number }>({
+): Promise<{
+  runId: number
+  replacedRunId: number | null
+  steered: boolean
+}> => {
+  return await baseRequest<{
+    runId: number
+    replacedRunId: number | null
+    steered: boolean
+  }>({
     url: `api/research/agent-runs/${runId}/redirect/`,
     method: METHOD.POST,
     data: { instruction },
