@@ -18,11 +18,20 @@ export interface ProjectDraftFile {
  * full workspace lives behind the detail route. Maps to the backend
  * `camelCase` response.
  */
+export type ProjectKind =
+  | 'general'
+  | 'academic'
+  | 'work'
+  | 'money'
+  | 'personal'
+  | 'news'
+
 export interface ResearchProject {
   id: number
   title: string
   question: string
   field: string
+  kind: ProjectKind
   status: ResearchProjectStatus
   enabledTools: string[]
   standardsTemplate: StandardsTemplate
@@ -73,6 +82,13 @@ export interface Provenance {
   soulFileVersion?: number | null
   role?: string
   runId?: number
+  /** DARE's check of the source before staging; `flags` are what to look at. */
+  check?: {
+    flags: string[]
+    read?: boolean
+    quoteFound?: boolean
+    doiMatches?: boolean
+  }
 }
 
 /** A staged review candidate (the canonical §11 shape). */
@@ -445,6 +461,7 @@ export interface ProjectDraft {
   title: string
   question: string
   field: string
+  kind: ProjectKind
   files: ProjectDraftFile[]
   enabledTools: string[]
   standardsTemplate: StandardsTemplate
@@ -459,6 +476,7 @@ export interface CreateResearchProjectPayload {
   title: string
   question: string
   field: string
+  kind: ProjectKind
   enabledTools: string[]
   standardsTemplate: StandardsTemplate
   /** Source-file metadata to attach on create. */

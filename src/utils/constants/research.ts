@@ -1,6 +1,7 @@
 // Finite option sets + presentation metadata for the Research Workspace.
 
 import type { McpConnection } from '@/redux/types/mcp'
+import type { ProjectKind } from '@/redux/types/research'
 
 export enum ResearchProjectStatus {
   ACTIVE = 'active',
@@ -228,12 +229,12 @@ export const ACCEPTED_SOURCE_EXTENSIONS = [
  */
 export const MEMORY_LAYERS = {
   researcher: {
-    label: 'Researcher-wide',
+    label: 'About you',
     hint: 'How you work — follows you into every project',
   },
   project: {
     label: 'Project only',
-    hint: "This inquiry's scope and framing — never leaves this project",
+    hint: "This project's scope and framing — never leaves it",
   },
   procedure: {
     label: 'Skill',
@@ -380,3 +381,29 @@ export const PROJECT_SCOPE_FIELDS = [
       'e.g. High-income health systems; English-language publications',
   },
 ] as const
+
+/** What sort of question a project asks; sets which sources Scouts trust and how fresh. */
+export const PROJECT_KINDS: {
+  value: ProjectKind
+  label: string
+  hint: string
+}[] = [
+  { value: 'general', label: 'General', hint: 'Any good source, labelled' },
+  { value: 'work', label: 'Work & tech', hint: 'Docs, specs, real benchmarks' },
+  {
+    value: 'money',
+    label: 'Money & markets',
+    hint: 'Official data, dated numbers',
+  },
+  {
+    value: 'news',
+    label: 'News & politics',
+    hint: 'Primary records, both sides',
+  },
+  {
+    value: 'personal',
+    label: 'Personal & habits',
+    hint: 'Studies plus lived experience',
+  },
+  { value: 'academic', label: 'Academic', hint: 'Papers and preprints first' },
+]

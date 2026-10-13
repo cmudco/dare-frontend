@@ -326,7 +326,7 @@ const AgentMemorySection = ({
             <span className='rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground/80'>
               {files.profile}
             </span>
-            <span>No other project or scholar can read it.</span>
+            <span>No other project or person can read it.</span>
           </>
         ) : (
           <span>

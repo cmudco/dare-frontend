@@ -48,6 +48,7 @@ const buildInitialDraft = (project?: ResearchProject): ProjectDraft => ({
   title: project?.title ?? '',
   question: project?.question ?? '',
   field: project?.field ?? '',
+  kind: project?.kind ?? 'general',
   files: [],
   // Opt-in by design — the scholar enables tools explicitly in the Tools step.
   enabledTools: project?.enabledTools ?? [],
@@ -192,6 +193,7 @@ const CreateProject = () => {
             title: draft.title.trim(),
             question: draft.question.trim(),
             field: draft.field.trim(),
+            kind: draft.kind,
             enabledTools: draft.enabledTools,
             standardsTemplate: draft.standardsTemplate,
           },
@@ -226,6 +228,7 @@ const CreateProject = () => {
         title: draft.title.trim(),
         question: draft.question.trim(),
         field: draft.field.trim(),
+        kind: draft.kind,
         enabledTools: draft.enabledTools,
         standardsTemplate: draft.standardsTemplate,
         sources: draft.files.map((f) => ({
@@ -261,7 +264,7 @@ const CreateProject = () => {
           <DefineStep
             title={draft.title}
             question={draft.question}
-            field={draft.field}
+            kind={draft.kind}
             onPatch={patch}
           />
         )

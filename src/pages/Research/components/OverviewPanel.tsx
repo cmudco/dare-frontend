@@ -48,7 +48,7 @@ const OverviewPanel = ({
     <div className='space-y-8'>
       <header>
         <p className='text-xs font-medium tracking-wide text-muted-foreground uppercase'>
-          Research question
+          Question
         </p>
         <h2 className='mt-2 max-w-2xl text-2xl leading-snug font-semibold tracking-tight'>
           {question}

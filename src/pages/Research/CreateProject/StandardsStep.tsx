@@ -153,7 +153,7 @@ const StandardsStep = ({
         ) : (
           <div className='space-y-5'>
             <Card
-              title='Scope this inquiry'
+              title='Scope this project'
               hint='Each field writes one entry into MEMORY.md. Add decisions, the working thesis or anything else this project should never forget straight into the file.'
             >
               <div className='space-y-3'>

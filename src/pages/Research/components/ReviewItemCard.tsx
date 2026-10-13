@@ -21,6 +21,7 @@ import { formatRelativeDate } from '@/utils/dateUtils'
 import type { ReviewItem, ReviewReasonTag } from '../types'
 import ConfidenceBar from './ConfidenceBar'
 import ReviewNotePanel from './ReviewNotePanel'
+import SourceCheckBadges from './SourceCheckBadges'
 import { evidenceMeta, toolLabel } from './signals'
 
 interface Props {
@@ -124,6 +125,7 @@ const ReviewItemCard = ({
             <span className='text-xs text-muted-foreground'>
               {item.provenance?.kind && `${item.provenance.kind} · `}via {tool}
             </span>
+            <SourceCheckBadges check={item.provenance?.check} />
           </div>
           <h3 className='truncate text-[15px] leading-snug font-semibold tracking-tight'>
             {item.title}
