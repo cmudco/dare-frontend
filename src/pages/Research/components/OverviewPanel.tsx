@@ -91,22 +91,22 @@ const OverviewPanel = ({
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center'>
           <Step
             index={1}
-            label='Ask Scout'
-            desc='Gather candidate sources'
+            label='Ask in chat'
+            desc='Scouts go and dig'
             state={askState}
           />
           <Connector />
           <Step
             index={2}
-            label='Review results'
-            desc='Weigh each finding'
+            label='Review'
+            desc='Keep or reject, with a note'
             state={reviewState}
           />
           <Connector />
           <Step
             index={3}
-            label='Approve knowledge'
-            desc='Keep what holds up'
+            label='It learns'
+            desc='Your notes shape the next run'
             state={approveState}
           />
         </div>

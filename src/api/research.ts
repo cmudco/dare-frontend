@@ -347,6 +347,11 @@ export const streamThreadMessage = async (
     handlers.onError('The agent is still replying in this thread.')
     return
   }
+  if (response.status === 402) {
+    const body = await response.json().catch(() => ({}))
+    handlers.onError(body.error || 'This project has used its research budget.')
+    return
+  }
   if (!response.ok || !response.body) {
     handlers.onError('The agent is unavailable right now.')
     return

@@ -59,7 +59,7 @@ const ReviewStep = ({ draft }: Props) => {
               ))}
             </div>
           ) : (
-            'No tools enabled'
+            'Web and paper search (always on)'
           )}
         </Row>
 

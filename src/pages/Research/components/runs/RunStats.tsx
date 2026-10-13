@@ -1,22 +1,19 @@
-import { formatTokens } from '../../runFormat'
+import { formatUsd } from '@/utils/wallets'
 import type { AgentRun } from '../../types'
 
 // The summary tiles above the runs list: totals across every delegated run.
 const RunStats = ({ runs }: { runs: AgentRun[] }) => {
-  const totalTokens = runs.reduce(
-    (sum, r) => sum + (r.usage?.totalTokens ?? 0),
-    0
-  )
+  const spent = runs.reduce((sum, r) => sum + Number(r.cost || 0), 0)
   const totalCalls = runs.reduce((sum, r) => sum + r.toolCalls.length, 0)
-  const measured = runs.filter((r) => (r.usage?.totalTokens ?? 0) > 0)
-  const avgTokens = measured.length
-    ? Math.round(totalTokens / measured.length)
-    : 0
+  const priced = runs.filter((r) => Number(r.cost || 0) > 0)
   const stats = [
     { label: 'Runs', value: String(runs.length) },
-    { label: 'Total tokens', value: formatTokens(totalTokens) },
+    { label: 'Spent', value: formatUsd(String(spent)) },
     { label: 'Tool calls', value: String(totalCalls) },
-    { label: 'Avg tokens / run', value: formatTokens(avgTokens) },
+    {
+      label: 'Avg per run',
+      value: formatUsd(String(priced.length ? spent / priced.length : 0)),
+    },
   ]
   return (
     <div className='grid grid-cols-2 gap-3 sm:grid-cols-4'>

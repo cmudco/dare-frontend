@@ -266,6 +266,8 @@ export interface ScoutSummary {
   status: string
   statusDetail: string
   staged: number
+  /** USD this Scout cost, priced from DARE's model rates. */
+  cost: number
   titles: string[]
   applied: LearningApplied[]
   setAside: LearningSetAside[]
@@ -301,6 +303,8 @@ export interface ThreadDetail {
   activeTurn: ThreadTurnState | null
   /** The thread's latest agent turn failed or its outcome is unconfirmed. */
   lastTurnFailed: ThreadTurnState | null
+  /** USD spent on this thread's agent runs so far. */
+  cost: number
 }
 
 export interface ThreadTurnState {

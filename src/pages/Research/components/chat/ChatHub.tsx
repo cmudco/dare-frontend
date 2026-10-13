@@ -1,3 +1,4 @@
+import { formatUsd } from '@/utils/wallets'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Loader2, Send } from 'lucide-react'
@@ -189,8 +190,13 @@ const ChatHub = ({
             {detail?.thread.title || 'Research chat'}
           </h2>
           <p className='mt-1 text-sm text-muted-foreground'>
-            Plan with the agent, launch Scouts from here, and steer them. Your
-            review notes come back into the thread so it can learn from them.
+            Ask anything. The agent sends Scouts to dig, and learns from your
+            review notes.
+            {!!detail?.cost && (
+              <span className='ml-2 text-xs tabular-nums'>
+                · {formatUsd(String(detail.cost))} spent
+              </span>
+            )}
           </p>
         </header>
 

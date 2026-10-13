@@ -1,3 +1,4 @@
+import { formatUsd } from '@/utils/wallets'
 import { useState } from 'react'
 import {
   CheckCircle2,
@@ -74,6 +75,7 @@ const ScoutRow = ({
           <p className='truncate text-xs text-muted-foreground'>
             {scout.statusDetail || scout.status}
             {scout.staged > 0 && !live && ` · ${scout.staged} in your inbox`}
+            {!live && scout.cost > 0 && ` · ${formatUsd(String(scout.cost))}`}
           </p>
         </div>
         {live && (

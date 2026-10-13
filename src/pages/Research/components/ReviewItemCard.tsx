@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { forwardRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Check,
@@ -72,237 +72,242 @@ const CRITIC_META: Record<
   },
 }
 
-const ReviewItemCard = ({
-  item,
-  critiquing,
-  onDecide,
-  onLater,
-  onAskCritic,
-  onOpenThread,
-}: Props) => {
-  const [expanded, setExpanded] = useState(false)
-  const [noting, setNoting] = useState<'approve' | 'reject' | null>(null)
-  const [deciding, setDeciding] = useState(false)
+// forwardRef: AnimatePresence's popLayout measures each card through a ref.
+const ReviewItemCard = forwardRef<HTMLDivElement, Props>(
+  function ReviewItemCard(
+    { item, critiquing, onDecide, onLater, onAskCritic, onOpenThread },
+    ref
+  ) {
+    const [expanded, setExpanded] = useState(false)
+    const [noting, setNoting] = useState<'approve' | 'reject' | null>(null)
+    const [deciding, setDeciding] = useState(false)
 
-  const decide = async (
-    decision: 'approve' | 'reject',
-    note: string,
-    tags: ReviewReasonTag[]
-  ) => {
-    setDeciding(true)
-    try {
-      await onDecide(item.id, decision, note, tags)
-    } finally {
-      setDeciding(false)
-      setNoting(null)
+    const decide = async (
+      decision: 'approve' | 'reject',
+      note: string,
+      tags: ReviewReasonTag[]
+    ) => {
+      setDeciding(true)
+      try {
+        await onDecide(item.id, decision, note, tags)
+      } finally {
+        setDeciding(false)
+        setNoting(null)
+      }
     }
-  }
-  const signal = evidenceMeta(item.evidenceLabel)
-  const confidence = Math.round((item.confidence ?? 0) * 100)
-  const tool = toolLabel(item.provenance?.tool ?? '')
-  const critic = item.criticMetadata as CriticVerdict | undefined
-  const verdict = critic?.verdict ? CRITIC_META[critic.verdict] : undefined
+    const signal = evidenceMeta(item.evidenceLabel)
+    const confidence = Math.round((item.confidence ?? 0) * 100)
+    const tool = toolLabel(item.provenance?.tool ?? '')
+    const critic = item.criticMetadata as CriticVerdict | undefined
+    const verdict = critic?.verdict ? CRITIC_META[critic.verdict] : undefined
 
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-      transition={{ duration: 0.25 }}
-      className='rounded-xl border border-border bg-card text-card-foreground shadow-xs'
-    >
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        className='flex w-full items-start gap-3 px-5 pt-5 text-left'
+    return (
+      <motion.div
+        ref={ref}
+        layout
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.98 }}
+        transition={{ duration: 0.25 }}
+        className='rounded-xl border border-border bg-card text-card-foreground shadow-xs'
       >
-        <div className='min-w-0 flex-1'>
-          <div className='mb-1.5 flex flex-wrap items-center gap-2'>
-            <Badge variant={signal.badge} className='gap-1.5'>
-              <span className={cn('h-1.5 w-1.5 rounded-full', signal.dot)} />
-              {signal.label}
-            </Badge>
-            <span className='text-xs text-muted-foreground'>
-              {item.provenance?.kind && `${item.provenance.kind} · `}via {tool}
-            </span>
-            <SourceCheckBadges check={item.provenance?.check} />
-          </div>
-          <h3 className='truncate text-[15px] leading-snug font-semibold tracking-tight'>
-            {item.title}
-          </h3>
-          <p className='mt-0.5 truncate text-xs text-muted-foreground'>
-            {[item.authors, item.venue, item.year].filter(Boolean).join(' · ')}
-          </p>
-          <p className='mt-2 line-clamp-1 text-sm text-foreground/80'>
-            {item.rationale}
-          </p>
-        </div>
-        <ChevronDown
-          className={cn(
-            'mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform',
-            expanded && 'rotate-180'
-          )}
-        />
-      </button>
-
-      <div className='px-5 pt-3'>
-        <ConfidenceBar value={confidence} />
-      </div>
-
-      {expanded && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className='overflow-hidden px-5'
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className='flex w-full items-start gap-3 px-5 pt-5 text-left'
         >
-          <div className='mt-4 space-y-4 border-t border-border pt-4 text-sm'>
-            <Field label='Why it matters'>{item.rationale}</Field>
-            {item.confidenceRationale && (
-              <Field label='Confidence rationale'>
-                {item.confidenceRationale}
-              </Field>
-            )}
-            {item.citationContext && (
-              <Field label='Citation context'>
-                <span className='text-foreground/80 italic'>
-                  {item.citationContext}
-                </span>
-              </Field>
-            )}
-            <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground'>
-              <span>Tool: {tool}</span>
-              {item.provenance?.query && (
-                <>
-                  <span>·</span>
-                  <span className='truncate'>“{item.provenance.query}”</span>
-                </>
-              )}
-              {item.provenance?.retrievedAt && (
-                <>
-                  <span>·</span>
-                  <span>{formatRelativeDate(item.provenance.retrievedAt)}</span>
-                </>
-              )}
-              {item.provenance?.soulFileVersion != null && (
-                <>
-                  <span>·</span>
-                  <span>Standards: v{item.provenance.soulFileVersion}</span>
-                </>
-              )}
-              {item.url && (
-                <a
-                  href={item.url}
-                  target='_blank'
-                  rel='noreferrer'
-                  onClick={(e) => e.stopPropagation()}
-                  className='inline-flex items-center gap-1 text-primary hover:underline'
-                >
-                  Open <ExternalLink className='h-3 w-3' />
-                </a>
-              )}
+          <div className='min-w-0 flex-1'>
+            <div className='mb-1.5 flex flex-wrap items-center gap-2'>
+              <Badge variant={signal.badge} className='gap-1.5'>
+                <span className={cn('h-1.5 w-1.5 rounded-full', signal.dot)} />
+                {signal.label}
+              </Badge>
+              <span className='text-xs text-muted-foreground'>
+                {item.provenance?.kind && `${item.provenance.kind} · `}via{' '}
+                {tool}
+              </span>
+              <SourceCheckBadges check={item.provenance?.check} />
             </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Critic verdict — the adversarial check, once run */}
-      {verdict && (
-        <div className='mx-5 mt-4 rounded-lg border border-border bg-muted/40 p-3'>
-          <div
-            className={cn(
-              'flex items-center gap-2 text-sm font-medium',
-              verdict.tone
-            )}
-          >
-            <verdict.Icon className='h-4 w-4' />
-            Critic · {verdict.label}
-          </div>
-          {critic?.reasoning && (
-            <p className='mt-1 text-sm text-muted-foreground'>
-              {critic.reasoning}
+            <h3 className='truncate text-[15px] leading-snug font-semibold tracking-tight'>
+              {item.title}
+            </h3>
+            <p className='mt-0.5 truncate text-xs text-muted-foreground'>
+              {[item.authors, item.venue, item.year]
+                .filter(Boolean)
+                .join(' · ')}
             </p>
-          )}
-          {!!critic?.concerns?.length && (
-            <ul className='mt-2 list-disc space-y-0.5 pl-4 text-sm text-muted-foreground'>
-              {critic.concerns.map((c, i) => (
-                <li key={i}>{c}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-
-      {noting && (
-        <div className='pt-4'>
-          <ReviewNotePanel
-            decision={noting}
-            busy={deciding}
-            onConfirm={(note, tags) => void decide(noting, note, tags)}
-            onCancel={() => setNoting(null)}
+            <p className='mt-2 line-clamp-1 text-sm text-foreground/80'>
+              {item.rationale}
+            </p>
+          </div>
+          <ChevronDown
+            className={cn(
+              'mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform',
+              expanded && 'rotate-180'
+            )}
           />
-        </div>
-      )}
+        </button>
 
-      <div className='flex flex-wrap items-center gap-2 p-5 pt-4'>
-        <Button
-          size='sm'
-          disabled={deciding}
-          onClick={() => void decide('approve', '', [])}
-        >
-          <Check className='h-4 w-4' /> Approve
-        </Button>
-        <Button
-          size='sm'
-          variant='ghost'
-          disabled={deciding}
-          onClick={() => setNoting('approve')}
-          aria-label='Approve with a note'
-        >
-          <MessageSquareText className='h-4 w-4' />
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={deciding}
-          onClick={() => setNoting('reject')}
-        >
-          <X className='h-4 w-4' /> Reject
-        </Button>
-        <Button size='sm' variant='ghost' onClick={() => onLater(item.id)}>
-          <Clock className='h-4 w-4' /> Later
-        </Button>
-        {item.threadId && onOpenThread && (
+        <div className='px-5 pt-3'>
+          <ConfidenceBar value={confidence} />
+        </div>
+
+        {expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className='overflow-hidden px-5'
+          >
+            <div className='mt-4 space-y-4 border-t border-border pt-4 text-sm'>
+              <Field label='Why it matters'>{item.rationale}</Field>
+              {item.confidenceRationale && (
+                <Field label='Confidence rationale'>
+                  {item.confidenceRationale}
+                </Field>
+              )}
+              {item.citationContext && (
+                <Field label='Citation context'>
+                  <span className='text-foreground/80 italic'>
+                    {item.citationContext}
+                  </span>
+                </Field>
+              )}
+              <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground'>
+                <span>Tool: {tool}</span>
+                {item.provenance?.query && (
+                  <>
+                    <span>·</span>
+                    <span className='truncate'>“{item.provenance.query}”</span>
+                  </>
+                )}
+                {item.provenance?.retrievedAt && (
+                  <>
+                    <span>·</span>
+                    <span>
+                      {formatRelativeDate(item.provenance.retrievedAt)}
+                    </span>
+                  </>
+                )}
+                {item.provenance?.soulFileVersion != null && (
+                  <>
+                    <span>·</span>
+                    <span>Standards: v{item.provenance.soulFileVersion}</span>
+                  </>
+                )}
+                {item.url && (
+                  <a
+                    href={item.url}
+                    target='_blank'
+                    rel='noreferrer'
+                    onClick={(e) => e.stopPropagation()}
+                    className='inline-flex items-center gap-1 text-primary hover:underline'
+                  >
+                    Open <ExternalLink className='h-3 w-3' />
+                  </a>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Critic verdict — the adversarial check, once run */}
+        {verdict && (
+          <div className='mx-5 mt-4 rounded-lg border border-border bg-muted/40 p-3'>
+            <div
+              className={cn(
+                'flex items-center gap-2 text-sm font-medium',
+                verdict.tone
+              )}
+            >
+              <verdict.Icon className='h-4 w-4' />
+              Critic · {verdict.label}
+            </div>
+            {critic?.reasoning && (
+              <p className='mt-1 text-sm text-muted-foreground'>
+                {critic.reasoning}
+              </p>
+            )}
+            {!!critic?.concerns?.length && (
+              <ul className='mt-2 list-disc space-y-0.5 pl-4 text-sm text-muted-foreground'>
+                {critic.concerns.map((c, i) => (
+                  <li key={i}>{c}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {noting && (
+          <div className='pt-4'>
+            <ReviewNotePanel
+              decision={noting}
+              busy={deciding}
+              onConfirm={(note, tags) => void decide(noting, note, tags)}
+              onCancel={() => setNoting(null)}
+            />
+          </div>
+        )}
+
+        <div className='flex flex-wrap items-center gap-2 p-5 pt-4'>
+          <Button
+            size='sm'
+            disabled={deciding}
+            onClick={() => void decide('approve', '', [])}
+          >
+            <Check className='h-4 w-4' /> Approve
+          </Button>
           <Button
             size='sm'
             variant='ghost'
-            className='ml-auto'
-            onClick={() => onOpenThread(item.threadId as number)}
+            disabled={deciding}
+            onClick={() => setNoting('approve')}
+            aria-label='Approve with a note'
           >
-            <MessagesSquare className='h-4 w-4' /> Thread
+            <MessageSquareText className='h-4 w-4' />
           </Button>
-        )}
-        <Button
-          size='sm'
-          variant='ghost'
-          className={item.threadId && onOpenThread ? '' : 'ml-auto'}
-          disabled={critiquing}
-          onClick={() => onAskCritic(item.id)}
-        >
-          {critiquing ? (
-            <>
-              <Loader2 className='h-4 w-4 animate-spin' /> Assessing…
-            </>
-          ) : (
-            <>
-              <ShieldQuestion className='h-4 w-4' />
-              {verdict ? 'Re-run Critic' : 'Ask Critic'}
-            </>
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={deciding}
+            onClick={() => setNoting('reject')}
+          >
+            <X className='h-4 w-4' /> Reject
+          </Button>
+          <Button size='sm' variant='ghost' onClick={() => onLater(item.id)}>
+            <Clock className='h-4 w-4' /> Later
+          </Button>
+          {item.threadId && onOpenThread && (
+            <Button
+              size='sm'
+              variant='ghost'
+              className='ml-auto'
+              onClick={() => onOpenThread(item.threadId as number)}
+            >
+              <MessagesSquare className='h-4 w-4' /> Thread
+            </Button>
           )}
-        </Button>
-      </div>
-    </motion.div>
-  )
-}
+          <Button
+            size='sm'
+            variant='ghost'
+            className={item.threadId && onOpenThread ? '' : 'ml-auto'}
+            disabled={critiquing}
+            onClick={() => onAskCritic(item.id)}
+          >
+            {critiquing ? (
+              <>
+                <Loader2 className='h-4 w-4 animate-spin' /> Assessing…
+              </>
+            ) : (
+              <>
+                <ShieldQuestion className='h-4 w-4' />
+                {verdict ? 'Re-run Critic' : 'Ask Critic'}
+              </>
+            )}
+          </Button>
+        </div>
+      </motion.div>
+    )
+  }
+)
 
 const Field = ({
   label,

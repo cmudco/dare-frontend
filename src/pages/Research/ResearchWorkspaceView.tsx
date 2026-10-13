@@ -244,7 +244,9 @@ const ResearchWorkspaceView = ({
       memoryPendingCount={memoryProposals.length}
       center={center()}
       context={
-        section === 'chat' ? null : (
+        // Only where judging a source needs the question and memory in view;
+        // elsewhere it duplicated the Context tab and squeezed the page.
+        section !== 'review' ? null : (
           <ContextPanel
             question={question}
             enabledTools={enabledTools}
