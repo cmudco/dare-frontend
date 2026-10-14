@@ -28,7 +28,7 @@ import {
   PROJECT_INSTRUCTIONS_MAX_LENGTH,
   ProjectMemoryScope,
 } from '@/utils/constants/project'
-import { persistableModels } from './projectModels'
+import { projectModelLabel } from './projectModels'
 import ProjectNameField from './ProjectNameField'
 import { PROMPT_TEMPLATES_PATH } from '@/routes/paths'
 
@@ -63,7 +63,7 @@ type Draft = Required<
     | 'description'
     | 'prompt'
     | 'instructions'
-    | 'defaultModel'
+    | 'defaultModelRef'
     | 'webSearchEnabled'
     | 'artifactsEnabled'
     | 'memoryEnabled'
@@ -77,7 +77,7 @@ const draftFrom = (project: Project): Draft => ({
   description: project.description,
   prompt: project.prompt,
   instructions: project.instructions,
-  defaultModel: project.defaultModel,
+  defaultModelRef: project.defaultModelRef,
   webSearchEnabled: project.webSearchEnabled,
   artifactsEnabled: project.artifactsEnabled,
   memoryEnabled: project.memoryEnabled,
@@ -131,10 +131,10 @@ const SettingsForm = ({
     const replaced = new Set(prompts.map((prompt) => prompt.parent))
     return prompts.filter((prompt) => !replaced.has(prompt.id))
   }, [prompts])
-  const models = useMemo(
-    () => persistableModels(pickerEntries),
-    [pickerEntries]
-  )
+  // A saved default outside the current wallet's models stays selectable.
+  const savedModelMissing =
+    !!draft.defaultModelRef &&
+    !pickerEntries.some((entry) => entry.id === draft.defaultModelRef)
 
   const update = (patch: Partial<Draft>) => {
     setDraft((current) => ({ ...current, ...patch }))
@@ -261,11 +261,9 @@ const SettingsForm = ({
           <div className='flex flex-col gap-1.5'>
             <Label htmlFor='settings-project-model'>Model</Label>
             <Select
-              value={
-                draft.defaultModel === null ? NONE : String(draft.defaultModel)
-              }
+              value={draft.defaultModelRef ?? NONE}
               onValueChange={(value) =>
-                update({ defaultModel: value === NONE ? null : Number(value) })
+                update({ defaultModelRef: value === NONE ? null : value })
               }
             >
               <SelectTrigger id='settings-project-model'>
@@ -273,7 +271,13 @@ const SettingsForm = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>Choose in each chat</SelectItem>
-                {models.map((model) => (
+                {savedModelMissing && draft.defaultModelRef && (
+                  <SelectItem value={draft.defaultModelRef}>
+                    {projectModelLabel(draft.defaultModelRef, pickerEntries) ??
+                      'Unavailable model'}
+                  </SelectItem>
+                )}
+                {pickerEntries.map((model) => (
                   <SelectItem key={model.id} value={model.id}>
                     {model.name}
                   </SelectItem>

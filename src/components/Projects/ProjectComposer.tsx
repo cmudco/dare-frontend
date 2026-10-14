@@ -3,6 +3,7 @@ import { ArrowUp, Brain, Cpu, Globe, Loader2, ScrollText } from 'lucide-react'
 import { useAppSelector } from '@/redux/hooks'
 import type { Project } from '@/redux/types/project'
 import { ProjectMemoryScope } from '@/utils/constants/project'
+import { projectModelLabel } from './projectModels'
 
 interface Props {
   project: Project
@@ -26,11 +27,8 @@ const Chip = ({
 const ProjectComposer = ({ project, onStart }: Props) => {
   const [message, setMessage] = useState('')
   const [starting, setStarting] = useState(false)
-  const modelName = useAppSelector(
-    (state) =>
-      state.conversation.pickerEntries.find(
-        (entry) => entry.id === String(project.defaultModel)
-      )?.name
+  const modelName = useAppSelector((state) =>
+    projectModelLabel(project.defaultModelRef, state.conversation.pickerEntries)
   )
 
   const start = async () => {
