@@ -1,8 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux'
 import {
   updateConversationInput,
-  updateActiveConversation,
-  updateSelectedTags,
   saveDraftForConversation,
   clearDraftForConversation,
   addAttachedImage,
@@ -16,10 +14,8 @@ import { selectProjectById } from '@/redux/projectSlice'
 import { isEnsembleActive } from '@/utils/ensemble'
 import PromptSet from './PromptSet'
 import { Message } from '../../redux/types/conversation'
-import { useLocation, useNavigate } from 'react-router-dom'
 import {
   sendMessage,
-  createConversation,
   updateConversation,
 } from '../../redux/asyncThunks/conversation'
 import ConversationFileSelect from './ConversationFileSelect'
@@ -78,16 +74,15 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     (state: RootState) => state.socket.connected
   )
   // The server refuses a send until this socket has joined the conversation's
-  // room, so a queued first message waits for the join, not just the connection.
-  const isSubscribed = useSelector((state: RootState) =>
-    activeConversation
-      ? state.socket.subscribedConversations.includes(
-          activeConversation.conversationId
-        )
-      : false
+  // room, so sending waits for the join instead of losing the message.
+  const isJoined = useSelector(
+    (state: RootState) =>
+      state.socket.connected &&
+      !!activeConversation &&
+      state.socket.subscribedConversations.includes(
+        activeConversation.conversationId
+      )
   )
-  const navigate = useNavigate()
-  const location = useLocation()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const selectedModel = useSelector(
     (state: RootState) => state.conversation.selectedModel
@@ -103,10 +98,6 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const project = useSelector((state: RootState) =>
     selectProjectById(state, activeConversation?.project)
   )
-  const modelCatalogStatus = useSelector(
-    (state: RootState) => state.conversation.modelCatalogStatus
-  )
-  const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const [showModelWarning, setShowModelWarning] = useState(false)
   const [modelPickerRequest, setModelPickerRequest] = useState(0)
   const [selectedQuill, setSelectedQuill] = useState<string | null>(null)
@@ -175,51 +166,6 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     }
   }
 
-  // A chat started from a project page arrives with its first message saved as
-  // the draft and flagged in route state: send it once the model is known,
-  // otherwise it stays in the input for the user to send after picking one.
-  const initialMessage = (location.state as { initialMessage?: string } | null)
-    ?.initialMessage
-  useEffect(() => {
-    if (!initialMessage || !activeConversation) return
-    if (modelCatalogStatus !== 'succeeded') return
-    navigate(location.pathname, { replace: true, state: null })
-    if (hasModelChoice) setPendingMessage(initialMessage)
-  }, [
-    initialMessage,
-    activeConversation,
-    modelCatalogStatus,
-    hasModelChoice,
-    navigate,
-    location.pathname,
-  ])
-
-  useEffect(() => {
-    if (
-      pendingMessage !== null &&
-      isSocketConnected &&
-      isSubscribed &&
-      activeConversation
-    ) {
-      const newMessage: Partial<Message> = {
-        message: pendingMessage,
-      }
-      dispatch(sendMessage(newMessage))
-      dispatch(updateConversationInput(''))
-      dispatch(clearDraftForConversation(activeConversation.conversationId))
-      dispatch(clearAttachedImages())
-      clearPendingDraftSave()
-      setPendingMessage(null)
-    }
-  }, [
-    pendingMessage,
-    isSocketConnected,
-    isSubscribed,
-    activeConversation,
-    dispatch,
-    clearPendingDraftSave,
-  ])
-
   const handleQuillChange = (quillName: string | null) => {
     setSelectedQuill(quillName)
 
@@ -252,7 +198,8 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   }
 
   const handleSendMessage = () => {
-    if (disabled || !hasMessageContent || pendingMessage !== null) return
+    if (disabled || !activeConversation || !hasMessageContent || !isJoined)
+      return
 
     if (!hasModelChoice) {
       setShowModelWarning(true)
@@ -273,27 +220,12 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
 
     onMessageSent?.()
 
-    if (!activeConversation) {
-      setPendingMessage(messageText)
-      dispatch(updateSelectedTags([]))
-      dispatch(createConversation())
-        .unwrap()
-        .then((newConversation) => {
-          dispatch(updateActiveConversation(newConversation))
-          navigate(`/conversation/${newConversation.conversationId}`)
-        })
-        .catch((error) => {
-          console.error('Error creating conversation:', error)
-          setPendingMessage(null)
-        })
-    } else {
-      dispatch(sendMessage(newMessage))
-      dispatch(updateConversationInput(''))
-      dispatch(clearDraftForConversation(activeConversation.conversationId))
-      dispatch(clearAttachedImages())
-      if (editMessageId && onCancelEdit) {
-        onCancelEdit()
-      }
+    dispatch(sendMessage(newMessage))
+    dispatch(updateConversationInput(''))
+    dispatch(clearDraftForConversation(activeConversation.conversationId))
+    dispatch(clearAttachedImages())
+    if (editMessageId && onCancelEdit) {
+      onCancelEdit()
     }
 
     // Quill hint is attached to the outgoing message — clear the selection
@@ -445,12 +377,11 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             ) : (
               <button
                 type='button'
-                disabled={
-                  disabled || !hasMessageContent || pendingMessage !== null
-                }
+                disabled={disabled || !hasMessageContent || !isJoined}
+                title={isJoined ? undefined : 'Connecting to the chat…'}
                 className={clsx(
                   'flex h-8 w-8 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
-                  disabled || !hasMessageContent || pendingMessage !== null
+                  disabled || !hasMessageContent || !isJoined
                     ? 'cursor-not-allowed bg-muted text-muted-foreground'
                     : 'cursor-pointer bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 )}
