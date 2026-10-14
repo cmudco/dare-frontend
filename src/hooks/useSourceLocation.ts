@@ -12,6 +12,7 @@ const NAMED_KINDS = [
   'attention',
   'libraries',
   'shared',
+  'deleted',
 ] as const
 
 type NamedKind = (typeof NAMED_KINDS)[number]

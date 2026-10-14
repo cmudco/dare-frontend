@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { MessageCircleQuestion, X } from 'lucide-react'
 import type { AppDispatch, RootState } from '@/redux/store'
 import { AssistantChat } from '@/components/Assistant/AssistantChat'
+import { useAssistantTourLauncher } from '@/components/Assistant/useAssistantTourLauncher'
 import {
   fetchAssistantThread,
   startAssistantThread,
@@ -32,6 +33,7 @@ export function FeedbackWidget() {
   const location = useLocation()
   const [tab, setTab] = useState<HelpTab>(HelpTab.ASSISTANT)
   const assistant = useSelector((state: RootState) => state.assistant)
+  useAssistantTourLauncher()
 
   // Hide feedback widget on workflow builder pages (create/edit)
   const isWorkflowBuilderPage =
@@ -105,10 +107,14 @@ export function FeedbackWidget() {
       dispatch(assistantSocketConnect({ jwtToken: token }))
   }
 
-  const handleToggle = () => {
-    if (!isOpen && tab === HelpTab.ASSISTANT) prepareAssistant()
-    dispatch(toggleFeedback())
-  }
+  // Runs on open only, however the panel was opened (the FAB or the sidebar's
+  // Tutorial); depending on the connection state would retry failures in a loop.
+  useEffect(() => {
+    if (isOpen && tab === HelpTab.ASSISTANT) prepareAssistant()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
+
+  const handleToggle = () => dispatch(toggleFeedback())
   const handleTabChange = (next: HelpTab) => {
     if (next === HelpTab.ASSISTANT) prepareAssistant()
     setTab(next)

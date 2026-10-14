@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { FolderInput, Tag as TagIcon, Trash2, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { FolderInput, Tag as TagIcon, TagsIcon, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -7,32 +7,42 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { DeleteConfirmation } from '@/components/DeleteConfirmation'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import {
-  bulkTagFiles,
-  deleteMultipleFiles,
-  getFolders,
-} from '@/redux/asyncThunks/file'
+import { bulkTagFiles, bulkUntagFiles } from '@/redux/asyncThunks/file'
 import { clearSelectedItems, openMoveModal } from '@/redux/fileSlice'
 import { toast } from '@/utils/toast'
+import MoveToRecentlyDeletedDialog from './MoveToRecentlyDeletedDialog'
 
 const BulkActionBar = () => {
   const dispatch = useAppDispatch()
   const selectedItems = useAppSelector((state) => state.files.selectedItems)
   const tags = useAppSelector((state) => state.tags.tags)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const files = useAppSelector((state) => state.files.files)
   const [tagging, setTagging] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const count = selectedItems.length
+  // Only tags some selected file carries can be removed.
+  const selectedFiles = useMemo(() => {
+    const selected = new Set(selectedItems)
+    return files.filter((file) => selected.has(file.id))
+  }, [files, selectedItems])
+  const selectedTags = useMemo(() => {
+    const onSelection = new Set(selectedFiles.flatMap((file) => file.tags))
+    return tags.filter((tag) => onSelection.has(tag.id))
+  }, [selectedFiles, tags])
 
   if (count === 0) return null
 
-  const handleDelete = async () => {
+  const handleUntag = async (tagId: number) => {
+    setTagging(true)
     try {
-      await dispatch(deleteMultipleFiles(selectedItems)).unwrap()
-      dispatch(getFolders())
+      await dispatch(
+        bulkUntagFiles({ fileIds: selectedItems, tagIds: [tagId] })
+      ).unwrap()
     } catch {
-      toast.error("Couldn't delete the selected files.")
+      toast.error("Couldn't remove the tag.")
+    } finally {
+      setTagging(false)
     }
   }
 
@@ -89,6 +99,30 @@ const BulkActionBar = () => {
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      {selectedTags.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='outline' size='sm' disabled={tagging}>
+              <TagsIcon className='h-4 w-4' />
+              Remove tag
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align='center'
+            side='top'
+            className='max-h-72 overflow-y-auto'
+          >
+            {selectedTags.map((tag) => (
+              <DropdownMenuItem
+                key={tag.id}
+                onClick={() => handleUntag(tag.id)}
+              >
+                {tag.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
       <Button
         variant='outline'
         size='sm'
@@ -107,13 +141,9 @@ const BulkActionBar = () => {
       >
         <X className='h-4 w-4' />
       </Button>
-      <DeleteConfirmation
-        isOpen={confirmingDelete}
+      <MoveToRecentlyDeletedDialog
+        files={confirmingDelete ? selectedFiles : null}
         onClose={() => setConfirmingDelete(false)}
-        onDelete={handleDelete}
-        title={count === 1 ? 'Delete file' : `Delete ${count} files`}
-        description='This permanently deletes the selected files and removes them from search.'
-        confirmText='Delete'
       />
     </div>
   )

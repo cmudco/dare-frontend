@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Loader2, Play, ArrowLeft, CheckCircle2, XCircle } from 'lucide-react'
+import { INTEGRATIONS_PATH } from '@/routes/paths'
 
 /**
  * MCPToolExecute - Execute a tool with auto-generated form
@@ -119,7 +120,7 @@ const MCPToolExecute = () => {
       <Button
         variant='ghost'
         size='sm'
-        onClick={() => navigate(`/mcp/${serverSlug}`)}
+        onClick={() => navigate(`${INTEGRATIONS_PATH}/${serverSlug}`)}
       >
         <ArrowLeft className='mr-2 h-4 w-4' />
         Back to {server.name}

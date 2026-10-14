@@ -8,6 +8,7 @@ import {
   Inbox,
   Library,
   LucideIcon,
+  Trash2,
   Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -15,7 +16,12 @@ import { useAppSelector } from '@/redux/hooks'
 import { selectSourceCounts } from '@/redux/fileSlice'
 import { SourceLocation } from '@/redux/types/files'
 import { isSameLocation } from '@/hooks/useSourceLocation'
+import FolderActionsMenu from './FolderActionsMenu'
 import SourcesNavItem from './SourcesNavItem'
+
+// Shown on hover, keyboard focus, or while its menu is open.
+const HOVER_REVEAL =
+  'opacity-0 group-focus-within/nav:opacity-100 group-hover/nav:opacity-100 data-[state=open]:opacity-100'
 
 interface SourcesNavProps {
   location: SourceLocation
@@ -27,6 +33,9 @@ const SourcesNav = ({ location, goTo, onNewFolder }: SourcesNavProps) => {
   const counts = useAppSelector(selectSourceCounts)
   const folders = useAppSelector((state) => state.files.folders)
   const sharedCount = useAppSelector((state) => state.files.sharedFiles.length)
+  const deletedCount = useAppSelector(
+    (state) => state.files.deletedFiles.length
+  )
   const isSyftboxUser = useAppSelector(
     (state) => state.user.user?.isSyftboxFileStorage ?? false
   )
@@ -96,6 +105,19 @@ const SourcesNav = ({ location, goTo, onNewFolder }: SourcesNavProps) => {
                 location.kind === 'folder' && location.folderId === folder.id
               }
               onSelect={() => goTo({ kind: 'folder', folderId: folder.id })}
+              actions={
+                <FolderActionsMenu
+                  folder={folder}
+                  triggerClassName={HOVER_REVEAL}
+                  onDeleted={() => {
+                    if (
+                      location.kind === 'folder' &&
+                      location.folderId === folder.id
+                    )
+                      goTo({ kind: 'home' })
+                  }}
+                />
+              }
             />
           ))
         )}
@@ -107,6 +129,15 @@ const SourcesNav = ({ location, goTo, onNewFolder }: SourcesNavProps) => {
         </h2>
         {item({ kind: 'libraries' }, Library, 'Shared libraries')}
       </section>
+
+      <div className='border-t border-border pt-3'>
+        {item(
+          { kind: 'deleted' },
+          Trash2,
+          'Recently deleted',
+          deletedCount || undefined
+        )}
+      </div>
     </nav>
   )
 }

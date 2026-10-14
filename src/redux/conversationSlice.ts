@@ -175,6 +175,9 @@ export const conversationSlice = createSlice({
       // preset's spare angles wait for the next seat to be filled.
       if (index === -1) {
         responderIds.push(action.payload)
+        // A bench seated without a single model selected still needs someone
+        // to fuse the answers.
+        state.ensemble.chairmanId ??= action.payload
       } else {
         responderIds.splice(index, 1)
         if (index < briefs.angles.length) briefs.angles.splice(index, 1)

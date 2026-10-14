@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { INTEGRATIONS_PATH } from '@/routes/paths'
 
 /**
  * MCPConnectionResult — landing page for the MCP OAuth callback return.
@@ -51,15 +52,17 @@ const MCPConnectionResult = () => {
 
         <div className='mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center'>
           {isSuccess && server ? (
-            <Button onClick={() => navigate(`/mcp/${server}`)}>
+            <Button onClick={() => navigate(`${INTEGRATIONS_PATH}/${server}`)}>
               View integration
             </Button>
           ) : (
             !isSuccess && (
-              <Button onClick={() => navigate('/mcp')}>Try again</Button>
+              <Button onClick={() => navigate(INTEGRATIONS_PATH)}>
+                Try again
+              </Button>
             )
           )}
-          <Button variant='outline' onClick={() => navigate('/mcp')}>
+          <Button variant='outline' onClick={() => navigate(INTEGRATIONS_PATH)}>
             Back to integrations
           </Button>
         </div>

@@ -6,7 +6,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen, Fingerprint } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   clearAllMemory,
@@ -178,28 +178,18 @@ const MemoryScreen = () => {
   const activeLayer = selectedLayer ? layerFor(selectedLayer) : null
 
   return (
-    <div className='flex h-full flex-col'>
-      <div className='mx-auto w-full max-w-5xl space-y-6 px-6 pt-6 pb-10'>
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'
-        >
-          <div className='flex items-center gap-3'>
-            <div className='flex h-11 w-11 items-center justify-center rounded-lg bg-dare-gradient'>
-              <Fingerprint className='h-6 w-6 text-white' />
-            </div>
-            <div>
-              <h1 className='text-3xl font-bold tracking-tight'>Memory</h1>
-              <p className='text-sm text-muted-foreground'>
-                Everything DARE remembers about you — layered, transparent, and
-                yours to prune.
-              </p>
-            </div>
-          </div>
-          <div className='flex flex-wrap items-center gap-2 sm:justify-end'>
+    <div className='flex flex-col'>
+      <div className='space-y-6'>
+        {/* Header — the Settings tab names the page */}
+        <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+          <p className='max-w-md text-sm text-muted-foreground'>
+            Everything DARE remembers about you — layered, transparent, and
+            yours to prune.
+          </p>
+          <div
+            className='flex flex-wrap items-center gap-2 sm:justify-end'
+            data-tour='memory-actions'
+          >
             <Button variant='outline' onClick={() => setExplainerOpen(true)}>
               <BookOpen className='h-4 w-4' />
               How it works
@@ -215,22 +205,24 @@ const MemoryScreen = () => {
               />
             )}
           </div>
-        </motion.div>
+        </div>
 
         {/* Layer overview + filter */}
-        <MemoryLayerCards
-          countsByType={countsByType}
-          selectedLayer={sessionMode ? null : selectedLayer}
-          onSelectLayer={(layer) => {
-            setSelectedLayer(layer)
-            if (sessionMode) dispatch(setSessionMode(false))
-          }}
-          sessionsSelected={sessionMode}
-          onSelectSessions={(selected) => {
-            dispatch(setSessionMode(selected))
-            if (selected) setSelectedLayer(null)
-          }}
-        />
+        <div data-tour='memory-layers'>
+          <MemoryLayerCards
+            countsByType={countsByType}
+            selectedLayer={sessionMode ? null : selectedLayer}
+            onSelectLayer={(layer) => {
+              setSelectedLayer(layer)
+              if (sessionMode) dispatch(setSessionMode(false))
+            }}
+            sessionsSelected={sessionMode}
+            onSelectSessions={(selected) => {
+              dispatch(setSessionMode(selected))
+              if (selected) setSelectedLayer(null)
+            }}
+          />
+        </div>
 
         {/* What was replaced — up here with the layers, because a store that
             corrects itself is the point, not a footnote */}
@@ -241,19 +233,22 @@ const MemoryScreen = () => {
         />
 
         {/* What the store would like to fix about itself */}
-        <MemoryTidyUp
-          sweep={sweep}
-          loading={sweepLoading}
-          applyingProposal={applyingProposal}
-          onRun={() => dispatch(getMemorySweep())}
-          onApprove={handleApproveProposal}
-        />
+        <div data-tour='memory-tidy-up'>
+          <MemoryTidyUp
+            sweep={sweep}
+            loading={sweepLoading}
+            applyingProposal={applyingProposal}
+            onRun={() => dispatch(getMemorySweep())}
+            onApprove={handleApproveProposal}
+          />
+        </div>
 
         {/* Search */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, delay: 0.2 }}
+          data-tour='memory-search'
         >
           {sessionMode ? (
             <SessionSearch

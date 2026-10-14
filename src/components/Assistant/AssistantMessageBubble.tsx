@@ -1,5 +1,11 @@
-import { Loader2 } from 'lucide-react'
-import type { AssistantLiveStep } from '@/redux/assistantSlice'
+import { Loader2, Map as MapIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useAppDispatch } from '@/redux/hooks'
+import {
+  assistantTourRequested,
+  tourRequestOf,
+  type AssistantLiveStep,
+} from '@/redux/assistantSlice'
 import type { AssistantMessage } from '@/schemas/assistantSocket'
 import {
   AssistantMessageStatus,
@@ -17,6 +23,7 @@ export function AssistantMessageBubble({
   message: AssistantMessage
   liveSteps: AssistantLiveStep[]
 }) {
+  const dispatch = useAppDispatch()
   if (message.role === AssistantRole.USER) {
     return (
       <div className='flex justify-end'>
@@ -38,6 +45,7 @@ export function AssistantMessageBubble({
   const isRunningTool = steps.some(
     (step) => step.status === AssistantStepStatus.RUNNING
   )
+  const tour = isStreaming ? null : tourRequestOf(message)
   return (
     <div className='text-sm text-foreground'>
       <AssistantSteps steps={steps} />
@@ -47,6 +55,18 @@ export function AssistantMessageBubble({
           <Loader2 className='h-3 w-3 animate-spin' />
           {steps.length ? 'Reading what I found…' : 'Thinking…'}
         </div>
+      )}
+      {tour && (
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          className='mt-2 h-7 gap-1.5 rounded-full text-xs'
+          onClick={() => dispatch(assistantTourRequested(tour))}
+        >
+          <MapIcon className='h-3.5 w-3.5' />
+          Start tour
+        </Button>
       )}
       {message.proposals.map((proposal) => (
         <ProposalCard key={proposal.id} proposal={proposal} />

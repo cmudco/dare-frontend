@@ -13,8 +13,8 @@ export interface Project {
   prompt: number | null
   /** Content of `prompt`, or empty when there is none. */
   instructions: string
-  /** DB-backed LLM pre-selected in new chats. */
-  defaultModel: number | null
+  /** Picker id pre-selected in new chats: an LLM PK or `litellm:<key>:<model>`. */
+  defaultModelRef: string | null
   webSearchEnabled: boolean
   artifactsEnabled: boolean
   memoryEnabled: boolean
@@ -42,7 +42,7 @@ export type ProjectUpdate = Partial<
     | 'description'
     | 'prompt'
     | 'instructions'
-    | 'defaultModel'
+    | 'defaultModelRef'
     | 'webSearchEnabled'
     | 'artifactsEnabled'
     | 'memoryEnabled'

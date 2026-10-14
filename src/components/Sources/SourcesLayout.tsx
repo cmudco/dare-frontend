@@ -10,6 +10,7 @@ import FolderUploadModal from '@/components/FolderManager/FolderUploadModal'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   createFolder,
+  getDeletedFiles,
   getFiles,
   getFolders,
   getSharedFiles,
@@ -18,6 +19,7 @@ import { getTags } from '@/redux/asyncThunks/tag'
 import { SourceLocation } from '@/redux/types/files'
 import { useSourceLocation } from '@/hooks/useSourceLocation'
 import BulkActionBar from './BulkActionBar'
+import RecentlyDeleted from './RecentlyDeleted'
 import SourcesHome from './SourcesHome'
 import SourcesListView from './SourcesListView'
 import SourcesNav from './SourcesNav'
@@ -41,6 +43,7 @@ const SourcesLayout = () => {
     dispatch(getFiles())
     dispatch(getFolders())
     dispatch(getTags())
+    dispatch(getDeletedFiles())
     if (isSyftboxUser) dispatch(getSharedFiles())
   }, [dispatch, isSyftboxUser])
 
@@ -50,8 +53,9 @@ const SourcesLayout = () => {
     mediaTypeFilter !== 'all'
   // Filtering from Home searches the whole library.
   const browsing = location.kind === 'home' && filtering ? ALL : location
-  const showToolbar =
-    browsing.kind !== 'libraries' && browsing.kind !== 'shared'
+  const showToolbar = !['libraries', 'shared', 'deleted'].includes(
+    browsing.kind
+  )
 
   const renderContent = () => {
     switch (browsing.kind) {
@@ -66,6 +70,8 @@ const SourcesLayout = () => {
         return <SharedLibraries />
       case 'shared':
         return <SharedFilesTable />
+      case 'deleted':
+        return <RecentlyDeleted />
       default:
         return <SourcesListView location={browsing} goTo={goTo} />
     }

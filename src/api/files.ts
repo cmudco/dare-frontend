@@ -4,6 +4,7 @@ import {
   BulkTagRequest,
   BulkTagResponse,
   ContentMatch,
+  DeletedFile,
   FileViewerCapabilities,
   FileReprocessingRequest,
   DocumentMap,
@@ -25,6 +26,32 @@ export const getFilesAPI = async (): Promise<{ results: MyFile[] }> => {
     method: METHOD.GET,
   })
 }
+
+export const getDeletedFilesAPI = async (): Promise<DeletedFile[]> =>
+  (
+    await baseRequest<{ results: DeletedFile[] }>({
+      url: 'api/files/deleted/',
+      method: METHOD.GET,
+    })
+  ).results
+
+export const restoreFilesAPI = async (
+  fileIds: number[]
+): Promise<{ restored: number }> =>
+  baseRequest<{ restored: number }>({
+    url: 'api/files/restore/',
+    method: METHOD.POST,
+    data: { fileIds },
+  })
+
+export const purgeFilesAPI = async (
+  fileIds: number[]
+): Promise<{ deleted: number }> =>
+  baseRequest<{ deleted: number }>({
+    url: 'api/files/purge/',
+    method: METHOD.POST,
+    data: { fileIds },
+  })
 
 export const getFilesByOwnerAPI = async (
   ownerId: number
@@ -168,18 +195,10 @@ export const getElementImageAPI = async (
   return blob
 }
 
-export const deleteFileAPI = async (id: number): Promise<void> => {
+/** Move files to Recently deleted, where they can be restored or purged. */
+export const trashFilesAPI = async (fileIds: number[]): Promise<void> => {
   await baseRequest<void>({
-    url: `api/files/${id}/`,
-    method: METHOD.DELETE,
-  })
-}
-
-export const deleteMultipleFilesAPI = async (
-  fileIds: number[]
-): Promise<void> => {
-  await baseRequest<void>({
-    url: 'api/files/bulk-delete/',
+    url: 'api/files/trash/',
     method: METHOD.POST,
     data: { fileIds },
   })
@@ -378,6 +397,15 @@ export const bulkTagFilesAPI = async (
 ): Promise<BulkTagResponse> =>
   await baseRequest<BulkTagResponse>({
     url: 'api/files/bulk-tags/',
+    method: METHOD.POST,
+    data: request,
+  })
+
+export const bulkUntagFilesAPI = async (
+  request: BulkTagRequest
+): Promise<BulkTagResponse> =>
+  await baseRequest<BulkTagResponse>({
+    url: 'api/files/bulk-untag/',
     method: METHOD.POST,
     data: request,
   })

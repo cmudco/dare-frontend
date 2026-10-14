@@ -11,6 +11,7 @@ import {
 } from '@/utils/constants/research'
 import type { ProjectDraft } from '@/redux/types/research'
 import StepHeading from './StepHeading'
+import { INTEGRATIONS_PATH } from '@/routes/paths'
 
 interface Props {
   enabledTools: string[]
@@ -81,7 +82,7 @@ const ToolsStep = ({ enabledTools, onPatch }: Props) => {
       {!loading && !hasConnections && (
         <p className='max-w-2xl text-xs text-muted-foreground'>
           Web search is ready out of the box. To let Scout search more sources,{' '}
-          <Link to='/mcp' className='text-primary hover:underline'>
+          <Link to={INTEGRATIONS_PATH} className='text-primary hover:underline'>
             connect an integration
           </Link>{' '}
           and it’ll show up here.
