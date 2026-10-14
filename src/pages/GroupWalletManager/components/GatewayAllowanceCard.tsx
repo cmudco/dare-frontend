@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import {
@@ -11,7 +12,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { updateGroupPolicy } from '@/redux/asyncThunks/billing'
+import { fetchGatewayKeyModelsAPI } from '@/api/groupWallets'
+import { BackgroundModelDialog } from '@/components/wallet/BackgroundModelDialog'
+import {
+  setGatewayKeyBackgroundModel,
+  updateGroupPolicy,
+} from '@/redux/asyncThunks/billing'
 import { GatewayKey, GroupWallet } from '@/redux/types/billing'
 import { formatUsd, formatUsdPrecise, toAmountInput } from '@/utils/wallets'
 import { toast } from '@/utils/toast'
@@ -27,7 +33,71 @@ const allowanceValidationSchema = Yup.object({
   ),
 })
 
-const GatewayKeyReport = ({ gatewayKey }: { gatewayKey: GatewayKey }) => (
+const GatewayKeyBackgroundModel = ({
+  groupWalletId,
+  gatewayKey,
+}: {
+  groupWalletId: number
+  gatewayKey: GatewayKey
+}) => {
+  const dispatch = useAppDispatch()
+  const [isOpen, setIsOpen] = useState(false)
+  const loadModels = useCallback(
+    () => fetchGatewayKeyModelsAPI(groupWalletId, gatewayKey.id),
+    [groupWalletId, gatewayKey.id]
+  )
+
+  return (
+    <div className='mt-3 flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between'>
+      <div className='min-w-0'>
+        <p className='text-xs text-muted-foreground uppercase'>
+          Background model
+        </p>
+        {gatewayKey.backgroundModel ? (
+          <p className='font-medium break-all'>{gatewayKey.backgroundModel}</p>
+        ) : (
+          <p className='text-xs text-destructive'>
+            Not set. Titles, memory and search analysis are charged to each
+            member&apos;s DARE wallet and stop when it is empty.
+          </p>
+        )}
+      </div>
+      <Button
+        variant='outline'
+        size='sm'
+        className='shrink-0'
+        onClick={() => setIsOpen(true)}
+      >
+        {gatewayKey.backgroundModel ? 'Change' : 'Choose model'}
+      </Button>
+      <BackgroundModelDialog
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title={`Background model for ${gatewayKey.label}`}
+        description='Members’ conversation titles, memory and search analysis run on this model through the gateway.'
+        currentModel={gatewayKey.backgroundModel}
+        loadModels={loadModels}
+        onSave={(backgroundModel) =>
+          dispatch(
+            setGatewayKeyBackgroundModel({
+              groupWalletId,
+              keyId: gatewayKey.id,
+              backgroundModel,
+            })
+          ).unwrap()
+        }
+      />
+    </div>
+  )
+}
+
+const GatewayKeyReport = ({
+  groupWalletId,
+  gatewayKey,
+}: {
+  groupWalletId: number
+  gatewayKey: GatewayKey
+}) => (
   <div className='rounded-md border border-border p-3 text-sm'>
     <p className='font-medium'>{gatewayKey.label}</p>
     <dl className='mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2'>
@@ -57,6 +127,10 @@ const GatewayKeyReport = ({ gatewayKey }: { gatewayKey: GatewayKey }) => (
         Last reported {new Date(gatewayKey.gatewayReportedAt).toLocaleString()}
       </p>
     )}
+    <GatewayKeyBackgroundModel
+      groupWalletId={groupWalletId}
+      gatewayKey={gatewayKey}
+    />
   </div>
 )
 
@@ -154,7 +228,11 @@ const GatewayAllowanceCard = ({ groupWallet }: GatewayAllowanceCardProps) => {
             </p>
           ) : (
             groupWallet.gatewayKeys.map((gatewayKey) => (
-              <GatewayKeyReport key={gatewayKey.id} gatewayKey={gatewayKey} />
+              <GatewayKeyReport
+                key={gatewayKey.id}
+                groupWalletId={groupWallet.id}
+                gatewayKey={gatewayKey}
+              />
             ))
           )}
         </div>

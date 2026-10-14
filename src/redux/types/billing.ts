@@ -171,6 +171,8 @@ export interface UserRefillOverride {
 export interface GatewayKey {
   id: string
   label: string
+  /** Blank: titles, memory and query analysis bill members' DARE wallets. */
+  backgroundModel: string
   /** Null until a gateway response has reported the key's spend. */
   gatewaySpend: string | null
   gatewayMaxBudget: string | null
