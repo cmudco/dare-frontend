@@ -77,6 +77,15 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const isSocketConnected = useSelector(
     (state: RootState) => state.socket.connected
   )
+  // The server refuses a send until this socket has joined the conversation's
+  // room, so a queued first message waits for the join, not just the connection.
+  const isSubscribed = useSelector((state: RootState) =>
+    activeConversation
+      ? state.socket.subscribedConversations.includes(
+          activeConversation.conversationId
+        )
+      : false
+  )
   const navigate = useNavigate()
   const location = useLocation()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -186,7 +195,12 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   ])
 
   useEffect(() => {
-    if (pendingMessage !== null && isSocketConnected && activeConversation) {
+    if (
+      pendingMessage !== null &&
+      isSocketConnected &&
+      isSubscribed &&
+      activeConversation
+    ) {
       const newMessage: Partial<Message> = {
         message: pendingMessage,
       }
@@ -200,6 +214,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   }, [
     pendingMessage,
     isSocketConnected,
+    isSubscribed,
     activeConversation,
     dispatch,
     clearPendingDraftSave,
