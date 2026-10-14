@@ -10,6 +10,7 @@ import {
   fetchOwnedGroups,
   refreshGroupMembers,
   updateGroupPolicy,
+  setGatewayKeyBackgroundModel,
   allocateToMember,
   upsertUserOverride,
   clearUserOverride,
@@ -158,6 +159,12 @@ const billingSlice = createSlice({
           }
         }
       )
+      .addCase(setGatewayKeyBackgroundModel.fulfilled, (state, action) => {
+        const group = state.ownedGroups.find(
+          (g) => g.groupWallet?.id === action.payload.groupWalletId
+        )
+        if (group) group.groupWallet = action.payload.groupWallet
+      })
       .addCase(updateGroupPolicy.pending, (state) => {
         state.groupActionLoading = true
       })

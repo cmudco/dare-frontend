@@ -2,6 +2,7 @@ import {
   AllocateResponse,
   AllocateToMemberPayload,
   GroupWallet,
+  LiteLLMTestResponse,
   OwnedGroupMember,
   OwnedGroupResponse,
   UpdateGroupPolicyPayload,
@@ -68,5 +69,27 @@ export const clearUserOverrideAPI = async (
   await baseRequest<void>({
     url: `api/billing/group-wallets/${groupWalletId}/members/${userId}/override/`,
     method: METHOD.DELETE,
+  })
+}
+
+export const fetchGatewayKeyModelsAPI = async (
+  groupWalletId: number,
+  keyId: string
+): Promise<LiteLLMTestResponse> => {
+  return baseRequest<LiteLLMTestResponse>({
+    url: `api/billing/group-wallets/${groupWalletId}/gateway-keys/${keyId}/models/`,
+    method: METHOD.GET,
+  })
+}
+
+export const setGatewayKeyBackgroundModelAPI = async (
+  groupWalletId: number,
+  keyId: string,
+  backgroundModel: string
+): Promise<GroupWallet> => {
+  return baseRequest<GroupWallet>({
+    url: `api/billing/group-wallets/${groupWalletId}/gateway-keys/${keyId}/`,
+    method: METHOD.PATCH,
+    data: { backgroundModel },
   })
 }

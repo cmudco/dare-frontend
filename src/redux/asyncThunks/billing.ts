@@ -20,6 +20,7 @@ import {
   clearUserOverrideAPI,
   fetchGroupMembersAPI,
   fetchOwnedGroupsAPI,
+  setGatewayKeyBackgroundModelAPI,
   updateGroupPolicyAPI,
   upsertUserOverrideAPI,
 } from '../../api/groupWallets'
@@ -145,6 +146,25 @@ export const updateGroupPolicy = createAsyncThunk<
     return thunkAPI.rejectWithValue((error as Error).message)
   }
 })
+
+export const setGatewayKeyBackgroundModel = createAsyncThunk<
+  { groupWalletId: number; groupWallet: GroupWallet },
+  { groupWalletId: number; keyId: string; backgroundModel: string }
+>(
+  'billing/setGatewayKeyBackgroundModel',
+  async ({ groupWalletId, keyId, backgroundModel }, thunkAPI) => {
+    try {
+      const groupWallet = await setGatewayKeyBackgroundModelAPI(
+        groupWalletId,
+        keyId,
+        backgroundModel
+      )
+      return { groupWalletId, groupWallet }
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
 
 export const allocateToMember = createAsyncThunk<
   { groupWalletId: number; response: AllocateResponse },
