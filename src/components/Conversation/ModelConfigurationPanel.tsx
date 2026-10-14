@@ -117,7 +117,6 @@ const ModelConfigurationPanel: React.FC = () => {
       dispatch(getActiveModels())
     }
   }, [allModels.length, dispatch])
-  const showWebSearch = walletMeta?.supportsWebSearch ?? true
   const showImageGeneration = walletMeta?.supportsImageGeneration ?? true
   const showAudioTranscription = walletMeta?.supportsAudioTranscription ?? true
   const selectedEntry = useSelector((state: RootState) =>
@@ -126,6 +125,9 @@ const ModelConfigurationPanel: React.FC = () => {
     )
   )
   const showTemperature = selectedEntry?.supportsTemperature ?? true
+  const showWebSearch =
+    (walletMeta?.supportsWebSearch ?? true) &&
+    (selectedEntry?.supportsWebSearch ?? true)
   const showEffort = selectedEntry?.supportsEffort ?? false
   const requestedEffort =
     activeConversation?.effort ??

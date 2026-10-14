@@ -365,7 +365,12 @@ export interface EnsemblePreset {
 }
 
 export type DeliberationStatus =
-  'pending' | 'streaming' | 'done' | 'failed' | 'dropped' | 'stopped'
+  | 'pending'
+  | 'streaming'
+  | 'done'
+  | 'failed'
+  | 'dropped'
+  | 'stopped'
 
 export interface DeliberationParticipant {
   modelId: string
@@ -545,6 +550,8 @@ export interface PickerModel {
   defaultAdaptiveThinkingEnabled: boolean
   isImageGenerator?: boolean
   isAudioTranscriber?: boolean
+  /** LiteLLM entries only: whether this gateway model can search the web. */
+  supportsWebSearch?: boolean
   inputTokenRatePerMillion: number | null
   outputTokenRatePerMillion: number | null
   tier: string | null
