@@ -180,7 +180,7 @@ const ProjectDetail = () => {
       ).unwrap()
       dispatch(updateSelectedTags([]))
       dispatch(resetConversation())
-      // The draft keeps the text if the chat still needs a model picked.
+      // The chat opens with the message as its draft; the user sends it.
       dispatch(
         saveDraftForConversation({
           conversationId: conversation.conversationId,
@@ -188,9 +188,7 @@ const ProjectDetail = () => {
         })
       )
       dispatch(updateActiveConversation(conversation))
-      navigate(`/conversation/${conversation.conversationId}`, {
-        state: { initialMessage: message },
-      })
+      navigate(`/conversation/${conversation.conversationId}`)
     } catch {
       // The project list loads once per session, so it may be gone already.
       const projects = await dispatch(fetchProjects())
