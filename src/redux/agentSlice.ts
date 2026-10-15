@@ -113,10 +113,24 @@ const agentSlice = createSlice({
     })
     builder.addCase(deleteAgent.fulfilled, (state, action) => {
       state.loading = false
-      const deletedAgentId = action.payload
-
-      state.agents = state.agents.filter((agent) => agent.id !== deletedAgentId)
-      if (state.selectedAgent?.id === deletedAgentId) {
+      // The server deletes the agent with every later version derived from it.
+      const deleted = new Set([action.payload])
+      let grew = true
+      while (grew) {
+        grew = false
+        for (const agent of state.agents) {
+          if (
+            agent.parent &&
+            deleted.has(agent.parent) &&
+            !deleted.has(agent.id)
+          ) {
+            deleted.add(agent.id)
+            grew = true
+          }
+        }
+      }
+      state.agents = state.agents.filter((agent) => !deleted.has(agent.id))
+      if (state.selectedAgent && deleted.has(state.selectedAgent.id)) {
         state.selectedAgent = null
       }
     })

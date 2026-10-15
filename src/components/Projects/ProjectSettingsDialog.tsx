@@ -28,7 +28,7 @@ import {
   PROJECT_INSTRUCTIONS_MAX_LENGTH,
   ProjectMemoryScope,
 } from '@/utils/constants/project'
-import { projectModelLabel } from './projectModels'
+import { modelRefLabel } from '@/utils/modelRef'
 import ProjectNameField from './ProjectNameField'
 import { PROMPT_TEMPLATES_PATH } from '@/routes/paths'
 
@@ -273,7 +273,7 @@ const SettingsForm = ({
                 <SelectItem value={NONE}>Choose in each chat</SelectItem>
                 {savedModelMissing && draft.defaultModelRef && (
                   <SelectItem value={draft.defaultModelRef}>
-                    {projectModelLabel(draft.defaultModelRef, pickerEntries) ??
+                    {modelRefLabel(draft.defaultModelRef, pickerEntries) ??
                       'Unavailable model'}
                   </SelectItem>
                 )}

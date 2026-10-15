@@ -32,6 +32,7 @@ import { getSharedLibraries } from '@/redux/asyncThunks/library'
 import { getMcpServers } from '@/redux/asyncThunks/mcp'
 import type { AppDispatch, RootState } from '@/redux/store'
 import type { Agent } from '@/redux/types/agent'
+import { isGatewayModelRef } from '@/utils/modelRef'
 
 const RAG_MODE_OPTIONS: Array<{
   value: RagMode
@@ -171,11 +172,21 @@ export default function StepNodeConfig({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='none'>None (Manual Configuration)</SelectItem>
-              {agents.map((agent) => (
-                <SelectItem key={agent.id} value={agent.id.toString()}>
-                  {agent.name}
-                </SelectItem>
-              ))}
+              {agents.map((agent) => {
+                // Workflow steps run DARE models only; gateway agents wait for that support.
+                const gateway = isGatewayModelRef(agent.modelRef)
+                return (
+                  <SelectItem
+                    key={agent.id}
+                    value={agent.id.toString()}
+                    disabled={gateway}
+                  >
+                    {gateway
+                      ? `${agent.name} (gateway model, not available in Workflows)`
+                      : agent.name}
+                  </SelectItem>
+                )
+              })}
             </SelectContent>
           </Select>
           <p className='text-xs text-muted-foreground'>

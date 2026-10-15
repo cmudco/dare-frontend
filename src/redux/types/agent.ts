@@ -1,19 +1,39 @@
-export interface Agent {
-  id: number
+import { RagMode } from '@/utils/constants/conversation'
+import { EffortLevel } from '@/utils/constants/model'
+
+/** The setup an agent gives a chat; also the create/update request body. */
+export interface AgentSetup {
   name: string
   description: string
-  user: string
   prompt: number
-  promptTitle?: string
-  contentFiles: number[]
-  embeddingFiles: number[]
-  llm: number | null
-  llmName?: string
+  /** Picker id: an LLM PK, `litellm:<key>:<model>`, or null for the chat's model. */
+  modelRef: string | null
   maxTokens: number
   temperature: number
+  effort: EffortLevel | null
+  historyLimit: number
+  ragMode: RagMode
   maxContextSnippets: number
   documentSimilarityThreshold: number
   enableWebSearch: boolean
+  webFetchEnabled: boolean
+  artifactsEnabled: boolean
+  memoryEnabled: boolean
+  contentFiles: number[]
+  embeddingFiles: number[]
+  libraries: number[]
+  mcpServers: number[]
+  dareToolSlugs: string[]
+}
+
+export interface Agent extends AgentSetup {
+  id: number
+  user: string
+  promptTitle?: string
+  /** Display name of the model: the DARE model's name or the gateway model id. */
+  modelName: string
+  /** DARE model PK; null for a gateway model, which Workflows cannot run yet. */
+  llm: number | null
   version: number
   parent?: number | null
   createdAt: string

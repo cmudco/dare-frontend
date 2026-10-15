@@ -15,6 +15,7 @@ import {
   getConversationAPI,
   deleteConversationAPI,
   updateConversationAPI,
+  applyAgentAPI,
   updateMessageAPI,
   updateConversationSortOrderAPI,
   deleteMultipleConversationsAPI,
@@ -28,6 +29,10 @@ import {
   getConversationMessagesAPI,
 } from '../../api/conversation'
 import { AppDispatch, RootState } from '../store'
+import { selectLibraries } from '../librarySlice'
+import { Agent } from '../types/agent'
+import { MyFile } from '../types/files'
+import { SharedLibrary } from '../types/library'
 import { sendSocketMessage } from './socketMessages'
 import { fetchProjects } from './project'
 import { LLMModel, PickerModel, WalletMeta } from '../types/conversation'
@@ -163,6 +168,40 @@ export const updateConversation = createAsyncThunk<
       return updatedConversation
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export interface AppliedAgent {
+  conversation: Conversation
+  /** The agent's model, which wins over the model that last answered in the chat. */
+  modelRef: string | null
+  /** Catalogs the chat's selected sources are resolved against. */
+  files: MyFile[]
+  libraries: SharedLibrary[]
+}
+
+export const applyAgentToConversation = createAsyncThunk<
+  AppliedAgent,
+  { conversationId: string; agent: Agent | null },
+  { state: RootState; rejectValue: string }
+>(
+  'conversation/applyAgent',
+  async ({ conversationId, agent }, { getState, rejectWithValue }) => {
+    try {
+      const conversation = await applyAgentAPI(
+        conversationId,
+        agent?.id ?? null
+      )
+      const state = getState()
+      return {
+        conversation,
+        modelRef: agent?.modelRef ?? null,
+        files: state.files.files,
+        libraries: selectLibraries(state),
+      }
+    } catch (error) {
+      return rejectWithValue((error as Error).message)
     }
   }
 )

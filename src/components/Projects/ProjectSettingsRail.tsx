@@ -7,7 +7,7 @@ import { useAppSelector } from '@/redux/hooks'
 import type { Project } from '@/redux/types/project'
 import { ProjectMemoryScope } from '@/utils/constants/project'
 import type { ProjectSettingsSection } from './ProjectSettingsDialog'
-import { projectModelLabel } from './projectModels'
+import { modelRefLabel } from '@/utils/modelRef'
 
 interface Props {
   project: Project
@@ -44,7 +44,7 @@ const ProjectSettingsRail = ({
   const enableMemory = useFeatureFlag('enableMemory')
   const workflows = useAppSelector((state) => state.workflow.workflows)
   const modelName = useAppSelector((state) =>
-    projectModelLabel(project.defaultModelRef, state.conversation.pickerEntries)
+    modelRefLabel(project.defaultModelRef, state.conversation.pickerEntries)
   )
   const pinned = workflows.filter((workflow) =>
     project.workflowIds.includes(workflow.id)

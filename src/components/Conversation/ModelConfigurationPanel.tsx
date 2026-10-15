@@ -1,64 +1,33 @@
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
-import { Button } from '../ui/button'
-import { AppDispatch, RootState } from '../../redux/store'
-import {
-  updateTemperature,
-  updateEffort,
-  updateMaxTokens,
-  updateHistoryLimit,
-  updateWebSearchEnabled,
-  updateWebFetchEnabled,
-  updateImageGenerationEnabled,
-  updateAudioTranscriptionEnabled,
-  updateArtifactsEnabled,
-  updateSelectedModel,
-} from '../../redux/conversationSlice'
-import { Slider } from '../ui/slider'
-import { Switch } from '../ui/switch'
-import { Settings, Info } from 'lucide-react'
-import { MODEL_CONFIG } from '../../config/modelConfig'
+import { Info, Settings } from 'lucide-react'
+
+import { MODEL_CONFIG } from '@/config/modelConfig'
+import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import {
   getActiveModels,
   updateConversation,
 } from '@/redux/asyncThunks/conversation'
-import { useFeatureFlag } from '@/hooks/useFeatureFlag'
+import {
+  updateAudioTranscriptionEnabled,
+  updateImageGenerationEnabled,
+  updateModelSettings,
+  updateSelectedModel,
+} from '@/redux/conversationSlice'
+import { AppDispatch, RootState } from '@/redux/store'
+import { ModelSettings } from '@/redux/types/conversation'
+import { Button } from '../ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { Switch } from '../ui/switch'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip'
-import { TOOLTIP_CONTENT } from '@/constants/tooltipContent'
-import { cn } from '@/lib/utils'
-import { EffortLevel, EffortLevelLabels } from '@/utils/constants/model'
-
-const ADAPTIVE_EFFORT_GUIDANCE: Record<
-  EffortLevel,
-  { recommendedTokens: number; description: string }
-> = {
-  [EffortLevel.Low]: {
-    recommendedTokens: 16384,
-    description: 'Low effort favors faster, lower-cost responses.',
-  },
-  [EffortLevel.Medium]: {
-    recommendedTokens: 32768,
-    description: 'Medium effort balances reasoning depth, latency, and cost.',
-  },
-  [EffortLevel.High]: {
-    recommendedTokens: 32768,
-    description: 'High effort may spend more of the response budget thinking.',
-  },
-  [EffortLevel.XHigh]: {
-    recommendedTokens: 65536,
-    description: 'XHigh effort prioritizes deep reasoning over speed and cost.',
-  },
-  [EffortLevel.Max]: {
-    recommendedTokens: 65536,
-    description: 'Max effort allows the deepest and most expensive reasoning.',
-  },
-}
+import ModelSettingsFields from './ModelSettingsFields'
+import { defaultMaxTokensFor } from '@/utils/modelConfigUtils'
 
 const ModelConfigurationPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -67,22 +36,25 @@ const ModelConfigurationPanel: React.FC = () => {
   )
   const enableImageGeneration = useFeatureFlag('enableImageGeneration')
   const enableAudioTranscription = useFeatureFlag('enableAudioTranscription')
-  const enableArtifacts = useFeatureFlag('enableArtifacts')
 
-  const temperature =
-    activeConversation?.temperature ?? MODEL_CONFIG.temperature
-  const maxTokens = activeConversation?.maxTokens ?? MODEL_CONFIG.maxTokens
-  const historyLimit =
-    activeConversation?.historyLimit ?? MODEL_CONFIG.historyLimit
-  const webSearchEnabled = useSelector(
-    (state: RootState) =>
-      activeConversation?.webSearchEnabled ??
-      state.conversation.webSearchEnabled
+  const defaultWebSearch = useSelector(
+    (state: RootState) => state.conversation.webSearchEnabled
   )
-  const webFetchEnabled = useSelector(
-    (state: RootState) =>
-      activeConversation?.webFetchEnabled ?? state.conversation.webFetchEnabled
+  const defaultWebFetch = useSelector(
+    (state: RootState) => state.conversation.webFetchEnabled
   )
+  const defaultArtifacts = useSelector(
+    (state: RootState) => state.conversation.artifactsEnabled
+  )
+  const settings: ModelSettings = {
+    temperature: activeConversation?.temperature ?? MODEL_CONFIG.temperature,
+    effort: activeConversation?.effort ?? null,
+    maxTokens: activeConversation?.maxTokens ?? MODEL_CONFIG.maxTokens,
+    historyLimit: activeConversation?.historyLimit ?? MODEL_CONFIG.historyLimit,
+    webSearchEnabled: activeConversation?.webSearchEnabled ?? defaultWebSearch,
+    webFetchEnabled: activeConversation?.webFetchEnabled ?? defaultWebFetch,
+    artifactsEnabled: activeConversation?.artifactsEnabled ?? defaultArtifacts,
+  }
   const imageGenerationEnabled = useSelector(
     (state: RootState) =>
       activeConversation?.imageGenerationEnabled ??
@@ -93,23 +65,19 @@ const ModelConfigurationPanel: React.FC = () => {
       activeConversation?.audioTranscriptionEnabled ??
       state.conversation.audioTranscriptionEnabled
   )
-  const artifactsEnabled = useSelector(
-    (state: RootState) =>
-      activeConversation?.artifactsEnabled ??
-      state.conversation.artifactsEnabled
-  )
   const allModels = useSelector(
     (state: RootState) => state.conversation.activeModels
   )
   const messageCount = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages.length
   )
-  // Wallet capability flags. The BE returns `null` for legacy callers (no
-  // wallet_scope param); treat that as "all features supported" so DARE /
-  // BYO users see every toggle as before. LITELLM users see only tools/MCP
-  // since the proxy doesn't transparently forward provider-native features.
   const walletMeta = useSelector(
     (state: RootState) => state.conversation.activeWalletMeta
+  )
+  const selectedEntry = useSelector((state: RootState) =>
+    state.conversation.pickerEntries.find(
+      (entry) => entry.id === state.conversation.selectedModel
+    )
   )
 
   React.useEffect(() => {
@@ -119,43 +87,20 @@ const ModelConfigurationPanel: React.FC = () => {
   }, [allModels.length, dispatch])
   const showImageGeneration = walletMeta?.supportsImageGeneration ?? true
   const showAudioTranscription = walletMeta?.supportsAudioTranscription ?? true
-  const selectedEntry = useSelector((state: RootState) =>
-    state.conversation.pickerEntries.find(
-      (entry) => entry.id === state.conversation.selectedModel
-    )
-  )
-  const showTemperature = selectedEntry?.supportsTemperature ?? true
-  const showWebSearch =
-    (walletMeta?.supportsWebSearch ?? true) &&
-    (selectedEntry?.supportsWebSearch ?? true)
-  const showEffort = selectedEntry?.supportsEffort ?? false
-  const requestedEffort =
-    activeConversation?.effort ??
-    selectedEntry?.defaultEffort ??
-    EffortLevel.High
-  const selectedProvider = selectedEntry?.provider?.toLowerCase()
-  const isGemini = selectedProvider === 'gemini'
-  const effort =
-    isGemini &&
-    (requestedEffort === EffortLevel.XHigh ||
-      requestedEffort === EffortLevel.Max)
-      ? EffortLevel.High
-      : requestedEffort
-  const effortOptions = isGemini
-    ? [EffortLevel.Low, EffortLevel.Medium, EffortLevel.High]
-    : Object.values(EffortLevel)
   const usesAdaptiveThinking = selectedEntry?.supportsAdaptiveThinking ?? false
-  const defaultMaxTokens = usesAdaptiveThinking
-    ? MODEL_CONFIG.adaptiveThinkingMaxTokens
-    : MODEL_CONFIG.maxTokens
-  const effortGuidance = ADAPTIVE_EFFORT_GUIDANCE[effort]
-  const maxTokenCeiling = usesAdaptiveThinking
-    ? MODEL_CONFIG.adaptiveThinkingTokenCeiling
-    : 16384
-  const showWebFetch =
-    showWebSearch &&
-    (selectedProvider === 'claude' || selectedProvider === 'gemini')
   const automaticDefaultKeyRef = React.useRef<string | null>(null)
+
+  const applySettings = (patch: Partial<ModelSettings>) => {
+    dispatch(updateModelSettings(patch))
+    if (activeConversation) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: patch,
+        })
+      )
+    }
+  }
 
   React.useEffect(() => {
     const selectionKey = `${activeConversation?.conversationId ?? 'none'}:${selectedEntry?.id ?? 'none'}`
@@ -168,7 +113,11 @@ const ModelConfigurationPanel: React.FC = () => {
       messageCount === 0 &&
       activeConversation.maxTokens <= MODEL_CONFIG.maxTokens
     ) {
-      dispatch(updateMaxTokens(MODEL_CONFIG.adaptiveThinkingMaxTokens))
+      dispatch(
+        updateModelSettings({
+          maxTokens: MODEL_CONFIG.adaptiveThinkingMaxTokens,
+        })
+      )
       dispatch(
         updateConversation({
           conversationId: activeConversation.conversationId,
@@ -183,78 +132,6 @@ const ModelConfigurationPanel: React.FC = () => {
     selectedEntry?.id,
     usesAdaptiveThinking,
   ])
-
-  const handleTemperatureChange = (values: number[]) => {
-    dispatch(updateTemperature(values[0]))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { temperature: values[0] },
-        })
-      )
-    }
-  }
-
-  const handleEffortChange = (value: EffortLevel) => {
-    dispatch(updateEffort(value))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { effort: value },
-        })
-      )
-    }
-  }
-
-  const handleMaxTokensChange = (values: number[]) => {
-    dispatch(updateMaxTokens(values[0]))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { maxTokens: values[0] },
-        })
-      )
-    }
-  }
-
-  const handleHistoryLimitChange = (values: number[]) => {
-    dispatch(updateHistoryLimit(values[0]))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { historyLimit: values[0] },
-        })
-      )
-    }
-  }
-
-  const handleWebSearchToggle = (checked: boolean) => {
-    dispatch(updateWebSearchEnabled(checked))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { webSearchEnabled: checked },
-        })
-      )
-    }
-  }
-
-  const handleWebFetchToggle = (checked: boolean) => {
-    dispatch(updateWebFetchEnabled(checked))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { webFetchEnabled: checked },
-        })
-      )
-    }
-  }
 
   const handleImageGenerationToggle = (checked: boolean) => {
     dispatch(updateImageGenerationEnabled(checked))
@@ -315,47 +192,30 @@ const ModelConfigurationPanel: React.FC = () => {
     }
   }
 
-  const handleArtifactsToggle = (checked: boolean) => {
-    dispatch(updateArtifactsEnabled(checked))
-    if (activeConversation) {
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: { artifactsEnabled: checked },
-        })
-      )
-    }
-  }
-
   const resetToDefaults = () => {
-    if (activeConversation) {
-      dispatch(updateTemperature(MODEL_CONFIG.temperature))
-      dispatch(updateEffort(null))
-      dispatch(updateMaxTokens(defaultMaxTokens))
-      dispatch(updateHistoryLimit(MODEL_CONFIG.historyLimit))
-      dispatch(updateWebSearchEnabled(false))
-      dispatch(updateWebFetchEnabled(false))
-      dispatch(updateImageGenerationEnabled(false))
-      dispatch(updateAudioTranscriptionEnabled(false))
-      dispatch(updateArtifactsEnabled(false))
-
-      dispatch(
-        updateConversation({
-          conversationId: activeConversation.conversationId,
-          updates: {
-            temperature: MODEL_CONFIG.temperature,
-            effort: null,
-            maxTokens: defaultMaxTokens,
-            historyLimit: MODEL_CONFIG.historyLimit,
-            webSearchEnabled: false,
-            webFetchEnabled: false,
-            imageGenerationEnabled: false,
-            audioTranscriptionEnabled: false,
-            artifactsEnabled: false,
-          },
-        })
-      )
+    if (!activeConversation) return
+    const defaults: ModelSettings = {
+      temperature: MODEL_CONFIG.temperature,
+      effort: null,
+      maxTokens: defaultMaxTokensFor(selectedEntry),
+      historyLimit: MODEL_CONFIG.historyLimit,
+      webSearchEnabled: false,
+      webFetchEnabled: false,
+      artifactsEnabled: false,
     }
+    dispatch(updateModelSettings(defaults))
+    dispatch(updateImageGenerationEnabled(false))
+    dispatch(updateAudioTranscriptionEnabled(false))
+    dispatch(
+      updateConversation({
+        conversationId: activeConversation.conversationId,
+        updates: {
+          ...defaults,
+          imageGenerationEnabled: false,
+          audioTranscriptionEnabled: false,
+        },
+      })
+    )
   }
 
   return (
@@ -388,394 +248,103 @@ const ModelConfigurationPanel: React.FC = () => {
               </div>
             )}
 
-            <div className='space-y-4'>
-              {/* Web Search Toggle */}
-              {showWebSearch && (
-                <div className='flex items-center justify-between border-b border-border pb-2'>
-                  <div className='flex flex-col gap-1'>
-                    <div className='flex items-center gap-2'>
-                      <h4 className='font-medium text-foreground'>
-                        Web Search
-                      </h4>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                        </TooltipTrigger>
-                        <TooltipContent className='max-w-xs'>
-                          <div className='space-y-2'>
-                            <p className='font-semibold'>
-                              {TOOLTIP_CONTENT.modelConfig.webSearch.title}
-                            </p>
-                            <p className='text-sm'>
-                              {
-                                TOOLTIP_CONTENT.modelConfig.webSearch
-                                  .description
-                              }
-                            </p>
-                            <p className='text-xs text-muted-foreground'>
-                              💡 {TOOLTIP_CONTENT.modelConfig.webSearch.tip}
-                            </p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={webSearchEnabled}
-                    onCheckedChange={handleWebSearchToggle}
-                  />
-                </div>
-              )}
-
-              {/* Web Fetch Toggle - provider-native URL/PDF fetch */}
-              {showWebFetch && (
-                <div className='flex items-center justify-between border-b border-border pb-2'>
-                  <div className='flex flex-col gap-1'>
-                    <div className='flex items-center gap-2'>
-                      <h4 className='font-medium text-foreground'>Web Fetch</h4>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                        </TooltipTrigger>
-                        <TooltipContent className='max-w-xs'>
-                          <div className='space-y-2'>
-                            <p className='font-semibold'>Web Fetch</p>
-                            <p className='text-sm'>
-                              Let the selected provider fetch explicit URLs and
-                              PDFs from the conversation.
-                            </p>
-                            <p className='text-xs text-muted-foreground'>
-                              Use for research papers, arXiv links, and source
-                              pages you paste into the prompt.
-                            </p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={webFetchEnabled}
-                    onCheckedChange={handleWebFetchToggle}
-                  />
-                </div>
-              )}
-
-              {/* Image Generation Toggle - Only show in Georgia Tech and Development */}
-              {enableImageGeneration && showImageGeneration && (
-                <div className='flex items-center justify-between border-b border-border pb-2'>
-                  <div className='flex flex-col gap-1'>
-                    <div className='flex items-center gap-2'>
-                      <h4 className='font-medium text-foreground'>
-                        Image Generation
-                      </h4>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                        </TooltipTrigger>
-                        <TooltipContent className='max-w-xs'>
-                          <div className='space-y-2'>
-                            <p className='font-semibold'>
-                              {
-                                TOOLTIP_CONTENT.modelConfig.imageGeneration
-                                  .title
-                              }
-                            </p>
-                            <p className='text-sm'>
-                              {
-                                TOOLTIP_CONTENT.modelConfig.imageGeneration
-                                  .description
-                              }
-                            </p>
-                            <p className='text-xs text-muted-foreground'>
-                              💡{' '}
-                              {TOOLTIP_CONTENT.modelConfig.imageGeneration.tip}
-                            </p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={imageGenerationEnabled}
-                    onCheckedChange={handleImageGenerationToggle}
-                  />
-                </div>
-              )}
-
-              {/* Audio Transcription Toggle - Only show when feature enabled */}
-              {enableAudioTranscription && showAudioTranscription && (
-                <div className='flex items-center justify-between border-b border-border pb-2'>
-                  <div className='flex flex-col gap-1'>
-                    <div className='flex items-center gap-2'>
-                      <h4
-                        className={
-                          audioTranscriptionEnabled
-                            ? 'bg-linear-to-r from-purple-600 via-violet-500 to-indigo-600 bg-clip-text font-medium text-transparent'
-                            : 'font-medium text-foreground'
-                        }
-                      >
-                        Audio Transcription
-                      </h4>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                        </TooltipTrigger>
-                        <TooltipContent className='max-w-xs'>
-                          <div className='space-y-2'>
-                            <p className='font-semibold'>Audio Transcription</p>
-                            <p className='text-sm'>
-                              Convert audio files to text using Whisper or
-                              Gemini models.
-                            </p>
-                            <p className='text-xs text-muted-foreground'>
-                              💡 Upload audio files in Media tab when enabled
-                            </p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={audioTranscriptionEnabled}
-                    onCheckedChange={handleAudioTranscriptionToggle}
-                  />
-                </div>
-              )}
-
-              {/* Artifacts Toggle - Only show when feature enabled */}
-              {enableArtifacts && (
-                <div className='flex items-center justify-between border-b border-border pb-2'>
-                  <div className='flex flex-col gap-1'>
-                    <div className='flex items-center gap-2'>
-                      <h4
-                        className={
-                          artifactsEnabled
-                            ? 'bg-linear-to-r from-orange-500 via-violet-500 to-sky-400 bg-clip-text font-medium text-transparent'
-                            : 'font-medium text-foreground'
-                        }
-                      >
-                        Artifacts
-                      </h4>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                        </TooltipTrigger>
-                        <TooltipContent className='max-w-xs'>
-                          <div className='space-y-2'>
-                            <p className='font-semibold'>
-                              {TOOLTIP_CONTENT.modelConfig.artifacts.title}
-                            </p>
-                            <p className='text-sm'>
-                              {
-                                TOOLTIP_CONTENT.modelConfig.artifacts
-                                  .description
-                              }
-                            </p>
-                            <p className='text-xs text-muted-foreground'>
-                              💡 {TOOLTIP_CONTENT.modelConfig.artifacts.tip}
-                            </p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={artifactsEnabled}
-                    onCheckedChange={handleArtifactsToggle}
-                  />
-                </div>
-              )}
-            </div>
-
-            {showEffort && (
-              <div className='space-y-3 border-t border-border pt-2'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <h4 className='font-medium text-foreground'>Effort</h4>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                      </TooltipTrigger>
-                      <TooltipContent className='max-w-xs'>
-                        <div className='space-y-2'>
-                          <p className='font-semibold'>Effort</p>
-                          <p className='text-sm'>
-                            Controls reasoning depth for models that support
-                            provider-native effort settings.
-                          </p>
+            <ModelSettingsFields
+              settings={settings}
+              onChange={applySettings}
+              model={selectedEntry}
+              walletMeta={walletMeta}
+              extraToggles={
+                <>
+                  {/* Image Generation Toggle - Only show in Georgia Tech and Development */}
+                  {enableImageGeneration && showImageGeneration && (
+                    <div className='flex items-center justify-between border-b border-border pb-2'>
+                      <div className='flex flex-col gap-1'>
+                        <div className='flex items-center gap-2'>
+                          <h4 className='font-medium text-foreground'>
+                            Image Generation
+                          </h4>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                            </TooltipTrigger>
+                            <TooltipContent className='max-w-xs'>
+                              <div className='space-y-2'>
+                                <p className='font-semibold'>
+                                  {
+                                    TOOLTIP_CONTENT.modelConfig.imageGeneration
+                                      .title
+                                  }
+                                </p>
+                                <p className='text-sm'>
+                                  {
+                                    TOOLTIP_CONTENT.modelConfig.imageGeneration
+                                      .description
+                                  }
+                                </p>
+                                <p className='text-xs text-muted-foreground'>
+                                  💡{' '}
+                                  {
+                                    TOOLTIP_CONTENT.modelConfig.imageGeneration
+                                      .tip
+                                  }
+                                </p>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
-                    {EffortLevelLabels[effort]}
-                  </span>
-                </div>
-                <div
-                  className={cn(
-                    'grid gap-1',
-                    isGemini ? 'grid-cols-3' : 'grid-cols-5'
+                      </div>
+                      <Switch
+                        checked={imageGenerationEnabled}
+                        onCheckedChange={handleImageGenerationToggle}
+                      />
+                    </div>
                   )}
-                >
-                  {effortOptions.map((value) => (
-                    <Button
-                      key={value}
-                      type='button'
-                      size='sm'
-                      variant={effort === value ? 'default' : 'outline'}
-                      className='h-8 px-1 text-xs'
-                      onClick={() => handleEffortChange(value)}
-                    >
-                      {EffortLevelLabels[value]}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {showTemperature && (
-              <div className='space-y-4'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <h4 className='font-medium text-foreground'>Temperature</h4>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                      </TooltipTrigger>
-                      <TooltipContent className='max-w-xs'>
-                        <div className='space-y-2'>
-                          <p className='font-semibold'>
-                            {TOOLTIP_CONTENT.modelConfig.temperature.title}
-                          </p>
-                          <p className='text-sm'>
-                            {
-                              TOOLTIP_CONTENT.modelConfig.temperature
-                                .description
+                  {/* Audio Transcription Toggle - Only show when feature enabled */}
+                  {enableAudioTranscription && showAudioTranscription && (
+                    <div className='flex items-center justify-between border-b border-border pb-2'>
+                      <div className='flex flex-col gap-1'>
+                        <div className='flex items-center gap-2'>
+                          <h4
+                            className={
+                              audioTranscriptionEnabled
+                                ? 'bg-linear-to-r from-purple-600 via-violet-500 to-indigo-600 bg-clip-text font-medium text-transparent'
+                                : 'font-medium text-foreground'
                             }
-                          </p>
-                          <p className='text-xs text-muted-foreground'>
-                            💡 {TOOLTIP_CONTENT.modelConfig.temperature.tip}
-                          </p>
+                          >
+                            Audio Transcription
+                          </h4>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
+                            </TooltipTrigger>
+                            <TooltipContent className='max-w-xs'>
+                              <div className='space-y-2'>
+                                <p className='font-semibold'>
+                                  Audio Transcription
+                                </p>
+                                <p className='text-sm'>
+                                  Convert audio files to text using Whisper or
+                                  Gemini models.
+                                </p>
+                                <p className='text-xs text-muted-foreground'>
+                                  💡 Upload audio files in Media tab when
+                                  enabled
+                                </p>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
-                    {temperature.toFixed(1)}
-                  </span>
-                </div>
-
-                <Slider
-                  value={[temperature]}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  onValueChange={handleTemperatureChange}
-                  className='my-4 cursor-pointer'
-                />
-
-                <div className='flex justify-between px-1 text-xs text-muted-foreground'>
-                  <span>Precise</span>
-                  <span>Balanced</span>
-                  <span>Creative</span>
-                </div>
-              </div>
-            )}
-
-            <div className='space-y-4 border-t border-border pt-2'>
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center gap-2'>
-                  <h4 className='font-medium text-foreground'>Max Tokens</h4>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                    </TooltipTrigger>
-                    <TooltipContent className='max-w-xs'>
-                      <div className='space-y-2'>
-                        <p className='font-semibold'>
-                          {TOOLTIP_CONTENT.modelConfig.maxTokens.title}
-                        </p>
-                        <p className='text-sm'>
-                          {TOOLTIP_CONTENT.modelConfig.maxTokens.description}
-                        </p>
-                        <p className='text-xs text-muted-foreground'>
-                          💡 {TOOLTIP_CONTENT.modelConfig.maxTokens.tip}
-                        </p>
                       </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
-                  {maxTokens}
-                </span>
-              </div>
-
-              <Slider
-                value={[maxTokens]}
-                min={256}
-                max={maxTokenCeiling}
-                step={256}
-                onValueChange={handleMaxTokensChange}
-                className='my-4 cursor-pointer'
-              />
-              {usesAdaptiveThinking && (
-                <p className='text-xs text-muted-foreground'>
-                  This ceiling is shared by hidden thinking and visible text.
-                  {` ${effortGuidance.description} Start with ${effortGuidance.recommendedTokens.toLocaleString()} tokens.`}
-                </p>
-              )}
-              {usesAdaptiveThinking &&
-                maxTokens < effortGuidance.recommendedTokens && (
-                  <p className='text-xs text-destructive'>
-                    {EffortLevelLabels[effort]} effort with this ceiling can
-                    leave too little room for the visible answer.
-                  </p>
-                )}
-            </div>
-
-            <div className='space-y-4 border-t border-border pt-2'>
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center gap-2'>
-                  <h4 className='font-medium text-foreground'>History Limit</h4>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className='h-3.5 w-3.5 cursor-help text-muted-foreground' />
-                    </TooltipTrigger>
-                    <TooltipContent className='max-w-xs'>
-                      <div className='space-y-2'>
-                        <p className='font-semibold'>
-                          {TOOLTIP_CONTENT.modelConfig.historyLimit.title}
-                        </p>
-                        <p className='text-sm'>
-                          {TOOLTIP_CONTENT.modelConfig.historyLimit.description}
-                        </p>
-                        <p className='text-xs text-muted-foreground'>
-                          💡 {TOOLTIP_CONTENT.modelConfig.historyLimit.tip}
-                        </p>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
-                  {historyLimit === 50 ? 'Full Context' : historyLimit}
-                </span>
-              </div>
-
-              <Slider
-                value={[historyLimit]}
-                min={1}
-                max={50}
-                step={1}
-                onValueChange={handleHistoryLimitChange}
-                className='my-4 cursor-pointer'
-              />
-
-              <div className='flex justify-between px-1 text-xs text-muted-foreground'>
-                <span>Minimal</span>
-                <span>Standard</span>
-                <span>Max</span>
-              </div>
-            </div>
+                      <Switch
+                        checked={audioTranscriptionEnabled}
+                        onCheckedChange={handleAudioTranscriptionToggle}
+                      />
+                    </div>
+                  )}
+                </>
+              }
+            />
 
             {activeConversation?.conversationId && (
               <p className='mt-2 border-t border-border pt-2 text-xs text-muted-foreground'>
