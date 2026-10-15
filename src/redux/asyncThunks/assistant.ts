@@ -13,6 +13,8 @@ import type { RootState } from '../store'
 import { getConversations } from './conversation'
 import { getDeletedFiles, getFiles, getFolders } from './file'
 import { fetchProjectChats, fetchProjects } from './project'
+import { getAgents } from './agent'
+import { getPrompts } from './prompt'
 import { getTags } from './tag'
 
 export const fetchAssistantThread = createAsyncThunk<
@@ -63,7 +65,7 @@ export const runProposalCommand = createAsyncThunk<
         command === ProposalCommand.APPLY ||
         command === ProposalCommand.UNDO
       ) {
-        // Files, chats and projects may all have changed; refresh their views.
+        // Files, chats, projects and agents may all have changed; refresh their views.
         const { dispatch, getState } = thunkAPI
         dispatch(getFiles())
         dispatch(getDeletedFiles())
@@ -71,6 +73,8 @@ export const runProposalCommand = createAsyncThunk<
         dispatch(getTags())
         dispatch(fetchProjects())
         dispatch(getConversations())
+        dispatch(getAgents())
+        dispatch(getPrompts())
         Object.keys(getState().project.chats).forEach((projectId) =>
           dispatch(fetchProjectChats(Number(projectId)))
         )
