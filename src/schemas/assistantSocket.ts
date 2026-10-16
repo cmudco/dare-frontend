@@ -71,6 +71,18 @@ export const AssistantThreadSchema = z.object({
   usage: AssistantUsageSchema,
 })
 
+/** One past conversation in the history menu. */
+export const AssistantThreadSummarySchema = z.object({
+  id: z.number(),
+  title: z.string().nullable(),
+  lastMessageAt: z.string(),
+  isOpen: z.boolean(),
+})
+
+export type AssistantThreadSummary = z.infer<
+  typeof AssistantThreadSummarySchema
+>
+
 export const AssistantEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('assistant_turn_started'),

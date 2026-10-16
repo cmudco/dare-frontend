@@ -1,11 +1,14 @@
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import { ProposalCommand } from '@/utils/constants/assistant'
+import { z } from 'zod'
 import {
   AssistantProposalSchema,
   AssistantThreadSchema,
+  AssistantThreadSummarySchema,
   type AssistantProposal,
   type AssistantThread,
+  type AssistantThreadSummary,
 } from '@/schemas/assistantSocket'
 
 export const getAssistantThreadAPI = async (): Promise<AssistantThread> =>
@@ -20,6 +23,26 @@ export const startAssistantThreadAPI = async (): Promise<AssistantThread> =>
   AssistantThreadSchema.parse(
     await baseRequest<unknown>({
       url: 'api/assistant/thread/new/',
+      method: METHOD.POST,
+    })
+  )
+
+export const getAssistantHistoryAPI = async (): Promise<
+  AssistantThreadSummary[]
+> =>
+  z.array(AssistantThreadSummarySchema).parse(
+    await baseRequest<unknown>({
+      url: 'api/assistant/threads/',
+      method: METHOD.GET,
+    })
+  )
+
+export const openAssistantThreadAPI = async (
+  threadId: number
+): Promise<AssistantThread> =>
+  AssistantThreadSchema.parse(
+    await baseRequest<unknown>({
+      url: `api/assistant/threads/${threadId}/open/`,
       method: METHOD.POST,
     })
   )

@@ -1,13 +1,16 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { ProposalCommand } from '@/utils/constants/assistant'
 import {
+  getAssistantHistoryAPI,
   getAssistantThreadAPI,
+  openAssistantThreadAPI,
   runProposalCommandAPI,
   startAssistantThreadAPI,
 } from '@/api/assistant'
 import type {
   AssistantProposal,
   AssistantThread,
+  AssistantThreadSummary,
 } from '@/schemas/assistantSocket'
 import type { RootState } from '../store'
 import { getConversations } from './conversation'
@@ -35,6 +38,30 @@ export const startAssistantThread = createAsyncThunk<
 >('assistant/startThread', async (_, thunkAPI) => {
   try {
     return await startAssistantThreadAPI()
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const fetchAssistantHistory = createAsyncThunk<
+  AssistantThreadSummary[],
+  void,
+  { rejectValue: string }
+>('assistant/fetchHistory', async (_, thunkAPI) => {
+  try {
+    return await getAssistantHistoryAPI()
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const openAssistantThread = createAsyncThunk<
+  AssistantThread,
+  number,
+  { rejectValue: string }
+>('assistant/openThread', async (threadId, thunkAPI) => {
+  try {
+    return await openAssistantThreadAPI(threadId)
   } catch (error) {
     return thunkAPI.rejectWithValue((error as Error).message)
   }
