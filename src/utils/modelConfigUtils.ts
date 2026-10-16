@@ -1,3 +1,4 @@
+import type { PickerModel } from '@/redux/types/conversation'
 import { MODEL_CONFIG } from '../config/modelConfig'
 
 export const getTemperatureColor = (temperature: number): string => {
@@ -52,3 +53,9 @@ export const getHistoryLimitDescription = (historyLimit: number): string => {
 export const DEFAULT_TEMPERATURE = MODEL_CONFIG.temperature
 export const DEFAULT_MAX_TOKENS = MODEL_CONFIG.maxTokens
 export const DEFAULT_HISTORY_LIMIT = MODEL_CONFIG.historyLimit
+
+/** Max-token default for a model: adaptive-thinking models share it with hidden thinking. */
+export const defaultMaxTokensFor = (model: PickerModel | undefined) =>
+  model?.supportsAdaptiveThinking
+    ? MODEL_CONFIG.adaptiveThinkingMaxTokens
+    : MODEL_CONFIG.maxTokens

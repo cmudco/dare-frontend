@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SquarePen, X } from 'lucide-react'
+import { AssistantHistoryMenu } from '@/components/Assistant/AssistantHistoryMenu'
 import {
   HelpTab,
   type FeedbackStep,
@@ -137,6 +138,7 @@ export function FeedbackPanel({
                   ))}
                 </div>
                 <div className='flex items-center gap-1'>
+                  {tab === HelpTab.ASSISTANT && <AssistantHistoryMenu />}
                   {tab === HelpTab.ASSISTANT && (
                     <button
                       type='button'

@@ -1,37 +1,23 @@
-/**
- * AgentTabContent Component
- *
- * Displays the agent templates list inside the PromptSet modal.
- * Handles agent selection and applies settings to the conversation.
- * Uses Redux directly for state management.
- */
-
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Bot, Check, Loader2 } from 'lucide-react'
 import { RootState, AppDispatch } from '@/redux/store'
-import { updateConversation } from '@/redux/asyncThunks/conversation'
-import {
-  updateSelectedAgent,
-  applyAgentSettings,
-  loadSelectedFilesFromIds,
-} from '@/redux/conversationSlice'
+import { applyAgentToConversation } from '@/redux/asyncThunks/conversation'
 import { Agent } from '@/redux/types/agent'
+import { toast } from '@/utils/toast'
 
+/** Agents list in the PromptSet dialog; picking one gives the chat its whole setup. */
 const AgentTabContent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
-
-  // Redux state
   const agents = useSelector((state: RootState) => state.agent.agents)
   const loading = useSelector((state: RootState) => state.agent.loading)
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
   )
-  const files = useSelector((state: RootState) => state.files.files)
+  const [applyingId, setApplyingId] = useState<number | null>(null)
 
   const selectedAgentId = activeConversation?.selectedAgent
 
-  // Sort agents to show selected agent at the top
   const sortedAgents = useMemo(() => {
     if (!selectedAgentId) return agents
     return [...agents].sort((a, b) => {
@@ -41,98 +27,24 @@ const AgentTabContent: React.FC = () => {
     })
   }, [agents, selectedAgentId])
 
-  /**
-   * Handle agent template selection.
-   * Applies agent settings to the conversation and persists via API.
-   */
-  const handleSelectAgent = (agent: Agent) => {
-    if (!activeConversation) return
-
-    // If clicking the already selected agent, deselect it
-    if (selectedAgentId === agent.id) {
-      handleClearSelection()
-      return
+  const handleSelectAgent = async (agent: Agent) => {
+    if (!activeConversation || applyingId !== null) return
+    const detaching = selectedAgentId === agent.id
+    setApplyingId(agent.id)
+    try {
+      await dispatch(
+        applyAgentToConversation({
+          conversationId: activeConversation.conversationId,
+          agent: detaching ? null : agent,
+        })
+      ).unwrap()
+    } catch {
+      toast.error(
+        detaching ? 'Could not remove the agent' : 'Could not apply the agent'
+      )
+    } finally {
+      setApplyingId(null)
     }
-
-    // Apply all agent settings to Redux state in a single dispatch
-    dispatch(
-      applyAgentSettings({
-        agentId: agent.id,
-        agentName: agent.name,
-        llm: agent.llm ?? undefined,
-        temperature: agent.temperature,
-        maxTokens: agent.maxTokens,
-        maxContextSnippets: agent.maxContextSnippets,
-        documentSimilarityThreshold: agent.documentSimilarityThreshold,
-        enableWebSearch: agent.enableWebSearch,
-      })
-    )
-
-    // Sync file selections to UI state
-    dispatch(
-      loadSelectedFilesFromIds({
-        files,
-        selectedFileIds: agent.contentFiles || [],
-        selectedEmbeddingIds: agent.embeddingFiles || [],
-        selectedMediaIds: activeConversation.selectedMediaIds || [],
-      })
-    )
-
-    // Persist all settings to backend
-    dispatch(
-      updateConversation({
-        conversationId: activeConversation.conversationId,
-        updates: {
-          selectedAgent: agent.id,
-          selectedModel: agent.llm,
-          temperature: agent.temperature,
-          maxTokens: agent.maxTokens,
-          maxContextSnippets: agent.maxContextSnippets,
-          documentSimilarityThreshold: agent.documentSimilarityThreshold,
-          webSearchEnabled: agent.enableWebSearch,
-          promptId: agent.prompt,
-          selectedFileIds: agent.contentFiles || [],
-          selectedEmbeddingIds: agent.embeddingFiles || [],
-        },
-      })
-    )
-  }
-
-  /**
-   * Clear agent selection.
-   */
-  const handleClearSelection = () => {
-    if (!activeConversation) return
-
-    // Update Redux state
-    dispatch(
-      updateSelectedAgent({
-        agentId: null,
-        agentName: null,
-      })
-    )
-
-    // Clear file selections in UI state
-    dispatch(
-      loadSelectedFilesFromIds({
-        files,
-        selectedFileIds: [],
-        selectedEmbeddingIds: [],
-        selectedMediaIds: activeConversation.selectedMediaIds || [],
-      })
-    )
-
-    // Persist cleared state to backend
-    dispatch(
-      updateConversation({
-        conversationId: activeConversation.conversationId,
-        updates: {
-          selectedAgent: null,
-          selectedFileIds: [],
-          selectedEmbeddingIds: [],
-        },
-      })
-    )
   }
 
   return (
@@ -157,12 +69,15 @@ const AgentTabContent: React.FC = () => {
             return (
               <button
                 key={agent.id}
-                className={`flex w-full items-start gap-2.5 rounded-lg border p-3 text-left transition-all ${
+                type='button'
+                disabled={applyingId !== null}
+                className={`flex w-full items-start gap-2.5 rounded-lg border p-3 text-left transition-all disabled:cursor-wait ${
                   isAgentSelected
                     ? 'border-primary bg-primary/10'
                     : 'border-border bg-background hover:bg-accent'
                 }`}
                 onClick={() => handleSelectAgent(agent)}
+                aria-pressed={isAgentSelected}
               >
                 <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted'>
                   <Bot className='h-4 w-4 text-primary' />
@@ -174,15 +89,19 @@ const AgentTabContent: React.FC = () => {
                   <div className='line-clamp-2 text-xs leading-relaxed text-muted-foreground'>
                     {agent.description || 'No description'}
                   </div>
-                  {agent.llmName && (
+                  {agent.modelName && (
                     <div className='mt-1 inline-flex items-center rounded-sm bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>
-                      {agent.llmName}
+                      {agent.modelName}
                     </div>
                   )}
                 </div>
                 <div className='flex h-5 w-5 shrink-0 items-center justify-center'>
-                  {isAgentSelected && (
-                    <Check className='h-4 w-4 text-primary' />
+                  {applyingId === agent.id ? (
+                    <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
+                  ) : (
+                    isAgentSelected && (
+                      <Check className='h-4 w-4 text-primary' />
+                    )
                   )}
                 </div>
               </button>
@@ -194,8 +113,8 @@ const AgentTabContent: React.FC = () => {
       {selectedAgentId && (
         <div className='mt-3 border-t border-border pt-3'>
           <div className='text-[11px] text-muted-foreground'>
-            Agent settings will be applied: model, temperature, max tokens,
-            context snippets, similarity threshold, and web search.
+            The agent sets this chat's prompt, model, settings, sources and
+            tools. Click it again to remove it.
           </div>
         </div>
       )}

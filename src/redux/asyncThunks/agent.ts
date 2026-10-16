@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { Agent } from '../types/agent'
+import { Agent, AgentSetup } from '../types/agent'
 import {
   cloneAgentAPI,
   createAgentAPI,
@@ -9,7 +9,6 @@ import {
   simpleUpdateAgentAPI,
   updateAgentAPI,
 } from '@/api/agents'
-import { RootState } from '../store'
 
 export const getAgents = createAsyncThunk(
   'agents/getAgents',
@@ -43,19 +42,7 @@ export const createOrUpdateAgent = createAsyncThunk(
       bumpVersion,
     }: {
       id?: number
-      agentData: {
-        name: string
-        description: string
-        prompt: number
-        llm?: number | null
-        contentFiles?: number[]
-        embeddingFiles?: number[]
-        maxTokens?: number
-        temperature?: number
-        maxContextSnippets?: number
-        documentSimilarityThreshold?: number
-        enableWebSearch?: boolean
-      }
+      agentData: AgentSetup
       bumpVersion?: boolean
     },
     { rejectWithValue }
@@ -89,30 +76,9 @@ export const cloneAgent = createAsyncThunk(
 
 export const deleteAgent = createAsyncThunk(
   'agents/deleteAgent',
-  async (id: number, { rejectWithValue, getState }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
-      const state = getState() as RootState
-      const agentState = state.agent
-
-      const deletedAgent = agentState.agents.find((a) => a.id === id)
-
-      if (deletedAgent) {
-        const childAgents = agentState.agents.filter((a) => a.parent === id)
-
-        await deleteAgentAPI(id)
-
-        const updatePromises = childAgents.map((child) => {
-          return updateAgentAPI(child.id, {
-            ...child,
-            parent: deletedAgent.parent,
-          })
-        })
-
-        await Promise.all(updatePromises)
-      } else {
-        await deleteAgentAPI(id)
-      }
-
+      await deleteAgentAPI(id)
       return id
     } catch (error) {
       return rejectWithValue((error as Error).message)

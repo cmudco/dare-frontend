@@ -35,6 +35,7 @@ import { TrashIcon } from '@heroicons/react/24/outline'
 import { PencilIcon } from '@heroicons/react/20/solid'
 import { updateSortState, SortDirection } from '@/utils/sortUtils'
 import { SortDirectionEnum } from '@/utils/constants/sort'
+import { Badge } from '@/components/ui/badge'
 import { sortAgents, filterAgents } from '@/utils/agentUtils'
 
 interface AgentTableProps {
@@ -171,13 +172,17 @@ const AgentTable = ({ searchQuery }: AgentTableProps) => {
                 </TableCell>
                 <TableCell className='p-4 text-foreground'>
                   <span className='inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                    {agent.promptTitle || 'Unknown'}
+                    {agent.promptTitle || "Chat's prompt"}
                   </span>
                 </TableCell>
                 <TableCell className='p-4 text-foreground'>
-                  <span className='inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'>
-                    {agent.temperature ? agent.temperature.toFixed(2) : 'N/A'}
-                  </span>
+                  {agent.modelName ? (
+                    <Badge variant='secondary'>{agent.modelName}</Badge>
+                  ) : (
+                    <span className='text-sm text-muted-foreground'>
+                      Chat's model
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell className='p-4 text-foreground'>
                   {formatDate(agent.createdAt)}
