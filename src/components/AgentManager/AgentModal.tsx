@@ -36,6 +36,7 @@ import { selectLibrariesLoaded } from '@/redux/librarySlice'
 import { AppDispatch, RootState } from '@/redux/store'
 import { Agent, AgentSetup } from '@/redux/types/agent'
 import { ModelSettings } from '@/redux/types/conversation'
+import { AGENT_DEFAULTS } from '@/utils/constants/agents'
 import { RagMode } from '@/utils/constants/conversation'
 import { defaultMaxTokensFor } from '@/utils/modelConfigUtils'
 import { modelRefLabel } from '@/utils/modelRef'
@@ -73,10 +74,10 @@ const setupFrom = (agent: Agent | null, modelRef: string | null): AgentSetup =>
         description: '',
         prompt: null,
         modelRef,
-        maxTokens: MODEL_CONFIG.maxTokens,
+        maxTokens: AGENT_DEFAULTS.maxTokens,
         temperature: MODEL_CONFIG.temperature,
         effort: null,
-        historyLimit: MODEL_CONFIG.historyLimit,
+        historyLimit: AGENT_DEFAULTS.historyLimit,
         ragMode: RagMode.ADVANCED,
         maxContextSnippets: MODEL_CONFIG.maxContextSnippets,
         documentSimilarityThreshold: MODEL_CONFIG.documentSimilarityThreshold,

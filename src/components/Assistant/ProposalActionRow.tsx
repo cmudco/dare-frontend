@@ -44,6 +44,9 @@ interface ProposalActionRowProps {
   disabled: boolean
   busy: boolean
   onToggle: () => void
+  /** create_agent only: the offered model chosen in the card. */
+  chosenModelRef: string | null
+  onChooseModel: (modelRef: string) => void
 }
 
 /** One proposed change, with its own Apply / Undo. */
@@ -53,6 +56,8 @@ export function ProposalActionRow({
   disabled,
   busy,
   onToggle,
+  chosenModelRef,
+  onChooseModel,
 }: ProposalActionRowProps) {
   const applied = action.status === ProposalActionStatus.APPLIED
   const destructive = isDeleteAction(action.type)
@@ -121,8 +126,14 @@ export function ProposalActionRow({
           {action.description}
         </p>
       )}
-      {action.agent && (
-        <ProposedAgentDetails agent={action.agent} applied={applied} />
+      {action.agent && chosenModelRef && (
+        <ProposedAgentDetails
+          agent={action.agent}
+          applied={applied}
+          chosenModelRef={chosenModelRef}
+          onChoose={onChooseModel}
+          disabled={disabled || !canToggle}
+        />
       )}
       {destructive && !applied && canToggle && (
         <p className='pl-5 text-[11px] text-muted-foreground'>

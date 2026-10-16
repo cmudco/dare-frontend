@@ -72,6 +72,8 @@ export interface ProposalCommandRequest {
   command: ProposalCommand
   /** Apply or undo just these actions; omitted means all of them. */
   actionId?: string
+  /** Apply only: create_agent action id -> the offered model the user picked. */
+  modelChoices?: Record<string, string>
 }
 
 export const runProposalCommand = createAsyncThunk<
@@ -80,12 +82,13 @@ export const runProposalCommand = createAsyncThunk<
   { state: RootState; rejectValue: string }
 >(
   'assistant/runProposalCommand',
-  async ({ proposalId, command, actionId }, thunkAPI) => {
+  async ({ proposalId, command, actionId, modelChoices }, thunkAPI) => {
     try {
       const proposal = await runProposalCommandAPI(
         proposalId,
         command,
-        actionId ? [actionId] : undefined
+        actionId ? [actionId] : undefined,
+        modelChoices
       )
       if (
         command === ProposalCommand.APPLY ||
