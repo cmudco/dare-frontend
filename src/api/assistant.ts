@@ -50,12 +50,16 @@ export const openAssistantThreadAPI = async (
 export const runProposalCommandAPI = async (
   proposalId: number,
   command: ProposalCommand,
-  actionIds?: string[]
+  actionIds?: string[],
+  modelChoices?: Record<string, string>
 ): Promise<AssistantProposal> =>
   AssistantProposalSchema.parse(
     await baseRequest<unknown>({
       url: `api/assistant/proposals/${proposalId}/${command}/`,
       method: METHOD.POST,
-      data: actionIds ? { actionIds } : {},
+      data: {
+        ...(actionIds && { actionIds }),
+        ...(modelChoices && { modelChoices }),
+      },
     })
   )

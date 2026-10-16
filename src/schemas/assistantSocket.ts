@@ -5,6 +5,7 @@
 
 import { z } from 'zod'
 import {
+  AgentModelRole,
   AssistantMessageStatus,
   AssistantRole,
   AssistantStepStatus,
@@ -21,12 +22,19 @@ export const ProposalActionSchema = z.object({
   description: z.string(),
   files: z.array(z.object({ id: z.number(), name: z.string() })),
   conversations: z.array(z.object({ id: z.string(), title: z.string() })),
-  /** create_agent only: the suggested model; the user picks the prompt. */
+  /** create_agent only: the models offered; the user picks one on apply. */
   agent: z
     .object({
-      modelRef: z.string(),
-      modelName: z.string(),
+      options: z.array(
+        z.object({
+          modelRef: z.string(),
+          modelName: z.string(),
+          role: z.enum(AgentModelRole).nullable(),
+          outputUsdPerMillionTokens: z.string().nullable(),
+        })
+      ),
       enableWebSearch: z.boolean(),
+      selectedModelRef: z.string().nullable(),
     })
     .nullable(),
   status: z.enum(ProposalActionStatus),

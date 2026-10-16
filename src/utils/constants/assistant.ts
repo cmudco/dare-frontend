@@ -54,3 +54,10 @@ export enum ProposalCommand {
   DISCARD = 'discard',
   RESTORE = 'restore',
 }
+
+/** Why Ask DARE offers a model for an agent (matches the backend roles). */
+export enum AgentModelRole {
+  QUALITY = 'quality',
+  BALANCED = 'balanced',
+  BUDGET = 'budget',
+}
