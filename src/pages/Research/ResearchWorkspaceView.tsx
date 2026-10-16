@@ -152,6 +152,14 @@ const ResearchWorkspaceView = ({
     refresh()
   }
 
+  const approveMany = async (ids: number[]) => {
+    try {
+      for (const id of ids) await reviewStagingItemAPI(id, 'approve', '', [])
+    } finally {
+      refresh()
+    }
+  }
+
   const askCritic = async (itemId: number) => {
     if (criticRunId) return
     setCriticItemId(itemId)
@@ -199,12 +207,14 @@ const ResearchWorkspaceView = ({
           <ReviewInbox
             pending={pending}
             later={later}
+            runs={runs}
             criticItemId={criticItemId}
             onDecide={review}
+            onApproveMany={approveMany}
             onLater={(id) => void review(id, 'later')}
             onAskCritic={askCritic}
             onOpenThread={openThread}
-            onGoToOverview={() => setSection('overview')}
+            onGoToChat={() => setSection('chat')}
           />
         )
       case 'memory':

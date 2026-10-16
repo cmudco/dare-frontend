@@ -91,7 +91,7 @@ export interface Provenance {
   }
 }
 
-/** A staged review candidate (the canonical §11 shape). */
+/** A finding a Scout staged for review. */
 export interface ReviewItem {
   id: number
   title: string
@@ -101,10 +101,13 @@ export interface ReviewItem {
   doi: string
   url: string
   abstract: string
+  /** What the source establishes for the Scout's task. Empty on older items. */
+  finding: string
+  /** Why it matters and its limits. */
   rationale: string
   confidence: number | null // 0.0–1.0
-  confidenceRationale: string
   evidenceLabel: string // supporting|disputing|partial|tangential|unverifiable
+  /** The sentence on the page that backs the finding. */
   citationContext: string
   provenance: Provenance
   status: string // staged|approved|rejected|later
@@ -114,6 +117,9 @@ export interface ReviewItem {
   reviewMetadata: ReviewMetadata
   /** The chat thread whose Scout staged this item, if any. */
   threadId: number | null
+  /** The Scout's short label and full task: the question this answers. */
+  focus: string
+  task: string
   createdAt: string
 }
 
@@ -135,22 +141,11 @@ export type ReviewReasonTag =
   | 'strong_evidence'
 
 /** Approved durable knowledge (display fields read from the source staging item). */
-export interface KnowledgeItem {
-  id: number
-  title: string
-  authors: string
-  year: number | null
-  venue: string
-  url: string
-  rationale: string
-  confidence: number | null
-  evidenceLabel: string
-  citationContext: string
-  provenance: Provenance
-  soulFileVersion: string
+export interface KnowledgeItem extends ReviewItem {
+  /** The staging item it was approved from (`id` is the knowledge id). */
+  stagingItemId: number | null
   usedIn: string[]
   approvedAt: string | null
-  createdAt: string
 }
 
 /** A durable project-memory snapshot (working thesis, open question, …). */
@@ -448,6 +443,8 @@ export interface AgentRun {
   learning: { applied?: LearningApplied[]; setAside?: LearningSetAside[] }
   /** Short label a thread gave this Scout. */
   focus: string
+  /** Scouts only: how wide it looked. */
+  coverage: { searches: number; reads: number } | null
 }
 
 /** One earlier turn sent to the agent as conversation history. */
