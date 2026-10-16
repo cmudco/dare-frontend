@@ -13,6 +13,13 @@ const ROLE_LABELS: Record<AgentModelRole, string> = {
   [AgentModelRole.BUDGET]: 'Budget',
 }
 
+type ModelOption = ProposedAgent['options'][number]
+
+const priceLabel = (option: ModelOption) =>
+  option.inputUsdPerMillionTokens && option.outputUsdPerMillionTokens
+    ? `$${option.inputUsdPerMillionTokens} in · $${option.outputUsdPerMillionTokens} out per 1M tokens`
+    : null
+
 interface ProposedAgentDetailsProps {
   agent: ProposedAgent
   applied: boolean
@@ -32,17 +39,18 @@ export function ProposedAgentDetails({
 }: ProposedAgentDetailsProps) {
   return (
     <div className='space-y-1.5 pl-5 text-[11px] text-muted-foreground'>
-      <div className='flex items-center gap-1'>
-        <span>{applied ? 'Model' : 'Pick a model'}</span>
-        {agent.enableWebSearch && (
+      {agent.enableWebSearch && (
+        <p className='flex items-start gap-1.5'>
           <Badge
             variant='outline'
-            className='px-1.5 py-0 text-[10px] font-normal'
+            className='shrink-0 px-1.5 py-0 text-[10px] font-normal'
           >
             Web search
           </Badge>
-        )}
-      </div>
+          {agent.webSearchWhy && <span>{agent.webSearchWhy}</span>}
+        </p>
+      )}
+      <p>{applied ? 'Model' : 'Pick a model'}</p>
       <div
         role='radiogroup'
         aria-label='Model for this agent'
@@ -61,7 +69,7 @@ export function ProposedAgentDetails({
                 disabled={disabled || applied}
                 onClick={() => onChoose(option.modelRef)}
                 className={cn(
-                  'flex items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-colors disabled:cursor-default',
+                  'flex items-start gap-2 rounded-md border px-2 py-1.5 text-left transition-colors disabled:cursor-default',
                   chosen
                     ? 'border-primary bg-primary/10'
                     : 'border-border hover:bg-accent'
@@ -74,15 +82,17 @@ export function ProposedAgentDetails({
                   <span className='block'>
                     {[
                       option.role && ROLE_LABELS[option.role],
-                      option.outputUsdPerMillionTokens &&
-                        `$${option.outputUsdPerMillionTokens} / 1M output tokens`,
+                      priceLabel(option),
                     ]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>
+                  <span className='mt-0.5 block text-foreground/80'>
+                    {option.why}
+                  </span>
                 </span>
                 {chosen && (
-                  <Check className='h-3.5 w-3.5 shrink-0 text-primary' />
+                  <Check className='mt-0.5 h-3.5 w-3.5 shrink-0 text-primary' />
                 )}
               </button>
             )

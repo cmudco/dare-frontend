@@ -30,10 +30,14 @@ export const ProposalActionSchema = z.object({
           modelRef: z.string(),
           modelName: z.string(),
           role: z.enum(AgentModelRole).nullable(),
+          /** Why this model suits the user's task, in Ask DARE's words. */
+          why: z.string(),
+          inputUsdPerMillionTokens: z.string().nullable(),
           outputUsdPerMillionTokens: z.string().nullable(),
         })
       ),
       enableWebSearch: z.boolean(),
+      webSearchWhy: z.string(),
       selectedModelRef: z.string().nullable(),
     })
     .nullable(),
