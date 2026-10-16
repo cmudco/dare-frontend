@@ -39,6 +39,21 @@ export function ProposedAgentDetails({
 }: ProposedAgentDetailsProps) {
   return (
     <div className='space-y-1.5 pl-5 text-[11px] text-muted-foreground'>
+      {agent.prompt ? (
+        <p>
+          Prompt: <span className='text-foreground'>{agent.prompt.title}</span>{' '}
+          — {agent.prompt.why}
+        </p>
+      ) : (
+        <p>
+          {applied ? 'Next, open ' : 'After applying, open '}
+          <Link to={AGENT_TEMPLATES_PATH} className='text-primary underline'>
+            Agents
+          </Link>{' '}
+          and set this agent's prompt, such as the one you cloned from your
+          professor.
+        </p>
+      )}
       {agent.enableWebSearch && (
         <p className='flex items-start gap-1.5'>
           <Badge
@@ -98,14 +113,6 @@ export function ProposedAgentDetails({
             )
           })}
       </div>
-      <p>
-        {applied ? 'Next, open ' : 'After applying, open '}
-        <Link to={AGENT_TEMPLATES_PATH} className='text-primary underline'>
-          Agents
-        </Link>{' '}
-        and set this agent's prompt, such as the one you cloned from your
-        professor.
-      </p>
     </div>
   )
 }

@@ -147,9 +147,6 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
     : Object.values(EffortLevel)
   const usesAdaptiveThinking = model?.supportsAdaptiveThinking ?? false
   const effortGuidance = ADAPTIVE_EFFORT_GUIDANCE[effort]
-  const maxTokenCeiling = usesAdaptiveThinking
-    ? MODEL_CONFIG.adaptiveThinkingTokenCeiling
-    : 16384
 
   return (
     <div className='flex flex-col gap-4'>
@@ -259,7 +256,7 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
         <Slider
           value={[settings.maxTokens]}
           min={256}
-          max={maxTokenCeiling}
+          max={MODEL_CONFIG.maxTokensCeiling}
           step={256}
           onValueChange={(values) => onChange({ maxTokens: values[0] })}
           className='my-4 cursor-pointer'

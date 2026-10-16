@@ -25,6 +25,10 @@ export const ProposalActionSchema = z.object({
   /** create_agent only: the models offered; the user picks one on apply. */
   agent: z
     .object({
+      /** One of the user's prompts Ask DARE found for the task, if any. */
+      prompt: z
+        .object({ id: z.number(), title: z.string(), why: z.string() })
+        .nullable(),
       options: z.array(
         z.object({
           modelRef: z.string(),
