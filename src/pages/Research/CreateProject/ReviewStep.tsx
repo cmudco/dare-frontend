@@ -1,9 +1,10 @@
 import { BookOpen, FileText, ScrollText, Wrench } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { useAppSelector } from '@/redux/hooks'
-import { resolveToolMeta, STANDARDS_PRESETS } from '@/utils/constants/research'
+import { resolveToolMeta } from '@/utils/constants/research'
 import type { ProjectDraft } from '@/redux/types/research'
 import StepHeading from './StepHeading'
+import { memoryEntries } from './memoryDocument'
 
 interface Props {
   draft: ProjectDraft
@@ -13,9 +14,6 @@ const ReviewStep = ({ draft }: Props) => {
   const connections = useAppSelector((state) => state.mcp.connections)
   const tools = draft.enabledTools.map((slug) =>
     resolveToolMeta(slug, connections)
-  )
-  const standards = STANDARDS_PRESETS.find(
-    (p) => p.key === draft.standardsTemplate
   )
 
   return (
@@ -27,7 +25,7 @@ const ReviewStep = ({ draft }: Props) => {
 
       <div className='max-w-2xl space-y-4'>
         <div className='rounded-xl border border-border bg-card p-5'>
-          <div className='flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+          <div className='flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase'>
             <BookOpen className='h-3.5 w-3.5' /> Project
           </div>
           <h3 className='mt-2 text-lg font-semibold tracking-tight'>
@@ -61,12 +59,13 @@ const ReviewStep = ({ draft }: Props) => {
               ))}
             </div>
           ) : (
-            'No tools enabled'
+            'Web and paper search (always on)'
           )}
         </Row>
 
-        <Row icon={<ScrollText className='h-3.5 w-3.5' />} label='Standards'>
-          {standards?.name ?? '—'}
+        <Row icon={<ScrollText className='h-3.5 w-3.5' />} label='Agent files'>
+          SOUL.md · {draft.soulContent?.length.toLocaleString() ?? 0} chars ·
+          MEMORY.md · {memoryEntries(draft.memoryContent ?? '').length} entries
         </Row>
       </div>
     </div>
@@ -83,7 +82,7 @@ const Row = ({
   children: React.ReactNode
 }) => (
   <div className='flex items-start gap-4 rounded-xl border border-border bg-card p-4'>
-    <div className='flex w-24 shrink-0 items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+    <div className='flex w-24 shrink-0 items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase'>
       {icon}
       {label}
     </div>

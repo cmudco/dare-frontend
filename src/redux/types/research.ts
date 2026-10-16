@@ -18,11 +18,20 @@ export interface ProjectDraftFile {
  * full workspace lives behind the detail route. Maps to the backend
  * `camelCase` response.
  */
+export type ProjectKind =
+  | 'general'
+  | 'academic'
+  | 'work'
+  | 'money'
+  | 'personal'
+  | 'news'
+
 export interface ResearchProject {
   id: number
   title: string
   question: string
   field: string
+  kind: ProjectKind
   status: ResearchProjectStatus
   enabledTools: string[]
   standardsTemplate: StandardsTemplate
@@ -65,15 +74,24 @@ export interface ResearchArtifact {
 /** Where/how a staged item was retrieved (the §11 provenance contract). */
 export interface Provenance {
   tool: string
+  /** What sort of source the Scout said this is (peer-reviewed, preprint…). */
+  kind?: string
   query?: string
   retrievedAt?: string
   soulFileId?: number | null
   soulFileVersion?: number | null
   role?: string
   runId?: number
+  /** DARE's check of the source before staging; `flags` are what to look at. */
+  check?: {
+    flags: string[]
+    read?: boolean
+    quoteFound?: boolean
+    doiMatches?: boolean
+  }
 }
 
-/** A staged review candidate (the canonical §11 shape). */
+/** A finding a Scout staged for review. */
 export interface ReviewItem {
   id: number
   title: string
@@ -83,37 +101,61 @@ export interface ReviewItem {
   doi: string
   url: string
   abstract: string
+  /** What the source establishes for the Scout's task. Empty on older items. */
+  finding: string
+  /** Why it matters and its limits. */
   rationale: string
   confidence: number | null // 0.0–1.0
-  confidenceRationale: string
   evidenceLabel: string // supporting|disputing|partial|tangential|unverifiable
+  /** The sentence on the page that backs the finding. */
   citationContext: string
   provenance: Provenance
   status: string // staged|approved|rejected|later
   rejectionReason: string
   laterReason: string
-  criticMetadata: Record<string, unknown>
-  reviewMetadata: Record<string, unknown>
+  /** Empty until the Critic has assessed the finding. */
+  criticMetadata: CriticVerdict
+  reviewMetadata: ReviewMetadata
+  /** The chat thread whose Scout staged this item, if any. */
+  threadId: number | null
+  /** The Scout's short label and full task: the question this answers. */
+  focus: string
+  task: string
   createdAt: string
 }
 
+/** The Critic's assessment of a finding. */
+export interface CriticVerdict {
+  verdict?: 'holds' | 'overstated' | 'unsupported' | 'inconclusive'
+  reasoning?: string
+  concerns?: string[]
+  runId?: number
+  assessedAt?: string
+}
+
+/** The scholar's decision on a staged item and why. */
+export interface ReviewMetadata {
+  decision?: string
+  note?: string
+  tags?: ReviewReasonTag[]
+  decidedAt?: string
+}
+
+export type ReviewReasonTag =
+  | 'preprint'
+  | 'off_scope'
+  | 'conflict_of_interest'
+  | 'weak_method'
+  | 'duplicate'
+  | 'outdated'
+  | 'strong_evidence'
+
 /** Approved durable knowledge (display fields read from the source staging item). */
-export interface KnowledgeItem {
-  id: number
-  title: string
-  authors: string
-  year: number | null
-  venue: string
-  url: string
-  rationale: string
-  confidence: number | null
-  evidenceLabel: string
-  citationContext: string
-  provenance: Provenance
-  soulFileVersion: string
+export interface KnowledgeItem extends ReviewItem {
+  /** The staging item it was approved from (`id` is the knowledge id). */
+  stagingItemId: number | null
   usedIn: string[]
   approvedAt: string | null
-  createdAt: string
 }
 
 /** A durable project-memory snapshot (working thesis, open question, …). */
@@ -126,21 +168,193 @@ export interface ProjectMemory {
 }
 
 /** An agent-proposed memory awaiting the scholar's decision. */
+/** Where an approved memory lives: every project, this project, or a method. */
+export type MemoryLayer = 'researcher' | 'project' | 'procedure'
+
+export type MemoryProposalOrigin = 'foreground' | 'background_review' | 'legacy'
+
+/** A review note a memory proposal drew on. */
+export interface MemoryEvidence {
+  itemId: number | null
+  title: string
+  decision: string
+  note: string
+  tags: string[]
+  at: string
+}
+
 export interface MemoryProposal {
   id: number
   role: string
   content: string
   memoryType: string
+  layer: MemoryLayer
+  origin: MemoryProposalOrigin
+  why: string
+  evidence: MemoryEvidence[]
+  thread: number | null
   status: string
   proposedAt: string
 }
 
-/** One message in the hands-on chat transcript. */
-export interface ChatMessage {
+export interface ScoutsLaunchedPayload {
+  scouts: { runId: number; focus: string; task: string }[]
+}
+
+export interface ReviewDecisionPayload {
+  itemId: number
+  title: string
+  decision: 'approve' | 'reject' | 'later'
+  note: string
+  tags: ReviewReasonTag[]
+  runId: number
+}
+
+interface ThreadRowBase {
   id: number
-  role: string // 'user' | 'assistant'
   content: string
+  run: number | null
   createdAt: string
+}
+
+/** A scholar or agent message in a thread. */
+export interface ThreadTextRow extends ThreadRowBase {
+  role: 'user' | 'assistant'
+  eventType: ''
+}
+
+/** A DARE event in a thread; `payload` is typed by `eventType`. */
+export type ThreadEventRow = ThreadRowBase & { role: 'event' } & (
+    | { eventType: 'scouts_launched'; payload: ScoutsLaunchedPayload }
+    | { eventType: 'scout_finished'; payload: ScoutSummary }
+    | { eventType: 'review_decision'; payload: ReviewDecisionPayload }
+    | { eventType: 'memory_proposed'; payload: ThreadProposal }
+    | { eventType: 'memory_decided'; payload: ThreadProposal }
+  )
+
+/** One row of a chat thread: a message, or a DARE event. */
+export type ChatMessage = ThreadTextRow | ThreadEventRow
+
+/** A chat thread in the thread list. */
+export interface ResearchThread {
+  id: number
+  title: string
+  preview: string
+  messageCount: number
+  lastRunAt: string | null
+  createdAt: string
+}
+
+/** What a run did because of the scholar's approved memory. */
+export interface LearningApplied {
+  memory: string
+  effect: string
+}
+
+export interface LearningSetAside {
+  title: string
+  url: string
+  reason: string
+}
+
+/** A Scout launched from a thread, with what it staged so far. */
+export interface ScoutSummary {
+  runId: number
+  focus: string
+  status: string
+  statusDetail: string
+  staged: number
+  /** USD this Scout cost, priced from DARE's model rates. */
+  cost: number
+  titles: string[]
+  applied: LearningApplied[]
+  setAside: LearningSetAside[]
+  /** Each search and page read so far, oldest first. */
+  activity: ScoutActivity[]
+}
+
+export interface ScoutActivity {
+  verb: string
+  tool: string
+  detail: string
+  ok: boolean
+  error: string
+  at: string
+}
+
+/** A memory proposal as it appears inline in a thread. */
+export interface ThreadProposal {
+  proposalId: number
+  layer: MemoryLayer
+  content: string
+  why: string
+  origin: MemoryProposalOrigin
+  status: string
+  action: string
+}
+
+export interface ThreadDetail {
+  thread: ResearchThread
+  messages: ChatMessage[]
+  scouts: ScoutSummary[]
+  proposals: Record<string, ThreadProposal>
+  activeTurn: ThreadTurnState | null
+  /** The thread's latest agent turn failed or its outcome is unconfirmed. */
+  lastTurnFailed: ThreadTurnState | null
+  /** USD spent on this thread's agent runs so far. */
+  cost: number
+}
+
+export interface ThreadTurnState {
+  runId: number
+  followup: boolean
+  status: string
+}
+
+/** One row of the decision timeline in the Learning view. */
+export interface LearningTimelineRow {
+  id: number
+  content: string
+  layer: MemoryLayer
+  status: string
+  origin: MemoryProposalOrigin
+  why: string
+  evidence: MemoryEvidence[]
+  action: string
+  threadId: number | null
+  projectId: number
+  proposedAt: string
+  decidedAt: string | null
+}
+
+export interface LearnedProcedure {
+  id: number
+  name: string
+  description: string
+  content: string
+  version: number
+  scope: 'researcher' | 'project'
+  approvedAt: string
+}
+
+/** How much correcting one Scout run needed — a point on the learning chart. */
+export interface CorrectionPoint {
+  runId: number
+  task: string
+  at: string
+  staged: number
+  decided: number
+  rejected: number
+  notes: number
+  applied: number
+  setAside: number
+}
+
+export interface LearningOverview {
+  procedures: LearnedProcedure[]
+  pending: LearningTimelineRow[]
+  timeline: LearningTimelineRow[]
+  corrections: CorrectionPoint[]
 }
 
 /** The current version of a project's soul file (standards document). */
@@ -232,11 +446,52 @@ export interface AgentRun {
   completedAt: string | null
   ranAt: string
   hermesRunId: string
-  toolCalls: AgentRunToolCall[]
+  toolCallCount: number
   cancellation: AgentRunCancellation | null
-  // The agent's exact final response text. Only present on the single-run
-  // detail fetch (getAgentRunAPI), not in list payloads — hence optional.
-  rawOutput?: string
+  /** The chat thread this run belongs to or was launched from. */
+  thread: number | null
+  learning: { applied?: LearningApplied[]; setAside?: LearningSetAside[] }
+  /** Short label a thread gave this Scout. */
+  focus: string
+  /** Scouts only: how wide it looked. */
+  coverage: { searches: number; reads: number } | null
+}
+
+/** One earlier turn sent to the agent as conversation history. */
+export interface RunPromptTurn {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+/** Exactly what a run was sent (the profile files it loaded, then the rest). */
+export interface RunPrompt {
+  instructions: string
+  input: string
+  history: RunPromptTurn[]
+  files: {
+    'SOUL.md': string
+    'MEMORY.md': string
+    'USER.md': string
+    skills: string[]
+  }
+}
+
+/** One role's brief, as a run of that role is given it. */
+export interface PromptBrief {
+  key: 'chat' | 'scout-now' | 'follow-up' | 'scout' | 'critic' | 'presenter'
+  label: string
+  /** Where it goes in the run: the instructions, or the input. */
+  part: 'instructions' | 'input'
+  when: string
+  text: string
+}
+
+/** One run's full audit, from the single-run endpoint. */
+export interface AgentRunDetail extends AgentRun {
+  toolCalls: AgentRunToolCall[]
+  /** Null for runs from before prompts were recorded. */
+  prompt: RunPrompt | null
+  rawOutput: string
 }
 
 /** Working state for the create/edit wizard before it becomes a project. */
@@ -244,9 +499,14 @@ export interface ProjectDraft {
   title: string
   question: string
   field: string
+  kind: ProjectKind
   files: ProjectDraftFile[]
   enabledTools: string[]
   standardsTemplate: StandardsTemplate
+  /** The project's SOUL.md. Null until the Standards step first opens. */
+  soulContent: string | null
+  /** The project's MEMORY.md. Null until the Standards step first opens. */
+  memoryContent: string | null
 }
 
 /** Payload sent to the backend to create a project. */
@@ -254,15 +514,23 @@ export interface CreateResearchProjectPayload {
   title: string
   question: string
   field: string
+  kind: ProjectKind
   enabledTools: string[]
   standardsTemplate: StandardsTemplate
   /** Source-file metadata to attach on create. */
   sources?: CreateProjectSourceInput[]
+  /** The SOUL.md built in the Standards step. */
+  soulContent?: string
+  /** The project's MEMORY.md entries, e.g. "Exclude: radiology triage". */
+  projectMemory?: string[]
 }
 
 /** Editable project fields for `PATCH /api/research/projects/{id}/`. */
 export type UpdateResearchProjectPayload = Partial<
-  Omit<CreateResearchProjectPayload, 'sources'>
+  Omit<
+    CreateResearchProjectPayload,
+    'sources' | 'soulContent' | 'projectMemory'
+  >
 >
 
 /** Paginated list response from `GET /api/research/projects/`. */
@@ -278,7 +546,7 @@ export interface ResearchState {
   loading: boolean
   error: string | null
   /** The run open on the run-details page (fetched + polled via thunks). */
-  currentRun: AgentRun | null
+  currentRun: AgentRunDetail | null
   okfBundle: OkfBundle | null
   okfBundleLoading: boolean
   okfBundleError: string | null

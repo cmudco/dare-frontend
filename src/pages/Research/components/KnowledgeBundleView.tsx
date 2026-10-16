@@ -19,13 +19,13 @@ const OKF_SPEC =
 
 // How DARE's durable knowledge maps onto the OKF v0.1 pattern, one-to-one.
 const OKF_MAP: { from: string; to: string }[] = [
-  { from: 'Research question', to: 'index.md (bundle root)' },
+  { from: 'Question', to: 'index.md (bundle root)' },
   {
     from: 'Working thesis · open question · decision',
     to: 'theses/*.md — frontmatter type',
   },
   {
-    from: 'Scholar-promoted source',
+    from: 'Source you approved',
     to: 'sources/*.md — type: Research Source',
   },
   { from: 'Observed DOI citations', to: 'markdown links between files' },

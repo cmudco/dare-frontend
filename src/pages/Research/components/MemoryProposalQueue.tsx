@@ -1,8 +1,6 @@
-import { useState } from 'react'
 import { Cpu } from 'lucide-react'
-import { reviewMemoryProposalAPI } from '@/api/research'
-import { formatRelativeDate } from '@/utils/dateUtils'
 import type { MemoryProposal } from '../types'
+import ProposalCard from './learning/ProposalCard'
 
 interface Props {
   proposals: MemoryProposal[]
@@ -16,14 +14,7 @@ interface Props {
   emptyLine?: string
 }
 
-/**
- * The agent's memory waiting on a decision.
- *
- * Lives in both the Context tab and the Review Inbox: a fact the agent wants to
- * keep is the same kind of decision as a source it wants to cite, and a scholar
- * who only ever opens the inbox should not have to discover a second queue
- * hidden behind a tab.
- */
+/** The agent's learning waiting on a decision, outside the Learning tab. */
 const MemoryProposalQueue = ({
   proposals,
   onDecided,
@@ -31,73 +22,27 @@ const MemoryProposalQueue = ({
   note,
   emptyLine,
 }: Props) => {
-  // Decided rows leave immediately rather than waiting for the refetch — a
-  // queue that still shows what you just actioned reads as broken.
-  const [decided, setDecided] = useState<Record<number, boolean>>({})
-  const [busy, setBusy] = useState<number | null>(null)
-
-  const decide = async (id: number, decision: 'accept' | 'reject') => {
-    setBusy(id)
-    try {
-      await reviewMemoryProposalAPI(id, decision)
-      setDecided((d) => ({ ...d, [id]: true }))
-      onDecided()
-    } finally {
-      setBusy(null)
-    }
-  }
-
-  const open = proposals.filter((p) => !decided[p.id])
-
-  if (open.length === 0) {
+  if (proposals.length === 0) {
     return emptyLine ? (
       <p className='rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground'>
         {emptyLine}
       </p>
     ) : null
   }
-
   return (
-    // Deliberately quiet. The nav badge and the layer card's pill already carry
-    // the "something needs you" signal; a saturated panel on top of them is
-    // just noise inside the tab you opened to deal with it.
     <section className='rounded-xl border border-border bg-muted/30 p-4'>
       <h3 className='flex items-center gap-2 text-sm font-medium'>
         <Cpu className='h-4 w-4 text-muted-foreground' />
-        {title} · {open.length}
+        {title} · {proposals.length}
       </h3>
       {note && <p className='mt-1 text-xs text-muted-foreground'>{note}</p>}
       <div className='mt-3 space-y-2'>
-        {open.map((p) => (
-          <div
+        {proposals.map((p) => (
+          <ProposalCard
             key={p.id}
-            className='flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3'
-          >
-            <div className='min-w-[12rem] flex-1'>
-              <p className='text-sm leading-relaxed'>{p.content}</p>
-              <p className='mt-1 text-xs text-muted-foreground'>
-                Proposed {formatRelativeDate(p.proposedAt)}
-              </p>
-            </div>
-            <div className='flex shrink-0 gap-2'>
-              <button
-                type='button'
-                disabled={busy === p.id}
-                onClick={() => decide(p.id, 'accept')}
-                className='rounded-md border border-green-600/40 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 hover:bg-green-100 disabled:opacity-50 dark:bg-green-950/40 dark:text-green-400 dark:hover:bg-green-900/40'
-              >
-                Keep
-              </button>
-              <button
-                type='button'
-                disabled={busy === p.id}
-                onClick={() => decide(p.id, 'reject')}
-                className='rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent disabled:opacity-50'
-              >
-                Discard
-              </button>
-            </div>
-          </div>
+            proposal={{ ...p, action: 'add' }}
+            onDecided={onDecided}
+          />
         ))}
       </div>
     </section>

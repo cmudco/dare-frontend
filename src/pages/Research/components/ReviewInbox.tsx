@@ -1,38 +1,68 @@
+import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { Compass, Inbox } from 'lucide-react'
+import { CheckCheck, Inbox, MessagesSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { ReviewItem } from '../types'
+import type { AgentRun, ReviewItem, ReviewReasonTag } from '../types'
 import ReviewItemCard from './ReviewItemCard'
+import ScoutGroupHeader from './ScoutGroupHeader'
+import { groupByScout, isStrong } from './signals'
 
 interface Props {
   pending: ReviewItem[]
   later: ReviewItem[]
+  runs: AgentRun[]
   /** The item currently being assessed by the Critic, if any. */
   criticItemId: number | null
-  onApprove: (id: number) => void
-  onReject: (id: number) => void
+  onDecide: (
+    id: number,
+    decision: 'approve' | 'reject',
+    note: string,
+    tags: ReviewReasonTag[]
+  ) => Promise<void>
+  onApproveMany: (ids: number[]) => Promise<void>
   onLater: (id: number) => void
   onAskCritic: (id: number) => void
-  onGoToOverview: () => void
+  onOpenThread: (threadId: number) => void
+  onGoToChat: () => void
 }
+
+const byStrength = (a: ReviewItem, b: ReviewItem) =>
+  Number(isStrong(b)) - Number(isStrong(a)) ||
+  (b.confidence ?? 0) - (a.confidence ?? 0)
 
 const ReviewInbox = ({
   pending,
   later,
+  runs,
   criticItemId,
-  onApprove,
-  onReject,
+  onDecide,
+  onApproveMany,
   onLater,
   onAskCritic,
-  onGoToOverview,
+  onOpenThread,
+  onGoToChat,
 }: Props) => {
+  const [approving, setApproving] = useState<string | null>(null)
+  const runById = new Map(runs.map((r) => [r.id, r]))
+  const groups = groupByScout(pending)
+
+  const approveAll = async (key: string, items: ReviewItem[]) => {
+    setApproving(key)
+    try {
+      await onApproveMany(items.map((i) => i.id))
+    } finally {
+      setApproving(null)
+    }
+  }
+
   return (
     <div className='space-y-6'>
       <header>
         <h2 className='text-xl font-semibold tracking-tight'>Review Inbox</h2>
         <p className='mt-1 text-sm text-muted-foreground'>
-          Scout's findings wait here. Nothing becomes project knowledge until
-          you approve it.
+          What each Scout found, grouped by the question it was sent to answer.
+          Each finding shows the sentence on the page that backs it. Nothing
+          becomes project knowledge until you approve it.
         </p>
       </header>
 
@@ -43,33 +73,60 @@ const ReviewInbox = ({
           </div>
           <p className='text-sm font-medium'>Your inbox is clear</p>
           <p className='mt-1 max-w-xs text-sm text-muted-foreground'>
-            Run Scout from the Overview to gather candidate sources for review.
+            Ask a question in Chat and send a Scout to look into it. What it
+            finds lands here.
           </p>
           <Button
             variant='outline'
             size='sm'
             className='mt-4'
-            onClick={onGoToOverview}
+            onClick={onGoToChat}
           >
-            <Compass className='h-4 w-4' /> Go to Overview
+            <MessagesSquare className='h-4 w-4' /> Go to Chat
           </Button>
         </div>
       ) : (
-        <div className='space-y-3'>
-          <AnimatePresence mode='popLayout'>
-            {pending.map((item) => (
-              <ReviewItemCard
-                key={item.id}
-                item={item}
-                critiquing={criticItemId === item.id}
-                onApprove={onApprove}
-                onReject={onReject}
-                onLater={onLater}
-                onAskCritic={onAskCritic}
-              />
-            ))}
-          </AnimatePresence>
-        </div>
+        groups.map((group) => {
+          const strong = group.items.filter(isStrong)
+          return (
+            <section key={group.key} className='space-y-3'>
+              <ScoutGroupHeader
+                focus={group.focus}
+                task={group.task}
+                run={group.runId ? runById.get(group.runId) : undefined}
+                count={group.items.length}
+              >
+                {strong.length > 1 && (
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    disabled={approving !== null}
+                    onClick={() => void approveAll(group.key, strong)}
+                    title='Approve the findings that were opened, quoted correctly, unflagged and at least 70% confident'
+                  >
+                    <CheckCheck className='h-4 w-4' />
+                    {approving === group.key
+                      ? 'Approving…'
+                      : `Approve ${strong.length} checked`}
+                  </Button>
+                )}
+              </ScoutGroupHeader>
+              <AnimatePresence mode='popLayout'>
+                {[...group.items].sort(byStrength).map((item) => (
+                  <ReviewItemCard
+                    key={item.id}
+                    item={item}
+                    critiquing={criticItemId === item.id}
+                    onDecide={onDecide}
+                    onLater={onLater}
+                    onAskCritic={onAskCritic}
+                    onOpenThread={onOpenThread}
+                  />
+                ))}
+              </AnimatePresence>
+            </section>
+          )
+        })
       )}
 
       {later.length > 0 && (
@@ -81,18 +138,20 @@ const ReviewInbox = ({
             {later.map((item) => (
               <div
                 key={item.id}
-                className='flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3'
+                className='flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3'
               >
                 <div className='min-w-0'>
-                  <p className='truncate text-sm font-medium'>{item.title}</p>
+                  <p className='truncate text-sm font-medium'>
+                    {item.finding || item.title}
+                  </p>
                   <p className='truncate text-xs text-muted-foreground'>
-                    {item.authors} · {item.year}
+                    {[item.title, item.year].filter(Boolean).join(' · ')}
                   </p>
                 </div>
                 <Button
                   size='sm'
                   variant='ghost'
-                  onClick={() => onApprove(item.id)}
+                  onClick={() => void onDecide(item.id, 'approve', '', [])}
                 >
                   Approve
                 </Button>

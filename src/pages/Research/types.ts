@@ -4,9 +4,9 @@
 // have a runtime list to validate the `?tab=` query param against.
 export const NAV_SECTIONS = [
   'overview',
-  'scout',
   'chat',
   'review',
+  'learning',
   'memory',
   'graph',
   'artifacts',
@@ -29,8 +29,12 @@ export interface SoulVirtue {
 export type {
   AgentRun,
   AgentRunCancellation,
+  AgentRunDetail,
+  PromptBrief,
+  RunPrompt,
   AgentRunToolCall,
   ChatMessage,
+  CriticVerdict,
   KnowledgeItem,
   MemoryProposal,
   ProjectMemory,
@@ -38,5 +42,6 @@ export type {
   ResearchArtifact,
   ResearchSource,
   ReviewItem,
+  ReviewReasonTag,
   SoulFile,
 } from '@/redux/types/research'
