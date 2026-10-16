@@ -11,19 +11,13 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { REVIEW_REASON_TAGS } from '@/utils/constants/research'
 import { formatRelativeDate } from '@/utils/dateUtils'
-import type { ReviewItem } from '../types'
+import type { CriticVerdict, ReviewItem } from '../types'
 import ConfidenceBar from './ConfidenceBar'
 import SourceCheckBadges from './SourceCheckBadges'
 import { evidenceMeta, toolLabel } from './signals'
 
-interface CriticVerdict {
-  verdict?: string
-  reasoning?: string
-  concerns?: string[]
-}
-
 const CRITIC_META: Record<
-  string,
+  NonNullable<CriticVerdict['verdict']>,
   { label: string; tone: string; Icon: typeof ShieldCheck }
 > = {
   holds: {
@@ -69,8 +63,8 @@ const EvidenceCard = ({ item, showTask = false, footer }: Props) => {
   const signal = evidenceMeta(item.evidenceLabel)
   const confidence = Math.round((item.confidence ?? 0) * 100)
   const check = item.provenance?.check
-  const critic = item.criticMetadata as CriticVerdict | undefined
-  const verdict = critic?.verdict ? CRITIC_META[critic.verdict] : undefined
+  const critic = item.criticMetadata
+  const verdict = critic.verdict ? CRITIC_META[critic.verdict] : undefined
   const review = item.reviewMetadata ?? {}
   const finding = item.finding || item.rationale
   const why = item.finding ? item.rationale : ''
@@ -177,12 +171,12 @@ const EvidenceCard = ({ item, showTask = false, footer }: Props) => {
             <verdict.Icon className='h-4 w-4' />
             Critic · {verdict.label}
           </div>
-          {critic?.reasoning && (
+          {critic.reasoning && (
             <p className='mt-1 text-sm text-muted-foreground'>
               {critic.reasoning}
             </p>
           )}
-          {!!critic?.concerns?.length && (
+          {!!critic.concerns?.length && (
             <ul className='mt-2 list-disc space-y-0.5 pl-4 text-sm text-muted-foreground'>
               {critic.concerns.map((c, i) => (
                 <li key={i}>{c}</li>

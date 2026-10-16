@@ -34,6 +34,7 @@ export type {
   RunPrompt,
   AgentRunToolCall,
   ChatMessage,
+  CriticVerdict,
   KnowledgeItem,
   MemoryProposal,
   ProjectMemory,

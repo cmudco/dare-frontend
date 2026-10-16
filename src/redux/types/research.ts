@@ -113,7 +113,8 @@ export interface ReviewItem {
   status: string // staged|approved|rejected|later
   rejectionReason: string
   laterReason: string
-  criticMetadata: Record<string, unknown>
+  /** Empty until the Critic has assessed the finding. */
+  criticMetadata: CriticVerdict
   reviewMetadata: ReviewMetadata
   /** The chat thread whose Scout staged this item, if any. */
   threadId: number | null
@@ -121,6 +122,15 @@ export interface ReviewItem {
   focus: string
   task: string
   createdAt: string
+}
+
+/** The Critic's assessment of a finding. */
+export interface CriticVerdict {
+  verdict?: 'holds' | 'overstated' | 'unsupported' | 'inconclusive'
+  reasoning?: string
+  concerns?: string[]
+  runId?: number
+  assessedAt?: string
 }
 
 /** The scholar's decision on a staged item and why. */

@@ -38,7 +38,7 @@ const ReviewItemCard = forwardRef<HTMLDivElement, Props>(
   ) {
     const [noting, setNoting] = useState<'approve' | 'reject' | null>(null)
     const [deciding, setDeciding] = useState(false)
-    const hasCritic = !!(item.criticMetadata as { verdict?: string })?.verdict
+    const hasCritic = !!item.criticMetadata.verdict
 
     const decide = async (
       decision: 'approve' | 'reject',
