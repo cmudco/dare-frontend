@@ -212,10 +212,6 @@ const TOOL_STEPS: Record<string, { running: string; done: string }> = {
     running: 'Checking your chats',
     done: 'Checked your chats',
   },
-  list_my_prompts: {
-    running: 'Checking your prompts',
-    done: 'Checked your prompts',
-  },
   list_my_models: {
     running: 'Checking your models',
     done: 'Checked your models',

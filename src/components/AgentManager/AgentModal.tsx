@@ -42,6 +42,7 @@ import { modelRefLabel } from '@/utils/modelRef'
 import AgentSourcesFields from './AgentSourcesFields'
 
 const NO_MODEL = 'none'
+const NO_PROMPT = 'none'
 
 const setupFrom = (agent: Agent | null, modelRef: string | null): AgentSetup =>
   agent
@@ -70,7 +71,7 @@ const setupFrom = (agent: Agent | null, modelRef: string | null): AgentSetup =>
     : {
         name: '',
         description: '',
-        prompt: 0,
+        prompt: null,
         modelRef,
         maxTokens: MODEL_CONFIG.maxTokens,
         temperature: MODEL_CONFIG.temperature,
@@ -159,7 +160,7 @@ const AgentEditor: React.FC<AgentEditorProps> = ({ agent, onDone }) => {
         : { ...rest, enableWebSearch: webSearchEnabled }
     )
 
-  const canSave = draft.name.trim() !== '' && draft.prompt > 0 && !saving
+  const canSave = draft.name.trim() !== '' && !saving
 
   const handleSave = async () => {
     setSaving(true)
@@ -212,13 +213,18 @@ const AgentEditor: React.FC<AgentEditorProps> = ({ agent, onDone }) => {
           <div className='space-y-2'>
             <Label htmlFor='agent-prompt'>Prompt</Label>
             <Select
-              value={draft.prompt ? String(draft.prompt) : ''}
-              onValueChange={(value) => update({ prompt: Number(value) })}
+              value={draft.prompt ? String(draft.prompt) : NO_PROMPT}
+              onValueChange={(value) =>
+                update({ prompt: value === NO_PROMPT ? null : Number(value) })
+              }
             >
               <SelectTrigger id='agent-prompt'>
-                <SelectValue placeholder='Choose a prompt' />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent className='max-h-60'>
+                <SelectItem value={NO_PROMPT}>
+                  Keep the chat's prompt
+                </SelectItem>
                 {promptOptions.map((prompt) => (
                   <SelectItem key={prompt.id} value={String(prompt.id)}>
                     {prompt.title || 'Untitled'}

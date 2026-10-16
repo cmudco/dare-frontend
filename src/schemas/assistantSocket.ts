@@ -21,23 +21,12 @@ export const ProposalActionSchema = z.object({
   description: z.string(),
   files: z.array(z.object({ id: z.number(), name: z.string() })),
   conversations: z.array(z.object({ id: z.string(), title: z.string() })),
-  /** create_agent only: the proposed setup; null settings keep the defaults. */
+  /** create_agent only: the suggested model; the user picks the prompt. */
   agent: z
     .object({
       modelRef: z.string(),
       modelName: z.string(),
-      promptTitle: z.string(),
-      newPrompt: z
-        .object({ title: z.string(), content: z.string() })
-        .nullable(),
-      temperature: z.number().nullable(),
-      effort: z.string().nullable(),
-      maxTokens: z.number().nullable(),
-      historyLimit: z.number().nullable(),
       enableWebSearch: z.boolean(),
-      webFetchEnabled: z.boolean(),
-      artifactsEnabled: z.boolean(),
-      memoryEnabled: z.boolean(),
     })
     .nullable(),
   status: z.enum(ProposalActionStatus),

@@ -5,7 +5,8 @@ import { EffortLevel } from '@/utils/constants/model'
 export interface AgentSetup {
   name: string
   description: string
-  prompt: number
+  /** Null keeps the chat's prompt when the agent is applied. */
+  prompt: number | null
   /** Picker id: an LLM PK, `litellm:<key>:<model>`, or null for the chat's model. */
   modelRef: string | null
   maxTokens: number

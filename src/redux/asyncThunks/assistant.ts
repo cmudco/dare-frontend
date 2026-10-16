@@ -14,7 +14,6 @@ import { getConversations } from './conversation'
 import { getDeletedFiles, getFiles, getFolders } from './file'
 import { fetchProjectChats, fetchProjects } from './project'
 import { getAgents } from './agent'
-import { getPrompts } from './prompt'
 import { getTags } from './tag'
 
 export const fetchAssistantThread = createAsyncThunk<
@@ -74,7 +73,6 @@ export const runProposalCommand = createAsyncThunk<
         dispatch(fetchProjects())
         dispatch(getConversations())
         dispatch(getAgents())
-        dispatch(getPrompts())
         Object.keys(getState().project.chats).forEach((projectId) =>
           dispatch(fetchProjectChats(Number(projectId)))
         )
