@@ -14,7 +14,12 @@ import { EffortLevel, EffortLevelLabels } from '@/utils/constants/model'
 import { Button } from '../ui/button'
 import { Slider } from '../ui/slider'
 import { Switch } from '../ui/switch'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipPortal,
+  TooltipTrigger,
+} from '../ui/tooltip'
 
 const ADAPTIVE_EFFORT_GUIDANCE: Record<
   EffortLevel,
@@ -74,13 +79,16 @@ const InfoLabel: React.FC<InfoLabelProps> = ({
           aria-label={`About ${title}`}
         />
       </TooltipTrigger>
-      <TooltipContent className='max-w-xs'>
-        <div className='space-y-2'>
-          <p className='font-semibold'>{title}</p>
-          <p className='text-sm'>{description}</p>
-          {tip && <p className='text-xs text-muted-foreground'>💡 {tip}</p>}
-        </div>
-      </TooltipContent>
+      {/* Portalled so a scrolling host (the agent dialog) cannot clip it. */}
+      <TooltipPortal>
+        <TooltipContent className='max-w-xs'>
+          <div className='space-y-2'>
+            <p className='font-semibold'>{title}</p>
+            <p className='text-sm'>{description}</p>
+            {tip && <p className='text-xs text-muted-foreground'>💡 {tip}</p>}
+          </div>
+        </TooltipContent>
+      </TooltipPortal>
     </Tooltip>
   </div>
 )
@@ -139,9 +147,6 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
     : Object.values(EffortLevel)
   const usesAdaptiveThinking = model?.supportsAdaptiveThinking ?? false
   const effortGuidance = ADAPTIVE_EFFORT_GUIDANCE[effort]
-  const maxTokenCeiling = usesAdaptiveThinking
-    ? MODEL_CONFIG.adaptiveThinkingTokenCeiling
-    : 16384
 
   return (
     <div className='flex flex-col gap-4'>
@@ -251,7 +256,7 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
         <Slider
           value={[settings.maxTokens]}
           min={256}
-          max={maxTokenCeiling}
+          max={MODEL_CONFIG.maxTokensCeiling}
           step={256}
           onValueChange={(values) => onChange({ maxTokens: values[0] })}
           className='my-4 cursor-pointer'

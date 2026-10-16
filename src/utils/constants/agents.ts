@@ -17,3 +17,9 @@ export const AGENT_TABLE_HEADER_TO_KEY = {
   'Date Created': 'createdAt',
   Action: null,
 } as const
+
+/** New-agent defaults; match the backend's AGENT_DEFAULT_* (thinking models share the token budget). */
+export const AGENT_DEFAULTS = {
+  maxTokens: 16384,
+  historyLimit: 40,
+} as const

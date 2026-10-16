@@ -1,13 +1,16 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { ProposalCommand } from '@/utils/constants/assistant'
 import {
+  getAssistantHistoryAPI,
   getAssistantThreadAPI,
+  openAssistantThreadAPI,
   runProposalCommandAPI,
   startAssistantThreadAPI,
 } from '@/api/assistant'
 import type {
   AssistantProposal,
   AssistantThread,
+  AssistantThreadSummary,
 } from '@/schemas/assistantSocket'
 import type { RootState } from '../store'
 import { getConversations } from './conversation'
@@ -40,11 +43,37 @@ export const startAssistantThread = createAsyncThunk<
   }
 })
 
+export const fetchAssistantHistory = createAsyncThunk<
+  AssistantThreadSummary[],
+  void,
+  { rejectValue: string }
+>('assistant/fetchHistory', async (_, thunkAPI) => {
+  try {
+    return await getAssistantHistoryAPI()
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
+export const openAssistantThread = createAsyncThunk<
+  AssistantThread,
+  number,
+  { rejectValue: string }
+>('assistant/openThread', async (threadId, thunkAPI) => {
+  try {
+    return await openAssistantThreadAPI(threadId)
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
+
 export interface ProposalCommandRequest {
   proposalId: number
   command: ProposalCommand
   /** Apply or undo just these actions; omitted means all of them. */
   actionId?: string
+  /** Apply only: create_agent action id -> the offered model the user picked. */
+  modelChoices?: Record<string, string>
 }
 
 export const runProposalCommand = createAsyncThunk<
@@ -53,12 +82,13 @@ export const runProposalCommand = createAsyncThunk<
   { state: RootState; rejectValue: string }
 >(
   'assistant/runProposalCommand',
-  async ({ proposalId, command, actionId }, thunkAPI) => {
+  async ({ proposalId, command, actionId, modelChoices }, thunkAPI) => {
     try {
       const proposal = await runProposalCommandAPI(
         proposalId,
         command,
-        actionId ? [actionId] : undefined
+        actionId ? [actionId] : undefined,
+        modelChoices
       )
       if (
         command === ProposalCommand.APPLY ||

@@ -216,6 +216,10 @@ const TOOL_STEPS: Record<string, { running: string; done: string }> = {
     running: 'Checking your models',
     done: 'Checked your models',
   },
+  search_my_prompts: {
+    running: 'Looking through your prompts',
+    done: 'Looked through your prompts',
+  },
   propose_changes: {
     running: 'Drafting the changes',
     done: 'Drafted the changes',
