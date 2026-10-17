@@ -1,4 +1,5 @@
 import React from 'react'
+import { Markdown } from '@/components/Markdown/Markdown'
 import type { Artifact } from '@/redux/types/artifact'
 import {
   ChartRenderer,
@@ -11,8 +12,6 @@ import {
 } from './renderers'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 
 interface ArtifactRendererProps {
   artifact: Artifact
@@ -45,7 +44,7 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
         <iframe
           title={artifact.title || 'HTML artifact'}
           srcDoc={artifact.content}
-          sandbox=''
+          sandbox='allow-scripts'
           className='h-full min-h-[360px] w-full rounded-lg border border-border bg-white'
         />
       )
@@ -112,9 +111,7 @@ export const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({
       return (
         <div className='h-full min-w-0 overflow-auto p-4 sm:p-6'>
           <div className='prose prose-sm max-w-none break-words dark:prose-invert prose-table:block prose-table:overflow-x-auto'>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {artifact.content}
-            </ReactMarkdown>
+            <Markdown content={artifact.content} />
           </div>
         </div>
       )

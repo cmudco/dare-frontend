@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
+import { Markdown } from '@/components/Markdown/Markdown'
 import { useParams, useNavigate } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   getMcpServers,
@@ -301,9 +300,7 @@ const MCPServerDetail = () => {
               {showSetupGuide && (
                 <div className='max-h-64 overflow-y-auto bg-background p-4'>
                   <div className='prose prose-sm max-w-none dark:prose-invert'>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {server.setupGuide}
-                    </ReactMarkdown>
+                    <Markdown content={server.setupGuide} />
                   </div>
                 </div>
               )}

@@ -11,6 +11,12 @@ import {
   ArrowsPointingOutIcon,
 } from '@heroicons/react/24/outline'
 
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'default',
+  securityLevel: 'loose',
+})
+
 interface ZoomControlsProps {
   onZoomIn: () => void
   onZoomOut: () => void

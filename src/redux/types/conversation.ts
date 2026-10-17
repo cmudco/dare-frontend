@@ -501,7 +501,6 @@ export interface GeneratedTranscription {
 export interface MessageProps {
   message: Message
   onEditMessage?: (id: string, content: string) => void
-  onContentRendered?: () => void
   shouldShowAutoFeedback?: boolean
 }
 

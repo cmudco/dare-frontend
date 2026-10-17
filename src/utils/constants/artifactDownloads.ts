@@ -7,6 +7,7 @@ export enum ArtifactDownloadFormat {
   JSX = 'jsx',
   TXT = 'txt',
   MD = 'md',
+  HTML = 'html',
   CHART_JSON = 'chart-json',
   IMAGE_ORIGINAL = 'image-original',
   PNG = 'png',

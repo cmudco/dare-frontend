@@ -10,6 +10,11 @@
 @import './themes/rose.css';
 
 @plugin '@tailwindcss/typography';
+/* Streamdown ships Tailwind classes in its dist; scan them so they're generated. */
+@source '../node_modules/streamdown/dist/*.js';
+@source '../node_modules/@streamdown/code/dist/*.js';
+@source '../node_modules/@streamdown/math/dist/*.js';
+@source '../node_modules/@streamdown/mermaid/dist/*.js';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -224,6 +229,26 @@
     --sidebar-border: hsl(0 0% 100% / 0.15);
     --sidebar-ring: hsl(348 88% 52%);
   }
+}
+
+/* Streamdown draws its own code and inline-code chrome; keep Tailwind
+   Typography's pre/code styles (margins, backtick pseudo-content) off it. */
+.prose [data-streamdown='code-block'] pre {
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.prose [data-streamdown='inline-code']::before,
+.prose [data-streamdown='inline-code']::after {
+  content: none;
+}
+[data-streamdown='inline-code'] {
+  font-size: 0.875em;
+  font-weight: 500;
+}
+[data-streamdown='code-block-body'] pre {
+  font-size: 0.8125rem;
 }
 
 @layer base {

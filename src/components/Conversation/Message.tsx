@@ -6,12 +6,6 @@ import {
   isSenderMessage,
 } from '@/redux/types/conversation'
 import { FeedbackType } from '@/utils/constants/conversation'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
-import rehypeRaw from 'rehype-raw'
-import 'katex/dist/katex.min.css'
-import 'highlight.js/styles/atom-one-light.css'
 import {
   Bot,
   ChevronDown,
@@ -29,11 +23,6 @@ import clsx from 'clsx'
 import { resolveMediaUrl } from '@/utils/files'
 import { estimatedUsageFields, sumUsage } from '../../utils/usageDetails'
 import { RootState } from '@/redux/store'
-import mermaid from 'mermaid'
-import rehypeKatex from 'rehype-katex'
-import rehypeHighlight from 'rehype-highlight'
-import { CodeBlock } from './CodeBlock'
-import { MermaidBlock } from './MermaidBlock'
 import { PencilIcon } from '@heroicons/react/20/solid'
 import {
   updateMessageThunk,
@@ -46,22 +35,19 @@ import FeedbackModal from './FeedbackModal'
 import MessageMetadata from './MessageMetadata'
 import { DeleteConfirmation } from '../DeleteConfirmation'
 import { ArtifactCard } from '../Artifacts'
+import { Markdown } from '../Markdown/Markdown'
+import type { ArtifactCardState, MarkdownFence } from '../Markdown/Markdown'
+import { OpenInEditorButton } from '../Artifacts/OpenInEditorButton'
+import SnippetArtifactCard from '../Artifacts/SnippetArtifactCard'
 import { MessageActivity } from './MessageActivity/MessageActivity'
 import ThinkingSummary from './ThinkingSummary'
 import { DeliberationPanel } from './Deliberation/DeliberationPanel'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { debugLog } from '@/utils/debugLogger'
 
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'default',
-  securityLevel: 'loose',
-})
-
 const Message: React.FC<MessageProps> = ({
   message,
   onEditMessage,
-  onContentRendered,
   shouldShowAutoFeedback,
 }) => {
   const dispatch = useDispatch<AppDispatch>()
@@ -245,6 +231,36 @@ const Message: React.FC<MessageProps> = ({
     }
   }
 
+  // Owners can turn assistant code into artifacts; cards show while the
+  // answer streams, but open only once the message is saved.
+  const canUseArtifacts =
+    enableArtifacts &&
+    !isReadOnly &&
+    !isSenderMessage(message) &&
+    Boolean(activeConversation?.conversationId)
+  const canOpenInEditor = canUseArtifacts && !message.streaming
+
+  const renderOpenInEditor = (fence: MarkdownFence) =>
+    activeConversation ? (
+      <OpenInEditorButton
+        conversationId={activeConversation.conversationId}
+        messageId={message.id}
+        fence={fence}
+      />
+    ) : null
+
+  const renderArtifactCard = (fence: MarkdownFence, card: ArtifactCardState) =>
+    activeConversation ? (
+      <SnippetArtifactCard
+        conversationId={activeConversation.conversationId}
+        messageId={message.id}
+        fence={fence}
+        kind={card.kind}
+        incomplete={card.incomplete || Boolean(message.streaming)}
+        onShowCode={card.onShowCode}
+      />
+    ) : null
+
   const displayMessage =
     showOriginal && message.originalMessage
       ? message.originalMessage
@@ -348,16 +364,12 @@ const Message: React.FC<MessageProps> = ({
               : 'border border-border bg-card'
           } inline-block hover:z-20`}
         >
-          {/* Above the pulsing wrapper on purpose: the drafts are the live
-              content while the answer is still empty. */}
+          {/* Above the answer on purpose: the drafts are the live content
+              while the answer is still empty. */}
           {!isSenderMessage(message) && message.deliberation && (
             <DeliberationPanel message={message} />
           )}
-          <div
-            className={`font-normal text-wrap ${
-              message.streaming ? 'animate-pulse' : ''
-            }`}
-          >
+          <div className='font-normal text-wrap'>
             {!isSenderMessage(message) && thinkingSummary && (
               <ThinkingSummary
                 summary={thinkingSummary}
@@ -368,115 +380,15 @@ const Message: React.FC<MessageProps> = ({
               className={`prose ${getFontSizeClasses()} max-w-full text-foreground focus:outline-hidden dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
               style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
             >
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={
-                  message.streaming
-                    ? [rehypeKatex, rehypeRaw]
-                    : [rehypeKatex, rehypeHighlight, rehypeRaw]
+              <Markdown
+                content={displayMessage}
+                streaming={message.streaming}
+                fenceAction={canOpenInEditor ? renderOpenInEditor : undefined}
+                renderArtifactCard={
+                  canUseArtifacts ? renderArtifactCard : undefined
                 }
-                components={{
-                  // Handle tables
-                  table({ children, ...props }) {
-                    return (
-                      <div className='max-w-full overflow-x-auto'>
-                        <table className='min-w-full' {...props}>
-                          {children}
-                        </table>
-                      </div>
-                    )
-                  },
-                  // Handle pre blocks
-                  pre({ children, ...props }) {
-                    return (
-                      <pre
-                        className='max-w-full overflow-x-auto wrap-break-word break-all whitespace-pre-wrap'
-                        {...props}
-                      >
-                        {children}
-                      </pre>
-                    )
-                  },
-                  // Handle paragraphs
-                  p({ children, ...props }) {
-                    return (
-                      <p
-                        className='wrap-break-word'
-                        style={{
-                          wordBreak: 'break-word',
-                          overflowWrap: 'break-word',
-                        }}
-                        {...props}
-                      >
-                        {children}
-                      </p>
-                    )
-                  },
-                  // Handle links to prevent long URLs from overflowing
-                  a({ children, href, ...props }) {
-                    return (
-                      <a
-                        href={href}
-                        className='break-all'
-                        style={{
-                          wordBreak: 'break-all',
-                          overflowWrap: 'break-word',
-                        }}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        onClick={(e) => {
-                          if (!href) return
-                          e.preventDefault()
-                          window.open(href, '_blank', 'noopener,noreferrer')
-                        }}
-                        {...props}
-                      >
-                        {children}
-                      </a>
-                    )
-                  },
-                  code({ className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '')
-                    if (match && match[1] === 'mermaid') {
-                      if (message.streaming) {
-                        return (
-                          <div className='not-prose my-4'>
-                            Loading diagram...
-                          </div>
-                        )
-                      }
-                      return (
-                        <MermaidBlock
-                          code={String(children).trim()}
-                          onRendered={onContentRendered}
-                          streaming={message.streaming}
-                        />
-                      )
-                    }
-                    if (match) {
-                      return (
-                        <CodeBlock className={className} props={props}>
-                          {children}
-                        </CodeBlock>
-                      )
-                    }
-                    return (
-                      <code
-                        className='not-prose rounded-sm border border-border bg-muted px-1 break-all text-foreground transition-colors hover:bg-muted/80'
-                        style={{
-                          wordBreak: 'break-all',
-                          overflowWrap: 'break-word',
-                        }}
-                        {...props}
-                      >
-                        {children}
-                      </code>
-                    )
-                  },
-                }}
-              >
-                {message.streaming ? `${displayMessage}\u258b` : displayMessage}
-              </ReactMarkdown>
+                runnable={!isSenderMessage(message)}
+              />
 
               {/* User Uploaded Images Display */}
               {(() => {

@@ -54,6 +54,8 @@ const SUPPORTED_ACTION_TYPES: ArtifactType[] = [
   'react',
   'code',
   'document',
+  'html',
+  'svg',
 ]
 
 const COPYABLE_ACTION_TYPES: ArtifactType[] = [
@@ -62,6 +64,8 @@ const COPYABLE_ACTION_TYPES: ArtifactType[] = [
   'react',
   'code',
   'document',
+  'html',
+  'svg',
 ]
 
 const ArtifactActions: React.FC<ArtifactActionsProps> = ({
