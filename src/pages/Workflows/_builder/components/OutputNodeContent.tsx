@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Markdown } from '@/components/Markdown/Markdown'
 import { ChevronDown, Maximize2 } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 
 interface OutputNodeContentProps {
   response: string
@@ -88,7 +87,7 @@ export function OutputNodeContent({
         onWheel={handleWheel}
       >
         <div className='prose prose-sm max-w-full text-foreground dark:prose-invert prose-headings:my-2 prose-p:my-1'>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{response}</ReactMarkdown>
+          <Markdown content={response} />
         </div>
         {/* Scroll anchor */}
         <div ref={anchorRef} />

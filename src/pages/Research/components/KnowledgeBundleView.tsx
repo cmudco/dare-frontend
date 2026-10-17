@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Markdown } from '@/components/Markdown/Markdown'
 import ForceGraph from 'force-graph'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import {
   ArrowRight,
   ExternalLink,
@@ -259,8 +258,8 @@ const KnowledgeBundleView = ({
                 <Frontmatter file={active} />
               )}
               <div className='prose prose-sm mt-3 max-w-none dark:prose-invert prose-headings:font-semibold prose-h1:mt-5 prose-h1:text-base prose-a:text-blue-600 dark:prose-a:text-blue-400'>
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
+                <Markdown
+                  content={active.body}
                   components={{
                     a: ({ href, children }) => {
                       const url = href ?? ''
@@ -288,9 +287,7 @@ const KnowledgeBundleView = ({
                       )
                     },
                   }}
-                >
-                  {active.body}
-                </ReactMarkdown>
+                />
               </div>
             </article>
           ) : (

@@ -56,9 +56,11 @@ export function getDownloadOptions(
         { format: ArtifactDownloadFormat.JSX, label: 'React Source (.jsx)' },
       ]
     case 'code':
-      return [
-        { format: ArtifactDownloadFormat.TXT, label: 'Source Text (.txt)' },
-      ]
+      return [{ format: ArtifactDownloadFormat.TXT, label: 'Source file' }]
+    case 'html':
+      return [{ format: ArtifactDownloadFormat.HTML, label: 'HTML (.html)' }]
+    case 'svg':
+      return [{ format: ArtifactDownloadFormat.SVG, label: 'SVG (.svg)' }]
     case 'document':
       return [{ format: ArtifactDownloadFormat.MD, label: 'Markdown (.md)' }]
     default:
@@ -85,15 +87,27 @@ export function getFormatLabel(format: ArtifactDownloadFormat) {
   }
 }
 
-export function getSourceExtension(artifactType: ArtifactType) {
-  if (artifactType === 'react') return 'jsx'
-  if (artifactType === 'document') return 'md'
-  return 'txt'
+const SOURCE_EXTENSIONS: Partial<Record<ArtifactType, string>> = {
+  react: 'jsx',
+  document: 'md',
+  html: 'html',
+  svg: 'svg',
+}
+
+/** Keep the artifact's own extension (e.g. `.py`, `.tsx`) for source files. */
+export function getSourceExtension(artifactType: ArtifactType, filename = '') {
+  const ownExtension = filename.includes('.') ? filename.split('.').pop() : ''
+  if (ownExtension && (artifactType === 'code' || artifactType === 'react')) {
+    return ownExtension
+  }
+  return SOURCE_EXTENSIONS[artifactType] ?? 'txt'
 }
 
 export function getSourceMimeType(artifactType: ArtifactType) {
   if (artifactType === 'react') return 'text/jsx;charset=utf-8'
   if (artifactType === 'document') return 'text/markdown;charset=utf-8'
+  if (artifactType === 'html') return 'text/html;charset=utf-8'
+  if (artifactType === 'svg') return 'image/svg+xml;charset=utf-8'
   return 'text/plain;charset=utf-8'
 }
 

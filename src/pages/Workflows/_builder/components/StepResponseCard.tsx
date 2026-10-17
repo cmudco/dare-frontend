@@ -9,6 +9,7 @@
  */
 
 import { memo, useState } from 'react'
+import { Markdown } from '@/components/Markdown/Markdown'
 import { useDispatch } from 'react-redux'
 import {
   Loader2,
@@ -29,12 +30,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import rehypeRaw from 'rehype-raw'
-import rehypeHighlight from 'rehype-highlight'
-import { CodeBlock } from '@/components/Conversation/CodeBlock'
-import { MermaidBlock } from '@/components/Conversation/MermaidBlock'
 import type {
   NodeState,
   WorkflowStepArtifact,
@@ -209,69 +204,7 @@ export const StepResponseCard = memo(function StepResponseCard({
       {content && (
         <div className='mt-2 rounded-sm bg-background/80 p-2'>
           <div className='prose prose-sm max-w-full text-foreground dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-pre:bg-transparent prose-pre:p-0'>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={
-                isActive ? [rehypeRaw] : [rehypeHighlight, rehypeRaw]
-              }
-              components={{
-                table({ children, ...props }) {
-                  return (
-                    <div className='max-w-full overflow-x-auto'>
-                      <table className='min-w-full text-xs' {...props}>
-                        {children}
-                      </table>
-                    </div>
-                  )
-                },
-                pre({ children, ...props }) {
-                  return (
-                    <pre
-                      className='max-w-full overflow-x-auto text-xs wrap-break-word whitespace-pre-wrap'
-                      {...props}
-                    >
-                      {children}
-                    </pre>
-                  )
-                },
-                code({ className, children, ...props }) {
-                  const match = /language-(\w+)/.exec(className || '')
-                  if (match && match[1] === 'mermaid') {
-                    if (isActive) {
-                      return (
-                        <div className='not-prose my-4 text-xs text-muted-foreground'>
-                          Loading diagram...
-                        </div>
-                      )
-                    }
-                    return (
-                      <MermaidBlock
-                        code={String(children).trim()}
-                        streaming={isActive}
-                      />
-                    )
-                  }
-                  if (match) {
-                    return (
-                      <CodeBlock className={className} props={props}>
-                        {children}
-                      </CodeBlock>
-                    )
-                  }
-                  return (
-                    <code
-                      className='not-prose rounded-sm border border-border bg-muted px-1 text-xs break-all text-foreground'
-                      {...props}
-                    >
-                      {children}
-                    </code>
-                  )
-                },
-              }}
-            >
-              {content}
-            </ReactMarkdown>
-            {isActive && <span className='animate-pulse text-dare'>|</span>}
+            <Markdown content={content} streaming={isActive} />
           </div>
         </div>
       )}
