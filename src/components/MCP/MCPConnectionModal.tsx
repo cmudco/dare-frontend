@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { Markdown } from '@/components/Markdown/Markdown'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   createMcpConnection,
@@ -171,9 +170,7 @@ export const MCPConnectionModal = ({
               {showSetupGuide && (
                 <div className='max-h-64 overflow-y-auto bg-background p-4'>
                   <div className='prose prose-sm max-w-none dark:prose-invert'>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {server.setupGuide}
-                    </ReactMarkdown>
+                    <Markdown content={server.setupGuide} />
                   </div>
                 </div>
               )}

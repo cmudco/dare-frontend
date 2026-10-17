@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { useEffect, useRef, useCallback, useMemo } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { RootState } from '../../redux/store'
 import Message from './Message'
@@ -75,10 +75,6 @@ const MessageList = ({
     if (scrollToBottomRequest > 0) forceScrollToBottom('auto')
   }, [scrollToBottomRequest, forceScrollToBottom])
 
-  const handleContentRendered = useCallback(() => {
-    scrollToBottom(isStreaming ? 'auto' : 'smooth')
-  }, [scrollToBottom, isStreaming])
-
   return (
     <div className='relative min-h-0 flex-1'>
       <div
@@ -94,7 +90,6 @@ const MessageList = ({
                 key={message.id || idx}
                 message={message}
                 onEditMessage={onEditMessage}
-                onContentRendered={handleContentRendered}
                 shouldShowAutoFeedback={
                   shouldShowAutoFeedbackModal && isLastMessage
                 }

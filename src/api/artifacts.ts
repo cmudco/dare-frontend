@@ -4,6 +4,7 @@ import type {
   ArtifactListResponse,
   ArtifactDetailResponse,
   ArtifactStatus,
+  SnippetArtifactRequest,
 } from '@/redux/types/artifact'
 import { ArtifactDownloadFormat } from '@/utils/constants/artifactDownloads'
 
@@ -98,6 +99,21 @@ export const updateArtifactContentAPI = async (
     url: `api/artifacts/${artifactId}/content/`,
     method: METHOD.PATCH,
     data: { content },
+  })
+}
+
+/**
+ * Open a chat code block as an artifact. Reopening the same block returns
+ * its latest saved version instead of creating a copy.
+ */
+export const createSnippetArtifactAPI = async (
+  conversationId: string,
+  request: SnippetArtifactRequest
+): Promise<ArtifactDetailResponse> => {
+  return await baseRequest<ArtifactDetailResponse>({
+    url: `api/conversations/${conversationId}/artifacts/`,
+    method: METHOD.POST,
+    data: request,
   })
 }
 

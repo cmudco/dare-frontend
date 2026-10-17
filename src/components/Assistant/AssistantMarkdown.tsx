@@ -1,14 +1,13 @@
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { Link } from 'react-router-dom'
+import { Markdown } from '@/components/Markdown/Markdown'
 
 // Relative links are in-app pages the assistant points to; they navigate
 // without a reload so the panel and thread stay open.
 export function AssistantMarkdown({ content }: { content: string }) {
   return (
     <div className='prose prose-sm max-w-none wrap-break-word dark:prose-invert prose-p:my-1.5 prose-ol:my-1.5 prose-ul:my-1.5 prose-li:my-0.5'>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+      <Markdown
+        content={content}
         components={{
           a({ href, children }) {
             if (href?.startsWith('/')) {
@@ -30,9 +29,7 @@ export function AssistantMarkdown({ content }: { content: string }) {
             )
           },
         }}
-      >
-        {content}
-      </ReactMarkdown>
+      />
     </div>
   )
 }

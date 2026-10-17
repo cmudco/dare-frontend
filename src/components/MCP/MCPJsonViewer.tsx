@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { Markdown } from '@/components/Markdown/Markdown'
 import {
   Copy,
   Check,
@@ -148,9 +147,7 @@ const MCPJsonViewer = ({ data }: MCPJsonViewerProps) => {
         <div className='max-h-96 overflow-auto p-4'>
           {showTextView ? (
             <div className='prose prose-sm max-w-none dark:prose-invert'>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {textContent}
-              </ReactMarkdown>
+              <Markdown content={textContent} />
             </div>
           ) : (
             <pre className='text-sm'>
