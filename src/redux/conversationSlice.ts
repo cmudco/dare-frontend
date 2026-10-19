@@ -22,12 +22,15 @@ import {
   publishConversation,
   forkConversation,
   fetchConversationMessages,
+  applyAgentToConversation,
 } from './asyncThunks/conversation'
 import {
   deleteProject,
   moveConversationsToProject,
 } from './asyncThunks/project'
 import {
+  ModelSettings,
+  ConversationState,
   Message,
   Conversation,
   ConversationSummary,
@@ -64,8 +67,75 @@ import {
   syncModelsWithImageGenerationState,
   syncModelsWithAudioTranscriptionState,
 } from './utils/modelSyncHelpers'
-import { EffortLevel } from '@/utils/constants/model'
 import { userLogin, userLogout } from './asyncThunks/user'
+
+/** Make `conversation` the active chat and mirror its toggles and model choice. */
+function setActiveConversation(
+  state: ConversationState,
+  conversation: Conversation | null
+) {
+  state.activeConversation = conversation
+  if (conversation) {
+    // Update toggle states from conversation
+    state.webSearchEnabled = conversation.webSearchEnabled ?? false
+    state.webFetchEnabled = conversation.webFetchEnabled ?? false
+    state.imageGenerationEnabled = conversation.imageGenerationEnabled ?? false
+    state.audioTranscriptionEnabled =
+      conversation.audioTranscriptionEnabled ?? false
+    state.artifactsEnabled = conversation.artifactsEnabled ?? false
+    state.memoryEnabled = conversation.memoryEnabled ?? false
+
+    const desired = conversation.selectedModelRef ?? null
+
+    // Sync picker entries based on the active mode (priority: audio >
+    // image > text).
+    if (conversation.audioTranscriptionEnabled) {
+      syncModelsWithAudioTranscriptionState(state, true, desired)
+    } else if (conversation.imageGenerationEnabled) {
+      syncModelsWithImageGenerationState(state, true, desired)
+    } else {
+      syncModelsWithImageGenerationState(state, false, desired)
+    }
+    // Preserve the saved choice until the catalog arrives and validates it.
+    if (!state.pickerEntries.length) state.selectedModel = desired
+  }
+}
+
+function selectModel(state: ConversationState, modelId: string | null) {
+  state.selectedModel = modelId
+  const selectedEntry = state.pickerEntries.find(
+    (entry) => entry.id === modelId
+  )
+  if (
+    selectedEntry?.supportsEffort &&
+    state.activeConversation &&
+    state.activeConversation.effort == null
+  ) {
+    state.activeConversation.effort = selectedEntry.defaultEffort
+  }
+}
+
+function selectSources(
+  state: ConversationState,
+  files: MyFile[],
+  fileIds: number[],
+  embeddingIds: number[]
+) {
+  state.selectedFiles = files.filter((file) => fileIds.includes(file.id))
+  state.selectedEmbeddings = files.filter((file) =>
+    embeddingIds.includes(file.id)
+  )
+}
+
+function selectLibraries(
+  state: ConversationState,
+  libraries: SharedLibrary[],
+  libraryIds: number[]
+) {
+  state.selectedLibraries = libraries.filter((library) =>
+    libraryIds.includes(library.id)
+  )
+}
 
 export const conversationSlice = createSlice({
   name: 'conversation',
@@ -80,32 +150,7 @@ export const conversationSlice = createSlice({
       state,
       action: PayloadAction<Conversation | null>
     ) {
-      state.activeConversation = action.payload
-      if (action.payload) {
-        // Update toggle states from conversation
-        state.webSearchEnabled = action.payload.webSearchEnabled ?? false
-        state.webFetchEnabled = action.payload.webFetchEnabled ?? false
-        state.imageGenerationEnabled =
-          action.payload.imageGenerationEnabled ?? false
-        state.audioTranscriptionEnabled =
-          action.payload.audioTranscriptionEnabled ?? false
-        state.artifactsEnabled = action.payload.artifactsEnabled ?? false
-        state.memoryEnabled = action.payload.memoryEnabled ?? false
-
-        const desired = action.payload.selectedModelRef ?? null
-
-        // Sync picker entries based on the active mode (priority: audio >
-        // image > text).
-        if (action.payload.audioTranscriptionEnabled) {
-          syncModelsWithAudioTranscriptionState(state, true, desired)
-        } else if (action.payload.imageGenerationEnabled) {
-          syncModelsWithImageGenerationState(state, true, desired)
-        } else {
-          syncModelsWithImageGenerationState(state, false, desired)
-        }
-        // Preserve the saved choice until the catalog arrives and validates it.
-        if (!state.pickerEntries.length) state.selectedModel = desired
-      }
+      setActiveConversation(state, action.payload)
     },
     loadSelectedFilesFromIds(
       state,
@@ -119,12 +164,7 @@ export const conversationSlice = createSlice({
       const { files, selectedFileIds, selectedEmbeddingIds, selectedMediaIds } =
         action.payload
 
-      state.selectedFiles = files.filter((file) =>
-        selectedFileIds.includes(file.id)
-      )
-      state.selectedEmbeddings = files.filter((file) =>
-        selectedEmbeddingIds.includes(file.id)
-      )
+      selectSources(state, files, selectedFileIds, selectedEmbeddingIds)
       if (selectedMediaIds) {
         state.selectedMediaFiles = files.filter((file) =>
           selectedMediaIds.includes(file.id)
@@ -139,22 +179,10 @@ export const conversationSlice = createSlice({
       }>
     ) {
       const { libraries, selectedLibraryIds } = action.payload
-      state.selectedLibraries = libraries.filter((library) =>
-        selectedLibraryIds.includes(library.id)
-      )
+      selectLibraries(state, libraries, selectedLibraryIds)
     },
     updateSelectedModel(state, action: PayloadAction<string | null>) {
-      state.selectedModel = action.payload
-      const selectedEntry = state.pickerEntries.find(
-        (entry) => entry.id === action.payload
-      )
-      if (
-        selectedEntry?.supportsEffort &&
-        state.activeConversation &&
-        state.activeConversation.effort == null
-      ) {
-        state.activeConversation.effort = selectedEntry.defaultEffort
-      }
+      selectModel(state, action.payload)
     },
     setEnsembleDepth(state, action: PayloadAction<EnsembleDepth>) {
       state.ensemble.depth = action.payload
@@ -268,20 +296,19 @@ export const conversationSlice = createSlice({
     clearConversation(state) {
       state.activeConversationMessages = []
     },
-    updateTemperature(state, action: PayloadAction<number>) {
-      if (state.activeConversation) {
-        state.activeConversation.temperature = action.payload
+    updateModelSettings(state, action: PayloadAction<Partial<ModelSettings>>) {
+      const patch = action.payload
+      if (patch.webSearchEnabled !== undefined) {
+        state.webSearchEnabled = patch.webSearchEnabled
       }
-    },
-    updateEffort(state, action: PayloadAction<EffortLevel | null>) {
-      if (state.activeConversation) {
-        state.activeConversation.effort = action.payload
+      if (patch.webFetchEnabled !== undefined) {
+        state.webFetchEnabled = patch.webFetchEnabled
       }
-    },
-    updateMaxTokens(state, action: PayloadAction<number>) {
-      if (state.activeConversation) {
-        state.activeConversation.maxTokens = action.payload
+      if (patch.artifactsEnabled !== undefined) {
+        state.artifactsEnabled = patch.artifactsEnabled
       }
+      if (state.activeConversation)
+        Object.assign(state.activeConversation, patch)
     },
     updateMaxContextSnippets(state, action: PayloadAction<number>) {
       if (state.activeConversation) {
@@ -298,23 +325,6 @@ export const conversationSlice = createSlice({
         state.activeConversation.ragMode = action.payload
       }
     },
-    updateHistoryLimit(state, action: PayloadAction<number>) {
-      if (state.activeConversation) {
-        state.activeConversation.historyLimit = action.payload
-      }
-    },
-    updateWebSearchEnabled(state, action: PayloadAction<boolean>) {
-      state.webSearchEnabled = action.payload
-      if (state.activeConversation) {
-        state.activeConversation.webSearchEnabled = action.payload
-      }
-    },
-    updateWebFetchEnabled(state, action: PayloadAction<boolean>) {
-      state.webFetchEnabled = action.payload
-      if (state.activeConversation) {
-        state.activeConversation.webFetchEnabled = action.payload
-      }
-    },
     updateImageGenerationEnabled(state, action: PayloadAction<boolean>) {
       // Update global and conversation-level state
       state.imageGenerationEnabled = action.payload
@@ -329,13 +339,6 @@ export const conversationSlice = createSlice({
         state.selectedModel
       )
     },
-    updateArtifactsEnabled(state, action: PayloadAction<boolean>) {
-      // Update global and conversation-level state
-      state.artifactsEnabled = action.payload
-      if (state.activeConversation) {
-        state.activeConversation.artifactsEnabled = action.payload
-      }
-    },
     updateSelectedMcpServers(state, action: PayloadAction<number[]>) {
       if (state.activeConversation) {
         state.activeConversation.selectedMcpServerIds = action.payload
@@ -346,66 +349,10 @@ export const conversationSlice = createSlice({
         state.activeConversation.selectedDareToolSlugs = action.payload
       }
     },
-    updateSelectedAgent(
-      state,
-      action: PayloadAction<{
-        agentId: number | null
-        agentName: string | null
-      }>
-    ) {
-      if (state.activeConversation) {
-        state.activeConversation.selectedAgent = action.payload.agentId
-        state.activeConversation.selectedAgentName = action.payload.agentName
-      }
-    },
     /**
      * Apply all agent settings to the active conversation in a single action.
      * This consolidates multiple individual updates for better performance and cleaner code.
      */
-    applyAgentSettings(
-      state,
-      action: PayloadAction<{
-        agentId: number
-        agentName: string
-        // Agent.llm is a numeric FK to a real DB-backed LLM — agents can't
-        // route through LiteLLM today, so we just stringify the PK.
-        llm?: number | null
-        temperature: number
-        maxTokens: number
-        maxContextSnippets: number
-        documentSimilarityThreshold: number
-        enableWebSearch: boolean
-      }>
-    ) {
-      if (!state.activeConversation) return
-
-      const {
-        agentId,
-        agentName,
-        llm,
-        temperature,
-        maxTokens,
-        maxContextSnippets,
-        documentSimilarityThreshold,
-        enableWebSearch,
-      } = action.payload
-
-      // Update agent selection
-      state.activeConversation.selectedAgent = agentId
-      state.activeConversation.selectedAgentName = agentName
-
-      // Apply all settings atomically
-      if (llm != null) {
-        state.selectedModel = String(llm)
-      }
-      state.activeConversation.temperature = temperature
-      state.activeConversation.maxTokens = maxTokens
-      state.activeConversation.maxContextSnippets = maxContextSnippets
-      state.activeConversation.documentSimilarityThreshold =
-        documentSimilarityThreshold
-      state.webSearchEnabled = enableWebSearch
-      state.activeConversation.webSearchEnabled = enableWebSearch
-    },
     updateImageGenerationSettings(
       state,
       action: PayloadAction<ImageGenerationSettings>
@@ -769,6 +716,28 @@ export const conversationSlice = createSlice({
       .addCase(updateConversation.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
+      })
+      .addCase(applyAgentToConversation.fulfilled, (state, action) => {
+        const { conversation, modelRef, files, libraries } = action.payload
+        const index = state.conversations.findIndex(
+          (conv) => conv.conversationId === conversation.conversationId
+        )
+        if (index !== -1) state.conversations[index] = conversation
+        if (
+          state.activeConversation?.conversationId !==
+          conversation.conversationId
+        ) {
+          return
+        }
+        setActiveConversation(state, conversation)
+        if (modelRef) selectModel(state, modelRef)
+        selectSources(
+          state,
+          files,
+          conversation.selectedFileIds ?? [],
+          conversation.selectedEmbeddingIds ?? []
+        )
+        selectLibraries(state, libraries, conversation.selectedLibraryIds ?? [])
       })
       .addCase(moveConversationsToProject.fulfilled, (state, action) => {
         action.payload.moved.forEach((moved) => {
@@ -1423,18 +1392,12 @@ export const {
   updateSelectedLibraries,
   setSourcePickerOpen,
   updateMemoryEnabled,
-  updateTemperature,
-  updateEffort,
-  updateMaxTokens,
-  updateHistoryLimit,
-  updateWebSearchEnabled,
-  updateWebFetchEnabled,
   updateImageGenerationEnabled,
   updateAudioTranscriptionEnabled,
-  updateArtifactsEnabled,
   updateImageGenerationSettings,
   updateAudioTranscriptionSettings,
   setIsTranscribingAudio,
+  updateModelSettings,
   updateMaxContextSnippets,
   updateDocumentSimilarityThreshold,
   updateRagMode,
@@ -1470,8 +1433,6 @@ export const {
   setImageGenerating,
   updateSelectedMcpServers,
   updateSelectedDareTools,
-  updateSelectedAgent,
-  applyAgentSettings,
   setActiveTab,
 } = conversationSlice.actions
 export default conversationSlice.reducer

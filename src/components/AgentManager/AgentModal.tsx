@@ -1,23 +1,18 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { RootState, AppDispatch } from '../../redux/store'
-import { createOrUpdateAgent } from '../../redux/asyncThunks/agent'
-import { getPrompts } from '../../redux/asyncThunks/prompt'
-import { getActiveModels } from '../../redux/asyncThunks/conversation'
-import { clearSelectedAgent, closeModal } from '../../redux/agentSlice'
+
+import ModelSettingsFields from '@/components/Conversation/ModelSettingsFields'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
   DialogDescription,
-} from '../ui/dialog'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
-import { Formik, Form } from 'formik'
-import * as Yup from 'yup'
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -25,521 +20,358 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
-import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { MODEL_CONFIG } from '@/config/modelConfig'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
+import { clearSelectedAgent, closeModal } from '@/redux/agentSlice'
+import { createOrUpdateAgent } from '@/redux/asyncThunks/agent'
+import { getAvailableModels } from '@/redux/asyncThunks/conversation'
 import { getFiles } from '@/redux/asyncThunks/file'
-import { FileText, Database, X } from 'lucide-react'
+import { getSharedLibraries } from '@/redux/asyncThunks/library'
+import { getPrompts } from '@/redux/asyncThunks/prompt'
+import { selectLibrariesLoaded } from '@/redux/librarySlice'
+import { AppDispatch, RootState } from '@/redux/store'
+import { Agent, AgentSetup } from '@/redux/types/agent'
+import { ModelSettings } from '@/redux/types/conversation'
+import { AGENT_DEFAULTS } from '@/utils/constants/agents'
+import { RagMode } from '@/utils/constants/conversation'
+import { defaultMaxTokensFor } from '@/utils/modelConfigUtils'
+import { modelRefLabel } from '@/utils/modelRef'
+import AgentSourcesFields from './AgentSourcesFields'
 
-const agentValidationSchema = Yup.object().shape({
-  name: Yup.string().required('Agent name is required'),
-  description: Yup.string(),
-  prompt: Yup.number().required('Prompt is required'),
-  llm: Yup.number().required('Language model is required'),
-  contentFiles: Yup.array().of(Yup.number()),
-  embeddingFiles: Yup.array().of(Yup.number()),
-  maxTokens: Yup.number()
-    .min(1, 'Max tokens must be at least 1')
-    .required('Max tokens is required'),
-  temperature: Yup.number()
-    .min(0.1, 'Temperature must be at least 0.1')
-    .max(1, 'Temperature must not exceed 1.0')
-    .required('Temperature is required'),
-  maxContextSnippets: Yup.number()
-    .min(0, 'Max context snippets must be at least 0')
-    .required('Max context snippets is required'),
-  documentSimilarityThreshold: Yup.number()
-    .min(0, 'Threshold must be at least 0')
-    .max(1, 'Threshold must not exceed 1')
-    .required('Threshold is required'),
-  enableWebSearch: Yup.boolean(),
-})
+const NO_MODEL = 'none'
+const NO_PROMPT = 'none'
 
-const AgentModal: React.FC = () => {
+const setupFrom = (agent: Agent | null, modelRef: string | null): AgentSetup =>
+  agent
+    ? {
+        name: agent.name,
+        description: agent.description,
+        prompt: agent.prompt,
+        modelRef: agent.modelRef,
+        maxTokens: agent.maxTokens,
+        temperature: agent.temperature,
+        effort: agent.effort,
+        historyLimit: agent.historyLimit,
+        ragMode: agent.ragMode,
+        maxContextSnippets: agent.maxContextSnippets,
+        documentSimilarityThreshold: agent.documentSimilarityThreshold,
+        enableWebSearch: agent.enableWebSearch,
+        webFetchEnabled: agent.webFetchEnabled,
+        artifactsEnabled: agent.artifactsEnabled,
+        memoryEnabled: agent.memoryEnabled,
+        contentFiles: agent.contentFiles,
+        embeddingFiles: agent.embeddingFiles,
+        libraries: agent.libraries,
+        mcpServers: agent.mcpServers,
+        dareToolSlugs: agent.dareToolSlugs,
+      }
+    : {
+        name: '',
+        description: '',
+        prompt: null,
+        modelRef,
+        maxTokens: AGENT_DEFAULTS.maxTokens,
+        temperature: MODEL_CONFIG.temperature,
+        effort: null,
+        historyLimit: AGENT_DEFAULTS.historyLimit,
+        ragMode: RagMode.ADVANCED,
+        maxContextSnippets: MODEL_CONFIG.maxContextSnippets,
+        documentSimilarityThreshold: MODEL_CONFIG.documentSimilarityThreshold,
+        enableWebSearch: false,
+        webFetchEnabled: false,
+        artifactsEnabled: false,
+        memoryEnabled: false,
+        contentFiles: [],
+        embeddingFiles: [],
+        libraries: [],
+        mcpServers: [],
+        dareToolSlugs: [],
+      }
+
+interface AgentEditorProps {
+  agent: Agent | null
+  onDone: () => void
+}
+
+/** The agent form; mounted fresh for each agent so its draft starts clean. */
+const AgentEditor: React.FC<AgentEditorProps> = ({ agent, onDone }) => {
   const dispatch = useDispatch<AppDispatch>()
-  const { selectedAgent, loading, isModalOpen } = useSelector(
-    (state: RootState) => state.agent
+  const enableMemory = useFeatureFlag('enableMemory')
+  const prompts = useSelector((state: RootState) => state.prompt.prompts)
+  const pickerEntries = useSelector(
+    (state: RootState) => state.conversation.pickerEntries
   )
-  const { prompts } = useSelector((state: RootState) => state.prompt)
-  // Agents only support DB-backed LLMs (no LiteLLM-routed dispatch yet) →
-  // pull the full catalog rather than the wallet-scoped chat picker.
-  const { activeModels } = useSelector((state: RootState) => state.conversation)
-  const availableModels = activeModels
-  const { files } = useSelector((state: RootState) => state.files)
+  const walletMeta = useSelector(
+    (state: RootState) => state.conversation.activeWalletMeta
+  )
+  const chatModel = useSelector(
+    (state: RootState) => state.conversation.selectedModel
+  )
+  const [draft, setDraft] = useState<AgentSetup>(() =>
+    setupFrom(agent, chatModel)
+  )
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const isEditMode = !!selectedAgent
+  // Editing a prompt versions it; offer the newest of each, plus the agent's own.
+  const promptOptions = useMemo(() => {
+    const replaced = new Set(prompts.map((prompt) => prompt.parent))
+    return prompts.filter(
+      (prompt) => !replaced.has(prompt.id) || prompt.id === draft.prompt
+    )
+  }, [prompts, draft.prompt])
+  const model = pickerEntries.find((entry) => entry.id === draft.modelRef)
+  const savedModelMissing = !!draft.modelRef && !model
 
-  useEffect(() => {
-    if (isModalOpen) {
-      if (prompts.length === 0) {
-        dispatch(getPrompts())
-      }
-      if (activeModels.length === 0) {
-        dispatch(getActiveModels())
-      }
-      if (files.length === 0) {
-        dispatch(getFiles())
-      }
-    }
-  }, [isModalOpen, dispatch, prompts.length, activeModels.length, files.length])
-
-  const initialValues = {
-    name: selectedAgent?.name || '',
-    description: selectedAgent?.description || '',
-    prompt: selectedAgent?.prompt || '',
-    llm: selectedAgent?.llm || 1,
-    contentFiles: selectedAgent?.contentFiles || [],
-    embeddingFiles: selectedAgent?.embeddingFiles || [],
-    maxTokens: selectedAgent?.maxTokens || 2000,
-    temperature: selectedAgent?.temperature || 0.6,
-    maxContextSnippets: selectedAgent?.maxContextSnippets || 10,
-    documentSimilarityThreshold:
-      selectedAgent?.documentSimilarityThreshold || 0.7,
-    enableWebSearch: selectedAgent?.enableWebSearch || false,
+  const update = (patch: Partial<AgentSetup>) => {
+    setDraft((current) => ({ ...current, ...patch }))
+    setError(null)
   }
 
-  const handleClose = () => {
-    dispatch(closeModal())
-    if (selectedAgent) {
-      dispatch(clearSelectedAgent())
-    }
+  const changeModel = (modelRef: string | null) => {
+    const next = pickerEntries.find((entry) => entry.id === modelRef)
+    // Keep a custom token budget; move a default one to the new model's default.
+    const maxTokens =
+      draft.maxTokens === defaultMaxTokensFor(model)
+        ? defaultMaxTokensFor(next)
+        : draft.maxTokens
+    update({ modelRef, maxTokens, effort: null })
   }
 
-  const handleSubmit = async (values: {
-    name: string
-    description: string
-    prompt: number | string
-    llm: number
-    contentFiles: number[]
-    embeddingFiles: number[]
-    maxTokens: number
-    temperature: number
-    maxContextSnippets: number
-    documentSimilarityThreshold: number
-    enableWebSearch: boolean
-  }) => {
+  const settings: ModelSettings = {
+    webSearchEnabled: draft.enableWebSearch,
+    webFetchEnabled: draft.webFetchEnabled,
+    artifactsEnabled: draft.artifactsEnabled,
+    effort: draft.effort,
+    temperature: draft.temperature,
+    maxTokens: draft.maxTokens,
+    historyLimit: draft.historyLimit,
+  }
+  const changeSettings = ({
+    webSearchEnabled,
+    ...rest
+  }: Partial<ModelSettings>) =>
+    update(
+      webSearchEnabled === undefined
+        ? rest
+        : { ...rest, enableWebSearch: webSearchEnabled }
+    )
+
+  const canSave = draft.name.trim() !== '' && !saving
+
+  const handleSave = async () => {
+    setSaving(true)
     try {
-      const agentData = {
-        name: values.name,
-        description: values.description,
-        prompt: Number(values.prompt),
-        llm: values.llm,
-        contentFiles: values.contentFiles,
-        embeddingFiles: values.embeddingFiles,
-        maxTokens: values.maxTokens,
-        temperature: values.temperature,
-        maxContextSnippets: values.maxContextSnippets,
-        documentSimilarityThreshold: values.documentSimilarityThreshold,
-        enableWebSearch: values.enableWebSearch,
-      }
       await dispatch(
         createOrUpdateAgent({
-          id: isEditMode ? selectedAgent?.id : undefined,
-          agentData,
+          id: agent?.id,
+          agentData: { ...draft, name: draft.name.trim() },
         })
+      ).unwrap()
+      onDone()
+    } catch (rejection) {
+      setError(
+        typeof rejection === 'string' ? rejection : 'Could not save the agent.'
       )
-        .unwrap()
-        .then(() => {
-          handleClose()
-        })
-    } catch (error) {
-      console.error('Failed to save agent:', error)
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
-    <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className='mx-auto max-h-[90vh] w-[90vw] max-w-3xl overflow-y-auto rounded-lg bg-background p-6 shadow-lg'>
+    <TooltipProvider>
+      <Tabs defaultValue='setup' className='w-full'>
+        <TabsList className='grid w-full grid-cols-3'>
+          <TabsTrigger value='setup'>Setup</TabsTrigger>
+          <TabsTrigger value='behavior'>Behavior</TabsTrigger>
+          <TabsTrigger value='sources'>Sources & tools</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value='setup' className='space-y-4 pt-2'>
+          <div className='space-y-2'>
+            <Label htmlFor='agent-name'>Name</Label>
+            <Input
+              id='agent-name'
+              value={draft.name}
+              onChange={(event) => update({ name: event.target.value })}
+              placeholder='A2 Parametric Span helper'
+            />
+          </div>
+          <div className='space-y-2'>
+            <Label htmlFor='agent-description'>Description</Label>
+            <Textarea
+              id='agent-description'
+              value={draft.description}
+              onChange={(event) => update({ description: event.target.value })}
+              placeholder='What this agent helps with (optional)'
+              rows={3}
+            />
+          </div>
+          <div className='space-y-2'>
+            <Label htmlFor='agent-prompt'>Prompt</Label>
+            <Select
+              value={draft.prompt ? String(draft.prompt) : NO_PROMPT}
+              onValueChange={(value) =>
+                update({ prompt: value === NO_PROMPT ? null : Number(value) })
+              }
+            >
+              <SelectTrigger id='agent-prompt'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className='max-h-60'>
+                <SelectItem value={NO_PROMPT}>
+                  Keep the chat's prompt
+                </SelectItem>
+                {promptOptions.map((prompt) => (
+                  <SelectItem key={prompt.id} value={String(prompt.id)}>
+                    {prompt.title || 'Untitled'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className='space-y-2'>
+            <Label htmlFor='agent-model'>Model</Label>
+            <Select
+              value={draft.modelRef ?? NO_MODEL}
+              onValueChange={(value) =>
+                changeModel(value === NO_MODEL ? null : value)
+              }
+            >
+              <SelectTrigger id='agent-model'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className='max-h-60'>
+                <SelectItem value={NO_MODEL}>Keep the chat's model</SelectItem>
+                {savedModelMissing && draft.modelRef && (
+                  <SelectItem value={draft.modelRef}>
+                    {modelRefLabel(draft.modelRef, pickerEntries) ??
+                      'Unavailable model'}
+                  </SelectItem>
+                )}
+                {pickerEntries.map((entry) => (
+                  <SelectItem key={entry.id} value={entry.id}>
+                    {entry.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {savedModelMissing && (
+              <p className='text-xs text-muted-foreground'>
+                This model isn't offered by your current wallet.
+              </p>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value='behavior' className='pt-2'>
+          {draft.modelRef === null && (
+            <p className='mb-3 text-xs text-muted-foreground'>
+              Choose a model on the Setup tab to see the settings it supports.
+            </p>
+          )}
+          <ModelSettingsFields
+            settings={settings}
+            onChange={changeSettings}
+            model={model}
+            walletMeta={walletMeta}
+            extraToggles={
+              enableMemory && (
+                <div className='flex items-center justify-between border-b border-border pb-2'>
+                  <Label htmlFor='agent-memory' className='font-medium'>
+                    Memory
+                  </Label>
+                  <Switch
+                    id='agent-memory'
+                    checked={draft.memoryEnabled}
+                    onCheckedChange={(checked) =>
+                      update({ memoryEnabled: checked })
+                    }
+                  />
+                </div>
+              )
+            }
+          />
+        </TabsContent>
+
+        <TabsContent value='sources' className='pt-2'>
+          <AgentSourcesFields setup={draft} onChange={update} />
+        </TabsContent>
+      </Tabs>
+
+      {error && (
+        <p role='alert' className='mt-3 text-sm text-destructive'>
+          {error}
+        </p>
+      )}
+      <DialogFooter className='mt-4 gap-2'>
+        <Button type='button' variant='outline' onClick={onDone}>
+          Cancel
+        </Button>
+        <Button type='button' disabled={!canSave} onClick={handleSave}>
+          {saving ? 'Saving…' : 'Save agent'}
+        </Button>
+      </DialogFooter>
+    </TooltipProvider>
+  )
+}
+
+const AgentModal: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>()
+  const { selectedAgent, isModalOpen } = useSelector(
+    (state: RootState) => state.agent
+  )
+  const promptCount = useSelector(
+    (state: RootState) => state.prompt.prompts.length
+  )
+  const fileCount = useSelector((state: RootState) => state.files.files.length)
+  const modelCatalogStatus = useSelector(
+    (state: RootState) => state.conversation.modelCatalogStatus
+  )
+  const librariesLoaded = useSelector(selectLibrariesLoaded)
+
+  useEffect(() => {
+    if (!isModalOpen) return
+    if (promptCount === 0) dispatch(getPrompts())
+    if (fileCount === 0) dispatch(getFiles())
+    if (modelCatalogStatus === 'idle') dispatch(getAvailableModels())
+    if (!librariesLoaded) dispatch(getSharedLibraries())
+  }, [
+    isModalOpen,
+    dispatch,
+    promptCount,
+    fileCount,
+    modelCatalogStatus,
+    librariesLoaded,
+  ])
+
+  const handleClose = () => {
+    dispatch(closeModal())
+    if (selectedAgent) dispatch(clearSelectedAgent())
+  }
+
+  return (
+    <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className='mx-auto max-h-[90vh] w-[90vw] max-w-2xl overflow-y-auto rounded-lg bg-background p-6 shadow-lg'>
         <DialogHeader>
-          <DialogTitle className='text-lg font-semibold text-foreground'>
-            {isEditMode ? 'Edit Agent' : 'Create New Agent'}
+          <DialogTitle>
+            {selectedAgent ? 'Edit agent' : 'New agent'}
           </DialogTitle>
-          <DialogDescription className='text-sm text-muted-foreground'>
-            {isEditMode
-              ? 'Update your agent configuration below.'
-              : 'Configure a new agent with LLM settings, prompts, and files.'}
+          <DialogDescription>
+            A reusable chat setup: prompt, model, settings, sources and tools.
           </DialogDescription>
         </DialogHeader>
-
-        <Formik
-          initialValues={initialValues}
-          validationSchema={agentValidationSchema}
-          onSubmit={(values, { setSubmitting }) => {
-            handleSubmit(values)
-            setSubmitting(false)
-          }}
-          enableReinitialize
-        >
-          {({
-            values,
-            errors,
-            touched,
-            handleChange,
-            setFieldValue,
-            isValid,
-            dirty,
-          }) => (
-            <Form className='space-y-4'>
-              <Tabs defaultValue='basic' className='w-full'>
-                <TabsList className='grid w-full grid-cols-2'>
-                  <TabsTrigger value='basic'>Basic</TabsTrigger>
-                  <TabsTrigger value='advanced'>Advanced</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value='basic' className='space-y-4'>
-                  <div className='space-y-2'>
-                    <Label htmlFor='name'>Agent Name</Label>
-                    <Input
-                      id='name'
-                      name='name'
-                      value={values.name}
-                      onChange={handleChange}
-                      placeholder='Enter agent name'
-                      className={
-                        errors.name && touched.name ? 'border-red-500' : ''
-                      }
-                    />
-                    {errors.name && touched.name && (
-                      <p className='mt-1 text-xs text-red-500'>{errors.name}</p>
-                    )}
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='description'>Description</Label>
-                    <Textarea
-                      id='description'
-                      name='description'
-                      value={values.description}
-                      onChange={handleChange}
-                      placeholder='Enter agent description (optional)'
-                      className={
-                        errors.description && touched.description
-                          ? 'border-red-500'
-                          : ''
-                      }
-                      rows={3}
-                    />
-                    {errors.description && touched.description && (
-                      <p className='mt-1 text-xs text-red-500'>
-                        {errors.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='prompt'>Prompt</Label>
-                    <Select
-                      value={values.prompt ? String(values.prompt) : ''}
-                      onValueChange={(value) =>
-                        setFieldValue('prompt', Number(value))
-                      }
-                    >
-                      <SelectTrigger
-                        className={
-                          errors.prompt && touched.prompt
-                            ? 'border-red-500'
-                            : ''
-                        }
-                      >
-                        <SelectValue placeholder='Select a prompt' />
-                      </SelectTrigger>
-                      <SelectContent className='max-h-[200px]'>
-                        {prompts.map((p) => (
-                          <SelectItem key={p.id} value={String(p.id)}>
-                            {p.title || 'Untitled'} (v{p.version || 1})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.prompt && touched.prompt && (
-                      <p className='mt-1 text-xs text-red-500'>
-                        {errors.prompt}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='llm'>Language Model</Label>
-                    <Select
-                      value={String(values.llm || '')}
-                      onValueChange={(value) =>
-                        setFieldValue('llm', Number(value))
-                      }
-                    >
-                      <SelectTrigger
-                        className={
-                          errors.llm && touched.llm ? 'border-red-500' : ''
-                        }
-                      >
-                        <SelectValue placeholder='Select a model' />
-                      </SelectTrigger>
-                      <SelectContent className='max-h-[200px]'>
-                        {availableModels.map((model) => (
-                          <SelectItem key={model.id} value={String(model.id)}>
-                            {model.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.llm && touched.llm && (
-                      <p className='mt-1 text-xs text-red-500'>{errors.llm}</p>
-                    )}
-                  </div>
-
-                  {/* Content Files */}
-                  <div className='space-y-2'>
-                    <Label className='flex items-center gap-2 text-xs font-medium'>
-                      <FileText className='h-3 w-3' />
-                      Content Files
-                    </Label>
-                    <div className='flex flex-wrap gap-1'>
-                      {(values.contentFiles || []).map((fileId) => {
-                        const file = files.find((f) => f.id === fileId)
-                        return (
-                          <Badge
-                            key={fileId}
-                            variant='secondary'
-                            className='text-xs'
-                          >
-                            {file?.name || `File ${fileId}`}
-                            <Button
-                              size='sm'
-                              variant='ghost'
-                              className='ml-1 h-4 w-4 p-0'
-                              type='button'
-                              onClick={() => {
-                                const newFiles = (
-                                  values.contentFiles || []
-                                ).filter((id) => id !== fileId)
-                                setFieldValue('contentFiles', newFiles)
-                              }}
-                            >
-                              <X className='h-3 w-3' />
-                            </Button>
-                          </Badge>
-                        )
-                      })}
-                      <Select
-                        value=''
-                        onValueChange={(value) => {
-                          const fileId = Number(value)
-                          const currentFiles = values.contentFiles || []
-                          if (value && !currentFiles.includes(fileId)) {
-                            const newFiles = [...currentFiles, fileId]
-                            setFieldValue('contentFiles', newFiles)
-                          }
-                        }}
-                      >
-                        <SelectTrigger className='w-full bg-background text-xs'>
-                          <SelectValue placeholder='+ Add' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {files
-                            .filter(
-                              (f) => !(values.contentFiles || []).includes(f.id)
-                            )
-                            .map((file) => (
-                              <SelectItem
-                                key={file.id}
-                                value={file.id.toString()}
-                              >
-                                {file.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Embedding Files */}
-                  <div className='space-y-2'>
-                    <Label className='flex items-center gap-2 text-xs font-medium'>
-                      <Database className='h-3 w-3' />
-                      Embedding Files
-                    </Label>
-                    <div className='flex flex-wrap gap-1'>
-                      {(values.embeddingFiles || []).map((fileId) => {
-                        const file = files.find((f) => f.id === fileId)
-                        return (
-                          <Badge
-                            key={fileId}
-                            variant='secondary'
-                            className='text-xs'
-                          >
-                            {file?.name || `File ${fileId}`}
-                            <Button
-                              size='sm'
-                              variant='ghost'
-                              className='ml-1 h-4 w-4 p-0'
-                              type='button'
-                              onClick={() => {
-                                const newFiles = (
-                                  values.embeddingFiles || []
-                                ).filter((id) => id !== fileId)
-                                setFieldValue('embeddingFiles', newFiles)
-                              }}
-                            >
-                              <X className='h-3 w-3' />
-                            </Button>
-                          </Badge>
-                        )
-                      })}
-                      <Select
-                        value=''
-                        onValueChange={(value) => {
-                          const fileId = Number(value)
-                          const currentFiles = values.embeddingFiles || []
-                          if (value && !currentFiles.includes(fileId)) {
-                            const newFiles = [...currentFiles, fileId]
-                            setFieldValue('embeddingFiles', newFiles)
-                          }
-                        }}
-                      >
-                        <SelectTrigger className='w-full bg-background text-xs'>
-                          <SelectValue placeholder='+ Add' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {files
-                            .filter(
-                              (f) =>
-                                !(values.embeddingFiles || []).includes(f.id)
-                            )
-                            .map((file) => (
-                              <SelectItem
-                                key={file.id}
-                                value={file.id.toString()}
-                              >
-                                {file.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value='advanced' className='space-y-4'>
-                  <div className='space-y-2'>
-                    <div className='flex items-center justify-between'>
-                      <Label>
-                        Temperature: {values.temperature.toFixed(2)}
-                      </Label>
-                    </div>
-                    <Slider
-                      value={[values.temperature]}
-                      onValueChange={(value) =>
-                        setFieldValue('temperature', value[0])
-                      }
-                      min={0.1}
-                      max={1}
-                      step={0.05}
-                      className='w-full'
-                    />
-                    <p className='text-xs text-muted-foreground'>
-                      Range: 0.1 (deterministic) to 1.0 (creative)
-                    </p>
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='maxTokens'>Max Tokens</Label>
-                    <Input
-                      id='maxTokens'
-                      name='maxTokens'
-                      type='number'
-                      value={values.maxTokens}
-                      onChange={handleChange}
-                      min='1'
-                      className={
-                        errors.maxTokens && touched.maxTokens
-                          ? 'border-red-500'
-                          : ''
-                      }
-                    />
-                    {errors.maxTokens && touched.maxTokens && (
-                      <p className='mt-1 text-xs text-red-500'>
-                        {errors.maxTokens}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='maxContextSnippets'>
-                      Max Context Snippets
-                    </Label>
-                    <Input
-                      id='maxContextSnippets'
-                      name='maxContextSnippets'
-                      type='number'
-                      value={values.maxContextSnippets}
-                      onChange={handleChange}
-                      min='0'
-                      className={
-                        errors.maxContextSnippets && touched.maxContextSnippets
-                          ? 'border-red-500'
-                          : ''
-                      }
-                    />
-                    {errors.maxContextSnippets &&
-                      touched.maxContextSnippets && (
-                        <p className='mt-1 text-xs text-red-500'>
-                          {errors.maxContextSnippets}
-                        </p>
-                      )}
-                  </div>
-
-                  <div className='space-y-2'>
-                    <div className='flex items-center justify-between'>
-                      <Label htmlFor='documentSimilarityThreshold'>
-                        Document Similarity Threshold:{' '}
-                        {values.documentSimilarityThreshold.toFixed(2)}
-                      </Label>
-                    </div>
-                    <Slider
-                      value={[values.documentSimilarityThreshold]}
-                      onValueChange={(value) =>
-                        setFieldValue('documentSimilarityThreshold', value[0])
-                      }
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      className='w-full'
-                    />
-                    <p className='text-xs text-muted-foreground'>
-                      Minimum similarity score for document retrieval
-                    </p>
-                  </div>
-
-                  <div className='flex items-center justify-between rounded-lg border p-3'>
-                    <div className='space-y-0.5'>
-                      <Label htmlFor='enableWebSearch'>Enable Web Search</Label>
-                      <p className='text-xs text-muted-foreground'>
-                        Allow this agent to search the web for information
-                      </p>
-                    </div>
-                    <Switch
-                      id='enableWebSearch'
-                      checked={values.enableWebSearch}
-                      onCheckedChange={(checked) =>
-                        setFieldValue('enableWebSearch', checked)
-                      }
-                    />
-                  </div>
-                </TabsContent>
-              </Tabs>
-
-              <DialogFooter className='flex justify-end gap-2 pt-4'>
-                <Button type='button' variant='outline' onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button type='submit' disabled={!(isValid && dirty) || loading}>
-                  {loading ? 'Saving...' : 'Save Agent'}
-                </Button>
-              </DialogFooter>
-            </Form>
-          )}
-        </Formik>
+        {isModalOpen && (
+          <AgentEditor
+            key={selectedAgent?.id ?? 'new'}
+            agent={selectedAgent}
+            onDone={handleClose}
+          />
+        )}
       </DialogContent>
     </Dialog>
   )

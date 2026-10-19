@@ -8,11 +8,15 @@ import {
 import type {
   AssistantEvent,
   AssistantMessage,
+  AssistantThread,
+  AssistantThreadSummary,
   AssistantUsage,
 } from '@/schemas/assistantSocket'
 import type { RootState } from './store'
 import {
+  fetchAssistantHistory,
   fetchAssistantThread,
+  openAssistantThread,
   runProposalCommand,
   startAssistantThread,
 } from './asyncThunks/assistant'
@@ -35,9 +39,13 @@ export interface AssistantTourRequest {
 }
 
 interface AssistantState {
+  threadId: number | null
   messages: AssistantMessage[]
   usage: AssistantUsage | null
   threadStatus: RequestStatus
+  /** Past conversations for the history menu, refreshed each time it opens. */
+  history: AssistantThreadSummary[]
+  historyStatus: RequestStatus
   connection: ConnectionStatus
   isAnswering: boolean
   liveSteps: AssistantLiveStep[]
@@ -52,9 +60,12 @@ interface AssistantState {
 }
 
 const initialState: AssistantState = {
+  threadId: null,
   messages: [],
   usage: null,
   threadStatus: 'idle',
+  history: [],
+  historyStatus: 'idle',
   connection: 'disconnected',
   isAnswering: false,
   liveSteps: [],
@@ -88,6 +99,15 @@ const upsert = (state: AssistantState, message: AssistantMessage) => {
   } else {
     state.messages[index] = message
   }
+}
+
+/** Show a thread from the server as the current conversation. */
+const loadThread = (state: AssistantState, thread: AssistantThread) => {
+  state.threadId = thread.id
+  state.messages = thread.messages
+  state.usage = thread.usage
+  state.liveSteps = []
+  state.error = null
 }
 
 const assistantSlice = createSlice({
@@ -213,18 +233,30 @@ const assistantSlice = createSlice({
       })
       .addCase(fetchAssistantThread.fulfilled, (state, action) => {
         state.threadStatus = 'succeeded'
-        state.messages = action.payload.messages
-        state.usage = action.payload.usage
+        loadThread(state, action.payload)
       })
       .addCase(fetchAssistantThread.rejected, (state) => {
         state.threadStatus = 'failed'
         state.error = ASSISTANT_CONNECTION_ERROR
       })
       .addCase(startAssistantThread.fulfilled, (state, action) => {
-        state.messages = action.payload.messages
-        state.usage = action.payload.usage
-        state.liveSteps = []
-        state.error = null
+        loadThread(state, action.payload)
+      })
+      .addCase(openAssistantThread.fulfilled, (state, action) => {
+        loadThread(state, action.payload)
+      })
+      .addCase(openAssistantThread.rejected, (state) => {
+        state.error = 'Could not open that conversation. Please try again.'
+      })
+      .addCase(fetchAssistantHistory.pending, (state) => {
+        state.historyStatus = 'loading'
+      })
+      .addCase(fetchAssistantHistory.fulfilled, (state, action) => {
+        state.historyStatus = 'succeeded'
+        state.history = action.payload
+      })
+      .addCase(fetchAssistantHistory.rejected, (state) => {
+        state.historyStatus = 'failed'
       })
       .addCase(startAssistantThread.rejected, (state) => {
         state.error = ASSISTANT_CONNECTION_ERROR

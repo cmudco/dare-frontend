@@ -558,6 +558,17 @@ export interface PickerModel {
   reasoningLevel: ReasoningLevel
 }
 
+/** Per-chat model settings, shared by the chat panel and the agent editor. */
+export interface ModelSettings {
+  webSearchEnabled: boolean
+  webFetchEnabled: boolean
+  artifactsEnabled: boolean
+  effort: EffortLevel | null
+  temperature: number
+  maxTokens: number
+  historyLimit: number
+}
+
 export interface WalletMeta {
   type: 'DARE' | 'BYO' | 'LITELLM'
   providers: string[]

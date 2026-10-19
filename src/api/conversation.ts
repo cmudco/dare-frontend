@@ -59,6 +59,18 @@ export const updateConversationAPI = async (
   })
 }
 
+/** Give the chat an agent's whole setup, or detach it with `null`. */
+export const applyAgentAPI = async (
+  conversationId: string,
+  agentId: number | null
+): Promise<Conversation> => {
+  return await baseRequest<Conversation>({
+    url: `api/conversations/${conversationId}/apply-agent/`,
+    method: METHOD.POST,
+    data: { agent: agentId },
+  })
+}
+
 export const deleteConversationAPI = async (
   conversationId: string
 ): Promise<void> => {

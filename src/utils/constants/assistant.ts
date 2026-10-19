@@ -44,6 +44,7 @@ export enum ProposalActionType {
   REMOVE_FROM_PROJECT = 'remove_from_project',
   DELETE_PROJECT = 'delete_project',
   DELETE_CONVERSATIONS = 'delete_conversations',
+  CREATE_AGENT = 'create_agent',
 }
 
 /** What the user can do to a proposal; each is its own endpoint. */
@@ -52,4 +53,11 @@ export enum ProposalCommand {
   UNDO = 'undo',
   DISCARD = 'discard',
   RESTORE = 'restore',
+}
+
+/** Why Ask DARE offers a model for an agent (matches the backend roles). */
+export enum AgentModelRole {
+  QUALITY = 'quality',
+  BALANCED = 'balanced',
+  BUDGET = 'budget',
 }
