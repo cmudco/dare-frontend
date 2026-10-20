@@ -3,7 +3,11 @@ import {
   ARTIFACT_SIDECAR_MAX_WIDTH,
   ARTIFACT_SIDECAR_MIN_WIDTH,
 } from '@/utils/constants/layout'
-import type { Artifact, ArtifactType } from './types/artifact'
+import type {
+  Artifact,
+  ArtifactSidecarTab,
+  ArtifactType,
+} from './types/artifact'
 import { initialArtifactState } from './types/artifact'
 
 /**
@@ -53,10 +57,35 @@ export const artifactSlice = createSlice({
     },
 
     setActiveArtifact(state, action: PayloadAction<number | null>) {
+      const previous = state.activeArtifactId
+        ? state.artifacts[String(state.activeArtifactId)]
+        : undefined
+      const next = action.payload
+        ? state.artifacts[String(action.payload)]
+        : undefined
+      const groupOf = (artifact?: Artifact) =>
+        artifact ? (artifact.artifactGroupId ?? artifact.id) : null
+      // Switching versions keeps the current view; a different artifact
+      // starts on its first tab.
+      if (groupOf(previous) !== groupOf(next)) state.sidecarTab = 'preview'
       state.activeArtifactId = action.payload
       if (action.payload) {
         state.sidecarOpen = true
       }
+    },
+
+    /** Open an artifact in the sidecar on a specific view. */
+    openArtifactInSidecar(
+      state,
+      action: PayloadAction<{ artifactId: number; tab: ArtifactSidecarTab }>
+    ) {
+      state.activeArtifactId = action.payload.artifactId
+      state.sidecarOpen = true
+      state.sidecarTab = action.payload.tab
+    },
+
+    setSidecarTab(state, action: PayloadAction<ArtifactSidecarTab>) {
+      state.sidecarTab = action.payload
     },
 
     setArtifactsEnabled(state, action: PayloadAction<boolean>) {
@@ -177,6 +206,7 @@ export const artifactSlice = createSlice({
           // Auto-open sidecar
           state.activeArtifactId = artifactId
           state.sidecarOpen = true
+          state.sidecarTab = 'preview'
         }
       )
       // ─────────────────────────────────────────────────────────────────────
@@ -249,6 +279,8 @@ export const {
   setSidecarFullscreen,
   toggleSidecarFullscreen,
   setActiveArtifact,
+  openArtifactInSidecar,
+  setSidecarTab,
   setArtifactsEnabled,
   toggleArtifactsEnabled,
   setArtifact,

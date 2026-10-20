@@ -90,7 +90,7 @@ export async function downloadArtifact(params: DownloadArtifactParams) {
     return
   }
 
-  const extension = getSourceExtension(artifactType)
+  const extension = getSourceExtension(artifactType, filename)
   triggerBrowserDownload(
     new Blob([content], { type: getSourceMimeType(artifactType) }),
     `${sanitizedTitle}.${extension}`

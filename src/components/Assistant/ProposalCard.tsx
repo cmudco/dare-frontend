@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import { Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { runProposalCommand } from '@/redux/asyncThunks/assistant'
-import type { AssistantProposal } from '@/schemas/assistantSocket'
+import type {
+  AssistantProposal,
+  ProposalAction,
+} from '@/schemas/assistantSocket'
 import {
   ProposalActionStatus,
   ProposalCommand,
@@ -17,8 +21,33 @@ export function ProposalCard({ proposal }: { proposal: AssistantProposal }) {
       ? state.assistant.busyProposal
       : null
   )
-  const run = (command: ProposalCommand, actionId?: string) =>
-    dispatch(runProposalCommand({ proposalId: proposal.id, command, actionId }))
+  // Picks made in the card, by action id; unpicked agents use their first option.
+  const [picks, setPicks] = useState<Record<string, string>>({})
+  const chosenModel = (action: ProposalAction) =>
+    action.agent
+      ? (action.agent.selectedModelRef ??
+        picks[action.id] ??
+        action.agent.options[0].modelRef)
+      : null
+  const modelChoicesFor = (actions: ProposalAction[]) =>
+    Object.fromEntries(
+      actions.flatMap((action) => {
+        const modelRef = chosenModel(action)
+        return modelRef ? [[action.id, modelRef]] : []
+      })
+    )
+  const run = (command: ProposalCommand, action?: ProposalAction) =>
+    dispatch(
+      runProposalCommand({
+        proposalId: proposal.id,
+        command,
+        actionId: action?.id,
+        modelChoices:
+          command === ProposalCommand.APPLY
+            ? modelChoicesFor(action ? [action] : proposal.actions)
+            : undefined,
+      })
+    )
   const discarded = proposal.status === ProposalStatus.DISCARDED
   const anyApplied = proposal.actions.some(
     (action) => action.status === ProposalActionStatus.APPLIED
@@ -63,8 +92,12 @@ export function ProposalCard({ proposal }: { proposal: AssistantProposal }) {
                 action.status === ProposalActionStatus.APPLIED
                   ? ProposalCommand.UNDO
                   : ProposalCommand.APPLY,
-                action.id
+                action
               )
+            }
+            chosenModelRef={chosenModel(action)}
+            onChooseModel={(modelRef) =>
+              setPicks((current) => ({ ...current, [action.id]: modelRef }))
             }
           />
         ))}

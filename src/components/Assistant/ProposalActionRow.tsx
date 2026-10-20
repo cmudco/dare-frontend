@@ -1,4 +1,5 @@
 import {
+  Bot,
   Check,
   Folder,
   FolderKanban,
@@ -11,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { ProposedAgentDetails } from './ProposedAgentDetails'
 import { isDeleteAction, proposalActionTitle } from '@/constants/assistant'
 import type { ProposalAction } from '@/schemas/assistantSocket'
 import {
@@ -29,6 +31,7 @@ const ICONS: Record<ProposalActionType, LucideIcon> = {
   [ProposalActionType.REMOVE_FROM_PROJECT]: FolderKanban,
   [ProposalActionType.DELETE_PROJECT]: Trash2,
   [ProposalActionType.DELETE_CONVERSATIONS]: Trash2,
+  [ProposalActionType.CREATE_AGENT]: Bot,
 }
 
 const plural = (count: number, noun: string) =>
@@ -41,6 +44,9 @@ interface ProposalActionRowProps {
   disabled: boolean
   busy: boolean
   onToggle: () => void
+  /** create_agent only: the offered model chosen in the card. */
+  chosenModelRef: string | null
+  onChooseModel: (modelRef: string) => void
 }
 
 /** One proposed change, with its own Apply / Undo. */
@@ -50,6 +56,8 @@ export function ProposalActionRow({
   disabled,
   busy,
   onToggle,
+  chosenModelRef,
+  onChooseModel,
 }: ProposalActionRowProps) {
   const applied = action.status === ProposalActionStatus.APPLIED
   const destructive = isDeleteAction(action.type)
@@ -117,6 +125,15 @@ export function ProposalActionRow({
         <p className='pl-5 text-[11px] text-muted-foreground'>
           {action.description}
         </p>
+      )}
+      {action.agent && chosenModelRef && (
+        <ProposedAgentDetails
+          agent={action.agent}
+          applied={applied}
+          chosenModelRef={chosenModelRef}
+          onChoose={onChooseModel}
+          disabled={disabled || !canToggle}
+        />
       )}
       {destructive && !applied && canToggle && (
         <p className='pl-5 text-[11px] text-muted-foreground'>

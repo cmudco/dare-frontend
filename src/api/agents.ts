@@ -1,4 +1,4 @@
-import { Agent } from '../redux/types/agent'
+import { Agent, AgentSetup } from '../redux/types/agent'
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 
@@ -16,19 +16,7 @@ export const getAgentByIdAPI = async (id: number): Promise<Agent> => {
   })
 }
 
-export const createAgentAPI = async (agentData: {
-  name: string
-  description: string
-  prompt: number
-  llm?: number | null
-  contentFiles?: number[]
-  embeddingFiles?: number[]
-  maxTokens?: number
-  temperature?: number
-  maxContextSnippets?: number
-  documentSimilarityThreshold?: number
-  enableWebSearch?: boolean
-}): Promise<Agent> => {
+export const createAgentAPI = async (agentData: AgentSetup): Promise<Agent> => {
   return await baseRequest<Agent>({
     url: 'api/agents/',
     method: METHOD.POST,
@@ -38,7 +26,7 @@ export const createAgentAPI = async (agentData: {
 
 export const updateAgentAPI = async (
   id: number,
-  agentData: Partial<Agent>
+  agentData: Partial<AgentSetup>
 ): Promise<Agent> => {
   return await baseRequest<Agent>({
     url: `api/agents/${id}/`,
@@ -49,7 +37,7 @@ export const updateAgentAPI = async (
 
 export const simpleUpdateAgentAPI = async (
   id: number,
-  agentData: Partial<Agent>
+  agentData: Partial<AgentSetup>
 ): Promise<Agent> => {
   return await baseRequest<Agent>({
     url: `api/agents/${id}/simple-update/`,

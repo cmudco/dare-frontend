@@ -501,7 +501,6 @@ export interface GeneratedTranscription {
 export interface MessageProps {
   message: Message
   onEditMessage?: (id: string, content: string) => void
-  onContentRendered?: () => void
   shouldShowAutoFeedback?: boolean
 }
 
@@ -556,6 +555,17 @@ export interface PickerModel {
   outputTokenRatePerMillion: number | null
   tier: string | null
   reasoningLevel: ReasoningLevel
+}
+
+/** Per-chat model settings, shared by the chat panel and the agent editor. */
+export interface ModelSettings {
+  webSearchEnabled: boolean
+  webFetchEnabled: boolean
+  artifactsEnabled: boolean
+  effort: EffortLevel | null
+  temperature: number
+  maxTokens: number
+  historyLimit: number
 }
 
 export interface WalletMeta {

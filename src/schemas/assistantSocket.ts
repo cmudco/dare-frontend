@@ -5,6 +5,7 @@
 
 import { z } from 'zod'
 import {
+  AgentModelRole,
   AssistantMessageStatus,
   AssistantRole,
   AssistantStepStatus,
@@ -21,6 +22,29 @@ export const ProposalActionSchema = z.object({
   description: z.string(),
   files: z.array(z.object({ id: z.number(), name: z.string() })),
   conversations: z.array(z.object({ id: z.string(), title: z.string() })),
+  /** create_agent only: the models offered; the user picks one on apply. */
+  agent: z
+    .object({
+      /** One of the user's prompts Ask DARE found for the task, if any. */
+      prompt: z
+        .object({ id: z.number(), title: z.string(), why: z.string() })
+        .nullable(),
+      options: z.array(
+        z.object({
+          modelRef: z.string(),
+          modelName: z.string(),
+          role: z.enum(AgentModelRole).nullable(),
+          /** Why this model suits the user's task, in Ask DARE's words. */
+          why: z.string(),
+          inputUsdPerMillionTokens: z.string().nullable(),
+          outputUsdPerMillionTokens: z.string().nullable(),
+        })
+      ),
+      enableWebSearch: z.boolean(),
+      webSearchWhy: z.string(),
+      selectedModelRef: z.string().nullable(),
+    })
+    .nullable(),
   status: z.enum(ProposalActionStatus),
   notes: z.array(z.string()),
 })
@@ -62,6 +86,18 @@ export const AssistantThreadSchema = z.object({
   messages: z.array(AssistantMessageSchema),
   usage: AssistantUsageSchema,
 })
+
+/** One past conversation in the history menu. */
+export const AssistantThreadSummarySchema = z.object({
+  id: z.number(),
+  title: z.string().nullable(),
+  lastMessageAt: z.string(),
+  isOpen: z.boolean(),
+})
+
+export type AssistantThreadSummary = z.infer<
+  typeof AssistantThreadSummarySchema
+>
 
 export const AssistantEventSchema = z.discriminatedUnion('type', [
   z.object({
@@ -109,3 +145,4 @@ export type AssistantEvent = z.infer<typeof AssistantEventSchema>
 export type AssistantToolCall = AssistantMessage['toolCalls'][number]
 export type AssistantProposal = z.infer<typeof AssistantProposalSchema>
 export type ProposalAction = z.infer<typeof ProposalActionSchema>
+export type ProposedAgent = NonNullable<ProposalAction['agent']>

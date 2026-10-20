@@ -115,9 +115,9 @@ const PAGE_INTROS: [RegExp, AssistantPageIntro][] = [
     {
       title: 'Setting up an agent?',
       suggestions: [
+        'Set up an agent for my course assignment',
         'What is an agent in DARE?',
-        'How do I create an agent?',
-        'How do I use an agent in a workflow?',
+        'How do I use an agent in a chat?',
       ],
     },
   ],
@@ -212,6 +212,14 @@ const TOOL_STEPS: Record<string, { running: string; done: string }> = {
     running: 'Checking your chats',
     done: 'Checked your chats',
   },
+  list_my_models: {
+    running: 'Checking your models',
+    done: 'Checked your models',
+  },
+  search_my_prompts: {
+    running: 'Looking through your prompts',
+    done: 'Looked through your prompts',
+  },
   propose_changes: {
     running: 'Drafting the changes',
     done: 'Drafted the changes',
@@ -247,6 +255,7 @@ const ACTION_TITLES: Record<ProposalActionType, (name: string) => string> = {
     `Remove from project “${name}”`,
   [ProposalActionType.DELETE_PROJECT]: (name) => `Delete project “${name}”`,
   [ProposalActionType.DELETE_CONVERSATIONS]: () => 'Delete chats',
+  [ProposalActionType.CREATE_AGENT]: (name) => `Create agent “${name}”`,
 }
 
 export const proposalActionTitle = (type: ProposalActionType, name: string) =>

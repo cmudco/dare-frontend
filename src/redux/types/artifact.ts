@@ -23,6 +23,15 @@ export type ArtifactType =
 
 export type ArtifactStatus = 'completed' | 'error'
 
+export type ArtifactSidecarTab = 'preview' | 'code' | 'split' | 'all'
+
+/** POST body for opening a chat code block as an artifact. */
+export interface SnippetArtifactRequest {
+  messageId: string
+  language: string
+  content: string
+}
+
 /**
  * Artifact - Generated content attached to a message
  */
@@ -103,6 +112,7 @@ export interface ArtifactState {
   sidecarOpen: boolean
   sidecarWidth: number
   sidecarFullscreen: boolean
+  sidecarTab: ArtifactSidecarTab
   artifactsEnabled: boolean // Toggle in chat input
 }
 
@@ -112,6 +122,7 @@ export const initialArtifactState: ArtifactState = {
   sidecarOpen: false,
   sidecarWidth: 640,
   sidecarFullscreen: false,
+  sidecarTab: 'preview',
   artifactsEnabled: false,
 }
 

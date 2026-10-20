@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   X,
+  AppWindow,
+  FileCode2,
   FileText,
   FileType,
   Code,
@@ -16,6 +18,7 @@ import {
 import {
   closeSidecar,
   setActiveArtifact,
+  setSidecarTab,
   setSidecarWidth,
   toggleSidecarFullscreen,
 } from '@/redux/artifactSlice'
@@ -24,7 +27,11 @@ import {
   fetchConversationArtifacts,
 } from '@/redux/asyncThunks/artifact'
 import { RootState, AppDispatch } from '@/redux/store'
-import type { Artifact, ArtifactType } from '@/redux/types/artifact'
+import type {
+  Artifact,
+  ArtifactSidecarTab,
+  ArtifactType,
+} from '@/redux/types/artifact'
 import {
   ARTIFACT_SIDECAR_DESKTOP_BREAKPOINT,
   ARTIFACT_SIDECAR_MAX_VIEWPORT_FRACTION,
@@ -35,13 +42,23 @@ import {
 } from '@/utils/constants/layout'
 import { cn } from '@/lib/utils'
 import { formatRelativeDate } from '@/utils/dateUtils'
+import {
+  isEditableArtifact,
+  resolveSidecarTab,
+  sidecarTabsFor,
+} from '@/utils/artifactEditing'
 import { Button } from '../ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import ArtifactRenderer from './ArtifactRenderer'
 import ArtifactActions from './ArtifactActions'
 import ArtifactVersionDropdown from './ArtifactVersionDropdown'
+import CodeArtifactWorkspace from './CodeArtifactWorkspace'
 
-type SidecarTab = 'preview' | 'all'
+const TAB_LABELS: Record<Exclude<ArtifactSidecarTab, 'all'>, string> = {
+  preview: 'Preview',
+  code: 'Code',
+  split: 'Split',
+}
 
 const getTypeLabel = (type?: ArtifactType): string => {
   switch (type) {
@@ -72,7 +89,12 @@ const ArtifactSidecar: React.FC = () => {
     sidecarOpen,
     sidecarWidth,
     sidecarFullscreen,
+    sidecarTab,
   } = useSelector((state: RootState) => state.artifact)
+  const isReadOnly = useSelector(
+    (state: RootState) =>
+      state.conversation.activeConversation?.isOwner === false
+  )
   const dragStartXRef = useRef(0)
   const dragStartWidthRef = useRef(sidecarWidth)
   const [viewportWidth, setViewportWidth] = useState(() =>
@@ -80,7 +102,6 @@ const ArtifactSidecar: React.FC = () => {
       ? ARTIFACT_SIDECAR_DESKTOP_BREAKPOINT
       : window.innerWidth
   )
-  const [activeTab, setActiveTab] = useState<SidecarTab>('preview')
   const [fetchedArtifactIds, setFetchedArtifactIds] = useState<number[]>([])
   const listFetchedForRef = useRef<string | null>(null)
 
@@ -99,6 +120,9 @@ const ArtifactSidecar: React.FC = () => {
   const activeArtifact = activeArtifactId
     ? artifacts[String(activeArtifactId)]
     : null
+  const activeTab = activeArtifact
+    ? resolveSidecarTab(activeArtifact, sidecarTab)
+    : sidecarTab
 
   const isOverlay = useMemo(() => {
     return (
@@ -162,12 +186,6 @@ const ArtifactSidecar: React.FC = () => {
     }
   }, [clampWidth, dispatch, sidecarWidth])
 
-  // Snap back to the preview whenever the active artifact changes
-  // (row click, new artifact via socket, version switch).
-  useEffect(() => {
-    setActiveTab('preview')
-  }, [activeArtifactId])
-
   // Reset the conversation-scoped artifact list when switching conversations
   useEffect(() => {
     setFetchedArtifactIds([])
@@ -196,6 +214,7 @@ const ArtifactSidecar: React.FC = () => {
   // reachable via the version dropdown in the preview tab.
   const conversationArtifacts = useMemo(() => {
     const ids = new Set<number>(fetchedArtifactIds)
+    if (activeArtifactId) ids.add(activeArtifactId)
     messageArtifactIdsKey
       .split(',')
       .map(Number)
@@ -214,7 +233,7 @@ const ArtifactSidecar: React.FC = () => {
     })
 
     return Array.from(latestByGroup.values()).sort((a, b) => b.id - a.id)
-  }, [artifacts, fetchedArtifactIds, messageArtifactIdsKey])
+  }, [activeArtifactId, artifacts, fetchedArtifactIds, messageArtifactIdsKey])
 
   const handleSelectArtifact = async (artifact: Artifact) => {
     // List responses may omit content; hydrate before previewing.
@@ -228,7 +247,6 @@ const ArtifactSidecar: React.FC = () => {
       }
     }
     dispatch(setActiveArtifact(artifact.id))
-    setActiveTab('preview')
   }
 
   const handleClose = () => {
@@ -279,6 +297,12 @@ const ArtifactSidecar: React.FC = () => {
         return <FileType className='h-5 w-5' />
       case 'code':
         return <Code className='h-5 w-5' />
+      case 'react':
+        return <FileCode2 className='h-5 w-5' />
+      case 'html':
+        return <AppWindow className='h-5 w-5' />
+      case 'svg':
+        return <ImageIcon className='h-5 w-5' />
       case 'image':
         return <ImageIcon className='h-5 w-5' />
       case 'file':
@@ -373,26 +397,47 @@ const ArtifactSidecar: React.FC = () => {
       {/* Content: preview / all-artifacts tabs */}
       <Tabs
         value={activeTab}
-        onValueChange={(value) => setActiveTab(value as SidecarTab)}
+        onValueChange={(value) =>
+          dispatch(setSidecarTab(value as ArtifactSidecarTab))
+        }
         className='flex min-h-0 flex-1 flex-col'
       >
         <div className='shrink-0 border-b border-border px-4 py-2'>
           <TabsList className='h-8'>
-            <TabsTrigger value='preview' className='h-6 px-2.5 text-xs'>
-              Preview
-            </TabsTrigger>
+            {sidecarTabsFor(activeArtifact)
+              .filter((tab) => tab !== 'all')
+              .map((tab) => (
+                <TabsTrigger
+                  key={tab}
+                  value={tab}
+                  className='h-6 px-2.5 text-xs'
+                >
+                  {TAB_LABELS[tab as Exclude<ArtifactSidecarTab, 'all'>]}
+                </TabsTrigger>
+              ))}
             <TabsTrigger value='all' className='h-6 px-2.5 text-xs'>
               All artifacts ({conversationArtifacts.length})
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent
-          value='preview'
-          className='mt-0 min-h-0 flex-1 overflow-hidden'
-        >
-          <ArtifactRenderer artifact={activeArtifact} />
-        </TabsContent>
+        {activeTab !== 'all' && (
+          <TabsContent
+            value={activeTab}
+            className='mt-0 min-h-0 flex-1 overflow-hidden'
+          >
+            {isEditableArtifact(activeArtifact) ? (
+              <CodeArtifactWorkspace
+                key={activeArtifact.id}
+                artifact={activeArtifact}
+                view={activeTab}
+                readOnly={isReadOnly}
+              />
+            ) : (
+              <ArtifactRenderer artifact={activeArtifact} />
+            )}
+          </TabsContent>
+        )}
 
         <TabsContent
           value='all'

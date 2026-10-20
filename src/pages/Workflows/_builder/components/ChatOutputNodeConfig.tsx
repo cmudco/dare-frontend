@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Markdown } from '@/components/Markdown/Markdown'
 import {
   Select,
   SelectContent,
@@ -28,16 +29,6 @@ import { useState, useCallback } from 'react'
 import { getDisplayRun, getNodeState } from '@/utils/workflowRunHelpers'
 import { WorkflowRunStepStatus } from '@/utils/constants/workflows'
 import { formatWorkflowRunLabel } from '@/utils/workflowUtils'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
-import rehypeRaw from 'rehype-raw'
-import rehypeKatex from 'rehype-katex'
-import rehypeHighlight from 'rehype-highlight'
-import 'katex/dist/katex.min.css'
-import 'highlight.js/styles/atom-one-light.css'
-import { CodeBlock } from '@/components/Conversation/CodeBlock'
-import { MermaidBlock } from '@/components/Conversation/MermaidBlock'
 
 interface ChatOutputNodeConfigProps {
   nodeId: string
@@ -191,70 +182,7 @@ export default function ChatOutputNodeConfig({
             onWheel={(e) => e.stopPropagation()}
           >
             <div className='prose prose-sm max-w-full text-foreground dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-pre:bg-transparent prose-pre:p-0'>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={
-                  isStreaming
-                    ? [rehypeKatex, rehypeRaw]
-                    : [rehypeKatex, rehypeHighlight, rehypeRaw]
-                }
-                components={{
-                  table({ children, ...props }) {
-                    return (
-                      <div className='max-w-full overflow-x-auto'>
-                        <table className='min-w-full' {...props}>
-                          {children}
-                        </table>
-                      </div>
-                    )
-                  },
-                  pre({ children, ...props }) {
-                    return (
-                      <pre
-                        className='max-w-full overflow-x-auto wrap-break-word whitespace-pre-wrap'
-                        {...props}
-                      >
-                        {children}
-                      </pre>
-                    )
-                  },
-                  code({ className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '')
-                    if (match && match[1] === 'mermaid') {
-                      if (isStreaming) {
-                        return (
-                          <div className='not-prose my-4 text-sm text-muted-foreground'>
-                            Loading diagram...
-                          </div>
-                        )
-                      }
-                      return (
-                        <MermaidBlock
-                          code={String(children).trim()}
-                          streaming={false}
-                        />
-                      )
-                    }
-                    if (match) {
-                      return (
-                        <CodeBlock className={className} props={props}>
-                          {children}
-                        </CodeBlock>
-                      )
-                    }
-                    return (
-                      <code
-                        className='not-prose rounded-sm border border-border bg-muted px-1 break-all text-foreground'
-                        {...props}
-                      >
-                        {children}
-                      </code>
-                    )
-                  },
-                }}
-              >
-                {response}
-              </ReactMarkdown>
+              <Markdown content={response} streaming={isStreaming} />
             </div>
           </div>
         </div>
