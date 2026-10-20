@@ -42,6 +42,8 @@ export interface ResearchProject {
   updatedAt: string
   /** ISO 8601 timestamp from the backend; formatted for display in the UI. */
   createdAt: string
+  /** When the project's newest agent run started; null before its first run. */
+  lastRunAt: string | null
   /** Agent runs — present only in the single-project detail payload. */
   runs?: AgentRun[]
   /** Sources — present only in the single-project detail payload. */
