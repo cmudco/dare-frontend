@@ -481,7 +481,7 @@ const Message: React.FC<MessageProps> = ({
                                 {file.revisedPrompt}
                               </p>
                             )}
-                            {file.generationParams && (
+                            {file.generationParams?.model && (
                               <p>
                                 {file.generationParams.model} •{' '}
                                 {file.generationParams.size}
