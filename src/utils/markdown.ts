@@ -71,11 +71,12 @@ export const normalizeMathDelimiters = (markdown: string): string => {
     .join('')
 }
 
-const SANDBOX_LINK = /\[([^\]]*)\]\(sandbox:[^)]*\)/g
+const SANDBOX_LINK = /!?\[([^\]]*)\]\(sandbox:[^)]*\)/g
 
 /**
- * Unlink `[name](sandbox:/mnt/data/...)` references: they point inside the
- * provider's code sandbox, and the file itself is attached to the message.
+ * Unlink `[name](sandbox:/mnt/data/...)` links and `![alt](sandbox:...)`
+ * images: they point inside the provider's code sandbox, and the file itself
+ * is attached to the message.
  */
 export const stripSandboxLinks = (markdown: string): string =>
   markdown.replace(SANDBOX_LINK, '$1')
