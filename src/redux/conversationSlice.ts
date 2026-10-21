@@ -79,6 +79,7 @@ function setActiveConversation(
     // Update toggle states from conversation
     state.webSearchEnabled = conversation.webSearchEnabled ?? false
     state.webFetchEnabled = conversation.webFetchEnabled ?? false
+    state.codeSandboxEnabled = conversation.codeSandboxEnabled ?? false
     state.imageGenerationEnabled = conversation.imageGenerationEnabled ?? false
     state.audioTranscriptionEnabled =
       conversation.audioTranscriptionEnabled ?? false
@@ -304,6 +305,9 @@ export const conversationSlice = createSlice({
       if (patch.webFetchEnabled !== undefined) {
         state.webFetchEnabled = patch.webFetchEnabled
       }
+      if (patch.codeSandboxEnabled !== undefined) {
+        state.codeSandboxEnabled = patch.codeSandboxEnabled
+      }
       if (patch.artifactsEnabled !== undefined) {
         state.artifactsEnabled = patch.artifactsEnabled
       }
@@ -448,6 +452,7 @@ export const conversationSlice = createSlice({
       state.audioTranscriptionEnabled = false
       state.webSearchEnabled = false
       state.webFetchEnabled = false
+      state.codeSandboxEnabled = false
       state.artifactsEnabled = false
 
       // Reset to text models — no auto-select (conversationModel is undefined → null)

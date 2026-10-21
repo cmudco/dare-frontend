@@ -26,7 +26,7 @@ import { fencePreviewKind } from '@/utils/artifactEditing'
 import type { FencePreviewKind } from '@/utils/artifactEditing'
 import { readsInput, runnerFor } from '@/utils/codeRunner/protocol'
 import type { RunnerLanguage } from '@/utils/codeRunner/protocol'
-import { normalizeMathDelimiters } from '@/utils/markdown'
+import { normalizeMathDelimiters, stripSandboxLinks } from '@/utils/markdown'
 import { extractTextFromChildren } from '@/utils/textUtils'
 import CodeRunOutput from '../CodeRunner/CodeRunOutput'
 import RunCodeButton from '../CodeRunner/RunCodeButton'
@@ -295,7 +295,7 @@ export const Markdown: React.FC<MarkdownProps> = ({
         tableMaxHeight={0}
         shikiTheme={['github-light', 'github-dark']}
       >
-        {normalizeMathDelimiters(content)}
+        {normalizeMathDelimiters(stripSandboxLinks(content))}
       </Streamdown>
     </FenceOptionsContext.Provider>
   )

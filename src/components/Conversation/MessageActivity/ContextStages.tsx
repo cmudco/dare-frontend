@@ -127,7 +127,11 @@ export const contextStageSteps = (
               >
                 <span className='min-w-0 truncate'>{file.name}</span>
                 <span className='shrink-0 tabular-nums'>
-                  {formatChars(file.chars)}
+                  {file.sandbox
+                    ? 'in sandbox'
+                    : file.chars != null
+                      ? formatChars(file.chars)
+                      : ''}
                 </span>
               </div>
             ))}

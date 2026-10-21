@@ -106,6 +106,9 @@ export const sendSocketMessage = createAsyncThunk<
       web_fetch_enabled:
         activeConversation.webFetchEnabled ??
         state.conversation.webFetchEnabled,
+      code_sandbox_enabled:
+        activeConversation.codeSandboxEnabled ??
+        state.conversation.codeSandboxEnabled,
       image_generation_enabled: imageGenerationEnabled,
       image_generation_settings: {
         size: imageGenerationSettings.size,
@@ -196,6 +199,7 @@ export const regenerateSocketResponse = createAsyncThunk<
       selectedModel,
       webSearchEnabled,
       webFetchEnabled,
+      codeSandboxEnabled,
       audioTranscriptionEnabled,
       audioTranscriptionSettings,
       artifactsEnabled,
@@ -235,6 +239,8 @@ export const regenerateSocketResponse = createAsyncThunk<
       history_limit: activeConversation.historyLimit,
       web_search_enabled: webSearchEnabled,
       web_fetch_enabled: activeConversation.webFetchEnabled ?? webFetchEnabled,
+      code_sandbox_enabled:
+        activeConversation.codeSandboxEnabled ?? codeSandboxEnabled,
       audio_transcription_enabled: audioTranscriptionEnabled,
       audio_transcription_settings: {
         language: audioTranscriptionSettings.language,

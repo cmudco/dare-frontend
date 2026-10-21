@@ -205,4 +205,7 @@ export interface ProviderToolResult {
   contentSize?: number
   contentPreview?: string
   truncated?: boolean
+  /** Code sandbox runs: the executed Python and its printed output. */
+  code?: string
+  logs?: string
 }
