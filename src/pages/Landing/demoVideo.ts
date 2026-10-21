@@ -1,16 +1,16 @@
 /**
- * The published DARE demo (Dietrich College, updated 2025-09-24).
+ * The published DARE demo (Dietrich College, updated 2026-10-21).
  *
  * It appears in two places: as the opening stop of the product tour, and as a
  * link under the hero CTAs that scrolls there.
  */
 export const DEMO_VIDEO = {
-  youtubeId: '6QMbeooxjJU',
+  youtubeId: 'OdSq5x7RH0Q',
   title: 'DARE Demo Video',
   credit: "Carnegie Mellon University's Dietrich College",
-  /** 908s, read from the published video. */
-  runtime: '15:08',
-  runtimeLabel: '15-minute',
+  /** 1122s, read from the published video. */
+  runtime: '18:42',
+  runtimeLabel: '19-minute',
 } as const
 
 /**
