@@ -43,6 +43,9 @@ const ModelConfigurationPanel: React.FC = () => {
   const defaultWebFetch = useSelector(
     (state: RootState) => state.conversation.webFetchEnabled
   )
+  const defaultCodeSandbox = useSelector(
+    (state: RootState) => state.conversation.codeSandboxEnabled
+  )
   const defaultArtifacts = useSelector(
     (state: RootState) => state.conversation.artifactsEnabled
   )
@@ -53,6 +56,8 @@ const ModelConfigurationPanel: React.FC = () => {
     historyLimit: activeConversation?.historyLimit ?? MODEL_CONFIG.historyLimit,
     webSearchEnabled: activeConversation?.webSearchEnabled ?? defaultWebSearch,
     webFetchEnabled: activeConversation?.webFetchEnabled ?? defaultWebFetch,
+    codeSandboxEnabled:
+      activeConversation?.codeSandboxEnabled ?? defaultCodeSandbox,
     artifactsEnabled: activeConversation?.artifactsEnabled ?? defaultArtifacts,
   }
   const imageGenerationEnabled = useSelector(
@@ -201,6 +206,7 @@ const ModelConfigurationPanel: React.FC = () => {
       historyLimit: MODEL_CONFIG.historyLimit,
       webSearchEnabled: false,
       webFetchEnabled: false,
+      codeSandboxEnabled: false,
       artifactsEnabled: false,
     }
     dispatch(updateModelSettings(defaults))
