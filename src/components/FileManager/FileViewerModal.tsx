@@ -9,6 +9,8 @@ import FileProcessingJourneyPanel from './FileProcessingJourneyPanel'
 import FileMapPanel from './FileMapPanel'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { fetchFileViewerCapabilities } from '@/redux/asyncThunks/file'
+import { isSpreadsheetFile } from '@/utils/spreadsheet/protocol'
+import SpreadsheetPreview from './SpreadsheetPreview'
 
 interface FileViewerModalProps {
   isOpen: boolean
@@ -47,6 +49,7 @@ const FileViewerModal = ({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
+  const [blob, setBlob] = useState<Blob | null>(null)
   const [tab, setTab] = useState('document')
   const [page, setPage] = useState<number | null>(null)
 
@@ -83,6 +86,7 @@ const FileViewerModal = ({
       })
 
       const url = URL.createObjectURL(response.data)
+      setBlob(response.data)
       setBlobUrl(url)
       setLoading(false)
     } catch (err: unknown) {
@@ -126,6 +130,7 @@ const FileViewerModal = ({
       if (blobUrl) {
         URL.revokeObjectURL(blobUrl)
         setBlobUrl(null)
+        setBlob(null)
       }
     }
   }, [isOpen, fileId, fetchFileAsBlob]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -138,6 +143,7 @@ const FileViewerModal = ({
     if (blobUrl) {
       URL.revokeObjectURL(blobUrl)
       setBlobUrl(null)
+      setBlob(null)
     }
     onClose()
   }
@@ -170,6 +176,11 @@ const FileViewerModal = ({
 
   const renderFileViewer = () => {
     if (!blobUrl) return null
+
+    // Browsers download spreadsheets instead of rendering them.
+    if (blob && isSpreadsheetFile(fileName)) {
+      return <SpreadsheetPreview blob={blob} onDownload={downloadFile} />
+    }
 
     return (
       <div className='relative h-full'>
