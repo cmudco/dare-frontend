@@ -22,9 +22,9 @@ export const getToolPresentation = (toolName: string): ToolPresentation => {
 
   if (normalized === CODE_SANDBOX_TOOL) {
     return {
-      title: 'Ran Python',
-      pendingLabel: 'Preparing Python code',
-      executingLabel: 'Running Python',
+      title: 'Ran code',
+      pendingLabel: 'Preparing code',
+      executingLabel: 'Running code',
     }
   }
   if (normalized.includes('search_documents')) {
