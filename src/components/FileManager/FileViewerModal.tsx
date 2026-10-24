@@ -9,6 +9,8 @@ import FileProcessingJourneyPanel from './FileProcessingJourneyPanel'
 import FileMapPanel from './FileMapPanel'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { fetchFileViewerCapabilities } from '@/redux/asyncThunks/file'
+import { isSpreadsheetFile } from '@/utils/spreadsheet/protocol'
+import SpreadsheetPreview from './SpreadsheetPreview'
 
 // A blob URL runs with this page's origin, so only types that cannot run
 // script keep their own type; HTML, SVG and the like are shown as text.
@@ -205,6 +207,11 @@ const FileViewerModal = ({
 
   const renderFileViewer = () => {
     if (!blobUrl) return null
+
+    // Browsers download spreadsheets instead of rendering them.
+    if (blob && isSpreadsheetFile(fileName)) {
+      return <SpreadsheetPreview blob={blob} onDownload={downloadFile} />
+    }
 
     return (
       <div className='relative h-full'>

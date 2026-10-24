@@ -450,9 +450,12 @@ const Message: React.FC<MessageProps> = ({
                 }
 
                 // Check for generated images in files array (from history)
+                // Sandbox charts are generated files too, saved without a prompt.
                 const generatedImages = message.files?.filter(
                   (file) =>
-                    file.isGenerated && file.mediaType === 'generated_image'
+                    file.isGenerated &&
+                    (file.mediaType === 'generated_image' ||
+                      file.mediaType === 'image')
                 )
 
                 if (generatedImages && generatedImages.length > 0) {
@@ -466,17 +469,19 @@ const Message: React.FC<MessageProps> = ({
                             className='max-w-full rounded-lg shadow-md'
                           />
                           <div className='mt-2 space-y-1 text-xs text-muted-foreground'>
-                            <p>
-                              <span className='font-medium'>Prompt:</span>{' '}
-                              {file.generationPrompt}
-                            </p>
+                            {file.generationPrompt && (
+                              <p>
+                                <span className='font-medium'>Prompt:</span>{' '}
+                                {file.generationPrompt}
+                              </p>
+                            )}
                             {file.revisedPrompt && (
                               <p>
                                 <span className='font-medium'>Revised:</span>{' '}
                                 {file.revisedPrompt}
                               </p>
                             )}
-                            {file.generationParams && (
+                            {file.generationParams?.model && (
                               <p>
                                 {file.generationParams.model} •{' '}
                                 {file.generationParams.size}
