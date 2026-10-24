@@ -64,7 +64,7 @@ export enum ServerSlug {
   OPENAI = 'openai',
 }
 
-/** Provider-native tool name for a Python run in OpenAI's code sandbox. */
+/** Provider-native tool name for a run in the OpenAI or Claude code sandbox. */
 export const CODE_SANDBOX_TOOL = 'code_sandbox'
 
 /**

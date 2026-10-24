@@ -141,9 +141,9 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
   const isGemini = provider === 'gemini'
   const showWebFetch =
     showWebSearch && (provider === 'claude' || provider === 'gemini')
-  // The sandbox is OpenAI's hosted code interpreter; gateways do not proxy it.
+  // The sandbox is the provider's hosted container; gateways do not proxy it.
   const sandboxAvailable =
-    provider === 'openai' &&
+    (provider === 'openai' || provider === 'claude') &&
     !model?.id.startsWith('litellm:') &&
     walletMeta?.type !== 'LITELLM'
   const showEffort = model?.supportsEffort ?? false
@@ -187,14 +187,16 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
         )}
         <ToggleRow
           title='Code sandbox'
-          description='Let the AI run Python on your full-text files (OpenAI models)'
-          tip='Files are copied into a temporary OpenAI container instead of being pasted into the prompt.'
+          description='Let the AI run Python on your full-text files (OpenAI and Claude models)'
+          tip="Files are copied into a temporary container at the model's provider instead of being pasted into the prompt."
           checked={settings.codeSandboxEnabled}
           onCheckedChange={(checked) =>
             onChange({ codeSandboxEnabled: checked })
           }
           disabledReason={
-            sandboxAvailable ? undefined : 'Pick an OpenAI model to use it.'
+            sandboxAvailable
+              ? undefined
+              : 'Pick an OpenAI or Claude model to use it.'
           }
         />
         {extraToggles}
