@@ -91,6 +91,14 @@ export function useAutoScroll(): UseAutoScrollReturn {
     setShowScrollButton(!atBottom)
   }, [isAtBottom])
 
+  // An image (e.g. a chart) that finishes loading after the scroll grows the
+  // content without a scroll event, leaving the reader short of the bottom.
+  const handleMediaLoad = useCallback((event: Event) => {
+    if (!(event.target instanceof HTMLImageElement)) return
+    if (userScrolledUpRef.current) return
+    anchorRef.current?.scrollIntoView({ behavior: 'auto' })
+  }, [])
+
   // Attach scroll listeners
   useEffect(() => {
     const container = containerRef.current
@@ -98,12 +106,15 @@ export function useAutoScroll(): UseAutoScrollReturn {
 
     container.addEventListener('wheel', handleWheel, { passive: true })
     container.addEventListener('scroll', handleScroll, { passive: true })
+    // load does not bubble, so listen in the capture phase.
+    container.addEventListener('load', handleMediaLoad, true)
 
     return () => {
       container.removeEventListener('wheel', handleWheel)
       container.removeEventListener('scroll', handleScroll)
+      container.removeEventListener('load', handleMediaLoad, true)
     }
-  }, [handleScroll, handleWheel])
+  }, [handleScroll, handleWheel, handleMediaLoad])
 
   return {
     containerRef,

@@ -9,6 +9,39 @@ import FileProcessingJourneyPanel from './FileProcessingJourneyPanel'
 import FileMapPanel from './FileMapPanel'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { fetchFileViewerCapabilities } from '@/redux/asyncThunks/file'
+import { isSpreadsheetFile } from '@/utils/spreadsheet/protocol'
+import SpreadsheetPreview from './SpreadsheetPreview'
+
+// A blob URL runs with this page's origin, so only types that cannot run
+// script keep their own type; HTML, SVG and the like are shown as text.
+const PASSIVE_BLOB_TYPES = new Set([
+  'application/pdf',
+  'application/json',
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+  'image/bmp',
+  'text/plain',
+  'text/csv',
+  'text/markdown',
+])
+
+const toPassiveBlob = (blob: Blob): Blob => {
+  const type = blob.type.split(';')[0].trim().toLowerCase()
+  if (
+    PASSIVE_BLOB_TYPES.has(type) ||
+    type.startsWith('audio/') ||
+    type.startsWith('video/')
+  ) {
+    return blob
+  }
+  return new Blob([blob], {
+    type: /html|xml|svg|javascript|^text\//.test(type)
+      ? 'text/plain'
+      : 'application/octet-stream',
+  })
+}
 
 interface FileViewerModalProps {
   isOpen: boolean
@@ -47,6 +80,7 @@ const FileViewerModal = ({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
+  const [blob, setBlob] = useState<Blob | null>(null)
   const [tab, setTab] = useState('document')
   const [page, setPage] = useState<number | null>(null)
 
@@ -82,8 +116,9 @@ const FileViewerModal = ({
         },
       })
 
-      const url = URL.createObjectURL(response.data)
-      setBlobUrl(url)
+      const fileBlob = toPassiveBlob(response.data)
+      setBlob(fileBlob)
+      setBlobUrl(URL.createObjectURL(fileBlob))
       setLoading(false)
     } catch (err: unknown) {
       console.error('File fetch error:', err)
@@ -126,6 +161,7 @@ const FileViewerModal = ({
       if (blobUrl) {
         URL.revokeObjectURL(blobUrl)
         setBlobUrl(null)
+        setBlob(null)
       }
     }
   }, [isOpen, fileId, fetchFileAsBlob]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -138,6 +174,7 @@ const FileViewerModal = ({
     if (blobUrl) {
       URL.revokeObjectURL(blobUrl)
       setBlobUrl(null)
+      setBlob(null)
     }
     onClose()
   }
@@ -171,6 +208,11 @@ const FileViewerModal = ({
   const renderFileViewer = () => {
     if (!blobUrl) return null
 
+    // Browsers download spreadsheets instead of rendering them.
+    if (blob && isSpreadsheetFile(fileName)) {
+      return <SpreadsheetPreview blob={blob} onDownload={downloadFile} />
+    }
+
     return (
       <div className='relative h-full'>
         {/* Action buttons */}
@@ -199,6 +241,8 @@ const FileViewerModal = ({
         <iframe
           key={page ?? 'all'}
           src={page ? `${blobUrl}#page=${page}` : blobUrl}
+          // Chrome refuses to render PDFs in a sandboxed frame.
+          sandbox={blob?.type === 'application/pdf' ? undefined : ''}
           className='h-full w-full rounded-md border-0'
           title={fileName}
           onLoad={handleIframeLoad}
