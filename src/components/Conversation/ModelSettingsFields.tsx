@@ -96,18 +96,27 @@ const InfoLabel: React.FC<InfoLabelProps> = ({
 interface ToggleRowProps extends InfoLabelProps {
   checked: boolean
   onCheckedChange: (checked: boolean) => void
+  /** Shown under the label when set; the switch is disabled. */
+  disabledReason?: string
 }
 
 const ToggleRow: React.FC<ToggleRowProps> = ({
   checked,
   onCheckedChange,
+  disabledReason,
   ...label
 }) => (
   <div className='flex items-center justify-between border-b border-border pb-2'>
-    <InfoLabel {...label} />
+    <div className='min-w-0'>
+      <InfoLabel {...label} />
+      {disabledReason && (
+        <p className='mt-0.5 text-xs text-muted-foreground'>{disabledReason}</p>
+      )}
+    </div>
     <Switch
-      checked={checked}
+      checked={checked && !disabledReason}
       onCheckedChange={onCheckedChange}
+      disabled={!!disabledReason}
       aria-label={label.title}
     />
   </div>
@@ -132,6 +141,11 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
   const isGemini = provider === 'gemini'
   const showWebFetch =
     showWebSearch && (provider === 'claude' || provider === 'gemini')
+  // The sandbox is OpenAI's hosted code interpreter; gateways do not proxy it.
+  const sandboxAvailable =
+    provider === 'openai' &&
+    !model?.id.startsWith('litellm:') &&
+    walletMeta?.type !== 'LITELLM'
   const showEffort = model?.supportsEffort ?? false
 
   const requestedEffort =
@@ -171,6 +185,18 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
             }
           />
         )}
+        <ToggleRow
+          title='Code sandbox'
+          description='Let the AI run Python on your full-text files (OpenAI models)'
+          tip='Files are copied into a temporary OpenAI container instead of being pasted into the prompt.'
+          checked={settings.codeSandboxEnabled}
+          onCheckedChange={(checked) =>
+            onChange({ codeSandboxEnabled: checked })
+          }
+          disabledReason={
+            sandboxAvailable ? undefined : 'Pick an OpenAI model to use it.'
+          }
+        />
         {extraToggles}
         {enableArtifacts && (
           <ToggleRow
