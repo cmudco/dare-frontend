@@ -47,17 +47,21 @@ export const TransactionTable = ({
     4
 
   return (
-    <Table>
+    <Table className='min-w-[960px] table-fixed'>
       <TableHeader>
         <TableRow>
-          {showAmount && <TableHead>Amount</TableHead>}
-          {showReferenceAmount && <TableHead>Est. Cost</TableHead>}
-          <TableHead className='w-[32%]'>Message</TableHead>
-          <TableHead>LLM</TableHead>
-          <TableHead className='min-w-[140px]'>Tokens</TableHead>
-          {showBillingMode && <TableHead>Billing Mode</TableHead>}
-          {showPlatform && <TableHead>Platform</TableHead>}
-          <TableHead>Date</TableHead>
+          {showAmount && <TableHead className='w-28'>Amount</TableHead>}
+          {showReferenceAmount && (
+            <TableHead className='w-36'>Est. Cost</TableHead>
+          )}
+          <TableHead>Message</TableHead>
+          <TableHead className='w-36'>LLM</TableHead>
+          <TableHead className='w-32 text-center'>Tokens</TableHead>
+          {showBillingMode && (
+            <TableHead className='w-28'>Billing Mode</TableHead>
+          )}
+          {showPlatform && <TableHead className='w-24'>Platform</TableHead>}
+          <TableHead className='w-28'>Date</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -71,7 +75,7 @@ export const TransactionTable = ({
           transactions.map((transaction) => (
             <TableRow key={transaction.id}>
               {showAmount && (
-                <TableCell>
+                <TableCell className='tabular-nums'>
                   <div className='flex flex-col'>
                     <span>{transaction.displayAmount}</span>
                     {transaction.displayReferenceAmount && (
@@ -96,13 +100,18 @@ export const TransactionTable = ({
                   )}
                 </TableCell>
               )}
-              <TableCell className='max-w-[420px]'>
-                <span className='line-clamp-2 text-sm' title={transaction.message}>
+              <TableCell>
+                <span
+                  className='line-clamp-2 text-sm'
+                  title={transaction.message}
+                >
                   {transaction.message}
                 </span>
               </TableCell>
-              <TableCell>{transaction.llmName || 'N/A'}</TableCell>
-              <TableCell>
+              <TableCell className='break-words'>
+                {transaction.llmName || 'N/A'}
+              </TableCell>
+              <TableCell className='whitespace-nowrap tabular-nums'>
                 <div className='flex flex-col'>
                   <div className='text-center'>
                     <span className='text-xs text-muted-foreground'>
@@ -172,8 +181,18 @@ export const TransactionTable = ({
                   </div>
                 </TableCell>
               )}
-              <TableCell>
-                {new Date(transaction.createdAt).toLocaleDateString()}
+              <TableCell className='whitespace-nowrap'>
+                <div className='flex flex-col'>
+                  <span className='text-sm'>
+                    {new Date(transaction.createdAt).toLocaleDateString()}
+                  </span>
+                  <span className='text-xs text-muted-foreground'>
+                    {new Date(transaction.createdAt).toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
               </TableCell>
             </TableRow>
           ))

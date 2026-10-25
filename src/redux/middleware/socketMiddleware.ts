@@ -14,7 +14,7 @@
  *   3. Listen for incoming actions in reducers
  */
 
-import type { Middleware } from '@reduxjs/toolkit'
+import type { Middleware, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 
 // Internal action type for middleware
 interface SocketActionWithPayload {
@@ -25,6 +25,8 @@ import { io, Socket } from 'socket.io-client'
 import { config } from '@/config/environment'
 import { SOCKET_RECONNECT_POLICY } from '@/config/socket'
 import { debugLog } from '@/utils/debugLogger'
+import { SenderType } from '@/utils/constants/conversation'
+import { getWallets } from '@/redux/asyncThunks/billing'
 import {
   captureSocketFailure,
   recordSocketLifecycle,
@@ -348,6 +350,17 @@ export function createSocketMiddleware(): Middleware {
         // Incoming messages → dispatch as actions
         socket.on('message', (data) => {
           dispatch({ type: `socket/${data.type}`, payload: data })
+          // The final AI message is sent after the turn is billed; refresh the
+          // header balance so it tracks spend without a page reload.
+          if (
+            data.type === 'message' &&
+            data.streaming === false &&
+            data.senderType !== SenderType.PLAYER
+          ) {
+            void (dispatch as ThunkDispatch<unknown, unknown, UnknownAction>)(
+              getWallets()
+            )
+          }
         })
 
         break
