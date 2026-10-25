@@ -642,6 +642,8 @@ export interface ConversationState {
   error: string | null
   searchQuery: string
   activeConversationMessages: Message[]
+  // Running turns announced by the socket before REST history loaded them.
+  pendingActiveGenerationIds: string[]
   // Opaque dispatch id from the picker — echoed back to the BE on send.
   selectedModel: string | null
   // Multi-model composition from the picker. Inactive until depth leaves

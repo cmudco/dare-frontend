@@ -18,6 +18,7 @@ export const initialState: ConversationState = {
   error: null,
   searchQuery: '',
   activeConversationMessages: [],
+  pendingActiveGenerationIds: [],
   selectedModel: null,
   ensemble: {
     depth: 'single',

@@ -981,6 +981,11 @@ export const conversationSlice = createSlice({
       })
       .addCase(fetchConversationMessages.fulfilled, (state, action) => {
         state.activeConversationMessages = action.payload
+        const pending = new Set(state.pendingActiveGenerationIds)
+        state.activeConversationMessages.forEach((message) => {
+          if (pending.has(String(message.id))) message.streaming = true
+        })
+        state.pendingActiveGenerationIds = []
       })
       // ─────────────────────────────────────────────────────────────────────
       // Socket.IO message handlers (from socketMiddleware)
@@ -1048,6 +1053,23 @@ export const conversationSlice = createSlice({
               ...state.activeConversationMessages[index],
               ...action.payload,
             }
+          }
+        }
+      )
+      // A turn still running server-side when the user re-opens its chat:
+      // persisted history only has the empty placeholder, so mark it live.
+      .addMatcher(
+        (action): action is { type: string; payload: { messageId: number } } =>
+          action.type === 'socket/generation_active',
+        (state, action) => {
+          const id = String(action.payload.messageId)
+          const message = state.activeConversationMessages.find(
+            (msg) => String(msg.id) === id
+          )
+          if (message) {
+            message.streaming = true
+          } else if (!state.pendingActiveGenerationIds.includes(id)) {
+            state.pendingActiveGenerationIds.push(id)
           }
         }
       )
