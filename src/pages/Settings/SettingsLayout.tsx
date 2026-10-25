@@ -5,6 +5,7 @@ import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { cn } from '@/lib/utils'
 import {
   APPEARANCE_PATH,
+  BACKGROUND_MODELS_PATH,
   CHAT_SETTINGS_PATH,
   DATA_SETTINGS_PATH,
   INTEGRATIONS_PATH,
@@ -22,6 +23,7 @@ const SettingsLayout = () => {
     { label: 'Account', path: SETTINGS_PATH, end: true },
     { label: 'Appearance', path: APPEARANCE_PATH, end: false },
     { label: 'Chat', path: CHAT_SETTINGS_PATH, end: false },
+    { label: 'Background models', path: BACKGROUND_MODELS_PATH, end: false },
     ...(enableMemory
       ? [{ label: 'Memory', path: MEMORY_PATH, end: false }]
       : []),
