@@ -100,6 +100,12 @@ export interface SocketMessage {
   [key: string]: unknown
 }
 
+/** The completed AI reply; the backend sends it only after the turn is billed. */
+export const isFinalAiMessage = (data: SocketMessage): boolean =>
+  data.type === 'message' &&
+  data.streaming === false &&
+  data.senderType !== SenderType.PLAYER
+
 // ════════════════════════════════════════════════════════════════════════════
 // ACTION TYPES
 // ════════════════════════════════════════════════════════════════════════════
@@ -350,13 +356,8 @@ export function createSocketMiddleware(): Middleware {
         // Incoming messages → dispatch as actions
         socket.on('message', (data) => {
           dispatch({ type: `socket/${data.type}`, payload: data })
-          // The final AI message is sent after the turn is billed; refresh the
-          // header balance so it tracks spend without a page reload.
-          if (
-            data.type === 'message' &&
-            data.streaming === false &&
-            data.senderType !== SenderType.PLAYER
-          ) {
+          // Refresh the header balance so it tracks spend without a reload.
+          if (isFinalAiMessage(data)) {
             void (dispatch as ThunkDispatch<unknown, unknown, UnknownAction>)(
               getWallets()
             )
