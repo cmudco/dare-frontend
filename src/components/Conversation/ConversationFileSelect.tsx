@@ -49,6 +49,15 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs'
 import ModelContextSettings from './ModelContextSettings'
 import { FileStatus } from '@/utils/constants/file'
+import { supportsCodeSandbox } from '@/utils/modelConfigUtils'
+import { isSpreadsheetFile } from '@/utils/spreadsheet/protocol'
+
+// Tables are searched by a summary card, so their parser is not the story.
+const sourceLabel = (
+  name: string,
+  parserName: keyof typeof DOCUMENT_PARSER_LABELS
+): string =>
+  isSpreadsheetFile(name) ? 'Table' : DOCUMENT_PARSER_LABELS[parserName]
 
 const ConversationFileSelect: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -60,6 +69,19 @@ const ConversationFileSelect: React.FC = () => {
   )
   const selectedEmbeddings = useSelector(
     (state: RootState) => state.conversation.selectedEmbeddings
+  )
+  const sandboxOn = useSelector(
+    (state: RootState) =>
+      state.conversation.activeConversation?.codeSandboxEnabled ??
+      state.conversation.codeSandboxEnabled
+  )
+  const sandboxAvailable = useSelector((state: RootState) =>
+    supportsCodeSandbox(
+      state.conversation.pickerEntries.find(
+        (entry) => entry.id === state.conversation.selectedModel
+      ),
+      state.conversation.activeWalletMeta
+    )
   )
   const selectedMediaFiles = useSelector(
     (state: RootState) => state.conversation.selectedMediaFiles
@@ -314,6 +336,17 @@ const ConversationFileSelect: React.FC = () => {
     { n: selectedLibraries.length, label: 'libraries' },
   ]
   const totalSelected = selectionCounts.reduce((sum, c) => sum + c.n, 0)
+  // Tables are searched by a summary and only partly fit in a prompt; exact
+  // answers need the sandbox, which reads the whole file.
+  const tableSelected = [...selectedFiles, ...selectedEmbeddings].some((file) =>
+    isSpreadsheetFile(file.name ?? '')
+  )
+  const tableHint =
+    !tableSelected || (sandboxOn && sandboxAvailable)
+      ? null
+      : sandboxAvailable
+        ? 'Turn on Code sandbox in chat settings for exact answers from tables. Without it, the AI only sees part of a large table.'
+        : "This model can't run code, so it only sees part of a large table. Pick an OpenAI or Claude model and turn on Code sandbox for exact answers."
   const selectionSummary = selectionCounts
     .filter((c) => c.n > 0)
     .map((c) => `${c.n} ${c.label}`)
@@ -469,7 +502,7 @@ const ConversationFileSelect: React.FC = () => {
                           {file.name}
                           {file.parserName && (
                             <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
-                              {DOCUMENT_PARSER_LABELS[file.parserName]}
+                              {sourceLabel(file.name ?? '', file.parserName)}
                             </span>
                           )}
                         </span>
@@ -515,7 +548,7 @@ const ConversationFileSelect: React.FC = () => {
                           {file.name}
                           {file.parserName && (
                             <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
-                              {DOCUMENT_PARSER_LABELS[file.parserName]}
+                              {sourceLabel(file.name ?? '', file.parserName)}
                             </span>
                           )}
                         </span>
@@ -561,7 +594,7 @@ const ConversationFileSelect: React.FC = () => {
                           {file.name}
                           {file.parserName && (
                             <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
-                              {DOCUMENT_PARSER_LABELS[file.parserName]}
+                              {sourceLabel(file.name ?? '', file.parserName)}
                             </span>
                           )}
                         </span>
@@ -734,6 +767,11 @@ const ConversationFileSelect: React.FC = () => {
               {totalSelected > 0 && (
                 <p className='px-1 text-xs text-muted-foreground'>
                   {selectionSummary}
+                </p>
+              )}
+              {tableHint && (
+                <p className='rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground'>
+                  {tableHint}
                 </p>
               )}
               <div className='flex items-center justify-between'>

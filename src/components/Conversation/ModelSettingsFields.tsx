@@ -11,6 +11,7 @@ import {
   WalletMeta,
 } from '@/redux/types/conversation'
 import { EffortLevel, EffortLevelLabels } from '@/utils/constants/model'
+import { supportsCodeSandbox } from '@/utils/modelConfigUtils'
 import { Button } from '../ui/button'
 import { Slider } from '../ui/slider'
 import { Switch } from '../ui/switch'
@@ -141,11 +142,7 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
   const isGemini = provider === 'gemini'
   const showWebFetch =
     showWebSearch && (provider === 'claude' || provider === 'gemini')
-  // The sandbox is the provider's hosted container; gateways do not proxy it.
-  const sandboxAvailable =
-    (provider === 'openai' || provider === 'claude') &&
-    !model?.id.startsWith('litellm:') &&
-    walletMeta?.type !== 'LITELLM'
+  const sandboxAvailable = supportsCodeSandbox(model, walletMeta)
   const showEffort = model?.supportsEffort ?? false
 
   const requestedEffort =
