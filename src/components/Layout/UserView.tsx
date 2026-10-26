@@ -6,11 +6,17 @@ import SystemBanner from './SystemBanner'
 import ToastContainer from '@/components/ui/ToastContainer'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { fetchOwnedGroups } from '@/redux/asyncThunks/billing'
+import { fetchUnseenReleaseNotes } from '@/redux/asyncThunks/releaseNotes'
+import { selectUnseenReleaseNotesStatus } from '@/redux/releaseNotesSlice'
+import { WhatsNewDialog } from '@/components/ReleaseNotes/WhatsNewDialog'
 
 const UserView: React.FC = () => {
   const dispatch = useAppDispatch()
   const ownedGroupsLoaded = useAppSelector(
     (state) => state.billing.ownedGroupsLoaded
+  )
+  const unseenReleaseNotesStatus = useAppSelector(
+    selectUnseenReleaseNotesStatus
   )
 
   useEffect(() => {
@@ -18,6 +24,12 @@ const UserView: React.FC = () => {
       dispatch(fetchOwnedGroups())
     }
   }, [dispatch, ownedGroupsLoaded])
+
+  useEffect(() => {
+    if (unseenReleaseNotesStatus === 'idle') {
+      dispatch(fetchUnseenReleaseNotes())
+    }
+  }, [dispatch, unseenReleaseNotesStatus])
 
   return (
     <div className='flex h-screen flex-col'>
@@ -30,6 +42,7 @@ const UserView: React.FC = () => {
         </main>
       </div>
       <ToastContainer />
+      <WhatsNewDialog />
     </div>
   )
 }
