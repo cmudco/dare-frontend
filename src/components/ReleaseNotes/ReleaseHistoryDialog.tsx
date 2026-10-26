@@ -37,7 +37,7 @@ export function ReleaseHistoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='w-[calc(100%-2rem)] max-w-xl rounded-2xl sm:rounded-2xl'>
+      <DialogContent className='w-[calc(100%-2rem)] max-w-xl rounded-2xl sm:rounded-2xl lg:max-w-[min(60vw,60rem)]'>
         <DialogHeader>
           <DialogTitle>What&apos;s new</DialogTitle>
           <DialogDescription>
