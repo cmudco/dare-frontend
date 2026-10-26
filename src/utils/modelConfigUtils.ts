@@ -1,4 +1,4 @@
-import type { PickerModel } from '@/redux/types/conversation'
+import type { PickerModel, WalletMeta } from '@/redux/types/conversation'
 import { MODEL_CONFIG } from '../config/modelConfig'
 
 export const getTemperatureColor = (temperature: number): string => {
@@ -59,3 +59,16 @@ export const defaultMaxTokensFor = (model: PickerModel | undefined) =>
   model?.supportsAdaptiveThinking
     ? MODEL_CONFIG.adaptiveThinkingMaxTokens
     : MODEL_CONFIG.maxTokens
+
+/** The sandbox is the provider's hosted container; gateways do not proxy it. */
+export const supportsCodeSandbox = (
+  model: PickerModel | undefined,
+  walletMeta: WalletMeta | null
+): boolean => {
+  const provider = model?.provider?.toLowerCase()
+  return (
+    (provider === 'openai' || provider === 'claude') &&
+    !model?.id.startsWith('litellm:') &&
+    walletMeta?.type !== 'LITELLM'
+  )
+}
