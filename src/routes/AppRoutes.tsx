@@ -16,6 +16,7 @@ import ProtectedRoute from './ProtectedRoute'
 import Help from '../pages/Help'
 import AccountSection from '@/pages/Settings/AccountSection'
 import ChatSection from '@/pages/Settings/ChatSection'
+import BackgroundModelsSection from '@/pages/Settings/BackgroundModelsSection'
 import AppearanceSettings from '@/components/Settings/AppearanceSettings'
 import DataAccountSettings from '@/components/Settings/DataAccountSettings'
 import ResetPasswordScreen from '../pages/ResetPassword'
@@ -197,6 +198,10 @@ const AppRoutes = () => {
               <Route index element={<AccountSection />} />
               <Route path='appearance' element={<AppearanceSettings />} />
               <Route path='chat' element={<ChatSection />} />
+              <Route
+                path='background-models'
+                element={<BackgroundModelsSection />}
+              />
               <Route path='data' element={<DataAccountSettings />} />
               {enableMemory && (
                 <Route path='memory' element={<MemoryScreen />} />
