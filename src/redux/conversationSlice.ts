@@ -23,6 +23,7 @@ import {
   forkConversation,
   fetchConversationMessages,
   applyAgentToConversation,
+  switchChatSourceMode,
 } from './asyncThunks/conversation'
 import {
   deleteProject,
@@ -68,6 +69,7 @@ import {
   syncModelsWithAudioTranscriptionState,
 } from './utils/modelSyncHelpers'
 import { userLogin, userLogout } from './asyncThunks/user'
+import { ProjectSourceMode } from '@/utils/constants/project'
 
 /** Make `conversation` the active chat and mirror its toggles and model choice. */
 function setActiveConversation(
@@ -138,7 +140,29 @@ function selectLibraries(
   )
 }
 
-export const conversationSlice = createSlice({
+export /** Move the given files into the full-text or the search selection. */
+const moveFilesToSourceMode = (
+  state: ConversationState,
+  fileIds: number[],
+  mode: ProjectSourceMode
+) => {
+  const ids = new Set(fileIds)
+  const moving = new Map(
+    [...state.selectedFiles, ...state.selectedEmbeddings]
+      .filter((file) => ids.has(file.id))
+      .map((file) => [file.id, file])
+  )
+  const files = state.selectedFiles.filter((file) => !ids.has(file.id))
+  const embeddings = state.selectedEmbeddings.filter(
+    (file) => !ids.has(file.id)
+  )
+  if (mode === ProjectSourceMode.FULL) files.push(...moving.values())
+  else embeddings.push(...moving.values())
+  state.selectedFiles = files
+  state.selectedEmbeddings = embeddings
+}
+
+const conversationSlice = createSlice({
   name: 'conversation',
   initialState: {
     ...initialState,
@@ -871,6 +895,28 @@ export const conversationSlice = createSlice({
       )
       .addCase(getActiveModels.rejected, (_state, action) => {
         console.error('Failed to load active models:', action.payload)
+      })
+      .addCase(switchChatSourceMode.pending, (state, action) => {
+        const { fileIds, mode } = action.meta.arg
+        moveFilesToSourceMode(state, fileIds, mode)
+      })
+      .addCase(switchChatSourceMode.fulfilled, (state, action) => {
+        if (
+          state.activeConversation?.conversationId ===
+          action.payload.conversationId
+        ) {
+          state.activeConversation = action.payload
+        }
+      })
+      .addCase(switchChatSourceMode.rejected, (state, action) => {
+        const { fileIds, mode } = action.meta.arg
+        moveFilesToSourceMode(
+          state,
+          fileIds,
+          mode === ProjectSourceMode.FULL
+            ? ProjectSourceMode.SEARCH
+            : ProjectSourceMode.FULL
+        )
       })
       .addCase(updateConversationSelectedIds.pending, (state) => {
         state.loading = true
