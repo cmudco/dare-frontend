@@ -55,7 +55,7 @@ function WhatsNewSteps({ unseen }: { unseen: ReleaseNote[] }) {
 
   return (
     <Dialog open onOpenChange={(open) => !open && dismiss()}>
-      <DialogContent className='w-[calc(100%-2rem)] max-w-md gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-2xl'>
+      <DialogContent className='w-[calc(100%-2rem)] max-w-xl gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-2xl lg:max-w-[min(60vw,60rem)]'>
         <div className='h-0.5 bg-dare-gradient' aria-hidden />
         <div className='flex flex-col items-center gap-3 border-b border-border bg-muted/40 px-6 pt-6 pb-5'>
           <Logo size='lg' animated showTagline={false} />
