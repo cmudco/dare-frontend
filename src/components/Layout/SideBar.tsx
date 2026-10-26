@@ -15,6 +15,7 @@ import {
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
 import { useCanAccessResearch } from '@/hooks/useCanAccessResearch'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   openConversationTour,
@@ -80,6 +81,8 @@ const Sidebar = () => {
     (state) => state.billing.ownedGroups.length > 0
   )
   const canAccessResearch = useCanAccessResearch()
+  const showResearchTools =
+    useFeatureFlag('enableResearchTools') && isResearchToolsEnabled()
 
   const handleStartTutorial = useCallback(() => {
     const pageKey = getTourPageKeyFromPath(location.pathname)
@@ -232,7 +235,7 @@ const Sidebar = () => {
               </span>
             </button>
 
-            {isResearchToolsEnabled() && (
+            {showResearchTools && (
               <button
                 onClick={handleGoToResearchTools}
                 className='flex w-full items-center rounded-lg p-3 text-start leading-tight outline-hidden transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
