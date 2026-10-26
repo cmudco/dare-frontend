@@ -2,6 +2,7 @@ import type { Conversation } from './conversation'
 import type {
   ProjectIconKey,
   ProjectMemoryScope,
+  ProjectSourceMode,
 } from '@/utils/constants/project'
 
 export interface Project {
@@ -19,6 +20,8 @@ export interface Project {
   artifactsEnabled: boolean
   memoryEnabled: boolean
   memoryScope: ProjectMemoryScope
+  /** Whether new chats search the project's files or read them in full. */
+  sourceMode: ProjectSourceMode
   fileIds: number[]
   folderIds: number[]
   libraryIds: number[]
@@ -47,6 +50,7 @@ export type ProjectUpdate = Partial<
     | 'artifactsEnabled'
     | 'memoryEnabled'
     | 'memoryScope'
+    | 'sourceMode'
     | 'fileIds'
     | 'folderIds'
     | 'libraryIds'
@@ -68,4 +72,17 @@ export interface MoveConversationsRequest {
 export interface MoveConversationsResult {
   moved: Conversation[]
   failedCount: number
+}
+
+export interface SourceSizeRequest {
+  fileIds: number[]
+  folderIds: number[]
+}
+
+/** Estimated prompt cost of reading files in full; libraries are always searched. */
+export interface SourceSize {
+  fileCount: number
+  estimatedTokens: number
+  tokenLimit: number
+  fitsFullFiles: boolean
 }

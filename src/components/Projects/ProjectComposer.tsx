@@ -1,9 +1,24 @@
 import React, { useState } from 'react'
-import { ArrowUp, Brain, Cpu, Globe, Loader2, ScrollText } from 'lucide-react'
+import {
+  ArrowUp,
+  BookOpen,
+  Brain,
+  Cpu,
+  Globe,
+  Loader2,
+  ScrollText,
+  Search,
+} from 'lucide-react'
+import { useProjectSourceMode } from '@/hooks/useProjectSourceMode'
 import { useAppSelector } from '@/redux/hooks'
 import type { Project } from '@/redux/types/project'
-import { ProjectMemoryScope } from '@/utils/constants/project'
+import {
+  PROJECT_SOURCE_MODE_LABELS,
+  ProjectMemoryScope,
+  ProjectSourceMode,
+} from '@/utils/constants/project'
 import { modelRefLabel } from '@/utils/modelRef'
+import { projectSourceCount } from './projectSources'
 
 interface Props {
   project: Project
@@ -27,6 +42,7 @@ const Chip = ({
 const ProjectComposer = ({ project, onStart }: Props) => {
   const [message, setMessage] = useState('')
   const [starting, setStarting] = useState(false)
+  const { effectiveMode } = useProjectSourceMode(project)
   const modelName = useAppSelector((state) =>
     modelRefLabel(project.defaultModelRef, state.conversation.pickerEntries)
   )
@@ -75,6 +91,19 @@ const ProjectComposer = ({ project, onStart }: Props) => {
           )}
           {project.instructions && (
             <Chip icon={<ScrollText className='h-3 w-3' />}>Instructions</Chip>
+          )}
+          {projectSourceCount(project) > 0 && (
+            <Chip
+              icon={
+                effectiveMode === ProjectSourceMode.FULL ? (
+                  <BookOpen className='h-3 w-3' />
+                ) : (
+                  <Search className='h-3 w-3' />
+                )
+              }
+            >
+              {PROJECT_SOURCE_MODE_LABELS[effectiveMode]}
+            </Chip>
           )}
           {project.webSearchEnabled && (
             <Chip icon={<Globe className='h-3 w-3' />}>Web search</Chip>
