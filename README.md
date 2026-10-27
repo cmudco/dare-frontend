@@ -174,7 +174,7 @@ DARE is an Open Forum for AI (OFAI) initiative, Carnegie Mellon University Libra
 
 The DARE name and marks are owned by Carnegie Mellon University. Use of the name, wordmark,
 Scotty dog mark, header lockup, and footer badge is governed by the
-[DARE Brand Guidelines & Usage Policy](docs/brand.md), independently of the software license.
+[DARE Brand Guidelines & Usage Policy](BRAND_GUIDELINES.md), independently of the software license.
 
 This software integrates with third-party APIs (Anthropic, OpenAI, Google, and others); use of those
 APIs is subject to each provider's own Terms of Service.
@@ -212,6 +212,6 @@ DARE is built and maintained by contributors at Carnegie Mellon University and i
 
 This project is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).
 The software license does not grant rights to the DARE name or marks; see the
-[DARE Brand Guidelines & Usage Policy](docs/brand.md).
+[DARE Brand Guidelines & Usage Policy](BRAND_GUIDELINES.md).
 
 See the [LICENSE](LICENSE) file for the full license text, or visit <https://www.gnu.org/licenses/agpl-3.0.en.html>.

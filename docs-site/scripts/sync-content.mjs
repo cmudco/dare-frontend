@@ -210,7 +210,7 @@ const pages = [
     description: 'How a chat turn calls tools across rounds and providers.',
   },
   {
-    from: path.join(frontendRoot, 'docs', 'brand.md'),
+    from: path.join(frontendRoot, 'BRAND_GUIDELINES.md'),
     to: 'reference/brand.mdx',
     title: 'DARE Brand Guidelines & Usage Policy',
     description:
@@ -325,7 +325,7 @@ function cleanMarkdown(markdown, currentSource) {
     .replaceAll('http://localhost:8000/api/docs/', '/api/docs/')
     .replaceAll('http://localhost:8000/api/redoc/', '/api/redoc/')
     .replaceAll('http://localhost:8000/api/schema/', '/api/schema/')
-    .replaceAll('](../docs-site/public/brand/', '](/brand/')
+    .replaceAll('](docs-site/public/brand/', '](/brand/')
     .trim()
 }
 
