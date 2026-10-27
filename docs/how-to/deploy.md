@@ -1,6 +1,6 @@
 # DARE Frontend — Deployment Guide
 
-> **Just want to run it locally?** See [QUICKSTART.md](QUICKSTART.md) —
+> **Just want to run it locally?** See [docs/tutorials/quickstart.md](../tutorials/quickstart.md) —
 > `npm install`, set two env vars, `npm run dev`. That's the whole story for development.
 > **This guide is for deploying to production.**
 
@@ -8,7 +8,7 @@ The DARE frontend is a static single-page app built with Vite. Deploying it is d
 simple: **build the bundle once, then serve the generated `dist/` folder from any static host.**
 There is no server runtime to manage.
 
-For the full environment variable reference, see [docs/configuration.md](docs/configuration.md).
+For the full environment variable reference, see [docs/reference/configuration.md](../reference/configuration.md).
 
 ---
 
@@ -18,7 +18,7 @@ For the full environment variable reference, see [docs/configuration.md](docs/co
 | ------------------------------------------ | ------- | -------------------------------------------------- |
 | Node.js                                    | 18+     | 20 LTS recommended — build-time only               |
 | npm                                        | 9+      | (or `pnpm` / `yarn` if you adapt scripts)          |
-| A running [DARE backend](../dare-backend/) | —       | Reachable from the browser via the configured URLs |
+| A running [DARE backend](../../../dare-backend/) | —       | Reachable from the browser via the configured URLs |
 
 > Node is needed only to **build** the bundle. Once you have `dist/`, the host serving it needs
 > nothing but the ability to serve static files.
@@ -67,7 +67,7 @@ Pick whichever fits your infrastructure — they are all equivalent from the app
 ## 4. CORS and CSRF
 
 The backend must include the frontend's origin in `CORS_ALLOWED_ORIGINS` and
-`CSRF_TRUSTED_ORIGINS`. See the [backend configuration reference](../dare-backend/docs/configuration.md).
+`CSRF_TRUSTED_ORIGINS`. See the [backend configuration reference](../../../dare-backend/docs/reference/configuration.md).
 
 For Socket.IO to connect, `VITE_WEBSOCKET_URL` must be reachable from the browser and accept the
 same auth token used for REST.
@@ -173,5 +173,5 @@ docker run -d -p 80:80 --name dare-frontend dare-frontend
 | Old code shipped after deploy                | CDN or browser cache                                            | Ensure `index.html` is `Cache-Control: no-cache`; assets fingerprinted (Vite default) |
 | `VITE_*` env var ignored at runtime          | Vite inlines at build time                                      | Rebuild with the desired value                                                        |
 
-For local development, see [QUICKSTART.md](QUICKSTART.md); for contributing, see
-[CONTRIBUTING.md](CONTRIBUTING.md).
+For local development, see [docs/tutorials/quickstart.md](../tutorials/quickstart.md); for contributing, see
+[.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md).

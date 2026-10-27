@@ -1,12 +1,12 @@
 # DARE Frontend — Quick Start
 
 Get the frontend running locally in about two minutes. This is all you need for development.
-For deploying to a server, see [DEPLOYMENT.md](DEPLOYMENT.md).
+For deploying to a server, see [docs/how-to/deploy.md](../how-to/deploy.md).
 
 ## Prerequisites
 
 - **Node.js 18+** (20 LTS recommended)
-- A **running DARE backend** — defaults assume `http://localhost:8000` (see [../dare-backend](../dare-backend/))
+- A **running DARE backend** — defaults assume `http://localhost:8000` (see [dare-backend](../../../dare-backend/))
 
 ## Run it
 
@@ -28,4 +28,4 @@ npm run dev
 Open **http://localhost:5173**. The dev server hot-reloads on save.
 
 That's it. If your backend isn't on `localhost:8000`, point `VITE_DJANGO_BACKEND_URL` and
-`VITE_WEBSOCKET_URL` in `.env` at it. Full variable reference: [docs/configuration.md](docs/configuration.md).
+`VITE_WEBSOCKET_URL` in `.env` at it. Full variable reference: [docs/reference/configuration.md](../reference/configuration.md).

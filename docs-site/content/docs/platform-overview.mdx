@@ -88,7 +88,7 @@ flowchart TB
 
 The frontend is a static single-page app: a Redux Toolkit store drives feature components, an Axios
 API layer talks REST to the backend, and Socket.IO middleware streams chat and workflow events. See
-[docs/architecture.md](/docs/explanation/frontend-architecture) for the full diagram and component breakdown.
+[docs/explanation/architecture.md](/docs/explanation/frontend-architecture) for the full diagram and component breakdown.
 
 ## Quick Start
 
@@ -104,8 +104,8 @@ npm run dev               # Vite dev server on http://localhost:5173
 
 **Prerequisites:** Node.js 18+ and a running `DARE backend` (default `http://localhost:8000`).
 
-See **[QUICKSTART.md](/docs/tutorials/frontend-quickstart)** for the full local-setup walkthrough, and
-**[DEPLOYMENT.md](/docs/how-to/deploy-frontend)** for building and serving `dist/` in production.
+See **[docs/tutorials/quickstart.md](/docs/tutorials/frontend-quickstart)** for the full local-setup walkthrough, and
+**[docs/how-to/deploy.md](/docs/how-to/deploy-frontend)** for building and serving `dist/` in production.
 
 ## Prerequisites
 
@@ -126,13 +126,13 @@ See **[QUICKSTART.md](/docs/tutorials/frontend-quickstart)** for the full local-
 
 | Kind        | Doc                                                                | What's in it                                                                    |
 | ----------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| Tutorial    | [QUICKSTART.md](/docs/tutorials/frontend-quickstart)                                     | Run the frontend locally — clone, install, configure, `npm run dev`             |
-| How-to      | [DEPLOYMENT.md](/docs/how-to/deploy-frontend)                                     | Production deployment — build and serve `dist/`, with an optional Docker recipe |
-| Reference   | [docs/configuration.md](/docs/reference/frontend-configuration)                     | Every Vite environment variable, with type, default, and description            |
-| Explanation | [docs/architecture.md](/docs/explanation/frontend-architecture)                       | Component diagram, state management, Socket.IO integration                      |
-| Explanation | [docs/document-processing.md](/docs/explanation/document-processing)         | Basic and Advanced document processing, and what Advanced costs                 |
-| Project     | [CONTRIBUTING.md](/docs/how-to/contribute-frontend), [docs/RULES.md](/docs/reference/frontend-rules) | How to contribute; project conventions and constraints                          |
-| Project     | [CHANGELOG.md](/docs/reference/changelog), [SECURITY.md](/docs/reference/security)           | Release notes; vulnerability disclosure                                         |
+| Tutorial    | [docs/tutorials/quickstart.md](/docs/tutorials/frontend-quickstart)                                     | Run the frontend locally — clone, install, configure, `npm run dev`             |
+| How-to      | [docs/how-to/deploy.md](/docs/how-to/deploy-frontend)                                     | Production deployment — build and serve `dist/`, with an optional Docker recipe |
+| Reference   | [docs/reference/configuration.md](/docs/reference/frontend-configuration)                     | Every Vite environment variable, with type, default, and description            |
+| Explanation | [docs/explanation/architecture.md](/docs/explanation/frontend-architecture)                       | Component diagram, state management, Socket.IO integration                      |
+| Explanation | [docs/explanation/document-processing.md](/docs/explanation/document-processing)         | Basic and Advanced document processing, and what Advanced costs                 |
+| Project     | [.github/CONTRIBUTING.md](/docs/how-to/contribute-frontend), [docs/reference/rules.md](/docs/reference/frontend-rules) | How to contribute; project conventions and constraints                          |
+| Project     | [CHANGELOG.md](/docs/reference/changelog), [.github/SECURITY.md](/docs/reference/security)           | Release notes; vulnerability disclosure                                         |
 
 `docs-site/` renders these pages, together with the backend's, as the app's `/docs` site.
 
@@ -156,7 +156,7 @@ See **[QUICKSTART.md](/docs/tutorials/frontend-quickstart)** for the full local-
   - `redux/` — store, slices, async thunks, Socket.IO middleware, types, and workflow-canvas state
   - `pages/`, `routes/`, `schemas/` (Zod), `config/`, and `utils/`
 - `docs/` — architecture, configuration, and project rules
-- Supporting docs — `QUICKSTART.md`, `DEPLOYMENT.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `SECURITY.md`
+- Supporting docs — `docs/tutorials/quickstart.md`, `docs/how-to/deploy.md`, `.github/CONTRIBUTING.md`, `CHANGELOG.md`, `.github/SECURITY.md`
 
 ## What is not included in this repo?
 
@@ -168,7 +168,7 @@ See **[QUICKSTART.md](/docs/tutorials/frontend-quickstart)** for the full local-
 
 - **Found a bug or have a feature request?** Open an issue on the project's GitHub repository.
 - **Questions or general inquiries?** Email the project team at vks@andrew.cmu.edu.
-- **Security disclosures:** see [SECURITY.md](/docs/reference/security).
+- **Security disclosures:** see [.github/SECURITY.md](/docs/reference/security).
 
 ## Acknowledgements
 

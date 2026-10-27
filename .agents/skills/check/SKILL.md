@@ -61,5 +61,5 @@ a layout change is rarely enough for a reviewer.
 
 ## Related
 
-- `CONTRIBUTING.md` — the full contribution guide.
-- `docs/RULES.md` — the repo's coding standards.
+- `.github/CONTRIBUTING.md` — the full contribution guide.
+- `docs/reference/rules.md` — the repo's coding standards.

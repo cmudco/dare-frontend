@@ -31,7 +31,7 @@ Frame them as user problems first, implementation second:
 
 ### Security issues
 
-**Do not** open public issues for security vulnerabilities. See [SECURITY.md](SECURITY.md).
+**Do not** open public issues for security vulnerabilities. See [.github/SECURITY.md](SECURITY.md).
 
 ---
 
@@ -175,7 +175,7 @@ already knows how to run the dev server and how to verify a change before you op
 | File | What it is |
 | --- | --- |
 | `AGENTS.md` | Project instructions — architecture, conventions, patterns. Read by Codex and other tools following the `AGENTS.md` convention. |
-| `CLAUDE.md` | Imports `AGENTS.md`, plus any Claude Code-specific notes. |
+| `.claude/CLAUDE.md` | Imports `AGENTS.md`, plus any Claude Code-specific notes. |
 | `.agents/skills/<name>/SKILL.md` | Task procedures — `run-frontend`, `check`. |
 | `.claude/skills/<name>` | Symlinks to the above, because Claude Code scans a different path. |
 
@@ -183,7 +183,7 @@ Invoke a skill by name — `/run-frontend` in Claude Code, `$run-frontend` in Co
 describe the task and let the agent load the matching skill on its own.
 
 To add or change a skill, edit the file under `.agents/skills/`; the `.claude/skills/` symlink
-needs no change. See [`.agents/README.md`](.agents/README.md) for the layout, how to add a new
+needs no change. See [`.agents/README.md`](../.agents/README.md) for the layout, how to add a new
 skill, and the Windows symlink caveat.
 
 Treat these files like code: they are reviewed in PRs, and a stale skill is worse than no skill.

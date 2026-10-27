@@ -25,14 +25,14 @@ const pages = [
       'Run the backend, worker and frontend locally, create an account, and send a first chat.',
   },
   {
-    from: path.join(backendRoot, 'QUICKSTART.md'),
+    from: path.join(backendRoot, 'docs', 'tutorials', 'quickstart.md'),
     to: 'tutorials/backend-quickstart.mdx',
     title: 'Backend Quick Start',
     description:
       'Run the backend alone: Docker one-command stack, or local Python in a venv.',
   },
   {
-    from: path.join(frontendRoot, 'QUICKSTART.md'),
+    from: path.join(frontendRoot, 'docs', 'tutorials', 'quickstart.md'),
     to: 'tutorials/frontend-quickstart.mdx',
     title: 'Frontend Quick Start',
     description:
@@ -46,14 +46,14 @@ const pages = [
       'A guided, in-browser tour of how chat memory is written and read.',
   },
   {
-    from: path.join(backendRoot, 'DEPLOYMENT.md'),
+    from: path.join(backendRoot, 'docs', 'how-to', 'deploy.md'),
     to: 'how-to/deploy-backend.mdx',
     title: 'Deploy the Backend',
     description:
       'Production deployment with Docker or bare metal, upgrades, and rollback.',
   },
   {
-    from: path.join(frontendRoot, 'DEPLOYMENT.md'),
+    from: path.join(frontendRoot, 'docs', 'how-to', 'deploy.md'),
     to: 'how-to/deploy-frontend.mdx',
     title: 'Deploy the Frontend',
     description:
@@ -81,13 +81,13 @@ const pages = [
       'Run the PDF document renderer locally and configure it for a deployment.',
   },
   {
-    from: path.join(backendRoot, 'CONTRIBUTING.md'),
+    from: path.join(backendRoot, '.github', 'CONTRIBUTING.md'),
     to: 'how-to/contribute-backend.mdx',
     title: 'Contribute to the Backend',
     description: 'Backend issues, pull requests, and review expectations.',
   },
   {
-    from: path.join(frontendRoot, 'CONTRIBUTING.md'),
+    from: path.join(frontendRoot, '.github', 'CONTRIBUTING.md'),
     to: 'how-to/contribute-frontend.mdx',
     title: 'Contribute to the Frontend',
     description: 'Frontend issues, pull requests, and review expectations.',
@@ -100,7 +100,7 @@ const pages = [
       'Every backend environment variable, with type, default, and description.',
   },
   {
-    from: path.join(frontendRoot, 'docs', 'configuration.md'),
+    from: path.join(frontendRoot, 'docs', 'reference', 'configuration.md'),
     to: 'reference/frontend-configuration.mdx',
     title: 'Frontend Configuration',
     description:
@@ -152,13 +152,13 @@ const pages = [
       'Every model call DARE makes outside the chat reply, and how each is chosen.',
   },
   {
-    from: path.join(backendRoot, 'rules.md'),
+    from: path.join(backendRoot, 'docs', 'reference', 'rules.md'),
     to: 'reference/backend-rules.mdx',
     title: 'Backend Rules',
     description: 'The engineering rules every backend change follows.',
   },
   {
-    from: path.join(frontendRoot, 'docs', 'RULES.md'),
+    from: path.join(frontendRoot, 'docs', 'reference', 'rules.md'),
     to: 'reference/frontend-rules.mdx',
     title: 'Frontend Rules',
     description: 'The engineering rules every frontend change follows.',
@@ -171,7 +171,7 @@ const pages = [
       "The DARE platform, the backend's main parts, and the choices behind them.",
   },
   {
-    from: path.join(frontendRoot, 'docs', 'architecture.md'),
+    from: path.join(frontendRoot, 'docs', 'explanation', 'architecture.md'),
     to: 'explanation/frontend-architecture.mdx',
     title: 'Frontend Architecture',
     description:
@@ -185,7 +185,7 @@ const pages = [
       'Chat, file upload, workflow, authentication, and artifact sequences.',
   },
   {
-    from: path.join(frontendRoot, 'docs', 'document-processing.md'),
+    from: path.join(frontendRoot, 'docs', 'explanation', 'document-processing.md'),
     to: 'explanation/document-processing.mdx',
     title: 'Document Processing',
     description:
@@ -210,7 +210,7 @@ const pages = [
     description: 'How a chat turn calls tools across rounds and providers.',
   },
   {
-    from: path.join(frontendRoot, 'BRAND_GUIDELINES.md'),
+    from: path.join(frontendRoot, 'docs', 'brand.md'),
     to: 'reference/brand.mdx',
     title: 'DARE Brand Guidelines & Usage Policy',
     description:
@@ -224,7 +224,7 @@ const pages = [
     format: 'license',
   },
   {
-    from: path.join(frontendRoot, 'SECURITY.md'),
+    from: path.join(frontendRoot, '.github', 'SECURITY.md'),
     to: 'reference/security.mdx',
     title: 'Security Policy',
     description:
@@ -325,7 +325,7 @@ function cleanMarkdown(markdown, currentSource) {
     .replaceAll('http://localhost:8000/api/docs/', '/api/docs/')
     .replaceAll('http://localhost:8000/api/redoc/', '/api/redoc/')
     .replaceAll('http://localhost:8000/api/schema/', '/api/schema/')
-    .replaceAll('](docs-site/public/brand/', '](/brand/')
+    .replaceAll('](../docs-site/public/brand/', '](/brand/')
     .trim()
 }
 

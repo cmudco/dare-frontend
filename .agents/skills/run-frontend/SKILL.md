@@ -73,4 +73,4 @@ npm run preview       # serve dist/ locally to verify
 ## Related
 
 - `check` — what to run before opening a PR.
-- `README.md` for the overview, `docs/architecture.md` for the component breakdown.
+- `README.md` for the overview, `docs/explanation/architecture.md` for the component breakdown.

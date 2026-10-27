@@ -1,6 +1,6 @@
 # DARE Frontend — Architecture
 
-This document is the entry point for understanding how the frontend is structured. For the backend's view of the same system, see [dare-backend/docs/explanation/architecture.md](../../dare-backend/docs/explanation/architecture.md).
+This document is the entry point for understanding how the frontend is structured. For the backend's view of the same system, see [dare-backend/docs/explanation/architecture.md](../../../dare-backend/docs/explanation/architecture.md).
 
 ## Component Diagram
 
@@ -70,9 +70,9 @@ Two namespaces, two middleware files, one connection lifecycle each.
 | `/chat`     | `socketMiddleware.ts`         | Streaming completions, artifact emission, message acks |
 | `/workflow` | `workflowSocketMiddleware.ts` | DAG execution, per-step progress, batch run updates    |
 
-**Validation rule:** All incoming `/workflow` events are validated with Zod schemas in [`src/schemas/workflowSocket.ts`](../src/schemas/workflowSocket.ts) before being dispatched to Redux. This catches backend-side schema drift early and surfaces a typed error instead of a silently broken UI.
+**Validation rule:** All incoming `/workflow` events are validated with Zod schemas in [`src/schemas/workflowSocket.ts`](../../src/schemas/workflowSocket.ts) before being dispatched to Redux. This catches backend-side schema drift early and surfaces a typed error instead of a silently broken UI.
 
-For the full event contract — payload shapes, directions, error codes — see the backend's [Socket.IO event reference](../../dare-backend/docs/reference/socketio-events.md).
+For the full event contract — payload shapes, directions, error codes — see the backend's [Socket.IO event reference](../../../dare-backend/docs/reference/socketio-events.md).
 
 ## API Layer
 
@@ -147,7 +147,7 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 - Route-level code splitting (`React.lazy` + `Suspense`).
 - `useMemo` / `useCallback` for expensive renders or stable references passed to memoized children.
 - Virtualization (`react-virtual` or similar) for long lists where applicable.
-- Vite's default asset fingerprinting + immutable cache headers in production (see [DEPLOYMENT.md](../DEPLOYMENT.md)).
+- Vite's default asset fingerprinting + immutable cache headers in production (see [docs/how-to/deploy.md](../how-to/deploy.md)).
 
 ## Build & Bundle
 
@@ -157,7 +157,7 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 
 ## Further reading
 
-- [docs/configuration.md](configuration.md) — Vite environment variables
-- [CONTRIBUTING.md](../CONTRIBUTING.md) — coding standards and PR process
-- [docs/RULES.md](RULES.md) — project-specific conventions
-- [dare-backend/docs/reference/socketio-events.md](../../dare-backend/docs/reference/socketio-events.md) — full event contract
+- [docs/reference/configuration.md](../reference/configuration.md) — Vite environment variables
+- [.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md) — coding standards and PR process
+- [docs/reference/rules.md](../reference/rules.md) — project-specific conventions
+- [dare-backend/docs/reference/socketio-events.md](../../../dare-backend/docs/reference/socketio-events.md) — full event contract

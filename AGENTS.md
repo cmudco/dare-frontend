@@ -3,7 +3,7 @@
 React 18 + TypeScript SPA for DARE, built with Vite and served on port 5173. It talks REST and
 Socket.IO to the `dare-backend` repo on port 8000. `docs-site/` is a separate Next.js docs app.
 
-Read and follow `docs/RULES.md` before changing code. Procedures live in `.agents/skills/`:
+Read and follow `docs/reference/rules.md` before changing code. Procedures live in `.agents/skills/`:
 `run-frontend`, `check`.
 
 ## Commands

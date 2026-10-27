@@ -86,7 +86,7 @@ flowchart TB
 
 The frontend is a static single-page app: a Redux Toolkit store drives feature components, an Axios
 API layer talks REST to the backend, and Socket.IO middleware streams chat and workflow events. See
-[docs/architecture.md](docs/architecture.md) for the full diagram and component breakdown.
+[docs/explanation/architecture.md](docs/explanation/architecture.md) for the full diagram and component breakdown.
 
 ## Quick Start
 
@@ -102,8 +102,8 @@ npm run dev               # Vite dev server on http://localhost:5173
 
 **Prerequisites:** Node.js 18+ and a running [DARE backend](../dare-backend/) (default `http://localhost:8000`).
 
-See **[QUICKSTART.md](QUICKSTART.md)** for the full local-setup walkthrough, and
-**[DEPLOYMENT.md](DEPLOYMENT.md)** for building and serving `dist/` in production.
+See **[docs/tutorials/quickstart.md](docs/tutorials/quickstart.md)** for the full local-setup walkthrough, and
+**[docs/how-to/deploy.md](docs/how-to/deploy.md)** for building and serving `dist/` in production.
 
 ## Prerequisites
 
@@ -124,13 +124,13 @@ See **[QUICKSTART.md](QUICKSTART.md)** for the full local-setup walkthrough, and
 
 | Kind        | Doc                                                                | What's in it                                                                    |
 | ----------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| Tutorial    | [QUICKSTART.md](QUICKSTART.md)                                     | Run the frontend locally — clone, install, configure, `npm run dev`             |
-| How-to      | [DEPLOYMENT.md](DEPLOYMENT.md)                                     | Production deployment — build and serve `dist/`, with an optional Docker recipe |
-| Reference   | [docs/configuration.md](docs/configuration.md)                     | Every Vite environment variable, with type, default, and description            |
-| Explanation | [docs/architecture.md](docs/architecture.md)                       | Component diagram, state management, Socket.IO integration                      |
-| Explanation | [docs/document-processing.md](docs/document-processing.md)         | Basic and Advanced document processing, and what Advanced costs                 |
-| Project     | [CONTRIBUTING.md](CONTRIBUTING.md), [docs/RULES.md](docs/RULES.md) | How to contribute; project conventions and constraints                          |
-| Project     | [CHANGELOG.md](CHANGELOG.md), [SECURITY.md](SECURITY.md)           | Release notes; vulnerability disclosure                                         |
+| Tutorial    | [docs/tutorials/quickstart.md](docs/tutorials/quickstart.md)                                     | Run the frontend locally — clone, install, configure, `npm run dev`             |
+| How-to      | [docs/how-to/deploy.md](docs/how-to/deploy.md)                                     | Production deployment — build and serve `dist/`, with an optional Docker recipe |
+| Reference   | [docs/reference/configuration.md](docs/reference/configuration.md)                     | Every Vite environment variable, with type, default, and description            |
+| Explanation | [docs/explanation/architecture.md](docs/explanation/architecture.md)                       | Component diagram, state management, Socket.IO integration                      |
+| Explanation | [docs/explanation/document-processing.md](docs/explanation/document-processing.md)         | Basic and Advanced document processing, and what Advanced costs                 |
+| Project     | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md), [docs/reference/rules.md](docs/reference/rules.md) | How to contribute; project conventions and constraints                          |
+| Project     | [CHANGELOG.md](CHANGELOG.md), [.github/SECURITY.md](.github/SECURITY.md)           | Release notes; vulnerability disclosure                                         |
 
 `docs-site/` renders these pages, together with the backend's, as the app's `/docs` site.
 
@@ -154,7 +154,7 @@ See **[QUICKSTART.md](QUICKSTART.md)** for the full local-setup walkthrough, and
   - `redux/` — store, slices, async thunks, Socket.IO middleware, types, and workflow-canvas state
   - `pages/`, `routes/`, `schemas/` (Zod), `config/`, and `utils/`
 - `docs/` — architecture, configuration, and project rules
-- Supporting docs — `QUICKSTART.md`, `DEPLOYMENT.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `SECURITY.md`
+- Supporting docs — `docs/tutorials/quickstart.md`, `docs/how-to/deploy.md`, `.github/CONTRIBUTING.md`, `CHANGELOG.md`, `.github/SECURITY.md`
 
 ## What is not included in this repo?
 
@@ -166,7 +166,7 @@ See **[QUICKSTART.md](QUICKSTART.md)** for the full local-setup walkthrough, and
 
 - **Found a bug or have a feature request?** Open an issue on the project's GitHub repository.
 - **Questions or general inquiries?** Email the project team at vks@andrew.cmu.edu.
-- **Security disclosures:** see [SECURITY.md](SECURITY.md).
+- **Security disclosures:** see [.github/SECURITY.md](.github/SECURITY.md).
 
 ## Acknowledgements
 
@@ -174,7 +174,7 @@ DARE is an Open Forum for AI (OFAI) initiative, Carnegie Mellon University Libra
 
 The DARE name and marks are owned by Carnegie Mellon University. Use of the name, wordmark,
 Scotty dog mark, header lockup, and footer badge is governed by the
-[DARE Brand Guidelines & Usage Policy](BRAND_GUIDELINES.md), independently of the software license.
+[DARE Brand Guidelines & Usage Policy](docs/brand.md), independently of the software license.
 
 This software integrates with third-party APIs (Anthropic, OpenAI, Google, and others); use of those
 APIs is subject to each provider's own Terms of Service.
@@ -212,6 +212,6 @@ DARE is built and maintained by contributors at Carnegie Mellon University and i
 
 This project is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).
 The software license does not grant rights to the DARE name or marks; see the
-[DARE Brand Guidelines & Usage Policy](BRAND_GUIDELINES.md).
+[DARE Brand Guidelines & Usage Policy](docs/brand.md).
 
 See the [LICENSE](LICENSE) file for the full license text, or visit <https://www.gnu.org/licenses/agpl-3.0.en.html>.
