@@ -51,11 +51,11 @@ moment you land:
   <img src="public/screenshots/dashboard.png" alt="DARE usage dashboard overview showing AI messages, conversations, files, token counts, and wallet balance" width="900" />
 </p>
 
-|                                                                                                                             |                                                                                                                            |
-| :-------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------: |
-| **Multi-LLM chat** — streaming conversations with per-conversation tools and controls<br/><img src="public/screenshots/conversation.png" alt="Conversation view with configuration panel" width="440" /> | **Workflow builder** — multi-step pipelines with conditional routing and human validation<br/><img src="public/screenshots/workflows.png" alt="Visual workflow builder canvas" width="440" /> |
-| **Research mode** — agent-gathered sources, human-reviewed before becoming knowledge<br/><img src="public/screenshots/research-mode.png" alt="Research workspace with review pipeline" width="440" /> | **Cost tracking** — a wallet per user, a ledger per message<br/><img src="public/screenshots/cost-wallet.png" alt="Cost tracking with wallet balance and transaction history" width="440" /> |
-| **Files & RAG** — upload and tag a corpus, ground answers in it<br/><img src="public/screenshots/files.png" alt="File manager with processing status" width="440" /> | **Environmental impact** — every message metered for energy, carbon, and water, with per-model breakdowns and real-world equivalents<br/><img src="public/screenshots/environmental-usage.png" alt="Environmental impact dashboard with energy, carbon, and water usage" width="440" /> |
+|                                                                                                                                                                                                          |                                                                                                                                                                                                                                                                                         |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| **Multi-LLM chat** — streaming conversations with per-conversation tools and controls<br/><img src="public/screenshots/conversation.png" alt="Conversation view with configuration panel" width="440" /> |                                              **Workflow builder** — multi-step pipelines with conditional routing and human validation<br/><img src="public/screenshots/workflows.png" alt="Visual workflow builder canvas" width="440" />                                              |
+|  **Research mode** — agent-gathered sources, human-reviewed before becoming knowledge<br/><img src="public/screenshots/research-mode.png" alt="Research workspace with review pipeline" width="440" />   |                                              **Cost tracking** — a wallet per user, a ledger per message<br/><img src="public/screenshots/cost-wallet.png" alt="Cost tracking with wallet balance and transaction history" width="440" />                                               |
+|                   **Files & RAG** — upload and tag a corpus, ground answers in it<br/><img src="public/screenshots/files.png" alt="File manager with processing status" width="440" />                   | **Environmental impact** — every message metered for energy, carbon, and water, with per-model breakdowns and real-world equivalents<br/><img src="public/screenshots/environmental-usage.png" alt="Environmental impact dashboard with energy, carbon, and water usage" width="440" /> |
 
 ## Overview
 
@@ -122,16 +122,17 @@ See **[QUICKSTART.md](QUICKSTART.md)** for the full local-setup walkthrough, and
 
 ## Documentation
 
-| Doc                                            | What's in it                                                         |
-| ---------------------------------------------- | -------------------------------------------------------------------- |
-| [QUICKSTART.md](QUICKSTART.md)                 | Run the frontend locally — clone, install, configure, `npm run dev`  |
-| [DEPLOYMENT.md](DEPLOYMENT.md)                 | Production deployment — build and serve `dist/`, with an optional Docker recipe |
-| [docs/configuration.md](docs/configuration.md) | Every Vite environment variable, with type, default, and description |
-| [docs/architecture.md](docs/architecture.md)   | Component diagram, state management, Socket.IO integration           |
-| [CONTRIBUTING.md](CONTRIBUTING.md)             | Issues, pull requests, coding standards                              |
-| [docs/RULES.md](docs/RULES.md)                 | Project-specific conventions and constraints                         |
-| [CHANGELOG.md](CHANGELOG.md)                   | Release notes                                                        |
-| [SECURITY.md](SECURITY.md)                     | Vulnerability disclosure process                                     |
+| Kind        | Doc                                                                | What's in it                                                                    |
+| ----------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| Tutorial    | [QUICKSTART.md](QUICKSTART.md)                                     | Run the frontend locally — clone, install, configure, `npm run dev`             |
+| How-to      | [DEPLOYMENT.md](DEPLOYMENT.md)                                     | Production deployment — build and serve `dist/`, with an optional Docker recipe |
+| Reference   | [docs/configuration.md](docs/configuration.md)                     | Every Vite environment variable, with type, default, and description            |
+| Explanation | [docs/architecture.md](docs/architecture.md)                       | Component diagram, state management, Socket.IO integration                      |
+| Explanation | [docs/document-processing.md](docs/document-processing.md)         | Basic and Advanced document processing, and what Advanced costs                 |
+| Project     | [CONTRIBUTING.md](CONTRIBUTING.md), [docs/RULES.md](docs/RULES.md) | How to contribute; project conventions and constraints                          |
+| Project     | [CHANGELOG.md](CHANGELOG.md), [SECURITY.md](SECURITY.md)           | Release notes; vulnerability disclosure                                         |
+
+`docs-site/` renders these pages, together with the backend's, as the app's `/docs` site.
 
 ## Tech Stack
 
