@@ -336,17 +336,20 @@ const ConversationFileSelect: React.FC = () => {
     { n: selectedLibraries.length, label: 'libraries' },
   ]
   const totalSelected = selectionCounts.reduce((sum, c) => sum + c.n, 0)
-  // Tables are searched by a summary and only partly fit in a prompt; exact
-  // answers need the sandbox, which reads the whole file.
-  const tableSelected = [...selectedFiles, ...selectedEmbeddings].some((file) =>
-    isSpreadsheetFile(file.name ?? '')
-  )
-  const tableHint =
-    !tableSelected || (sandboxOn && sandboxAvailable)
-      ? null
+  // The sandbox only receives tables ticked under Files; under Embeddings a
+  // table is searched by its summary alone.
+  const isTable = (file: MyFile) => isSpreadsheetFile(file.name ?? '')
+  const tableInFiles = selectedFiles.some(isTable)
+  const tableInEmbeddings = selectedEmbeddings.some(isTable)
+  const tableHint = tableInFiles
+    ? sandboxOn && sandboxAvailable
+      ? 'Code sandbox is on: the AI will analyze the whole table.'
       : sandboxAvailable
-        ? 'Turn on Code sandbox in chat settings for exact answers from tables. Without it, the AI only sees part of a large table.'
-        : "This model can't run code, so it only sees part of a large table. Pick an OpenAI or Claude model and turn on Code sandbox for exact answers."
+        ? 'To process this file or run any calculations on it, turn on Code sandbox in chat settings.'
+        : "This model can't run code. To process this file or run any calculations on it, pick an OpenAI or Claude model and turn on Code sandbox."
+    : tableInEmbeddings
+      ? 'Search only sees a short summary of this table. To process it or run calculations on it, tick it under Files and turn on Code sandbox (OpenAI or Claude models).'
+      : null
   const selectionSummary = selectionCounts
     .filter((c) => c.n > 0)
     .map((c) => `${c.n} ${c.label}`)
