@@ -1,8 +1,8 @@
 ---
 title: "Frontend Architecture"
-description: "Component structure, routing, Redux, API layer, and Socket.IO integration."
+description: "Component structure, routing, Redux, the API layer, and Socket.IO integration."
 ---
-This document is the entry point for understanding how the frontend is structured. For the backend's view of the same system, see [dare-backend/docs/architecture.md](/docs/backend/architecture).
+This document is the entry point for understanding how the frontend is structured. For the backend's view of the same system, see [dare-backend/docs/explanation/architecture.md](/docs/explanation/architecture).
 
 ## Component Diagram
 
@@ -74,7 +74,7 @@ Two namespaces, two middleware files, one connection lifecycle each.
 
 **Validation rule:** All incoming `/workflow` events are validated with Zod schemas in `src/schemas/workflowSocket.ts` before being dispatched to Redux. This catches backend-side schema drift early and surfaces a typed error instead of a silently broken UI.
 
-For the full event contract — payload shapes, directions, error codes — see the backend's [Socket.IO event reference](/docs/backend/socketio-events).
+For the full event contract — payload shapes, directions, error codes — see the backend's [Socket.IO event reference](/docs/reference/socketio-events).
 
 ## API Layer
 
@@ -149,7 +149,7 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 - Route-level code splitting (`React.lazy` + `Suspense`).
 - `useMemo` / `useCallback` for expensive renders or stable references passed to memoized children.
 - Virtualization (`react-virtual` or similar) for long lists where applicable.
-- Vite's default asset fingerprinting + immutable cache headers in production (see [DEPLOYMENT.md](/docs/frontend/deployment)).
+- Vite's default asset fingerprinting + immutable cache headers in production (see [DEPLOYMENT.md](/docs/how-to/deploy-frontend)).
 
 ## Build & Bundle
 
@@ -159,7 +159,7 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 
 ## Further reading
 
-- [docs/configuration.md](/docs/frontend/configuration) — Vite environment variables
-- [CONTRIBUTING.md](/docs/frontend/contributing) — coding standards and PR process
-- [docs/RULES.md](/docs/frontend/rules) — project-specific conventions
-- [dare-backend/docs/architecture/socketio-events.md](/docs/backend/socketio-events) — full event contract
+- [docs/configuration.md](/docs/reference/frontend-configuration) — Vite environment variables
+- [CONTRIBUTING.md](/docs/how-to/contribute-frontend) — coding standards and PR process
+- [docs/RULES.md](/docs/reference/frontend-rules) — project-specific conventions
+- [dare-backend/docs/reference/socketio-events.md](/docs/reference/socketio-events) — full event contract

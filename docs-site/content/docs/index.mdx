@@ -1,47 +1,28 @@
 ---
 title: "DARE Documentation"
-description: "Client guides and technical references for the Dietrich Analysis Research Education (DARE) Platform."
+description: "Guides and technical references for the Dietrich Analysis Research Education (DARE) Platform."
 ---
 
 <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-fd-card via-fd-card to-fd-muted p-8">
   <div className="dare-hero-grid absolute inset-0" />
   <div className="relative max-w-3xl">
-    <p className="mb-3 text-sm font-medium uppercase tracking-wider text-fd-muted-foreground">
-      Dietrich Analysis Research Education (DARE) Platform
-    </p>
-    <h2 className="mb-4 text-3xl font-semibold tracking-tight md:text-5xl">
-      Product guides and technical references for <span className="dare-gradient-text">DARE</span>.
-    </h2>
-    <p className="text-lg text-fd-muted-foreground">
-      Start with the platform overview, then move into frontend, backend, operations, and reference material.
-    </p>
+    <p className="mb-3 text-sm font-medium uppercase tracking-wider text-fd-muted-foreground">Dietrich Analysis Research Education (DARE) Platform</p>
+    <h2 className="mb-4 text-3xl font-semibold tracking-tight md:text-5xl">Product guides and technical references for <span className="dare-gradient-text">DARE</span>.</h2>
+    <p className="text-lg text-fd-muted-foreground">Pages are grouped by what you are trying to do: learn, get something done, look something up, or understand why.</p>
   </div>
 </div>
 
-## Start here
-
 <Cards>
-  <Card title="Getting Started" href="/docs/getting-started">
-    Run the full platform locally and verify backend, workers, frontend, and API docs.
+  <Card title="Tutorials" href="/docs/tutorials/getting-started">
+    Learn by doing. Start with Getting Started: run the platform locally and send a first chat.
   </Card>
-  <Card title="Platform Overview" href="/docs/platform-overview">
-    Understand the app surface: conversations, RAG files, workflows, prompts, artifacts, and MCP.
+  <Card title="How-to guides" href="/docs/how-to/deploy-backend">
+    Reach a goal: deploy, administer, run research mode, contribute.
   </Card>
-  <Card title="API Reference" href="/docs/api-reference">
-    Use the human API overview first, then jump into Swagger or Redoc when a backend is running.
+  <Card title="Reference" href="/docs/reference/backend-configuration">
+    Look things up: configuration, REST API, Socket.IO events, rules.
   </Card>
-</Cards>
-
-## Core references
-
-<Cards>
-  <Card title="Frontend Architecture" href="/docs/frontend/architecture">
-    React routes, Redux state, Socket.IO integration, API layer, and component organization.
-  </Card>
-  <Card title="Backend Architecture" href="/docs/backend/architecture">
-    Django REST, Socket.IO, service boundaries, request flows, and backend design patterns.
-  </Card>
-  <Card title="Socket.IO Events" href="/docs/backend/socketio-events">
-    Chat and workflow namespace contracts for real-time platform behavior.
+  <Card title="Explanation" href="/docs/explanation/architecture">
+    Understand why: architecture, data flows, document ingestion, the tool loop.
   </Card>
 </Cards>

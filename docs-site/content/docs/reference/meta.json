@@ -2,9 +2,18 @@
   "title": "Reference",
   "defaultOpen": true,
   "pages": [
+    "backend-configuration",
+    "frontend-configuration",
+    "rest-api",
+    "socketio-events",
+    "serialization",
+    "socratic-bots-integration",
+    "non-chat-model-usage",
+    "backend-rules",
+    "frontend-rules",
+    "security",
     "license",
     "brand",
-    "security",
     "changelog"
   ]
 }

@@ -2,15 +2,10 @@
   "title": "DARE Docs",
   "pages": [
     "index",
-    "---Start Here---",
-    "getting-started",
     "platform-overview",
-    "document-processing",
-    "api-reference",
-    "---Technical Docs---",
-    "frontend",
-    "backend",
-    "---Reference---",
-    "reference"
+    "tutorials",
+    "how-to",
+    "reference",
+    "explanation"
   ]
 }

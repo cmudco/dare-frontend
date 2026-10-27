@@ -21,9 +21,10 @@ npm run lint
 - **Never run `npm run format`.** It is `prettier --write .` over the whole repo and rewrites
   unrelated files. lint-staged formats staged files on commit; format by hand only the files you
   touched (`npx prettier --write <files>`).
-- **The pre-commit hook needs `../dare-backend`.** It runs `docs:sync`, which copies docs from a
-  sibling `dare-backend` checkout into `docs-site/content/docs` and stages them. Without that
-  checkout the hook fails; with it, the commit picks up whatever branch the backend is on.
+- **The pre-commit hook copies docs from `../dare-backend`.** It runs `docs:sync`, which renders
+  docs from a sibling `dare-backend` checkout into `docs-site/content/docs` and stages them, so
+  the commit picks up whatever branch the backend is on. With no sibling checkout it skips; if
+  the backend branch lacks a synced file, it fails and names the file.
 - **CI does not run lint or tests.** The workflows only deploy. Run the `check` skill yourself.
 - **Style with semantic tokens only** (`bg-background`, `bg-primary`, `text-muted-foreground`).
   No hex colors and no raw palette classes (gray, slate, violet…); a new UI state uses

@@ -41,7 +41,8 @@ Two consequences worth knowing:
   its files: `npx prettier --write <files>`.
 - The hook adds synced docs content to your commit. If a commit contains `docs-site/content/docs`
   changes you did not write, that is the hook, not a bad merge. It reads the sibling
-  `../dare-backend` checkout, so without one the hook fails.
+  `../dare-backend` checkout: with none it skips, and with an out-of-date branch it fails and
+  names the missing file.
 
 ## Branch and PR conventions
 

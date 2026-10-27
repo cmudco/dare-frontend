@@ -1,6 +1,6 @@
 # DARE Frontend — Architecture
 
-This document is the entry point for understanding how the frontend is structured. For the backend's view of the same system, see [dare-backend/docs/architecture.md](../../dare-backend/docs/architecture.md).
+This document is the entry point for understanding how the frontend is structured. For the backend's view of the same system, see [dare-backend/docs/explanation/architecture.md](../../dare-backend/docs/explanation/architecture.md).
 
 ## Component Diagram
 
@@ -72,7 +72,7 @@ Two namespaces, two middleware files, one connection lifecycle each.
 
 **Validation rule:** All incoming `/workflow` events are validated with Zod schemas in [`src/schemas/workflowSocket.ts`](../src/schemas/workflowSocket.ts) before being dispatched to Redux. This catches backend-side schema drift early and surfaces a typed error instead of a silently broken UI.
 
-For the full event contract — payload shapes, directions, error codes — see the backend's [Socket.IO event reference](../../dare-backend/docs/architecture/socketio-events.md).
+For the full event contract — payload shapes, directions, error codes — see the backend's [Socket.IO event reference](../../dare-backend/docs/reference/socketio-events.md).
 
 ## API Layer
 
@@ -160,4 +160,4 @@ Formik + Yup for non-trivial forms. Validation schemas are defined alongside the
 - [docs/configuration.md](configuration.md) — Vite environment variables
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — coding standards and PR process
 - [docs/RULES.md](RULES.md) — project-specific conventions
-- [dare-backend/docs/architecture/socketio-events.md](../../dare-backend/docs/architecture/socketio-events.md) — full event contract
+- [dare-backend/docs/reference/socketio-events.md](../../dare-backend/docs/reference/socketio-events.md) — full event contract

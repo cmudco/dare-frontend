@@ -1,6 +1,6 @@
 ---
 title: "Platform Overview"
-description: "What the Dietrich Analysis Research Education (DARE) Platform provides and how the frontend fits into it."
+description: "What the Dietrich Analysis Research Education (DARE) Platform provides and how its parts fit together."
 ---
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](/docs/reference/license)
 [![Node](https://img.shields.io/badge/Node-18%2B-339933.svg)](https://nodejs.org/)
@@ -88,7 +88,7 @@ flowchart TB
 
 The frontend is a static single-page app: a Redux Toolkit store drives feature components, an Axios
 API layer talks REST to the backend, and Socket.IO middleware streams chat and workflow events. See
-[docs/architecture.md](/docs/frontend/architecture) for the full diagram and component breakdown.
+[docs/architecture.md](/docs/explanation/frontend-architecture) for the full diagram and component breakdown.
 
 ## Quick Start
 
@@ -104,8 +104,8 @@ npm run dev               # Vite dev server on http://localhost:5173
 
 **Prerequisites:** Node.js 18+ and a running `DARE backend` (default `http://localhost:8000`).
 
-See **[QUICKSTART.md](/docs/frontend/quickstart)** for the full local-setup walkthrough, and
-**[DEPLOYMENT.md](/docs/frontend/deployment)** for building and serving `dist/` in production.
+See **[QUICKSTART.md](/docs/tutorials/frontend-quickstart)** for the full local-setup walkthrough, and
+**[DEPLOYMENT.md](/docs/how-to/deploy-frontend)** for building and serving `dist/` in production.
 
 ## Prerequisites
 
@@ -126,12 +126,12 @@ See **[QUICKSTART.md](/docs/frontend/quickstart)** for the full local-setup walk
 
 | Doc                                            | What's in it                                                         |
 | ---------------------------------------------- | -------------------------------------------------------------------- |
-| [QUICKSTART.md](/docs/frontend/quickstart)                 | Run the frontend locally — clone, install, configure, `npm run dev`  |
-| [DEPLOYMENT.md](/docs/frontend/deployment)                 | Production deployment — build and serve `dist/`, with an optional Docker recipe |
-| [docs/configuration.md](/docs/frontend/configuration) | Every Vite environment variable, with type, default, and description |
-| [docs/architecture.md](/docs/frontend/architecture)   | Component diagram, state management, Socket.IO integration           |
-| [CONTRIBUTING.md](/docs/frontend/contributing)             | Issues, pull requests, coding standards                              |
-| [docs/RULES.md](/docs/frontend/rules)                 | Project-specific conventions and constraints                         |
+| [QUICKSTART.md](/docs/tutorials/frontend-quickstart)                 | Run the frontend locally — clone, install, configure, `npm run dev`  |
+| [DEPLOYMENT.md](/docs/how-to/deploy-frontend)                 | Production deployment — build and serve `dist/`, with an optional Docker recipe |
+| [docs/configuration.md](/docs/reference/frontend-configuration) | Every Vite environment variable, with type, default, and description |
+| [docs/architecture.md](/docs/explanation/frontend-architecture)   | Component diagram, state management, Socket.IO integration           |
+| [CONTRIBUTING.md](/docs/how-to/contribute-frontend)             | Issues, pull requests, coding standards                              |
+| [docs/RULES.md](/docs/reference/frontend-rules)                 | Project-specific conventions and constraints                         |
 | [CHANGELOG.md](/docs/reference/changelog)                   | Release notes                                                        |
 | [SECURITY.md](/docs/reference/security)                     | Vulnerability disclosure process                                     |
 

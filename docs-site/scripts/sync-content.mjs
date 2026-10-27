@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -10,179 +11,203 @@ const contentRoot = path.join(docsSite, 'content', 'docs')
 
 const pages = [
   {
-    from: path.join(frontendRoot, 'docs', 'document-processing.md'),
-    to: 'document-processing.mdx',
-    title: 'Document processing in DARE',
-    description:
-      'Basic and Advanced processing, vision models, and failed-image retries.',
-  },
-  {
     from: path.join(frontendRoot, 'README.md'),
     to: 'platform-overview.mdx',
     title: 'Platform Overview',
     description:
-      'What the Dietrich Analysis Research Education (DARE) Platform provides and how the frontend fits into it.',
+      'What the Dietrich Analysis Research Education (DARE) Platform provides and how its parts fit together.',
   },
   {
-    from: path.join(backendRoot, 'docs', 'getting-started.md'),
-    to: 'getting-started.mdx',
+    from: path.join(backendRoot, 'docs', 'tutorials', 'getting-started.md'),
+    to: 'tutorials/getting-started.mdx',
     title: 'Getting Started',
-    description: 'Run the DARE platform locally and verify the core services.',
+    description:
+      'Run the backend, worker and frontend locally, create an account, and send a first chat.',
   },
   {
-    from: path.join(frontendRoot, 'README.md'),
-    to: 'frontend/index.mdx',
-    title: 'Frontend Overview',
+    from: path.join(backendRoot, 'QUICKSTART.md'),
+    to: 'tutorials/backend-quickstart.mdx',
+    title: 'Backend Quick Start',
     description:
-      'React, TypeScript, routing, state, and UI structure for the Dietrich Analysis Research Education (DARE) Platform frontend.',
+      'Run the backend alone: Docker one-command stack, or local Python in a venv.',
   },
   {
     from: path.join(frontendRoot, 'QUICKSTART.md'),
-    to: 'frontend/quickstart.mdx',
+    to: 'tutorials/frontend-quickstart.mdx',
     title: 'Frontend Quick Start',
     description:
       'Run the frontend locally: install, set two env vars, and start the dev server.',
   },
   {
-    from: path.join(frontendRoot, 'DEPLOYMENT.md'),
-    to: 'frontend/deployment.mdx',
-    title: 'Frontend Deployment',
+    from: path.join(backendRoot, 'docs', 'tutorials', 'memory-walkthrough.md'),
+    to: 'tutorials/memory-walkthrough.mdx',
+    title: 'Memory Walkthrough',
     description:
-      'Deploy to production: build the static bundle and serve dist/, with an optional Docker recipe.',
+      'A guided, in-browser tour of how chat memory is written and read.',
+  },
+  {
+    from: path.join(backendRoot, 'DEPLOYMENT.md'),
+    to: 'how-to/deploy-backend.mdx',
+    title: 'Deploy the Backend',
+    description:
+      'Production deployment with Docker or bare metal, upgrades, and rollback.',
+  },
+  {
+    from: path.join(frontendRoot, 'DEPLOYMENT.md'),
+    to: 'how-to/deploy-frontend.mdx',
+    title: 'Deploy the Frontend',
+    description:
+      'Build the static bundle and serve dist/, with an optional Docker recipe.',
+  },
+  {
+    from: path.join(backendRoot, 'docs', 'how-to', 'administer-dare.md'),
+    to: 'how-to/administer-dare.mdx',
+    title: 'Administer DARE',
+    description:
+      'Users, roles, access codes, model groups, analytics, and operational tasks.',
+  },
+  {
+    from: path.join(backendRoot, 'docs', 'how-to', 'deploy-research-mode.md'),
+    to: 'how-to/deploy-research-mode.mdx',
+    title: 'Deploy Research Mode',
+    description:
+      'Run research mode agents on a Hermes host and connect it to DARE.',
+  },
+  {
+    from: path.join(backendRoot, 'docs', 'how-to', 'run-quillmark.md'),
+    to: 'how-to/run-quillmark.mdx',
+    title: 'Run the Quillmark Renderer',
+    description:
+      'Run the PDF document renderer locally and configure it for a deployment.',
+  },
+  {
+    from: path.join(backendRoot, 'CONTRIBUTING.md'),
+    to: 'how-to/contribute-backend.mdx',
+    title: 'Contribute to the Backend',
+    description: 'Backend issues, pull requests, and review expectations.',
+  },
+  {
+    from: path.join(frontendRoot, 'CONTRIBUTING.md'),
+    to: 'how-to/contribute-frontend.mdx',
+    title: 'Contribute to the Frontend',
+    description: 'Frontend issues, pull requests, and review expectations.',
+  },
+  {
+    from: path.join(backendRoot, 'docs', 'reference', 'configuration.md'),
+    to: 'reference/backend-configuration.mdx',
+    title: 'Backend Configuration',
+    description:
+      'Every backend environment variable, with type, default, and description.',
   },
   {
     from: path.join(frontendRoot, 'docs', 'configuration.md'),
-    to: 'frontend/configuration.mdx',
+    to: 'reference/frontend-configuration.mdx',
     title: 'Frontend Configuration',
     description:
       'Vite environment variables and per-environment frontend settings.',
   },
   {
-    from: path.join(frontendRoot, 'docs', 'architecture.md'),
-    to: 'frontend/architecture.mdx',
-    title: 'Frontend Architecture',
+    from: path.join(backendRoot, 'docs', 'reference', 'rest-api.md'),
+    to: 'reference/rest-api.mdx',
+    title: 'REST API',
     description:
-      'Component structure, routing, Redux, API layer, and Socket.IO integration.',
+      'REST API overview, with links to the live Swagger UI, ReDoc and OpenAPI schema.',
   },
   {
-    from: path.join(frontendRoot, 'CONTRIBUTING.md'),
-    to: 'frontend/contributing.mdx',
-    title: 'Frontend Contributing',
-    description: 'Frontend issue, pull request, and coding standards.',
+    from: path.join(backendRoot, 'docs', 'reference', 'socketio-events.md'),
+    to: 'reference/socketio-events.mdx',
+    title: 'Socket.IO Events',
+    description:
+      'Real-time event payloads for the /chat and /workflow namespaces.',
+  },
+  {
+    from: path.join(backendRoot, 'docs', 'reference', 'serialization.md'),
+    to: 'reference/serialization.mdx',
+    title: 'Serialization',
+    description:
+      'camelCase and snake_case rules at the frontend/backend boundary.',
+  },
+  {
+    from: path.join(
+      backendRoot,
+      'docs',
+      'reference',
+      'socratic-bots-integration.md'
+    ),
+    to: 'reference/socratic-bots-integration.mdx',
+    title: 'Socratic Bots Integration',
+    description:
+      'How Socratic Bots calls DARE, and the rules for changing that contract.',
+  },
+  {
+    from: path.join(
+      backendRoot,
+      'docs',
+      'reference',
+      'non-chat-model-usage.md'
+    ),
+    to: 'reference/non-chat-model-usage.mdx',
+    title: 'Non-chat Model Usage',
+    description:
+      'Every model call DARE makes outside the chat reply, and how each is chosen.',
+  },
+  {
+    from: path.join(backendRoot, 'rules.md'),
+    to: 'reference/backend-rules.mdx',
+    title: 'Backend Rules',
+    description: 'The engineering rules every backend change follows.',
   },
   {
     from: path.join(frontendRoot, 'docs', 'RULES.md'),
-    to: 'frontend/rules.mdx',
+    to: 'reference/frontend-rules.mdx',
     title: 'Frontend Rules',
+    description: 'The engineering rules every frontend change follows.',
+  },
+  {
+    from: path.join(backendRoot, 'docs', 'explanation', 'architecture.md'),
+    to: 'explanation/architecture.mdx',
+    title: 'Platform Architecture',
     description:
-      'Project-specific frontend development rules and API contract conventions.',
+      "The DARE platform, the backend's main parts, and the choices behind them.",
   },
   {
-    from: path.join(backendRoot, 'docs', 'index.md'),
-    to: 'backend/index.mdx',
-    title: 'Backend Overview',
+    from: path.join(frontendRoot, 'docs', 'architecture.md'),
+    to: 'explanation/frontend-architecture.mdx',
+    title: 'Frontend Architecture',
     description:
-      'Backend documentation index for API, architecture, operations, and standards.',
+      'Component structure, routing, Redux, the API layer, and Socket.IO integration.',
   },
   {
-    from: path.join(backendRoot, 'README.md'),
-    to: 'backend/readme.mdx',
-    title: 'Backend README',
-    description: 'Django REST and Socket.IO backend overview.',
-  },
-  {
-    from: path.join(backendRoot, 'QUICKSTART.md'),
-    to: 'backend/quickstart.mdx',
-    title: 'Backend Quick Start',
-    description:
-      'Run the backend locally: Docker one-command stack, or local Python in a venv.',
-  },
-  {
-    from: path.join(backendRoot, 'DEPLOYMENT.md'),
-    to: 'backend/deployment.mdx',
-    title: 'Backend Deployment',
-    description:
-      'Production and server deployment: Docker and bare-metal paths, reverse proxy, and troubleshooting.',
-  },
-  {
-    from: path.join(backendRoot, 'CONTRIBUTING.md'),
-    to: 'backend/contributing.mdx',
-    title: 'Backend Contributing',
-    description: 'Backend issue, pull request, and coding standards.',
-  },
-  {
-    from: path.join(backendRoot, 'docs', 'admin-guide.md'),
-    to: 'backend/admin-guide.mdx',
-    title: 'Administrator Guide',
-    description:
-      'User management, access codes, model access, analytics, and operational tasks.',
-  },
-  {
-    from: path.join(backendRoot, 'docs', 'configuration.md'),
-    to: 'backend/configuration.mdx',
-    title: 'Backend Configuration',
-    description:
-      'Django, Redis, database, provider key, MCP, and observability settings.',
-  },
-  {
-    from: path.join(backendRoot, 'docs', 'architecture.md'),
-    to: 'backend/architecture.mdx',
-    title: 'Backend Architecture',
-    description: 'Backend components, request flows, and key design patterns.',
-  },
-  {
-    from: path.join(backendRoot, 'docs', 'architecture', 'overview.md'),
-    to: 'backend/architecture-overview.mdx',
-    title: 'System Architecture',
-    description:
-      'System diagrams, service responsibilities, real-time architecture, and data flows.',
-  },
-  {
-    from: path.join(backendRoot, 'docs', 'architecture', 'data-flows.md'),
-    to: 'backend/data-flows.mdx',
+    from: path.join(backendRoot, 'docs', 'explanation', 'data-flows.md'),
+    to: 'explanation/data-flows.mdx',
     title: 'Data Flows',
     description:
-      'Chat, file upload, workflow execution, authentication, and artifact flow diagrams.',
+      'Chat, file upload, workflow, authentication, and artifact sequences.',
   },
   {
-    from: path.join(backendRoot, 'docs', 'architecture', 'socketio-events.md'),
-    to: 'backend/socketio-events.mdx',
-    title: 'Socket.IO Event Contract',
-    description: 'Real-time event payloads for chat and workflow namespaces.',
-  },
-  {
-    from: path.join(backendRoot, 'docs', 'serialization.md'),
-    to: 'backend/serialization.mdx',
-    title: 'Serialization Contract',
+    from: path.join(frontendRoot, 'docs', 'document-processing.md'),
+    to: 'explanation/document-processing.mdx',
+    title: 'Document Processing',
     description:
-      'camelCase and snake_case conversion rules for frontend/backend boundaries.',
+      'Basic and Advanced processing, vision models, and failed-image retries.',
   },
   {
-    from: path.join(backendRoot, 'docs', 'deployment', 'infrastructure.md'),
-    to: 'backend/deployment-infrastructure.mdx',
-    title: 'Deployment Infrastructure',
+    from: path.join(
+      backendRoot,
+      'docs',
+      'explanation',
+      'document-ingestion.md'
+    ),
+    to: 'explanation/document-ingestion.mdx',
+    title: 'Document Ingestion',
     description:
-      'Production infrastructure notes and existing deployment scripts.',
+      'How an upload becomes a verified search index, and how interrupted runs recover.',
   },
   {
-    from: path.join(backendRoot, 'docs', 'deployment', 'procedures.md'),
-    to: 'backend/deployment-procedures.mdx',
-    title: 'Deployment Procedures',
-    description:
-      'Deployment order and procedures for the DARE and SocraticBooks services.',
-  },
-  {
-    from: path.join(backendRoot, 'docs', 'code-standards.md'),
-    to: 'backend/code-standards.mdx',
-    title: 'Code Standards',
-    description: 'Backend and frontend coding conventions.',
-  },
-  {
-    from: path.join(backendRoot, 'docs', 'api', 'dare-backend.md'),
-    to: 'backend/api-reference.mdx',
-    title: 'Backend API Reference',
-    description:
-      'Human-readable REST API overview and links to interactive Swagger and Redoc.',
+    from: path.join(backendRoot, 'docs', 'explanation', 'tool-loop.md'),
+    to: 'explanation/tool-loop.mdx',
+    title: 'Tool Loop',
+    description: 'How a chat turn calls tools across rounds and providers.',
   },
   {
     from: path.join(frontendRoot, 'BRAND_GUIDELINES.md'),
@@ -301,15 +326,10 @@ function cleanMarkdown(markdown, currentSource) {
     .replaceAll('http://localhost:8000/api/redoc/', '/api/redoc/')
     .replaceAll('http://localhost:8000/api/schema/', '/api/schema/')
     .replaceAll('](docs-site/public/brand/', '](/brand/')
-    .replace(
-      /SocraticBooks-DARE Proxy Contract/g,
-      'SocraticBooks-DARE Proxy Contract (planned)'
-    )
     .trim()
 }
 
-async function writePage(page) {
-  const input = await readFile(page.from, 'utf8')
+function renderPage(page, input) {
   const body =
     page.format === 'license'
       ? [
@@ -324,198 +344,129 @@ async function writePage(page) {
           '```',
         ].join('\n')
       : cleanMarkdown(input, page.from)
-  const output = `${frontmatter(page)}${body}\n`
-  const destination = path.join(contentRoot, page.to)
-
-  await mkdir(path.dirname(destination), { recursive: true })
-  await writeFile(destination, output)
+  return `${frontmatter(page)}${body}\n`
 }
 
-async function writeStaticPages() {
-  await writeFile(
-    path.join(contentRoot, 'index.mdx'),
-    `---
+const indexPage = `---
 title: "DARE Documentation"
-description: "Client guides and technical references for the Dietrich Analysis Research Education (DARE) Platform."
+description: "Guides and technical references for the Dietrich Analysis Research Education (DARE) Platform."
 ---
 
 <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-fd-card via-fd-card to-fd-muted p-8">
   <div className="dare-hero-grid absolute inset-0" />
   <div className="relative max-w-3xl">
-    <p className="mb-3 text-sm font-medium uppercase tracking-wider text-fd-muted-foreground">
-      Dietrich Analysis Research Education (DARE) Platform
-    </p>
-    <h2 className="mb-4 text-3xl font-semibold tracking-tight md:text-5xl">
-      Product guides and technical references for <span className="dare-gradient-text">DARE</span>.
-    </h2>
-    <p className="text-lg text-fd-muted-foreground">
-      Start with the platform overview, then move into frontend, backend, operations, and reference material.
-    </p>
+    <p className="mb-3 text-sm font-medium uppercase tracking-wider text-fd-muted-foreground">Dietrich Analysis Research Education (DARE) Platform</p>
+    <h2 className="mb-4 text-3xl font-semibold tracking-tight md:text-5xl">Product guides and technical references for <span className="dare-gradient-text">DARE</span>.</h2>
+    <p className="text-lg text-fd-muted-foreground">Pages are grouped by what you are trying to do: learn, get something done, look something up, or understand why.</p>
   </div>
 </div>
 
-## Start here
-
 <Cards>
-  <Card title="Getting Started" href="/docs/getting-started">
-    Run the full platform locally and verify backend, workers, frontend, and API docs.
+  <Card title="Tutorials" href="/docs/tutorials/getting-started">
+    Learn by doing. Start with Getting Started: run the platform locally and send a first chat.
   </Card>
-  <Card title="Platform Overview" href="/docs/platform-overview">
-    Understand the app surface: conversations, RAG files, workflows, prompts, artifacts, and MCP.
+  <Card title="How-to guides" href="/docs/how-to/deploy-backend">
+    Reach a goal: deploy, administer, run research mode, contribute.
   </Card>
-  <Card title="API Reference" href="/docs/api-reference">
-    Use the human API overview first, then jump into Swagger or Redoc when a backend is running.
+  <Card title="Reference" href="/docs/reference/backend-configuration">
+    Look things up: configuration, REST API, Socket.IO events, rules.
   </Card>
-</Cards>
-
-## Core references
-
-<Cards>
-  <Card title="Frontend Architecture" href="/docs/frontend/architecture">
-    React routes, Redux state, Socket.IO integration, API layer, and component organization.
-  </Card>
-  <Card title="Backend Architecture" href="/docs/backend/architecture">
-    Django REST, Socket.IO, service boundaries, request flows, and backend design patterns.
-  </Card>
-  <Card title="Socket.IO Events" href="/docs/backend/socketio-events">
-    Chat and workflow namespace contracts for real-time platform behavior.
+  <Card title="Explanation" href="/docs/explanation/architecture">
+    Understand why: architecture, data flows, document ingestion, the tool loop.
   </Card>
 </Cards>
 `
-  )
 
-  await writeFile(
-    path.join(contentRoot, 'api-reference.mdx'),
-    `---
-title: "API Reference"
-description: "Human-maintained API entrypoint with links to the backend's interactive OpenAPI tools."
----
-
-The docs portal does not use OpenAPI as the foundation. The first version keeps the API reference human-readable and points to the backend's existing interactive tools when the backend is running.
-
-## Interactive API tools
-
-- Swagger UI: [/api/docs/](/api/docs/)
-- Redoc: [/api/redoc/](/api/redoc/)
-- Raw OpenAPI schema: [/api/schema/](/api/schema/)
-
-## API overview
-
-Use the backend API reference for authentication, major endpoint groups, and documentation improvement notes:
-
-<Cards>
-  <Card title="Backend API Reference" href="/docs/backend/api-reference">
-    REST API overview maintained from the backend documentation.
-  </Card>
-  <Card title="Serialization Contract" href="/docs/backend/serialization">
-    camelCase and snake_case boundaries between REST responses and Python internals.
-  </Card>
-  <Card title="Socket.IO Event Contract" href="/docs/backend/socketio-events">
-    Real-time events are documented separately from REST endpoints.
-  </Card>
-</Cards>
-`
-  )
+function section(title, pages) {
+  return { title, defaultOpen: true, pages }
 }
 
-async function writeMeta() {
-  await writeFile(
-    path.join(contentRoot, 'meta.json'),
-    `${JSON.stringify(
-      {
-        title: 'DARE Docs',
-        pages: [
-          'index',
-          '---Start Here---',
-          'getting-started',
-          'platform-overview',
-          'document-processing',
-          'api-reference',
-          '---Technical Docs---',
-          'frontend',
-          'backend',
-          '---Reference---',
-          'reference',
-        ],
-      },
-      null,
-      2
-    )}\n`
-  )
-
-  await mkdir(path.join(contentRoot, 'frontend'), { recursive: true })
-  await writeFile(
-    path.join(contentRoot, 'frontend', 'meta.json'),
-    `${JSON.stringify(
-      {
-        title: 'Frontend',
-        defaultOpen: true,
-        pages: [
-          'index',
-          'quickstart',
-          'deployment',
-          'configuration',
-          'architecture',
-          'contributing',
-          'rules',
-        ],
-      },
-      null,
-      2
-    )}\n`
-  )
-
-  await mkdir(path.join(contentRoot, 'backend'), { recursive: true })
-  await writeFile(
-    path.join(contentRoot, 'backend', 'meta.json'),
-    `${JSON.stringify(
-      {
-        title: 'Backend',
-        defaultOpen: true,
-        pages: [
-          'index',
-          'readme',
-          'quickstart',
-          'deployment',
-          'contributing',
-          'admin-guide',
-          'configuration',
-          'architecture',
-          'architecture-overview',
-          'data-flows',
-          'socketio-events',
-          'serialization',
-          'deployment-infrastructure',
-          'deployment-procedures',
-          'code-standards',
-          'api-reference',
-        ],
-      },
-      null,
-      2
-    )}\n`
-  )
-
-  await mkdir(path.join(contentRoot, 'reference'), { recursive: true })
-  await writeFile(
-    path.join(contentRoot, 'reference', 'meta.json'),
-    `${JSON.stringify(
-      {
-        title: 'Reference',
-        defaultOpen: true,
-        pages: ['license', 'brand', 'security', 'changelog'],
-      },
-      null,
-      2
-    )}\n`
-  )
+const meta = {
+  'meta.json': {
+    title: 'DARE Docs',
+    pages: [
+      'index',
+      'platform-overview',
+      'tutorials',
+      'how-to',
+      'reference',
+      'explanation',
+    ],
+  },
+  'tutorials/meta.json': section('Tutorials', [
+    'getting-started',
+    'backend-quickstart',
+    'frontend-quickstart',
+    'memory-walkthrough',
+  ]),
+  'how-to/meta.json': section('How-to guides', [
+    'deploy-backend',
+    'deploy-frontend',
+    'administer-dare',
+    'deploy-research-mode',
+    'run-quillmark',
+    'contribute-backend',
+    'contribute-frontend',
+  ]),
+  'reference/meta.json': section('Reference', [
+    'backend-configuration',
+    'frontend-configuration',
+    'rest-api',
+    'socketio-events',
+    'serialization',
+    'socratic-bots-integration',
+    'non-chat-model-usage',
+    'backend-rules',
+    'frontend-rules',
+    'security',
+    'license',
+    'brand',
+    'changelog',
+  ]),
+  'explanation/meta.json': section('Explanation', [
+    'architecture',
+    'frontend-architecture',
+    'data-flows',
+    'document-processing',
+    'document-ingestion',
+    'tool-loop',
+  ]),
 }
+
+// A frontend-only clone has no sibling dare-backend: keep the committed pages as they are.
+if (!existsSync(backendRoot)) {
+  console.log(
+    `docs:sync skipped: no dare-backend checkout at ${backendRoot}; committed docs are unchanged`
+  )
+  process.exit(0)
+}
+
+const missing = pages.filter((page) => !existsSync(page.from))
+if (missing.length) {
+  console.error(
+    `docs:sync failed: missing sources (is ../dare-backend on an up-to-date branch?)\n${missing
+      .map((page) => `  ${page.from}`)
+      .join('\n')}`
+  )
+  process.exit(1)
+}
+
+const rendered = await Promise.all(
+  pages.map(async (page) => [
+    page.to,
+    renderPage(page, await readFile(page.from, 'utf8')),
+  ])
+)
 
 await rm(contentRoot, { recursive: true, force: true })
-await mkdir(contentRoot, { recursive: true })
+const files = [['index.mdx', indexPage], ...rendered]
+for (const [name, value] of Object.entries(meta)) {
+  files.push([name, `${JSON.stringify(value, null, 2)}\n`])
+}
+for (const [name, content] of files) {
+  const destination = path.join(contentRoot, name)
+  await mkdir(path.dirname(destination), { recursive: true })
+  await writeFile(destination, content)
+}
 
-await writeStaticPages()
-await Promise.all(pages.map(writePage))
-await writeMeta()
-
-console.log(`Synced ${pages.length + 2} docs pages into ${contentRoot}`)
+console.log(`Synced ${rendered.length + 1} docs pages into ${contentRoot}`)

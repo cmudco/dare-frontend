@@ -1,8 +1,8 @@
 ---
-title: "Frontend Deployment"
-description: "Deploy to production: build the static bundle and serve dist/, with an optional Docker recipe."
+title: "Deploy the Frontend"
+description: "Build the static bundle and serve dist/, with an optional Docker recipe."
 ---
-> **Just want to run it locally?** See [QUICKSTART.md](/docs/frontend/quickstart) —
+> **Just want to run it locally?** See [QUICKSTART.md](/docs/tutorials/frontend-quickstart) —
 > `npm install`, set two env vars, `npm run dev`. That's the whole story for development.
 > **This guide is for deploying to production.**
 
@@ -10,7 +10,7 @@ The DARE frontend is a static single-page app built with Vite. Deploying it is d
 simple: **build the bundle once, then serve the generated `dist/` folder from any static host.**
 There is no server runtime to manage.
 
-For the full environment variable reference, see [docs/configuration.md](/docs/frontend/configuration).
+For the full environment variable reference, see [docs/configuration.md](/docs/reference/frontend-configuration).
 
 ---
 
@@ -69,7 +69,7 @@ Pick whichever fits your infrastructure — they are all equivalent from the app
 ## 4. CORS and CSRF
 
 The backend must include the frontend's origin in `CORS_ALLOWED_ORIGINS` and
-`CSRF_TRUSTED_ORIGINS`. See the [backend configuration reference](/docs/backend/configuration).
+`CSRF_TRUSTED_ORIGINS`. See the `backend configuration reference`.
 
 For Socket.IO to connect, `VITE_WEBSOCKET_URL` must be reachable from the browser and accept the
 same auth token used for REST.
@@ -175,5 +175,5 @@ docker run -d -p 80:80 --name dare-frontend dare-frontend
 | Old code shipped after deploy                | CDN or browser cache                                            | Ensure `index.html` is `Cache-Control: no-cache`; assets fingerprinted (Vite default) |
 | `VITE_*` env var ignored at runtime          | Vite inlines at build time                                      | Rebuild with the desired value                                                        |
 
-For local development, see [QUICKSTART.md](/docs/frontend/quickstart); for contributing, see
-[CONTRIBUTING.md](/docs/frontend/contributing).
+For local development, see [QUICKSTART.md](/docs/tutorials/frontend-quickstart); for contributing, see
+[CONTRIBUTING.md](/docs/how-to/contribute-frontend).
