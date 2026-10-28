@@ -1,26 +1,26 @@
-# Document processing in DARE
+# Document processing
 
-DARE turns uploaded documents into searchable text. The processing mode applies to documents; other file types keep their existing handling.
+This page explains how DARE turns uploaded documents into searchable text, and when each processing mode costs money. The processing mode applies only to documents; other file types keep their own handling.
 
 ## Basic and Advanced
 
-**Basic** extracts text with lightweight format-specific readers. Choose it when straightforward text extraction is sufficient.
+**Basic** extracts text with lightweight format-specific readers. Choose it when plain text extraction is enough.
 
-**Advanced** uses Docling for supported document formats to retain richer structure such as sections, tables, and figures. DARE adds separate vision-model calls to describe relevant figures and transcribe scanned pages. These calls can incur charges through your active wallet. Scanned documents may require approval of a page limit before transcription continues.
+**Advanced** uses Docling for supported document formats to keep richer structure such as sections, tables and figures. DARE adds separate vision-model calls to describe relevant figures and transcribe scanned pages. These calls can incur charges through your active wallet. A scanned document may need you to approve a page limit before transcription continues.
 
 [Docling](https://docling-project.github.io/docling/) is an open-source document conversion toolkit. DARE integrates a subset of its capabilities; the upstream documentation is not a list of features available in DARE.
 
 ## Choose a vision model
 
-The upload screen lets you choose the vision model used for scanned pages and figures. That choice saves your upload preference. Available models depend on your active wallet.
+On the upload screen you choose the vision model for scanned pages and figures. That choice is saved as your upload preference. Available models depend on your active wallet.
 
-The **Reprocess document** dialog lets you choose a vision model for that run without changing your upload preference. This selection applies to full Advanced reprocessing as well as failed-image retries. Basic processing does not use a vision model. For scanned pages requiring approval, review the model and page limit in the approval dialog before continuing.
+In the **Reprocess document** dialog you choose a vision model for that run without changing your upload preference. The choice applies to full Advanced reprocessing and to failed-image retries. Basic processing does not use a vision model. For scanned pages requiring approval, review the model and page limit in the approval dialog before continuing.
 
 ## Retry failed image descriptions
 
-Open the document’s reprocessing action. If image descriptions failed, choose a vision model and select **Retry failed image descriptions**. This retries failed figures while preserving successful descriptions and the current processing mode. For example, if 23 of 50 image descriptions failed, the successful 27 are retained.
+Open the document’s reprocessing action. If image descriptions failed, choose a vision model and select **Retry failed image descriptions**. This retries the failed figures and keeps the successful descriptions and the current processing mode. For example, if 23 of 50 image descriptions failed, the successful 27 are retained.
 
-Changing models may help with provider or model failures, but it cannot guarantee that every image succeeds. If failures persist, inspect the document’s processing error before retrying again.
+Changing models can help with provider or model failures, but it cannot guarantee that every image succeeds. If failures persist, inspect the document’s processing error before retrying again.
 
 ## Reprocess the whole document
 

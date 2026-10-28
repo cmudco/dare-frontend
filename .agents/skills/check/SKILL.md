@@ -26,7 +26,7 @@ uses, and it is not interchangeable with `tsc --noEmit`:
 
 This has bitten this repo before. Always verify with `npm run app:build`.
 
-`npm run build` additionally builds and copies the docs site. That is what CI runs for a release,
+`npm run build` additionally builds and copies the docs site. That is what the production deploy runs,
 but it is slow; `app:build` is enough for a normal change. Run the full `build` if you touched
 `docs-site/` or anything it syncs from.
 

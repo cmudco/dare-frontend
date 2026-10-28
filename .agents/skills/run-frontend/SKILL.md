@@ -25,8 +25,8 @@ npm run dev
 ```
 
 Note the env filename is `.env.example` here; the backend repo uses `.example.env`. Point
-`VITE_DJANGO_BACKEND_URL` and `VITE_WEBSOCKET_URL` at your backend — the defaults assume
-`http://localhost:8000`.
+`VITE_DJANGO_BACKEND_URL` at your backend (REST and every Socket.IO namespace use it); the
+default is `http://localhost:8000`.
 
 Then open http://localhost:5173. Vite hot-reloads on save.
 

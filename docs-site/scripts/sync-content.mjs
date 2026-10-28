@@ -230,12 +230,6 @@ const pages = [
     description:
       'Supported versions, vulnerability reporting, safe harbor, and operator hardening.',
   },
-  {
-    from: path.join(frontendRoot, 'CHANGELOG.md'),
-    to: 'reference/changelog.mdx',
-    title: 'Frontend Changelog',
-    description: 'Frontend release notes and documentation changes.',
-  },
 ]
 
 const sourceToUrl = new Map()
@@ -421,7 +415,6 @@ const meta = {
     'security',
     'license',
     'brand',
-    'changelog',
   ]),
   'explanation/meta.json': section('Explanation', [
     'architecture',

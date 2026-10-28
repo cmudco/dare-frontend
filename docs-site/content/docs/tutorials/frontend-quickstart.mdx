@@ -2,32 +2,74 @@
 title: "Frontend Quick Start"
 description: "Run the frontend locally: install, set two env vars, and start the dev server."
 ---
-Get the frontend running locally in about two minutes. This is all you need for development.
-For deploying to a server, see [docs/how-to/deploy.md](/docs/how-to/deploy-frontend).
+In about two minutes you will have the frontend running on `http://localhost:5173` against a local
+backend. To deploy to a server, see [docs/how-to/deploy.md](/docs/how-to/deploy-frontend).
 
 ## Prerequisites
 
-- **Node.js 18+** (20 LTS recommended)
-- A **running DARE backend** — defaults assume `http://localhost:8000` (see `dare-backend`)
+- **Node.js 20+.** Tailwind's native engine needs 20; the full `npm run build` needs 22 because it
+  also builds the docs site.
+- **A running DARE backend** on `http://localhost:8000` (see `dare-backend`).
+  To run the whole platform at once, follow the backend's
+  [getting started tutorial](/docs/tutorials/getting-started).
 
-## Run it
+## 1. Clone the repo
 
 ```bash
-# 1. Clone the repo
 git clone https://github.com/cmudco/dare-frontend.git
 cd dare-frontend
+```
 
-# 2. Install dependencies
-npm install                # or: npm ci
+## 2. Install dependencies
 
-# 3. Configure environment
-cp .env.example .env       # defaults already point at a backend on http://localhost:8000
+```bash
+npm install
+```
 
-# 4. Start the dev server (Vite, port 5173)
+`npm ci` also works and installs exactly what `package-lock.json` pins.
+
+## 3. Configure the environment
+
+The defaults point at a backend on `http://localhost:8000`.
+
+```bash
+cp .env.example .env
+```
+
+If your backend runs elsewhere, set `VITE_DJANGO_BACKEND_URL` in `.env`; REST and Socket.IO both
+use it.
+[docs/reference/configuration.md](/docs/reference/frontend-configuration) lists every variable.
+
+## 4. Start the dev server
+
+```bash
 npm run dev
 ```
 
-Open **http://localhost:5173**. The dev server hot-reloads on save.
+## Verify
 
-That's it. If your backend isn't on `localhost:8000`, point `VITE_DJANGO_BACKEND_URL` and
-`VITE_WEBSOCKET_URL` in `.env` at it. Full variable reference: [docs/reference/configuration.md](/docs/reference/frontend-configuration).
+Open `http://localhost:5173` and sign in. The page hot-reloads when you save a file.
+
+## Scripts
+
+| Command                                | What it does                                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------------------- |
+| `npm run dev`                          | Vite dev server on port 5173                                                          |
+| `npm run app:build`                    | `tsc -b` and `vite build` into `dist/`; the real type check                           |
+| `npm run build`                        | `app:build`, then builds `docs-site/` and copies it into `dist/docs` and `dist/_next` |
+| `npm run preview`                      | Serve the built `dist/` locally                                                       |
+| `npm run lint`                         | ESLint over the repo, failing on any warning                                          |
+| `npm run docs:sync`                    | Copy these docs and `../dare-backend/docs` into `docs-site/content/docs`              |
+| `node scripts/test-ensemble-state.mjs` | The ensemble reducer test (`node:test`)                                               |
+
+Do not run `npm run format`: it rewrites every file in the repo. Format the files you changed with
+`npx prettier --write &lt;files&gt;`.
+
+## Troubleshooting
+
+- **The UI loads but shows empty state or auth errors.** The backend is not reachable. Check it
+  answers on `http://localhost:8000` and that `VITE_DJANGO_BACKEND_URL` points at it.
+- **Chat never streams.** Check the `/socket.io/` request to the backend in the browser's network
+  panel. A failed handshake or a CORS rejection leaves the Vite log looking clean.
+- **`/docs` returns the app instead of the docs.** The dev server serves the docs from
+  `docs-site/out`, which exists only after `npm run build` (or `npm run docs:build`).

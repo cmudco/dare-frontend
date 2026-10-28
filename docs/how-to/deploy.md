@@ -1,130 +1,66 @@
-# DARE Frontend — Deployment Guide
+# Deploy
 
-> **Just want to run it locally?** See [docs/tutorials/quickstart.md](../tutorials/quickstart.md) —
-> `npm install`, set two env vars, `npm run dev`. That's the whole story for development.
-> **This guide is for deploying to production.**
-
-The DARE frontend is a static single-page app built with Vite. Deploying it is deliberately
-simple: **build the bundle once, then serve the generated `dist/` folder from any static host.**
-There is no server runtime to manage.
-
-For the full environment variable reference, see [docs/reference/configuration.md](../reference/configuration.md).
-
----
+You build the frontend once into a static `dist/` folder and serve it from any static host; there
+is no server runtime. To run it locally instead, see [docs/tutorials/quickstart.md](../tutorials/quickstart.md).
 
 ## Prerequisites
 
-| Requirement                                | Version | Notes                                              |
-| ------------------------------------------ | ------- | -------------------------------------------------- |
-| Node.js                                    | 18+     | 20 LTS recommended — build-time only               |
-| npm                                        | 9+      | (or `pnpm` / `yarn` if you adapt scripts)          |
-| A running [DARE backend](../../../dare-backend/) | —       | Reachable from the browser via the configured URLs |
+- **Node.js 22+ and npm 9+** on the build machine. `npm run build` also builds the docs site,
+  which needs Node 22. The host that serves `dist/` needs nothing but static file serving.
+- **A running [DARE backend](../../../dare-backend/)** that the browser can reach at the URLs you
+  configure.
 
-> Node is needed only to **build** the bundle. Once you have `dist/`, the host serving it needs
-> nothing but the ability to serve static files.
+## Production checklist
 
----
+- Set the `VITE_*` values for this environment before you build. Vite inlines them into the
+  bundle, so changing them later means rebuilding.
+- Set `VITE_APP_ENVIRONMENT` to a valid tier (`dare-staging`, `dare-production` or
+  `gt-production`). Any other value falls back to `local`.
+- Use an `https://` backend URL when the page is served over HTTPS; Socket.IO then upgrades to
+  `wss://` on the same origin.
+- Configure SPA fallback: rewrite every unmatched path to `/index.html`.
+- Add the frontend's origin to the backend's `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS`.
+- Serve `index.html` with `Cache-Control: no-cache`.
+- Apply the [hardening notes](../../.github/SECURITY.md#hardening-notes) in the security policy.
 
-## 1. Configure environment
+## Static host
 
-```bash
-cp .env.example .env
-# edit .env — see docs/configuration.md for the full reference
-```
+1. Copy the env template and set the production values.
+   [docs/reference/configuration.md](../reference/configuration.md) lists every variable.
 
-Minimum for a production build:
+   ```bash
+   cp .env.example .env
+   ```
 
-```
-VITE_APP_ENVIRONMENT=production
-VITE_DJANGO_BACKEND_URL=https://api.example.com
-VITE_WEBSOCKET_URL=wss://api.example.com
-```
+   The minimum for a production build:
 
-> **Important:** Vite inlines `VITE_*` values at **build time**. Changing them after the build has
-> no effect — you must rebuild for each target environment.
+   ```
+   VITE_APP_ENVIRONMENT=dare-production
+   VITE_DJANGO_BACKEND_URL=https://api.example.com
+   ```
 
-## 2. Build
+2. Build. `dist/` gets the hashed JS/CSS assets, `index.html`, and the docs site in `dist/docs`
+   and `dist/_next`.
 
-```bash
-npm ci            # respect the lockfile
-npm run build     # produces ./dist
-```
+   ```bash
+   npm ci
+   npm run build
+   ```
 
-`dist/` is a self-contained static bundle: hashed JS/CSS assets plus `index.html`.
+3. Serve `dist/`. Every option works the same for the app:
+   - **Managed static hosting.** Upload `dist/` to Netlify, Vercel, Cloudflare Pages, S3 +
+     CloudFront or Cloud Storage, and turn on the rewrite of unmatched paths to `/index.html` so
+     React Router handles deep links.
+   - **Nginx, Apache or Caddy.** Copy `dist/` to the web root and add the same SPA fallback. A
+     minimal Nginx config is under [Docker and Nginx](#docker-and-nginx).
+   - **A quick check on a box.** `npx serve -s dist -l 5173` (`-s` turns on the SPA fallback). Fine
+     for staging; use a real web server or CDN in production.
 
-## 3. Serve `dist/`
+## Docker and Nginx
 
-Pick whichever fits your infrastructure — they are all equivalent from the app's point of view:
+The frontend does not need a container. Use one only if the rest of your stack ships that way.
 
-- **Managed static hosting (simplest)** — upload `dist/` to Netlify, Vercel, Cloudflare Pages,
-  S3 + CloudFront, or Cloud Storage. **The one required setting:** SPA-style routing — rewrite all
-  unmatched paths to `/index.html` so React Router can handle deep links.
-- **Nginx / Apache / Caddy** — copy `dist/` to the web root and add the same SPA fallback. A
-  minimal Nginx config is in the [appendix](#appendix-nginx--docker) below.
-- **Quick check on a box** — `npx serve -s dist -l 5173` (the `-s` flag enables SPA fallback).
-  Fine for staging; use a real web server or CDN for production.
-
-## 4. CORS and CSRF
-
-The backend must include the frontend's origin in `CORS_ALLOWED_ORIGINS` and
-`CSRF_TRUSTED_ORIGINS`. See the [backend configuration reference](../../../dare-backend/docs/reference/configuration.md).
-
-For Socket.IO to connect, `VITE_WEBSOCKET_URL` must be reachable from the browser and accept the
-same auth token used for REST.
-
----
-
-## Verifying the deployment
-
-1. Visit the deployed URL — the login screen should load.
-2. Open dev tools → Network, sign in, and confirm:
-   - The REST request hits `VITE_DJANGO_BACKEND_URL`.
-   - The Socket.IO upgrade succeeds (a `wss://` request with a `101` status).
-3. Send a chat message — you should see streamed tokens arrive.
-4. Upload a file — it should move from `processing` to `completed`.
-
-If any step fails, check the browser console for CORS or auth errors and confirm the backend's
-`CORS_ALLOWED_ORIGINS` includes your origin.
-
----
-
-## Upgrading
-
-```bash
-git pull
-npm ci          # respect lockfile
-npm run build
-# redeploy dist/ via your usual mechanism
-```
-
----
-
-## Appendix: Nginx & Docker
-
-Serving a static bundle needs no container, so **Docker is optional for the frontend** — reach for
-it only if a container is how the rest of your stack ships. If so, a minimal multi-stage build:
-
-```dockerfile
-# build stage
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-ARG VITE_DJANGO_BACKEND_URL
-ARG VITE_WEBSOCKET_URL
-ENV VITE_DJANGO_BACKEND_URL=$VITE_DJANGO_BACKEND_URL
-ENV VITE_WEBSOCKET_URL=$VITE_WEBSOCKET_URL
-RUN npm run build
-
-# serve stage
-FROM nginx:1.27-alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY devops/nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-```
-
-A SPA-friendly Nginx config (`devops/nginx.conf`) — also usable standalone, without Docker:
+Save this as `nginx.conf` at the repo root. It also works on its own, without Docker:
 
 ```nginx
 server {
@@ -133,45 +69,102 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # Cache static assets aggressively (they are content-hashed)
+    # Content-hashed assets can be cached for a year
     location /assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
-    # SPA fallback — let React Router handle the path
+    # SPA fallback: React Router handles the path
     location / {
         try_files $uri $uri/ /index.html;
     }
 }
 ```
 
-Build and run:
+A minimal multi-stage `Dockerfile`:
+
+```dockerfile
+# build stage
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+ARG VITE_APP_ENVIRONMENT=dare-production
+ARG VITE_DJANGO_BACKEND_URL
+ENV VITE_APP_ENVIRONMENT=$VITE_APP_ENVIRONMENT
+ENV VITE_DJANGO_BACKEND_URL=$VITE_DJANGO_BACKEND_URL
+RUN npm run build
+
+# serve stage
+FROM nginx:1.27-alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+```
+
+Pass the per-environment values as build args; changing them on a running container has no
+effect.
 
 ```bash
 docker build \
     --build-arg VITE_DJANGO_BACKEND_URL=https://api.example.com \
-    --build-arg VITE_WEBSOCKET_URL=wss://api.example.com \
     -t dare-frontend .
 
 docker run -d -p 80:80 --name dare-frontend dare-frontend
 ```
 
-> Because Vite inlines `VITE_*` at build time, pass the per-environment URLs as **build args** —
-> changing them on the running container has no effect.
+## Socket.IO
 
----
+Socket.IO connects to the `VITE_DJANGO_BACKEND_URL` origin (a trailing `/api` is stripped) at
+path `/socket.io/`, on the `/chat`, `/workflow` and `/assistant` namespaces. It sends the same JWT as
+REST and tries WebSocket first, then long polling. A reverse proxy in front of the backend must
+pass WebSocket upgrades on `/socket.io/`. Backend settings are in the
+[backend configuration reference](../../../dare-backend/docs/reference/configuration.md).
+
+## Verify
+
+1. Visit the deployed URL. The login screen loads.
+2. Open dev tools, go to Network, sign in, and check that:
+   - REST requests go to `VITE_DJANGO_BACKEND_URL`
+   - the Socket.IO upgrade succeeds (a `wss://` request with status `101`)
+3. Send a chat message. Streamed tokens arrive.
+4. Upload a file. It moves from `processing` to `completed`.
+5. Open `/docs`. The docs site loads.
+
+If a step fails, check the browser console for CORS or auth errors and confirm the backend's
+`CORS_ALLOWED_ORIGINS` includes your origin.
+
+## Upgrade
+
+```bash
+git pull
+npm ci
+npm run build
+# redeploy dist/ the usual way
+```
+
+DARE's own servers deploy over SSH from GitHub Actions. Staging deploys on every push to `dev`
+(`.github/workflows/deploy-staging.yml`, which runs the server's `deploy_fe.sh`, a copy of
+`devops/deploy.sh`). Production is a manual run of `.github/workflows/deploy.yml`: it pulls `main`
+on the server, runs `npm run build` with Node 22, moves `dist/*` into `/var/www/dare-frontend`
+and restarts Nginx.
 
 ## Troubleshooting
 
-| Symptom                                      | Likely cause                                                    | Fix                                                                                   |
-| -------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| White screen, console error about asset 404s | Server not serving SPA fallback (deep links 404)                | Configure `try_files $uri /index.html` or the host's rewrite-to-`index.html` setting  |
-| `Network Error` on every request             | Wrong `VITE_DJANGO_BACKEND_URL`, or CORS not allowed by backend | Verify URL; add origin to backend `CORS_ALLOWED_ORIGINS`                              |
-| Chat connects but no streamed tokens         | Socket.IO URL or auth issue                                     | Check `VITE_WEBSOCKET_URL`; inspect WS frames in dev tools                            |
-| Build fails with TS errors                   | Type drift after backend API changes                            | Update `redux/types/`; run `npx tsc --noEmit` for a full report                       |
-| Old code shipped after deploy                | CDN or browser cache                                            | Ensure `index.html` is `Cache-Control: no-cache`; assets fingerprinted (Vite default) |
-| `VITE_*` env var ignored at runtime          | Vite inlines at build time                                      | Rebuild with the desired value                                                        |
+- **White screen, or deep links return 404.** The server has no SPA fallback. Add
+  `try_files $uri $uri/ /index.html` or the host's rewrite-to-`index.html` setting.
+- **`Network Error` on every request.** `VITE_DJANGO_BACKEND_URL` is wrong, or the backend's CORS
+  settings do not allow your origin. Check the URL and add the origin to `CORS_ALLOWED_ORIGINS`.
+- **Chat connects but no tokens stream.** Check that the `/socket.io/` request to the backend
+  origin upgrades (status `101`) and inspect the WebSocket frames in dev tools.
+- **The build fails with type errors.** The types drifted from a backend API change. Update
+  `src/redux/types/` and rerun `npm run app:build` for the full report.
+- **Old code is served after a deploy.** A CDN or browser cache holds the old `index.html`. Serve
+  `index.html` with `Cache-Control: no-cache`; Vite fingerprints the assets.
+- **A `VITE_*` value is ignored.** Vite inlines it at build time. Rebuild with the new value.
+- **The console warns `Invalid or missing VITE_APP_ENVIRONMENT`.** The value is not one of the
+  valid tiers, so the app runs as `local`. Set a valid tier and rebuild.
 
-For local development, see [docs/tutorials/quickstart.md](../tutorials/quickstart.md); for contributing, see
-[.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md).
+For contributing, see [.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md).

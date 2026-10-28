@@ -2,9 +2,14 @@
 title: "Frontend Architecture"
 description: "Component structure, routing, Redux, the API layer, and Socket.IO integration."
 ---
-This document is the entry point for understanding how the frontend is structured. For the backend's view of the same system, see [dare-backend/docs/explanation/architecture.md](/docs/explanation/architecture).
+The DARE frontend is a static React 18 single-page app. Pages render feature components; a Redux
+Toolkit store holds server-backed state; thunks call the backend over REST through a small Axios
+layer; and three Socket.IO middlewares stream chat, workflow and assistant events into the same
+store. Vite builds it into `dist/`, alongside the docs site from `docs-site/`. For the backend's
+view of the same system, see
+[dare-backend/docs/explanation/architecture.md](/docs/explanation/architecture).
 
-## Component Diagram
+## Overview
 
 ```mermaid
 flowchart TB
@@ -15,8 +20,8 @@ flowchart TB
         features["Feature Components\nConversation, WorkflowBuilder, FileManager, Artifacts, Auth, Layout"]
         ui["UI Primitives\nRadix, Tailwind, brand tokens"]
         redux["Redux Toolkit Store\nDomain slices + async thunks"]
-        middleware["Socket.IO Middleware\n/chat namespace\n/workflow namespace"]
-        api["API Layer\nAxios + Zod validation"]
+        middleware["Socket.IO Middleware\n/chat, /workflow, /assistant"]
+        api["API Layer\nbaseRequest over Axios"]
     end
 
     backend["DARE Backend"]
@@ -31,135 +36,114 @@ flowchart TB
     middleware <-->|Socket.IO over WSS| backend
 ```
 
-## State Management
+## Components
 
-Redux Toolkit organizes state by domain, with two Socket.IO middleware files for real-time channels:
+| Path                  | Owns                                                                                                             |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `src/routes/`         | `AppRoutes.tsx`, `ProtectedRoute.tsx` and `RouteListener.tsx`                                                    |
+| `src/pages/`          | Top-level pages                                                                                                  |
+| `src/components/`     | UI by feature (`Conversation/`, `WorkflowBuilder/`, `FileManager/`, `Artifacts/`, …) and `ui/` shadcn primitives |
+| `src/redux/`          | The store, one `&lt;feature&gt;Slice.ts` per domain, `asyncThunks/`, `middleware/`, `types/` and `workflowBuilder/`    |
+| `src/api/`            | HTTP calls, one file per domain                                                                                  |
+| `src/schemas/`        | Zod schemas for inbound `/workflow` and `/assistant` socket events                                               |
+| `src/config/`         | `environment.ts` (typed `VITE_*` config) and `socket.ts` (reconnect policy)                                      |
+| `src/themes/`         | One CSS file per theme                                                                                           |
+| `src/utils/requests/` | `baseRequest`, the single Axios wrapper                                                                          |
 
-```
-src/redux/
-├── slices/                          # State slices by domain
-│   ├── userSlice.ts                 # Auth + preferences
-│   ├── conversationSlice.ts         # Chat sessions and messages
-│   ├── fileSlice.ts                 # Uploads and processing status
-│   ├── workflowSlice.ts             # Workflow definitions and runs
-│   ├── promptSlice.ts               # Prompt templates
-│   ├── billingSlice.ts              # Token usage and cost
-│   ├── tagsSlice.ts                 # File tags
-│   ├── themeSlice.ts                # Light/dark mode
-│   ├── notificationSlice.ts         # Toast notifications
-│   └── websocketSlice.ts            # Connection state
-├── asyncThunks/                     # createAsyncThunk wrappers, one file per domain
-├── middleware/
-│   ├── socketMiddleware.ts          # /chat namespace — chat, messages, artifacts, voice
-│   └── workflowSocketMiddleware.ts  # /workflow namespace — execution, steps, batches
-├── types/                           # TypeScript interfaces matching API response shapes
-└── workflowBuilder/                 # Canvas state — nodes, edges, undo/redo
-```
+## State management
 
-**Patterns:**
+Redux Toolkit organizes state by domain. Slices sit directly in `src/redux/` as
+`&lt;feature&gt;Slice.ts` (for example `conversationSlice.ts`, `fileSlice.ts`, `workflowSlice.ts`,
+`billingSlice.ts`, `themeSlice.ts`, `featureFlagsSlice.ts`); `src/redux/slices/socketSlice.ts`
+tracks connection state, and `src/redux/workflowBuilder/` holds the canvas state (nodes, edges,
+execution, batches). `src/redux/store.ts` registers them all.
 
-- All slices use `createSlice` with reducers.
-- Async operations use `createAsyncThunk`, never inline `dispatch(fn)`.
-- Type-safe hooks via `useSelector&lt;RootState&gt;` and `useDispatch&lt;AppDispatch&gt;`.
-- Middleware owns Socket.IO lifecycle — connect, reconnect, dispatch on event.
+- Every slice uses `createSlice`.
+- Async operations use `createAsyncThunk`, one file per domain in `src/redux/asyncThunks/`.
+- Components use the typed `useAppDispatch` and `useAppSelector` from `src/redux/hooks.ts`.
+- Middleware owns the Socket.IO lifecycle: connect, reconnect and dispatch on each event.
 
-## Socket.IO Integration
-
-Two namespaces, two middleware files, one connection lifecycle each.
-
-| Namespace   | Middleware                    | Used by                                                |
-| ----------- | ----------------------------- | ------------------------------------------------------ |
-| `/chat`     | `socketMiddleware.ts`         | Streaming completions, artifact emission, message acks |
-| `/workflow` | `workflowSocketMiddleware.ts` | DAG execution, per-step progress, batch run updates    |
-
-**Validation rule:** All incoming `/workflow` events are validated with Zod schemas in `src/schemas/workflowSocket.ts` before being dispatched to Redux. This catches backend-side schema drift early and surfaces a typed error instead of a silently broken UI.
-
-For the full event contract — payload shapes, directions, error codes — see the backend's [Socket.IO event reference](/docs/reference/socketio-events).
-
-## API Layer
+## REST requests
 
 ```
-src/api/                # One file per domain (auth, conversation, files, ...)
-src/redux/types/        # TypeScript interfaces matching API response shapes
-src/redux/asyncThunks/  # createAsyncThunk wrappers, one file per domain
+Component → dispatch(thunk) → src/api/<domain>.ts → baseRequest → axios → Backend
+  → thunk fulfilled → slice updates state → component re-renders
 ```
 
-Integration cycle:
+- **Base URL.** `src/config/environment.ts` reads `VITE_DJANGO_BACKEND_URL`; `src/api/config.ts`
+  re-exports it.
+- **Auth.** `baseRequest` in `src/utils/requests/index.ts` adds `Authorization: Bearer &lt;token&gt;`
+  from `localStorage`. On a `401` it hands off to `tokenExpirationService`
+  (`src/services/tokenExpirationService.ts`), which also checks token health every 15 seconds. When
+  the token is no longer valid it clears the stored tokens, queues a "Session Expired" toast and
+  signs the user out. There is no refresh-token interceptor.
+- **Errors.** `getErrorMessage` in `src/utils/errorHandler.ts` turns DRF error shapes into
+  user-facing messages.
+- **Types.** Response interfaces in `src/redux/types/` define the wire shapes.
 
-```
-Component → dispatch(thunk) → api/<domain>.ts → axios → Backend →
-  thunk fulfilled → slice handles state → component re-renders
-```
+## Socket.IO
 
-Centralized concerns:
+Three namespaces, three middleware files, one connection lifecycle each. All connect to the
+`VITE_DJANGO_BACKEND_URL` origin at path `/socket.io/`, send the JWT in `auth.token`, and try
+WebSocket before long polling. `src/config/socket.ts` limits reconnects to two attempts.
 
-- **Base URL & headers** in `src/api/config.ts`.
-- **Token refresh** via axios response interceptor.
-- **Error normalization** in `src/utils/errorHandler.ts` — extracts user-friendly messages from DRF error shapes.
+| Namespace    | Middleware                     | Used by                                                |
+| ------------ | ------------------------------ | ------------------------------------------------------ |
+| `/chat`      | `socketMiddleware.ts`          | Streaming completions, artifact emission, message acks |
+| `/workflow`  | `workflowSocketMiddleware.ts`  | DAG execution, per-step progress, batch run updates    |
+| `/assistant` | `assistantSocketMiddleware.ts` | The Ask DARE platform assistant                        |
 
-## Component Organization
+Inbound `/workflow` and `/assistant` events are validated with the Zod schemas in
+`src/schemas/workflowSocket.ts` and
+`src/schemas/assistantSocket.ts` before they reach Redux.
+Schema drift on the backend then surfaces as a typed error instead of a silently broken UI.
 
-```
-src/components/
-├── ui/                # Shadcn/ui primitives (Button, Dialog, Input, ...) — reusable
-├── Auth/              # Login, register, password reset
-├── Conversation/      # Chat view, message list, composer
-├── WorkflowBuilder/   # Canvas, nodes, edges, run controls
-├── FileManager/       # Upload, list, tag, folder
-├── Artifacts/         # Code blocks, diagrams, document previews
-├── Dashboard/         # Analytics overview
-└── Layout/            # App shell, sidebar, header
-```
-
-Feature folders follow the same internal layout: `index.tsx`, sub-components, hooks (`useX.ts`), and feature-specific types co-located.
+The backend's [Socket.IO event reference](/docs/reference/socketio-events)
+has the full contract: payload shapes, directions and error codes.
 
 ## Routing
 
-```ts
-<Route path="/login" element={<LoginScreen />} />
-<Route path="/dashboard" element={
+```tsx
+<Route path='/login' element={<LoginScreen />} />
+<Route path='/workflows/create' element={
   <ProtectedRoute>
-    <Dashboard />
+    <WorkflowCreatePage />
   </ProtectedRoute>
 } />
 ```
 
-`ProtectedRoute` checks the auth slice and redirects to `/login` if no valid token. A route listener (`src/routes/RouteListener.tsx`) handles cross-cutting concerns like analytics and toast cleanup on navigation.
+- `ProtectedRoute` redirects to `/login` when there is no signed-in user or the user is inactive,
+  and to `/onboarding` when the user has not finished onboarding.
+- `RouteListener` (`src/routes/RouteListener.tsx`) runs on every navigation: it clears the user
+  error, resets the workflow builder when you leave a workflow edit route, and updates the active
+  conversation.
 
-## Styling
+## Styling and theming
 
-- **Tailwind** as the base utility system.
-- **Shadcn/ui** for accessible component primitives, customized via Tailwind tokens.
-- **CSS custom properties** drive light/dark theming — toggling adds/removes the `dark` class on `&lt;html&gt;`.
-- Brand colors and the DARE gradient live in `tailwind.config.ts`.
-- Class merging via the `cn()` helper (`clsx` + `tailwind-merge`).
+- **Tailwind CSS v4** is the utility layer, loaded with `@tailwindcss/vite`. There is no
+  `tailwind.config.ts`: brand tokens and the DARE gradient are defined in `src/index.css`
+  (`@theme inline`).
+- **shadcn/ui** supplies the accessible primitives in `src/components/ui/`, styled with the same
+  tokens.
+- **Themes.** Each theme is a CSS file in `src/themes/`, imported by `src/index.css`.
+  `ThemeProvider` sets `data-theme` on `&lt;body&gt;` and toggles the `dark` class on it for dark mode.
+- **Class merging** uses `cn()` from `src/lib/utils.ts` (`clsx` + `tailwind-merge`).
 
-## Forms
+## Build
 
-Formik + Yup for non-trivial forms. Validation schemas are defined alongside the form component and shared with the backend's serializer-level validation where useful. Simple inputs use plain controlled state.
-
-## TypeScript
-
-- Strict mode on.
-- Interfaces preferred over type aliases for object shapes.
-- API response types in `src/redux/types/` are the source of truth for shape — update them when the backend changes.
-
-## Performance
-
-- Route-level code splitting (`React.lazy` + `Suspense`).
-- `useMemo` / `useCallback` for expensive renders or stable references passed to memoized children.
-- Virtualization (`react-virtual` or similar) for long lists where applicable.
-- Vite's default asset fingerprinting + immutable cache headers in production (see [docs/how-to/deploy.md](/docs/how-to/deploy-frontend)).
-
-## Build & Bundle
-
-- **Vite** for dev server and production builds.
-- **Path alias** `@/` → `src/`.
-- **Client error reporting** via Sentry when `VITE_SENTRY_DSN` is configured.
+- **Vite** runs the dev server and the production build. The `@/` alias maps to `src/`.
+- `npm run build` runs `tsc -b && vite build`, then builds `docs-site/` (a static Next.js export)
+  and copies it into `dist/docs` and `dist/_next`. In development, a small Vite plugin serves
+  `docs-site/out` at `/docs`.
+- Vite fingerprints asset names, so production can cache them as immutable (see
+  [docs/how-to/deploy.md](/docs/how-to/deploy-frontend)).
+- **Sentry** reports browser errors, traces and session replays (inputs masked) when
+  `VITE_SENTRY_DSN` is set; it is initialized in `src/main.tsx`.
 
 ## Further reading
 
-- [docs/reference/configuration.md](/docs/reference/frontend-configuration) — Vite environment variables
-- [.github/CONTRIBUTING.md](/docs/how-to/contribute-frontend) — coding standards and PR process
-- [docs/reference/rules.md](/docs/reference/frontend-rules) — project-specific conventions
-- [dare-backend/docs/reference/socketio-events.md](/docs/reference/socketio-events) — full event contract
+- [docs/reference/configuration.md](/docs/reference/frontend-configuration): Vite environment variables
+- [docs/reference/rules.md](/docs/reference/frontend-rules): coding rules and project conventions
+- [.github/CONTRIBUTING.md](/docs/how-to/contribute-frontend): the PR process
+- [dare-backend/docs/reference/socketio-events.md](/docs/reference/socketio-events):
+  the full event contract

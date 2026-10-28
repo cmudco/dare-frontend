@@ -2,7 +2,7 @@
 title: "Frontend Rules"
 description: "The engineering rules every frontend change follows."
 ---
-These rules are the default for new work and touched code. Exceptions need a concrete reason in the PR.
+These rules apply to new work and to code you touch. An exception needs a concrete reason in the PR.
 
 ## 1. Build one typed data flow
 
@@ -23,14 +23,14 @@ component <- selector       <- slice reducer       <- response/event
 
 ## 2. Give state one owner
 
-| State | Owner |
-| --- | --- |
-| Input focus, open popover, temporary draft | Local component state |
-| URL, route filters, shareable navigation | Router/search params |
-| Server-backed feature data and cross-page state | Redux slice |
-| Derived counts, labels, and filtered views | Memoized selector |
-| Remote request lifecycle | Thunk/API state |
-| Streaming/socket lifecycle | Socket middleware and reducers |
+| State                                           | Owner                          |
+| ----------------------------------------------- | ------------------------------ |
+| Input focus, open popover, temporary draft      | Local component state          |
+| URL, route filters, shareable navigation        | Router/search params           |
+| Server-backed feature data and cross-page state | Redux slice                    |
+| Derived counts, labels, and filtered views      | Memoized selector              |
+| Remote request lifecycle                        | Thunk/API state                |
+| Streaming/socket lifecycle                      | Socket middleware and reducers |
 
 - Never copy the same server object into multiple slices.
 - Never persist values that can be derived reliably from canonical state.
@@ -145,11 +145,15 @@ Examples clarify a rule; they are not templates to copy blindly.
 
 ```typescript
 // Bad: activeCount can drift from items.
-interface State { items: Memory[]; activeCount: number }
+interface State {
+  items: Memory[]
+  activeCount: number
+}
 
 // Good: canonical state plus a selector.
-const selectActiveCount = createSelector(selectItems, (items) =>
-  items.filter((item) => item.state === MemoryState.ACTIVE).length,
+const selectActiveCount = createSelector(
+  selectItems,
+  (items) => items.filter((item) => item.state === MemoryState.ACTIVE).length
 )
 ```
 
@@ -157,7 +161,9 @@ const selectActiveCount = createSelector(selectItems, (items) =>
 
 ```typescript
 // Bad: an effect turns state into an indirect command.
-useEffect(() => { if (submitted) dispatch(saveDraft(draft)) }, [submitted])
+useEffect(() => {
+  if (submitted) dispatch(saveDraft(draft))
+}, [submitted])
 
 // Good: the event expresses the intent directly.
 const handleSubmit = () => dispatch(saveDraft(draft))
@@ -194,8 +200,56 @@ Leave touched code cleaner than you found it, but keep cleanup evidence-driven a
 
 ## Project conventions
 
+**TypeScript**
+
+- Strict mode is on in `tsconfig.app.json`. Do not turn it off.
+- Use `interface` for object shapes and `type` for unions and aliases. Name props interfaces
+  `&lt;Component&gt;Props`.
+- An `any` needs a comment saying why. Prefer `unknown` and narrowing.
+- Response types in `src/redux/types/` are the source of truth for API shapes. Update them when the
+  backend changes.
+- Import from `src/` with the `@/` alias.
+
+**React**
+
+- Functional components only.
+- Order hooks at the top of a component: state, derived state, refs, effects, callbacks.
+- Extract sub-components or hooks before a file grows past about 300 lines.
+- Route-protected pages use the existing `ProtectedRoute` pattern.
+- Use Formik + Yup for a form with validation, server submission or several fields; use plain
+  controlled state for a single trivial input. Keep the Yup schema next to the form.
+
+**Redux and Socket.IO**
+
+- Name a slice after its domain (`conversationSlice`, not `chatSlice`).
+- Side effects go in `createAsyncThunk`. Never dispatch from a reducer or selector.
+- Keep selectors next to their slice; memoize with `createSelector` when they do real work.
+- Use the typed hooks `useAppDispatch` and `useAppSelector` from `src/redux/hooks.ts`.
+- Validate inbound `/workflow` and `/assistant` events with the Zod schemas in `src/schemas/`
+  before dispatch. A new event type adds its schema first.
+- The socket connection lifecycle stays in `src/redux/middleware/`. Components dispatch actions
+  and never touch a socket.
+
+**Code**
+
 - Keep imports at module scope and group React, third-party, internal, then relative imports.
 - Store domain constants with their existing feature constants, not inside components.
-- Use typed Redux hooks and existing centralized error handling.
+- Name components in `PascalCase` and hooks `useThing`; a file name matches its default export
+  (`MyComponent.tsx`, `useMyHook.ts`). Use `SCREAMING_SNAKE_CASE` only for module-level constants.
+- Normalize errors with `getErrorMessage` in `src/utils/errorHandler.ts`.
 - Validate upload type and size before creating `FormData`.
-- Route-protected pages use the existing `ProtectedRoute` pattern.
+- Comments never reference a PR number or task ID.
+- Lint rules live in `eslint.config.js`. Do not disable a rule inline without a reason; if a rule is
+  wrong for the project, raise an issue.
+
+**Styling**
+
+- Brand tokens and the DARE gradient live in `src/index.css` (`@theme inline`) and the per-theme
+  files in `src/themes/`. Tailwind v4 has no `tailwind.config.ts` here.
+
+**Tests**
+
+- No test runner is installed. The one automated test, `scripts/test-ensemble-state.mjs`, runs the
+  ensemble reducer under `node:test` with esbuild.
+- When you add tests, unit-test pure utilities and reducers, test components with React Testing
+  Library, and mock API calls and Socket.IO at the module boundary.
