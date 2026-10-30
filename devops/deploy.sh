@@ -18,11 +18,16 @@ npm -v
 echo "Navigating to frontend directory..."
 cd ~/dare-frontend
 
+# An untracked lockfile left by older npm-install deploys would block the pull
+for f in package-lock.json docs-site/package-lock.json; do
+  git ls-files --error-unmatch "$f" >/dev/null 2>&1 || rm -f "$f"
+done
+
 echo "Pulling latest changes..."
 git pull origin main
 
 echo "Installing dependencies..."
-npm install --frozen-lockfile --no-audit --no-fund
+npm ci --no-audit --no-fund
 
 echo "Building the project..."
 npm run build

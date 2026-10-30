@@ -37,7 +37,7 @@ Run the script to deploy the frontend:
 2. **Connects to the remote server** securely using SSH.
 3. **Navigates to the frontend directory** (`~/dare-frontend`).
 4. **Pulls the latest changes** from the `main` branch.
-5. **Installs dependencies** using `npm install --frozen-lockfile`.
+5. **Installs dependencies** using `npm ci` (exact versions from the committed `package-lock.json`).
 6. **Builds the frontend application** with `npm run build`.
 7. **Clears the old deployment** from `/var/www/dare-frontend/`.
 8. **Moves the new built files** (`dist/`) to `/var/www/dare-frontend/`.
