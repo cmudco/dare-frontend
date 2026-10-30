@@ -23,20 +23,6 @@ export const filterPickerEntriesByImageGeneration = (
     isImageGeneration ? m.isImageGenerator === true : !isImageOrAudioModel(m)
   )
 
-export const filterPickerEntriesByAudioTranscription = (
-  entries: PickerModel[],
-  isAudioTranscription: boolean
-): PickerModel[] =>
-  entries.filter((m) =>
-    isAudioTranscription ? m.isAudioTranscriber === true : !m.isAudioTranscriber
-  )
-
-// Legacy aliases used by non-picker surfaces (Agents, Workflows, config).
-export const filterModelsByImageGeneration =
-  filterPickerEntriesByImageGeneration
-export const filterModelsByAudioTranscription =
-  filterPickerEntriesByAudioTranscription
-
 /**
  * Pick a dispatch id for the current mode: keep the desired one if it's
  * still in the filtered entries, otherwise require an explicit selection.
@@ -49,34 +35,29 @@ export const selectAppropriateModel = (
   return null
 }
 
-export const syncModelsWithImageGenerationState = <
-  T extends { pickerEntries: PickerModel[]; selectedModel: string | null },
->(
-  state: T,
-  imageGenerationEnabled: boolean,
+/**
+ * Re-derive the picker from the unfiltered catalog for the active mode
+ * (priority: audio > image > text), so toggling modes is lossless.
+ */
+export const syncPickerEntriesWithMode = (
+  state: Pick<
+    ConversationState,
+    | 'modelCatalog'
+    | 'pickerEntries'
+    | 'selectedModel'
+    | 'imageGenerationEnabled'
+    | 'audioTranscriptionEnabled'
+  >,
   desired?: string | null
 ): void => {
-  const filtered = filterPickerEntriesByImageGeneration(
-    state.pickerEntries,
-    imageGenerationEnabled
-  )
-  state.pickerEntries = filtered
-  state.selectedModel = selectAppropriateModel(desired, filtered)
-}
-
-export const syncModelsWithAudioTranscriptionState = <
-  T extends { pickerEntries: PickerModel[]; selectedModel: string | null },
->(
-  state: T,
-  audioTranscriptionEnabled: boolean,
-  desired?: string | null
-): void => {
-  const filtered = filterPickerEntriesByAudioTranscription(
-    state.pickerEntries,
-    audioTranscriptionEnabled
-  )
-  state.pickerEntries = filtered
-  state.selectedModel = selectAppropriateModel(desired, filtered)
+  const entries = state.audioTranscriptionEnabled
+    ? state.modelCatalog.filter((m) => m.isAudioTranscriber === true)
+    : filterPickerEntriesByImageGeneration(
+        state.modelCatalog,
+        state.imageGenerationEnabled
+      )
+  state.pickerEntries = entries
+  state.selectedModel = selectAppropriateModel(desired, entries)
 }
 
 /** Wait for the route's conversation and catalog before prompting for a model. */
