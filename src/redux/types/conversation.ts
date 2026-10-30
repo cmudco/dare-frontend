@@ -652,6 +652,8 @@ export interface ConversationState {
   // Picker catalog (uniform flat shape) plus the wallet metadata block for
   // capability toggles.
   pickerEntries: PickerModel[]
+  // Unfiltered wallet catalog; pickerEntries is derived from it per mode.
+  modelCatalog: PickerModel[]
   activeWalletMeta: WalletMeta | null
   selectedFiles: MyFile[]
   selectedEmbeddings: MyFile[]
