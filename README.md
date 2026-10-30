@@ -1,46 +1,29 @@
 # DARE Frontend
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/Node-18%2B-339933.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/Node-20%2B-339933.svg)](https://nodejs.org/)
 
 > React/TypeScript frontend for the **Dietrich Analysis Research Education (DARE) Platform**.
-
-## Table of Contents
-
-- [What is DARE?](#what-is-dare)
-- [Screenshots](#screenshots)
-- [Overview](#overview)
-- [Quick Start](#quick-start)
-- [Documentation](#documentation)
-- [Tech Stack](#tech-stack)
-- [What is included in this repo?](#what-is-included-in-this-repo)
-- [What is not included in this repo?](#what-is-not-included-in-this-repo)
-- [Stay in touch](#stay-in-touch)
-- [Acknowledgements](#acknowledgements)
-- [Contributors](#contributors)
-- [License](#license)
 
 ## What is DARE?
 
 The Dietrich Analysis Research Education (DARE) Platform is an open-source, multi-LLM research and
-conversation platform. It provides a single, vendor-agnostic interface to OpenAI, Anthropic Claude,
-Google Gemini, and self-hosted LLaMA models, with file-grounded retrieval (RAG), Model Context
-Protocol (MCP) tool integration, visual multi-step workflows, and real-time streaming. DARE is
-built for researchers and institutions that need more than a chatbot — document intelligence,
-reproducible workflows, and per-user usage tracking in one place.
+conversation platform. It gives you one vendor-agnostic interface to OpenAI, Anthropic Claude,
+Google Gemini and self-hosted LLaMA models, with file-grounded retrieval (RAG), Model Context
+Protocol (MCP) tools, visual multi-step workflows and real-time streaming.
 
-**This repository is the DARE web frontend** — the primary user interface for the platform. It
-connects to the [DARE backend](https://github.com/cmudco/dare-backend/) over REST and Socket.IO and gives users:
+DARE is built for researchers and institutions that need more than a chatbot: document
+intelligence, reproducible workflows and per-user usage tracking in one place.
 
-- **Multi-LLM chat** — streaming conversations with OpenAI, Anthropic, Google, and self-hosted LLaMA models
-- **File-grounded RAG** — upload documents and reference them in chat
-- **Visual workflow builder** — design and run multi-step AI workflows as a DAG
-- **Prompt templates** — reusable, parameterized prompts
-- **Artifacts** — rich rendering for code, diagrams, and documents emitted by the model
-- **MCP integration** — connect to Model Context Protocol servers for tool use
+**This repository is the DARE web frontend**, the main user interface for the platform. It talks to
+the [DARE backend](https://github.com/cmudco/dare-backend/) over REST and Socket.IO, and handles:
 
-> **DARE runs standalone.** The DARE frontend and backend are all you need to run the platform —
-> nothing else is required. SocraticBooks is a separate, optional platform built on top of DARE.
+- The browser UI for chat, files, workflows, research, usage and settings
+- Client state in Redux Toolkit and live streaming over Socket.IO
+- The `/docs` site in `docs-site/`, built into the same `dist/` as the app
+
+> **DARE runs standalone.** The DARE frontend and backend are all you need to run the platform.
+> Socratic Bots is a separate, optional platform built on top of DARE.
 
 ## Screenshots
 
@@ -51,11 +34,11 @@ moment you land:
   <img src="public/screenshots/dashboard.png" alt="DARE usage dashboard overview showing AI messages, conversations, files, token counts, and wallet balance" width="900" />
 </p>
 
-|                                                                                                                             |                                                                                                                            |
-| :-------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------: |
-| **Multi-LLM chat** — streaming conversations with per-conversation tools and controls<br/><img src="public/screenshots/conversation.png" alt="Conversation view with configuration panel" width="440" /> | **Workflow builder** — multi-step pipelines with conditional routing and human validation<br/><img src="public/screenshots/workflows.png" alt="Visual workflow builder canvas" width="440" /> |
-| **Research mode** — agent-gathered sources, human-reviewed before becoming knowledge<br/><img src="public/screenshots/research-mode.png" alt="Research workspace with review pipeline" width="440" /> | **Cost tracking** — a wallet per user, a ledger per message<br/><img src="public/screenshots/cost-wallet.png" alt="Cost tracking with wallet balance and transaction history" width="440" /> |
-| **Files & RAG** — upload and tag a corpus, ground answers in it<br/><img src="public/screenshots/files.png" alt="File manager with processing status" width="440" /> | **Environmental impact** — every message metered for energy, carbon, and water, with per-model breakdowns and real-world equivalents<br/><img src="public/screenshots/environmental-usage.png" alt="Environmental impact dashboard with energy, carbon, and water usage" width="440" /> |
+|                                                                                                                                                                                                          |                                                                                                                                                                                                                                                                                         |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| **Multi-LLM chat** — streaming conversations with per-conversation tools and controls<br/><img src="public/screenshots/conversation.png" alt="Conversation view with configuration panel" width="440" /> |                                              **Workflow builder** — multi-step pipelines with conditional routing and human validation<br/><img src="public/screenshots/workflows.png" alt="Visual workflow builder canvas" width="440" />                                              |
+|  **Research mode** — agent-gathered sources, human-reviewed before becoming knowledge<br/><img src="public/screenshots/research-mode.png" alt="Research workspace with review pipeline" width="440" />   |                                              **Cost tracking** — a wallet per user, a ledger per message<br/><img src="public/screenshots/cost-wallet.png" alt="Cost tracking with wallet balance and transaction history" width="440" />                                               |
+|                   **Files & RAG** — upload and tag a corpus, ground answers in it<br/><img src="public/screenshots/files.png" alt="File manager with processing status" width="440" />                   | **Environmental impact** — every message metered for energy, carbon, and water, with per-model breakdowns and real-world equivalents<br/><img src="public/screenshots/environmental-usage.png" alt="Environmental impact dashboard with energy, carbon, and water usage" width="440" /> |
 
 ## Overview
 
@@ -84,99 +67,103 @@ flowchart TB
     sockets <-->|Socket.IO| backend
 ```
 
-The frontend is a static single-page app: a Redux Toolkit store drives feature components, an Axios
-API layer talks REST to the backend, and Socket.IO middleware streams chat and workflow events. See
-[docs/architecture.md](docs/architecture.md) for the full diagram and component breakdown.
+The frontend is a static single-page app. A Redux Toolkit store drives the feature components, an
+Axios API layer calls the backend over REST, and Socket.IO middleware streams chat and workflow
+events. [docs/explanation/architecture.md](docs/explanation/architecture.md) has the full picture.
 
-## Quick Start
+## Features
 
-Get the frontend running locally in about two minutes:
+- **Multi-LLM chat.** Streaming conversations with OpenAI, Anthropic, Google and self-hosted LLaMA
+  models.
+- **File-grounded RAG.** Upload documents and reference them in chat.
+- **Visual workflow builder.** Design and run multi-step AI workflows as a DAG.
+- **Prompt templates.** Reusable, parameterized prompts.
+- **Artifacts.** Rich rendering for code, diagrams and documents the model emits.
+- **MCP integration.** Connect Model Context Protocol servers for tool use.
+
+## Quick start
+
+You need Node.js 20+ and a running [DARE backend](https://github.com/cmudco/dare-backend/) on
+`http://localhost:8000`.
 
 ```bash
 git clone https://github.com/cmudco/dare-frontend.git
 cd dare-frontend
 npm install
-cp .env.example .env      # defaults assume a backend on http://localhost:8000
-npm run dev               # Vite dev server on http://localhost:5173
+cp .env.example .env      # defaults point at a backend on http://localhost:8000
+npm run dev
 ```
 
-**Prerequisites:** Node.js 18+ and a running [DARE backend](../dare-backend/) (default `http://localhost:8000`).
-
-See **[QUICKSTART.md](QUICKSTART.md)** for the full local-setup walkthrough, and
-**[DEPLOYMENT.md](DEPLOYMENT.md)** for building and serving `dist/` in production.
-
-## Prerequisites
-
-- Node.js 18+
-- A running [DARE backend](https://github.com/cmudco/dare-backend/) (default `http://localhost:8000`)
-
-## Available Scripts
-
-| Command           | Description                            |
-| ----------------- | -------------------------------------- |
-| `npm run dev`     | Start the Vite dev server on port 5173 |
-| `npm run build`   | Produce a production bundle in `dist/` |
-| `npm run preview` | Serve the production bundle locally    |
-| `npm run lint`    | Run ESLint over `src/`                 |
-| `npm run format`  | Run Prettier                           |
+Open `http://localhost:5173`. [docs/tutorials/quickstart.md](docs/tutorials/quickstart.md) has the
+full walkthrough and every npm script; [docs/how-to/deploy.md](docs/how-to/deploy.md) covers
+production.
 
 ## Documentation
 
-| Doc                                            | What's in it                                                         |
-| ---------------------------------------------- | -------------------------------------------------------------------- |
-| [QUICKSTART.md](QUICKSTART.md)                 | Run the frontend locally — clone, install, configure, `npm run dev`  |
-| [DEPLOYMENT.md](DEPLOYMENT.md)                 | Production deployment — build and serve `dist/`, with an optional Docker recipe |
-| [docs/configuration.md](docs/configuration.md) | Every Vite environment variable, with type, default, and description |
-| [docs/architecture.md](docs/architecture.md)   | Component diagram, state management, Socket.IO integration           |
-| [CONTRIBUTING.md](CONTRIBUTING.md)             | Issues, pull requests, coding standards                              |
-| [docs/RULES.md](docs/RULES.md)                 | Project-specific conventions and constraints                         |
-| [CHANGELOG.md](CHANGELOG.md)                   | Release notes                                                        |
-| [SECURITY.md](SECURITY.md)                     | Vulnerability disclosure process                                     |
+| Kind        | Doc                                                                                | What's in it                                                    |
+| ----------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Tutorial    | [docs/tutorials/quickstart.md](docs/tutorials/quickstart.md)                       | Run the frontend locally: install, configure, `npm run dev`     |
+| How-to      | [docs/how-to/deploy.md](docs/how-to/deploy.md)                                     | Build `dist/` and serve it in production, with a Docker recipe  |
+| Reference   | [docs/reference/configuration.md](docs/reference/configuration.md)                 | Every Vite environment variable, with default and description   |
+| Explanation | [docs/explanation/architecture.md](docs/explanation/architecture.md)               | Components, state, Socket.IO and the API layer                  |
+| Explanation | [docs/explanation/document-processing.md](docs/explanation/document-processing.md) | Basic and Advanced document processing, and what Advanced costs |
+| Project     | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)                                 | Issues, branches, pull requests and commit messages             |
+| Project     | [docs/reference/rules.md](docs/reference/rules.md)                                 | Coding rules and project conventions                            |
+| Project     | [.github/SECURITY.md](.github/SECURITY.md)                                         | How to report a vulnerability                                   |
+| Project     | [AGENTS.md](AGENTS.md)                                                             | Commands and traps for AI coding agents                         |
+| Project     | [BRAND.md](BRAND.md)                                                               | Rules for using the DARE name and marks                         |
 
-## Tech Stack
+`docs-site/` renders these pages, together with the backend's, as the app's `/docs` site.
 
-- **React 18** + **TypeScript**
-- **Vite** for build and dev server
-- **Redux Toolkit** for state management
+## Tech stack
+
+- **React 18** and **TypeScript**
+- **Vite** for the dev server and build
+- **Redux Toolkit** for state
 - **React Router v6**
-- **Tailwind CSS** + **Shadcn/ui** (Radix UI primitives)
-- **Socket.IO Client** for real-time chat and workflow streaming
+- **Tailwind CSS v4** and **shadcn/ui** (Radix UI primitives)
+- **Socket.IO client** for live chat and workflow streaming
 - **Formik + Yup** for forms
 - **Zod** for runtime validation of Socket.IO events
 - **Axios** for HTTP
+- **Next.js + Fumadocs** for the docs site in `docs-site/`
 
 ## What is included in this repo?
 
-- `src/` — all application source code:
-  - `api/` — API layer (one file per domain)
-  - `components/` — UI components by feature (`Conversation/`, `WorkflowBuilder/`, `FileManager/`, `Artifacts/`, `Layout/`, and `ui/` primitives)
-  - `redux/` — store, slices, async thunks, Socket.IO middleware, types, and workflow-canvas state
-  - `pages/`, `routes/`, `schemas/` (Zod), `config/`, and `utils/`
-- `docs/` — architecture, configuration, and project rules
-- Supporting docs — `QUICKSTART.md`, `DEPLOYMENT.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `SECURITY.md`
+- `src/`, the application source:
+  - `api/`: API layer, one file per domain
+  - `components/`: UI by feature (`Conversation/`, `WorkflowBuilder/`, `FileManager/`,
+    `Artifacts/`, `Layout/`, and `ui/` primitives)
+  - `redux/`: store, slices, async thunks, Socket.IO middleware, types and workflow-canvas state
+  - `pages/`, `routes/`, `schemas/` (Zod), `config/`, `themes/` and `utils/`
+- `docs/`: tutorial, how-to, reference and explanation pages
+- `docs-site/`: the Fumadocs site that renders this repo's and the backend's docs at `/docs`
 
 ## What is not included in this repo?
 
-- [dare-backend](https://github.com/cmudco/dare-backend/) — the Django REST + Socket.IO backend this frontend depends on (run it separately)
-- [socraticbooks-frontend](https://github.com/cmudco/socraticbots-frontend/) — the SocraticBooks frontend (Private Repo for now)
-- [socraticbooks-backend](https://github.com/cmudco/socraticbots-backend/) — the SocraticBooks backend that proxies to DARE (Private Repo for now)
+- [dare-backend](https://github.com/cmudco/dare-backend/): the Django REST + Socket.IO backend this
+  frontend depends on (run it separately)
+- [socraticbots-frontend](https://github.com/cmudco/socraticbots-frontend/): the Socratic Bots
+  frontend (private repo for now)
+- [socraticbots-backend](https://github.com/cmudco/socraticbots-backend/): the Socratic Bots
+  backend that proxies to DARE (private repo for now)
 
 ## Stay in touch
 
-- **Found a bug or have a feature request?** Open an issue on the project's GitHub repository.
-- **Questions or general inquiries?** Email the project team at vks@andrew.cmu.edu.
-- **Security disclosures:** see [SECURITY.md](SECURITY.md).
+- **Bug or feature request?** Open an issue on this repository.
+- **Security issue?** Follow [.github/SECURITY.md](.github/SECURITY.md); do not open a public issue.
+- **Questions?** Email the project team at vks@andrew.cmu.edu.
 
 ## Acknowledgements
 
-DARE is an Open Forum for AI (OFAI) initiative, Carnegie Mellon University Libraries.
+DARE is an Open Forum for AI (OFAI) initiative of Carnegie Mellon University Libraries.
 
-The DARE name and marks are owned by Carnegie Mellon University. Use of the name, wordmark,
-Scotty dog mark, header lockup, and footer badge is governed by the
-[DARE Brand Guidelines & Usage Policy](BRAND_GUIDELINES.md), independently of the software license.
+Carnegie Mellon University owns the DARE name and marks. The
+[DARE Brand Guidelines & Usage Policy](BRAND.md) governs use of the name, wordmark,
+Scotty dog mark, header lockup and footer badge, separately from the software license.
 
-This software integrates with third-party APIs (Anthropic, OpenAI, Google, and others); use of those
-APIs is subject to each provider's own Terms of Service.
+DARE integrates with third-party APIs (Anthropic, OpenAI, Google and others). Each provider's own
+terms of service govern your use of its API.
 
 ## Contributors
 
@@ -209,8 +196,7 @@ DARE is built and maintained by contributors at Carnegie Mellon University and i
 
 ## License
 
-This project is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).
-The software license does not grant rights to the DARE name or marks; see the
-[DARE Brand Guidelines & Usage Policy](BRAND_GUIDELINES.md).
-
-See the [LICENSE](LICENSE) file for the full license text, or visit <https://www.gnu.org/licenses/agpl-3.0.en.html>.
+DARE is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only); the
+full text is in [LICENSE](LICENSE) and at <https://www.gnu.org/licenses/agpl-3.0.en.html>. The
+license does not grant rights to the DARE name or marks; see the
+[DARE Brand Guidelines & Usage Policy](BRAND.md).

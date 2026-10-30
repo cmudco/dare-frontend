@@ -1,0 +1,12 @@
+{
+  "title": "Explanation",
+  "defaultOpen": true,
+  "pages": [
+    "architecture",
+    "frontend-architecture",
+    "data-flows",
+    "document-processing",
+    "document-ingestion",
+    "tool-loop"
+  ]
+}

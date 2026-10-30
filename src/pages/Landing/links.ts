@@ -9,8 +9,8 @@
 export const LINKS = {
   console: '/dashboard',
   deploymentGuide: '/docs/',
-  architecture: '/docs/backend/architecture/',
-  contributing: '/docs/frontend/contributing/',
+  architecture: '/docs/explanation/architecture/',
+  contributing: '/docs/how-to/contribute-frontend/',
   brandUsage: '/docs/reference/brand/',
   repository: 'https://github.com/cmudco',
   community: 'https://github.com/cmudco',

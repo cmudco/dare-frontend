@@ -8,8 +8,11 @@ description: Verify a DARE frontend change before opening a pull request — run
 ```bash
 npm run app:build
 npm run lint
-npm run format
+git diff --name-only --diff-filter=d dev -- '*.ts' '*.tsx' '*.js' '*.jsx' | xargs npx prettier --check
 ```
+
+Never run `npm run format`: it is `prettier --write .` over the whole repo and buries the diff
+under unrelated rewrites.
 
 ## Use `app:build`, not `tsc --noEmit`
 
@@ -23,7 +26,7 @@ uses, and it is not interchangeable with `tsc --noEmit`:
 
 This has bitten this repo before. Always verify with `npm run app:build`.
 
-`npm run build` additionally builds and copies the docs site. That is what CI runs for a release,
+`npm run build` additionally builds and copies the docs site. That is what the production deploy runs,
 but it is slow; `app:build` is enough for a normal change. Run the full `build` if you touched
 `docs-site/` or anything it syncs from.
 
@@ -34,10 +37,12 @@ lint-staged (`prettier --write` and `eslint --fix`) over staged `.js/.jsx/.ts/.t
 
 Two consequences worth knowing:
 
-- Formatting is normally handled for you. Run `npm run format` by hand only if a commit was made
-  with `--no-verify`.
+- Formatting is normally handled for you. If a commit was made with `--no-verify`, format only
+  its files: `npx prettier --write <files>`.
 - The hook adds synced docs content to your commit. If a commit contains `docs-site/content/docs`
-  changes you did not write, that is the hook, not a bad merge.
+  changes you did not write, that is the hook, not a bad merge. It reads the sibling
+  `../dare-backend` checkout: with none it skips, and with an out-of-date branch it fails and
+  names the missing file.
 
 ## Branch and PR conventions
 
@@ -56,5 +61,5 @@ a layout change is rarely enough for a reviewer.
 
 ## Related
 
-- `CONTRIBUTING.md` — the full contribution guide.
-- `docs/RULES.md` — the repo's coding standards.
+- `.github/CONTRIBUTING.md` — the full contribution guide.
+- `docs/reference/rules.md` — the repo's coding standards.
