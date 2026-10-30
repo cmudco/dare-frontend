@@ -7,23 +7,25 @@ Thanks for helping. This repo is the web frontend of the DARE platform; it works
 
 ## Filing issues
 
-Search existing issues first, and check that the problem still happens on the latest `dev`. Use
-the browser's network and console panels to tell whether it is a frontend, backend or integration
-problem.
+1. **Search first.** Look through
+   [open and closed issues](https://github.com/cmudco/dare-frontend/issues?q=is%3Aissue), and check
+   that the problem still happens on the latest `dev`.
+2. **Pick the right repo.** Open the browser's network and console panels. If a request fails with
+   an error response, the problem is usually in
+   [dare-backend](https://github.com/cmudco/dare-backend/issues/new/choose); if the response is
+   right but the page is wrong, it belongs here.
+3. **Open a form.** Go to
+   [Issues → New issue](https://github.com/cmudco/dare-frontend/issues/new/choose) and choose **Bug
+   report**, **Feature request** or **Docs problem**. Each form asks for exactly what we need; fill
+   in every required field.
+4. **Redact.** Remove keys, tokens and student data from logs and screenshots.
+5. **Watch the issue.** If we need more detail, we ask there.
 
-- **Bug reports.** Include:
-  - Environment: OS, browser and version, frontend commit or deploy URL
-  - Backend: version or commit, and where it is deployed
-  - Minimal, numbered steps to reproduce
-  - Expected and actual behaviour
-  - Console and network output: the relevant errors and request/response excerpts (redact tokens)
-  - Screenshots or a recording, especially for layout, animation and interaction issues
-- **Feature requests.** Describe the user problem first and the implementation second: the
-  problem, who it affects and how often, and any constraints or non-goals.
-- **Security issues.** Do not open a public issue. Follow [SECURITY.md](/docs/reference/security).
+Before a large change, such as a new top-level page, a change to the state shape, or a new
+dependency, open a feature request with a short design sketch and wait for a reply before you write
+code.
 
-For larger changes (new top-level pages, state shape changes, new dependencies), file an issue
-before you start.
+Security vulnerabilities never go in an issue. Follow [SECURITY.md](/docs/reference/security).
 
 ## Pull requests
 
@@ -49,19 +51,15 @@ npm run lint
 npx prettier --check <the files you changed>
 ```
 
-Do not run `npm run format`; it rewrites the whole repo. Test the change in a real browser against
-a running backend, in both light and dark mode for UI changes. Follow the coding rules in
+Do not run `npm run format`; it rewrites the whole repo. Test the change in a real browser against a
+running backend, in both light and dark mode for UI changes. Follow the coding rules in
 [docs/reference/rules.md](/docs/reference/frontend-rules).
 
 ### PR description
 
-- **What.** A one-paragraph summary.
-- **Why.** Link the issue (`Closes #123`) or explain the motivation.
-- **How.** The approach, and any decision that is not obvious.
-- **Testing.** How you verified the change.
-- **Screenshots or recordings.** Required for any visible UI change. Show each relevant state
-  (light/dark, empty/populated, loading/error).
-- **Backend dependencies.** Link the backend PR if this change needs one.
+The `pull request template` asks for what, why, how, testing, screenshots
+and AI assistance, plus a checklist. Fill in every section; write "none" where nothing applies.
+Screenshots are required for any visible change.
 
 ### Review and merge
 
@@ -92,8 +90,8 @@ Add a body when the change needs explaining, and close issues with `Closes #123`
 imports it for Claude Code. Task procedures (`run-frontend`, `check`) live in
 `.agents/skills/&lt;name&gt;/SKILL.md`, and `.claude/skills/` symlinks to them; see
 `.agents/README.md`. Invoke a skill by name (`/run-frontend` in Claude Code,
-`$run-frontend` in Codex) or describe the task and let the agent pick it. Treat these files like code: if you change how the app
-is run, built or checked, update the matching skill in the same PR.
+`$run-frontend` in Codex) or describe the task and let the agent pick it. Treat these files like
+code: if you change how the app is run, built or checked, update the matching skill in the same PR.
 
 ## Getting help
 

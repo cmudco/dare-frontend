@@ -23,7 +23,7 @@ the [DARE backend](https://github.com/cmudco/dare-backend/) over REST and Socket
 - The `/docs` site in `docs-site/`, built into the same `dist/` as the app
 
 > **DARE runs standalone.** The DARE frontend and backend are all you need to run the platform.
-> SocraticBooks is a separate, optional platform built on top of DARE.
+> Socratic Bots is a separate, optional platform built on top of DARE.
 
 ## Screenshots
 
@@ -143,9 +143,9 @@ production.
 
 - [dare-backend](https://github.com/cmudco/dare-backend/): the Django REST + Socket.IO backend this
   frontend depends on (run it separately)
-- [socraticbooks-frontend](https://github.com/cmudco/socraticbots-frontend/): the SocraticBooks
+- [socraticbots-frontend](https://github.com/cmudco/socraticbots-frontend/): the Socratic Bots
   frontend (private repo for now)
-- [socraticbooks-backend](https://github.com/cmudco/socraticbots-backend/): the SocraticBooks
+- [socraticbots-backend](https://github.com/cmudco/socraticbots-backend/): the Socratic Bots
   backend that proxies to DARE (private repo for now)
 
 ## Stay in touch
