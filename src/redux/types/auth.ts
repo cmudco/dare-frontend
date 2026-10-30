@@ -17,6 +17,7 @@ export interface VerifyEmailResponse {
   access?: string
   refresh?: string
   alreadyVerified?: boolean
+  approvalRequired?: boolean
 }
 
 export interface ResetPasswordResponse {
@@ -33,4 +34,9 @@ export interface UploadProfilePictureResponse {
   avatarUrl: string
   avatarType: string
   message: string
+}
+
+export interface RegistrationResponse {
+  detail: string
+  approvalRequired: boolean
 }

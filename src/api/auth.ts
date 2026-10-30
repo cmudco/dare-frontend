@@ -3,6 +3,7 @@ import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import {
   AuthResponse,
+  RegistrationResponse,
   VerifyEmailResponse,
   Setup2FAResponse,
   ResetPasswordResponse,
@@ -14,11 +15,12 @@ export const registerUser = async (data: {
   email: string
   password1: string
   password2: string
-  accessCode: string
-}): Promise<AuthResponse> => {
-  return await baseRequest<AuthResponse>({
+  accessCode?: string
+}): Promise<RegistrationResponse> => {
+  return await baseRequest<RegistrationResponse>({
     url: 'users/api/dj-rest-auth/registration/',
     method: METHOD.POST,
+    includeAuthToken: false,
     data,
   })
 }
