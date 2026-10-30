@@ -1,12 +1,14 @@
 # **Frontend Deployment Script**
 
-This script automates the deployment of the frontend application to a remote server via SSH.
+`deploy.sh` builds and publishes the frontend on the server it runs on. It does not connect anywhere
+over SSH; run it on the target host (the production workflow, `.github/workflows/deploy.yml`, SSHes in
+and runs the same steps).
 
 ## **Setup Instructions**
 
 ### **Step 1: Copy the Deployment Script**
 
-Navigate to the project root directory and copy the script:
+On the target host, from the project root:
 
 ```bash
 cd dare-frontend/devops
@@ -15,15 +17,11 @@ cp deploy.sh ~/deploy_fe.sh
 
 ### **Step 2: Make the Script Executable**
 
-Change the file permissions to allow execution:
-
 ```bash
 chmod +x ~/deploy_fe.sh
 ```
 
 ### **Step 3: Execute the Deployment Script**
-
-Run the script to deploy the frontend:
 
 ```bash
 ~/deploy_fe.sh
@@ -33,9 +31,9 @@ Run the script to deploy the frontend:
 
 ## **What This Script Does**
 
-1. **Installs `sshpass`** (if not already installed) to facilitate SSH authentication.
-2. **Connects to the remote server** securely using SSH.
-3. **Navigates to the frontend directory** (`~/dare-frontend`).
+1. **Installs Node.js 22.16.0** under `~/.local` if it is not already there, and puts it on `PATH`.
+2. **Navigates to the frontend directory** (`~/dare-frontend`).
+3. **Removes untracked lockfiles** left by older deploys so the pull does not fail.
 4. **Pulls the latest changes** from the `main` branch.
 5. **Installs dependencies** using `npm ci` (exact versions from the committed `package-lock.json`).
 6. **Builds the frontend application** with `npm run build`.
@@ -43,6 +41,8 @@ Run the script to deploy the frontend:
 8. **Moves the new built files** (`dist/`) to `/var/www/dare-frontend/`.
 9. **Sets proper ownership and permissions** for `www-data` (webserver user).
 10. **Restarts Nginx** to apply the updates.
+
+The script uses `set -e`, so it exits non-zero on the first failing step and `0` on success.
 
 ---
 
@@ -53,9 +53,8 @@ Run the script to deploy the frontend:
   ```bash
   chmod +x ~/deploy_fe.sh
   ```
-- **SSH Authentication Issues?**
-  - Ensure the SSH credentials (user, host, and password) are correct.
-  - If using an SSH key instead of a password, modify the script to use `ssh -i /path/to/private_key`.
+- **`sudo` prompts or fails?**  
+  The deploying user needs passwordless `sudo` for `rm`, `mv`, `chown`, `chmod`, and `systemctl restart nginx`.
 - **Nginx Not Restarting?**  
   Check for errors in the Nginx logs:
   ```bash
