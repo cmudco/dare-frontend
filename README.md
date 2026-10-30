@@ -111,7 +111,7 @@ production.
 | Project     | [docs/reference/rules.md](docs/reference/rules.md)                                 | Coding rules and project conventions                            |
 | Project     | [.github/SECURITY.md](.github/SECURITY.md)                                         | How to report a vulnerability                                   |
 | Project     | [AGENTS.md](AGENTS.md)                                                             | Commands and traps for AI coding agents                         |
-| Project     | [BRAND_GUIDELINES.md](BRAND_GUIDELINES.md)                                         | Rules for using the DARE name and marks                         |
+| Project     | [BRAND.md](BRAND.md)                                                               | Rules for using the DARE name and marks                         |
 
 `docs-site/` renders these pages, together with the backend's, as the app's `/docs` site.
 
@@ -159,7 +159,7 @@ production.
 DARE is an Open Forum for AI (OFAI) initiative of Carnegie Mellon University Libraries.
 
 Carnegie Mellon University owns the DARE name and marks. The
-[DARE Brand Guidelines & Usage Policy](BRAND_GUIDELINES.md) governs use of the name, wordmark,
+[DARE Brand Guidelines & Usage Policy](BRAND.md) governs use of the name, wordmark,
 Scotty dog mark, header lockup and footer badge, separately from the software license.
 
 DARE integrates with third-party APIs (Anthropic, OpenAI, Google and others). Each provider's own
@@ -199,4 +199,4 @@ DARE is built and maintained by contributors at Carnegie Mellon University and i
 DARE is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only); the
 full text is in [LICENSE](LICENSE) and at <https://www.gnu.org/licenses/agpl-3.0.en.html>. The
 license does not grant rights to the DARE name or marks; see the
-[DARE Brand Guidelines & Usage Policy](BRAND_GUIDELINES.md).
+[DARE Brand Guidelines & Usage Policy](BRAND.md).

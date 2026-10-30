@@ -210,7 +210,7 @@ const pages = [
     description: 'How a chat turn calls tools across rounds and providers.',
   },
   {
-    from: path.join(frontendRoot, 'BRAND_GUIDELINES.md'),
+    from: path.join(frontendRoot, 'BRAND.md'),
     to: 'reference/brand.mdx',
     title: 'DARE Brand Guidelines & Usage Policy',
     description:
