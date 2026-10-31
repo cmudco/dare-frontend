@@ -12,6 +12,11 @@ export interface ErrorResponse {
   message: string
 }
 
+export interface EmailVerificationSentResponse {
+  detail: string
+  emailDeliveryConfigured: boolean
+}
+
 export interface VerifyEmailResponse {
   detail: string
   access?: string
