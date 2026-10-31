@@ -137,10 +137,8 @@ const userSlice = createSlice({
         state.loading = true
         state.error = null
       })
-      .addCase(userRegister.fulfilled, (state, action) => {
+      .addCase(userRegister.fulfilled, (state) => {
         state.loading = false
-        state.user = action.payload.user
-        state.isAuthenticated = true
         state.error = null
       })
       .addCase(userRegister.rejected, (state, action) => {

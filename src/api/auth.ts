@@ -3,6 +3,7 @@ import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
 import {
   AuthResponse,
+  EmailVerificationSentResponse,
   VerifyEmailResponse,
   Setup2FAResponse,
   ResetPasswordResponse,
@@ -15,8 +16,8 @@ export const registerUser = async (data: {
   password1: string
   password2: string
   accessCode: string
-}): Promise<AuthResponse> => {
-  return await baseRequest<AuthResponse>({
+}): Promise<EmailVerificationSentResponse> => {
+  return await baseRequest<EmailVerificationSentResponse>({
     url: 'users/api/dj-rest-auth/registration/',
     method: METHOD.POST,
     data,
@@ -95,8 +96,8 @@ export const verifyCodeUser = async (data: {
 
 export const resendVerificationEmail = async (data: {
   email: string
-}): Promise<void> => {
-  return await baseRequest<void>({
+}): Promise<EmailVerificationSentResponse> => {
+  return await baseRequest<EmailVerificationSentResponse>({
     url: 'users/api/dj-rest-auth/registration/resend-email/',
     method: METHOD.POST,
     data,
