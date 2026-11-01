@@ -26,6 +26,7 @@ import { resolveMediaUrl } from '@/utils/files'
 import { fetchFileBlobAPI } from '@/api/files'
 import { triggerBrowserDownload } from '@/utils/download'
 import { linkSandboxFiles } from '@/utils/markdown'
+import { formatUsdPrecise } from '@/utils/wallets'
 import { estimatedUsageFields, sumUsage } from '../../utils/usageDetails'
 import { RootState } from '@/redux/store'
 import { PencilIcon } from '@heroicons/react/20/solid'
@@ -690,8 +691,8 @@ const Message: React.FC<MessageProps> = ({
                     : undefined
                 }
               >
-                {cachedInputTokens > 0 && <DatabaseZap className='h-3 w-3' />}$
-                {parseFloat(message.cost).toFixed(4)}
+                {cachedInputTokens > 0 && <DatabaseZap className='h-3 w-3' />}
+                {formatUsdPrecise(message.cost)}
               </span>
             )}
             {usageIsEstimated && (

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/drawer'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { formatUsdPrecise } from '@/utils/wallets'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   X,
@@ -96,11 +97,6 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
       return llm ? llm.name : `Model ${llmId}`
     }
     return litellmModelName ?? 'N/A'
-  }
-
-  const formatCost = (cost?: string | null) => {
-    if (!cost) return '0.0000'
-    return parseFloat(cost).toFixed(4)
   }
 
   const formatDate = (dateString: string) => {
@@ -405,7 +401,7 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                         <div className='flex items-center gap-2'>
                           <Coins className='h-4 w-4 text-yellow-500' />
                           <span className='font-mono text-lg font-semibold text-green-600'>
-                            ${formatCost(message.cost)}
+                            {formatUsdPrecise(message.cost ?? '0')}
                           </span>
                         </div>
                       </div>
