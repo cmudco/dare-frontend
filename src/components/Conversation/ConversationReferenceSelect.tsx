@@ -42,6 +42,7 @@ import { MEMORY_PATH } from '@/routes/paths'
 const ConversationReferenceSelect: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const enableMemory = useFeatureFlag('enableMemory')
+  const summariesEnabled = useFeatureFlag('conversationSummaries')
   const conversations = useSelector(
     (state: RootState) => state.conversation.conversations
   )
@@ -439,7 +440,9 @@ const ConversationReferenceSelect: React.FC = () => {
               <p className='text-xs text-muted-foreground'>
                 {activeTab === 'references'
                   ? 'Referenced conversations provide extra context for the current chat.'
-                  : 'Conversation summaries refresh after every 5 completed assistant responses in a conversation.'}
+                  : summariesEnabled
+                    ? 'Conversation summaries refresh after every 5 completed assistant responses in a conversation.'
+                    : 'New conversation summaries are not being created on this server. Existing summaries can still be used.'}
               </p>
             </div>
           </div>
