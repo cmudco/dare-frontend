@@ -38,7 +38,10 @@ const RegistrationScreen: React.FC = () => {
         return
       }
       navigate('/confirmation', {
-        state: { email: values.email, password: values.password1 },
+        state: {
+          email: values.email,
+          emailDeliveryConfigured: resultAction.payload.emailDeliveryConfigured,
+        },
       })
     } catch (err) {
       console.error(err)
