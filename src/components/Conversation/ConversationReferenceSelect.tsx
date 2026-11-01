@@ -432,7 +432,10 @@ const ConversationReferenceSelect: React.FC = () => {
                     </div>
                   </div>
                 )}
-                <ConversationSummarySelect searchQuery={searchQuery} />
+                <ConversationSummarySelect
+                  searchQuery={searchQuery}
+                  summariesEnabled={summariesEnabled}
+                />
               </TabsContent>
             </Tabs>
 
