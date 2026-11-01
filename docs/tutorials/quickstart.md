@@ -5,8 +5,7 @@ backend. To deploy to a server, see [docs/how-to/deploy.md](../how-to/deploy.md)
 
 ## Prerequisites
 
-- **Node.js 20+.** Tailwind's native engine needs 20; the full `npm run build` needs 22 because it
-  also builds the docs site.
+- **Node.js 22+.** The full `npm run build` also builds the docs site, which needs 22.
 - **A running DARE backend** on `http://localhost:8000` (see [dare-backend](../../../dare-backend/)).
   To run the whole platform at once, follow the backend's
   [getting started tutorial](../../../dare-backend/docs/tutorials/getting-started.md).

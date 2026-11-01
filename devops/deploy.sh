@@ -46,6 +46,3 @@ echo "Restarting Nginx..."
 sudo systemctl restart nginx
 
 echo "Frontend deployment successful!"
-EOF
-
-echo "Deployment script completed successfully!"

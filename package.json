@@ -128,5 +128,8 @@
   "main": "eslint.config.js",
   "keywords": [],
   "author": "",
-  "license": "AGPL-3.0-only"
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  }
 }
