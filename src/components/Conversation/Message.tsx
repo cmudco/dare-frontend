@@ -25,7 +25,6 @@ import clsx from 'clsx'
 import { resolveMediaUrl } from '@/utils/files'
 import { fetchFileBlobAPI } from '@/api/files'
 import { triggerBrowserDownload } from '@/utils/download'
-import { linkSandboxFiles } from '@/utils/markdown'
 import { formatUsdPrecise } from '@/utils/wallets'
 import { estimatedUsageFields, sumUsage } from '../../utils/usageDetails'
 import { RootState } from '@/redux/store'
@@ -271,17 +270,10 @@ const Message: React.FC<MessageProps> = ({
     const { blob } = await fetchFileBlobAPI(file.id)
     triggerBrowserDownload(blob, file.name)
   }
-  const sandboxFileUrls = new Map(
-    (message.files ?? [])
-      .filter((file) => file.isGenerated)
-      .map((file) => [file.name, resolveMediaUrl(file.file)])
-  )
-  const displayMessage = linkSandboxFiles(
+  const displayMessage =
     showOriginal && message.originalMessage
       ? message.originalMessage
-      : message.message,
-    sandboxFileUrls
-  )
+      : message.message
   const buttonLabel = message.isRegenerated
     ? showOriginal
       ? 'Regenerated'
