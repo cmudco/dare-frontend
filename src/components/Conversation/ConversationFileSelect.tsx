@@ -438,40 +438,40 @@ const ConversationFileSelect: React.FC = () => {
                 )
               }
             >
-              <TabsList className='grid w-full grid-cols-6 border-border bg-muted/50'>
+              <TabsList className='flex w-full overflow-x-auto border-border bg-muted/50'>
                 <TabsTrigger
                   value='embeddings'
-                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
+                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Embeddings
                 </TabsTrigger>
                 <TabsTrigger
                   value='files'
-                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
+                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Files
                 </TabsTrigger>
                 <TabsTrigger
                   value='media'
-                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
+                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Media
                 </TabsTrigger>
                 <TabsTrigger
                   value='tags'
-                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
+                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Tags
                 </TabsTrigger>
                 <TabsTrigger
                   value='folders'
-                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
+                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Folders
                 </TabsTrigger>
                 <TabsTrigger
                   value='libraries'
-                  className='text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
+                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Libraries
                 </TabsTrigger>
