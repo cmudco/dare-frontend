@@ -4,6 +4,7 @@ import { METHOD } from '@/utils/constants/requests'
 import {
   AuthResponse,
   RegistrationResponse,
+  EmailVerificationSentResponse,
   VerifyEmailResponse,
   Setup2FAResponse,
   ResetPasswordResponse,
@@ -97,8 +98,8 @@ export const verifyCodeUser = async (data: {
 
 export const resendVerificationEmail = async (data: {
   email: string
-}): Promise<void> => {
-  return await baseRequest<void>({
+}): Promise<EmailVerificationSentResponse> => {
+  return await baseRequest<EmailVerificationSentResponse>({
     url: 'users/api/dj-rest-auth/registration/resend-email/',
     method: METHOD.POST,
     data,

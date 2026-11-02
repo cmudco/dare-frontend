@@ -18,9 +18,14 @@ import {
   Info,
   Trash2,
   DatabaseZap,
+  Download,
+  ExternalLink,
 } from 'lucide-react'
 import clsx from 'clsx'
 import { resolveMediaUrl } from '@/utils/files'
+import { fetchFileBlobAPI } from '@/api/files'
+import { triggerBrowserDownload } from '@/utils/download'
+import { formatUsdPrecise } from '@/utils/wallets'
 import { estimatedUsageFields, sumUsage } from '../../utils/usageDetails'
 import { RootState } from '@/redux/store'
 import { PencilIcon } from '@heroicons/react/20/solid'
@@ -261,6 +266,10 @@ const Message: React.FC<MessageProps> = ({
       />
     ) : null
 
+  const downloadFile = async (file: { id: number; name: string }) => {
+    const { blob } = await fetchFileBlobAPI(file.id)
+    triggerBrowserDownload(blob, file.name)
+  }
   const displayMessage =
     showOriginal && message.originalMessage
       ? message.originalMessage
@@ -463,11 +472,36 @@ const Message: React.FC<MessageProps> = ({
                     <>
                       {generatedImages.map((file) => (
                         <div key={file.id} className='not-prose mt-4'>
-                          <img
-                            src={resolveMediaUrl(file.file)}
-                            alt={file.generationPrompt || file.name}
-                            className='max-w-full rounded-lg shadow-md'
-                          />
+                          <a
+                            href={resolveMediaUrl(file.file)}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                          >
+                            <img
+                              src={resolveMediaUrl(file.file)}
+                              alt={file.generationPrompt || file.name}
+                              className='max-w-full rounded-lg shadow-md'
+                            />
+                          </a>
+                          <div className='mt-2 flex gap-3 text-xs'>
+                            <a
+                              href={resolveMediaUrl(file.file)}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='flex items-center gap-1 text-muted-foreground hover:text-foreground'
+                            >
+                              <ExternalLink className='h-3.5 w-3.5' />
+                              Open
+                            </a>
+                            <button
+                              type='button'
+                              onClick={() => downloadFile(file)}
+                              className='flex items-center gap-1 text-muted-foreground hover:text-foreground'
+                            >
+                              <Download className='h-3.5 w-3.5' />
+                              Download
+                            </button>
+                          </div>
                           <div className='mt-2 space-y-1 text-xs text-muted-foreground'>
                             {file.generationPrompt && (
                               <p>
@@ -649,8 +683,8 @@ const Message: React.FC<MessageProps> = ({
                     : undefined
                 }
               >
-                {cachedInputTokens > 0 && <DatabaseZap className='h-3 w-3' />}$
-                {parseFloat(message.cost).toFixed(4)}
+                {cachedInputTokens > 0 && <DatabaseZap className='h-3 w-3' />}
+                {formatUsdPrecise(message.cost)}
               </span>
             )}
             {usageIsEstimated && (

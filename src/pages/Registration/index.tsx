@@ -42,7 +42,11 @@ const RegistrationScreen: React.FC = () => {
           ? '/signup-pending'
           : '/confirmation',
         {
-          state: { email: values.email },
+          state: {
+            email: values.email,
+            emailDeliveryConfigured:
+              resultAction.payload.emailDeliveryConfigured,
+          },
         }
       )
     } catch (err) {

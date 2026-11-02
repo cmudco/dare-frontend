@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AuthCard from '@/components/Auth/AuthCard'
 import AuthFormFooter from '@/components/Auth/AuthFormFooter'
+import ResendVerificationNotice from '@/components/Auth/ResendVerificationNotice'
+import { EmailVerificationSentResponse } from '@/redux/types/auth'
 import { useAppDispatch } from '@/redux/hooks'
 import { resendVerification } from '@/redux/asyncThunks/user'
 
@@ -11,15 +13,19 @@ const SignupPendingScreen = () => {
   const dispatch = useAppDispatch()
   const email =
     typeof location.state?.email === 'string' ? location.state.email : undefined
-  const [requested, setRequested] = useState(false)
+  const [resendResult, setResendResult] =
+    useState<EmailVerificationSentResponse | null>(null)
+  const emailDeliveryConfigured =
+    resendResult?.emailDeliveryConfigured ??
+    location.state?.emailDeliveryConfigured ??
+    false
   const [sending, setSending] = useState(false)
 
   const resend = async () => {
     if (!email || sending) return
     setSending(true)
     try {
-      await dispatch(resendVerification({ email })).unwrap()
-      setRequested(true)
+      setResendResult(await dispatch(resendVerification({ email })).unwrap())
     } catch {
       // The existing auth slice displays the request error in AuthCard.
     } finally {
@@ -30,7 +36,11 @@ const SignupPendingScreen = () => {
   return (
     <AuthCard
       title='Account awaiting approval'
-      subtitle='Your account has been created. Follow the email verification link and wait for an administrator to approve your request. Neither step alone enables sign-in. We will email you when your account is ready.'
+      subtitle={
+        emailDeliveryConfigured
+          ? 'Your account has been created. Check your inbox for the verification link and wait for administrator approval. Both steps are required before you can sign in.'
+          : 'Your account has been created and needs administrator approval and email verification. This server is not configured to send verification emails. Contact your deployment administrator for help.'
+      }
       inputs={[]}
       formikConfig={{ initialValues: {}, onSubmit: () => navigate('/login') }}
       buttonText='Back to login'
@@ -42,12 +52,7 @@ const SignupPendingScreen = () => {
               routeText={sending ? 'Requesting…' : 'Resend'}
               onClick={resend}
             />
-            {requested && (
-              <p className='mt-3 text-sm text-muted-foreground'>
-                Verification requested again. Contact your deployment
-                administrator if it does not arrive.
-              </p>
-            )}
+            {resendResult && <ResendVerificationNotice result={resendResult} />}
           </>
         ) : undefined
       }

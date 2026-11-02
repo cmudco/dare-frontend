@@ -62,7 +62,7 @@ const YourBackgroundModelCard = ({
             {litellmKey.backgroundModel ||
               'None chosen: the platform models run on your DARE wallet.'}
           </span>
-          {wallet && (
+          {wallet?.source === 'USER' ? (
             <Button
               variant='outline'
               size='sm'
@@ -70,9 +70,13 @@ const YourBackgroundModelCard = ({
             >
               Change
             </Button>
+          ) : (
+            <span className='text-xs text-muted-foreground'>
+              Set by your administrator
+            </span>
           )}
         </div>
-        {wallet && (
+        {wallet?.source === 'USER' && (
           <EditLiteLLMBackgroundModelModal
             isOpen={editingKey}
             onClose={() => setEditingKey(false)}

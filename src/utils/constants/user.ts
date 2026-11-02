@@ -19,3 +19,6 @@ export enum AvatarType {
   PRESET = 'preset',
   CUSTOM = 'custom',
 }
+
+export const EMAIL_DELIVERY_UNAVAILABLE_MESSAGE =
+  "This server isn't set up to send verification emails. Contact your deployment administrator for help."

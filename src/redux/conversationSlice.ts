@@ -64,9 +64,8 @@ import { Tag } from './types/tags'
 import { SharedLibrary } from './types/library'
 import { Prompt } from './types/prompt'
 import {
-  selectAppropriateModel,
-  syncModelsWithImageGenerationState,
-  syncModelsWithAudioTranscriptionState,
+  filterPickerEntriesByImageGeneration,
+  syncPickerEntriesWithMode,
 } from './utils/modelSyncHelpers'
 import { userLogin, userLogout } from './asyncThunks/user'
 import { ProjectSourceMode } from '@/utils/constants/project'
@@ -90,15 +89,7 @@ function setActiveConversation(
 
     const desired = conversation.selectedModelRef ?? null
 
-    // Sync picker entries based on the active mode (priority: audio >
-    // image > text).
-    if (conversation.audioTranscriptionEnabled) {
-      syncModelsWithAudioTranscriptionState(state, true, desired)
-    } else if (conversation.imageGenerationEnabled) {
-      syncModelsWithImageGenerationState(state, true, desired)
-    } else {
-      syncModelsWithImageGenerationState(state, false, desired)
-    }
+    syncPickerEntriesWithMode(state, desired)
     // Preserve the saved choice until the catalog arrives and validates it.
     if (!state.pickerEntries.length) state.selectedModel = desired
   }
@@ -360,12 +351,7 @@ const conversationSlice = createSlice({
         state.activeConversation.imageGenerationEnabled = action.payload
       }
 
-      // Sync available models and auto-select appropriate model
-      syncModelsWithImageGenerationState(
-        state,
-        action.payload,
-        state.selectedModel
-      )
+      syncPickerEntriesWithMode(state, state.selectedModel)
     },
     updateSelectedMcpServers(state, action: PayloadAction<number[]>) {
       if (state.activeConversation) {
@@ -394,12 +380,7 @@ const conversationSlice = createSlice({
         state.activeConversation.audioTranscriptionEnabled = action.payload
       }
 
-      // Sync available models and auto-select appropriate model
-      syncModelsWithAudioTranscriptionState(
-        state,
-        action.payload,
-        state.selectedModel
-      )
+      syncPickerEntriesWithMode(state, state.selectedModel)
     },
     updateAudioTranscriptionSettings(
       state,
@@ -480,7 +461,7 @@ const conversationSlice = createSlice({
       state.artifactsEnabled = false
 
       // Reset to text models — no auto-select (conversationModel is undefined → null)
-      syncModelsWithImageGenerationState(state, false)
+      syncPickerEntriesWithMode(state)
     },
     updateConversationOrder(state, action: PayloadAction<string[]>) {
       const orderedConversations: Conversation[] = []
@@ -633,27 +614,21 @@ const conversationSlice = createSlice({
         ) => {
           state.modelCatalogStatus = 'succeeded'
           state.loading = false
-          // Strip image-gen / audio-transcription models from the chat
-          // picker (they belong on dedicated toggles). LiteLLM entries
-          // already have those flags forced to false on the BE.
-          state.pickerEntries = action.payload.models.filter(
-            (m) => !m.isImageGenerator && !m.isAudioTranscriber
-          )
+          state.modelCatalog = action.payload.models
+          syncPickerEntriesWithMode(state, state.selectedModel)
           state.activeWalletMeta = action.payload.wallet
+          const chatModels = filterPickerEntriesByImageGeneration(
+            state.modelCatalog,
+            false
+          )
           const seated = state.ensemble.responderIds.map((id) =>
-            state.pickerEntries.some((entry) => entry.id === id)
+            chatModels.some((entry) => entry.id === id)
           )
           state.ensemble.responderIds = state.ensemble.responderIds.filter(
             (_, i) => seated[i]
           )
           state.ensemble.briefs.angles = state.ensemble.briefs.angles.filter(
             (_, i) => seated[i] ?? true
-          )
-          // Reconcile selectedModel: if the previously selected id is no
-          // longer in the wallet catalog, require a new explicit choice.
-          state.selectedModel = selectAppropriateModel(
-            state.selectedModel,
-            state.pickerEntries
           )
           const selectedEntry = state.pickerEntries.find(
             (entry) => entry.id === state.selectedModel

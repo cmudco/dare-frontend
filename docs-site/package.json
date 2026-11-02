@@ -31,6 +31,9 @@
     "tailwindcss": "4.3.0",
     "typescript": "6.0.3"
   },
+  "overrides": {
+    "mdast-util-to-markdown": "2.1.2"
+  },
   "engines": {
     "node": ">=22"
   }

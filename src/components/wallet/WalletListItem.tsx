@@ -38,6 +38,7 @@ import { toast } from '@/utils/toast'
 import {
   formatBalanceOfCeiling,
   formatUsd,
+  formatUsdPrecise,
   needsBackgroundModel,
 } from '@/utils/wallets'
 
@@ -262,9 +263,7 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
               </span>
             ) : (
               wallet.status.spend && (
-                <span>
-                  Est. cost ${parseFloat(wallet.status.spend).toFixed(4)}
-                </span>
+                <span>Est. cost {formatUsdPrecise(wallet.status.spend)}</span>
               )
             ))}
           {wallet.expiresAt && (

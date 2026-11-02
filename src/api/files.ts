@@ -418,3 +418,12 @@ export const searchFileContentsAPI = async (
     method: METHOD.GET,
     params: { q: query },
   })
+
+export const fetchFileBlobAPI = async (
+  fileId: number
+): Promise<{ blob: Blob; filename: string }> =>
+  await baseRequest({
+    url: `api/files/${fileId}/view/`,
+    method: METHOD.GET,
+    responseType: 'blob',
+  })

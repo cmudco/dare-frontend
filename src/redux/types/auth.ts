@@ -12,6 +12,11 @@ export interface ErrorResponse {
   message: string
 }
 
+export interface EmailVerificationSentResponse {
+  detail: string
+  emailDeliveryConfigured: boolean
+}
+
 export interface VerifyEmailResponse {
   detail: string
   access?: string
@@ -36,7 +41,6 @@ export interface UploadProfilePictureResponse {
   message: string
 }
 
-export interface RegistrationResponse {
-  detail: string
+export interface RegistrationResponse extends EmailVerificationSentResponse {
   approvalRequired: boolean
 }

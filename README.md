@@ -1,7 +1,7 @@
 # DARE Frontend
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/Node-20%2B-339933.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/Node-22%2B-339933.svg)](https://nodejs.org/)
 
 > React/TypeScript frontend for the **Dietrich Analysis Research Education (DARE) Platform**.
 
@@ -83,7 +83,7 @@ events. [docs/explanation/architecture.md](docs/explanation/architecture.md) has
 
 ## Quick start
 
-You need Node.js 20+ and a running [DARE backend](https://github.com/cmudco/dare-backend/) on
+You need Node.js 22+ and a running [DARE backend](https://github.com/cmudco/dare-backend/) on
 `http://localhost:8000`.
 
 ```bash

@@ -214,24 +214,14 @@ const FileViewerModal = ({
     }
 
     return (
-      <div className='relative h-full'>
-        {/* Action buttons */}
-        <div className='absolute top-4 right-4 z-10 flex space-x-2'>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={openInNewTab}
-            className='bg-card/90 backdrop-blur-xs'
-          >
+      <div className='flex h-full flex-col gap-2'>
+        {/* Action buttons sit above the frame so they never cover its text. */}
+        <div className='flex justify-end gap-2'>
+          <Button variant='outline' size='sm' onClick={openInNewTab}>
             <ExternalLink className='mr-2 h-4 w-4' />
             Open in New Tab
           </Button>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={downloadFile}
-            className='bg-card/90 backdrop-blur-xs'
-          >
+          <Button variant='outline' size='sm' onClick={downloadFile}>
             <Download className='mr-2 h-4 w-4' />
             Download
           </Button>
@@ -243,7 +233,7 @@ const FileViewerModal = ({
           src={page ? `${blobUrl}#page=${page}` : blobUrl}
           // Chrome refuses to render PDFs in a sandboxed frame.
           sandbox={blob?.type === 'application/pdf' ? undefined : ''}
-          className='h-full w-full rounded-md border-0'
+          className='w-full flex-1 rounded-md border-0'
           title={fileName}
           onLoad={handleIframeLoad}
           onError={handleIframeError}

@@ -15,7 +15,11 @@ describe('signup state', () => {
       const state = reducer(
         undefined,
         userRegister.fulfilled(
-          { detail: 'Check your email.', approvalRequired },
+          {
+            detail: 'Check your email.',
+            approvalRequired,
+            emailDeliveryConfigured: true,
+          },
           'one',
           registration
         )

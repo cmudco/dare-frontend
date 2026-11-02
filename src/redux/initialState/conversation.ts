@@ -27,6 +27,7 @@ export const initialState: ConversationState = {
     briefs: EMPTY_BRIEFS,
   },
   pickerEntries: [],
+  modelCatalog: [],
   activeWalletMeta: null,
   selectedFiles: [] as MyFile[],
   selectedEmbeddings: [] as MyFile[],
