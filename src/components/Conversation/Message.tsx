@@ -25,6 +25,7 @@ import clsx from 'clsx'
 import { resolveMediaUrl } from '@/utils/files'
 import { fetchFileBlobAPI } from '@/api/files'
 import { triggerBrowserDownload } from '@/utils/download'
+import { linkSandboxFiles } from '@/utils/markdown'
 import { formatUsdPrecise } from '@/utils/wallets'
 import { estimatedUsageFields, sumUsage } from '../../utils/usageDetails'
 import { RootState } from '@/redux/store'
@@ -270,10 +271,29 @@ const Message: React.FC<MessageProps> = ({
     const { blob } = await fetchFileBlobAPI(file.id)
     triggerBrowserDownload(blob, file.name)
   }
-  const displayMessage =
+  const sandboxFileUrls = new Map(
+    (message.files ?? [])
+      .filter((file) => file.isGenerated)
+      .map((file) => [file.name, resolveMediaUrl(file.file)])
+  )
+  // Chart links in the reply text download like the Download button.
+  const downloadSandboxLink = (event: React.MouseEvent) => {
+    const href = (event.target as HTMLElement).closest('a')?.href
+    const file = (message.files ?? []).find(
+      (f) =>
+        f.isGenerated &&
+        href === new URL(resolveMediaUrl(f.file), window.location.href).href
+    )
+    if (!file) return
+    event.preventDefault()
+    void downloadFile(file)
+  }
+  const displayMessage = linkSandboxFiles(
     showOriginal && message.originalMessage
       ? message.originalMessage
-      : message.message
+      : message.message,
+    sandboxFileUrls
+  )
   const buttonLabel = message.isRegenerated
     ? showOriginal
       ? 'Regenerated'
@@ -389,15 +409,17 @@ const Message: React.FC<MessageProps> = ({
               className={`prose ${getFontSizeClasses()} max-w-full text-foreground focus:outline-hidden dark:prose-invert prose-code:bg-transparent prose-code:p-0 prose-code:shadow-none prose-pre:bg-transparent prose-pre:p-0 prose-pre:shadow-none`}
               style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
             >
-              <Markdown
-                content={displayMessage}
-                streaming={message.streaming}
-                fenceAction={canOpenInEditor ? renderOpenInEditor : undefined}
-                renderArtifactCard={
-                  canUseArtifacts ? renderArtifactCard : undefined
-                }
-                runnable={!isSenderMessage(message)}
-              />
+              <div className='contents' onClickCapture={downloadSandboxLink}>
+                <Markdown
+                  content={displayMessage}
+                  streaming={message.streaming}
+                  fenceAction={canOpenInEditor ? renderOpenInEditor : undefined}
+                  renderArtifactCard={
+                    canUseArtifacts ? renderArtifactCard : undefined
+                  }
+                  runnable={!isSenderMessage(message)}
+                />
+              </div>
 
               {/* User Uploaded Images Display */}
               {(() => {
