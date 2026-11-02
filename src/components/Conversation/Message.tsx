@@ -19,10 +19,9 @@ import {
   Trash2,
   DatabaseZap,
   Download,
-  ExternalLink,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { resolveMediaUrl } from '@/utils/files'
+import FileImage from './FileImage'
 import { fetchFileBlobAPI } from '@/api/files'
 import { triggerBrowserDownload } from '@/utils/download'
 import { linkSandboxFiles } from '@/utils/markdown'
@@ -50,6 +49,8 @@ import ThinkingSummary from './ThinkingSummary'
 import { DeliberationPanel } from './Deliberation/DeliberationPanel'
 import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { debugLog } from '@/utils/debugLogger'
+
+const SANDBOX_FILE_ANCHOR = 'sandbox-file-'
 
 const Message: React.FC<MessageProps> = ({
   message,
@@ -274,16 +275,15 @@ const Message: React.FC<MessageProps> = ({
   const sandboxFileUrls = new Map(
     (message.files ?? [])
       .filter((file) => file.isGenerated)
-      .map((file) => [file.name, resolveMediaUrl(file.file)])
+      .map((file) => [file.name, `#${SANDBOX_FILE_ANCHOR}${file.id}`])
   )
   // Chart links in the reply text download like the Download button.
   const downloadSandboxLink = (event: React.MouseEvent) => {
-    const href = (event.target as HTMLElement).closest('a')?.href
-    const file = (message.files ?? []).find(
-      (f) =>
-        f.isGenerated &&
-        href === new URL(resolveMediaUrl(f.file), window.location.href).href
-    )
+    const href = (event.target as HTMLElement).closest('a')?.href ?? ''
+    const id = href.split(`#${SANDBOX_FILE_ANCHOR}`)[1]
+    const file = id
+      ? (message.files ?? []).find((f) => f.isGenerated && f.id === Number(id))
+      : undefined
     if (!file) return
     event.preventDefault()
     void downloadFile(file)
@@ -435,8 +435,8 @@ const Message: React.FC<MessageProps> = ({
                           key={file.id}
                           className='relative max-w-full rounded-lg border border-border'
                         >
-                          <img
-                            src={resolveMediaUrl(file.file)}
+                          <FileImage
+                            fileId={file.id}
                             alt={file.name}
                             className='max-h-64 max-w-full rounded-lg object-contain sm:max-w-xs'
                           />
@@ -454,8 +454,8 @@ const Message: React.FC<MessageProps> = ({
                 if (message.generatedImage) {
                   return (
                     <div className='not-prose mt-4'>
-                      <img
-                        src={resolveMediaUrl(message.generatedImage.fileUrl)}
+                      <FileImage
+                        fileId={message.generatedImage.fileId}
                         alt={message.generatedImage.prompt}
                         className='max-w-full rounded-lg shadow-md'
                       />
@@ -494,27 +494,12 @@ const Message: React.FC<MessageProps> = ({
                     <>
                       {generatedImages.map((file) => (
                         <div key={file.id} className='not-prose mt-4'>
-                          <a
-                            href={resolveMediaUrl(file.file)}
-                            target='_blank'
-                            rel='noopener noreferrer'
+                          <FileImage
+                            fileId={file.id}
+                            alt={file.generationPrompt || file.name}
+                            className='max-w-full rounded-lg shadow-md'
+                            openable
                           >
-                            <img
-                              src={resolveMediaUrl(file.file)}
-                              alt={file.generationPrompt || file.name}
-                              className='max-w-full rounded-lg shadow-md'
-                            />
-                          </a>
-                          <div className='mt-2 flex gap-3 text-xs'>
-                            <a
-                              href={resolveMediaUrl(file.file)}
-                              target='_blank'
-                              rel='noopener noreferrer'
-                              className='flex items-center gap-1 text-muted-foreground hover:text-foreground'
-                            >
-                              <ExternalLink className='h-3.5 w-3.5' />
-                              Open
-                            </a>
                             <button
                               type='button'
                               onClick={() => downloadFile(file)}
@@ -523,7 +508,7 @@ const Message: React.FC<MessageProps> = ({
                               <Download className='h-3.5 w-3.5' />
                               Download
                             </button>
-                          </div>
+                          </FileImage>
                           <div className='mt-2 space-y-1 text-xs text-muted-foreground'>
                             {file.generationPrompt && (
                               <p>
