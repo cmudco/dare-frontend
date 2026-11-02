@@ -20,9 +20,12 @@ export const formatBalanceOfCeiling = (status: WalletStatusBalance): string =>
     ? formatUsd(status.balance)
     : `${formatUsd(status.balance)} of ${formatUsd(status.ceiling)}`
 
-/** Four-decimal USD for spend comparisons, where cents hide the difference. */
-export const formatUsdPrecise = (amount: string): string =>
-  `$${Number(amount).toFixed(4)}`
+/** Four-decimal USD for per-reply costs and spend comparisons. A cost below
+ *  $0.0001 reads as "<$0.0001" so it is not mistaken for free. */
+export const formatUsdPrecise = (amount: string): string => {
+  const value = Number(amount)
+  return value > 0 && value < 0.0001 ? '<$0.0001' : `$${value.toFixed(4)}`
+}
 
 /** Form value for an optional API amount: "15.000000" → "15", null → "". */
 export const toAmountInput = (amount: string | null): string =>

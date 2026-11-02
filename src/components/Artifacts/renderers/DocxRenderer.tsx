@@ -91,6 +91,16 @@ const renderPreviewBlock = (
         </blockquote>
       )
 
+    case 'code':
+      return (
+        <pre
+          key={`docx-code-${index}`}
+          className='overflow-x-auto rounded-md border border-border bg-muted p-3 font-mono text-sm whitespace-pre'
+        >
+          {block.text}
+        </pre>
+      )
+
     case 'table':
       return (
         <div

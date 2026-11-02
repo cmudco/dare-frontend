@@ -1,3 +1,4 @@
+import { formatUsd } from '@/utils/wallets'
 import { ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -41,9 +42,15 @@ const RunRow = ({ run, onOpen }: RunRowProps) => {
           <span>·</span>
           <span>{run.stagedCount} staged</span>
           <span>·</span>
-          <span>{run.toolCalls.length} tool calls</span>
+          <span>{run.toolCallCount} tool calls</span>
           <span>·</span>
           <span>{formatTokens(run.usage?.totalTokens)}</span>
+          {Number(run.cost || 0) > 0 && (
+            <>
+              <span>·</span>
+              <span>{formatUsd(String(run.cost))}</span>
+            </>
+          )}
         </div>
       </div>
       <ChevronRight className='mt-1 h-4 w-4 shrink-0 text-muted-foreground' />

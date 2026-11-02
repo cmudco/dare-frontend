@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { AppDispatch, RootState } from '../../redux/store'
@@ -9,6 +9,8 @@ import NotificationPopover from './NotificationPopover'
 import { Avatar } from './Avatar'
 import { WalletPopover } from '@/components/wallet/WalletPopover'
 import { Logo } from '@/components/Logo'
+import { ReleaseHistoryDialog } from '@/components/ReleaseNotes/ReleaseHistoryDialog'
+import { fetchReleaseNoteHistory } from '@/redux/asyncThunks/releaseNotes'
 
 import {
   DropdownMenu,
@@ -22,6 +24,12 @@ const Header: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const user = useSelector((state: RootState) => state.user.user)
+  const [releaseHistoryOpen, setReleaseHistoryOpen] = useState(false)
+
+  const openReleaseHistory = () => {
+    setReleaseHistoryOpen(true)
+    dispatch(fetchReleaseNoteHistory(1))
+  }
 
   // Wallet state is fetched once by <WalletPopover /> on mount.
 
@@ -91,6 +99,12 @@ const Header: React.FC = () => {
               Cost Tracking
             </DropdownMenuItem>
             <DropdownMenuItem
+              onClick={openReleaseHistory}
+              className='cursor-pointer py-3 hover:bg-accent hover:text-accent-foreground'
+            >
+              What&apos;s new
+            </DropdownMenuItem>
+            <DropdownMenuItem
               onClick={handleLogout}
               className='cursor-pointer py-3 text-destructive hover:bg-accent'
             >
@@ -99,6 +113,11 @@ const Header: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <ReleaseHistoryDialog
+        open={releaseHistoryOpen}
+        onOpenChange={setReleaseHistoryOpen}
+      />
     </header>
   )
 }

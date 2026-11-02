@@ -11,6 +11,13 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipPortal,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -26,6 +33,7 @@ import { getFileIcon } from '@/utils/constants/files'
 import { formatRelativeDate } from '@/utils/dateUtils'
 import { formatFileSize } from '@/utils/files'
 import { cn } from '@/lib/utils'
+import { isSpreadsheetFile } from '@/utils/spreadsheet/protocol'
 import MatchSnippet from './MatchSnippet'
 import SourceStatusBadge from './SourceStatusBadge'
 
@@ -106,6 +114,23 @@ const SourceRow = ({
             maxVisible={2}
             onRemove={(tagId) => onRemoveTag(file, tagId)}
           />
+          {isSpreadsheetFile(name) && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant='outline' className='cursor-help font-normal'>
+                    Table
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipPortal>
+                  <TooltipContent className='max-w-xs'>
+                    Search finds this table by a summary of its columns, not row
+                    by row. For exact answers, attach it with Code sandbox on.
+                  </TooltipContent>
+                </TooltipPortal>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <SourceStatusBadge file={file} />
         </div>
         <span className='ml-auto hidden shrink-0 text-xs whitespace-nowrap text-muted-foreground sm:block'>

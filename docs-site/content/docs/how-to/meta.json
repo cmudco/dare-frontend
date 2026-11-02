@@ -1,0 +1,13 @@
+{
+  "title": "How-to guides",
+  "defaultOpen": true,
+  "pages": [
+    "deploy-backend",
+    "deploy-frontend",
+    "administer-dare",
+    "deploy-research-mode",
+    "run-quillmark",
+    "contribute-backend",
+    "contribute-frontend"
+  ]
+}

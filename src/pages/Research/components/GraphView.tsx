@@ -125,7 +125,7 @@ const GraphView = ({
 
         const text =
           n.kind === 'question'
-            ? 'RESEARCH QUESTION'
+            ? 'QUESTION'
             : n.kind === 'request'
               ? `“${n.label.length > 36 ? n.label.slice(0, 34) + '…' : n.label}”`
               : n.label.length > 44

@@ -45,7 +45,7 @@ const ResearchProjects = () => {
           <div>
             <h1 className='text-3xl font-bold tracking-tight'>Research</h1>
             <p className='text-sm text-muted-foreground'>
-              Your research projects — each a workspace for one line of inquiry.
+              Your projects. Each one digs into one question.
             </p>
           </div>
         </div>

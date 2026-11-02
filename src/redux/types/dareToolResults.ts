@@ -76,12 +76,18 @@ export interface DocxBlockquoteBlock {
   text: string
 }
 
+export interface DocxCodeBlock {
+  type: 'code'
+  text: string
+}
+
 export type DocxBlock =
   | DocxHeadingBlock
   | DocxParagraphBlock
   | DocxListBlock
   | DocxTableBlock
   | DocxBlockquoteBlock
+  | DocxCodeBlock
 
 /**
  * Document configuration returned by create_docx tool
@@ -205,4 +211,7 @@ export interface ProviderToolResult {
   contentSize?: number
   contentPreview?: string
   truncated?: boolean
+  /** Code sandbox runs: the executed Python and its printed output. */
+  code?: string
+  logs?: string
 }

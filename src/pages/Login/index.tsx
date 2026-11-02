@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import AuthCard from '../../components/Auth/AuthCard'
 import AuthFormFooter from '../../components/Auth/AuthFormFooter'
+import ResendVerificationNotice from '../../components/Auth/ResendVerificationNotice'
 import {
   LoginFormValues,
   loginInitialValues,
@@ -20,12 +21,14 @@ import { useAppSelector } from '../../redux/hooks'
 import { Button } from '../../components/ui/button'
 import { Moon, Sun } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { EmailVerificationSentResponse } from '@/redux/types/auth'
 
 const LoginScreen: React.FC = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>()
   const { user } = useAppSelector((state) => state.user)
-  const [resendSuccess, setResendSuccess] = useState(false)
+  const [resendResult, setResendResult] =
+    useState<EmailVerificationSentResponse | null>(null)
 
   useEffect(() => {
     dispatch(resetError())
@@ -90,7 +93,7 @@ const LoginScreen: React.FC = () => {
       if (resendVerification.rejected.match(resultAction)) {
         return
       }
-      setResendSuccess(true)
+      setResendResult(resultAction.payload)
     } catch (error) {
       console.error('Failed to resend verification email:', error)
     }
@@ -135,11 +138,7 @@ const LoginScreen: React.FC = () => {
               routeText='Sign up'
             />
 
-            {resendSuccess && (
-              <div className='mt-3 w-max rounded-md bg-green-500 px-4 py-2 text-xs font-medium text-white shadow-xs'>
-                Verification email resent successfully. Please check your inbox.
-              </div>
-            )}
+            {resendResult && <ResendVerificationNotice result={resendResult} />}
           </>
         }
       />

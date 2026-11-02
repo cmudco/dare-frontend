@@ -36,6 +36,7 @@ import { SharedLibrary } from '../types/library'
 import { sendSocketMessage } from './socketMessages'
 import { fetchProjects } from './project'
 import { LLMModel, PickerModel, WalletMeta } from '../types/conversation'
+import { ProjectSourceMode } from '@/utils/constants/project'
 
 interface PickerModelsPayload {
   models: PickerModel[]
@@ -255,6 +256,34 @@ export const updateConversationSelectedIds = createAsyncThunk<
     }
   }
 )
+
+export interface SwitchChatSourceModeRequest {
+  /** The chat's project files; other selections are left alone. */
+  fileIds: number[]
+  mode: ProjectSourceMode
+}
+
+/** Move a project chat's files between search and full-file reading. */
+export const switchChatSourceMode = createAsyncThunk<
+  Conversation,
+  SwitchChatSourceModeRequest,
+  { state: RootState; rejectValue: string }
+>('conversation/switchChatSourceMode', async (_request, thunkAPI) => {
+  // The pending reducer has already moved the files; persist the result.
+  const { conversation } = thunkAPI.getState()
+  const active = conversation.activeConversation
+  if (!active) return thunkAPI.rejectWithValue('No active chat.')
+  try {
+    return await updateConversationAPI(active.conversationId, {
+      selectedFileIds: conversation.selectedFiles.map((file) => file.id),
+      selectedEmbeddingIds: conversation.selectedEmbeddings.map(
+        (file) => file.id
+      ),
+    })
+  } catch (error) {
+    return thunkAPI.rejectWithValue((error as Error).message)
+  }
+})
 
 export const sendMessage = createAsyncThunk<
   void,

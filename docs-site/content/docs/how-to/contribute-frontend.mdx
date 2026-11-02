@@ -1,0 +1,99 @@
+---
+title: "Contribute to the Frontend"
+description: "Frontend issues, pull requests, and review expectations."
+---
+Thanks for helping. This repo is the web frontend of the DARE platform; it works with the
+[DARE backend](https://github.com/cmudco/dare-backend/).
+
+## Filing issues
+
+1. **Search first.** Look through
+   [open and closed issues](https://github.com/cmudco/dare-frontend/issues?q=is%3Aissue), and check
+   that the problem still happens on the latest `dev`.
+2. **Pick the right repo.** Open the browser's network and console panels. If a request fails with
+   an error response, the problem is usually in
+   [dare-backend](https://github.com/cmudco/dare-backend/issues/new/choose); if the response is
+   right but the page is wrong, it belongs here.
+3. **Open a form.** Go to
+   [Issues → New issue](https://github.com/cmudco/dare-frontend/issues/new/choose) and choose **Bug
+   report**, **Feature request** or **Docs problem**. Each form asks for exactly what we need; fill
+   in every required field.
+4. **Redact.** Remove keys, tokens and student data from logs and screenshots.
+5. **Watch the issue.** If we need more detail, we ask there.
+
+Before a large change, such as a new top-level page, a change to the state shape, or a new
+dependency, open a feature request with a short design sketch and wait for a reply before you write
+code.
+
+Security vulnerabilities never go in an issue. Follow [SECURITY.md](/docs/reference/security).
+
+## Pull requests
+
+### Branching
+
+Branch from `dev`, not `main`:
+
+```bash
+git checkout dev
+git pull --ff-only origin dev
+git checkout -b your-name/feature/short-description
+```
+
+Name branches `&lt;author&gt;/&lt;feature|fix|refactor|docs|chore&gt;/&lt;short-description&gt;`.
+
+### Before you open a PR
+
+Run the `check` skill, or the same commands by hand:
+
+```bash
+npm run app:build    # tsc -b + vite build; tsc --noEmit is not enough
+npm run lint
+npx prettier --check <the files you changed>
+```
+
+Do not run `npm run format`; it rewrites the whole repo. Test the change in a real browser against a
+running backend, in both light and dark mode for UI changes. Follow the coding rules in
+[docs/reference/rules.md](/docs/reference/frontend-rules).
+
+### PR description
+
+The `pull request template` asks for what, why, how, testing, screenshots
+and AI assistance, plus a checklist. Fill in every section; write "none" where nothing applies.
+Screenshots are required for any visible change.
+
+### Review and merge
+
+- You need at least one approving review from a maintainer.
+- CI only deploys; it does not lint, type-check or test. Reviewers rely on your checks above.
+- We squash-merge by default, and the squashed message feeds the release notes, so make it
+  descriptive.
+- Reviewers look at correctness, then design, then style, and prefix comments with `nit:`,
+  `consider:` or `blocking:`.
+- For UI changes, reviewers pull the branch and try it before approving.
+
+### Commit messages
+
+Use `&lt;type&gt;: &lt;summary&gt;`, where type is `feat`, `fix`, `refactor`, `docs`, `style`, `test` or
+`chore`. Keep the summary under 70 characters.
+
+```
+feat: add MCP server picker to conversation header
+fix: keep the composer draft when switching conversations
+docs: fold the script list into the quick start
+```
+
+Add a body when the change needs explaining, and close issues with `Closes #123`.
+
+## Using AI coding agents
+
+`AGENTS.md` holds the commands and traps every agent reads; `.claude/CLAUDE.md`
+imports it for Claude Code. Task procedures (`run-frontend`, `check`) live in
+`.agents/skills/&lt;name&gt;/SKILL.md`, and `.claude/skills/` symlinks to them; see
+`.agents/README.md`. Invoke a skill by name (`/run-frontend` in Claude Code,
+`$run-frontend` in Codex) or describe the task and let the agent pick it. Treat these files like
+code: if you change how the app is run, built or checked, update the matching skill in the same PR.
+
+## Getting help
+
+Open a draft PR with your sketch and ask in the description, open an issue, or email
+vks@andrew.cmu.edu.

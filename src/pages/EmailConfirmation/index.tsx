@@ -3,16 +3,30 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import AuthFormFooter from '../../components/Auth/AuthFormFooter'
 import AuthCard from '../../components/Auth/AuthCard'
+import ResendVerificationNotice from '../../components/Auth/ResendVerificationNotice'
 import * as Yup from 'yup'
 import { AppDispatch } from '../../redux/store'
 import { resendVerification } from '../../redux/asyncThunks/user'
+import { EmailVerificationSentResponse } from '@/redux/types/auth'
+import { EMAIL_DELIVERY_UNAVAILABLE_MESSAGE } from '@/utils/constants/user'
+
+interface EmailConfirmationState {
+  email: string
+  emailDeliveryConfigured: boolean
+}
 
 const EmailConfirmationScreen: React.FC = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>()
   const location = useLocation()
-  const email = location.state?.email
-  const [resendSuccess, setResendSuccess] = useState(false)
+  const state = location.state as EmailConfirmationState | null
+  const email = state?.email
+  const [resendResult, setResendResult] =
+    useState<EmailVerificationSentResponse | null>(null)
+  const emailDeliveryConfigured =
+    resendResult?.emailDeliveryConfigured ??
+    state?.emailDeliveryConfigured ??
+    false
 
   useEffect(() => {
     if (!email) {
@@ -21,14 +35,9 @@ const EmailConfirmationScreen: React.FC = () => {
   }, [email, navigate])
 
   const handleResendVerification = async () => {
+    if (!email) return
     try {
-      const resultAction = await dispatch(
-        resendVerification({ email })
-      ).unwrap()
-      if (resendVerification.rejected.match(resultAction)) {
-        return
-      }
-      setResendSuccess(true)
+      setResendResult(await dispatch(resendVerification({ email })).unwrap())
     } catch (err) {
       console.error('Failed to resend verification email:', err)
     }
@@ -47,24 +56,26 @@ const EmailConfirmationScreen: React.FC = () => {
   return (
     <AuthCard
       title='Email Confirmation'
-      subtitle='A verification link has been sent to your email. Please check your email and click on the link to verify your account.'
+      subtitle={
+        emailDeliveryConfigured
+          ? 'A verification link has been sent to your email. Please check your email and click on the link to verify your account.'
+          : EMAIL_DELIVERY_UNAVAILABLE_MESSAGE
+      }
       inputs={[]}
       formikConfig={formikConfig}
       buttonText='Back to login'
       showBackButton={false}
       footer={
-        <>
-          <AuthFormFooter
-            text="Didn't receive an email?"
-            routeText='Resend'
-            onClick={handleResendVerification}
-          />
-          {resendSuccess && (
-            <div className='mt-3 w-max rounded-md bg-green-500 px-4 py-2 text-xs font-medium text-white shadow-xs'>
-              Verification email resent successfully.
-            </div>
-          )}
-        </>
+        emailDeliveryConfigured && (
+          <>
+            <AuthFormFooter
+              text="Didn't receive an email?"
+              routeText='Resend'
+              onClick={handleResendVerification}
+            />
+            {resendResult && <ResendVerificationNotice result={resendResult} />}
+          </>
+        )
       }
     />
   )

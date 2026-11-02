@@ -1,0 +1,85 @@
+---
+title: "Frontend Configuration"
+description: "Vite environment variables and per-environment frontend settings."
+---
+Vite reads `VITE_*` variables from `.env` files at build time; `src/config/environment.ts` turns
+the core ones into a typed `config` object. Copy `.env.example` to `.env` to start.
+
+Vite inlines every `VITE_*` value into the bundle. Changing one after `npm run build` means
+rebuilding and redeploying; for per-environment builds, pass values as Docker build args or set them
+in CI before `npm run build`.
+
+## Values that must match across services
+
+- **`VITE_DJANGO_BACKEND_URL`** must be the backend origin the browser reaches, and the frontend's
+  origin must be in the backend's `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS` (see the
+  [backend configuration reference](/docs/reference/backend-configuration)).
+
+## Core
+
+| Variable               | Default | Description                                                                                                                                                                              |
+| ---------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_APP_ENVIRONMENT` | `local` | Deployment tier: `local`, `dare-staging`, `dare-production` or `gt-production`. Any other value logs a warning and falls back to `local`. `local` logs the resolved URLs to the console. |
+
+## Backend connection
+
+| Variable                  | Default                 | Description                                                                                                                                                                                       |
+| ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_DJANGO_BACKEND_URL` | `http://localhost:8000` | Origin of the DARE backend, reachable from the browser. REST calls go to it, and Socket.IO connects to it (a trailing `/api` stripped) at `/socket.io/` on `/chat`, `/workflow` and `/assistant`. |
+| `VITE_WEBSOCKET_URL`      | `ws://localhost:8000`   | Read into `config.websocketUrl`, but no socket uses it. Set it to the backend origin with `ws://` or `wss://` to keep it consistent.                                                              |
+
+## Integrations
+
+| Variable                  | Default  | Description                                                                                                                                                                                                                                                     |
+| ------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_RESEARCH_TOOLS_URL` | _(none)_ | Base URL of Research Tools for the sidebar's "Go to Research Tools" handover, which opens `&lt;url&gt;/sso?token=&lt;access token&gt;`. The link shows only when this is set and the `enableResearchTools` feature flag is on. `.env.example` sets `http://localhost:3000`. |
+| `VITE_SOCRATIC_BOOKS_URL` | _(none)_ | Read into `config.socraticBooksUrl`; no UI uses it yet.                                                                                                                                                                                                         |
+
+## Observability
+
+| Variable          | Default  | Description                                                                            |
+| ----------------- | -------- | -------------------------------------------------------------------------------------- |
+| `VITE_SENTRY_DSN` | _(none)_ | Sentry DSN for browser error reporting, tracing and session replay. Empty disables it. |
+
+Never put a Sentry auth token in a `VITE_*` variable. If source-map upload is added, use a non-`VITE_`
+CI secret.
+
+## Feature flags
+
+Feature flags are not environment variables. The backend serves them from `api/feature-flags/me/`
+(`src/api/featureFlags.ts`) and admins set them in Django admin at three levels: app default,
+access-code group override and per-user override. Read one with `useFeatureFlag('flagName')` from
+`src/hooks/useFeatureFlag.ts`; keys are camelCase.
+
+## Per-environment files
+
+| File               | Loaded for                           |
+| ------------------ | ------------------------------------ |
+| `.env`             | Always                               |
+| `.env.local`       | Always; gitignored, overrides `.env` |
+| `.env.development` | `npm run dev`                        |
+| `.env.production`  | `npm run build`                      |
+
+- Commit `.env.example` as the template. A `.env.development` that only points at localhost is
+  safe to commit.
+- Never commit `.env`, `.env.local` or production env files (`.gitignore` already excludes `.env`,
+  `.env.local` and `.env.production`).
+- Set production values in your CI or deploy environment.
+
+## Adding a variable
+
+1. Add it to `.env.example` with a placeholder.
+2. Declare its type in `ImportMetaEnv` in `src/vite-env.d.ts`.
+3. Read it in `src/config/environment.ts` (or the one module that owns it) with
+   `import.meta.env.VITE_MY_VAR`, rather than at each call site.
+4. Document it in this file.
+
+To check the result, run `npm run app:build` and then `npm run preview`.
+
+## Security notes
+
+- **No secrets in `VITE_*` variables.** Everything prefixed `VITE_` ships to the browser in plain
+  text and is visible on `import.meta.env` to anyone using the app. API keys and internal hostnames
+  belong on the backend.
+- **Auth tokens are not configuration.** The sign-in flow stores the JWT in `localStorage`
+  (`token`).

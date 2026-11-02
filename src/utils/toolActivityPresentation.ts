@@ -1,4 +1,4 @@
-import { ToolCallStatus } from '@/utils/constants/dareTools'
+import { CODE_SANDBOX_TOOL, ToolCallStatus } from '@/utils/constants/dareTools'
 
 export interface ToolPresentation {
   title: string
@@ -20,6 +20,13 @@ const humanizeIdentifier = (value: string): string => {
 export const getToolPresentation = (toolName: string): ToolPresentation => {
   const normalized = toolName.toLowerCase()
 
+  if (normalized === CODE_SANDBOX_TOOL) {
+    return {
+      title: 'Ran code',
+      pendingLabel: 'Preparing code',
+      executingLabel: 'Running code',
+    }
+  }
   if (normalized.includes('search_documents')) {
     return {
       title: 'Source search',
@@ -113,5 +120,6 @@ export const getToolSourceLabel = (serverSlug: string): string => {
   if (!serverSlug || serverSlug === 'dare') return 'DARE'
   if (serverSlug === 'anthropic') return 'Anthropic'
   if (serverSlug === 'gemini') return 'Gemini'
+  if (serverSlug === 'openai') return 'OpenAI'
   return humanizeIdentifier(serverSlug)
 }

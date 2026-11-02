@@ -69,7 +69,7 @@ const LOSSES = [
   },
   {
     icon: GraduationCap,
-    title: 'Your Socratic Books account',
+    title: 'Your Socratic Bots account',
     description: 'It rides on this account, so it goes too.',
   },
   {

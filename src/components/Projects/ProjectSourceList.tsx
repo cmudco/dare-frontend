@@ -15,13 +15,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useProjectSourceMode } from '@/hooks/useProjectSourceMode'
 import { cn } from '@/lib/utils'
 import { useAppSelector } from '@/redux/hooks'
 import { selectLibraries } from '@/redux/librarySlice'
 import type { Project, ProjectUpdate } from '@/redux/types/project'
 import { FileStatus } from '@/utils/constants/file'
+import { ProjectSourceMode } from '@/utils/constants/project'
 import { formatRelativeDate } from '@/utils/dateUtils'
 import { getFileExtension } from '@/utils/files'
+import { formatTokenEstimate, projectSourceCount } from './projectSources'
 
 interface Props {
   project: Project
@@ -54,6 +57,7 @@ const ProjectSourceList = ({
   const libraries = useAppSelector(selectLibraries)
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragDepth, setDragDepth] = useState(0)
+  const { effectiveMode, tooLargeTokens } = useProjectSourceMode(project)
 
   const rows = useMemo<SourceRow[]>(
     () => [
@@ -138,6 +142,24 @@ const ProjectSourceList = ({
           e.target.value = ''
         }}
       />
+      {projectSourceCount(project) > 0 && (
+        <div className='flex items-center gap-3 px-3 pb-2 text-xs text-muted-foreground'>
+          <p className='min-w-0 flex-1'>
+            {tooLargeTokens !== null
+              ? `Too large to read in full (${formatTokenEstimate(tooLargeTokens)}), so new chats search instead.`
+              : effectiveMode === ProjectSourceMode.FULL
+                ? 'New chats read these files in full.'
+                : 'New chats search these sources for relevant passages.'}
+          </p>
+          <button
+            type='button'
+            onClick={onChooseExisting}
+            className='shrink-0 rounded-md px-1.5 py-0.5 text-foreground hover:bg-accent'
+          >
+            Change
+          </button>
+        </div>
+      )}
       <ul className={cn('flex flex-col', dragDepth > 0 && 'opacity-40')}>
         <li>
           <DropdownMenu>

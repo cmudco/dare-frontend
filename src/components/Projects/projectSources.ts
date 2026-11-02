@@ -17,3 +17,12 @@ export const projectUploadProblem = (file: File): string | null => {
   if (!isAllowedFileType(file)) return `“${file.name}” is not a supported type.`
   return null
 }
+
+const compactTokens = new Intl.NumberFormat(undefined, {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
+
+/** "~42K tokens" — estimates are rough, so they read as approximate. */
+export const formatTokenEstimate = (tokens: number) =>
+  `~${compactTokens.format(tokens)} tokens`

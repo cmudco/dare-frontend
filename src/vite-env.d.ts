@@ -26,7 +26,7 @@ interface ImportMetaEnv {
   readonly VITE_WEBSOCKET_URL: string
 
   /**
-   * Socratic Books application URL (optional)
+   * Socratic Bots application URL (optional)
    * @example 'http://localhost:5174'
    */
   readonly VITE_SOCRATIC_BOOKS_URL?: string

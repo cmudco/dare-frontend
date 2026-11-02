@@ -11,6 +11,7 @@ import {
   WalletMeta,
 } from '@/redux/types/conversation'
 import { EffortLevel, EffortLevelLabels } from '@/utils/constants/model'
+import { supportsCodeSandbox } from '@/utils/modelConfigUtils'
 import { Button } from '../ui/button'
 import { Slider } from '../ui/slider'
 import { Switch } from '../ui/switch'
@@ -96,18 +97,27 @@ const InfoLabel: React.FC<InfoLabelProps> = ({
 interface ToggleRowProps extends InfoLabelProps {
   checked: boolean
   onCheckedChange: (checked: boolean) => void
+  /** Shown under the label when set; the switch is disabled. */
+  disabledReason?: string
 }
 
 const ToggleRow: React.FC<ToggleRowProps> = ({
   checked,
   onCheckedChange,
+  disabledReason,
   ...label
 }) => (
   <div className='flex items-center justify-between border-b border-border pb-2'>
-    <InfoLabel {...label} />
+    <div className='min-w-0'>
+      <InfoLabel {...label} />
+      {disabledReason && (
+        <p className='mt-0.5 text-xs text-muted-foreground'>{disabledReason}</p>
+      )}
+    </div>
     <Switch
-      checked={checked}
+      checked={checked && !disabledReason}
       onCheckedChange={onCheckedChange}
+      disabled={!!disabledReason}
       aria-label={label.title}
     />
   </div>
@@ -132,6 +142,7 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
   const isGemini = provider === 'gemini'
   const showWebFetch =
     showWebSearch && (provider === 'claude' || provider === 'gemini')
+  const sandboxAvailable = supportsCodeSandbox(model, walletMeta)
   const showEffort = model?.supportsEffort ?? false
 
   const requestedEffort =
@@ -171,6 +182,20 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
             }
           />
         )}
+        <ToggleRow
+          title='Code sandbox'
+          description='Let the AI run Python on your full-text files (OpenAI and Claude models)'
+          tip="Files are copied into a temporary container at the model's provider instead of being pasted into the prompt."
+          checked={settings.codeSandboxEnabled}
+          onCheckedChange={(checked) =>
+            onChange({ codeSandboxEnabled: checked })
+          }
+          disabledReason={
+            sandboxAvailable
+              ? undefined
+              : 'Pick an OpenAI or Claude model to use it.'
+          }
+        />
         {extraToggles}
         {enableArtifacts && (
           <ToggleRow

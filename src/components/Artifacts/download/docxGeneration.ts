@@ -64,6 +64,24 @@ const blocksToDocxChildren = (blocks: DocxBlock[]) => {
       return
     }
 
+    if (block.type === 'code') {
+      children.push(
+        new Paragraph({
+          children: block.text.split('\n').map(
+            (line, lineIndex) =>
+              new TextRun({
+                text: line,
+                font: 'Courier New',
+                size: 20,
+                break: lineIndex > 0 ? 1 : undefined,
+              })
+          ),
+          spacing: { after: 200 },
+        })
+      )
+      return
+    }
+
     if (block.type === 'blockquote') {
       children.push(
         new Paragraph({
@@ -188,6 +206,9 @@ export const generateDocxHtml = (config: DocxDocumentConfig): string => {
           `<blockquote><em>${escapeHtml(block.text)}</em></blockquote>`
         )
         return
+      case 'code':
+        parts.push(`<pre><code>${escapeHtml(block.text)}</code></pre>`)
+        return
       case 'table': {
         const head = block.headers
           .map((header) => `<th>${escapeHtml(header)}</th>`)
@@ -236,6 +257,9 @@ export const generateDocxPlainText = (config: DocxDocumentConfig): string => {
       case 'blockquote':
         block.text.split('\n').forEach((line) => lines.push(`> ${line}`))
         lines.push('')
+        return
+      case 'code':
+        lines.push('```', block.text, '```', '')
         return
       case 'table': {
         const widths = block.headers.map((header, columnIndex) =>

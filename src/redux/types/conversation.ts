@@ -55,6 +55,7 @@ export interface Conversation {
   historyLimit: number
   webSearchEnabled?: boolean
   webFetchEnabled?: boolean
+  codeSandboxEnabled?: boolean
   imageGenerationEnabled?: boolean
   audioTranscriptionEnabled?: boolean
   artifactsEnabled?: boolean
@@ -305,7 +306,8 @@ export interface ContextTraceStage {
   turns?: number
   limit?: number | null
   /** Files read in full. */
-  files?: { name: string; chars: number }[]
+  /** Sandbox files are copied into the code sandbox, so they carry no chars. */
+  files?: { name: string; chars?: number; sandbox?: boolean }[]
   /** Retrieval: settings used and the per-source pipeline traces. */
   mode?: string
   threshold?: number
@@ -561,6 +563,7 @@ export interface PickerModel {
 export interface ModelSettings {
   webSearchEnabled: boolean
   webFetchEnabled: boolean
+  codeSandboxEnabled: boolean
   artifactsEnabled: boolean
   effort: EffortLevel | null
   temperature: number
@@ -639,6 +642,8 @@ export interface ConversationState {
   error: string | null
   searchQuery: string
   activeConversationMessages: Message[]
+  // Running turns announced by the socket before REST history loaded them.
+  pendingActiveGenerationIds: string[]
   // Opaque dispatch id from the picker — echoed back to the BE on send.
   selectedModel: string | null
   // Multi-model composition from the picker. Inactive until depth leaves
@@ -647,6 +652,8 @@ export interface ConversationState {
   // Picker catalog (uniform flat shape) plus the wallet metadata block for
   // capability toggles.
   pickerEntries: PickerModel[]
+  // Unfiltered wallet catalog; pickerEntries is derived from it per mode.
+  modelCatalog: PickerModel[]
   activeWalletMeta: WalletMeta | null
   selectedFiles: MyFile[]
   selectedEmbeddings: MyFile[]
@@ -674,6 +681,7 @@ export interface ConversationState {
   attachedImages: AttachedImage[]
   webSearchEnabled: boolean
   webFetchEnabled: boolean
+  codeSandboxEnabled: boolean
   imageGenerationEnabled: boolean
   audioTranscriptionEnabled: boolean
   artifactsEnabled: boolean

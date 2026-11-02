@@ -2,9 +2,10 @@ import React from 'react'
 
 import { FileText, Presentation, Search } from 'lucide-react'
 
-import { ToolCallOrigin } from '@/utils/constants/dareTools'
+import { CODE_SANDBOX_TOOL, ToolCallOrigin } from '@/utils/constants/dareTools'
 import type { ToolCall } from '@/redux/types/conversation'
 
+import { CodeSandboxRunView } from './CodeSandboxRunView'
 import { ProviderToolResultView } from './ProviderToolResultView'
 
 interface ToolResultPreviewProps {
@@ -14,6 +15,13 @@ interface ToolResultPreviewProps {
 export const ToolResultPreview: React.FC<ToolResultPreviewProps> = ({
   toolCall,
 }) => {
+  if (
+    toolCall.origin === ToolCallOrigin.PROVIDER &&
+    toolCall.toolName === CODE_SANDBOX_TOOL
+  ) {
+    return <CodeSandboxRunView toolCall={toolCall} />
+  }
+
   if (toolCall.origin === ToolCallOrigin.PROVIDER && toolCall.providerResult) {
     return <ProviderToolResultView result={toolCall.providerResult} />
   }

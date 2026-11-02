@@ -1,0 +1,10 @@
+{
+  "title": "Tutorials",
+  "defaultOpen": true,
+  "pages": [
+    "getting-started",
+    "backend-quickstart",
+    "frontend-quickstart",
+    "memory-walkthrough"
+  ]
+}

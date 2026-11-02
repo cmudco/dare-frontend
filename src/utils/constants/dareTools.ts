@@ -61,7 +61,11 @@ export enum ServerSlug {
   DARE = 'dare',
   ANTHROPIC = 'anthropic',
   GEMINI = 'gemini',
+  OPENAI = 'openai',
 }
+
+/** Provider-native tool name for a run in the OpenAI or Claude code sandbox. */
+export const CODE_SANDBOX_TOOL = 'code_sandbox'
 
 /**
  * Tool call execution origin.

@@ -45,7 +45,7 @@ export default function DocumentProcessingSelect({
             supports a subset of Docling’s features.
           </p>
           <a
-            href='/docs/document-processing/'
+            href='/docs/explanation/document-processing/'
             target='_blank'
             rel='noreferrer'
             className='block text-primary underline'

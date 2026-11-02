@@ -37,7 +37,6 @@ export const ALLOWED_FILE_EXTENSIONS = [
   '.bmp',
   '.tif',
   '.tiff',
-  '.svg',
   // Videos
   '.mp4',
   '.webm',
@@ -76,7 +75,6 @@ export const ALLOWED_FILE_TYPES = [
   'image/webp',
   'image/bmp',
   'image/tiff',
-  'image/svg+xml',
   // Videos
   'video/mp4',
   'video/webm',

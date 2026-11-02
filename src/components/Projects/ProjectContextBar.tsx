@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { setSourcePickerOpen } from '@/redux/conversationSlice'
 import { selectProjectById } from '@/redux/projectSlice'
 import { ProjectMemoryScope } from '@/utils/constants/project'
+import ChatSourceModeMenu from './ChatSourceModeMenu'
 import ProjectIcon from './ProjectIcon'
 
 /** Breadcrumb above a chat that belongs to a project. */
@@ -46,16 +47,19 @@ const ProjectContextBar = () => {
           Memory limited to this project
         </span>
       )}
-      <button
-        type='button'
-        onClick={() => dispatch(setSourcePickerOpen(true))}
-        className='ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
-      >
-        <FileText className='h-3.5 w-3.5' />
-        {sourceCount === 0
-          ? 'No sources'
-          : `${sourceCount} ${sourceCount === 1 ? 'source' : 'sources'}`}
-      </button>
+      <div className='ml-auto flex shrink-0 items-center gap-1'>
+        <ChatSourceModeMenu />
+        <button
+          type='button'
+          onClick={() => dispatch(setSourcePickerOpen(true))}
+          className='inline-flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+        >
+          <FileText className='h-3.5 w-3.5' />
+          {sourceCount === 0
+            ? 'No sources'
+            : `${sourceCount} ${sourceCount === 1 ? 'source' : 'sources'}`}
+        </button>
+      </div>
     </div>
   )
 }

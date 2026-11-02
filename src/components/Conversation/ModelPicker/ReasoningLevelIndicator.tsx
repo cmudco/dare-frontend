@@ -12,7 +12,7 @@ interface ReasoningLevelIndicatorProps {
 
 // Marks cost_unconstrained models only. The picker layers its own reasoning
 // dot for other cases (see ModelItem); the Help table carries the signal in
-// its own column. Amber is the status-color exception per docs/RULES.md.
+// its own column. Amber is the status-color exception per docs/reference/rules.md.
 const ReasoningLevelIndicator: React.FC<ReasoningLevelIndicatorProps> = ({
   level,
   className,

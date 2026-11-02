@@ -61,6 +61,7 @@ const setupFrom = (agent: Agent | null, modelRef: string | null): AgentSetup =>
         documentSimilarityThreshold: agent.documentSimilarityThreshold,
         enableWebSearch: agent.enableWebSearch,
         webFetchEnabled: agent.webFetchEnabled,
+        codeSandboxEnabled: agent.codeSandboxEnabled ?? false,
         artifactsEnabled: agent.artifactsEnabled,
         memoryEnabled: agent.memoryEnabled,
         contentFiles: agent.contentFiles,
@@ -83,6 +84,7 @@ const setupFrom = (agent: Agent | null, modelRef: string | null): AgentSetup =>
         documentSimilarityThreshold: MODEL_CONFIG.documentSimilarityThreshold,
         enableWebSearch: false,
         webFetchEnabled: false,
+        codeSandboxEnabled: false,
         artifactsEnabled: false,
         memoryEnabled: false,
         contentFiles: [],
@@ -145,6 +147,7 @@ const AgentEditor: React.FC<AgentEditorProps> = ({ agent, onDone }) => {
   const settings: ModelSettings = {
     webSearchEnabled: draft.enableWebSearch,
     webFetchEnabled: draft.webFetchEnabled,
+    codeSandboxEnabled: draft.codeSandboxEnabled,
     artifactsEnabled: draft.artifactsEnabled,
     effort: draft.effort,
     temperature: draft.temperature,

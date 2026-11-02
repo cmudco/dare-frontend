@@ -63,7 +63,7 @@ const VisualizationView = ({ projectId }: { projectId?: number }) => {
       <p className='mb-3 text-xs text-muted-foreground'>
         {view === 'evidence'
           ? 'Every candidate in review — staged + approved (rejected excluded). The working layer; faded nodes are still in review.'
-          : 'Promoted knowledge only — what the scholar committed to the durable record. The exportable layer.'}
+          : 'Approved knowledge only — what you kept. This is what gets exported.'}
       </p>
 
       {view === 'evidence' ? (

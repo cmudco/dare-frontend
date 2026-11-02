@@ -70,3 +70,28 @@ export const normalizeMathDelimiters = (markdown: string): string => {
     })
     .join('')
 }
+
+const SANDBOX_LINK = /!?\[([^\]]*)\]\(sandbox:[^)]*\)/g
+
+/**
+ * Unlink `[name](sandbox:/mnt/data/...)` links and `![alt](sandbox:...)`
+ * images: they point inside the provider's code sandbox, and the file itself
+ * is attached to the message.
+ */
+export const stripSandboxLinks = (markdown: string): string =>
+  markdown.replace(SANDBOX_LINK, '$1')
+
+const SANDBOX_FILE_LINK = /(?<!!)\[([^\]]*)\]\(sandbox:[^)]*?([^/)]+)\)/g
+
+/**
+ * Point `[text](sandbox:/mnt/data/name)` links at the reply's saved copy of
+ * that file; links with no saved copy are left for stripSandboxLinks.
+ */
+export const linkSandboxFiles = (
+  markdown: string,
+  urlsByName: Map<string, string>
+): string =>
+  markdown.replace(SANDBOX_FILE_LINK, (link, text: string, name: string) => {
+    const url = urlsByName.get(decodeURIComponent(name))
+    return url ? `[${text}](${url})` : link
+  })

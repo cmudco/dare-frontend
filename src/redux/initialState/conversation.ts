@@ -18,6 +18,7 @@ export const initialState: ConversationState = {
   error: null,
   searchQuery: '',
   activeConversationMessages: [],
+  pendingActiveGenerationIds: [],
   selectedModel: null,
   ensemble: {
     depth: 'single',
@@ -26,6 +27,7 @@ export const initialState: ConversationState = {
     briefs: EMPTY_BRIEFS,
   },
   pickerEntries: [],
+  modelCatalog: [],
   activeWalletMeta: null,
   selectedFiles: [] as MyFile[],
   selectedEmbeddings: [] as MyFile[],
@@ -49,6 +51,7 @@ export const initialState: ConversationState = {
   attachedImages: [],
   webSearchEnabled: false,
   webFetchEnabled: false,
+  codeSandboxEnabled: false,
   imageGenerationEnabled: false,
   audioTranscriptionEnabled: false,
   artifactsEnabled: false,

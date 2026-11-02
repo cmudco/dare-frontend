@@ -7,7 +7,7 @@
     "dev": "vite",
     "app:build": "tsc -b && vite build",
     "build": "npm run app:build && npm run docs:build && npm run docs:copy",
-    "docs:install": "npm --prefix docs-site install --no-audit --no-fund",
+    "docs:install": "npm --prefix docs-site ci --no-audit --no-fund",
     "docs:sync": "npm --prefix docs-site run sync-content",
     "docs:build": "npm run docs:install && npm --prefix docs-site run build",
     "docs:copy": "node docs-site/scripts/copy-static-build.mjs",
@@ -94,6 +94,7 @@
     "tiptap-markdown": "^0.8.10",
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "yup": "^1.4.0",
     "zod": "^4.3.6"
   },
@@ -127,5 +128,8 @@
   "main": "eslint.config.js",
   "keywords": [],
   "author": "",
-  "license": "AGPL-3.0-only"
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  }
 }

@@ -27,8 +27,10 @@ const ToolsStep = ({ enabledTools, onPatch }: Props) => {
     dispatch(getMcpConnections())
   }, [dispatch])
 
-  const tools = availableResearchTools(connections)
-  const hasConnections = tools.length > 1 // anything beyond the web built-in
+  const tools = availableResearchTools(connections).filter(
+    (tool) => tool.slug !== WEB_SEARCH_TOOL_SLUG
+  )
+  const hasConnections = tools.length > 0
 
   const toggle = (slug: string) => {
     const next = enabledTools.includes(slug)
@@ -40,13 +42,27 @@ const ToolsStep = ({ enabledTools, onPatch }: Props) => {
   return (
     <div className='space-y-6'>
       <StepHeading
-        title='Where should Scout look?'
-        subtitle='Choose from the integrations you’ve connected. Every tool is opt-in — nothing runs until you ask it to.'
+        title='Where should Scouts look?'
+        subtitle='Web search, paper search and the page reader are always on. Add any research tools you’ve connected.'
       />
+
+      <div className='flex max-w-2xl items-start gap-3 rounded-xl border border-border bg-muted/30 p-4'>
+        <div className='rounded-lg bg-muted p-2'>
+          <Globe className='h-5 w-5 text-muted-foreground' />
+        </div>
+        <div className='min-w-0'>
+          <p className='text-sm font-medium'>Always on</p>
+          <p className='mt-0.5 text-xs text-muted-foreground'>
+            Web search, paper search (OpenAlex) and a page reader that finds
+            free copies of paywalled papers. Every source is checked before it
+            reaches your inbox.
+          </p>
+        </div>
+      </div>
 
       <div className='grid max-w-2xl gap-3 sm:grid-cols-2'>
         {tools.map((tool) => {
-          const Icon = tool.slug === WEB_SEARCH_TOOL_SLUG ? Globe : Plug
+          const Icon = Plug
           const isOn = enabledTools.includes(tool.slug)
           return (
             <div
@@ -81,7 +97,7 @@ const ToolsStep = ({ enabledTools, onPatch }: Props) => {
 
       {!loading && !hasConnections && (
         <p className='max-w-2xl text-xs text-muted-foreground'>
-          Web search is ready out of the box. To let Scout search more sources,{' '}
+          Want Scite, Consensus or another research tool too?{' '}
           <Link to={INTEGRATIONS_PATH} className='text-primary hover:underline'>
             connect an integration
           </Link>{' '}

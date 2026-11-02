@@ -1,6 +1,7 @@
 // Finite option sets + presentation metadata for the Research Workspace.
 
 import type { McpConnection } from '@/redux/types/mcp'
+import type { ProjectKind } from '@/redux/types/research'
 
 export enum ResearchProjectStatus {
   ACTIVE = 'active',
@@ -43,19 +44,6 @@ export enum ToolCallStatus {
   SUCCESS = 'success',
   ERROR = 'error',
 }
-
-/**
- * Scout depth presets — mirror the backend scout job (research/tasks.py):
- * quick = max_searches 2 / max_candidates 3; deep = 5 / 10. Explanatory copy
- * for the "how it works" guide; keep in sync if the backend caps change.
- */
-export const SCOUT_DEPTH = {
-  quick: { searches: 2, findings: 3 },
-  deep: { searches: 5, findings: 10 },
-} as const
-
-/** The agent-loop ceiling per run (Hermes runtime `agent.max_turns`). */
-export const AGENT_LOOP_MAX_TURNS = 40
 
 /**
  * Run states where the agent is still working (or a stop is not yet confirmed):
@@ -149,46 +137,6 @@ export enum StandardsTemplate {
   CUSTOM = 'custom',
 }
 
-export interface StandardsPreset {
-  key: StandardsTemplate
-  name: string
-  summary: string
-  virtues: string[]
-}
-
-export const STANDARDS_PRESETS: StandardsPreset[] = [
-  {
-    key: StandardsTemplate.RESEARCH_ETHICS,
-    name: 'Research Ethics',
-    summary:
-      'Careful, non-fabricating scholarship. A strong default for ethics, philosophy and policy work.',
-    virtues: [
-      'Never fabricate — every citation must be real and verifiable.',
-      'Signal uncertainty honestly, not reflexively.',
-      'Never overstate what a source actually supports.',
-      'Preserve ethical nuance — respect for persons, beneficence, justice.',
-    ],
-  },
-  {
-    key: StandardsTemplate.EMPIRICAL_RIGOR,
-    name: 'Empirical Rigor',
-    summary:
-      'Methods-first standards for data-heavy fields where reproducibility matters.',
-    virtues: [
-      'Prefer primary sources and pre-registered studies.',
-      'Always surface sample size, method and effect size.',
-      'Flag replication status where known.',
-      'Distinguish correlation from causation explicitly.',
-    ],
-  },
-  {
-    key: StandardsTemplate.CUSTOM,
-    name: 'Start blank',
-    summary: 'Define your own standards later in the workspace soul file.',
-    virtues: [],
-  },
-]
-
 /**
  * Accepted source file extensions for a project. Kept deliberately broad —
  * documents, slides, spreadsheets, web/markup and data files. The backend
@@ -220,3 +168,189 @@ export const ACCEPTED_SOURCE_EXTENSIONS = [
   // E-books
   'epub',
 ] as const
+
+/**
+ * Memory layers — values IDENTICAL to the backend `MemoryLayer`. Researcher-wide
+ * memory follows the scholar into every project; project memory never leaves
+ * this one; procedures are learned methods the agent runs as skills.
+ */
+export const MEMORY_LAYERS = {
+  researcher: {
+    label: 'About you',
+    hint: 'How you work — follows you into every project',
+  },
+  project: {
+    label: 'Project only',
+    hint: "This project's scope and framing — never leaves it",
+  },
+  procedure: {
+    label: 'Skill',
+    hint: 'A method the agent follows step by step (a Hermes skill)',
+  },
+} as const
+
+/** Quick-pick review reasons — values IDENTICAL to the backend `ReviewReasonTag`. */
+export const REVIEW_REASON_TAGS = [
+  { value: 'preprint', label: 'Preprint', on: 'reject' },
+  { value: 'off_scope', label: 'Off scope', on: 'reject' },
+  {
+    value: 'conflict_of_interest',
+    label: 'Conflict of interest',
+    on: 'reject',
+  },
+  { value: 'weak_method', label: 'Weak method', on: 'reject' },
+  { value: 'duplicate', label: 'Duplicate', on: 'reject' },
+  { value: 'outdated', label: 'Outdated', on: 'reject' },
+  { value: 'strong_evidence', label: 'Strong evidence', on: 'approve' },
+] as const
+
+/**
+ * Quick-pick researcher-wide standards, grouped. Each `rule` is written as the
+ * instruction the agent follows, because it is saved verbatim to the scholar's
+ * researcher-wide memory (USER.md in every project).
+ */
+export const STANDARD_CATALOG = [
+  {
+    group: 'Evidence quality',
+    options: [
+      {
+        label: 'Verify every citation',
+        rule: 'Before staging, confirm each DOI or PMID resolves to the paper you describe; drop anything you cannot verify.',
+      },
+      {
+        label: 'Peer-reviewed only',
+        rule: 'Stage only peer-reviewed work. Set preprints aside and say how many, so I can ask to see them.',
+      },
+      {
+        label: 'Strongest designs first',
+        rule: 'Prefer systematic reviews, meta-analyses and RCTs; label observational studies as such and never present them as causal.',
+      },
+      {
+        label: 'Check retractions',
+        rule: 'Before staging a paper, check it has not been retracted or carries an expression of concern; say so if it has.',
+      },
+      {
+        label: 'Flag conflicts of interest',
+        rule: 'Flag industry funding, vendor authorship or white papers as a conflict of interest in the rationale.',
+      },
+      {
+        label: 'Question the venue',
+        rule: 'Treat papers from questionable or predatory venues with caution and say why in the rationale.',
+      },
+    ],
+  },
+  {
+    group: 'Reporting',
+    options: [
+      {
+        label: 'Numbers, not adjectives',
+        rule: 'Always report sample size, design and effect size (with confidence intervals when given).',
+      },
+      {
+        label: 'Quote the evidence',
+        rule: 'Quote the exact passage that supports each claim; never paraphrase a finding without the quote.',
+      },
+      {
+        label: 'Say what is missing',
+        rule: 'When the evidence is thin or conflicting, say so plainly instead of smoothing it over.',
+      },
+      {
+        label: 'Primary sources',
+        rule: 'Cite the primary study, not a news article, blog or secondary summary of it.',
+      },
+    ],
+  },
+  {
+    group: 'How I work',
+    options: [
+      {
+        label: 'Recent work',
+        rule: 'Prefer work from the last 10 years unless a source is foundational; mark older sources as such.',
+      },
+      {
+        label: 'Short answers',
+        rule: 'Answer briefly with the judgement first; offer detail rather than leading with it.',
+      },
+      {
+        label: 'AI search is an adjunct',
+        rule: 'Treat your searches as a supplement to my systematic search, never the search of record; say what databases you did not cover.',
+      },
+      {
+        label: 'Look for disconfirmation',
+        rule: 'For every claim I am building toward, actively look for the strongest evidence against it.',
+      },
+    ],
+  },
+] as const
+
+export const CITATION_STYLES = [
+  'APA 7',
+  'Chicago (author-date)',
+  'MLA 9',
+  'Vancouver',
+  'IEEE',
+  'Harvard',
+] as const
+
+/** Scope fields; each value is one "Label: value" entry in MEMORY.md. */
+export const PROJECT_SCOPE_FIELDS = [
+  {
+    key: 'population',
+    label: 'Population or setting',
+    placeholder: 'e.g. Adult patients in emergency departments',
+  },
+  {
+    key: 'include',
+    label: 'Include',
+    placeholder:
+      'e.g. Studies measuring under- or over-triage, mortality, time to treatment',
+  },
+  {
+    key: 'exclude',
+    label: 'Exclude',
+    placeholder:
+      'e.g. Radiology triage, paediatric-only studies, simulation-only studies',
+  },
+  {
+    key: 'period',
+    label: 'Time period',
+    placeholder: 'e.g. 2015 onwards',
+  },
+  {
+    key: 'designs',
+    label: 'Study designs',
+    placeholder: 'e.g. RCTs, prospective cohorts, stepped-wedge trials',
+  },
+  {
+    key: 'geography',
+    label: 'Geography or language',
+    placeholder:
+      'e.g. High-income health systems; English-language publications',
+  },
+] as const
+
+/** What sort of question a project asks; sets which sources Scouts trust and how fresh. */
+export const PROJECT_KINDS: {
+  value: ProjectKind
+  label: string
+  hint: string
+}[] = [
+  { value: 'general', label: 'General', hint: 'Any good source, labelled' },
+  { value: 'work', label: 'Work & tech', hint: 'Docs, specs, real benchmarks' },
+  {
+    value: 'money',
+    label: 'Money & markets',
+    hint: 'Official data, dated numbers',
+  },
+  {
+    value: 'news',
+    label: 'News & politics',
+    hint: 'Primary records, both sides',
+  },
+  {
+    value: 'personal',
+    label: 'Personal & habits',
+    hint: 'Studies plus lived experience',
+  },
+  { value: 'academic', label: 'Academic', hint: 'Papers and preprints first' },
+]

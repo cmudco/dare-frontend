@@ -67,7 +67,7 @@ const ContextPanel = ({
                 </div>
               ) : (
                 <p className='text-xs text-muted-foreground'>
-                  No tools enabled yet.
+                  Web and paper search (always on).
                 </p>
               )}
             </Block>

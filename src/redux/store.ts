@@ -27,6 +27,7 @@ import researchReducer from './researchSlice'
 import libraryReducer from './librarySlice'
 import projectReducer from './projectSlice'
 import assistantReducer from './assistantSlice'
+import releaseNotesReducer from './releaseNotesSlice'
 import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
 import { assistantSocketMiddleware } from './middleware/assistantSocketMiddleware'
@@ -66,6 +67,7 @@ export const store = configureStore({
     project: projectReducer,
     ensemble: ensembleReducer,
     assistant: assistantReducer,
+    releaseNotes: releaseNotesReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware

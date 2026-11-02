@@ -6,14 +6,13 @@ import {
   FileText,
   Inbox,
   MessagesSquare,
-  Telescope,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatRanAt, roleLabel, runStatusBadge } from '../runFormat'
 import type { AgentRun } from '../types'
-import AgentGuide from './AgentGuide'
+import PromptAnatomy from './PromptAnatomy'
 
 interface Props {
   question: string
@@ -21,7 +20,6 @@ interface Props {
   runs: AgentRun[]
   pendingCount: number
   approvedCount: number
-  onGoToScout: () => void
   onGoToChat: () => void
   onGoToReview: () => void
   onGoToRuns: () => void
@@ -35,7 +33,6 @@ const OverviewPanel = ({
   runs,
   pendingCount,
   approvedCount,
-  onGoToScout,
   onGoToChat,
   onGoToReview,
   onGoToRuns,
@@ -51,7 +48,7 @@ const OverviewPanel = ({
     <div className='space-y-8'>
       <header>
         <p className='text-xs font-medium tracking-wide text-muted-foreground uppercase'>
-          Research question
+          Question
         </p>
         <h2 className='mt-2 max-w-2xl text-2xl leading-snug font-semibold tracking-tight'>
           {question}
@@ -94,22 +91,22 @@ const OverviewPanel = ({
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center'>
           <Step
             index={1}
-            label='Ask Scout'
-            desc='Gather candidate sources'
+            label='Ask in chat'
+            desc='Scouts go and dig'
             state={askState}
           />
           <Connector />
           <Step
             index={2}
-            label='Review results'
-            desc='Weigh each finding'
+            label='Review'
+            desc='Keep or reject, with a note'
             state={reviewState}
           />
           <Connector />
           <Step
             index={3}
-            label='Approve knowledge'
-            desc='Keep what holds up'
+            label='It learns'
+            desc='Your notes shape the next run'
             state={approveState}
           />
         </div>
@@ -123,22 +120,19 @@ const OverviewPanel = ({
           )}
           <Button
             variant={pendingCount > 0 ? 'outline' : 'default'}
-            onClick={onGoToScout}
+            onClick={onGoToChat}
             className='shrink-0'
           >
-            <Telescope className='h-4 w-4' /> Ask Scout
-          </Button>
-          <Button variant='outline' onClick={onGoToChat} className='shrink-0'>
             <MessagesSquare className='h-4 w-4' /> Open chat
           </Button>
           <p className='text-xs text-muted-foreground sm:ml-auto'>
-            Delegate a task, or think live — same agent, same standards.
+            Plan in chat; the agent launches Scouts from the thread and learns
+            from your review notes.
           </p>
         </div>
       </div>
 
-      {/* What each helper does + its limits */}
-      <AgentGuide />
+      <PromptAnatomy />
 
       {/* Recent activity */}
       <section>

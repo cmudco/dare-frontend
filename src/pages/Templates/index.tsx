@@ -3,6 +3,7 @@ import { LayoutTemplate } from 'lucide-react'
 import { NavLink, Navigate, useParams } from 'react-router-dom'
 import AgentManagerLayout from '@/components/AgentManager/AgentManagerLayout'
 import PromptManagerLayout from '@/components/PromptManager/PromptManagerLayout'
+import { buttonVariants } from '@/components/ui/buttonVariants'
 import { cn } from '@/lib/utils'
 import { AGENT_TEMPLATES_PATH, PROMPT_TEMPLATES_PATH } from '@/routes/paths'
 
@@ -39,7 +40,7 @@ const Templates = () => {
         </div>
         <nav
           aria-label='Template types'
-          className='flex gap-1'
+          className='flex gap-2'
           data-tour='templates-tabs'
         >
           {TABS.map((item) => (
@@ -48,10 +49,11 @@ const Templates = () => {
               to={item.path}
               className={({ isActive }) =>
                 cn(
-                  'rounded-full px-4 py-1.5 text-sm transition-colors',
-                  isActive
-                    ? 'bg-accent font-medium text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                  buttonVariants({
+                    variant: isActive ? 'default' : 'outline',
+                    size: 'sm',
+                  }),
+                  'px-5'
                 )
               }
             >

@@ -23,6 +23,7 @@ import {
   forkConversation,
   fetchConversationMessages,
   applyAgentToConversation,
+  switchChatSourceMode,
 } from './asyncThunks/conversation'
 import {
   deleteProject,
@@ -63,11 +64,11 @@ import { Tag } from './types/tags'
 import { SharedLibrary } from './types/library'
 import { Prompt } from './types/prompt'
 import {
-  selectAppropriateModel,
-  syncModelsWithImageGenerationState,
-  syncModelsWithAudioTranscriptionState,
+  filterPickerEntriesByImageGeneration,
+  syncPickerEntriesWithMode,
 } from './utils/modelSyncHelpers'
 import { userLogin, userLogout } from './asyncThunks/user'
+import { ProjectSourceMode } from '@/utils/constants/project'
 
 /** Make `conversation` the active chat and mirror its toggles and model choice. */
 function setActiveConversation(
@@ -79,6 +80,7 @@ function setActiveConversation(
     // Update toggle states from conversation
     state.webSearchEnabled = conversation.webSearchEnabled ?? false
     state.webFetchEnabled = conversation.webFetchEnabled ?? false
+    state.codeSandboxEnabled = conversation.codeSandboxEnabled ?? false
     state.imageGenerationEnabled = conversation.imageGenerationEnabled ?? false
     state.audioTranscriptionEnabled =
       conversation.audioTranscriptionEnabled ?? false
@@ -87,15 +89,7 @@ function setActiveConversation(
 
     const desired = conversation.selectedModelRef ?? null
 
-    // Sync picker entries based on the active mode (priority: audio >
-    // image > text).
-    if (conversation.audioTranscriptionEnabled) {
-      syncModelsWithAudioTranscriptionState(state, true, desired)
-    } else if (conversation.imageGenerationEnabled) {
-      syncModelsWithImageGenerationState(state, true, desired)
-    } else {
-      syncModelsWithImageGenerationState(state, false, desired)
-    }
+    syncPickerEntriesWithMode(state, desired)
     // Preserve the saved choice until the catalog arrives and validates it.
     if (!state.pickerEntries.length) state.selectedModel = desired
   }
@@ -137,7 +131,29 @@ function selectLibraries(
   )
 }
 
-export const conversationSlice = createSlice({
+export /** Move the given files into the full-text or the search selection. */
+const moveFilesToSourceMode = (
+  state: ConversationState,
+  fileIds: number[],
+  mode: ProjectSourceMode
+) => {
+  const ids = new Set(fileIds)
+  const moving = new Map(
+    [...state.selectedFiles, ...state.selectedEmbeddings]
+      .filter((file) => ids.has(file.id))
+      .map((file) => [file.id, file])
+  )
+  const files = state.selectedFiles.filter((file) => !ids.has(file.id))
+  const embeddings = state.selectedEmbeddings.filter(
+    (file) => !ids.has(file.id)
+  )
+  if (mode === ProjectSourceMode.FULL) files.push(...moving.values())
+  else embeddings.push(...moving.values())
+  state.selectedFiles = files
+  state.selectedEmbeddings = embeddings
+}
+
+const conversationSlice = createSlice({
   name: 'conversation',
   initialState: {
     ...initialState,
@@ -304,6 +320,9 @@ export const conversationSlice = createSlice({
       if (patch.webFetchEnabled !== undefined) {
         state.webFetchEnabled = patch.webFetchEnabled
       }
+      if (patch.codeSandboxEnabled !== undefined) {
+        state.codeSandboxEnabled = patch.codeSandboxEnabled
+      }
       if (patch.artifactsEnabled !== undefined) {
         state.artifactsEnabled = patch.artifactsEnabled
       }
@@ -332,12 +351,7 @@ export const conversationSlice = createSlice({
         state.activeConversation.imageGenerationEnabled = action.payload
       }
 
-      // Sync available models and auto-select appropriate model
-      syncModelsWithImageGenerationState(
-        state,
-        action.payload,
-        state.selectedModel
-      )
+      syncPickerEntriesWithMode(state, state.selectedModel)
     },
     updateSelectedMcpServers(state, action: PayloadAction<number[]>) {
       if (state.activeConversation) {
@@ -366,12 +380,7 @@ export const conversationSlice = createSlice({
         state.activeConversation.audioTranscriptionEnabled = action.payload
       }
 
-      // Sync available models and auto-select appropriate model
-      syncModelsWithAudioTranscriptionState(
-        state,
-        action.payload,
-        state.selectedModel
-      )
+      syncPickerEntriesWithMode(state, state.selectedModel)
     },
     updateAudioTranscriptionSettings(
       state,
@@ -448,10 +457,11 @@ export const conversationSlice = createSlice({
       state.audioTranscriptionEnabled = false
       state.webSearchEnabled = false
       state.webFetchEnabled = false
+      state.codeSandboxEnabled = false
       state.artifactsEnabled = false
 
       // Reset to text models — no auto-select (conversationModel is undefined → null)
-      syncModelsWithImageGenerationState(state, false)
+      syncPickerEntriesWithMode(state)
     },
     updateConversationOrder(state, action: PayloadAction<string[]>) {
       const orderedConversations: Conversation[] = []
@@ -604,27 +614,21 @@ export const conversationSlice = createSlice({
         ) => {
           state.modelCatalogStatus = 'succeeded'
           state.loading = false
-          // Strip image-gen / audio-transcription models from the chat
-          // picker (they belong on dedicated toggles). LiteLLM entries
-          // already have those flags forced to false on the BE.
-          state.pickerEntries = action.payload.models.filter(
-            (m) => !m.isImageGenerator && !m.isAudioTranscriber
-          )
+          state.modelCatalog = action.payload.models
+          syncPickerEntriesWithMode(state, state.selectedModel)
           state.activeWalletMeta = action.payload.wallet
+          const chatModels = filterPickerEntriesByImageGeneration(
+            state.modelCatalog,
+            false
+          )
           const seated = state.ensemble.responderIds.map((id) =>
-            state.pickerEntries.some((entry) => entry.id === id)
+            chatModels.some((entry) => entry.id === id)
           )
           state.ensemble.responderIds = state.ensemble.responderIds.filter(
             (_, i) => seated[i]
           )
           state.ensemble.briefs.angles = state.ensemble.briefs.angles.filter(
             (_, i) => seated[i] ?? true
-          )
-          // Reconcile selectedModel: if the previously selected id is no
-          // longer in the wallet catalog, require a new explicit choice.
-          state.selectedModel = selectAppropriateModel(
-            state.selectedModel,
-            state.pickerEntries
           )
           const selectedEntry = state.pickerEntries.find(
             (entry) => entry.id === state.selectedModel
@@ -867,6 +871,28 @@ export const conversationSlice = createSlice({
       .addCase(getActiveModels.rejected, (_state, action) => {
         console.error('Failed to load active models:', action.payload)
       })
+      .addCase(switchChatSourceMode.pending, (state, action) => {
+        const { fileIds, mode } = action.meta.arg
+        moveFilesToSourceMode(state, fileIds, mode)
+      })
+      .addCase(switchChatSourceMode.fulfilled, (state, action) => {
+        if (
+          state.activeConversation?.conversationId ===
+          action.payload.conversationId
+        ) {
+          state.activeConversation = action.payload
+        }
+      })
+      .addCase(switchChatSourceMode.rejected, (state, action) => {
+        const { fileIds, mode } = action.meta.arg
+        moveFilesToSourceMode(
+          state,
+          fileIds,
+          mode === ProjectSourceMode.FULL
+            ? ProjectSourceMode.SEARCH
+            : ProjectSourceMode.FULL
+        )
+      })
       .addCase(updateConversationSelectedIds.pending, (state) => {
         state.loading = true
         state.error = null
@@ -976,6 +1002,11 @@ export const conversationSlice = createSlice({
       })
       .addCase(fetchConversationMessages.fulfilled, (state, action) => {
         state.activeConversationMessages = action.payload
+        const pending = new Set(state.pendingActiveGenerationIds)
+        state.activeConversationMessages.forEach((message) => {
+          if (pending.has(String(message.id))) message.streaming = true
+        })
+        state.pendingActiveGenerationIds = []
       })
       // ─────────────────────────────────────────────────────────────────────
       // Socket.IO message handlers (from socketMiddleware)
@@ -1043,6 +1074,23 @@ export const conversationSlice = createSlice({
               ...state.activeConversationMessages[index],
               ...action.payload,
             }
+          }
+        }
+      )
+      // A turn still running server-side when the user re-opens its chat:
+      // persisted history only has the empty placeholder, so mark it live.
+      .addMatcher(
+        (action): action is { type: string; payload: { messageId: number } } =>
+          action.type === 'socket/generation_active',
+        (state, action) => {
+          const id = String(action.payload.messageId)
+          const message = state.activeConversationMessages.find(
+            (msg) => String(msg.id) === id
+          )
+          if (message) {
+            message.streaming = true
+          } else if (!state.pendingActiveGenerationIds.includes(id)) {
+            state.pendingActiveGenerationIds.push(id)
           }
         }
       )

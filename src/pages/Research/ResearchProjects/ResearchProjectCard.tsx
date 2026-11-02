@@ -76,7 +76,9 @@ const ResearchProjectCard = ({ project, onOpen, onEdit, onDelete }: Props) => {
           {project.sourceCount} sources
         </span>
         <span className='ml-auto'>
-          Updated {formatRelativeDate(project.updatedAt)}
+          {project.lastRunAt
+            ? `Last run ${formatRelativeDate(project.lastRunAt)}`
+            : `Created ${formatRelativeDate(project.createdAt)}`}
         </span>
       </div>
     </div>

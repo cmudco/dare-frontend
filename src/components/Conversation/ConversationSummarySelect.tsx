@@ -7,10 +7,12 @@ import type { ConversationSummary } from '@/redux/types/conversation'
 
 interface ConversationSummarySelectProps {
   searchQuery: string
+  summariesEnabled: boolean
 }
 
 const ConversationSummarySelect: React.FC<ConversationSummarySelectProps> = ({
   searchQuery,
+  summariesEnabled,
 }) => {
   const dispatch = useAppDispatch()
   const summaries = useAppSelector(
@@ -60,9 +62,11 @@ const ConversationSummarySelect: React.FC<ConversationSummarySelectProps> = ({
         <p className='mt-3 text-sm font-medium text-foreground'>
           No conversation summaries yet
         </p>
-        <p className='mt-1 text-xs leading-5 text-muted-foreground'>
-          Summaries appear after every 5 completed assistant responses.
-        </p>
+        {summariesEnabled && (
+          <p className='mt-1 text-xs leading-5 text-muted-foreground'>
+            Summaries appear after every 5 completed assistant responses.
+          </p>
+        )}
       </div>
     )
   }

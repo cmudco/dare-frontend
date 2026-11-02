@@ -18,6 +18,7 @@ export interface AgentSetup {
   documentSimilarityThreshold: number
   enableWebSearch: boolean
   webFetchEnabled: boolean
+  codeSandboxEnabled: boolean
   artifactsEnabled: boolean
   memoryEnabled: boolean
   contentFiles: number[]
