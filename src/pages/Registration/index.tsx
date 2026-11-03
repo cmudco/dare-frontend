@@ -37,12 +37,18 @@ const RegistrationScreen: React.FC = () => {
       if (userRegister.rejected.match(resultAction)) {
         return
       }
-      navigate('/confirmation', {
-        state: {
-          email: values.email,
-          emailDeliveryConfigured: resultAction.payload.emailDeliveryConfigured,
-        },
-      })
+      navigate(
+        resultAction.payload.approvalRequired
+          ? '/signup-pending'
+          : '/confirmation',
+        {
+          state: {
+            email: values.email,
+            emailDeliveryConfigured:
+              resultAction.payload.emailDeliveryConfigured,
+          },
+        }
+      )
     } catch (err) {
       console.error(err)
     }
@@ -67,7 +73,7 @@ const RegistrationScreen: React.FC = () => {
       label: 'Confirm Password',
       type: 'password',
     },
-    { name: 'accessCode', label: 'Access Code', type: 'text' },
+    { name: 'accessCode', label: 'Access Code (optional)', type: 'text' },
   ]
 
   return (
@@ -81,12 +87,18 @@ const RegistrationScreen: React.FC = () => {
       </div>
       <AuthCard<SignupFormValues>
         title='Create Account'
+        subtitle='Have an invitation code? Enter it below. Otherwise, leave it blank to request administrator approval. Both signup paths require email verification.'
         inputs={inputs}
         formikConfig={formikConfig}
         buttonText='Create Account'
         showprivacyPolicy
         footer={
           <>
+            <AuthFormFooter
+              text='Prefer an invitation code?'
+              route='/request-access'
+              routeText='Request access'
+            />
             <AuthFormFooter
               text='Already have an account?'
               route='/login'

@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import * as Sentry from '@sentry/react'
 import userReducer from './userSlice'
+import accessRequestReducer from './accessRequestSlice'
 import fileReducer from './fileSlice'
 import conversationReducer from './conversationSlice'
 import promptReducer from './promptSlice'
@@ -40,6 +41,7 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({})
 export const store = configureStore({
   reducer: {
     user: userReducer,
+    accessRequest: accessRequestReducer,
     files: fileReducer,
     conversation: conversationReducer,
     prompt: promptReducer,

@@ -7,6 +7,8 @@ import Files from '../pages/Files'
 import VerifyCodeScreen from '../pages/VerifyCode'
 import LoginScreen from '../pages/Login'
 import ForgotScreen from '../pages/ForgotPassword'
+import RequestAccessScreen from '../pages/RequestAccess'
+import SignupPendingScreen from '../pages/SignupPending'
 import RegistrationScreen from '../pages/Registration'
 import CoversationScreen from '../pages/Conversation/index.tsx'
 import UserView from '../components/Layout/UserView'
@@ -69,6 +71,8 @@ const AppRoutes = () => {
         {isAuthenticated && <FeedbackWidget />}
         <Routes>
           <Route path='/login' element={<LoginScreen />} />
+          <Route path='/request-access' element={<RequestAccessScreen />} />
+          <Route path='/signup-pending' element={<SignupPendingScreen />} />
           <Route path='/register' element={<RegistrationScreen />} />
           <Route path='/users/confirm-email' element={<VerifyEmailScreen />} />
           <Route path='/forgot-password' element={<ForgotScreen />} />
