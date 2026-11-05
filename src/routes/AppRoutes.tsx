@@ -47,6 +47,8 @@ import MCPExecutionHistory from '@/pages/MCP/MCPExecutionHistory.tsx'
 import MCPConnectionResult from '@/pages/MCP/MCPConnectionResult.tsx'
 import MemoryScreen from '@/pages/Memory'
 import ProjectsPage from '@/pages/Projects'
+import KnowledgeGraphsPage from '@/pages/KnowledgeGraph'
+import KnowledgeGraphDetail from '@/pages/KnowledgeGraph/GraphDetail'
 import ProjectDetail from '@/pages/Projects/ProjectDetail'
 import LandingPage from '../pages/Landing/LandingPage'
 import AboutPage from '../pages/About/AboutPage'
@@ -177,6 +179,11 @@ const AppRoutes = () => {
             <Route path='/projects/:projectId' element={<ProjectDetail />} />
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/files' element={<Files />} />
+            <Route path='/knowledge-graphs' element={<KnowledgeGraphsPage />} />
+            <Route
+              path='/knowledge-graphs/:graphId'
+              element={<KnowledgeGraphDetail />}
+            />
             <Route
               path={TEMPLATES_PATH}
               element={<Navigate to={PROMPT_TEMPLATES_PATH} replace />}

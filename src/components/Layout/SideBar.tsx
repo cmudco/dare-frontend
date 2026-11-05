@@ -11,6 +11,7 @@ import {
   BeakerIcon,
   ArrowTopRightOnSquareIcon,
   RectangleStackIcon,
+  ShareIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { TooltipProvider } from '../ui/tooltip'
@@ -126,6 +127,7 @@ const Sidebar = () => {
     { name: 'Conversations', icon: ChatBubbleLeftIcon, path: '/conversation' },
     { name: 'Projects', icon: RectangleStackIcon, path: '/projects' },
     { name: 'Sources', icon: FolderOpenIcon, path: '/files' },
+    { name: 'Knowledge graphs', icon: ShareIcon, path: '/knowledge-graphs' },
     { name: 'Templates', icon: PromptsIcon, path: TEMPLATES_PATH },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
     ...(canAccessResearch

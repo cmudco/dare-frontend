@@ -1,6 +1,8 @@
 import React from 'react'
+import GraphPath from '@/components/Conversation/GraphPath'
 import {
   hopVerb,
+  type GraphWalkStep,
   type ContextTraceStage,
   type RetrievalTrace,
   type RetrievalTraceEntry,
@@ -24,6 +26,7 @@ interface SnippetRowProps {
   location?: string
   via?: string | null
   viaKind?: string | null
+  path?: GraphWalkStep[]
 }
 
 /** One kept snippet, one compact line: rank, source, preview, relevance bar. */
@@ -37,6 +40,7 @@ const SnippetRow: React.FC<SnippetRowProps> = ({
   location,
   via,
   viaKind,
+  path,
 }) => {
   const ratio = maxScore > 0 ? Math.min(1, Math.max(0, score / maxScore)) : 0
   return (
@@ -66,11 +70,16 @@ const SnippetRow: React.FC<SnippetRowProps> = ({
       {(location || via) && (
         <div className='ml-6 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground'>
           {location && <span>{location}</span>}
-          {via && (
+          {via && !path?.length && (
             <span className='rounded-full bg-primary/10 px-1.5 text-primary'>
               {hopVerb(viaKind)} "{via}"
             </span>
           )}
+        </div>
+      )}
+      {!!path?.length && (
+        <div className='mt-1 ml-6'>
+          <GraphPath path={path} />
         </div>
       )}
     </div>
@@ -117,6 +126,7 @@ export const SourceSnippets: React.FC<{ source: RetrievalTrace }> = ({
           location={locationOf(entry)}
           via={entry.via}
           viaKind={entry.viaKind}
+          path={entry.path}
         />
       ))}
     </div>

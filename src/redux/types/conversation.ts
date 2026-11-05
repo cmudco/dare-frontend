@@ -233,6 +233,21 @@ export const retrievalTraces = (
   return 'traces' in payload ? payload.traces : [payload]
 }
 
+/** One node of a graph-walk path. */
+export interface GraphWalkStep {
+  kind: 'chunk' | 'entity'
+  label: string
+  /** Stated relationship on the edge arriving at this node. */
+  relation: string
+  relationReversed: boolean
+  /** The alias spelling that made this link, when it differs from the label. */
+  mentionedAs: string
+  page: number | null
+  fileId: string
+  chunkIndex: number | null
+  entityId: number | null
+}
+
 /** One chunk as it appeared at a single RAG pipeline stage. */
 export interface RetrievalTraceEntry {
   citationId?: string | null
@@ -250,11 +265,13 @@ export interface RetrievalTraceEntry {
   via?: string | null
   /** How `via` was followed: 'entity' for a shared-entity hop, otherwise the pointer kind. */
   viaKind?: string | null
+  /** The full route when a graph walk reached this chunk. */
+  path?: GraphWalkStep[]
 }
 
 /** Whether a hop followed a pointer or was pulled in through a shared entity. */
 export const hopVerb = (viaKind?: string | null): 'shares' | 'followed' =>
-  viaKind === 'entity' ? 'shares' : 'followed'
+  viaKind === 'entity' || viaKind === 'walk' ? 'shares' : 'followed'
 
 /** How an answer was retrieved, stage by stage (matches backend RetrievalTrace.to_payload). */
 export interface RetrievalTrace {
@@ -268,12 +285,26 @@ export interface RetrievalTrace {
     rewrittenQuery?: string
     /** HyDE: a hypothetical answer embedded instead of the bare question. */
     hydePassage?: string
+    /** Which way the query analyzer sent the question; absent on older traces. */
+    route?: 'direct' | 'graph'
+    queryEntities?: string[]
   } | null
   hybrid: { poolSize: number; topCandidates: RetrievalTraceEntry[] }
   rerank: { applied: boolean; results: RetrievalTraceEntry[] }
   /** Graph expand stage: in-document references followed, and shared-entity links,
    *  one hop out (absent on older traces). */
-  expand?: { applied: boolean; added: RetrievalTraceEntry[] }
+  expand?: {
+    applied: boolean
+    added: RetrievalTraceEntry[]
+    /** Set when a graph walk ran instead of the one-hop expand. */
+    walk?: {
+      nodes: number
+      edges: number
+      milliseconds: number
+      queryEntities: { name: string; entity: string }[]
+      error: string
+    } | null
+  }
   mmr: { applied: boolean; reason: string }
   grounding: {
     answerFound: boolean
