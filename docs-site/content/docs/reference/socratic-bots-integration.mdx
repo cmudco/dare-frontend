@@ -16,7 +16,7 @@ Read this before you change a DARE endpoint: it lists the rules Socratic Bots re
 
 ## Authentication rules
 
-- End-user requests use the DARE-issued JWT in `Authorization: Bearer &lt;token&gt;`.
+- End-user requests use the DARE-issued JWT in `Authorization: Bearer <token>`.
 - Backend-to-backend requests use `X-Internal-Key: $DARE_INTERNAL_KEY`.
 - `DARE_INTERNAL_KEY` must match on both services in local and deployed environments.
 - Socratic Bots decodes DARE JWTs using the shared signing secret configured for the environment.

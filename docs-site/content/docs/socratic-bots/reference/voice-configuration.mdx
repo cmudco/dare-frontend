@@ -1,0 +1,136 @@
+---
+title: "Voice Runtime Configuration"
+description: "Every voice runtime environment variable."
+---
+The runtime reads its variables in `runtime/settings.py` (`LOCAL_SENTRY_DSN` in `runtime/sentry.py`),
+from the process environment or from `.env` in the repository root; copy `.env.example` to `.env` to
+start. The Whisper worker reads its own short list, in the last table.
+
+- **Precedence.** Variables already set in the process environment win over `.env`.
+- **Restart to apply.** Settings are read once at startup.
+- **Types.** Booleans accept `1`, `true` or `yes` (case-insensitive); anything else is false. Lists
+  are comma-separated.
+
+## Values that must match across services
+
+| Variable | Must equal | Why |
+| --- | --- | --- |
+| `DARE_INTERNAL_KEY` | Backend `DARE_INTERNAL_KEY` | Sent as `X-Internal-Key` on every runtime → backend call (session context, start and end callbacks). |
+| `VOICE_RUNTIME_SESSION_SECRET` | Backend `VOICE_RUNTIME_SESSION_SECRET` | HMAC key for the browser session token. Both sides fall back to `DARE_INTERNAL_KEY` when it is empty. |
+| `VOICE_RUNTIME_ICE_SERVERS` | Backend `VOICE_RUNTIME_ICE_SERVERS` | The backend gives the browser its list; the runtime uses its own. Keep them identical. |
+
+The backend points at the runtime with `VOICE_RUNTIME_PUBLIC_URL`.
+
+## Core
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `MISTRAL_API_KEY` | **Required** | Mistral key for Voxtral realtime STT, Voxtral TTS and Mistral LLMs. |
+| `DARE_INTERNAL_KEY` | **Required** | Shared internal-service key (see above). With it empty, backend calls are rejected and, unless `VOICE_RUNTIME_SESSION_SECRET` is set, every session token is rejected. |
+| `SOCRATIC_BOTS_BACKEND_URLS` | falls back to `SOCRATIC_BOTS_BACKEND_URL`, then `http://localhost:8001` | Backends this runtime serves. For each session the runtime asks each URL in order for the session context; the first that answers owns the session and receives its callbacks. |
+
+## Sessions, networking and CORS
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VOICE_RUNTIME_SESSION_SECRET` | `DARE_INTERNAL_KEY` | Secret used to verify browser session tokens. |
+| `VOICE_RUNTIME_ICE_SERVERS` | `stun:stun.l.google.com:19302` | STUN/TURN URLs for WebRTC. See [docs/how-to/deploy.md](/docs/socratic-bots/how-to/deploy-voice#webrtc-stun-and-turn). |
+| `VOICE_RUNTIME_CORS_ORIGINS` | empty | Extra allowed browser origins. They are added to a built-in list that always includes `http://localhost:5173`, `http://localhost:5174`, their `127.0.0.1` forms, and the maintainers' hosted frontends. |
+
+## Speech-to-text (Mistral Voxtral)
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `MISTRAL_STT_MODEL` | `voxtral-mini-transcribe-realtime-2602` | Realtime transcription model. |
+| `MISTRAL_STT_TARGET_DELAY_MS` | `600` | Target transcription delay passed to Voxtral. Lower is faster but less accurate. |
+| `VOICE_RUNTIME_STT_LIVENESS_DEADLINE_SECS` | `4.0` | Seconds allowed between VAD closing a turn and the first transcript before the STT connection is treated as dead and rebuilt with a replay. `<= 0` disables the watchdog. Must be positive when the Whisper backup is enabled (startup fails otherwise). |
+| `VOICE_RUNTIME_STT_PROGRESS_TIMEOUT_SECS` | `12` | During continuous speech: seconds without new transcript text (with recent audio and at least two seconds of detected speech) before recovery starts. |
+| `VOICE_RUNTIME_STT_RECONNECT_TIMEOUT_SECS` | `12` | Time allowed for reconnect, buffered replay and recognition together. It grows with the replayed clip length. |
+| `VOICE_RUNTIME_STT_RECONNECT_CAP_SECS` | `30` | Upper bound for the reconnect timeout above. |
+
+## Whisper STT backup (runtime side)
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VOICE_RUNTIME_WHISPER_URL` | empty | Base URL of the Whisper worker, e.g. `http://127.0.0.1:8011`. Empty disables the backup. |
+| `VOICE_RUNTIME_WHISPER_TOKEN` | empty | Bearer token shared with the worker. Required when the URL is set; startup fails without it. |
+
+See [docs/how-to/whisper-backup.md](/docs/socratic-bots/how-to/whisper-backup).
+
+## LLM
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `MISTRAL_LLM_MODEL` | `mistral-large-latest` | Model used when the agent has no model of its own. |
+| `MISTRAL_LLM_MAX_TOKENS` | `180` | Max tokens per agent reply. Short replies keep the conversation spoken, not lectured. |
+| `VOICE_RUNTIME_LLM_FALLBACKS` | `gpt-5.6-luna,claude-haiku-4-5-20251001,mistral-large-latest` | Models tried in order after the primary fails or is too slow. The provider is inferred from the name (`gpt-`/`o1`/`o3`/`o4` → OpenAI, `claude-` → Anthropic, `gemini-` → Gemini, anything else → Mistral). Models whose provider key is missing are skipped. |
+| `VOICE_RUNTIME_LLM_TTFB_DEADLINE_SECS` | `6.0` | Seconds to wait for the first token before moving to the next model. |
+| `VOICE_RUNTIME_LLM_RESPONSE_TIMEOUT_SECS` | `30.0` | Total time allowed for one reply. |
+| `OPENAI_API_KEY` | empty | Enables OpenAI models in the fallback chain. |
+| `ANTHROPIC_API_KEY` | empty | Enables Anthropic models (via Anthropic's OpenAI-compatible endpoint). |
+| `GEMINI_API_KEY` | empty | Enables Gemini models (via Google's OpenAI-compatible endpoint). |
+
+## Text-to-speech
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VOICE_RUNTIME_TTS_PROVIDER` | `mistral` | `kokoro` (local, recommended) or `mistral` (Voxtral TTS). `.env.example` sets `kokoro`. |
+| `VOICE_RUNTIME_TTS_TRANSPORT` | `http` | `webrtc` streams audio on the WebRTC track in step with transcript events (recommended, Kokoro only). `http` pre-renders each reply to a WAV the browser downloads (works with both engines). `.env.example` sets `webrtc`. |
+| `KOKORO_VOICE` | `af_heart` | Kokoro voice name, used for every agent. An agent's own voice setting applies only to Mistral TTS. |
+| `KOKORO_MODEL_PATH` | empty | Path to `kokoro-v1.0.onnx`. Empty downloads it to `~/.cache/kokoro-onnx` on first use. |
+| `KOKORO_VOICES_PATH` | empty | Path to `voices-v1.0.bin`. Same download behaviour. |
+| `MISTRAL_TTS_MODEL` | `voxtral-mini-tts-2603` | Voxtral TTS model, used when the provider is `mistral`. |
+| `MISTRAL_TTS_VOICE` | `en_paul_neutral` | Voxtral TTS voice, used when the agent has no voice of its own. |
+
+The code defaults are `mistral` + `http`, not the tested `kokoro` + `webrtc`. Set both variables
+explicitly.
+
+## Turn detection (Silero VAD)
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VOICE_RUNTIME_VAD_CONFIDENCE` | `0.5` | Speech-probability threshold. |
+| `VOICE_RUNTIME_VAD_START_SECS` | `0.2` | Speech needed before a turn starts. |
+| `VOICE_RUNTIME_VAD_STOP_SECS` | `1.2` | Silence needed before a turn ends, used only when the agent's eagerness is not `low`, `normal` or `high`. Those map to 2.0, 1.5 and 1.0 seconds (`runtime/vad.py`), and sessions default to `normal`. |
+| `VOICE_RUNTIME_VAD_MIN_VOLUME` | `0.35` | Raw energy gate applied on top of the model. Raising it drops soft speech. |
+| `VOICE_RUNTIME_USER_TURN_STOP_TIMEOUT` | `2.0` | Cap on Pipecat's fallback wait after the student stops talking. Lower feels snappier; higher tolerates long thinking pauses. |
+
+## Logging and debugging
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VOICE_RUNTIME_AUDIO_INPUT_DEBUG` | `true` | Logs inbound microphone levels (never content). Useful to tell a silent browser track from speech below the VAD gate. Noisy; `.env.example` sets it to `false`. |
+| `VOICE_RUNTIME_LLM_INPUT_DEBUG` | `false` | Writes every LLM request context, including student answers, to `/tmp/voice-runtime-audio/<session>/`. Never enable in production. |
+| `VOICE_RUNTIME_LOG_TTS_REQUEST_TEXT` | `false` | Logs the text sent to TTS. Contains agent replies. |
+
+## Sentry
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `SENTRY_DSN` | empty | Production DSN. Used only when `SENTRY_ENVIRONMENT` is not `development`, `local` or `test`. |
+| `SENTRY_ENVIRONMENT` | `development` | Environment name on events. |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | Trace sampling rate. Forced to `0` when `SENTRY_ENVIRONMENT` is `development`, `local` or `test`. |
+| `LOCAL_SENTRY_DSN` | empty | DSN used instead of `SENTRY_DSN` when `SENTRY_ENVIRONMENT` is `development`, `local` or `test`. Local events are stripped to metadata. |
+
+Leave both DSNs empty to disable Sentry.
+
+## Whisper worker (separate process)
+
+`runtime.whisper_worker` runs in its own virtualenv and reads only these:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VOICE_RUNTIME_WHISPER_TOKEN` | **Required** | Same value as the runtime's. Must be exported in the worker's environment before it starts. |
+| `WHISPER_MODEL` | `small` | faster-whisper model name (`tiny.en`, `small`, …) or a local model directory. |
+| `WHISPER_DEVICE` | `cpu` | `cpu` or `cuda`. |
+| `WHISPER_COMPUTE_TYPE` | `int8` | faster-whisper compute type. |
+| `WHISPER_CPU_THREADS` | `4` | CPU threads for inference. |
+
+`scripts/setup_whisper_backup.sh` also honours `WHISPER_PORT` (default `8011`) when writing
+`VOICE_RUNTIME_WHISPER_URL`.
+
+## Adding a variable
+
+1. Read it in `runtime/settings.py`, with a default and a short comment for non-obvious values.
+2. Add it to `.env.example`.
+3. Add a row to the matching table in this file.

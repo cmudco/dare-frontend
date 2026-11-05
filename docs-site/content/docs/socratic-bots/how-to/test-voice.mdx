@@ -1,0 +1,116 @@
+---
+title: "Test the Voice Runtime"
+description: "Run the automated suite, the Whisper smoke test and the manual voice checklist."
+---
+Run the automated suite, the Whisper smoke test and the manual voice checklist before you ship a
+runtime change.
+
+## Automated tests
+
+The suite uses the standard library's `unittest`, so the runtime requirements are all you need. Run
+it from the repository root with the runtime virtualenv active:
+
+```bash
+python -m unittest discover -s tests
+```
+
+Add `-v` to see each test name. The suite runs in about ten seconds and makes no network calls.
+
+| File | Covers |
+| --- | --- |
+| `tests/test_health.py` | `/health` response |
+| `tests/test_preflight.py` | the Whisper deploy gate |
+| `tests/test_session_lifecycle.py` | session start/end, exit reasons, end acknowledgements |
+| `tests/test_stt_fallback.py` | STT watchdog, rebuild and replay, Whisper hand-off and revert |
+| `tests/test_turn_recovery.py` | interruption recovery |
+| `tests/test_speech_policy.py`, `tests/test_speech_text.py` | what is and is not spoken |
+
+### Whisper smoke test
+
+`tests/smoke_whisper.py` runs a real Pipecat pipeline against a running Whisper worker, with one
+simulated Mistral failure, and checks that exactly one recovered transcript comes out. It needs the
+worker running (see [docs/how-to/whisper-backup.md](/docs/socratic-bots/how-to/whisper-backup)), the shared token in the
+environment, and a mono 16 kHz WAV file:
+
+```bash
+PYTHONPATH=. python tests/smoke_whisper.py path/to/speech-16k-mono.wav [auto|manual|direct|aggregated]
+```
+
+`aggregated` runs the production user aggregator with the backup result delayed by three seconds and
+checks that the late transcript still yields exactly one LLM request. This is a smoke test, not a
+quality or concurrency benchmark.
+
+## Manual voice checklist
+
+Automated tests do not cover real microphones, browsers or networks. Before a release, run these
+against a local or staging stack with a test agent, and use a student account when checking attempt
+limits. Never run failure tests on live exams.
+
+**Startup**
+
+1. Deny the microphone, then allow it and retry. No attempt should be used.
+2. Start, then cancel while connecting. No completion screen should appear.
+3. Double-click Start, and open a second tab. Only one session should start.
+4. Refresh or leave during startup. Callbacks from the old attempt must not affect the next session.
+
+**Conversation**
+
+5. Ask and answer normally. The agent-speaking indicator lasts until its audio finishes.
+6. Make a brief noise while the agent speaks, then stay silent. The agent should resume its reply
+   once, without inventing words for you.
+7. Interrupt the agent with real words. It should drop the retry and answer the new turn.
+8. Talk continuously with short pauses. The agent should not talk over you.
+9. Interrupt right after the agent starts. No one-word reply should be recorded as complete.
+
+**Recovery**
+
+10. Turn Wi-Fi off briefly (under 8 seconds), then back on. The session should recover.
+11. Drop the network for longer. The UI should report the lost connection and the session should be
+    recorded as cancelled.
+12. With the Whisper backup configured, switch to backup recognition, speak and pause. Your words
+    should appear.
+
+**Ending**
+
+13. End normally. Completion should appear only after the backend confirms it.
+14. End while a retry is pending. No audio should play afterwards, and the end reason is kept.
+15. Navigate away, refresh or close the tab. History should show the reason the browser could report,
+    or `unknown`; nothing is guessed.
+
+When reporting a failure, include the session ID, time, browser and what you did. Never include
+passwords or tokens.
+
+## Releasing alongside the backend
+
+The runtime and the Socratic Bots backend change together. When a release touches both:
+
+- Deploy the backend first.
+- If you use the backend's startup claims (`VOICE_RUNTIME_STARTUP_CLAIMS_ENABLED`), keep them off
+  until every runtime serving that backend fetches the session context with `POST`, and run the
+  backend's `python manage.py expire_voice_startups` every minute. A claimed startup holds a
+  90-second lease, so offline cleanup is not instant; active exams are never reclaimed. Turn claims
+  off before rolling a runtime back to an older version.
+- If you run the Whisper backup, run `python -m runtime.preflight`, then test both a manual and an
+  automatic switch after deploying.
+- Deploy the frontend last.
+- Test concurrent starts on PostgreSQL, real microphone audio in a browser, Sentry delivery (if used)
+  and backup capacity before calling the release verified.
+
+## Local log capture
+
+`scripts/local_logs.py` runs a service under a wrapper that writes metadata-only JSONL logs
+(timestamps, error classes, HTTP status, session IDs, health-event names; no audio, transcript text,
+request bodies or tokens). It keeps five 5 MB files per service in an owner-only folder.
+
+```bash
+python scripts/local_logs.py --service runtime --directory local-logs/test-run -- \
+  python -m uvicorn runtime.pipecat_app:app --host 127.0.0.1 --port 8010
+```
+
+`--service` accepts `runtime`, `whisper`, `sb-backend` and `dare-backend`, so you can capture the
+whole local stack into one folder. Start each process through the wrapper; it does not attach to
+running processes. Review the folder before sharing it. Terminal output and debug dumps are not
+covered by this filtering and can contain student data.
+
+For local Sentry testing, set `LOCAL_SENTRY_DSN` to a separate test project. Local events are
+stripped of payloads, breadcrumbs, request data and local variables.

@@ -1,0 +1,226 @@
+---
+title: "Deploy the Backend"
+description: "Run the backend on a server, with Docker or on bare metal."
+---
+Run the Socratic Bots backend on a server, with Docker or on bare metal. To run it on your own
+machine instead, follow [docs/tutorials/quickstart.md](/docs/socratic-bots/tutorials/full-stack-quickstart).
+
+The backend is a stateless Django WSGI app plus a PostgreSQL database, and it needs a reachable DARE
+backend. The examples use `bots-api.example.org` for this backend, `bots.example.org` for the
+frontend, and `dare-api.example.org` for DARE; substitute your own hostnames. Every variable is in
+[docs/reference/configuration.md](/docs/socratic-bots/reference/backend-configuration).
+
+## Prerequisites
+
+- **Docker 24+ with Compose** (Path 1), or **Python 3.10+** (Path 2). The image uses 3.13.
+- **PostgreSQL 14+.** SQLite is for local development only. The compose file bundles 16.
+- **A DARE backend** on current `dev` or `main`, reachable from this server over HTTPS.
+- **WeasyPrint system libraries** (Pango and HarfBuzz). The Dockerfile installs them.
+- **A reverse proxy** (nginx, Caddy, or a load balancer) that terminates TLS.
+
+### Resource minimums
+
+The backend is light; DARE is where CPU, memory and disk go.
+
+| Profile | CPU | RAM | Disk | Notes |
+| --- | ---: | ---: | ---: | --- |
+| Backend + bundled PostgreSQL | 1 vCPU | 1 GB | 5 GB | Image about 530 MB; a fresh database is 50 MB |
+
+Measured on Docker Desktop (8-vCPU VM on an Apple M1 Pro): the `web` container with 3 Gunicorn
+workers used 236 MiB idle and did not grow over 400 requests at 10 concurrent, peaking at a third
+of one core; PostgreSQL used 30 MiB. Most request time is spent waiting on DARE.
+
+## Production checklist
+
+Set these before the first deploy:
+
+- [ ] `DEBUG=False`
+- [ ] `DJANGO_SECRET_KEY` — a new random value, never the default
+- [ ] `SSO_JWT_KEY` — identical to DARE's
+- [ ] `DARE_INTERNAL_KEY` — identical to DARE's and the voice runtime's; empty disables internal endpoints
+- [ ] `DARE_BACKEND_URL=https://dare-api.example.org`
+- [ ] `SOCRATIC_BOTS_BACKEND_URL=https://bots-api.example.org` (and the same value in DARE's `.env`)
+- [ ] `ALLOWED_HOSTS=bots-api.example.org`
+- [ ] `CORS_ALLOWED_ORIGINS=https://bots.example.org`
+- [ ] `CSRF_TRUSTED_ORIGINS=https://bots-api.example.org`
+- [ ] `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` for PostgreSQL
+- [ ] In DARE's `.env`: `SOCRATIC_BOTS_FRONTEND_URL=https://bots.example.org`
+- [ ] Optional: `VOICE_RUNTIME_PUBLIC_URL`, `VOICE_RUNTIME_ICE_SERVERS` with a TURN server, ElevenLabs keys, `SENTRY_DSN`
+
+With `DEBUG=False` the backend sends secure-only cookies and an HSTS header (one year, with
+subdomains and preload), so serve it over HTTPS only.
+
+## Path 1: Docker
+
+The bundled `docker-compose.yml` runs:
+
+- **web**: Gunicorn (3 workers, 300 s timeout) on host port `${WEB_PORT:-8001}`. On start it
+  waits for PostgreSQL and applies migrations. It refuses to start with `DEBUG=False` while
+  `DJANGO_SECRET_KEY`, `SSO_JWT_KEY` or `DARE_INTERNAL_KEY` is empty.
+- **db**: PostgreSQL 16 on `127.0.0.1:${POSTGRES_PORT:-5433}`, data in the
+  `socraticbots_postgres_data` volume.
+- **scheduler**, with the `voice` profile: runs `expire_voice_startups` every minute (see
+  [Scheduled jobs](#scheduled-jobs)).
+
+The image runs as a non-root user and serves static files with WhiteNoise, so the admin works
+without a proxy rule for `/static/`.
+
+1. Clone the repo and fill in `.env` from the checklist above. Also set `DB_PASSWORD`; Compose
+   refuses to start without it.
+2. Build and start the containers.
+3. Optionally create a superuser; it can use the Django admin only.
+
+```bash
+git clone https://github.com/cmudco/socraticbots-backend.git
+cd socraticbots-backend
+cp env.example .env              # fill in the checklist above, plus DB_PASSWORD
+docker compose up --build -d
+docker compose --profile voice up -d   # only with VOICE_RUNTIME_STARTUP_CLAIMS_ENABLED=true
+docker compose exec web python backend/manage.py createsuperuser   # Django admin only
+```
+
+Things to know:
+
+- The containers ignore `DEBUG`, `DB_HOST` and `DARE_BACKEND_URL` from `.env`: they use
+  `DOCKER_DEBUG` (default `False`), the bundled `db`, and `DOCKER_DARE_BACKEND_URL`.
+- `DOCKER_DARE_BACKEND_URL` defaults to `http://host.docker.internal:8000`, DARE on the Docker
+  host. Set it to DARE's public or internal URL on a server. If you keep `host.docker.internal`,
+  add it to DARE's `ALLOWED_HOSTS`, or DARE answers every call with 400 `DisallowedHost`.
+- Bind the API port to `127.0.0.1` (`WEB_PORT=127.0.0.1:8001`) or firewall it when the reverse
+  proxy runs on the same host.
+- `docker-compose.override.yml.example` is for local development only: it turns on `DEBUG` and
+  mounts the working tree.
+
+## Path 2: Bare metal (systemd + Gunicorn)
+
+1. Install the system packages, clone the repo, create the virtualenv, and fill in `.env`.
+2. Run migrations and collect static files.
+3. Install the systemd unit below and start it.
+
+```bash
+sudo apt install python3-venv libpq-dev libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0
+git clone https://github.com/cmudco/socraticbots-backend.git /srv/socraticbots-backend
+cd /srv/socraticbots-backend
+python3 -m venv venv && venv/bin/pip install -r requirements.txt
+cp env.example .env              # fill in the checklist above
+cd backend
+../venv/bin/python manage.py migrate
+../venv/bin/python manage.py collectstatic --noinput
+```
+
+Save the unit as `/etc/systemd/system/socraticbots-backend.service`:
+
+```ini
+[Unit]
+Description=Socratic Bots backend
+After=network.target
+
+[Service]
+User=socraticbots
+WorkingDirectory=/srv/socraticbots-backend/backend
+EnvironmentFile=/srv/socraticbots-backend/.env
+ExecStart=/srv/socraticbots-backend/venv/bin/gunicorn core.wsgi:application \
+    --bind 127.0.0.1:8001 --workers 3 --timeout 300
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now socraticbots-backend
+```
+
+The 300-second timeout matters: file uploads and PDF exports wait on DARE.
+
+## Reverse proxy
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name bots-api.example.org;
+
+    client_max_body_size 100M;          # tutor document uploads
+
+    location / {
+        proxy_pass http://127.0.0.1:8001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+    }
+}
+```
+
+This backend serves plain HTTP only. Chat WebSockets go to DARE, and voice WebRTC goes to the
+voice runtime, so neither needs WebSocket proxying here.
+
+## Scheduled jobs
+
+| Command | When | Needed if |
+| --- | --- | --- |
+| `python manage.py expire_voice_startups` | Every minute | `VOICE_RUNTIME_STARTUP_CLAIMS_ENABLED=true` |
+| `python manage.py update_agent_webhooks` | Once, after setting `ELEVENLABS_WEBHOOK_ID` | You use ElevenLabs agents |
+
+On Docker, the `scheduler` service runs the first one (`docker compose --profile voice up -d`), and
+`docker compose exec web python backend/manage.py update_agent_webhooks` runs the second. On bare
+metal, use cron or a systemd timer.
+
+## Backups
+
+Back up the PostgreSQL database and `backend/mediafiles/`. Conversations, files, accounts, and
+wallets live in DARE and need DARE's own backups.
+
+## Verify
+
+Two unauthenticated endpoints:
+
+- `GET /api/health/` answers 200 while the process is up. It touches neither the database nor DARE,
+  so use it for liveness probes; the Docker health check calls it.
+- `GET /api/ready/` answers 200 when PostgreSQL and DARE's `/api/health/` both respond, and 503 with
+  the failing check otherwise. Use it after a deploy and for load-balancer readiness.
+
+```bash
+curl https://bots-api.example.org/api/ready/
+# {"status": "ready", "checks": {"database": "ok", "dare": "ok"}, ...}
+docker compose ps                # Docker path: web shows (healthy)
+```
+
+## Upgrade
+
+Pull the code, update dependencies, migrate, collect static files, and restart. On Docker,
+`git pull && docker compose up --build -d` does all of it: the image collects static files and the
+`web` container migrates on start.
+
+```bash
+git pull
+venv/bin/pip install -r requirements.txt
+cd backend
+../venv/bin/python manage.py migrate
+../venv/bin/python manage.py collectstatic --noinput
+sudo systemctl restart socraticbots-backend
+```
+
+When a release changes the API that DARE or the frontend uses, deploy DARE first, then this
+backend, then the frontend.
+
+## Troubleshooting
+
+- **Every request returns 401 after sign-in.** `SSO_JWT_KEY` differs from DARE's. Set the same
+  value on both and restart both.
+- **Budgets, uploads, or voice callbacks fail with 401/403.** `DARE_INTERNAL_KEY` differs between
+  this backend, DARE, and the voice runtime. Use one value everywhere.
+- **`DisallowedHost` or CORS errors.** Add your hostnames to `ALLOWED_HOSTS`,
+  `CORS_ALLOWED_ORIGINS`, and `CSRF_TRUSTED_ORIGINS`.
+- **Startup fails with `OSError: cannot load library ...`.** WeasyPrint's system libraries are
+  missing. Install the `libpango` and `libharfbuzz` packages from Path 2.
+- **`/api/ready/` reports `"dare": "error: ..."`.** The backend can't reach DARE at
+  `DARE_BACKEND_URL` (`DOCKER_DARE_BACKEND_URL` on Docker). An `HTTPError` usually means DARE
+  rejected the host name: add it to DARE's `ALLOWED_HOSTS`.
+- **`docker compose up` fails with `Set DB_PASSWORD in .env`.** Set `DB_PASSWORD` in `.env`.
+- **Uploads or PDF exports time out.** Keep Gunicorn's `--timeout 300` and the proxy's
+  `proxy_read_timeout 300s`; both wait on DARE.
+
+The [quick start troubleshooting](/docs/socratic-bots/tutorials/full-stack-quickstart#troubleshooting) covers more DARE-side
+causes.

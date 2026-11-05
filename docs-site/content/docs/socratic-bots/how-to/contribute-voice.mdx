@@ -1,0 +1,114 @@
+---
+title: "Contribute to the Voice Runtime"
+description: "Voice runtime issues, pull requests, and conventions."
+---
+Thanks for helping with the voice runtime, the part of Socratic Bots that runs live voice sessions.
+This guide covers issues, pull requests and the conventions this repository follows.
+
+## Filing issues
+
+1. **Search first.** Look through
+   [open and closed issues](https://github.com/cmudco/voice-agent-runtime/issues?q=is%3Aissue), and
+   check that the problem still happens on the latest `main`.
+2. **Pick the right repo.** Problems inside a voice call belong here. For voice bugs, give the
+   session ID, the time, the browser, and whether the Whisper backup was configured. Runtime logs
+   can contain transcript text when debug switches are on, so check them before you paste.
+3. **Open a form.** Go to
+   [Issues → New issue](https://github.com/cmudco/voice-agent-runtime/issues/new/choose) and choose
+   **Bug report**, **Feature request** or **Docs problem**. Each form asks for exactly what we need;
+   fill in every required field.
+4. **Redact.** Remove keys, tokens and student data from logs and screenshots.
+5. **Watch the issue.** If we need more detail, we ask there.
+
+Before a large change, such as a new provider, a change to the pipeline, or a change to the backend
+contract, open a feature request with a short design sketch and wait for a reply before you write
+code.
+
+Security vulnerabilities never go in an issue. Follow [SECURITY.md](/docs/socratic-bots/reference/voice-security).
+
+## Pull requests
+
+### Branching
+
+This repository has no `dev` branch. Fork it, branch from the latest `main`, and target `main`.
+
+```bash
+git checkout main
+git pull --ff-only origin main
+git checkout -b your-name/fix/short-description
+```
+
+Name branches `<author>/<feature|fix|refactor|docs>/<short-description>`.
+
+### Before you open a PR
+
+1. Run the checks with the Python 3.12 virtualenv from
+   [docs/tutorials/quickstart.md](/docs/socratic-bots/tutorials/voice-quickstart) active (or run the `check`
+   skill):
+
+   ```bash
+   python -m compileall -q runtime scripts tests
+   python -m unittest discover -s tests
+   ```
+
+2. For changes to the pipeline, STT/LLM resilience or browser events, run the relevant parts of the
+   manual checklist in [docs/how-to/testing.md](/docs/socratic-bots/how-to/test-voice) with a real browser and
+   microphone, and say what you ran in the PR.
+3. If you add or change an environment variable, update `runtime/settings.py`, `.env.example` and
+   [docs/reference/configuration.md](/docs/socratic-bots/reference/voice-configuration) in the same PR.
+
+This repository has no `rules.md`. The conventions below and the Traps in `AGENTS.md`
+are its coding rules.
+
+### Conventions
+
+- **Python 3.12.** Do not use features that break on it.
+- **Dependencies.** Add runtime packages to `requirements.txt` with a pin. Pipecat stays in
+  `requirements-pipecat.txt` and is installed with `--no-deps`; if you bump Pipecat, re-check its
+  declared dependencies and pin what it needs in `requirements.txt`. Whisper worker packages go in
+  `requirements-whisper.txt` only.
+- **Settings.** Read environment variables in `runtime/settings.py`, with a default and a short
+  comment for non-obvious values. Changing a default changes every deployment that relies on it, so
+  call it out in the PR.
+- **Student data.** Never log transcript text, audio or tokens by default. Anything that does
+  belongs behind an explicit debug switch that defaults to off.
+- **Backend contract.** The session token format, the context endpoint and the start/end callbacks
+  are shared with the Socratic Bots backend. Keep changes backward compatible, or document the
+  deploy order.
+- **Tests.** Use `unittest`. Mock Mistral and other providers; tests must not make network calls.
+
+### PR description
+
+The `pull request template` asks for what, why, how, testing and AI
+assistance, plus a checklist. Fill in every section; write "none" where nothing applies. Add rollout
+notes if the change needs a matching Socratic Bots change or a deploy order.
+
+### Review and merge
+
+- At least one approving review from a maintainer.
+- Squash-merge by default; the squashed message describes the change.
+
+### Commit messages
+
+`<type>: <summary>`, where type is `feat`, `fix`, `refactor`, `docs`, `test` or `chore`. Keep the
+summary under 70 characters and put the reasoning in the body.
+
+```text
+fix: replay the buffered turn after an STT rebuild
+feat: add Gemini to the LLM fallback chain
+docs: document the Whisper preflight gate
+```
+
+## Using AI coding agents
+
+`AGENTS.md` holds the commands and traps; Codex reads it directly and Claude Code
+imports it through `.claude/CLAUDE.md`. Task procedures live in `.agents/skills/` (`run-runtime`,
+`check`), symlinked into `.claude/skills/`. Invoke one by name (`/run-runtime` in Claude Code,
+`$run-runtime` in Codex). See `.agents/README.md` for the layout and the
+Windows symlink caveat. If you change how the runtime is run or tested, update the matching skill in
+the same PR.
+
+## Getting help
+
+Open an issue (with a design sketch before a large change) or a draft PR with your question in the
+description. You can also email the project team at vks@andrew.cmu.edu.
