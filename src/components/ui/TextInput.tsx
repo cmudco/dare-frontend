@@ -40,6 +40,7 @@ const TextInput: React.FC<TextInputProps> = ({
           id={name}
           name={name}
           type={showPassword && type === 'password' ? 'text' : type}
+          autoCapitalize={type === 'email' ? 'none' : undefined}
           value={value}
           onChange={onChange}
           onBlur={onBlur}
