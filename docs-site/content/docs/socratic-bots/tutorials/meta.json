@@ -1,0 +1,8 @@
+{
+  "title": "Tutorials",
+  "pages": [
+    "full-stack-quickstart",
+    "frontend-quickstart",
+    "voice-quickstart"
+  ]
+}

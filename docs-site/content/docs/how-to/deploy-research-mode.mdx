@@ -181,7 +181,7 @@ in the `X-DARE-Project` header. It is offered:
   `search_knowledge`) and the Scout tools (`stage_finding`, `report_learning`),
   authorized by a signed token in their arguments;
 - every tool of each MCP server the owner connected and enabled for the
-  project, as `&lt;server&gt;__&lt;tool&gt;` (for example `scite__search`). DARE runs the
+  project, as `<server>__<tool>` (for example `scite__search`). DARE runs the
   call with the owner's credentials and records it on the run.
 
 The briefs do not name these tools; the agent finds them in its tool list.
@@ -202,10 +202,10 @@ an MCP error, so it does not trip Hermes's per-server circuit breaker.
 | `SOUL.md` | `SoulFileVersion` (versioned) | this project |
 | `memories/MEMORY.md` | the project's settings + `ResearchProjectMemory` | this project |
 | `memories/USER.md` | `ResearcherProfile` | every project the user owns |
-| `skills/dare/&lt;name&gt;/SKILL.md` | `ResearchProcedure` | every project, or one |
+| `skills/dare/<name>/SKILL.md` | `ResearchProcedure` | every project, or one |
 
 Every memory or skill write the agent makes, mid-turn or in background
-reflection, is staged under `&lt;profile&gt;/pending/`. DARE turns each into a
+reflection, is staged under `<profile>/pending/`. DARE turns each into a
 `ResearchMemoryProposal` (`learning_service.sync_pending_learning`), the user
 approves or rejects it, and DARE re-renders the files. Hermes caps
 `MEMORY.md` (2200 chars) and `USER.md` (1375 chars) and rejects writes past
@@ -228,7 +228,7 @@ data older than the project kind allows is staged with a flag.
 
 ## 8. Smoke test
 
-1. Create a project in the UI; `~/.hermes/profiles/dare-proj&lt;id&gt;/` appears with
+1. Create a project in the UI; `~/.hermes/profiles/dare-proj<id>/` appears with
    `config.yaml`, `.env`, `SOUL.md` and `memories/`.
 2. In a new thread ask "What is the question we are working on?" and "What do
    you know about me?". The answers come from `MEMORY.md` and `USER.md`.
