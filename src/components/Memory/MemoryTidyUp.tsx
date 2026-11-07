@@ -11,7 +11,7 @@
  * has something to say or tells you plainly that it does not.
  */
 import { useState } from 'react'
-import { Loader2, Sparkle } from 'lucide-react'
+import { Brush, Loader2 } from 'lucide-react'
 import type { MemoryProposal, MemorySweep } from '@/redux/types/memory'
 import { Button } from '@/components/ui/button'
 import MemoryProposalCard from './MemoryProposalCard'
@@ -47,7 +47,7 @@ const MemoryTidyUp: React.FC<MemoryTidyUpProps> = ({
       <div className='flex flex-wrap items-center justify-between gap-3'>
         <div>
           <div className='flex items-center gap-2'>
-            <Sparkle className='h-4 w-4 text-muted-foreground' />
+            <Brush className='h-4 w-4 text-muted-foreground' />
             <span className='text-sm font-medium'>Tidy up</span>
           </div>
           <p className='mt-1 text-xs text-muted-foreground'>

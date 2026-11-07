@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  Sparkles,
+  Compass,
   History,
   Plus,
   Cpu,
@@ -38,7 +38,7 @@ const BASE_STEPS: ConversationTourStep[] = [
     title: 'Welcome to DARE Chat',
     description:
       "Let's take a quick tour of the conversation interface to get you up to speed.",
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {

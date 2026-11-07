@@ -38,7 +38,7 @@ import {
   Crown,
   FileText,
   ExternalLink,
-  Sparkles,
+  Gauge,
   XCircle,
   Zap,
 } from 'lucide-react'
@@ -48,7 +48,7 @@ import ReasoningLevelIndicator from '@/components/Conversation/ModelPicker/Reaso
 
 const tierIcons = {
   [ModelTier.Premium]: Crown,
-  [ModelTier.Advanced]: Sparkles,
+  [ModelTier.Advanced]: Gauge,
   [ModelTier.Flash]: Zap,
 }
 

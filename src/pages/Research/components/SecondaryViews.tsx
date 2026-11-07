@@ -4,9 +4,9 @@ import {
   FileText,
   LayoutGrid,
   Loader2,
+  Play,
   Rows3,
   Shapes,
-  Sparkles,
   Workflow,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -198,7 +198,7 @@ const GenerateBar = ({ projectId }: { projectId?: number }) => {
             </>
           ) : (
             <>
-              <Sparkles className='h-4 w-4' /> Generate
+              <Play className='h-4 w-4' /> Generate
             </>
           )}
         </Button>

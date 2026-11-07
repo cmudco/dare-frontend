@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Sparkles, X } from 'lucide-react'
+import { Compass, X } from 'lucide-react'
 
 interface ConversationTourWelcomeProps {
   onStart: () => void
@@ -46,7 +46,7 @@ export default function ConversationTourWelcome({
           transition={{ delay: 0.05, duration: 0.3 }}
         >
           <div className='mb-4 inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/20 p-2.5 backdrop-blur-xs'>
-            <Sparkles className='h-5 w-5 text-white' />
+            <Compass className='h-5 w-5 text-white' />
           </div>
           <h2 className='text-xl font-bold tracking-tight text-white'>
             {title || 'Welcome to DARE Chat'}
@@ -72,7 +72,7 @@ export default function ConversationTourWelcome({
           <span className='absolute inset-0 bg-dare-gradient transition-opacity group-hover:opacity-90' />
           <span className='absolute inset-0 -translate-x-full skew-x-12 bg-linear-to-r from-transparent via-white/15 to-transparent transition-transform duration-500 group-hover:translate-x-full' />
           <span className='relative flex items-center justify-center gap-2'>
-            <Sparkles className='h-4 w-4' />
+            <Compass className='h-4 w-4' />
             Start Tour
           </span>
         </button>
