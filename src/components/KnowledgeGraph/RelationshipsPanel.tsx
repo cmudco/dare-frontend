@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ListPlus, Loader2, Plus, X } from 'lucide-react'
+import { ListPlus, Loader2, Plus } from 'lucide-react'
 
 import {
   addLabelAPI,
@@ -9,6 +9,7 @@ import {
   getGraphEstimateAPI,
 } from '@/api/knowledgeGraph'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import type {
   GraphEstimate,
@@ -19,49 +20,12 @@ import type {
 import { toast } from '@/utils/toast'
 
 import { relationText } from './entityKinds'
+import RelationLabelRow from './RelationLabelRow'
 
 const MAX_LABELS = 12
 
 const money = (value: number) =>
   value < 0.01 ? 'under $0.01' : `$${value.toFixed(2)}`
-
-const LabelRow = ({
-  label,
-  onDelete,
-}: {
-  label: RelationLabel
-  onDelete: () => void
-}) => (
-  <div className='flex items-center gap-3 border-b border-border py-2 last:border-0'>
-    <div className='min-w-0 flex-1'>
-      <p className='truncate text-sm font-medium'>{relationText(label.name)}</p>
-      {label.description && (
-        <p className='truncate text-xs text-muted-foreground'>
-          {label.description}
-        </p>
-      )}
-    </div>
-    <span className='shrink-0 text-xs text-muted-foreground tabular-nums'>
-      {label.relationCount} found
-    </span>
-    <span className='shrink-0 text-xs text-muted-foreground'>
-      {!label.read
-        ? 'Not read yet'
-        : label.source === 'user'
-          ? 'Added by you'
-          : 'Suggested'}
-    </span>
-    <Button
-      variant='ghost'
-      size='icon'
-      className='h-7 w-7 shrink-0'
-      aria-label={`Remove ${label.name}`}
-      onClick={onDelete}
-    >
-      <X className='h-3.5 w-3.5' />
-    </Button>
-  </div>
-)
 
 const RelationshipsPanel = ({
   graph,
@@ -75,6 +39,7 @@ const RelationshipsPanel = ({
   const [estimate, setEstimate] = useState<GraphEstimate | null>(null)
   const [newLabel, setNewLabel] = useState('')
   const [newMeaning, setNewMeaning] = useState('')
+  const [newTwoWay, setNewTwoWay] = useState(false)
   const [goal, setGoal] = useState(graph.goal)
   const [starting, setStarting] = useState(false)
 
@@ -99,9 +64,13 @@ const RelationshipsPanel = ({
     }
   }
 
-  const addType = async (name: string, description: string) => {
+  const addType = async (
+    name: string,
+    description: string,
+    twoWay: boolean
+  ) => {
     try {
-      await addLabelAPI(graph.id, name, description)
+      await addLabelAPI(graph.id, name, description, twoWay)
       onChanged()
       return true
     } catch {
@@ -112,9 +81,10 @@ const RelationshipsPanel = ({
 
   const add = async () => {
     const name = newLabel.trim()
-    if (name && (await addType(name, newMeaning.trim()))) {
+    if (name && (await addType(name, newMeaning.trim(), newTwoWay))) {
       setNewLabel('')
       setNewMeaning('')
+      setNewTwoWay(false)
     }
   }
 
@@ -139,9 +109,11 @@ const RelationshipsPanel = ({
       <div>
         <h2 className='text-lg font-semibold'>Stated relationships</h2>
         <p className='mt-1 text-sm text-muted-foreground'>
-          Optional. Entities, aliases and graph search already work for free.
-          This step reads your chunks to label how things connect, such as who
-          appointed whom. You see the cost before anything runs.
+          Optional. Names, their other spellings and graph search already work
+          for free. This step labels how people and things connect, such as who
+          married or testified for whom, and keeps the sentence that says so.
+          Labeled links show as named lines on the graph and in each name's
+          panel. You see the cost before anything runs.
         </p>
       </div>
 
@@ -199,7 +171,7 @@ const RelationshipsPanel = ({
 
         <div className='mt-3'>
           {view.labels.map((label) => (
-            <LabelRow
+            <RelationLabelRow
               key={label.id}
               label={label}
               onDelete={() => void remove(label)}
@@ -243,6 +215,14 @@ const RelationshipsPanel = ({
             Add
           </Button>
         </form>
+        <label className='mt-2 flex w-fit items-center gap-2 text-xs text-muted-foreground'>
+          <Checkbox
+            checked={newTwoWay}
+            onCheckedChange={(checked) => setNewTwoWay(checked === true)}
+            disabled={labelCount >= MAX_LABELS}
+          />
+          Works both ways, like married to
+        </label>
 
         {graph.proposedTypes.length > 0 && (
           <div className='mt-5 border-t border-border pt-4'>
@@ -277,7 +257,11 @@ const RelationshipsPanel = ({
                     size='sm'
                     disabled={labelCount >= MAX_LABELS}
                     onClick={() =>
-                      void addType(proposed.name, proposed.description)
+                      void addType(
+                        proposed.name,
+                        proposed.description,
+                        proposed.twoWay ?? false
+                      )
                     }
                   >
                     <Plus className='mr-1 h-3.5 w-3.5' />
@@ -378,32 +362,6 @@ const RelationshipsPanel = ({
               </div>
             </>
           )}
-        </section>
-      )}
-
-      {view.relations.length > 0 && (
-        <section>
-          <h3 className='font-medium'>Found so far</h3>
-          <div className='mt-2 divide-y divide-border rounded-lg border border-border bg-card'>
-            {view.relations.slice(0, 40).map((edge, index) => {
-              const name = (id: number) =>
-                view.nodes.find((node) => node.id === id)?.label ?? ''
-              return (
-                <div key={index} className='px-4 py-2.5'>
-                  <p className='text-sm'>
-                    <span className='font-medium'>{name(edge.source)}</span>{' '}
-                    <span className='text-muted-foreground italic'>
-                      {relationText(edge.label)}
-                    </span>{' '}
-                    <span className='font-medium'>{name(edge.target)}</span>
-                  </p>
-                  <p className='mt-0.5 line-clamp-2 text-xs text-muted-foreground'>
-                    “{edge.evidence}”
-                  </p>
-                </div>
-              )
-            })}
-          </div>
         </section>
       )}
     </div>

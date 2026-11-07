@@ -33,6 +33,7 @@ export interface KnowledgeGraphSummary {
 export interface ProposedType {
   name: string
   description: string
+  twoWay?: boolean
   example: string
   count: number
 }
@@ -66,13 +67,25 @@ export interface GraphLinkEdge {
   strong: boolean
 }
 
+export interface RelationExample {
+  subject: string
+  object: string
+  evidence: string
+  fileName: string
+  page: number | null
+  sources: number
+}
+
 export interface RelationLabel {
   id: number
   name: string
   description: string
   source: 'discovered' | 'user'
+  twoWay: boolean
   relationCount: number
+  pairCount: number
   read: boolean
+  examples: RelationExample[]
 }
 
 export interface GraphStats {

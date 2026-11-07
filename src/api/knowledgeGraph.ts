@@ -65,11 +65,16 @@ export const approveBuildAPI = (id: number, newOnly = false) =>
     data: { new_only: newOnly },
   })
 
-export const addLabelAPI = (id: number, name: string, description: string) =>
+export const addLabelAPI = (
+  id: number,
+  name: string,
+  description: string,
+  twoWay: boolean
+) =>
   baseRequest<RelationLabel>({
     url: `${BASE}/${id}/labels/`,
     method: METHOD.POST,
-    data: { name, description },
+    data: { name, description, twoWay },
   })
 
 export const deleteLabelAPI = (id: number, labelId: number) =>
