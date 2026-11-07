@@ -267,6 +267,8 @@ export interface RetrievalTraceEntry {
   viaKind?: string | null
   /** The full route when a graph walk reached this chunk. */
   path?: GraphWalkStep[]
+  /** Who chose this evidence: search, the graph among search's results, or the graph alone. */
+  origin?: 'search' | 'graph_ranked' | 'graph_only' | ''
 }
 
 /** Whether a hop followed a pointer or was pulled in through a shared entity. */
@@ -289,6 +291,8 @@ export interface RetrievalTrace {
     route?: 'direct' | 'graph'
     queryEntities?: string[]
   } | null
+  /** Set only when query analysis broke; a null plan alone means nothing to analyze. */
+  queryAnalysisError?: string | null
   hybrid: { poolSize: number; topCandidates: RetrievalTraceEntry[] }
   rerank: { applied: boolean; results: RetrievalTraceEntry[] }
   /** Graph expand stage: in-document references followed, and shared-entity links,
@@ -303,6 +307,12 @@ export interface RetrievalTrace {
       milliseconds: number
       queryEntities: { name: string; entity: string }[]
       error: string
+      connections?: {
+        from: string
+        to: string
+        together: number
+        via: string[]
+      }[]
     } | null
   }
   mmr: { applied: boolean; reason: string }

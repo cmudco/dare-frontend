@@ -86,6 +86,14 @@ const EntityPanel = ({
       </div>
 
       <div className='min-h-0 flex-1 space-y-6 overflow-y-auto p-4'>
+        {entity.kind === 'person' && entity.files > 1 && (
+          <p className='rounded-md border border-border bg-muted/50 p-3 text-xs text-foreground'>
+            This name appears in {entity.files} documents. A shared name doesn't
+            prove one person, so check the passages before treating it as a link
+            between them.
+          </p>
+        )}
+
         <section>
           <h3 className='text-xs font-medium text-muted-foreground'>
             Also written as
@@ -157,9 +165,7 @@ const EntityPanel = ({
                   </p>
                   <p className='mt-1 truncate text-[11px] text-muted-foreground'>
                     {fileLabel(relation.fileName)}
-                    {relation.page != null
-                      ? `, p. ${relation.page}`
-                      : ''} · {Math.round(relation.probability * 100)}%
+                    {relation.page != null ? `, p. ${relation.page}` : ''}
                   </p>
                 </div>
               ))}

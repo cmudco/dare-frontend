@@ -21,6 +21,7 @@ import { ToolActivityRow } from '../ToolActivity/ToolActivityRow'
 import { getStatusIcon } from '../ToolActivity/toolStatusIcon'
 import { StepHeader, TimelineStep } from '../Timeline'
 import { contextStageSteps, type ActivityStep } from './ContextStages'
+import { citedIdsIn } from '@/components/Conversation/graphPathText'
 import { contextSummaryPieces, formatMs } from './activitySummary'
 import { MemoryWriteStep } from './MemoryWriteStep'
 import { memoryWriteSummary } from './memoryWriteSummary'
@@ -105,6 +106,7 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
   const memoryWrite = message.memoryWriteData
   const streaming = !!message.streaming
   const loopState = message.toolLoopState
+  const citedIds = useMemo(() => citedIdsIn(message.message), [message.message])
 
   const orderedCalls = useMemo(
     () => [...toolCalls].sort((a, b) => (a.round ?? 1) - (b.round ?? 1)),
@@ -220,7 +222,7 @@ export const MessageActivity: React.FC<MessageActivityProps> = ({
   // The lifecycle, in the order it actually happened: context assembly,
   // then each tool call (loop order), then the answer's sources.
   const steps: ActivityStep[] = [
-    ...(trace ? contextStageSteps(trace.stages) : []),
+    ...(trace ? contextStageSteps(trace.stages, citedIds) : []),
     ...orderedCalls.map((tc) => ({
       key: `tool-${tc.id}`,
       icon: getStatusIcon(tc.status),

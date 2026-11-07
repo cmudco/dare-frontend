@@ -22,6 +22,7 @@ export const createGraphAPI = (draft: {
   name: string
   description: string
   fileIds: number[]
+  folderIds: number[]
 }) =>
   baseRequest<KnowledgeGraphSummary>({
     url: `${BASE}/`,
@@ -38,9 +39,9 @@ export const getGraphAPI = (id: number) =>
 export const deleteGraphAPI = (id: number) =>
   baseRequest<void>({ url: `${BASE}/${id}/`, method: METHOD.DELETE })
 
-export const getGraphViewAPI = (id: number) =>
+export const getGraphViewAPI = (id: number, focus?: number | null) =>
   baseRequest<KnowledgeGraphView>({
-    url: `${BASE}/${id}/view/`,
+    url: `${BASE}/${id}/view/${focus ? `?focus=${focus}` : ''}`,
     method: METHOD.GET,
   })
 
@@ -50,16 +51,18 @@ export const getGraphEstimateAPI = (id: number) =>
     method: METHOD.GET,
   })
 
-export const discoverLabelsAPI = (id: number) =>
+export const discoverLabelsAPI = (id: number, goal: string) =>
   baseRequest<KnowledgeGraphSummary>({
     url: `${BASE}/${id}/discover/`,
     method: METHOD.POST,
+    data: { goal },
   })
 
-export const approveBuildAPI = (id: number) =>
+export const approveBuildAPI = (id: number, newOnly = false) =>
   baseRequest<KnowledgeGraphSummary>({
     url: `${BASE}/${id}/approve/`,
     method: METHOD.POST,
+    data: { new_only: newOnly },
   })
 
 export const addLabelAPI = (id: number, name: string, description: string) =>

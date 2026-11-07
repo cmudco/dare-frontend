@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Loader2, Plus, Sparkles, X } from 'lucide-react'
+import { ListPlus, Loader2, Plus, X } from 'lucide-react'
 
 import {
   addLabelAPI,
@@ -45,7 +45,11 @@ const LabelRow = ({
       {label.relationCount} found
     </span>
     <span className='shrink-0 text-xs text-muted-foreground'>
-      {label.source === 'user' ? 'Added by you' : 'Suggested'}
+      {!label.read
+        ? 'Not read yet'
+        : label.source === 'user'
+          ? 'Added by you'
+          : 'Suggested'}
     </span>
     <Button
       variant='ghost'
@@ -70,6 +74,8 @@ const RelationshipsPanel = ({
 }) => {
   const [estimate, setEstimate] = useState<GraphEstimate | null>(null)
   const [newLabel, setNewLabel] = useState('')
+  const [newMeaning, setNewMeaning] = useState('')
+  const [goal, setGoal] = useState(graph.goal)
   const [starting, setStarting] = useState(false)
 
   const labelCount = view.labels.length
@@ -93,15 +99,22 @@ const RelationshipsPanel = ({
     }
   }
 
-  const add = async () => {
-    const name = newLabel.trim()
-    if (!name) return
+  const addType = async (name: string, description: string) => {
     try {
-      await addLabelAPI(graph.id, name, '')
-      setNewLabel('')
+      await addLabelAPI(graph.id, name, description)
       onChanged()
+      return true
     } catch {
       toast.error("Couldn't add that type. It may already exist.")
+      return false
+    }
+  }
+
+  const add = async () => {
+    const name = newLabel.trim()
+    if (name && (await addType(name, newMeaning.trim()))) {
+      setNewLabel('')
+      setNewMeaning('')
     }
   }
 
@@ -115,7 +128,11 @@ const RelationshipsPanel = ({
     : 0
   const building = graph.status === 'building'
   const discovering = graph.status === 'discovering'
+  const preparing = graph.status === 'preparing'
   const build = estimate?.build
+  const newTypes = estimate?.newTypes
+  const unreadCount = view.labels.filter((label) => !label.read).length
+  const shownBuild = newTypes ?? build
 
   return (
     <div className='mx-auto max-w-3xl space-y-6 px-6 py-8'>
@@ -123,8 +140,8 @@ const RelationshipsPanel = ({
         <h2 className='text-lg font-semibold'>Stated relationships</h2>
         <p className='mt-1 text-sm text-muted-foreground'>
           Optional. Entities, aliases and graph search already work for free.
-          This step reads your passages to label how things connect, such as who
-          appointed whom, and costs a small amount.
+          This step reads your chunks to label how things connect, such as who
+          appointed whom. You see the cost before anything runs.
         </p>
       </div>
 
@@ -133,6 +150,12 @@ const RelationshipsPanel = ({
           <p className='font-medium'>The last run didn't finish</p>
           <p className='mt-0.5 text-muted-foreground'>{graph.error}</p>
         </div>
+      )}
+
+      {graph.status === 'ready' && graph.error && (
+        <p className='rounded-lg border border-border p-3 text-sm text-muted-foreground'>
+          {graph.error} Run again to retry them.
+        </p>
       )}
 
       <section className='rounded-lg border border-border bg-card p-5'>
@@ -147,13 +170,13 @@ const RelationshipsPanel = ({
           <Button
             variant='outline'
             size='sm'
-            disabled={discovering || building || starting}
-            onClick={() => void run(() => discoverLabelsAPI(graph.id))}
+            disabled={preparing || discovering || building || starting}
+            onClick={() => void run(() => discoverLabelsAPI(graph.id, goal))}
           >
             {discovering ? (
               <Loader2 className='mr-1.5 h-3.5 w-3.5 animate-spin' />
             ) : (
-              <Sparkles className='mr-1.5 h-3.5 w-3.5' />
+              <ListPlus className='mr-1.5 h-3.5 w-3.5' />
             )}
             {discovering
               ? 'Reading a sample'
@@ -164,6 +187,15 @@ const RelationshipsPanel = ({
                 }`}
           </Button>
         </div>
+
+        <Input
+          className='mt-3'
+          maxLength={300}
+          aria-label='What do you want to learn from these files?'
+          placeholder='What do you want to learn from these files? Optional'
+          value={goal}
+          onChange={(event) => setGoal(event.target.value)}
+        />
 
         <div className='mt-3'>
           {view.labels.map((label) => (
@@ -188,9 +220,18 @@ const RelationshipsPanel = ({
           }}
         >
           <Input
+            className='max-w-56'
             placeholder='Add a type, like appointed'
             value={newLabel}
             onChange={(event) => setNewLabel(event.target.value)}
+            disabled={labelCount >= MAX_LABELS}
+          />
+          <Input
+            maxLength={200}
+            aria-label='What the type means'
+            placeholder='What it means, optional'
+            value={newMeaning}
+            onChange={(event) => setNewMeaning(event.target.value)}
             disabled={labelCount >= MAX_LABELS}
           />
           <Button
@@ -202,6 +243,51 @@ const RelationshipsPanel = ({
             Add
           </Button>
         </form>
+
+        {graph.proposedTypes.length > 0 && (
+          <div className='mt-5 border-t border-border pt-4'>
+            <h4 className='text-sm font-medium'>
+              Also found in your documents
+            </h4>
+            <p className='text-xs text-muted-foreground'>
+              The last read saw these but had no type for them. Add one, then
+              pay only to read the new types.
+            </p>
+            <div className='mt-2'>
+              {graph.proposedTypes.map((proposed) => (
+                <div
+                  key={proposed.name}
+                  className='flex items-start gap-3 border-b border-border py-2 last:border-0'
+                >
+                  <div className='min-w-0 flex-1'>
+                    <p className='text-sm font-medium'>
+                      {relationText(proposed.name)}
+                      <span className='ml-2 text-xs font-normal text-muted-foreground tabular-nums'>
+                        in {proposed.count} sampled{' '}
+                        {proposed.count === 1 ? 'sentence' : 'sentences'}
+                      </span>
+                    </p>
+                    <p className='line-clamp-2 text-xs text-muted-foreground'>
+                      “{proposed.example}”
+                    </p>
+                  </div>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    disabled={labelCount >= MAX_LABELS}
+                    onClick={() =>
+                      void addType(proposed.name, proposed.description)
+                    }
+                  >
+                    <Plus className='mr-1 h-3.5 w-3.5' />
+                    Add
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {labelCount > 0 && !discovering && (
@@ -214,7 +300,7 @@ const RelationshipsPanel = ({
                   Reading relationships
                 </span>
                 <span className='text-muted-foreground tabular-nums'>
-                  {graph.chunksDone} of {graph.chunksTotal} passages
+                  {graph.chunksDone} of {graph.chunksTotal} chunks
                 </span>
               </div>
               <div className='mt-3 h-1.5 overflow-hidden rounded-full bg-muted'>
@@ -227,21 +313,23 @@ const RelationshipsPanel = ({
           ) : (
             <>
               <h3 className='font-medium'>
-                {graph.status === 'ready'
-                  ? 'Run again with these types'
-                  : 'Approve the cost'}
+                {newTypes
+                  ? `Read ${unreadCount} new ${unreadCount === 1 ? 'type' : 'types'}`
+                  : graph.status === 'ready'
+                    ? 'Run again with these types'
+                    : 'Approve the cost'}
               </h3>
               <p className='mt-0.5 text-sm text-muted-foreground'>
-                Each passage is read twice: once to label a pair, once to check
-                that the passage really says it. Your files stay searchable
-                while this runs.
+                {newTypes
+                  ? 'Reads your chunks for the new types only. Existing relationships stay as they are.'
+                  : 'Each chunk is read twice: once to label a pair, once to check that the chunk really says it. Your files stay searchable while this runs.'}
               </p>
-              {build ? (
+              {shownBuild ? (
                 <div className='mt-4 grid grid-cols-3 gap-2'>
                   {[
-                    ['Passages to read', build.chunks.toLocaleString()],
-                    ['Pairs to check', build.pairs.toLocaleString()],
-                    ['Estimated cost', money(build.cost)],
+                    ['Chunks to read', shownBuild.chunks.toLocaleString()],
+                    ['Pairs to check', shownBuild.pairs.toLocaleString()],
+                    ['Estimated cost', money(shownBuild.cost)],
                   ].map(([label, value]) => (
                     <div key={label} className='rounded-md bg-muted/50 p-3'>
                       <p className='text-xs text-muted-foreground'>{label}</p>
@@ -264,14 +352,29 @@ const RelationshipsPanel = ({
                     ? `Last run read ${graph.tokensUsed.toLocaleString()} tokens.`
                     : 'Charged to your wallet.'}
                 </p>
-                <Button
-                  disabled={starting || !build}
-                  onClick={() => void run(() => approveBuildAPI(graph.id))}
-                >
-                  {graph.status === 'ready'
-                    ? 'Approve and rerun'
-                    : 'Approve and start'}
-                </Button>
+                <div className='flex shrink-0 flex-wrap justify-end gap-2'>
+                  {newTypes && build && (
+                    <Button
+                      variant='outline'
+                      disabled={preparing || starting}
+                      onClick={() => void run(() => approveBuildAPI(graph.id))}
+                    >
+                      Rerun all · {money(build.cost)}
+                    </Button>
+                  )}
+                  <Button
+                    disabled={preparing || starting || !build}
+                    onClick={() =>
+                      void run(() => approveBuildAPI(graph.id, !!newTypes))
+                    }
+                  >
+                    {newTypes
+                      ? 'Approve new types'
+                      : graph.status === 'ready'
+                        ? 'Approve and rerun'
+                        : 'Approve and start'}
+                  </Button>
+                </div>
               </div>
             </>
           )}

@@ -19,6 +19,7 @@ import { SourceSnippets } from './MessageActivity/SnippetList'
 
 interface RetrievalTraceStagesProps {
   trace: RetrievalTrace
+  citedIds: ReadonlySet<string>
 }
 
 const fmtScore = (score: number): string =>
@@ -51,6 +52,7 @@ const EntryRow: React.FC<{
 
 const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
   trace,
+  citedIds,
 }) => {
   if (!trace) return null
 
@@ -137,10 +139,12 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
       icon: <CornerDownRight className='h-3.5 w-3.5' />,
       content: (
         <>
-          <StepHeader title={trace.expand.walk ? 'Graph walk' : 'Graph expand'}>
+          <StepHeader
+            title={trace.expand.walk ? 'Graph walk (PageRank)' : 'Graph expand'}
+          >
             <span className='font-normal text-muted-foreground'>
               {trace.expand.added.length === 0
-                ? '· nothing linked'
+                ? '· no new chunks'
                 : `· reached ${trace.expand.added.length} linked ${
                     trace.expand.added.length === 1 ? 'chunk' : 'chunks'
                   }`}
@@ -259,7 +263,7 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
     content: (
       <>
         <StepHeader title='Evidence sent to the model' />
-        <SourceSnippets source={trace} />
+        <SourceSnippets source={trace} citedIds={citedIds} />
       </>
     ),
   })

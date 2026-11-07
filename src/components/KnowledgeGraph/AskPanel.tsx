@@ -56,7 +56,7 @@ const AskPanel = ({
       <div className='border-b border-border p-4'>
         <h2 className='text-sm font-medium'>Trace a question</h2>
         <p className='mt-0.5 text-xs text-muted-foreground'>
-          See which passages a question reaches and the path it takes.
+          See which chunks a question reaches and the path it takes.
         </p>
         <div className='relative mt-3'>
           <Textarea

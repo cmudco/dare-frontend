@@ -17,7 +17,7 @@ import type {
   KnowledgeGraphView,
 } from '@/redux/types/knowledgeGraph'
 
-const BUSY = ['discovering', 'building']
+const BUSY = ['preparing', 'discovering', 'building']
 const POLL_MS = 2500
 const FEW_RELATIONS = 8
 
@@ -36,6 +36,7 @@ const KnowledgeGraphDetail = () => {
   const [graph, setGraph] = useState<KnowledgeGraphSummary | null>(null)
   const [view, setView] = useState<KnowledgeGraphView | null>(null)
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [focusId, setFocusId] = useState<number | null>(null)
   const [pathIds, setPathIds] = useState<number[]>([])
   const [showLinks, setShowLinks] = useState(false)
   const [search, setSearch] = useState('')
@@ -44,13 +45,13 @@ const KnowledgeGraphDetail = () => {
   const refresh = useCallback(async () => {
     const [summary, payload] = await Promise.all([
       getGraphAPI(id),
-      getGraphViewAPI(id),
+      getGraphViewAPI(id, focusId),
     ])
     setGraph(summary)
     setView(payload)
     // A graph with few stated relationships would look empty without these.
     setShowLinks((shown) => shown || payload.relations.length < FEW_RELATIONS)
-  }, [id])
+  }, [id, focusId])
 
   useEffect(() => {
     void refresh()
@@ -66,8 +67,8 @@ const KnowledgeGraphDetail = () => {
   const matches = useMemo(() => {
     const needle = search.trim().toLowerCase()
     if (!needle || !view) return []
-    return view.nodes
-      .filter((node) => node.label.toLowerCase().includes(needle))
+    return view.entities
+      .filter((entity) => entity.label.toLowerCase().includes(needle))
       .slice(0, 6)
   }, [search, view])
 
@@ -101,7 +102,7 @@ const KnowledgeGraphDetail = () => {
           </div>
           <div className='flex gap-7'>
             <Stat label='Documents' value={view.stats.documents} />
-            <Stat label='Passages' value={view.stats.passages} />
+            <Stat label='Chunks' value={view.stats.passages} />
             <Stat label='Entities' value={view.stats.entities} />
             <Stat label='Merged names' value={view.stats.mergedEntities} />
             <Stat
@@ -157,6 +158,7 @@ const KnowledgeGraphDetail = () => {
                       className='block w-full truncate px-3 py-1.5 text-left text-sm hover:bg-accent'
                       onClick={() => {
                         setSelectedId(node.id)
+                        setFocusId(node.id)
                         setSearch('')
                       }}
                     >
@@ -180,8 +182,9 @@ const KnowledgeGraphDetail = () => {
               />
             ) : (
               <div className='flex h-full items-center justify-center text-sm text-muted-foreground'>
-                No entities yet. They appear once these documents finish
-                processing.
+                {graph.status === 'preparing'
+                  ? 'Getting entities ready. This takes about a minute.'
+                  : 'No entities yet. They appear once these documents finish processing.'}
               </div>
             )}
           </div>

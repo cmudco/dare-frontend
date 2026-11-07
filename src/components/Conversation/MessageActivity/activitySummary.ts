@@ -1,3 +1,4 @@
+import { addedByGraph } from '@/components/Conversation/graphUsage'
 import type {
   ContextTrace,
   ContextTraceStage,
@@ -25,6 +26,11 @@ export const contextSummaryPieces = (trace: ContextTrace): string[] => {
     if (stage.kind === 'retrieval') {
       const kept = keptSnippetCount(stage)
       if (kept) pieces.push(`${kept} snippet${kept === 1 ? '' : 's'}`)
+      const linked = (stage.sources ?? []).reduce(
+        (total, source) => total + addedByGraph(source),
+        0
+      )
+      if (linked) pieces.push(`${linked} added by the graph`)
     }
     if (stage.kind === 'files' && stage.files?.length) {
       pieces.push(

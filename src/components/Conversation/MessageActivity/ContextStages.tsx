@@ -100,7 +100,8 @@ export interface ActivityStep {
  * retrieval lists the kept snippets with relative score bars.
  */
 export const contextStageSteps = (
-  stages: ContextTraceStage[]
+  stages: ContextTraceStage[],
+  citedIds: ReadonlySet<string>
 ): ActivityStep[] =>
   stages.map((stage) => ({
     key: `context-${stage.kind}`,
@@ -140,7 +141,11 @@ export const contextStageSteps = (
 
         {stage.kind === 'retrieval' &&
           stage.sources?.map((source, sourceIndex) => (
-            <SourceSnippets key={sourceIndex} source={source} />
+            <SourceSnippets
+              key={sourceIndex}
+              source={source}
+              citedIds={citedIds}
+            />
           ))}
 
         {stage.kind === 'retrieval' && stage.snippets && (

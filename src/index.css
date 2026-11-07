@@ -195,7 +195,9 @@
     --brand-to: #023572;
   }
 
-  .dark {
+  /* Scoped to body: a canvas library adds its own "dark" class, and a bare .dark
+     rule there would reset the theme's colors back to the defaults. */
+  body.dark {
     --background: hsl(210 94% 4%);
     --foreground: hsl(0 0% 100%);
     --card: hsl(214 60% 8%);

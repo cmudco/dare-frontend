@@ -1,4 +1,5 @@
 export type GraphStatus =
+  | 'preparing'
   | 'free'
   | 'discovering'
   | 'awaiting_approval'
@@ -10,6 +11,7 @@ export interface KnowledgeGraphSummary {
   id: number
   name: string
   description: string
+  goal: string
   status: GraphStatus
   statusLabel: string
   error: string
@@ -24,6 +26,15 @@ export interface KnowledgeGraphSummary {
   labelCount: number
   chunkCount: number
   hasEvalReport: boolean
+  /** Types the last read saw in your documents that the list doesn't have. */
+  proposedTypes: ProposedType[]
+}
+
+export interface ProposedType {
+  name: string
+  description: string
+  example: string
+  count: number
 }
 
 export interface GraphNode {
@@ -51,6 +62,8 @@ export interface GraphLinkEdge {
   source: number
   target: number
   weight: number
+  /** Strong links shape the layout; the rest appear when an endpoint is selected. */
+  strong: boolean
 }
 
 export interface RelationLabel {
@@ -59,6 +72,7 @@ export interface RelationLabel {
   description: string
   source: 'discovered' | 'user'
   relationCount: number
+  read: boolean
 }
 
 export interface GraphStats {
@@ -74,6 +88,7 @@ export interface GraphStats {
 
 export interface KnowledgeGraphView {
   nodes: GraphNode[]
+  entities: { id: number; label: string }[]
   relations: GraphRelationEdge[]
   links: GraphLinkEdge[]
   labels: RelationLabel[]
@@ -113,20 +128,26 @@ export interface EntityDetail {
   id: number
   label: string
   kind: string
+  /** Documents this entity's names appear in. */
+  files: number
   aliases: EntityAlias[]
   mentions: EntityMention[]
   relations: EntityRelationRow[]
 }
 
+export interface BuildEstimate {
+  chunks: number
+  pairs: number
+  tokens: number
+  cost: number
+  ratePerMillion: number
+}
+
 export interface GraphEstimate {
   discoveryCost: number | null
-  build: {
-    chunks: number
-    pairs: number
-    tokens: number
-    cost: number
-    ratePerMillion: number
-  } | null
+  build: BuildEstimate | null
+  /** Set when some types have been read and others have not. */
+  newTypes: BuildEstimate | null
   unavailableReason: string
 }
 

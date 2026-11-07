@@ -2,14 +2,20 @@ import { useEffect, useMemo } from 'react'
 import {
   Background,
   BackgroundVariant,
+  BaseEdge,
   Controls,
+  getStraightPath,
   Handle,
+  MarkerType,
   Position,
   ReactFlow,
   ReactFlowProvider,
+  useInternalNode,
   useNodesInitialized,
   useReactFlow,
   type Edge,
+  type EdgeProps,
+  type InternalNode,
   type Node,
   type NodeProps,
 } from '@xyflow/react'
@@ -24,6 +30,8 @@ import type {
 
 import { entityKind, relationText } from './entityKinds'
 import { forceLayout } from './forceLayout'
+
+const ARROW_GAP = 3
 
 const CENTER_HANDLE = {
   top: '50%',
@@ -83,6 +91,70 @@ const EntityNode = ({ data }: NodeProps<Node<EntityNodeData>>) => {
 
 const NODE_TYPES = { entity: EntityNode }
 
+type Point = { x: number; y: number }
+
+const borderPoint = (node: InternalNode, from: Point, toward: Point): Point => {
+  const halfWidth = (node.measured.width ?? 0) / 2 + ARROW_GAP
+  const halfHeight = (node.measured.height ?? 0) / 2 + ARROW_GAP
+  const dx = toward.x - from.x
+  const dy = toward.y - from.y
+  const scale = Math.min(
+    dx ? halfWidth / Math.abs(dx) : Infinity,
+    dy ? halfHeight / Math.abs(dy) : Infinity,
+    1
+  )
+  return { x: from.x + dx * scale, y: from.y + dy * scale }
+}
+
+// Handles sit at the node's center, which would hide an arrowhead under the pill.
+const BorderEdge = ({
+  source,
+  target,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  markerEnd,
+  style,
+  label,
+  labelStyle,
+  labelBgStyle,
+  labelBgPadding,
+  labelBgBorderRadius,
+}: EdgeProps) => {
+  const from = useInternalNode(source)
+  const to = useInternalNode(target)
+  if (!from || !to) return null
+  const sourceCenter = { x: sourceX, y: sourceY }
+  const targetCenter = { x: targetX, y: targetY }
+  const start = borderPoint(from, sourceCenter, targetCenter)
+  const end = borderPoint(to, targetCenter, sourceCenter)
+  const [path, labelX, labelY] = getStraightPath({
+    sourceX: start.x,
+    sourceY: start.y,
+    targetX: end.x,
+    targetY: end.y,
+  })
+  return (
+    <BaseEdge
+      path={path}
+      markerEnd={markerEnd}
+      style={style}
+      label={label}
+      labelX={labelX}
+      labelY={labelY}
+      labelStyle={labelStyle}
+      labelBgStyle={labelBgStyle}
+      labelBgPadding={labelBgPadding}
+      labelBgBorderRadius={labelBgBorderRadius}
+    />
+  )
+}
+
+const EDGE_TYPES = { border: BorderEdge }
+// The layout places node centers.
+const NODE_ORIGIN: [number, number] = [0.5, 0.5]
+
 interface GraphCanvasProps {
   view: KnowledgeGraphView
   selectedId: number | null
@@ -105,7 +177,10 @@ const Canvas = ({
 
   // With only stated relationships showing, an unconnected entity is just noise.
   const shownLinks = useMemo(
-    () => (showLinks || view.relations.length === 0 ? view.links : []),
+    () =>
+      showLinks || view.relations.length === 0
+        ? view.links.filter((link) => link.strong)
+        : [],
     [showLinks, view.links, view.relations.length]
   )
   const shownNodes = useMemo(() => {
@@ -118,6 +193,18 @@ const Canvas = ({
       ? view.nodes.filter((node) => connected.has(node.id))
       : view.nodes
   }, [view.nodes, view.relations, shownLinks])
+
+  const visibleLinks = useMemo(() => {
+    if (selectedId == null) return shownLinks
+    const shownIds = new Set(shownNodes.map((node) => node.id))
+    const touching = view.links.filter(
+      (link) =>
+        (link.source === selectedId || link.target === selectedId) &&
+        shownIds.has(link.source) &&
+        shownIds.has(link.target)
+    )
+    return [...new Set([...shownLinks, ...touching])]
+  }, [selectedId, shownLinks, shownNodes, view.links])
 
   const positions = useMemo(() => {
     const maxMentions = Math.max(...shownNodes.map((n) => n.mentions), 1)
@@ -144,12 +231,12 @@ const Canvas = ({
   const neighbours = useMemo(() => {
     const near = new Set<number>()
     if (selectedId == null) return near
-    for (const edge of [...view.relations, ...shownLinks]) {
+    for (const edge of [...view.relations, ...visibleLinks]) {
       if (edge.source === selectedId) near.add(edge.target)
       if (edge.target === selectedId) near.add(edge.source)
     }
     return near
-  }, [selectedId, view.relations, shownLinks])
+  }, [selectedId, view.relations, visibleLinks])
 
   const pathSet = useMemo(() => new Set(highlightedIds), [highlightedIds])
   const pathPairs = useMemo(() => {
@@ -216,7 +303,13 @@ const Canvas = ({
         id: `r-${index}`,
         source: String(edge.source),
         target: String(edge.target),
-        type: 'straight',
+        type: 'border',
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 14,
+          height: 14,
+          color: active ? 'var(--primary)' : 'var(--muted-foreground)',
+        },
         label: active || !focusing ? relationText(edge.label) : undefined,
         labelStyle: { fill: 'var(--muted-foreground)', fontSize: 10 },
         labelBgStyle: { fill: 'var(--card)' },
@@ -229,7 +322,7 @@ const Canvas = ({
         },
       }
     })
-    const links: Edge[] = shownLinks.map((edge, index) => {
+    const links: Edge[] = visibleLinks.map((edge, index) => {
       const active =
         touching(edge.source, edge.target) ||
         pathPairs.has(pairKey(edge.source, edge.target))
@@ -237,7 +330,7 @@ const Canvas = ({
         id: `l-${index}`,
         source: String(edge.source),
         target: String(edge.target),
-        type: 'straight',
+        type: 'border',
         style: {
           stroke: active ? 'var(--primary)' : 'var(--border)',
           strokeWidth: active ? 1.75 : 1,
@@ -247,7 +340,7 @@ const Canvas = ({
       }
     })
     return [...links, ...typed]
-  }, [view.relations, shownLinks, selectedId, focusing, pathPairs])
+  }, [view.relations, visibleLinks, selectedId, focusing, pathPairs])
 
   const measured = useNodesInitialized()
   useEffect(() => {
@@ -259,6 +352,8 @@ const Canvas = ({
       nodes={nodes}
       edges={edges}
       nodeTypes={NODE_TYPES}
+      edgeTypes={EDGE_TYPES}
+      nodeOrigin={NODE_ORIGIN}
       colorMode={mode}
       fitView
       minZoom={0.15}

@@ -2,12 +2,10 @@ import { ArrowRight } from 'lucide-react'
 
 import type { GraphWalkStep } from '@/redux/types/conversation'
 
+import { chunkStepLabel, relationPhrase } from './graphPathText'
+
 const stepLabel = (step: GraphWalkStep) =>
-  step.kind === 'chunk'
-    ? `${step.label.replace(/\.[a-z0-9]+$/i, '').replace(/_/g, ' ')}${
-        step.page != null ? `, p. ${step.page}` : ''
-      }`
-    : step.label
+  step.kind === 'chunk' ? chunkStepLabel(step) : step.label
 
 /** A walk path: passage -> entity -> passage, with stated relationships on the arrows. */
 const GraphPath = ({ path }: { path: GraphWalkStep[] }) => {
@@ -22,11 +20,9 @@ const GraphPath = ({ path }: { path: GraphWalkStep[] }) => {
           >
             {index > 0 && (
               <span className='flex items-center gap-1 text-muted-foreground'>
-                {step.relation && step.relation !== 'points_to' && (
+                {relationPhrase(step) && (
                   <span className='text-[11px] italic'>
-                    {step.relationReversed ? 'is ' : ''}
-                    {step.relation.replace(/_/g, ' ')}
-                    {step.relationReversed ? ' by' : ''}
+                    {relationPhrase(step)}
                   </span>
                 )}
                 <ArrowRight className='h-3 w-3 shrink-0' />

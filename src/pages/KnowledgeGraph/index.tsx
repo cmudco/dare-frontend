@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Network, Plus, Search, Trash2 } from 'lucide-react'
+import { FileText, Folder, Network, Plus, Search, Trash2 } from 'lucide-react'
 
-import { getFilesAPI } from '@/api/files'
+import { getFilesAPI, getFoldersAPI } from '@/api/files'
 import {
   createGraphAPI,
   deleteGraphAPI,
   listGraphsAPI,
 } from '@/api/knowledgeGraph'
+import SelectableList, {
+  type SelectableRow,
+} from '@/components/Projects/SelectableList'
+import SourceSortSelect from '@/components/Projects/SourceSortSelect'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -20,10 +23,18 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { MyFile } from '@/redux/types/files'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useSourceSort } from '@/hooks/useSourceSort'
+import { useAppSelector } from '@/redux/hooks'
+import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { KnowledgeGraphSummary } from '@/redux/types/knowledgeGraph'
+import { FileStatus } from '@/utils/constants/file'
 import { formatRelativeDate } from '@/utils/dateUtils'
+import { toggleId } from '@/utils/selection'
+import { sortSources, type SortableSource } from '@/utils/sourceSort'
 import { toast } from '@/utils/toast'
+
+type SourceRow = SelectableRow<number> & SortableSource
 
 const CreateGraphDialog = ({
   open,
@@ -34,34 +45,64 @@ const CreateGraphDialog = ({
   onClose: () => void
   onCreated: (graph: KnowledgeGraphSummary) => void
 }) => {
+  const vectorDb = useAppSelector((state) => state.user.user?.vectorDb)
   const [files, setFiles] = useState<MyFile[]>([])
-  const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [folders, setFolders] = useState<MyFolder[]>([])
+  const [fileIds, setFileIds] = useState<number[]>([])
+  const [folderIds, setFolderIds] = useState<number[]>([])
   const [name, setName] = useState('')
   const [query, setQuery] = useState('')
+  const [sort, setSort] = useSourceSort()
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!open) return
-    setSelected(new Set())
+    setFileIds([])
+    setFolderIds([])
     setName('')
     setQuery('')
     void getFilesAPI().then((response) => setFiles(response.results))
+    void getFoldersAPI().then((response) => setFolders(response.results))
   }, [open])
 
-  const visible = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    return files.filter(
-      (file) => !needle || file.name.toLowerCase().includes(needle)
+  const visible = (rows: SourceRow[]) =>
+    sortSources(
+      rows.filter((row) =>
+        row.label.toLowerCase().includes(query.trim().toLowerCase())
+      ),
+      sort
     )
-  }, [files, query])
 
-  const toggle = (id: number) =>
-    setSelected((current) => {
-      const next = new Set(current)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+  const fileRows = useMemo<SourceRow[]>(
+    () =>
+      files
+        .filter(
+          (file) =>
+            !file.isMedia &&
+            file.vectorDbSource === vectorDb &&
+            file.status !== FileStatus.FAILED
+        )
+        .map((file) => ({
+          id: file.id,
+          label: file.name,
+          date: file.createdAt,
+          meta: file.status === FileStatus.PROCESSING ? 'Processing…' : '',
+        })),
+    [files, vectorDb]
+  )
+  const folderRows = useMemo<SourceRow[]>(
+    () =>
+      folders.map((folder) => ({
+        id: folder.id,
+        label: folder.name,
+        date: folder.updatedAt,
+        meta: `${folder.fileCount} ${folder.fileCount === 1 ? 'file' : 'files'}`,
+      })),
+    [folders]
+  )
+
+  const selectedCount = fileIds.length + folderIds.length
+  const countLabel = (count: number) => (count > 0 ? ` (${count})` : '')
 
   const submit = async () => {
     setSaving(true)
@@ -70,7 +111,8 @@ const CreateGraphDialog = ({
         await createGraphAPI({
           name: name.trim(),
           description: '',
-          fileIds: [...selected],
+          fileIds,
+          folderIds,
         })
       )
     } catch {
@@ -87,7 +129,8 @@ const CreateGraphDialog = ({
           <DialogTitle>New knowledge graph</DialogTitle>
           <DialogDescription>
             Pick the documents to connect. Entities and aliases are free and
-            ready right away.
+            ready in about a minute. A folder adds the files it holds when you
+            create the graph.
           </DialogDescription>
         </DialogHeader>
         <Input
@@ -95,44 +138,68 @@ const CreateGraphDialog = ({
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
-        <div className='relative'>
-          <Search className='absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground' />
-          <Input
-            className='pl-8'
-            placeholder='Search your sources'
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
+        <div className='flex gap-2'>
+          <div className='relative min-w-0 flex-1'>
+            <Search className='pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+            <Input
+              className='pl-9'
+              placeholder='Search sources'
+              aria-label='Search sources'
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
+          <SourceSortSelect value={sort} onChange={setSort} />
         </div>
-        <div className='max-h-64 space-y-0.5 overflow-y-auto rounded-md border border-border p-1'>
-          {visible.map((file) => (
-            <label
-              key={file.id}
-              className='flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent'
-            >
-              <Checkbox
-                checked={selected.has(file.id)}
-                onCheckedChange={() => toggle(file.id)}
+        <Tabs defaultValue='files' className='flex min-h-0 flex-col'>
+          <TabsList className='grid w-full grid-cols-2'>
+            <TabsTrigger value='files'>
+              Files{countLabel(fileIds.length)}
+            </TabsTrigger>
+            <TabsTrigger value='folders'>
+              Folders{countLabel(folderIds.length)}
+            </TabsTrigger>
+          </TabsList>
+          <div className='mt-2 h-56 overflow-y-auto pr-1'>
+            <TabsContent value='files' className='mt-0'>
+              <SelectableList
+                idPrefix='graph-files'
+                rows={visible(fileRows)}
+                selected={fileIds}
+                onToggle={(id) => setFileIds(toggleId(fileIds, id))}
+                icon={<FileText className='h-4 w-4' />}
+                emptyLabel={
+                  query
+                    ? 'No files match.'
+                    : 'Upload documents in Sources first.'
+                }
               />
-              <FileText className='h-3.5 w-3.5 shrink-0 text-muted-foreground' />
-              <span className='truncate'>{file.name}</span>
-            </label>
-          ))}
-          {visible.length === 0 && (
-            <p className='p-3 text-center text-sm text-muted-foreground'>
-              No matching sources.
-            </p>
-          )}
-        </div>
+            </TabsContent>
+            <TabsContent value='folders' className='mt-0'>
+              <SelectableList
+                idPrefix='graph-folders'
+                rows={visible(folderRows)}
+                selected={folderIds}
+                onToggle={(id) => setFolderIds(toggleId(folderIds, id))}
+                icon={<Folder className='h-4 w-4' />}
+                emptyLabel={
+                  query
+                    ? 'No folders match.'
+                    : 'Create folders in Sources first.'
+                }
+              />
+            </TabsContent>
+          </div>
+        </Tabs>
         <DialogFooter>
           <span className='mr-auto self-center text-sm text-muted-foreground'>
-            {selected.size} selected
+            {selectedCount} selected
           </span>
           <Button variant='outline' onClick={onClose}>
             Cancel
           </Button>
           <Button
-            disabled={!name.trim() || selected.size === 0 || saving}
+            disabled={!name.trim() || selectedCount === 0 || saving}
             onClick={() => void submit()}
           >
             Create graph
