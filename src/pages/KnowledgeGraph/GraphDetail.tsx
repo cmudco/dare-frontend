@@ -193,6 +193,7 @@ const KnowledgeGraphDetail = () => {
               <EntityPanel
                 graphId={id}
                 entityId={selectedId}
+                entities={view.entities}
                 onClose={() => setSelectedId(null)}
                 onSelect={setSelectedId}
                 onChanged={() => void refresh()}

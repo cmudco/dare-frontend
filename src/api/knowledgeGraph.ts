@@ -96,6 +96,13 @@ export const separateAliasAPI = (id: number, entityId: number, key: string) =>
     data: { key },
   })
 
+export const mergeEntityAPI = (id: number, entityId: number, otherId: number) =>
+  baseRequest<EntityDetail>({
+    url: `${BASE}/${id}/clusters/${entityId}/merge/`,
+    method: METHOD.POST,
+    data: { otherId },
+  })
+
 export const askGraphAPI = (id: number, question: string) =>
   baseRequest<{ trace: RetrievalTrace }>({
     url: `${BASE}/${id}/ask/`,

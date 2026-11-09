@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowRight, FileText, Loader2, X } from 'lucide-react'
 
-import { getEntityAPI, separateAliasAPI } from '@/api/knowledgeGraph'
+import {
+  getEntityAPI,
+  mergeEntityAPI,
+  separateAliasAPI,
+} from '@/api/knowledgeGraph'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import type { EntityAlias, EntityDetail } from '@/redux/types/knowledgeGraph'
 import { toast } from '@/utils/toast'
 
@@ -15,27 +20,39 @@ const ALIAS_REASON: Record<EntityAlias['source'], string> = {
   manual: 'Changed by you',
 }
 
+const MERGE_MATCHES = 6
+
 const fileLabel = (name: string) =>
   name.replace(/\.[a-z0-9]+$/i, '').replace(/_/g, ' ')
 
 const EntityPanel = ({
   graphId,
   entityId,
+  entities,
   onClose,
   onSelect,
   onChanged,
 }: {
   graphId: number
   entityId: number
+  entities: { id: number; label: string }[]
   onClose: () => void
   onSelect: (id: number) => void
   onChanged: () => void
 }) => {
   const [entity, setEntity] = useState<EntityDetail | null>(null)
   const [separating, setSeparating] = useState<string | null>(null)
+  const [mergeSearch, setMergeSearch] = useState('')
+  const [mergeTarget, setMergeTarget] = useState<{
+    id: number
+    label: string
+  } | null>(null)
+  const [merging, setMerging] = useState(false)
 
   const load = useCallback(() => {
     setEntity(null)
+    setMergeSearch('')
+    setMergeTarget(null)
     void getEntityAPI(graphId, entityId).then(setEntity)
   }, [graphId, entityId])
 
@@ -51,6 +68,38 @@ const EntityPanel = ({
       toast.error("Couldn't separate that name. Try again.")
     } finally {
       setSeparating(null)
+    }
+  }
+
+  const mergeMatches = useMemo(() => {
+    const needle = mergeSearch.trim().toLowerCase()
+    if (!needle) return []
+    return entities
+      .filter(
+        (other) =>
+          other.id !== entityId && other.label.toLowerCase().includes(needle)
+      )
+      .sort(
+        (a, b) =>
+          Number(b.label.toLowerCase().startsWith(needle)) -
+          Number(a.label.toLowerCase().startsWith(needle))
+      )
+      .slice(0, MERGE_MATCHES)
+  }, [mergeSearch, entities, entityId])
+
+  const merge = async () => {
+    if (!mergeTarget) return
+    setMerging(true)
+    try {
+      setEntity(await mergeEntityAPI(graphId, entityId, mergeTarget.id))
+      setMergeSearch('')
+      setMergeTarget(null)
+      toast.success('Merged. Use Separate to undo a spelling.')
+      onChanged()
+    } catch {
+      toast.error("Couldn't merge those names. Try again.")
+    } finally {
+      setMerging(false)
     }
   }
 
@@ -127,6 +176,69 @@ const EntityPanel = ({
               </div>
             ))}
           </div>
+        </section>
+
+        <section>
+          <h3 className='text-xs font-medium text-muted-foreground'>
+            Same as another name?
+          </h3>
+          {mergeTarget ? (
+            <div className='mt-2 rounded-md border border-border p-2.5'>
+              <p className='text-sm'>
+                Merge <span className='font-medium'>{mergeTarget.label}</span>{' '}
+                into <span className='font-medium'>{entity.label}</span>? Its
+                spellings and relationships move here.
+              </p>
+              <div className='mt-2 flex gap-2'>
+                <Button
+                  size='sm'
+                  className='h-7 px-3 text-xs'
+                  disabled={merging}
+                  onClick={() => void merge()}
+                >
+                  {merging && <Loader2 className='h-3 w-3 animate-spin' />}
+                  Merge
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='h-7 px-3 text-xs'
+                  disabled={merging}
+                  onClick={() => setMergeTarget(null)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Input
+                className='mt-2 h-8 text-sm'
+                placeholder='Find the other name'
+                value={mergeSearch}
+                onChange={(event) => setMergeSearch(event.target.value)}
+              />
+              {mergeMatches.length > 0 && (
+                <div className='mt-1 overflow-hidden rounded-md border border-border'>
+                  {mergeMatches.map((other) => (
+                    <button
+                      key={other.id}
+                      type='button'
+                      className='block w-full truncate px-3 py-1.5 text-left text-sm hover:bg-accent'
+                      onClick={() => setMergeTarget(other)}
+                    >
+                      {other.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {mergeSearch.trim() && mergeMatches.length === 0 && (
+                <p className='mt-1 text-xs text-muted-foreground'>
+                  No other name matches.
+                </p>
+              )}
+            </>
+          )}
         </section>
 
         {entity.relations.length > 0 && (
