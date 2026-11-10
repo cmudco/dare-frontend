@@ -300,6 +300,8 @@ export interface RetrievalTrace {
   expand?: {
     applied: boolean
     added: RetrievalTraceEntry[]
+    /** Stored connections handed to the model for the names in the question. */
+    storedFacts?: number
     /** Set when a graph walk ran instead of the one-hop expand. */
     walk?: {
       nodes: number

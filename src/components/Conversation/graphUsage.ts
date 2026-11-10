@@ -58,6 +58,12 @@ export const graphUsageOf = (trace: RetrievalTrace): GraphUsage | null => {
       ? `${item.from} and ${item.to} never appear together. They connect only through ${joinNames(item.via)}.`
       : `Nothing in these files connects ${item.from} and ${item.to}.`
   })
+  const facts = trace.expand?.storedFacts ?? 0
+  if (facts) {
+    connections.unshift(
+      `The model was given ${plural(facts, 'stored connection')} about the names in your question.`
+    )
+  }
   const base = { score, connections }
   if (walk?.error) {
     return {
@@ -104,6 +110,15 @@ export const graphUsageOf = (trace: RetrievalTrace): GraphUsage | null => {
       title: 'How the graph was used',
       summary:
         `Followed shared names one step, which brought in ${oneStep} of the ${plural(final.length, 'snippet')} used. ${why}`.trim(),
+      showRoute: false,
+    }
+  }
+  if (facts) {
+    return {
+      ...base,
+      helped: true,
+      title: 'How the graph was used',
+      summary: why,
       showRoute: false,
     }
   }
