@@ -42,7 +42,6 @@ Next: [Choose a model and manage conversation context](/help/user-guide/conversa
 | [Templates — Agents](/templates/agents) | Save a prompt, model and settings as an agent template. |
 | [Workflows](/workflows) | Connect processing steps and inspect their results. |
 | [Cost Tracking](/billing/) | Review wallet credit, token usage and transactions. |
-| [User Manual](/help/user-guide) | Open these instructions. |
 | [Help](/help) | Read model information and find other support resources. |
 | [Settings](/settings) | Change appearance, message font size, password and account data settings. |
 
@@ -62,7 +61,7 @@ The question-bubble control in the bottom-right opens **Ask DARE**. Ask a specif
 
 ### Move through the manual
 
-Choose a topic from the overview. On desktop, use the topic rail to move directly to another page; the current topic is highlighted. On smaller screens, open the topic menu above the article or use **Previous** and **Next** below it. **All manual topics** returns to the overview.
+Open [Help](/help), choose **User Manual**, then choose a topic from the overview. On desktop, use the topic rail to move directly to another page; the current topic is highlighted. On smaller screens, open the topic menu above the article or use **Previous** and **Next** below it. **All manual topics** returns to the overview.
 
 Use **Print or save as PDF** to open your browser's print dialog for the page you are reading.
 
@@ -128,7 +127,7 @@ Next: [Add document context](/help/user-guide/sources-and-documents) or [select 
 4. Review any model, page-limit or cost choices, then choose **Upload files**.
 5. Wait for processing to finish. Check the document's status and any error before using it in a conversation.
 
-Wait for **Processed** in the file's **Status** column before selecting it in a conversation. **Failed** includes error details. **Needs OCR** means scanned pages need text recognition; inspect the file's actions for **Review transcription** or **Continue transcription** when offered. Review the model, page count and estimate before starting that work. Advanced processing, transcription and retries can consume credit.
+Check the status badge beside the file name. It shows the current processing stage and disappears when processing succeeds without warnings; there is no separate **Processed** badge in the Sources list. **Failed** includes error details. A transcription badge can mean scanned pages need recognition or approval; inspect the file's actions for **Review transcription** or **Continue transcription** when offered. Review the model, page count and estimate before starting that work. Advanced processing, transcription and retries can consume credit.
 
 ### Organize and inspect your files
 
@@ -238,15 +237,15 @@ Next: [Reuse the prompt with model settings as an agent](/help/user-guide/agents
 
 1. Save a prompt in [**Templates → Prompts**](/templates/prompts) first.
 2. Open [**Templates → Agents**](/templates/agents) and choose **Create Agent**.
-3. Under **Basic**, enter `Document checker` as the **Agent Name** and describe its task in **Description**.
-4. Choose the saved **Prompt** and an available **Language Model**.
-5. Under **Basic**, add any **Content Files** the template should send as full text and **Embedding Files** it should search for passages. Leave both empty if you will select documents for each conversation.
-6. Review **Advanced** settings, choose **Save Agent**, and check that the template appears in the list.
+3. Under **Setup**, enter `Document checker` as the **Name** and describe its task in **Description**.
+4. Choose the saved **Prompt** and an available **Model**.
+5. Under **Sources & tools**, use **Full-text files** for documents sent in full and **Searched files** for documents searched for passages. Leave both empty if you will select documents for each conversation.
+6. Review **Behavior** for response settings, choose **Save agent**, and check that the template appears in the list.
 
 ### Apply it to a conversation
 
-1. Open a conversation and use the **Agent** control, whose tooltip is **Agent Template**.
-2. Choose the template under **Agent Templates**.
+1. Open a conversation and use the command-style prompt icon in the toolbar.
+2. Open the **Agent Templates** tab and choose the template.
 3. Review the model, prompt and file selections before sending a message. Applying a template can change those settings.
 4. Ask the workshop-budget question with the workshop note selected.
 

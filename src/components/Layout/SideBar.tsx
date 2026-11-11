@@ -8,7 +8,6 @@ import {
   Cog8ToothIcon,
   CreditCardIcon,
   AcademicCapIcon,
-  BookOpenIcon,
   BeakerIcon,
   ArrowTopRightOnSquareIcon,
   RectangleStackIcon,
@@ -72,7 +71,6 @@ const NESTED_ROUTE_PATHS = [
   '/projects',
   TEMPLATES_PATH,
   SETTINGS_PATH,
-  '/help/user-guide',
 ]
 
 const Sidebar = () => {
@@ -148,7 +146,6 @@ const Sidebar = () => {
     ...(hasOwnedGroups
       ? [{ name: 'Group Wallet', icon: UsersIcon, path: '/group-wallet' }]
       : []),
-    { name: 'User Manual', icon: BookOpenIcon, path: '/help/user-guide' },
     { name: 'Help', icon: QuestionMarkCircleIcon, path: '/help' },
     { name: 'Settings', icon: Cog8ToothIcon, path: SETTINGS_PATH },
   ]

@@ -66,18 +66,20 @@ const metadata: Record<string, { icon: LucideIcon; summary: string }> = {
 export const manualTopics = manual
   .split(/^## /m)
   .slice(1)
-  .map((block) => {
+  .flatMap((block) => {
     const newline = block.indexOf('\n')
     const title = block.slice(0, newline).trim()
     const details = metadata[title]
-    if (!details) throw new Error(`Missing manual topic metadata: ${title}`)
-    return {
-      id: title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, ''),
-      title,
-      markdown: `# ${title}\n${block.slice(newline)}`,
-      ...details,
-    }
+    if (!details) return []
+    return [
+      {
+        id: title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, ''),
+        title,
+        markdown: `# ${title}\n${block.slice(newline)}`,
+        ...details,
+      },
+    ]
   })

@@ -182,17 +182,25 @@ const UserGuide = () => {
           {
             label: '01 / Get oriented',
             title: 'Conversations & sources',
-            ids: [1, 2, 3],
+            ids: [
+              'find-your-way-around',
+              'conversations-and-models',
+              'sources-and-documents',
+            ],
           },
           {
             label: '02 / Build on your work',
             title: 'Prompts, agents & workflows',
-            ids: [4, 5, 6],
+            ids: ['reusable-prompts', 'agents', 'workflows'],
           },
           {
             label: '03 / Manage your workspace',
             title: 'Usage & support',
-            ids: [7, 8, 9],
+            ids: [
+              'wallets-and-cost-tracking',
+              'settings-and-account-controls',
+              'troubleshooting-and-support',
+            ],
           },
         ].map((group) => (
           <section key={group.label} className='min-w-0'>
@@ -205,32 +213,33 @@ const UserGuide = () => {
               </h2>
             </div>
             <div className='divide-y divide-border rounded-xl border border-border bg-card px-4'>
-              {group.ids.map((index) => {
-                const { id, title, summary, icon: Icon } = manualTopics[index]
-                return (
-                  <Link
-                    key={id}
-                    to={`/help/user-guide/${id}`}
-                    className='group flex min-h-32 items-start gap-3 rounded-lg py-5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
-                  >
-                    <span className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-dare/10 text-dare'>
-                      <Icon className='h-4 w-4' aria-hidden='true' />
-                    </span>
-                    <span className='min-w-0 flex-1'>
-                      <span className='block text-sm font-semibold group-hover:text-primary'>
-                        {title}
+              {manualTopics
+                .filter((topic) => group.ids.includes(topic.id))
+                .map(({ id, title, summary, icon: Icon }) => {
+                  return (
+                    <Link
+                      key={id}
+                      to={`/help/user-guide/${id}`}
+                      className='group flex min-h-32 items-start gap-3 rounded-lg py-5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
+                    >
+                      <span className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-dare/10 text-dare'>
+                        <Icon className='h-4 w-4' aria-hidden='true' />
                       </span>
-                      <span className='mt-1.5 block text-sm leading-relaxed text-muted-foreground 2xl:text-base'>
-                        {summary}
+                      <span className='min-w-0 flex-1'>
+                        <span className='block text-sm font-semibold group-hover:text-primary'>
+                          {title}
+                        </span>
+                        <span className='mt-1.5 block text-sm leading-relaxed text-muted-foreground 2xl:text-base'>
+                          {summary}
+                        </span>
                       </span>
-                    </span>
-                    <ArrowUpRight
-                      className='mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transform-none'
-                      aria-hidden='true'
-                    />
-                  </Link>
-                )
-              })}
+                      <ArrowUpRight
+                        className='mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transform-none'
+                        aria-hidden='true'
+                      />
+                    </Link>
+                  )
+                })}
             </div>
           </section>
         ))}
