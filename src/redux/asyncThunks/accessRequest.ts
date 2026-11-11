@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { requestAccessAPI } from '@/api/accessRequests'
+import { requestAccessAPI, getSignupOptionsAPI } from '@/api/accessRequests'
 import {
   AccessRequestInput,
   AccessRequestResponse,
@@ -20,3 +20,8 @@ export const requestAccess = createAsyncThunk<
     )
   }
 })
+
+export const loadSignupOptions = createAsyncThunk(
+  'accessRequest/options',
+  getSignupOptionsAPI
+)

@@ -1,8 +1,11 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { requestAccess } from './asyncThunks/accessRequest'
+import { requestAccess, loadSignupOptions } from './asyncThunks/accessRequest'
 import { AccessRequestState } from './types/accessRequest'
 
 const initialState: AccessRequestState = {
+  options: null,
+  optionsStatus: 'idle',
+  optionsRequestId: null,
   requestId: null,
   loading: false,
   error: null,
@@ -12,9 +15,27 @@ const initialState: AccessRequestState = {
 const accessRequestSlice = createSlice({
   name: 'accessRequest',
   initialState,
-  reducers: {},
+  reducers: {
+    resetAccessRequest: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
+      .addCase(loadSignupOptions.pending, (state, action) => {
+        state.optionsRequestId = action.meta.requestId
+        state.optionsStatus = 'loading'
+        state.options = null
+      })
+      .addCase(loadSignupOptions.fulfilled, (state, action) => {
+        if (state.optionsRequestId !== action.meta.requestId) return
+        state.options = action.payload
+        state.optionsStatus = 'succeeded'
+        state.optionsRequestId = null
+      })
+      .addCase(loadSignupOptions.rejected, (state, action) => {
+        if (state.optionsRequestId !== action.meta.requestId) return
+        state.optionsStatus = 'failed'
+        state.optionsRequestId = null
+      })
       .addCase(requestAccess.pending, (state, action) => {
         state.requestId = action.meta.requestId
         state.loading = true
@@ -37,4 +58,5 @@ const accessRequestSlice = createSlice({
   },
 })
 
+export const { resetAccessRequest } = accessRequestSlice.actions
 export default accessRequestSlice.reducer
