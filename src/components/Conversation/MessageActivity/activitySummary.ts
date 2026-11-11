@@ -2,6 +2,7 @@ import { addedByGraph } from '@/components/Conversation/graphUsage'
 import type {
   ContextTrace,
   ContextTraceStage,
+  RetrievalTrace,
 } from '@/redux/types/conversation'
 
 export const formatMs = (ms: number): string =>
@@ -10,9 +11,21 @@ export const formatMs = (ms: number): string =>
 export const formatChars = (chars: number): string =>
   chars >= 1000 ? `${Math.round(chars / 1000)}k chars` : `${chars} chars`
 
+/**
+ * The searches behind a retrieval stage. In Autonomous mode the model runs
+ * them as tool calls, so the stage has none of its own.
+ */
+export const stageSources = (
+  stage: ContextTraceStage,
+  toolSearches: RetrievalTrace[]
+): RetrievalTrace[] => (stage.sources?.length ? stage.sources : toolSearches)
+
 /** Kept snippets across advanced sources AND the naive snippet list. */
-export const keptSnippetCount = (stage: ContextTraceStage): number => {
-  const fromSources = (stage.sources ?? []).reduce(
+export const keptSnippetCount = (
+  stage: ContextTraceStage,
+  toolSearches: RetrievalTrace[] = []
+): number => {
+  const fromSources = stageSources(stage, toolSearches).reduce(
     (total, source) => total + source.finalSize,
     0
   )
@@ -20,13 +33,16 @@ export const keptSnippetCount = (stage: ContextTraceStage): number => {
 }
 
 /** Short facts for the panel's summary line ("4 snippets · 2 files · …"). */
-export const contextSummaryPieces = (trace: ContextTrace): string[] => {
+export const contextSummaryPieces = (
+  trace: ContextTrace,
+  toolSearches: RetrievalTrace[]
+): string[] => {
   const pieces: string[] = []
   for (const stage of trace.stages) {
     if (stage.kind === 'retrieval') {
-      const kept = keptSnippetCount(stage)
+      const kept = keptSnippetCount(stage, toolSearches)
       if (kept) pieces.push(`${kept} snippet${kept === 1 ? '' : 's'}`)
-      const linked = (stage.sources ?? []).reduce(
+      const linked = stageSources(stage, toolSearches).reduce(
         (total, source) => total + addedByGraph(source),
         0
       )

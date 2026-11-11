@@ -11,8 +11,11 @@ export const relationPhrase = (step: GraphWalkStep) => {
   return step.relation.replace(/_/g, ' ')
 }
 
-/** Citation ids an answer actually used, such as S3 in "[S3]". */
+/** Citation ids an answer actually used, such as S3 in "[S3]". Some models write 【S3】. */
 export const citedIdsIn = (answer: string | null | undefined) =>
   new Set(
-    Array.from((answer ?? '').matchAll(/\[(S\d+)\]/g), (match) => match[1])
+    Array.from(
+      (answer ?? '').matchAll(/[[【](S\d+)[\]】]/g),
+      (match) => match[1]
+    )
   )
