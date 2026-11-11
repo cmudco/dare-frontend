@@ -55,7 +55,7 @@ export const graphUsageOf = (trace: RetrievalTrace): GraphUsage | null => {
       return `${item.from} and ${item.to} appear together in ${plural(item.together, 'chunk')}.`
     }
     return item.via.length
-      ? `${item.from} and ${item.to} never appear together. They connect only through ${joinNames(item.via)}.`
+      ? `${item.from} and ${item.to} never appear in the same chunk. They share only names they each appear beside: ${joinNames(item.via)}.`
       : `Nothing in these files connects ${item.from} and ${item.to}.`
   })
   const facts = trace.expand?.storedFacts ?? 0
@@ -99,7 +99,7 @@ export const graphUsageOf = (trace: RetrievalTrace): GraphUsage | null => {
   }
   const why = trace.queryAnalysisError
     ? 'The question could not be analyzed, so the graph walk was not tried.'
-    : trace.queryAnalysis
+    : trace.queryAnalysis?.route === 'direct'
       ? 'The question looked answerable from a single chunk, so the graph walk was not used.'
       : ''
   const oneStep = final.filter((entry) => entry.via).length

@@ -24,9 +24,9 @@ const EvalPanel = ({ graphId }: { graphId: number }) => {
   const [report, setReport] = useState<EvalReport | null | undefined>(undefined)
 
   useEffect(() => {
-    void getEvalReportAPI(graphId).then((response) =>
-      setReport(response.report)
-    )
+    getEvalReportAPI(graphId)
+      .then((response) => setReport(response.report))
+      .catch(() => setReport(null))
   }, [graphId])
 
   if (report === undefined) {

@@ -88,6 +88,13 @@ export interface RelationLabel {
   examples: RelationExample[]
 }
 
+export interface EntityBand {
+  band: '1' | '2' | '3-5' | '6+'
+  entities: number
+  connected: number
+  examples: string[]
+}
+
 export interface GraphStats {
   documents: number
   passages: number
@@ -97,6 +104,7 @@ export interface GraphStats {
   mergedEntities: number
   crossDocumentEntities: number
   relations: number
+  entityBands: EntityBand[]
 }
 
 export interface KnowledgeGraphView {

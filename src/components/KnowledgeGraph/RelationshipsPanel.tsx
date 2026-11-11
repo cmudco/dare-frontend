@@ -45,7 +45,9 @@ const RelationshipsPanel = ({
 
   const labelCount = view.labels.length
   const loadEstimate = useCallback(() => {
-    void getGraphEstimateAPI(graph.id).then(setEstimate)
+    getGraphEstimateAPI(graph.id)
+      .then(setEstimate)
+      .catch(() => toast.error("Couldn't load the cost estimate."))
   }, [graph.id])
 
   useEffect(() => {
@@ -89,8 +91,12 @@ const RelationshipsPanel = ({
   }
 
   const remove = async (label: RelationLabel) => {
-    await deleteLabelAPI(graph.id, label.id)
-    onChanged()
+    try {
+      await deleteLabelAPI(graph.id, label.id)
+      onChanged()
+    } catch {
+      toast.error("Couldn't remove that type. Try again.")
+    }
   }
 
   const percent = graph.chunksTotal

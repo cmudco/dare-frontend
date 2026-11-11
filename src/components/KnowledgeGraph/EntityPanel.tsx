@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, FileText, Loader2, X } from 'lucide-react'
 
 import {
@@ -49,11 +49,17 @@ const EntityPanel = ({
   } | null>(null)
   const [merging, setMerging] = useState(false)
 
+  const wanted = useRef(entityId)
   const load = useCallback(() => {
+    wanted.current = entityId
     setEntity(null)
     setMergeSearch('')
     setMergeTarget(null)
-    void getEntityAPI(graphId, entityId).then(setEntity)
+    getEntityAPI(graphId, entityId)
+      .then((detail) => {
+        if (wanted.current === entityId) setEntity(detail)
+      })
+      .catch(() => toast.error("Couldn't load that name. Try again."))
   }, [graphId, entityId])
 
   useEffect(load, [load])

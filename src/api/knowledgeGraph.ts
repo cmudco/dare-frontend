@@ -62,7 +62,7 @@ export const approveBuildAPI = (id: number, newOnly = false) =>
   baseRequest<KnowledgeGraphSummary>({
     url: `${BASE}/${id}/approve/`,
     method: METHOD.POST,
-    data: { new_only: newOnly },
+    data: { newOnly },
   })
 
 export const addLabelAPI = (

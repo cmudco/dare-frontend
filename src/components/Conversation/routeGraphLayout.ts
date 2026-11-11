@@ -82,7 +82,7 @@ export const layoutRouteGraph = (
         edges.set(key, {
           from: previous,
           to: id,
-          label: phrase,
+          label: phrase && step.relationReversed ? `← ${phrase}` : phrase,
           stated: !!phrase,
         })
       }

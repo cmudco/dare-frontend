@@ -8,6 +8,7 @@ import {
   deleteGraphAPI,
   listGraphsAPI,
 } from '@/api/knowledgeGraph'
+import { DeleteConfirmation } from '@/components/DeleteConfirmation'
 import SelectableList, {
   type SelectableRow,
 } from '@/components/Projects/SelectableList'
@@ -61,8 +62,12 @@ const CreateGraphDialog = ({
     setFolderIds([])
     setName('')
     setQuery('')
-    void getFilesAPI().then((response) => setFiles(response.results))
-    void getFoldersAPI().then((response) => setFolders(response.results))
+    Promise.all([getFilesAPI(), getFoldersAPI()])
+      .then(([fileRows, folderRows]) => {
+        setFiles(fileRows.results)
+        setFolders(folderRows.results)
+      })
+      .catch(() => toast.error("Couldn't load your documents. Try again."))
   }, [open])
 
   const visible = (rows: SourceRow[]) =>
@@ -214,17 +219,27 @@ const KnowledgeGraphsPage = () => {
   const navigate = useNavigate()
   const [graphs, setGraphs] = useState<KnowledgeGraphSummary[] | null>(null)
   const [creating, setCreating] = useState(false)
+  const [deleting, setDeleting] = useState<KnowledgeGraphSummary | null>(null)
 
   const load = useCallback(() => {
-    void listGraphsAPI().then(setGraphs)
+    listGraphsAPI()
+      .then(setGraphs)
+      .catch(() => {
+        setGraphs((current) => current ?? [])
+        toast.error("Couldn't load your graphs. Try again.")
+      })
   }, [])
 
   useEffect(load, [load])
 
   const remove = async (graph: KnowledgeGraphSummary) => {
-    await deleteGraphAPI(graph.id)
-    toast.success(`Deleted “${graph.name}”`)
-    load()
+    try {
+      await deleteGraphAPI(graph.id)
+      toast.success(`Deleted “${graph.name}”`)
+      load()
+    } catch {
+      toast.error("Couldn't delete that graph. Try again.")
+    }
   }
 
   return (
@@ -287,7 +302,7 @@ const KnowledgeGraphsPage = () => {
                 className='shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100'
                 onClick={(event) => {
                   event.stopPropagation()
-                  void remove(graph)
+                  setDeleting(graph)
                 }}
               >
                 <Trash2 className='h-4 w-4' />
@@ -309,6 +324,14 @@ const KnowledgeGraphsPage = () => {
         open={creating}
         onClose={() => setCreating(false)}
         onCreated={(graph) => navigate(`/knowledge-graphs/${graph.id}`)}
+      />
+      <DeleteConfirmation
+        isOpen={!!deleting}
+        onClose={() => setDeleting(null)}
+        onDelete={() => (deleting ? remove(deleting) : undefined)}
+        title='Delete this graph?'
+        description='Its relationship types and stated relationships are deleted. Your documents stay.'
+        itemName={deleting?.name}
       />
     </div>
   )

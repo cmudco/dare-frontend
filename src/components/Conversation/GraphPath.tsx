@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 
 import type { GraphWalkStep } from '@/redux/types/conversation'
 
@@ -10,10 +10,17 @@ const stepLabel = (step: GraphWalkStep) =>
 /** A walk path: passage -> entity -> passage, with stated relationships on the arrows. */
 const GraphPath = ({ path }: { path: GraphWalkStep[] }) => {
   const alias = path.find((step) => step.mentionedAs)
+  // Two spellings of one name are one stop, not a step from a name to itself.
+  const steps = path.filter(
+    (step, index) =>
+      index === 0 ||
+      step.kind !== path[index - 1].kind ||
+      step.label !== path[index - 1].label
+  )
   return (
     <div className='min-w-0 rounded-md border border-border bg-muted/30 px-2 py-1.5'>
       <div className='flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs'>
-        {path.map((step, index) => (
+        {steps.map((step, index) => (
           <span
             key={`${step.kind}-${index}`}
             className='flex min-w-0 items-center gap-1.5'
@@ -25,7 +32,11 @@ const GraphPath = ({ path }: { path: GraphWalkStep[] }) => {
                     {relationPhrase(step)}
                   </span>
                 )}
-                <ArrowRight className='h-3 w-3 shrink-0' />
+                {relationPhrase(step) && step.relationReversed ? (
+                  <ArrowLeft className='h-3 w-3 shrink-0' />
+                ) : (
+                  <ArrowRight className='h-3 w-3 shrink-0' />
+                )}
               </span>
             )}
             <span

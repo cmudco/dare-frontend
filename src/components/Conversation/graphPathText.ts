@@ -8,8 +8,7 @@ export const chunkStepLabel = (step: GraphWalkStep) =>
 /** The stated relationship arriving at this step, or '' when there is none. */
 export const relationPhrase = (step: GraphWalkStep) => {
   if (!step.relation || step.relation === 'points_to') return ''
-  const words = step.relation.replace(/_/g, ' ')
-  return step.relationReversed ? `is ${words} by` : words
+  return step.relation.replace(/_/g, ' ')
 }
 
 /** Citation ids an answer actually used, such as S3 in "[S3]". */

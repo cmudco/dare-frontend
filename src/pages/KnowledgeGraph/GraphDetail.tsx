@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Search, X } from 'lucide-react'
 
 import { getGraphAPI, getGraphViewAPI } from '@/api/knowledgeGraph'
 import AskPanel from '@/components/KnowledgeGraph/AskPanel'
+import EntityBands from '@/components/KnowledgeGraph/EntityBands'
 import EntityPanel from '@/components/KnowledgeGraph/EntityPanel'
 import EvalPanel from '@/components/KnowledgeGraph/EvalPanel'
 import GraphCanvas from '@/components/KnowledgeGraph/GraphCanvas'
@@ -41,12 +42,25 @@ const KnowledgeGraphDetail = () => {
   const [showLinks, setShowLinks] = useState(false)
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState('graph')
+  const [failed, setFailed] = useState(false)
+  const latestRequest = useRef(0)
 
   const refresh = useCallback(async () => {
-    const [summary, payload] = await Promise.all([
-      getGraphAPI(id),
-      getGraphViewAPI(id, focusId),
-    ])
+    const request = ++latestRequest.current
+    let summary: KnowledgeGraphSummary
+    let payload: KnowledgeGraphView
+    try {
+      ;[summary, payload] = await Promise.all([
+        getGraphAPI(id),
+        getGraphViewAPI(id, focusId),
+      ])
+    } catch {
+      // A failed poll keeps the last good view; only a first load has nothing to show.
+      if (request === latestRequest.current) setFailed(true)
+      return
+    }
+    if (request !== latestRequest.current) return
+    setFailed(false)
     setGraph(summary)
     setView(payload)
     // A graph with few stated relationships would look empty without these.
@@ -72,6 +86,16 @@ const KnowledgeGraphDetail = () => {
       .slice(0, 6)
   }, [search, view])
 
+  if ((!graph || !view) && failed) {
+    return (
+      <div className='p-6 text-sm text-muted-foreground'>
+        This graph could not be loaded.{' '}
+        <Link to='/knowledge-graphs' className='text-foreground underline'>
+          Back to knowledge graphs
+        </Link>
+      </div>
+    )
+  }
   if (!graph || !view) {
     return (
       <div className='space-y-4 p-6'>
@@ -103,7 +127,10 @@ const KnowledgeGraphDetail = () => {
           <div className='flex gap-7'>
             <Stat label='Documents' value={view.stats.documents} />
             <Stat label='Chunks' value={view.stats.passages} />
-            <Stat label='Entities' value={view.stats.entities} />
+            <EntityBands
+              total={view.stats.entities}
+              bands={view.stats.entityBands}
+            />
             <Stat label='Merged names' value={view.stats.mergedEntities} />
             <Stat
               label='Across documents'
