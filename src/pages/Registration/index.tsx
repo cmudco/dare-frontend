@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import AuthCard from '../../components/Auth/AuthCard'
 import AuthFormFooter from '../../components/Auth/AuthFormFooter'
-import { AppDispatch } from '../../redux/store'
+import { AppDispatch, RootState } from '../../redux/store'
+import { loadSignupOptions } from '@/redux/asyncThunks/accessRequest'
 import { toggleMode } from '../../redux/themeSlice'
 import { userRegister } from '../../redux/asyncThunks/user'
 import {
@@ -18,9 +19,14 @@ import { Moon, Sun } from 'lucide-react'
 const RegistrationScreen: React.FC = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>()
+  const approvalEnabled = useSelector(
+    (state: RootState) =>
+      state.accessRequest.options?.approvalSignupEnabled === true
+  )
 
   useEffect(() => {
     dispatch(resetError())
+    void dispatch(loadSignupOptions())
   }, [dispatch])
 
   const handleSubmit = async (values: SignupFormValues) => {
@@ -37,12 +43,18 @@ const RegistrationScreen: React.FC = () => {
       if (userRegister.rejected.match(resultAction)) {
         return
       }
-      navigate('/confirmation', {
-        state: {
-          email: values.email,
-          emailDeliveryConfigured: resultAction.payload.emailDeliveryConfigured,
-        },
-      })
+      navigate(
+        resultAction.payload.approvalRequired
+          ? '/signup-pending'
+          : '/confirmation',
+        {
+          state: {
+            email: values.email,
+            emailDeliveryConfigured:
+              resultAction.payload.emailDeliveryConfigured,
+          },
+        }
+      )
     } catch (err) {
       console.error(err)
     }
@@ -67,7 +79,7 @@ const RegistrationScreen: React.FC = () => {
       label: 'Confirm Password',
       type: 'password',
     },
-    { name: 'accessCode', label: 'Access Code', type: 'text' },
+    { name: 'accessCode', label: 'Access Code (optional)', type: 'text' },
   ]
 
   return (
@@ -81,12 +93,24 @@ const RegistrationScreen: React.FC = () => {
       </div>
       <AuthCard<SignupFormValues>
         title='Create Account'
+        subtitle={
+          approvalEnabled
+            ? 'Have an invitation code? Enter it below. Otherwise, leave it blank to request administrator approval. Both signup paths require email verification.'
+            : 'Create your account. If you have an access code, enter it below.'
+        }
         inputs={inputs}
         formikConfig={formikConfig}
         buttonText='Create Account'
         showprivacyPolicy
         footer={
           <>
+            {approvalEnabled && (
+              <AuthFormFooter
+                text='Prefer an invitation code?'
+                route='/request-access'
+                routeText='Request access'
+              />
+            )}
             <AuthFormFooter
               text='Already have an account?'
               route='/login'
