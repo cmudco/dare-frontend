@@ -34,6 +34,17 @@ import { MCPServerSelector } from '@/components/MCP/MCPServerSelector'
 import { DareToolSelector } from '@/components/DareTools/DareToolSelector'
 import { QuillPicker } from './QuillPicker'
 import { useSocket } from '@/hooks/useSocket'
+import { useMessageQueue } from '@/hooks/useMessageQueue'
+import MessageQueueTray from './MessageQueueTray'
+import {
+  enqueueMessage,
+  pauseMessageQueue,
+  promoteQueuedMessage,
+  removeQueuedMessage,
+  resumeMessageQueue,
+  type QueuedMessage,
+} from '@/redux/messageQueueSlice'
+import { editQueuedMessage } from '@/redux/asyncThunks/messageQueue'
 
 const QUILLMARK_SERVER_SLUG = 'quillmark'
 
@@ -54,9 +65,10 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const conversationInput = useSelector(
     (state: RootState) => state.conversation.conversationInput
   )
-  const hasAttachedImages = useSelector(
-    (state: RootState) => state.conversation.attachedImages.length > 0
+  const attachedImages = useSelector(
+    (state: RootState) => state.conversation.attachedImages
   )
+  const hasAttachedImages = attachedImages.length > 0
   const hasMessageContent =
     conversationInput.trim().length > 0 || hasAttachedImages
   const { stopGeneration } = useSocket()
@@ -83,6 +95,13 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
         activeConversation.conversationId
       )
   )
+  const { queue, paused, replyInProgress } = useMessageQueue(
+    activeConversation?.conversationId,
+    isJoined && !disabled
+  )
+  // A message typed behind a running reply, or behind others already
+  // waiting, takes its turn instead of sending straight away.
+  const willQueue = replyInProgress || queue.length > 0
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const selectedModel = useSelector(
     (state: RootState) => state.conversation.selectedModel
@@ -195,6 +214,19 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
   const handleStopGeneration = () => {
     if (!activeConversation?.conversationId) return
     stopGeneration(activeConversation.conversationId, streamingMessageId)
+    dispatch(pauseMessageQueue(activeConversation.conversationId))
+  }
+
+  const handleSendQueuedNow = (queued: QueuedMessage) => {
+    dispatch(promoteQueuedMessage(queued.id))
+    if (streamingMessageId) {
+      stopGeneration(queued.conversationId, streamingMessageId)
+    }
+  }
+
+  const handleEditQueued = (queued: QueuedMessage) => {
+    dispatch(editQueuedMessage(queued))
+    textareaRef.current?.focus()
   }
 
   const handleSendMessage = () => {
@@ -214,13 +246,23 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
       ? `${conversationInput}\n\n[Selected CMU document template: "${selectedQuill}"]`
       : conversationInput
 
-    const newMessage: Partial<Message> = {
-      message: messageText,
+    if (willQueue) {
+      dispatch(
+        enqueueMessage({
+          conversationId: activeConversation.conversationId,
+          text: messageText,
+          images: attachedImages,
+        })
+      )
+    } else {
+      const newMessage: Partial<Message> = {
+        message: messageText,
+      }
+
+      onMessageSent?.()
+
+      dispatch(sendMessage(newMessage))
     }
-
-    onMessageSent?.()
-
-    dispatch(sendMessage(newMessage))
     dispatch(updateConversationInput(''))
     dispatch(clearDraftForConversation(activeConversation.conversationId))
     dispatch(clearAttachedImages())
@@ -335,6 +377,17 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             </span>
           </div>
         )}
+        <MessageQueueTray
+          queue={queue}
+          paused={paused}
+          onSendNow={handleSendQueuedNow}
+          onEdit={handleEditQueued}
+          onRemove={(queued) => dispatch(removeQueuedMessage(queued.id))}
+          onResume={() =>
+            activeConversation &&
+            dispatch(resumeMessageQueue(activeConversation.conversationId))
+          }
+        />
         <ImagePreview />
         <div className='relative flex w-full items-center rounded-md px-4'>
           <textarea
@@ -348,9 +401,11 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
                 ? 'Select a conversation to start chatting'
                 : hasAttachedImages
                   ? 'Add a message (optional)'
-                  : project
-                    ? `Ask anything in ${project.name}`
-                    : 'Type message'
+                  : replyInProgress
+                    ? 'Type to queue another message'
+                    : project
+                      ? `Ask anything in ${project.name}`
+                      : 'Type message'
             }
             disabled={disabled}
             className={clsx(
@@ -364,7 +419,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             {/* Voice Mode Button */}
             <VoiceModeButton disabled={disabled} />
             {/* Send / Stop Button */}
-            {streamingMessageId && !disabled ? (
+            {streamingMessageId && !disabled && !hasMessageContent ? (
               <button
                 type='button'
                 className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-colors hover:bg-secondary/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none'
@@ -378,7 +433,13 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
               <button
                 type='button'
                 disabled={disabled || !hasMessageContent || !isJoined}
-                title={isJoined ? undefined : 'Connecting to the chat…'}
+                title={
+                  !isJoined
+                    ? 'Connecting to the chat…'
+                    : willQueue
+                      ? 'Add to queue'
+                      : undefined
+                }
                 className={clsx(
                   'flex h-8 w-8 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
                   disabled || !hasMessageContent || !isJoined
@@ -386,7 +447,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
                     : 'cursor-pointer bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 )}
                 onClick={handleSendMessage}
-                aria-label='Send message'
+                aria-label={willQueue ? 'Add to queue' : 'Send message'}
               >
                 <ArrowUp className='h-4 w-4' />
               </button>

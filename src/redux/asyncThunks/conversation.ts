@@ -33,7 +33,7 @@ import { selectLibraries } from '../librarySlice'
 import { Agent } from '../types/agent'
 import { MyFile } from '../types/files'
 import { SharedLibrary } from '../types/library'
-import { sendSocketMessage } from './socketMessages'
+import { sendSocketMessage, type OutgoingMessage } from './socketMessages'
 import { fetchProjects } from './project'
 import { LLMModel, PickerModel, WalletMeta } from '../types/conversation'
 import { ProjectSourceMode } from '@/utils/constants/project'
@@ -287,7 +287,7 @@ export const switchChatSourceMode = createAsyncThunk<
 
 export const sendMessage = createAsyncThunk<
   void,
-  Partial<Message> & { filePath?: string },
+  OutgoingMessage & { filePath?: string },
   { dispatch: AppDispatch; state: RootState }
 >(
   'conversation/sendMessage',
