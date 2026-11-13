@@ -14,6 +14,7 @@ import EmailConfirmationScreen from '../pages/EmailConfirmation'
 import RouteListener from './RouteListener'
 import ProtectedRoute from './ProtectedRoute'
 import Help from '../pages/Help'
+import UserGuide from '../pages/UserGuide'
 import AccountSection from '@/pages/Settings/AccountSection'
 import ChatSection from '@/pages/Settings/ChatSection'
 import BackgroundModelsSection from '@/pages/Settings/BackgroundModelsSection'
@@ -226,6 +227,8 @@ const AppRoutes = () => {
               )}
             </Route>
             <Route path='/help' element={<Help />} />
+            <Route path='/help/user-guide' element={<UserGuide />} />
+            <Route path='/help/user-guide/:topicId' element={<UserGuide />} />
             {/* OAuth callback landing — must stay OUTSIDE the enableMcp gate:
                 the flag is false while still loading right after the redirect,
                 which would drop the user on the 404 catch-all. */}

@@ -143,7 +143,7 @@ export function FeedbackWidget() {
     <div
       ref={feedbackRef}
       data-feedback-widget
-      className='fixed right-4 bottom-4 z-50'
+      className='fixed right-4 bottom-4 z-50 print:hidden'
     >
       {/* Feedback Panel */}
       <FeedbackPanel
