@@ -12,7 +12,7 @@ After running migrations and creating a superuser:
 python manage.py createsuperuser
 ```
 
-Open `http://&lt;host&gt;:8000/admin/` and log in to manage users, access codes, model groups, billing and more.
+Open `http://<host>:8000/admin/` and log in to manage users, access codes, model groups, billing and more.
 
 For programmatic operations, use the Django shell:
 
@@ -135,7 +135,7 @@ Transactional emails (registration, password reset, confirmations) use django-al
 
 ### Storage
 
-File uploads land in Django's `MEDIA_ROOT` (`&lt;repo&gt;/media`). Each user's `storage_backend` picks local filesystem (the default) or SyftBox for new uploads. For multi-instance deployments, mount a shared filesystem at `MEDIA_ROOT`.
+File uploads land in Django's `MEDIA_ROOT` (`<repo>/media`). Each user's `storage_backend` picks local filesystem (the default) or SyftBox for new uploads. For multi-instance deployments, mount a shared filesystem at `MEDIA_ROOT`.
 
 ## 6. Analytics & reporting
 

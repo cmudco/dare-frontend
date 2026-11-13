@@ -43,7 +43,7 @@ flowchart TB
 | `src/routes/`         | `AppRoutes.tsx`, `ProtectedRoute.tsx` and `RouteListener.tsx`                                                    |
 | `src/pages/`          | Top-level pages                                                                                                  |
 | `src/components/`     | UI by feature (`Conversation/`, `WorkflowBuilder/`, `FileManager/`, `Artifacts/`, …) and `ui/` shadcn primitives |
-| `src/redux/`          | The store, one `&lt;feature&gt;Slice.ts` per domain, `asyncThunks/`, `middleware/`, `types/` and `workflowBuilder/`    |
+| `src/redux/`          | The store, one `<feature>Slice.ts` per domain, `asyncThunks/`, `middleware/`, `types/` and `workflowBuilder/`    |
 | `src/api/`            | HTTP calls, one file per domain                                                                                  |
 | `src/schemas/`        | Zod schemas for inbound `/workflow` and `/assistant` socket events                                               |
 | `src/config/`         | `environment.ts` (typed `VITE_*` config) and `socket.ts` (reconnect policy)                                      |
@@ -53,7 +53,7 @@ flowchart TB
 ## State management
 
 Redux Toolkit organizes state by domain. Slices sit directly in `src/redux/` as
-`&lt;feature&gt;Slice.ts` (for example `conversationSlice.ts`, `fileSlice.ts`, `workflowSlice.ts`,
+`<feature>Slice.ts` (for example `conversationSlice.ts`, `fileSlice.ts`, `workflowSlice.ts`,
 `billingSlice.ts`, `themeSlice.ts`, `featureFlagsSlice.ts`); `src/redux/slices/socketSlice.ts`
 tracks connection state, and `src/redux/workflowBuilder/` holds the canvas state (nodes, edges,
 execution, batches). `src/redux/store.ts` registers them all.
@@ -72,7 +72,7 @@ Component → dispatch(thunk) → src/api/<domain>.ts → baseRequest → axios 
 
 - **Base URL.** `src/config/environment.ts` reads `VITE_DJANGO_BACKEND_URL`; `src/api/config.ts`
   re-exports it.
-- **Auth.** `baseRequest` in `src/utils/requests/index.ts` adds `Authorization: Bearer &lt;token&gt;`
+- **Auth.** `baseRequest` in `src/utils/requests/index.ts` adds `Authorization: Bearer <token>`
   from `localStorage`. On a `401` it hands off to `tokenExpirationService`
   (`src/services/tokenExpirationService.ts`), which also checks token health every 15 seconds. When
   the token is no longer valid it clears the stored tokens, queues a "Session Expired" toast and
@@ -126,7 +126,7 @@ has the full contract: payload shapes, directions and error codes.
 - **shadcn/ui** supplies the accessible primitives in `src/components/ui/`, styled with the same
   tokens.
 - **Themes.** Each theme is a CSS file in `src/themes/`, imported by `src/index.css`.
-  `ThemeProvider` sets `data-theme` on `&lt;body&gt;` and toggles the `dark` class on it for dark mode.
+  `ThemeProvider` sets `data-theme` on `<body>` and toggles the `dark` class on it for dark mode.
 - **Class merging** uses `cn()` from `src/lib/utils.ts` (`clsx` + `tailwind-merge`).
 
 ## Build

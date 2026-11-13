@@ -1,0 +1,58 @@
+---
+title: "Voice Runtime Security Policy"
+description: "Vulnerability reporting and hardening notes for the voice runtime."
+---
+Report vulnerabilities in the voice runtime privately, and harden your own deployment with the notes
+below.
+
+## Reporting a vulnerability
+
+Do not report security vulnerabilities through public issues, discussions or pull requests.
+
+Use GitHub's private vulnerability reporting on this repository ("Report a vulnerability" under the
+**Security** tab). If that is not available, email the project team at vks@andrew.cmu.edu.
+
+### What to include
+
+- A description of the issue
+- Steps to reproduce
+- The affected version or commit
+
+### What to expect
+
+We acknowledge your report, keep you informed while we investigate, and credit you in the fix unless
+you prefer otherwise.
+
+## Scope
+
+In scope:
+
+- The runtime application code in `runtime/`
+- The Whisper worker (`runtime/whisper_worker.py`)
+- Session token validation and the runtime ↔ Socratic Bots backend calls
+- The default configuration in `.env.example` and the `Dockerfile`
+
+Out of scope:
+
+- Vulnerabilities in Mistral, OpenAI, Anthropic, Google or other provider services
+- Vulnerabilities in Pipecat, aiortc or other upstream dependencies (report those upstream; tell us
+  if the runtime is affected)
+- Issues that exist only in modified forks or a specific deployment's infrastructure
+- Denial of service by traffic volume, social engineering, physical attacks
+
+## Hardening notes
+
+- **Shared secrets.** `DARE_INTERNAL_KEY` authenticates runtime ↔ backend calls and, unless
+  `VOICE_RUNTIME_SESSION_SECRET` is set, also signs browser session tokens. Use long random values,
+  share them only with the Socratic Bots backend, and rotate them together.
+- **Tokens.** Session tokens are HMAC-SHA256 signed, short-lived and bound to one session ID. They
+  carry no prompt or personal data.
+- **Whisper worker.** Bind it to loopback only and always set `VOICE_RUNTIME_WHISPER_TOKEN`. The token
+  is the only protection on an endpoint that transcribes student audio.
+- **Debug switches.** `VOICE_RUNTIME_LLM_INPUT_DEBUG` writes student answers to `/tmp`, and
+  `VOICE_RUNTIME_LOG_TTS_REQUEST_TEXT` logs agent replies. Keep both off in production.
+- **CORS.** Set `VOICE_RUNTIME_CORS_ORIGINS` to your frontend origins only. The runtime also allows
+  local development origins and the maintainers' hosted frontends from a built-in list in
+  `runtime/settings.py`; review that list for your deployment.
+- **Transport.** Serve the runtime over HTTPS. Browsers require a secure origin for microphone access.
+- **Secrets in git.** Never commit `.env`. `.gitignore` excludes it.

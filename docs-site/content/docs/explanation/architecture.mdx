@@ -83,7 +83,7 @@ flowchart TB
 
 | Component | Responsibility | Code path |
 |---|---|---|
-| **REST API** | CRUD over conversations, files, prompts, users, billing | `*/views.py`, `*/serializers.py`, `*/urls.py` (some apps use `&lt;app&gt;/api/`) |
+| **REST API** | CRUD over conversations, files, prompts, users, billing | `*/views.py`, `*/serializers.py`, `*/urls.py` (some apps use `<app>/api/`) |
 | **Socket.IO server** | Chat streaming and workflow execution updates | `conversations/socket_server.py` and `conversations/namespaces/`, mounted in `dare/asgi.py`; `workflows/` |
 | **Service layer** | Provider integrations and multi-model coordination | `core/services/` |
 | **Background workers** | File processing, embeddings, email, memory writes | `*/tasks.py`, run by `python manage.py rqworker` |

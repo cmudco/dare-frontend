@@ -1,0 +1,10 @@
+{
+  "title": "Socratic Bots Documentation",
+  "defaultOpen": false,
+  "pages": [
+    "tutorials",
+    "how-to",
+    "reference",
+    "explanation"
+  ]
+}
