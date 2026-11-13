@@ -7,7 +7,7 @@
 
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { AppDispatch, RootState } from '../store'
-import type { Message } from '../types/conversation'
+import type { AttachedImage, Message } from '../types/conversation'
 import { RagMode } from '../types/conversation'
 import { ensemblePayload } from '@/utils/ensemble'
 import {
@@ -20,9 +20,13 @@ import {
 // SEND MESSAGE
 // ════════════════════════════════════════════════════════════════════════════
 
+// `images` overrides the composer's attached images, for a message that was
+// queued earlier with its own.
+export type OutgoingMessage = Partial<Message> & { images?: AttachedImage[] }
+
 export const sendSocketMessage = createAsyncThunk<
   void,
-  Partial<Message>,
+  OutgoingMessage,
   { dispatch: AppDispatch; state: RootState }
 >(
   'socket/sendMessageThunk',
@@ -119,11 +123,13 @@ export const sendSocketMessage = createAsyncThunk<
       audio_transcription_settings: {
         language: audioTranscriptionSettings.language,
       },
-      images: attachedImages.map(({ preview, name, type }) => ({
-        preview,
-        name,
-        type,
-      })),
+      images: (message.images ?? attachedImages).map(
+        ({ preview, name, type }) => ({
+          preview,
+          name,
+          type,
+        })
+      ),
       artifacts_enabled: artifactsEnabled,
       artifact_action: shouldSendArtifactContext ? 'auto' : undefined,
       active_artifact_id: shouldSendArtifactContext
