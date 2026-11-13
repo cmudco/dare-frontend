@@ -16,6 +16,7 @@ import {
   searchSessionsAPI,
   exportMemoryAPI,
   exportOmpMemoryAPI,
+  getOmpRecordAPI,
   importMemoryAPI,
   importOmpMemoryAPI,
   releaseOmpImportsAPI,
@@ -190,6 +191,18 @@ export const exportOmpMemory = createAsyncThunk(
   async (includeSensitive: boolean, thunkAPI) => {
     try {
       return await exportOmpMemoryAPI(includeSensitive)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Read one memory as its Open Memory Protocol record */
+export const getOmpRecord = createAsyncThunk(
+  'memory/getOmpRecord',
+  async (recordId: string, thunkAPI) => {
+    try {
+      return await getOmpRecordAPI(recordId)
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

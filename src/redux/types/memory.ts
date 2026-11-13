@@ -118,6 +118,25 @@ export interface OmpArchive {
   tombstones: unknown[]
 }
 
+/** One memory as its Open Memory Protocol record */
+export interface OmpFieldEntry {
+  /** What DARE calls it; empty for a field added on export */
+  label: string
+  value: string
+  /** The record fields it lands in */
+  omp: string[]
+  how: 'kept' | 'reshaped' | 'stays' | 'added'
+  note: string
+}
+
+export interface OmpRecord {
+  origin: string
+  /** The header of the file this record would be exported in */
+  manifest: Record<string, unknown>
+  memory: Record<string, unknown>
+  fields: OmpFieldEntry[]
+}
+
 export type OmpOutcome =
   | 'accepted'
   | 'transformed'

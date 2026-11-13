@@ -17,6 +17,7 @@ import type {
   ForeignImportResult,
   OmpArchive,
   OmpImportRun,
+  OmpRecord,
   OmpReleaseResult,
   MemoryBackfillResponse,
   MemoryBackfillRange,
@@ -182,6 +183,14 @@ export const exportOmpMemoryAPI = async (
 ): Promise<OmpArchive> => {
   return await baseRequest<OmpArchive>({
     url: `api/memory/v2/omp/export/${includeSensitive ? '?include_sensitive=true' : ''}`,
+    method: METHOD.GET,
+  })
+}
+
+/** One memory as its Open Memory Protocol record */
+export const getOmpRecordAPI = async (recordId: string): Promise<OmpRecord> => {
+  return await baseRequest<OmpRecord>({
+    url: `api/memory/v2/omp/records/${recordId}/`,
     method: METHOD.GET,
   })
 }
