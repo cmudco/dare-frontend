@@ -6,7 +6,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Braces } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   clearAllMemory,
@@ -39,6 +39,7 @@ import {
   MemoryLayerCards,
   MemoryPortability,
   MemoryTidyUp,
+  OmpFormatDialog,
   SessionSearch,
 } from '@/components/Memory'
 import { bucketForType, layerFor } from '@/components/Memory/layers'
@@ -51,6 +52,7 @@ const MemoryScreen = () => {
   const [sessionSince, setSessionSince] = useState('')
   const [sessionUntil, setSessionUntil] = useState('')
   const [explainerOpen, setExplainerOpen] = useState(false)
+  const [format, setFormat] = useState<{ id: string | null } | null>(null)
 
   const items = useAppSelector((state) => state.memory.items)
   const itemsLoading = useAppSelector((state) => state.memory.itemsLoading)
@@ -193,6 +195,10 @@ const MemoryScreen = () => {
             <Button variant='outline' onClick={() => setExplainerOpen(true)}>
               <BookOpen className='h-4 w-4' />
               How it works
+            </Button>
+            <Button variant='outline' onClick={() => setFormat({ id: null })}>
+              <Braces className='h-4 w-4' />
+              See the OMP format
             </Button>
             <MemoryBackfillButton />
             <MemoryPortability memoryCount={items.length} />
@@ -341,11 +347,17 @@ const MemoryScreen = () => {
             savingId={savingId}
             onCategoryClick={handleQueryChange}
             onOpenExplainer={() => setExplainerOpen(true)}
+            onViewFormat={(id) => setFormat({ id })}
           />
         )}
       </div>
 
       <MemoryExplainer open={explainerOpen} onOpenChange={setExplainerOpen} />
+      <OmpFormatDialog
+        open={format !== null}
+        onOpenChange={(open) => !open && setFormat(null)}
+        memoryId={format?.id}
+      />
     </div>
   )
 }

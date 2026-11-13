@@ -30,6 +30,8 @@ interface Props {
   onCategoryClick?: (category: string) => void
   /** Open the "How memory works" drawer from the empty state */
   onOpenExplainer?: () => void
+  /** Show a memory as its Open Memory Protocol record */
+  onViewFormat?: (id: string) => void
 }
 
 const ProfileViewToggle = ({
@@ -76,6 +78,7 @@ const MemoryFeed = ({
   savingId,
   onCategoryClick,
   onOpenExplainer,
+  onViewFormat,
 }: Props) => {
   const [profileView, setProfileView] = useState<'document' | 'cards'>(
     'document'
@@ -157,6 +160,7 @@ const MemoryFeed = ({
               saving={savingId === item.id}
               showScore={showScores}
               onCategoryClick={onCategoryClick}
+              onViewFormat={onViewFormat}
             />
           ))}
         </AnimatePresence>
