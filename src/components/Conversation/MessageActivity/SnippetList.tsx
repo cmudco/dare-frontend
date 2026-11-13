@@ -1,4 +1,5 @@
 import React from 'react'
+import GraphUsagePanel from '@/components/Conversation/GraphUsagePanel'
 import {
   hopVerb,
   type ContextTraceStage,
@@ -24,6 +25,9 @@ interface SnippetRowProps {
   location?: string
   via?: string | null
   viaKind?: string | null
+  /** The walk reached this snippet; its route is drawn above the list. */
+  throughGraph?: boolean
+  cited?: boolean
 }
 
 /** One kept snippet, one compact line: rank, source, preview, relevance bar. */
@@ -37,6 +41,8 @@ const SnippetRow: React.FC<SnippetRowProps> = ({
   location,
   via,
   viaKind,
+  throughGraph,
+  cited,
 }) => {
   const ratio = maxScore > 0 ? Math.min(1, Math.max(0, score / maxScore)) : 0
   return (
@@ -63,13 +69,24 @@ const SnippetRow: React.FC<SnippetRowProps> = ({
           </span>
         )}
       </div>
-      {(location || via) && (
+      {(location || via || throughGraph || cited) && (
         <div className='ml-6 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground'>
           {location && <span>{location}</span>}
-          {via && (
-            <span className='rounded-full bg-primary/10 px-1.5 text-primary'>
-              {hopVerb(viaKind)} "{via}"
+          {cited && (
+            <span className='rounded-full bg-muted px-1.5 text-foreground'>
+              cited
             </span>
+          )}
+          {throughGraph ? (
+            <span className='rounded-full bg-primary/10 px-1.5 text-primary'>
+              added by the graph
+            </span>
+          ) : (
+            via && (
+              <span className='rounded-full bg-primary/10 px-1.5 text-primary'>
+                {hopVerb(viaKind)} "{via}"
+              </span>
+            )
           )}
         </div>
       )}
@@ -86,18 +103,20 @@ const locationOf = (entry: RetrievalTraceEntry): string | undefined => {
 }
 
 /** Snippets an advanced retrieval source kept, with the pool→kept header. */
-export const SourceSnippets: React.FC<{ source: RetrievalTrace }> = ({
-  source,
-}) => {
+export const SourceSnippets: React.FC<{
+  source: RetrievalTrace
+  citedIds: ReadonlySet<string>
+}> = ({ source, citedIds }) => {
   const label = source.source === 'libraries' ? 'Shared libraries' : 'Documents'
   const kept = source.finalEvidence ?? []
   const maxScore = Math.max(0, ...kept.map((entry) => entry.score))
   return (
     <div className='mt-1.5 space-y-0.5'>
+      <GraphUsagePanel trace={source} citedIds={citedIds} />
       <div className='flex items-center justify-between text-xs text-muted-foreground'>
         <span>{label}</span>
         <span className='tabular-nums'>
-          pool {source.hybrid.poolSize} → kept {source.finalSize}
+          {source.hybrid.poolSize} candidates → {source.finalSize} used
         </span>
       </div>
       {source.finalEvidence === undefined && (
@@ -117,6 +136,8 @@ export const SourceSnippets: React.FC<{ source: RetrievalTrace }> = ({
           location={locationOf(entry)}
           via={entry.via}
           viaKind={entry.viaKind}
+          throughGraph={!!entry.origin && entry.origin !== 'search'}
+          cited={!!entry.citationId && citedIds.has(entry.citationId)}
         />
       ))}
     </div>

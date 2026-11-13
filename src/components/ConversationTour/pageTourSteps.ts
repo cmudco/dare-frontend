@@ -18,7 +18,7 @@ import {
   Crown,
   CreditCard,
   TrendingUp,
-  Sparkles,
+  Compass,
   Zap,
   FolderKanban,
   MessageSquarePlus,
@@ -52,7 +52,7 @@ const DASHBOARD_STEPS: PageTourStep[] = [
     title: 'Welcome to Dashboard',
     description:
       "Your command center — see all your activity and usage stats at a glance. Let's walk through it.",
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {
@@ -91,7 +91,7 @@ const FILES_STEPS: PageTourStep[] = [
     title: 'Welcome to Files',
     description:
       "Upload and organize your documents here. The AI can read and reference them in your conversations. Let's explore.",
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {
@@ -139,7 +139,7 @@ const PROMPTS_STEPS: PageTourStep[] = [
     title: 'Welcome to Prompts',
     description:
       "Save and reuse your best prompts as templates. Apply them instantly in any conversation. Let's take a look.",
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {
@@ -186,7 +186,7 @@ const WORKFLOWS_STEPS: PageTourStep[] = [
     title: 'Welcome to Workflows',
     description:
       "Build multi-step AI pipelines by chaining prompts together. Automate complex tasks. Let's explore.",
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {
@@ -224,7 +224,7 @@ const AGENTS_STEPS: PageTourStep[] = [
     title: 'Welcome to Agents',
     description:
       "Create AI agents with specialized personas and instructions. Deploy them in your conversations. Let's see how.",
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {
@@ -262,7 +262,7 @@ const SETTINGS_STEPS: PageTourStep[] = [
     title: 'Welcome to Settings',
     description:
       "Customize your DARE experience — avatar, API keys, preferences, and security. Let's walk through each section.",
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {
@@ -326,7 +326,7 @@ const HELP_STEPS: PageTourStep[] = [
     title: 'Welcome to Help',
     description:
       "Find documentation, learning modules, and a full reference of available AI models. Let's explore.",
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {
@@ -365,7 +365,7 @@ const BILLING_STEPS: PageTourStep[] = [
     title: 'Welcome to Cost Tracking',
     description:
       "Monitor your AI usage costs, wallet balance, and spending trends. Let's see what's here.",
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {
@@ -386,7 +386,7 @@ const PROJECTS_STEPS: PageTourStep[] = [
     title: 'Welcome to Projects',
     description:
       'Projects keep the chats, files and instructions for one piece of work in one place.',
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {
@@ -424,7 +424,7 @@ const PROJECT_STEPS: PageTourStep[] = [
     title: 'Inside a Project',
     description:
       'Every chat started here shares the same instructions, sources and defaults.',
-    icon: Sparkles,
+    icon: Compass,
     placement: 'center',
   },
   {
@@ -490,7 +490,7 @@ const MEMORY_STEPS: PageTourStep[] = [
     title: 'Tidy Up',
     description:
       'Ask DARE to check its memories for duplicates and stale labels. It suggests fixes, and nothing changes until you approve one.',
-    icon: Sparkles,
+    icon: Compass,
     placement: 'bottom',
   },
   {

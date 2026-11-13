@@ -10,9 +10,17 @@ import {
   Wrench,
 } from 'lucide-react'
 import { RagMode } from '@/utils/constants/conversation'
-import type { ContextTraceStage } from '@/redux/types/conversation'
+import type {
+  ContextTraceStage,
+  RetrievalTrace,
+} from '@/redux/types/conversation'
 import { StepHeader } from '../Timeline'
-import { formatChars, formatMs, keptSnippetCount } from './activitySummary'
+import {
+  formatChars,
+  formatMs,
+  keptSnippetCount,
+  stageSources,
+} from './activitySummary'
 import { NaiveSnippets, SourceSnippets } from './SnippetList'
 
 /** Same vocabulary as the retrieval-mode cards in settings. */
@@ -100,7 +108,9 @@ export interface ActivityStep {
  * retrieval lists the kept snippets with relative score bars.
  */
 export const contextStageSteps = (
-  stages: ContextTraceStage[]
+  stages: ContextTraceStage[],
+  citedIds: ReadonlySet<string>,
+  toolSearches: RetrievalTrace[]
 ): ActivityStep[] =>
   stages.map((stage) => ({
     key: `context-${stage.kind}`,
@@ -139,8 +149,12 @@ export const contextStageSteps = (
         )}
 
         {stage.kind === 'retrieval' &&
-          stage.sources?.map((source, sourceIndex) => (
-            <SourceSnippets key={sourceIndex} source={source} />
+          stageSources(stage, toolSearches).map((source, sourceIndex) => (
+            <SourceSnippets
+              key={sourceIndex}
+              source={source}
+              citedIds={citedIds}
+            />
           ))}
 
         {stage.kind === 'retrieval' && stage.snippets && (

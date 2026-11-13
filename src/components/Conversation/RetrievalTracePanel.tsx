@@ -1,3 +1,4 @@
+import GraphPath from '@/components/Conversation/GraphPath'
 import React from 'react'
 import {
   ArrowUp,
@@ -18,6 +19,7 @@ import { SourceSnippets } from './MessageActivity/SnippetList'
 
 interface RetrievalTraceStagesProps {
   trace: RetrievalTrace
+  citedIds: ReadonlySet<string>
 }
 
 const fmtScore = (score: number): string =>
@@ -50,6 +52,7 @@ const EntryRow: React.FC<{
 
 const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
   trace,
+  citedIds,
 }) => {
   if (!trace) return null
 
@@ -72,6 +75,11 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
             <span className='rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary'>
               {trace.queryAnalysis.intent}
             </span>
+            {trace.queryAnalysis.route === 'graph' && (
+              <span className='rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary'>
+                graph route
+              </span>
+            )}
             {trace.queryAnalysis.keywords.map((kw) => (
               <span
                 key={kw}
@@ -131,15 +139,33 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
       icon: <CornerDownRight className='h-3.5 w-3.5' />,
       content: (
         <>
-          <StepHeader title='Graph expand'>
+          <StepHeader
+            title={trace.expand.walk ? 'Graph walk (PageRank)' : 'Graph expand'}
+          >
             <span className='font-normal text-muted-foreground'>
               {trace.expand.added.length === 0
-                ? '· nothing added'
-                : `· added ${trace.expand.added.length} linked ${
+                ? '· no new chunks'
+                : `· reached ${trace.expand.added.length} linked ${
                     trace.expand.added.length === 1 ? 'chunk' : 'chunks'
                   }`}
+              {trace.expand.walk?.nodes
+                ? ` · ${trace.expand.walk.nodes} nodes, ${trace.expand.walk.edges} links, ${trace.expand.walk.milliseconds} ms`
+                : ''}
             </span>
           </StepHeader>
+          {!!trace.expand.walk?.queryEntities.length && (
+            <div className='mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-muted-foreground'>
+              <span>Started from</span>
+              {trace.expand.walk.queryEntities.map((item) => (
+                <span
+                  key={item.name}
+                  className='rounded bg-muted px-1.5 py-0.5 font-medium text-foreground'
+                >
+                  {item.entity}
+                </span>
+              ))}
+            </div>
+          )}
           {trace.expand.added.length > 0 && (
             <div className='mt-1 min-w-0 overflow-hidden'>
               {trace.expand.added.map((e) => {
@@ -153,10 +179,16 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
                 return (
                   <div key={`x-${e.sourceRef}-${e.chunkIndex}`}>
                     <EntryRow entry={e} />
-                    {locationLine && (
-                      <div className='pl-4 text-[11px] text-muted-foreground'>
-                        {locationLine}
+                    {e.path?.length ? (
+                      <div className='my-1 pl-4'>
+                        <GraphPath path={e.path} />
                       </div>
+                    ) : (
+                      locationLine && (
+                        <div className='pl-4 text-[11px] text-muted-foreground'>
+                          {locationLine}
+                        </div>
+                      )
                     )}
                   </div>
                 )
@@ -231,7 +263,7 @@ const RetrievalTraceStages: React.FC<RetrievalTraceStagesProps> = ({
     content: (
       <>
         <StepHeader title='Evidence sent to the model' />
-        <SourceSnippets source={trace} />
+        <SourceSnippets source={trace} citedIds={citedIds} />
       </>
     ),
   })

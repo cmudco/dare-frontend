@@ -52,6 +52,7 @@ import {
   usageRounds,
 } from '../../utils/usageDetails'
 import RetrievalTraceStages from './RetrievalTracePanel'
+import { citedIdsIn } from './graphPathText'
 import {
   formatEnergy,
   formatCarbon,
@@ -893,7 +894,10 @@ const MessageMetadata: React.FC<MessageMetadataProps> = ({
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <RetrievalTraceStages trace={trace} />
+                      <RetrievalTraceStages
+                        trace={trace}
+                        citedIds={citedIdsIn(message.message)}
+                      />
                     </CardContent>
                   </Card>
                 ))}

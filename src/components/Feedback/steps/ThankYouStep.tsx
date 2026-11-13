@@ -52,24 +52,6 @@ export function ThankYouStep() {
             />
           </svg>
         </motion.div>
-
-        {/* Sparkles */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4 }}
-          className='absolute -top-1 -right-1'
-        >
-          <span className='text-2xl'>✨</span>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5 }}
-          className='absolute -bottom-1 -left-1'
-        >
-          <span className='text-xl'>✨</span>
-        </motion.div>
       </motion.div>
 
       {/* Thank you text */}

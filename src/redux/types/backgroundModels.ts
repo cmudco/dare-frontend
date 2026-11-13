@@ -5,6 +5,7 @@ export type BackgroundTask =
   | 'summaries'
   | 'memory'
   | 'query_analysis'
+  | 'graph_relations'
 
 export type BackgroundModelSource =
   | 'litellm_key'
