@@ -15,7 +15,10 @@ import {
   searchMemoryAPI,
   searchSessionsAPI,
   exportMemoryAPI,
+  exportOmpMemoryAPI,
   importMemoryAPI,
+  importOmpMemoryAPI,
+  releaseOmpImportsAPI,
   importForeignMemoryAPI,
   clearAllMemoryAPI,
   getMemoryBackfillAPI,
@@ -175,6 +178,42 @@ export const importMemory = createAsyncThunk(
   async (bundle: object, thunkAPI) => {
     try {
       return await importMemoryAPI(bundle)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Download current memories as an Open Memory Protocol archive */
+export const exportOmpMemory = createAsyncThunk(
+  'memory/exportOmpMemory',
+  async (includeSensitive: boolean, thunkAPI) => {
+    try {
+      return await exportOmpMemoryAPI(includeSensitive)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Import an Open Memory Protocol archive and get its receipt */
+export const importOmpMemory = createAsyncThunk(
+  'memory/importOmpMemory',
+  async (archive: object, thunkAPI) => {
+    try {
+      return await importOmpMemoryAPI(archive)
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+/** Release every imported memory that is still held */
+export const releaseOmpImports = createAsyncThunk(
+  'memory/releaseOmpImports',
+  async (_, thunkAPI) => {
+    try {
+      return await releaseOmpImportsAPI()
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }

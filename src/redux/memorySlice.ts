@@ -16,8 +16,11 @@ import {
   clearAllMemory,
   searchSessions,
   exportMemory,
+  exportOmpMemory,
   importMemory,
+  importOmpMemory,
   importForeignMemory,
+  releaseOmpImports,
   getMemoryBackfill,
   startMemoryBackfill,
   stopMemoryBackfill,
@@ -95,6 +98,40 @@ const memorySlice = createSlice({
         state.importing = false
       })
       .addCase(importForeignMemory.rejected, (state, action) => {
+        state.importing = false
+        state.error = action.payload as string
+      })
+      // Open Memory Protocol exchange
+      .addCase(exportOmpMemory.pending, (state) => {
+        state.exporting = true
+        state.error = null
+      })
+      .addCase(exportOmpMemory.fulfilled, (state) => {
+        state.exporting = false
+      })
+      .addCase(exportOmpMemory.rejected, (state, action) => {
+        state.exporting = false
+        state.error = action.payload as string
+      })
+      .addCase(importOmpMemory.pending, (state) => {
+        state.importing = true
+        state.error = null
+      })
+      .addCase(importOmpMemory.fulfilled, (state) => {
+        state.importing = false
+      })
+      .addCase(importOmpMemory.rejected, (state, action) => {
+        state.importing = false
+        state.error = action.payload as string
+      })
+      .addCase(releaseOmpImports.pending, (state) => {
+        state.importing = true
+        state.error = null
+      })
+      .addCase(releaseOmpImports.fulfilled, (state) => {
+        state.importing = false
+      })
+      .addCase(releaseOmpImports.rejected, (state, action) => {
         state.importing = false
         state.error = action.payload as string
       })
