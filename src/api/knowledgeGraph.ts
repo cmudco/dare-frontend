@@ -36,6 +36,16 @@ export const getGraphAPI = (id: number) =>
     method: METHOD.GET,
   })
 
+export const updateGraphAPI = (
+  id: number,
+  changes: { name: string; fileIds: number[]; folderIds: number[] }
+) =>
+  baseRequest<KnowledgeGraphSummary>({
+    url: `${BASE}/${id}/`,
+    method: METHOD.PATCH,
+    data: changes,
+  })
+
 export const deleteGraphAPI = (id: number) =>
   baseRequest<void>({ url: `${BASE}/${id}/`, method: METHOD.DELETE })
 
@@ -58,11 +68,17 @@ export const discoverLabelsAPI = (id: number, goal: string) =>
     data: { goal },
   })
 
-export const approveBuildAPI = (id: number, newOnly = false) =>
+/** What a build reads: everything, only the unread types, or only the added documents. */
+export type BuildScope = 'all' | 'newTypes' | 'newFiles'
+
+export const approveBuildAPI = (id: number, scope: BuildScope = 'all') =>
   baseRequest<KnowledgeGraphSummary>({
     url: `${BASE}/${id}/approve/`,
     method: METHOD.POST,
-    data: { newOnly },
+    data: {
+      newOnly: scope === 'newTypes',
+      newFilesOnly: scope === 'newFiles',
+    },
   })
 
 export const addLabelAPI = (

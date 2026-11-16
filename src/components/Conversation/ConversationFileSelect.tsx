@@ -20,6 +20,7 @@ import {
   updateSelectedTags,
   updateSelectedFolders,
   updateSelectedLibraries,
+  updateRagMode,
   setSourcePickerOpen,
 } from '@/redux/conversationSlice'
 import {
@@ -27,7 +28,14 @@ import {
   selectLibrariesLoaded,
 } from '@/redux/librarySlice'
 import { getSharedLibraries } from '@/redux/asyncThunks/library'
-import { updateConversationSelectedIds } from '@/redux/asyncThunks/conversation'
+import {
+  updateConversation,
+  updateConversationSelectedIds,
+} from '@/redux/asyncThunks/conversation'
+import { listGraphsAPI } from '@/api/knowledgeGraph'
+import type { KnowledgeGraphSummary } from '@/redux/types/knowledgeGraph'
+import { RagMode } from '@/utils/constants/conversation'
+import { toast } from '@/utils/toast'
 import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { Tag } from '@/redux/types/tags'
 import type { SharedLibrary } from '@/redux/types/library'
@@ -47,6 +55,7 @@ import {
   PopoverTrigger as SettingsPopoverTrigger,
 } from '../ui/popover'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs'
+import GraphSourceList from './GraphSourceList'
 import ModelContextSettings from './ModelContextSettings'
 import { FileStatus } from '@/utils/constants/file'
 import { supportsCodeSandbox } from '@/utils/modelConfigUtils'
@@ -58,6 +67,15 @@ const sourceLabel = (
   parserName: keyof typeof DOCUMENT_PARSER_LABELS
 ): string =>
   isSpreadsheetFile(name) ? 'Table' : DOCUMENT_PARSER_LABELS[parserName]
+
+type SourceTab =
+  | 'files'
+  | 'embeddings'
+  | 'media'
+  | 'tags'
+  | 'folders'
+  | 'libraries'
+  | 'graphs'
 
 const ConversationFileSelect: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -116,9 +134,18 @@ const ConversationFileSelect: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectionDirty, setSelectionDirty] = useState(false)
   const [showAllSources, setShowAllSources] = useState(false)
-  const [activeTab, setActiveTab] = useState<
-    'files' | 'embeddings' | 'media' | 'tags' | 'folders' | 'libraries'
-  >('embeddings')
+  const [activeTab, setActiveTab] = useState<SourceTab>('embeddings')
+  const [graphs, setGraphs] = useState<KnowledgeGraphSummary[] | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    listGraphsAPI()
+      .then(setGraphs)
+      .catch(() => {
+        setGraphs([])
+        toast.error("Couldn't load your knowledge graphs.")
+      })
+  }, [open])
 
   useEffect(() => {
     if (open && !librariesLoaded) {
@@ -327,6 +354,83 @@ const ConversationFileSelect: React.FC = () => {
     dispatch(updateSelectedLibraries(newSelectedLibraries))
   }
 
+  // A graph is a set of documents, so picking one ticks its embeddings.
+  const graphFiles = useCallback(
+    (graph: KnowledgeGraphSummary) => {
+      const ids = new Set(graph.fileIds)
+      return allFiles.filter(
+        (file) =>
+          ids.has(file.id) &&
+          file.status === FileStatus.PROCESSED &&
+          !file.isMedia
+      )
+    },
+    [allFiles]
+  )
+  // A small graph inside a bigger ticked one is not a second pick.
+  const selectedGraphs = useMemo(() => {
+    const picked = new Set(selectedEmbeddings.map((file) => file.id))
+    const covered = (graphs ?? [])
+      .map((graph) => ({
+        graph,
+        ids: graphFiles(graph).map((file) => file.id),
+      }))
+      .filter(({ ids }) => ids.length > 0 && ids.every((id) => picked.has(id)))
+    return covered
+      .filter(
+        ({ ids }) =>
+          !covered.some(
+            (other) =>
+              other.ids.length > ids.length &&
+              ids.every((id) => other.ids.includes(id))
+          )
+      )
+      .map(({ graph }) => graph)
+  }, [graphs, graphFiles, selectedEmbeddings])
+  const filteredGraphs = useMemo(
+    () =>
+      graphs?.filter((graph) =>
+        graph.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ) ?? null,
+    [graphs, searchQuery]
+  )
+
+  const setRagMode = (mode: RagMode) => {
+    if (!activeConversation || activeConversation.ragMode === mode) return
+    dispatch(updateRagMode(mode))
+    if (activeConversation.isOwner !== false) {
+      dispatch(
+        updateConversation({
+          conversationId: activeConversation.conversationId,
+          updates: { ragMode: mode },
+        })
+      )
+    }
+  }
+
+  const handleToggleGraph = (graph: KnowledgeGraphSummary) => {
+    const members = graphFiles(graph)
+    if (members.length === 0) {
+      toast.error("This graph's documents are still processing.")
+      return
+    }
+    const memberIds = new Set(members.map((file) => file.id))
+    const others = selectedEmbeddings.filter((file) => !memberIds.has(file.id))
+    const wasSelected = selectedGraphs.some((item) => item.id === graph.id)
+    setSelectionDirty(true)
+    dispatch(
+      updateSelectedEmbeddings(wasSelected ? others : [...others, ...members])
+    )
+    if (!wasSelected) {
+      setRagMode(RagMode.GRAPH)
+    } else if (
+      selectedGraphs.length === 1 &&
+      activeConversation?.ragMode === RagMode.GRAPH
+    ) {
+      setRagMode(RagMode.ADVANCED)
+    }
+  }
+
   const selectionCounts = [
     { n: selectedEmbeddings.length, label: 'embeddings' },
     { n: selectedFiles.length, label: 'files' },
@@ -348,10 +452,12 @@ const ConversationFileSelect: React.FC = () => {
           ? 'To process this file or run any calculations on it, turn on Code sandbox in chat settings.'
           : "This model can't run code. To process this file or run any calculations on it, pick an OpenAI or Claude model and turn on Code sandbox."
       : null
-  const selectionSummary = selectionCounts
-    .filter((c) => c.n > 0)
-    .map((c) => `${c.n} ${c.label}`)
-    .join(' · ')
+  const selectionSummary = [
+    ...(selectedGraphs.length
+      ? [`Graph: ${selectedGraphs.map((graph) => graph.name).join(', ')}`]
+      : []),
+    ...selectionCounts.filter((c) => c.n > 0).map((c) => `${c.n} ${c.label}`),
+  ].join(' · ')
 
   const clearSelections = () => {
     setSelectionDirty(true)
@@ -432,11 +538,7 @@ const ConversationFileSelect: React.FC = () => {
 
             <Tabs
               value={activeTab}
-              onValueChange={(value) =>
-                setActiveTab(
-                  value as 'files' | 'embeddings' | 'media' | 'tags' | 'folders'
-                )
-              }
+              onValueChange={(value) => setActiveTab(value as SourceTab)}
             >
               <TabsList className='flex w-full overflow-x-auto border-border bg-muted/50'>
                 <TabsTrigger
@@ -474,6 +576,12 @@ const ConversationFileSelect: React.FC = () => {
                   className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
                   Libraries
+                </TabsTrigger>
+                <TabsTrigger
+                  value='graphs'
+                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
+                >
+                  Graphs
                 </TabsTrigger>
               </TabsList>
 
@@ -759,6 +867,14 @@ const ConversationFileSelect: React.FC = () => {
                     </p>
                   )}
                 </div>
+              </TabsContent>
+
+              <TabsContent value='graphs' className='mt-4'>
+                <GraphSourceList
+                  graphs={filteredGraphs}
+                  selectedIds={new Set(selectedGraphs.map((graph) => graph.id))}
+                  onToggle={handleToggleGraph}
+                />
               </TabsContent>
             </Tabs>
 

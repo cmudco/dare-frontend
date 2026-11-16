@@ -23,6 +23,7 @@ export enum RagMode {
   NAIVE = 'naive',
   ADVANCED = 'advanced',
   AGENTIC = 'agentic',
+  GRAPH = 'graph',
 }
 
 // ─────────────────────────────────────────────────────────────

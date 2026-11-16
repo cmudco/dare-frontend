@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ListPlus, Loader2, Plus } from 'lucide-react'
 
 import {
+  type BuildScope,
   addLabelAPI,
   approveBuildAPI,
   deleteLabelAPI,
@@ -52,7 +53,7 @@ const RelationshipsPanel = ({
 
   useEffect(() => {
     loadEstimate()
-  }, [loadEstimate, labelCount, graph.status])
+  }, [loadEstimate, labelCount, graph.status, graph.unreadFileIds.length])
 
   const run = async (action: () => Promise<unknown>) => {
     setStarting(true)
@@ -107,8 +108,15 @@ const RelationshipsPanel = ({
   const preparing = graph.status === 'preparing'
   const build = estimate?.build
   const newTypes = estimate?.newTypes
+  const newFiles = estimate?.newFiles
   const unreadCount = view.labels.filter((label) => !label.read).length
-  const shownBuild = newTypes ?? build
+  const newFileCount = graph.unreadFileIds.length
+  const shownBuild = newFiles ?? newTypes ?? build
+  const scope: BuildScope = newFiles
+    ? 'newFiles'
+    : newTypes
+      ? 'newTypes'
+      : 'all'
 
   return (
     <div className='mx-auto max-w-3xl space-y-6 px-6 py-8'>
@@ -303,16 +311,20 @@ const RelationshipsPanel = ({
           ) : (
             <>
               <h3 className='font-medium'>
-                {newTypes
-                  ? `Read ${unreadCount} new ${unreadCount === 1 ? 'type' : 'types'}`
-                  : graph.status === 'ready'
-                    ? 'Run again with these types'
-                    : 'Approve the cost'}
+                {newFiles
+                  ? `Read ${newFileCount} new ${newFileCount === 1 ? 'document' : 'documents'}`
+                  : newTypes
+                    ? `Read ${unreadCount} new ${unreadCount === 1 ? 'type' : 'types'}`
+                    : graph.status === 'ready'
+                      ? 'Run again with these types'
+                      : 'Approve the cost'}
               </h3>
               <p className='mt-0.5 text-sm text-muted-foreground'>
-                {newTypes
-                  ? 'Reads your chunks for the new types only. Existing relationships stay as they are.'
-                  : 'Each chunk is read twice: once to label a pair, once to check that the chunk really says it. Your files stay searchable while this runs.'}
+                {newFiles
+                  ? 'Reads only the documents you added. Existing relationships stay as they are.'
+                  : newTypes
+                    ? 'Reads your chunks for the new types only. Existing relationships stay as they are.'
+                    : 'Each chunk is read twice: once to label a pair, once to check that the chunk really says it. Your files stay searchable while this runs.'}
               </p>
               {shownBuild ? (
                 <div className='mt-4 grid grid-cols-3 gap-2'>
@@ -343,7 +355,7 @@ const RelationshipsPanel = ({
                     : 'Charged to your wallet.'}
                 </p>
                 <div className='flex shrink-0 flex-wrap justify-end gap-2'>
-                  {newTypes && build && (
+                  {scope !== 'all' && build && (
                     <Button
                       variant='outline'
                       disabled={preparing || starting}
@@ -355,14 +367,16 @@ const RelationshipsPanel = ({
                   <Button
                     disabled={preparing || starting || !build}
                     onClick={() =>
-                      void run(() => approveBuildAPI(graph.id, !!newTypes))
+                      void run(() => approveBuildAPI(graph.id, scope))
                     }
                   >
-                    {newTypes
-                      ? 'Approve new types'
-                      : graph.status === 'ready'
-                        ? 'Approve and rerun'
-                        : 'Approve and start'}
+                    {newFiles
+                      ? 'Approve new documents'
+                      : newTypes
+                        ? 'Approve new types'
+                        : graph.status === 'ready'
+                          ? 'Approve and rerun'
+                          : 'Approve and start'}
                   </Button>
                 </div>
               </div>
