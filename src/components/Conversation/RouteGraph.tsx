@@ -2,7 +2,29 @@ import { useMemo } from 'react'
 
 import type { RetrievalTrace } from '@/redux/types/conversation'
 
-import { layoutRouteGraph, type RouteGraphNode } from './routeGraphLayout'
+import {
+  layoutRouteGraph,
+  type RouteGraphEdge,
+  type RouteGraphNode,
+} from './routeGraphLayout'
+
+const BULGE = 14
+
+const edgePath = ({ points, bulge }: RouteGraphEdge) => {
+  const [start, ...rest] = points
+  const parts = [`M ${start[0]} ${start[1]}`]
+  rest.forEach(([x, y], index) => {
+    const [fromX, fromY] = points[index]
+    if (index % 2) {
+      parts.push(`L ${x} ${y}`)
+      return
+    }
+    const bend = bulge ? bulge * BULGE : Math.max((x - fromX) / 2, 12)
+    const pull = bulge ? x + bend : x - bend
+    parts.push(`C ${fromX + bend} ${fromY}, ${pull} ${y}, ${x} ${y}`)
+  })
+  return parts.join(' ')
+}
 
 const nodeClasses = (node: RouteGraphNode) => {
   if (node.kind === 'entity') {
@@ -28,7 +50,6 @@ const RouteGraph = ({
     [trace, citedIds]
   )
   if (!layout.nodes.length) return null
-  const byId = new Map(layout.nodes.map((node) => [node.id, node]))
   return (
     <svg
       role='img'
@@ -40,16 +61,11 @@ const RouteGraph = ({
       className='mt-2 block w-full'
     >
       {layout.edges.map((edge) => {
-        const from = byId.get(edge.from)
-        const to = byId.get(edge.to)
-        if (!from || !to) return null
-        const startX = from.x + from.width
-        const endX = to.x
-        const bend = Math.max((endX - startX) / 2, 12)
+        const [endX, endY] = edge.points[edge.points.length - 1]
         return (
           <g key={`${edge.from}-${edge.to}`}>
             <path
-              d={`M ${startX} ${from.y} C ${startX + bend} ${from.y}, ${endX - bend} ${to.y}, ${endX} ${to.y}`}
+              d={edgePath(edge)}
               fill='none'
               strokeWidth={edge.stated ? 1.5 : 1}
               strokeDasharray={edge.stated ? undefined : '3 3'}
@@ -59,9 +75,9 @@ const RouteGraph = ({
             />
             {edge.label && (
               <text
-                x={endX - 3}
-                y={to.y - 5}
-                textAnchor='end'
+                x={edge.bulge ? endX + edge.bulge * BULGE : endX - 3}
+                y={endY - 5}
+                textAnchor={edge.bulge > 0 ? 'start' : 'end'}
                 paintOrder='stroke'
                 strokeWidth={3}
                 className='fill-foreground stroke-card text-[10px] italic'
