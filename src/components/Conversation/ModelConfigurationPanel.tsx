@@ -141,22 +141,11 @@ const ModelConfigurationPanel: React.FC = () => {
   const handleImageGenerationToggle = (checked: boolean) => {
     dispatch(updateImageGenerationEnabled(checked))
 
-    // Auto-select DALL-E model when enabled
     if (checked) {
-      const dalleModel =
-        allModels.find(
-          (model) =>
-            model.identifier === 'dall-e-3' ||
-            model.name.toLowerCase().includes('dall-e-3')
-        ) ||
-        allModels.find(
-          (model) =>
-            model.identifier === 'dall-e-2' ||
-            model.name.toLowerCase().includes('dall-e-2')
-        )
+      const imageModel = allModels.find((model) => model.isImageGenerator)
 
-      if (dalleModel) {
-        dispatch(updateSelectedModel(String(dalleModel.id)))
+      if (imageModel) {
+        dispatch(updateSelectedModel(String(imageModel.id)))
       }
     }
 

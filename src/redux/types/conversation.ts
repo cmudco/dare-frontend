@@ -19,7 +19,6 @@ import type {
 import type {
   ImageSizeType,
   ImageQualityType,
-  ImageStyleType,
 } from '@/utils/constants/imageGeneration'
 import type { LanguageCode } from '@/utils/constants/audioTranscription'
 import { MyFile, MyFolder } from './files'
@@ -524,12 +523,10 @@ export interface GeneratedImage {
   filename: string
   fileUrl: string
   prompt: string
-  revisedPrompt?: string
   cost: string
   model: string
   size: string
   quality: string
-  style: string
 }
 
 export interface GeneratedTranscription {
@@ -668,7 +665,6 @@ export interface AttachedImage {
 export interface ImageGenerationSettings {
   size: ImageSizeType
   quality: ImageQualityType
-  style: ImageStyleType
 }
 
 export interface AudioTranscriptionSettings {
