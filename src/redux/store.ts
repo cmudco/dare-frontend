@@ -32,6 +32,7 @@ import { socketMiddleware } from './middleware/socketMiddleware'
 import { workflowSocketMiddleware } from './middleware/workflowSocketMiddleware'
 import { assistantSocketMiddleware } from './middleware/assistantSocketMiddleware'
 import ensembleReducer from './ensembleSlice'
+import messageQueueReducer from './messageQueueSlice'
 import { saveDraftsToLocalStorage } from '../utils/draftStorage'
 import { debugLog, setDebugLogsAccessor } from '@/utils/debugLogger'
 
@@ -68,6 +69,7 @@ export const store = configureStore({
     ensemble: ensembleReducer,
     assistant: assistantReducer,
     releaseNotes: releaseNotesReducer,
+    messageQueue: messageQueueReducer,
   },
   middleware: (getDefaultMiddleware) => {
     // Draft persistence middleware
