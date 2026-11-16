@@ -28,6 +28,7 @@ const MODE_LABELS: Record<string, string> = {
   [RagMode.NAIVE]: 'Fast',
   [RagMode.ADVANCED]: 'Thorough',
   [RagMode.AGENTIC]: 'Autonomous',
+  [RagMode.GRAPH]: 'Graph',
 }
 
 const STAGE_ICONS: Record<ContextTraceStage['kind'], React.ReactNode> = {

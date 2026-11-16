@@ -16,6 +16,8 @@ export interface KnowledgeGraphSummary {
   statusLabel: string
   error: string
   fileIds: number[]
+  /** Documents added after the last build; no relationships read from them yet. */
+  unreadFileIds: number[]
   chunksTotal: number
   chunksDone: number
   tokensUsed: number
@@ -169,6 +171,8 @@ export interface GraphEstimate {
   build: BuildEstimate | null
   /** Set when some types have been read and others have not. */
   newTypes: BuildEstimate | null
+  /** Set when documents were added to a graph that was already built. */
+  newFiles: BuildEstimate | null
   unavailableReason: string
 }
 

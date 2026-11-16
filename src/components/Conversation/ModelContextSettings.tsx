@@ -35,6 +35,7 @@ const MODE_LABELS: Record<RagMode, string> = {
   [RagMode.NAIVE]: 'Fast',
   [RagMode.ADVANCED]: 'Thorough',
   [RagMode.AGENTIC]: 'Autonomous',
+  [RagMode.GRAPH]: 'Graph',
 }
 
 type SettingsUpdates = Partial<{
@@ -137,11 +138,13 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
   const summaryDetail =
     ragMode === RagMode.AGENTIC
       ? 'Searches on demand and refines across rounds'
-      : ragMode === RagMode.ADVANCED
-        ? `Reranks a wider candidate pool · keeps the top ${maxContextSnippets}`
-        : isTopK
-          ? `Top ${maxContextSnippets} snippets by score · no similarity filter`
-          : `Up to ${maxContextSnippets} snippets · similarity ≥ ${documentSimilarityThreshold.toFixed(2)}`
+      : ragMode === RagMode.GRAPH
+        ? `Walks the graph on every question · keeps the top ${maxContextSnippets} plus what the walk adds`
+        : ragMode === RagMode.ADVANCED
+          ? `Reranks a wider candidate pool · keeps the top ${maxContextSnippets}`
+          : isTopK
+            ? `Top ${maxContextSnippets} snippets by score · no similarity filter`
+            : `Up to ${maxContextSnippets} snippets · similarity ≥ ${documentSimilarityThreshold.toFixed(2)}`
 
   const snippetsAtDefault =
     maxContextSnippets === MODEL_CONFIG.maxContextSnippets
@@ -202,6 +205,8 @@ const ModelContextSettings: React.FC<ModelContextSettingsProps> = ({
                     retrieval, rerank, grounding, and trace data. Autonomous
                     lets the model search your documents itself — issuing and
                     refining retrieval queries as tool calls across rounds.
+                    Graph is Thorough plus a walk through the names your
+                    documents share, on every question.
                   </p>
                 </TooltipContent>
               </Tooltip>

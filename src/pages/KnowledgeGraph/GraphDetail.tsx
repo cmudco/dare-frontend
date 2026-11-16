@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Search, X } from 'lucide-react'
+import { ArrowLeft, Pencil, Search, X } from 'lucide-react'
 
 import { getGraphAPI, getGraphViewAPI } from '@/api/knowledgeGraph'
 import AskPanel from '@/components/KnowledgeGraph/AskPanel'
@@ -8,7 +8,9 @@ import EntityBands from '@/components/KnowledgeGraph/EntityBands'
 import EntityPanel from '@/components/KnowledgeGraph/EntityPanel'
 import EvalPanel from '@/components/KnowledgeGraph/EvalPanel'
 import GraphCanvas from '@/components/KnowledgeGraph/GraphCanvas'
+import GraphFilesDialog from '@/components/KnowledgeGraph/GraphFilesDialog'
 import RelationshipsPanel from '@/components/KnowledgeGraph/RelationshipsPanel'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
@@ -43,6 +45,7 @@ const KnowledgeGraphDetail = () => {
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState('graph')
   const [failed, setFailed] = useState(false)
+  const [editing, setEditing] = useState(false)
   const latestRequest = useRef(0)
 
   const refresh = useCallback(async () => {
@@ -117,11 +120,34 @@ const KnowledgeGraphDetail = () => {
         </Link>
         <div className='mt-1 flex flex-wrap items-end justify-between gap-x-8 gap-y-3'>
           <div className='min-w-0'>
-            <h1 className='truncate text-xl font-semibold'>{graph.name}</h1>
+            <div className='flex items-center gap-1'>
+              <h1 className='truncate text-xl font-semibold'>{graph.name}</h1>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='h-7 w-7 shrink-0'
+                aria-label='Edit graph'
+                disabled={busy}
+                onClick={() => setEditing(true)}
+              >
+                <Pencil className='h-3.5 w-3.5' />
+              </Button>
+            </div>
             {graph.description && (
               <p className='truncate text-sm text-muted-foreground'>
                 {graph.description}
               </p>
+            )}
+            {graph.unreadFileIds.length > 0 && (
+              <button
+                type='button'
+                className='text-sm text-muted-foreground underline hover:text-foreground'
+                onClick={() => setTab('relationships')}
+              >
+                {graph.unreadFileIds.length} new{' '}
+                {graph.unreadFileIds.length === 1 ? 'document' : 'documents'}{' '}
+                not read for relationships yet
+              </button>
             )}
           </div>
           <div className='flex gap-7'>
@@ -249,6 +275,15 @@ const KnowledgeGraphDetail = () => {
           <EvalPanel graphId={id} />
         </TabsContent>
       </Tabs>
+      <GraphFilesDialog
+        open={editing}
+        graph={graph}
+        onClose={() => setEditing(false)}
+        onSaved={() => {
+          setEditing(false)
+          void refresh()
+        }}
+      />
     </div>
   )
 }

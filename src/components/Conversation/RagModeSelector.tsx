@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Bot, Check, Database, Route } from 'lucide-react'
+import { Bot, Check, Database, Network, Route } from 'lucide-react'
 
 import { RagMode } from '@/utils/constants/conversation'
 
@@ -39,13 +39,20 @@ const options: RagModeOption[] = [
     recommended: false,
     icon: <Bot className='h-4 w-4' />,
   },
+  {
+    value: RagMode.GRAPH,
+    label: 'Graph',
+    description: 'Follows names across documents',
+    recommended: false,
+    icon: <Network className='h-4 w-4' />,
+  },
 ]
 
 export const RagModeSelector: React.FC<RagModeSelectorProps> = ({
   value,
   onChange,
 }) => (
-  <div className='grid grid-cols-1 gap-2 sm:grid-cols-3'>
+  <div className='grid grid-cols-2 gap-2'>
     {options.map((option) => {
       const selected = option.value === value
       return (

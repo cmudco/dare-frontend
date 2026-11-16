@@ -1,224 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Folder, Network, Plus, Search, Trash2 } from 'lucide-react'
+import { Network, Pencil, Plus, Trash2 } from 'lucide-react'
 
-import { getFilesAPI, getFoldersAPI } from '@/api/files'
-import {
-  createGraphAPI,
-  deleteGraphAPI,
-  listGraphsAPI,
-} from '@/api/knowledgeGraph'
+import { deleteGraphAPI, listGraphsAPI } from '@/api/knowledgeGraph'
 import { DeleteConfirmation } from '@/components/DeleteConfirmation'
-import SelectableList, {
-  type SelectableRow,
-} from '@/components/Projects/SelectableList'
-import SourceSortSelect from '@/components/Projects/SourceSortSelect'
+import GraphFilesDialog from '@/components/KnowledgeGraph/GraphFilesDialog'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useSourceSort } from '@/hooks/useSourceSort'
-import { useAppSelector } from '@/redux/hooks'
-import type { MyFile, MyFolder } from '@/redux/types/files'
 import type { KnowledgeGraphSummary } from '@/redux/types/knowledgeGraph'
-import { FileStatus } from '@/utils/constants/file'
 import { formatRelativeDate } from '@/utils/dateUtils'
-import { toggleId } from '@/utils/selection'
-import { sortSources, type SortableSource } from '@/utils/sourceSort'
 import { toast } from '@/utils/toast'
-
-type SourceRow = SelectableRow<number> & SortableSource
-
-const CreateGraphDialog = ({
-  open,
-  onClose,
-  onCreated,
-}: {
-  open: boolean
-  onClose: () => void
-  onCreated: (graph: KnowledgeGraphSummary) => void
-}) => {
-  const vectorDb = useAppSelector((state) => state.user.user?.vectorDb)
-  const [files, setFiles] = useState<MyFile[]>([])
-  const [folders, setFolders] = useState<MyFolder[]>([])
-  const [fileIds, setFileIds] = useState<number[]>([])
-  const [folderIds, setFolderIds] = useState<number[]>([])
-  const [name, setName] = useState('')
-  const [query, setQuery] = useState('')
-  const [sort, setSort] = useSourceSort()
-  const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    if (!open) return
-    setFileIds([])
-    setFolderIds([])
-    setName('')
-    setQuery('')
-    Promise.all([getFilesAPI(), getFoldersAPI()])
-      .then(([fileRows, folderRows]) => {
-        setFiles(fileRows.results)
-        setFolders(folderRows.results)
-      })
-      .catch(() => toast.error("Couldn't load your documents. Try again."))
-  }, [open])
-
-  const visible = (rows: SourceRow[]) =>
-    sortSources(
-      rows.filter((row) =>
-        row.label.toLowerCase().includes(query.trim().toLowerCase())
-      ),
-      sort
-    )
-
-  const fileRows = useMemo<SourceRow[]>(
-    () =>
-      files
-        .filter(
-          (file) =>
-            !file.isMedia &&
-            file.vectorDbSource === vectorDb &&
-            file.status !== FileStatus.FAILED
-        )
-        .map((file) => ({
-          id: file.id,
-          label: file.name,
-          date: file.createdAt,
-          meta: file.status === FileStatus.PROCESSING ? 'Processing…' : '',
-        })),
-    [files, vectorDb]
-  )
-  const folderRows = useMemo<SourceRow[]>(
-    () =>
-      folders.map((folder) => ({
-        id: folder.id,
-        label: folder.name,
-        date: folder.updatedAt,
-        meta: `${folder.fileCount} ${folder.fileCount === 1 ? 'file' : 'files'}`,
-      })),
-    [folders]
-  )
-
-  const selectedCount = fileIds.length + folderIds.length
-  const countLabel = (count: number) => (count > 0 ? ` (${count})` : '')
-
-  const submit = async () => {
-    setSaving(true)
-    try {
-      onCreated(
-        await createGraphAPI({
-          name: name.trim(),
-          description: '',
-          fileIds,
-          folderIds,
-        })
-      )
-    } catch {
-      toast.error("Couldn't create the graph. Try again.")
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className='sm:max-w-lg'>
-        <DialogHeader>
-          <DialogTitle>New knowledge graph</DialogTitle>
-          <DialogDescription>
-            Pick the documents to connect. Entities and aliases are free and
-            ready in about a minute. A folder adds the files it holds when you
-            create the graph.
-          </DialogDescription>
-        </DialogHeader>
-        <Input
-          placeholder='Graph name'
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
-        <div className='flex gap-2'>
-          <div className='relative min-w-0 flex-1'>
-            <Search className='pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
-            <Input
-              className='pl-9'
-              placeholder='Search sources'
-              aria-label='Search sources'
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </div>
-          <SourceSortSelect value={sort} onChange={setSort} />
-        </div>
-        <Tabs defaultValue='files' className='flex min-h-0 flex-col'>
-          <TabsList className='grid w-full grid-cols-2'>
-            <TabsTrigger value='files'>
-              Files{countLabel(fileIds.length)}
-            </TabsTrigger>
-            <TabsTrigger value='folders'>
-              Folders{countLabel(folderIds.length)}
-            </TabsTrigger>
-          </TabsList>
-          <div className='mt-2 h-56 overflow-y-auto pr-1'>
-            <TabsContent value='files' className='mt-0'>
-              <SelectableList
-                idPrefix='graph-files'
-                rows={visible(fileRows)}
-                selected={fileIds}
-                onToggle={(id) => setFileIds(toggleId(fileIds, id))}
-                icon={<FileText className='h-4 w-4' />}
-                emptyLabel={
-                  query
-                    ? 'No files match.'
-                    : 'Upload documents in Sources first.'
-                }
-              />
-            </TabsContent>
-            <TabsContent value='folders' className='mt-0'>
-              <SelectableList
-                idPrefix='graph-folders'
-                rows={visible(folderRows)}
-                selected={folderIds}
-                onToggle={(id) => setFolderIds(toggleId(folderIds, id))}
-                icon={<Folder className='h-4 w-4' />}
-                emptyLabel={
-                  query
-                    ? 'No folders match.'
-                    : 'Create folders in Sources first.'
-                }
-              />
-            </TabsContent>
-          </div>
-        </Tabs>
-        <DialogFooter>
-          <span className='mr-auto self-center text-sm text-muted-foreground'>
-            {selectedCount} selected
-          </span>
-          <Button variant='outline' onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            disabled={!name.trim() || selectedCount === 0 || saving}
-            onClick={() => void submit()}
-          >
-            Create graph
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 const KnowledgeGraphsPage = () => {
   const navigate = useNavigate()
   const [graphs, setGraphs] = useState<KnowledgeGraphSummary[] | null>(null)
   const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState<KnowledgeGraphSummary | null>(null)
   const [deleting, setDeleting] = useState<KnowledgeGraphSummary | null>(null)
 
   const load = useCallback(() => {
@@ -298,6 +95,18 @@ const KnowledgeGraphsPage = () => {
               <Button
                 variant='ghost'
                 size='icon'
+                aria-label={`Edit ${graph.name}`}
+                className='shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100'
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setEditing(graph)
+                }}
+              >
+                <Pencil className='h-4 w-4' />
+              </Button>
+              <Button
+                variant='ghost'
+                size='icon'
                 aria-label={`Delete ${graph.name}`}
                 className='shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100'
                 onClick={(event) => {
@@ -320,10 +129,14 @@ const KnowledgeGraphsPage = () => {
           )}
         </div>
       </div>
-      <CreateGraphDialog
-        open={creating}
-        onClose={() => setCreating(false)}
-        onCreated={(graph) => navigate(`/knowledge-graphs/${graph.id}`)}
+      <GraphFilesDialog
+        open={creating || !!editing}
+        graph={editing}
+        onClose={() => {
+          setCreating(false)
+          setEditing(null)
+        }}
+        onSaved={(graph) => navigate(`/knowledge-graphs/${graph.id}`)}
       />
       <DeleteConfirmation
         isOpen={!!deleting}
