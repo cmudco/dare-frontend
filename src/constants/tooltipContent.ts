@@ -163,7 +163,7 @@ export const TOOLTIP_CONTENT = {
     imageGeneration: {
       title: 'Image Generation',
       description:
-        'Allows AI to generate images using DALL-E. Automatically switches to GPT-4 when needed.',
+        "Allows AI to generate images. Switches the chat to one of OpenAI's GPT Image models.",
       tip: 'Each image generation incurs additional costs. Check pricing in your billing dashboard.',
     },
     artifacts: {
@@ -408,25 +408,13 @@ export const TOOLTIP_CONTENT = {
       title: 'Image Size',
       description:
         'Output image dimensions. Larger images cost more but provide better detail and quality.',
-      tip: '1024x1024: Standard square. 1792x1024: Landscape. 1024x1792: Portrait. Choose based on use case.',
+      tip: '1024x1024: Standard square. 1536x1024: Landscape. 1024x1536: Portrait. Choose based on use case.',
     },
     quality: {
       title: 'Image Quality',
       description:
-        'Standard: Faster, cheaper. HD: Higher fidelity, more detail, costs 2x standard.',
-      tip: 'Use standard for quick iterations, HD for final production images.',
-    },
-    style: {
-      title: 'Image Style',
-      description:
-        'Vivid: Hyper-real, dramatic, high contrast. Natural: Softer, more realistic, subtle.',
-      tip: 'Vivid for marketing/creative. Natural for realistic representations.',
-    },
-    cost: {
-      title: 'Estimated Cost',
-      description:
-        'Approximate cost in credits or USD for generating this image. Based on size and quality settings.',
-      tip: 'Actual cost may vary slightly based on provider pricing changes.',
+        'Low: fastest and cheapest. Medium: balanced. High: most detail, highest cost.',
+      tip: 'Use low for quick iterations, high for final images.',
     },
   },
 

@@ -442,12 +442,6 @@ const Message: React.FC<MessageProps> = ({
                           <span className='font-medium'>Prompt:</span>{' '}
                           {message.generatedImage.prompt}
                         </p>
-                        {message.generatedImage.revisedPrompt && (
-                          <p>
-                            <span className='font-medium'>Revised:</span>{' '}
-                            {message.generatedImage.revisedPrompt}
-                          </p>
-                        )}
                         <p>
                           {message.generatedImage.model} •{' '}
                           {message.generatedImage.size} • $
