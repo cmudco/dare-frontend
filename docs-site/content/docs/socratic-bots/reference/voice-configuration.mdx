@@ -78,7 +78,7 @@ See [docs/how-to/whisper-backup.md](/docs/socratic-bots/how-to/whisper-backup).
 | `VOICE_RUNTIME_TTS_TRANSPORT` | `http` | `webrtc` streams audio on the WebRTC track in step with transcript events (recommended, Kokoro only). `http` pre-renders each reply to a WAV the browser downloads (works with both engines). `.env.example` sets `webrtc`. |
 | `VOICE_RUNTIME_PTT_MAX_HOLD_SECS` | `120` | Push-to-talk agents only: end a student's turn after this long if they never press stop. |
 | `VOICE_RUNTIME_PTT_EMPTY_TURN_SECS` | `12` | Push-to-talk agents only: tell the student nothing was heard if no transcript arrives this long after stop. |
-| `KOKORO_VOICE` | `af_heart` | Kokoro voice name, used for every agent. An agent's own voice setting applies only to Mistral TTS. |
+| `KOKORO_VOICE` | `af_heart` | Default Kokoro voice, used when an agent has not picked one of the voices in `runtime/kokoro_voices.py`. |
 | `KOKORO_MODEL_PATH` | empty | Path to `kokoro-v1.0.onnx`. Empty downloads it to `~/.cache/kokoro-onnx` on first use. |
 | `KOKORO_VOICES_PATH` | empty | Path to `voices-v1.0.bin`. Same download behaviour. |
 | `MISTRAL_TTS_MODEL` | `voxtral-mini-tts-2603` | Voxtral TTS model, used when the provider is `mistral`. |
