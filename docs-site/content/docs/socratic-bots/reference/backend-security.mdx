@@ -1,0 +1,58 @@
+---
+title: "Backend Security Policy"
+description: "Vulnerability reporting and hardening notes for the backend."
+---
+Report vulnerabilities in the Socratic Bots backend privately, and use the hardening notes when you
+run it.
+
+## Reporting a vulnerability
+
+Do not report security vulnerabilities through public issues, discussions, or pull requests.
+
+Report privately through GitHub's **Report a vulnerability** button on this repository's Security
+tab. If that is not available, email vks@andrew.cmu.edu with "Socratic Bots security" in the
+subject.
+
+### What to include
+
+- What you found.
+- How to reproduce it.
+- The impact you expect.
+
+### What to expect
+
+We will acknowledge your report and keep you updated while we work on a fix.
+
+## Scope
+
+In scope:
+
+- The Django application in `backend/`
+- The default configuration in `env.example`, `Dockerfile`, and `docker-compose.yml`
+- The DARE integration in `backend/utils/dare_api/` and the internal endpoints DARE and the voice
+  runtime call
+
+Out of scope:
+
+- Vulnerabilities in DARE itself — report those to
+  [dare-backend](https://github.com/cmudco/dare-backend/security)
+- Vulnerabilities in third-party providers (LLM vendors, ElevenLabs, Mistral)
+- Problems that only exist in modified forks or deployment-specific infrastructure
+- Social engineering, physical attacks, and volumetric denial of service
+
+## Hardening notes
+
+- Set `DEBUG=False`. The backend then sends secure-only cookies and an HSTS header, so serve it
+  over HTTPS only.
+- Generate a fresh `DJANGO_SECRET_KEY`. The default is public.
+- Generate long random values for `SSO_JWT_KEY` and `DARE_INTERNAL_KEY` and share them only with
+  your DARE backend and voice runtime. Anyone holding `DARE_INTERNAL_KEY` can call the internal
+  budget, billing, and voice-callback endpoints.
+- Add your domains to `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, and `CSRF_TRUSTED_ORIGINS`. The
+  built-in lists in `backend/core/settings.py` also include localhost and the maintainers' hosted
+  instances; delete those entries in your deployment if you want a strict allowlist.
+- Set `ELEVENLABS_WEBHOOK_SECRET` if you use ElevenLabs. Without it every post-call webhook is
+  rejected, so transcripts never arrive.
+- Keep the Django admin behind your reverse proxy's access controls, or on a private network.
+- Never commit `.env` files or provider keys. `.gitignore` and `.dockerignore` exclude `.env`.
+- Rotate every key above if a `.env` file or server image is exposed.

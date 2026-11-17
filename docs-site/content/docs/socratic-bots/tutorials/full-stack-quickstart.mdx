@@ -1,0 +1,209 @@
+---
+title: "Full Stack Quick Start"
+description: "Run the whole Socratic Bots stack locally and chat with your first tutor."
+---
+Run the whole Socratic Bots stack on your machine and chat with your first tutor. To deploy to a server, see [docs/how-to/deploy.md](/docs/socratic-bots/how-to/deploy-backend).
+
+## Prerequisites
+
+Socratic Bots is three services, plus one optional one. Start them in this order:
+
+| # | Service | Repo | Port | Needed for |
+| - | --- | --- | --- | --- |
+| 1 | DARE backend | [dare-backend](https://github.com/cmudco/dare-backend) | 8000 | Everything: accounts, chat, files, billing |
+| 2 | Socratic Bots backend | this repo | 8001 | Tutors, access codes, notes, voice agents |
+| 3 | Socratic Bots frontend | [socraticbots-frontend](https://github.com/cmudco/socraticbots-frontend) | 5174 | The web app |
+| 4 | Voice runtime (optional) | [voice-agent-runtime](https://github.com/cmudco/voice-agent-runtime) | 8010 | Self-hosted voice agents and oral exams |
+
+DARE's own frontend (port 5173) is not needed. You also need:
+
+- **Python 3.13** for the DARE backend.
+- **Python 3.10+** for this backend (3.12 and 3.13 are tested), or Docker (step 3, Option B).
+- **Node.js 20+** for the frontend.
+- **Docker 24+ with Compose**, the easiest way to run DARE and its databases.
+- **An LLM provider key** (OpenAI, Anthropic, or Gemini), set in DARE.
+- **Python 3.12 and a Mistral key**, only for the voice runtime.
+
+## 1. Choose the two shared secrets
+
+DARE and this backend trust each other through two values that must be **identical** on both
+sides. Pick them once and reuse them below.
+
+```bash
+python3 -c "import secrets; print('SSO_JWT_KEY=' + secrets.token_urlsafe(48))"
+python3 -c "import secrets; print('DARE_INTERNAL_KEY=' + secrets.token_urlsafe(32))"
+```
+
+| Variable | What it does | Where it goes |
+| --- | --- | --- |
+| `SSO_JWT_KEY` | DARE signs login tokens with it; this backend verifies them | DARE `.env`, this repo's `.env` |
+| `DARE_INTERNAL_KEY` | Authenticates server-to-server calls (`X-Internal-Key`) | DARE `.env`, this repo's `.env`, voice runtime `.env` |
+
+If `SSO_JWT_KEY` is missing or different, sign-in appears to work but every API call after it
+returns 401.
+
+## 2. Run the DARE backend
+
+Follow [DARE's quick start](https://github.com/cmudco/dare-backend/blob/dev/docs/tutorials/quickstart.md).
+The Docker path starts the API, a worker, Postgres, Redis, and Weaviate in one command. Before you
+start it, set these in DARE's `.env`:
+
+```bash
+SSO_JWT_KEY=<value from step 1>
+DARE_INTERNAL_KEY=<value from step 1>
+SOCRATIC_BOTS_BACKEND_URL=http://127.0.0.1:8001
+SOCRATIC_BOTS_FRONTEND_URL=http://localhost:5174
+OPENAI_API_KEY=...          # or CLAUDE_API_KEY / GEMINI_API_KEY
+```
+
+DARE uses the two `SOCRATIC_BOTS_*` URLs to recognise requests that come from Socratic Bots. The
+frontend URL must be `:5174` when both frontends run on one machine. Keep DARE's background worker
+running: uploaded tutor documents are not indexed without it.
+
+Check that it is up:
+
+```bash
+curl http://localhost:8000/api/health/
+```
+
+## 3. Run this backend
+
+Pick one option. Both end with the backend on `:8001`.
+
+```bash
+git clone https://github.com/cmudco/socraticbots-backend.git
+cd socraticbots-backend
+cp env.example .env
+```
+
+Edit `.env` and set `SSO_JWT_KEY` and `DARE_INTERNAL_KEY` to the values from step 1.
+
+### Option A — local Python
+
+The other defaults work for local development: SQLite, DARE at `http://127.0.0.1:8000`, voice
+off.
+
+```bash
+python3 -m venv venv
+source venv/bin/activate              # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cd backend
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8001
+```
+
+### Option B — Docker
+
+Also set `DB_PASSWORD` in `.env`; Compose refuses to start without it. This runs Gunicorn with its
+own PostgreSQL (on `127.0.0.1:5433`) and applies migrations on start. Inside the container, DARE
+is reached at `http://host.docker.internal:8000`, which works whether DARE runs in Docker or not;
+set `DOCKER_DARE_BACKEND_URL` to change it. DARE must accept that host name: add it to DARE's
+`.env` and restart DARE.
+
+```bash
+ALLOWED_HOSTS=localhost,127.0.0.1,host.docker.internal     # in DARE's .env
+```
+
+```bash
+docker compose up --build -d
+curl http://localhost:8001/api/ready/     # {"status": "ready", ...} once Postgres and DARE answer
+```
+
+The container runs with `DEBUG=False`. For live reload while you edit code, copy
+`docker-compose.override.yml.example` to `docker-compose.override.yml` (it sets `DEBUG=True` and
+mounts the repo), then run `docker compose up -d` again.
+
+## 4. Run the frontend
+
+```bash
+git clone https://github.com/cmudco/socraticbots-frontend.git
+cd socraticbots-frontend
+npm install
+cp .env.example .env
+npm run dev -- --port 5174
+```
+
+The defaults in `.env.example` point at this backend (`VITE_API_URL`) and at DARE's chat socket
+(`VITE_DARE_SOCKET_URL`). Open http://localhost:5174.
+
+## 5. Create your first accounts
+
+Accounts live in DARE. Socratic Bots creates its own copy of a user the first time they sign in.
+
+1. **Create a DARE admin** (skip if you already have one). In the DARE backend run
+   `python manage.py createsuperuser` (or `docker compose exec web python manage.py createsuperuser`).
+2. **Create an access code.** Open the DARE admin at http://localhost:8000/admin/, go to
+   **Access code groups**, and add one. The fields that matter here:
+   - **Default role** decides what people who register with this code can do in Socratic Bots:
+
+     | Role | In Socratic Bots |
+     | --- | --- |
+     | `CREATOR`, `RESEARCHER`, `SUPERVISOR`, `SUPERADMIN` | Can build tutors and voice agents (creator) |
+     | `USER`, `SB_USER` | Can use tutors shared with them (student) |
+
+   - **Initial wallet credit** gives new users a starting balance. Chat is billed to the user's DARE
+     wallet, and an empty wallet blocks chat.
+3. **Register.** On http://localhost:5174/register, sign up with the access code.
+4. **Build a tutor.** As a creator, open **Chatbot Groups**, create a group, add a tutor, pick a
+   model, and save. Chat with it from **Chat**.
+5. **Invite students.** Students need an account and access to the tutor. Create a second DARE
+   access code group with role `SB_USER` for sign-up, then generate a subscription code in the
+   tutor's **Deployment** tab. Students redeem it under **Subscription Codes**.
+
+You can also sign in to Socratic Bots with any existing DARE account, including your superuser.
+To change someone's role later, edit the user in the DARE admin.
+
+## 6. Voice agents (optional)
+
+Voice agents run on ElevenLabs or on the self-hosted
+[voice-agent-runtime](https://github.com/cmudco/voice-agent-runtime). To use the self-hosted
+runtime, start it by following its quick start, then set these in this repo's `.env` and restart:
+
+```bash
+VOICE_RUNTIME_PUBLIC_URL=http://localhost:8010
+MISTRAL_API_KEY=...          # also lets the agent editor list Mistral voices
+```
+
+The runtime's `.env` needs the same `DARE_INTERNAL_KEY` (and the same
+`VOICE_RUNTIME_SESSION_SECRET`, if you set one) and `SOCRATIC_BOTS_BACKEND_URLS=http://localhost:8001`.
+
+For ElevenLabs agents, set `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, and
+`ELEVENLABS_WEBHOOK_ID` instead. See [docs/reference/configuration.md](/docs/socratic-bots/reference/backend-configuration).
+
+## Verify
+
+- This backend is up and can reach its database and DARE:
+
+  ```bash
+  curl http://localhost:8001/api/ready/     # "status": "ready"; 503 names the failing check
+  ```
+
+- You can sign in at http://localhost:5174, open a tutor from **Chat**, and get a streamed reply.
+
+## Troubleshooting
+
+- **`/api/ready/` reports `"dare": "error: ... HTTPError"` on Docker.** DARE rejects the
+  `host.docker.internal` host name. Add it to DARE's `ALLOWED_HOSTS` and restart DARE.
+- **Login succeeds, then every page shows "unauthorized".** `SSO_JWT_KEY` is empty or differs
+  between DARE and here. Set the same value in both `.env` files and restart both.
+- **Backend log says `SSO_JWT_KEY is not configured`.** It is missing from this repo's `.env`. Add
+  it and restart.
+- **Uploads, budgets, or voice callbacks fail with 401/403.** `DARE_INTERNAL_KEY` differs between
+  services. Use one value everywhere.
+- **Chat replies never arrive.** The frontend can't reach DARE's socket, or DARE has no provider
+  key. Check `VITE_DARE_SOCKET_URL` and DARE's provider key, and read the DARE log.
+- **Chat says "insufficient balance".** The user's DARE wallet is empty. Add credit in the DARE
+  admin (**Wallets**) or set initial credit on the access code group.
+- **Registration says the code is invalid or full.** The code is inactive, expired, or at capacity.
+  Check the access code group in the DARE admin.
+- **Tutor documents stay "processing".** DARE's background worker isn't running. Start DARE's RQ
+  worker (Docker runs one for you).
+- **DARE treats Socratic Bots as DARE (wrong roles, wrong links).** DARE's
+  `SOCRATIC_BOTS_FRONTEND_URL` still points at `:5173`. Set it to `http://localhost:5174`.
+- **`DisallowedHost` or CORS errors on your own domain.** The domain is not allowed. Add it to
+  `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, and `CSRF_TRUSTED_ORIGINS`.
+- **Startup fails with `OSError: cannot load library ...`.** WeasyPrint's system libraries are
+  missing. Install Pango (macOS: `brew install pango`; Debian/Ubuntu:
+  `apt install libpango-1.0-0 libpangoft2-1.0-0`).
+
+Every variable is described in [docs/reference/configuration.md](/docs/socratic-bots/reference/backend-configuration).

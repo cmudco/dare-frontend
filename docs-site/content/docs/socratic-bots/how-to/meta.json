@@ -1,0 +1,13 @@
+{
+  "title": "How-to guides",
+  "pages": [
+    "deploy-backend",
+    "deploy-frontend",
+    "deploy-voice",
+    "whisper-backup",
+    "test-voice",
+    "contribute-backend",
+    "contribute-frontend",
+    "contribute-voice"
+  ]
+}

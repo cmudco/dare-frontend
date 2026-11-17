@@ -122,7 +122,7 @@ How early each provider reveals a call:
 
 - **Claude**: name + id at `content_block_start` — before any arguments stream. Earliest signal.
 - **OpenAI**: first delta carrying `function.name`; `READY` at `finish_reason == "tool_calls"`.
-- **Gemini**: calls arrive whole — `START` + `READY` back-to-back; ids are synthesized by the loop (`tc-&lt;msg&gt;-r&lt;round&gt;-&lt;n&gt;`).
+- **Gemini**: calls arrive whole — `START` + `READY` back-to-back; ids are synthesized by the loop (`tc-<msg>-r<round>-<n>`).
 
 `LLMService.query()` serves single-shot consumers (workflows, summaries, learning progress) and downgrades events to `(chunk, usage)` tuples internally. **Chat does not use `query()`**; it uses `prepare_chat()` + `stream_round()`.
 
@@ -175,7 +175,7 @@ Every round is billed: a 3-call turn bills all 3 calls, not only the last one, a
 
 ## 8. Adding a new DARE tool
 
-1. Schema pair + registry entry in `dare_tools/services/registry.py` (`get_&lt;tool&gt;_tool_openai/_claude`, `TOOLS` entry).
+1. Schema pair + registry entry in `dare_tools/services/registry.py` (`get_<tool>_tool_openai/_claude`, `TOOLS` entry).
 2. Model-facing result text branch in `dare_tools/services/result_formatters.py`.
 3. Seed migration for the `DareTool` row (pattern: `dare_tools/migrations/0003_add_search_documents_tool.py`).
 4. Executor: plain sync function → registry `executor`; needs request context / async / ORM → route it in `ToolExecutionService._execute_dare` like `RETRIEVAL_TOOLS` / `ARTIFACT_TOOLS`.

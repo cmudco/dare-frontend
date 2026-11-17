@@ -64,7 +64,7 @@ Only add a file or abstraction when it owns a distinct responsibility. A small f
 
 - Reuse one interface for each backend response; do not recreate near-duplicates in components.
 - Use interfaces for object shapes and discriminated unions for true variants.
-- Avoid `any`, unchecked casts, and broad `Record&lt;string, unknown&gt;` state.
+- Avoid `any`, unchecked casts, and broad `Record<string, unknown>` state.
 - Use enums or existing domain constants for finite server values; do not scatter string literals.
 - Optional fields must represent a real optional state, not uncertainty about the contract.
 - Compatibility transforms live in one named adapter with a removal condition.
@@ -204,7 +204,7 @@ Leave touched code cleaner than you found it, but keep cleanup evidence-driven a
 
 - Strict mode is on in `tsconfig.app.json`. Do not turn it off.
 - Use `interface` for object shapes and `type` for unions and aliases. Name props interfaces
-  `&lt;Component&gt;Props`.
+  `<Component>Props`.
 - An `any` needs a comment saying why. Prefer `unknown` and narrowing.
 - Response types in `src/redux/types/` are the source of truth for API shapes. Update them when the
   backend changes.

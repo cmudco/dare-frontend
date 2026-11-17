@@ -1,0 +1,237 @@
+---
+title: "Deploy the Voice Runtime"
+description: "Run the voice runtime on a server behind a TLS reverse proxy."
+---
+Run the voice runtime on a server for real students: one FastAPI process behind a TLS reverse proxy,
+with a working STUN/TURN path and, optionally, the Whisper backup worker next to it.
+
+To run it on your own machine instead, see [docs/tutorials/quickstart.md](/docs/socratic-bots/tutorials/voice-quickstart).
+Hostnames below use `example.org`; replace them with your own.
+
+## Prerequisites
+
+- **Linux host with Python 3.12**, or Docker with the included `Dockerfile`.
+- **CPU and RAM.** Kokoro TTS and Silero VAD run on the CPU, once per active session. Benchmark
+  concurrent sessions on your target machine before an exam; the project does not publish a capacity
+  figure.
+- **A Socratic Bots backend** reachable from the runtime over HTTPS.
+- **A TLS hostname for the runtime**, such as `voice.example.org`. Browsers only allow microphone
+  access and WebRTC signaling from secure origins.
+- **STUN/TURN.** STUN is enough on open networks; most campus and corporate networks need TURN.
+- **A Mistral API key** (required). OpenAI, Anthropic and Gemini keys are optional fallbacks.
+
+## Production checklist
+
+- [ ] `.env` is not world-readable and is not committed.
+- [ ] `DARE_INTERNAL_KEY` (and `VOICE_RUNTIME_SESSION_SECRET`, if used) are long random values shared
+      only with the backend.
+- [ ] `VOICE_RUNTIME_TTS_PROVIDER=kokoro` and `VOICE_RUNTIME_TTS_TRANSPORT=webrtc` are set explicitly.
+- [ ] Debug switches (`VOICE_RUNTIME_LLM_INPUT_DEBUG`, `VOICE_RUNTIME_LOG_TTS_REQUEST_TEXT`) are off.
+      `VOICE_RUNTIME_LLM_INPUT_DEBUG` writes student answers to `/tmp`.
+- [ ] TURN is configured and tested from student networks.
+- [ ] The Whisper worker listens on loopback only and `runtime.preflight` passes.
+- [ ] `/health` is monitored.
+- [ ] Concurrent-session capacity was measured on this host.
+
+## Environment
+
+Start from `.env.example`. These settings must be right in production:
+
+```bash
+MISTRAL_API_KEY=...
+SOCRATIC_BOTS_BACKEND_URLS=https://api.example.org
+VOICE_RUNTIME_CORS_ORIGINS=https://bots.example.org
+DARE_INTERNAL_KEY=<same value as the Socratic Bots backend>
+VOICE_RUNTIME_SESSION_SECRET=<optional; same value as the backend if set>
+
+VOICE_RUNTIME_TTS_PROVIDER=kokoro
+VOICE_RUNTIME_TTS_TRANSPORT=webrtc
+VOICE_RUNTIME_ICE_SERVERS=stun:stun.example.org:3478,turn:turn.example.org:3478
+
+VOICE_RUNTIME_LLM_INPUT_DEBUG=false
+VOICE_RUNTIME_AUDIO_INPUT_DEBUG=false
+VOICE_RUNTIME_LOG_TTS_REQUEST_TEXT=false
+
+SENTRY_DSN=...                 # optional
+SENTRY_ENVIRONMENT=production
+
+VOICE_RUNTIME_WHISPER_URL=http://127.0.0.1:8011
+VOICE_RUNTIME_WHISPER_TOKEN=<random secret shared with the worker>
+```
+
+On the Socratic Bots backend, set `VOICE_RUNTIME_PUBLIC_URL=https://voice.example.org` and the same
+`DARE_INTERNAL_KEY` / `VOICE_RUNTIME_SESSION_SECRET`.
+
+One runtime can serve several backends, such as staging and production:
+
+- List each backend in `SOCRATIC_BOTS_BACKEND_URLS` and each frontend in
+  `VOICE_RUNTIME_CORS_ORIGINS`, comma-separated.
+- The runtime finds the backend that owns a session by asking each in turn, so every backend it
+  serves must share the same `DARE_INTERNAL_KEY` and `VOICE_RUNTIME_SESSION_SECRET`.
+
+Every variable is in [docs/reference/configuration.md](/docs/socratic-bots/reference/voice-configuration).
+
+## Bare metal with systemd
+
+### 1. Install
+
+```bash
+sudo useradd --system --create-home --home-dir /srv/voice voice
+sudo -u voice -i
+git clone https://github.com/cmudco/voice-agent-runtime.git
+cd voice-agent-runtime
+python3.12 -m venv .venv
+.venv/bin/pip install --upgrade pip
+.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install --no-deps -r requirements-pipecat.txt
+cp .env.example .env && chmod 600 .env   # then edit
+```
+
+### 2. Pre-download the Kokoro model
+
+So the first student does not wait for the download, either start one session after install, or
+download `kokoro-v1.0.onnx` and `voices-v1.0.bin` from the
+[kokoro-onnx releases](https://github.com/thewh1teagle/kokoro-onnx/releases) and point
+`KOKORO_MODEL_PATH` / `KOKORO_VOICES_PATH` at them.
+
+### 3. Set up the Whisper backup and pass the preflight gate
+
+The self-hosted Whisper worker takes over speech recognition when Mistral's realtime STT keeps
+failing. The runtime itself does not need it: with `VOICE_RUNTIME_WHISPER_URL` and
+`VOICE_RUNTIME_WHISPER_TOKEN` empty, it starts and runs without a backup. Worker setup is in
+[docs/how-to/whisper-backup.md](/docs/socratic-bots/how-to/whisper-backup).
+
+The deploy gate is stricter. `python -m runtime.preflight` **fails unless the backup is configured,
+its model is loaded, and one authenticated test transcription succeeds**:
+
+```bash
+.venv/bin/python -m runtime.preflight
+# Backup configured, model loaded, and authenticated inference passed.
+```
+
+The maintainers' `deploy.sh` runs it before restarting the service, so a deployment without a working
+backup is blocked. If you do not want a backup, leave preflight out of your own deploy script.
+
+### 4. Install the systemd unit
+
+`/etc/systemd/system/voice-agent-runtime.service`:
+
+```ini
+[Unit]
+Description=Socratic Bots voice runtime
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=voice
+WorkingDirectory=/srv/voice/voice-agent-runtime
+ExecStart=/srv/voice/voice-agent-runtime/.venv/bin/uvicorn runtime.pipecat_app:app --host 127.0.0.1 --port 8010
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+```
+
+- The runtime loads `.env` itself, so the unit needs no `EnvironmentFile`.
+- Run a single Uvicorn worker. Sessions live in process memory, and the HTTP-WAV fallback serves
+  utterance files from the process that created them.
+- The Whisper worker gets its own unit; see
+  [docs/how-to/whisper-backup.md](/docs/socratic-bots/how-to/whisper-backup#run-it-under-systemd).
+
+### 5. Start it
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now voice-agent-runtime
+curl -sf http://127.0.0.1:8010/health
+```
+
+## Docker
+
+```bash
+docker build -t voice-agent-runtime .
+docker run -d --name voice-agent-runtime --env-file .env -p 127.0.0.1:8010:8010 voice-agent-runtime
+```
+
+- WebRTC media from a container needs either host networking (`--network host`) or a TURN server,
+  because browsers cannot reach the container's private address.
+- The image does not include the Whisper worker.
+
+## Reverse proxy (nginx)
+
+The proxy carries signaling and the HTTP-WAV fallback only. WebRTC media does not pass through it.
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name voice.example.org;
+
+    ssl_certificate     /etc/letsencrypt/live/voice.example.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/voice.example.org/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8010;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+}
+```
+
+The runtime handles CORS (`VOICE_RUNTIME_CORS_ORIGINS`); do not add CORS headers in nginx.
+
+## WebRTC, STUN and TURN
+
+After the offer/answer exchange over HTTPS, the browser and the runtime negotiate a direct media path
+with ICE. The runtime uses its own `VOICE_RUNTIME_ICE_SERVERS`; the backend passes its
+`VOICE_RUNTIME_ICE_SERVERS` to the browser. Keep the two lists the same.
+
+- **Default STUN.** `stun:stun.l.google.com:19302` works when the runtime host has a public IP and
+  students are on permissive networks.
+- **TURN.** Networks that block UDP or use symmetric NAT need a TURN relay. Run one (for example
+  [coturn](https://github.com/coturn/coturn)) on a public host and add it to both lists, including a
+  `turns:` entry on 443 for networks that only allow TLS.
+- **Firewall.** The runtime host must allow inbound UDP on the ephemeral port range aiortc uses, or
+  all media goes through TURN.
+
+Test from the networks your students actually use before an exam.
+
+## Verify
+
+```bash
+curl -sf http://127.0.0.1:8010/health
+.venv/bin/python -m runtime.preflight     # if you run the Whisper backup
+```
+
+`/health` returns `"sttFallbackConfigured": true` only when both Whisper variables are set. Then start
+a voice session from the Socratic Bots frontend, from a network your students use.
+
+## Upgrade
+
+```bash
+git pull
+.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install --no-deps -r requirements-pipecat.txt
+.venv/bin/python -m runtime.preflight     # if you run the Whisper backup
+sudo systemctl restart voice-agent-runtime
+curl -sf http://127.0.0.1:8010/health
+```
+
+- Restarting ends any live sessions. Schedule restarts outside exam windows.
+- `deploy.sh` and `.github/workflows/deploy-staging.yml` are the maintainers' own deployment scripts.
+  They assume a specific host layout, systemd unit name and SSH setup, and the workflow only runs on
+  the upstream repository. Use them as a reference and adapt them to your environment.
+
+## Troubleshooting
+
+- **`runtime.preflight` fails.** The Whisper backup is not configured, its model is not loaded, or
+  the test transcription failed. Fix the worker ([whisper-backup.md](/docs/socratic-bots/how-to/whisper-backup)), or leave
+  preflight out of your deploy if you run without a backup.
+- **Media connects on some networks but not others.** Add a TURN server, including a `turns:` entry
+  on 443, to both the runtime's and the backend's `VOICE_RUNTIME_ICE_SERVERS`.
+- **WebRTC fails from a Docker container.** Use `--network host` or a TURN server.
+- **The browser blocks the microphone.** Serve the runtime over HTTPS.
+- **The first session after a deploy is slow to speak.** Kokoro is downloading its model; pre-download
+  it (step 2).

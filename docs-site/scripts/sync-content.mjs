@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -7,7 +7,12 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const docsSite = path.resolve(here, '..')
 const frontendRoot = path.resolve(docsSite, '..')
 const backendRoot = path.resolve(frontendRoot, '..', 'dare-backend')
+const socraticRoot = path.resolve(frontendRoot, '..', '..', 'socraticbots')
+const sbBackendRoot = path.join(socraticRoot, 'socraticbots-backend')
+const sbFrontendRoot = path.join(socraticRoot, 'socraticbots-frontend')
+const sbVoiceRoot = path.join(socraticRoot, 'voice-agent-runtime')
 const contentRoot = path.join(docsSite, 'content', 'docs')
+const socraticFolder = 'socratic-bots'
 
 const pages = [
   {
@@ -16,6 +21,7 @@ const pages = [
     title: 'Platform Overview',
     description:
       'What the Dietrich Analysis Research Education (DARE) Platform provides and how its parts fit together.',
+    dropSections: ['Contributors'],
   },
   {
     from: path.join(backendRoot, 'docs', 'tutorials', 'getting-started.md'),
@@ -185,7 +191,12 @@ const pages = [
       'Chat, file upload, workflow, authentication, and artifact sequences.',
   },
   {
-    from: path.join(frontendRoot, 'docs', 'explanation', 'document-processing.md'),
+    from: path.join(
+      frontendRoot,
+      'docs',
+      'explanation',
+      'document-processing.md'
+    ),
     to: 'explanation/document-processing.mdx',
     title: 'Document Processing',
     description:
@@ -232,8 +243,172 @@ const pages = [
   },
 ]
 
+const socraticPages = [
+  {
+    from: path.join(sbBackendRoot, 'README.md'),
+    to: 'socratic-bots/index.mdx',
+    title: 'Socratic Bots Documentation',
+    description:
+      'What Socratic Bots provides, how it builds on DARE, and how its services fit together.',
+    dropSections: ['Contributors'],
+  },
+  {
+    from: path.join(sbBackendRoot, 'docs', 'tutorials', 'quickstart.md'),
+    to: 'socratic-bots/tutorials/full-stack-quickstart.mdx',
+    title: 'Full Stack Quick Start',
+    description:
+      'Run the whole Socratic Bots stack locally and chat with your first tutor.',
+  },
+  {
+    from: path.join(sbFrontendRoot, 'docs', 'tutorials', 'quickstart.md'),
+    to: 'socratic-bots/tutorials/frontend-quickstart.mdx',
+    title: 'Frontend Quick Start',
+    description: 'Run the web app locally against your local backends.',
+  },
+  {
+    from: path.join(sbVoiceRoot, 'docs', 'tutorials', 'quickstart.md'),
+    to: 'socratic-bots/tutorials/voice-quickstart.mdx',
+    title: 'Voice Runtime Quick Start',
+    description:
+      'Run the voice runtime and serve voice sessions for a local backend.',
+  },
+  {
+    from: path.join(sbBackendRoot, 'docs', 'how-to', 'deploy.md'),
+    to: 'socratic-bots/how-to/deploy-backend.mdx',
+    title: 'Deploy the Backend',
+    description: 'Run the backend on a server, with Docker or on bare metal.',
+  },
+  {
+    from: path.join(sbFrontendRoot, 'docs', 'how-to', 'deploy.md'),
+    to: 'socratic-bots/how-to/deploy-frontend.mdx',
+    title: 'Deploy the Frontend',
+    description: 'Build the frontend into static files and serve them.',
+  },
+  {
+    from: path.join(sbVoiceRoot, 'docs', 'how-to', 'deploy.md'),
+    to: 'socratic-bots/how-to/deploy-voice.mdx',
+    title: 'Deploy the Voice Runtime',
+    description:
+      'Run the voice runtime on a server behind a TLS reverse proxy.',
+  },
+  {
+    from: path.join(sbVoiceRoot, 'docs', 'how-to', 'whisper-backup.md'),
+    to: 'socratic-bots/how-to/whisper-backup.mdx',
+    title: 'Set Up the Whisper Backup',
+    description:
+      'Run a self-hosted faster-whisper worker as a speech-to-text backup.',
+  },
+  {
+    from: path.join(sbVoiceRoot, 'docs', 'how-to', 'testing.md'),
+    to: 'socratic-bots/how-to/test-voice.mdx',
+    title: 'Test the Voice Runtime',
+    description:
+      'Run the automated suite, the Whisper smoke test and the manual voice checklist.',
+  },
+  {
+    from: path.join(sbBackendRoot, '.github', 'CONTRIBUTING.md'),
+    to: 'socratic-bots/how-to/contribute-backend.mdx',
+    title: 'Contribute to the Backend',
+    description: 'Backend issues, pull requests, and review expectations.',
+  },
+  {
+    from: path.join(sbFrontendRoot, '.github', 'CONTRIBUTING.md'),
+    to: 'socratic-bots/how-to/contribute-frontend.mdx',
+    title: 'Contribute to the Frontend',
+    description: 'Frontend issues, pull requests, and review expectations.',
+  },
+  {
+    from: path.join(sbVoiceRoot, '.github', 'CONTRIBUTING.md'),
+    to: 'socratic-bots/how-to/contribute-voice.mdx',
+    title: 'Contribute to the Voice Runtime',
+    description: 'Voice runtime issues, pull requests, and conventions.',
+  },
+  {
+    from: path.join(sbBackendRoot, 'docs', 'reference', 'configuration.md'),
+    to: 'socratic-bots/reference/backend-configuration.mdx',
+    title: 'Backend Configuration',
+    description:
+      'Every backend environment variable, and which must match DARE.',
+  },
+  {
+    from: path.join(sbFrontendRoot, 'docs', 'reference', 'configuration.md'),
+    to: 'socratic-bots/reference/frontend-configuration.mdx',
+    title: 'Frontend Configuration',
+    description: 'Every frontend environment variable.',
+  },
+  {
+    from: path.join(sbVoiceRoot, 'docs', 'reference', 'configuration.md'),
+    to: 'socratic-bots/reference/voice-configuration.mdx',
+    title: 'Voice Runtime Configuration',
+    description: 'Every voice runtime environment variable.',
+  },
+  {
+    from: path.join(sbBackendRoot, 'docs', 'reference', 'rules.md'),
+    to: 'socratic-bots/reference/backend-rules.mdx',
+    title: 'Backend Rules',
+    description: 'The engineering rules every backend change follows.',
+  },
+  {
+    from: path.join(sbFrontendRoot, 'docs', 'reference', 'rules.md'),
+    to: 'socratic-bots/reference/frontend-rules.mdx',
+    title: 'Frontend Rules',
+    description: 'The engineering rules every frontend change follows.',
+  },
+  {
+    from: path.join(sbBackendRoot, '.github', 'SECURITY.md'),
+    to: 'socratic-bots/reference/backend-security.mdx',
+    title: 'Backend Security Policy',
+    description: 'Vulnerability reporting and hardening notes for the backend.',
+  },
+  {
+    from: path.join(sbFrontendRoot, '.github', 'SECURITY.md'),
+    to: 'socratic-bots/reference/frontend-security.mdx',
+    title: 'Frontend Security Policy',
+    description:
+      'Vulnerability reporting and hardening notes for the frontend.',
+  },
+  {
+    from: path.join(sbVoiceRoot, '.github', 'SECURITY.md'),
+    to: 'socratic-bots/reference/voice-security.mdx',
+    title: 'Voice Runtime Security Policy',
+    description:
+      'Vulnerability reporting and hardening notes for the voice runtime.',
+  },
+  {
+    from: path.join(sbBackendRoot, 'docs', 'explanation', 'architecture.md'),
+    to: 'socratic-bots/explanation/backend-architecture.mdx',
+    title: 'Platform Architecture',
+    description:
+      'The four services, who owns what, and the main request flows.',
+  },
+  {
+    from: path.join(sbFrontendRoot, 'docs', 'explanation', 'architecture.md'),
+    to: 'socratic-bots/explanation/frontend-architecture.mdx',
+    title: 'Frontend Architecture',
+    description: 'How the React single-page app is structured.',
+  },
+  {
+    from: path.join(sbVoiceRoot, 'docs', 'explanation', 'architecture.md'),
+    to: 'socratic-bots/explanation/voice-architecture.mdx',
+    title: 'Voice Runtime Architecture',
+    description: 'How a browser microphone becomes a spoken conversation.',
+  },
+  {
+    from: path.join(
+      sbVoiceRoot,
+      'docs',
+      'explanation',
+      'http-wav-architecture.md'
+    ),
+    to: 'socratic-bots/explanation/http-wav-architecture.mdx',
+    title: 'HTTP-WAV Design Note',
+    description:
+      'Why agent speech was once played as HTTP WAV files over WebRTC.',
+  },
+]
+
 const sourceToUrl = new Map()
-for (const page of pages) {
+for (const page of [...pages, ...socraticPages]) {
   const targetPath = path.resolve(page.from)
   sourceToUrl.set(
     targetPath,
@@ -243,7 +418,9 @@ for (const page of pages) {
     )
   )
 }
-sourceToUrl.set(path.resolve(backendRoot, 'LICENSE'), '/docs/reference/license')
+for (const root of [backendRoot, sbBackendRoot, sbFrontendRoot, sbVoiceRoot]) {
+  sourceToUrl.set(path.resolve(root, 'LICENSE'), '/docs/reference/license')
+}
 
 function frontmatter(page) {
   return [
@@ -257,6 +434,17 @@ function frontmatter(page) {
 
 function stripFirstHeading(markdown) {
   return markdown.replace(/^# .+\n+/, '')
+}
+
+function dropSections(markdown, headings = []) {
+  return headings.reduce(
+    (text, heading) =>
+      text.replace(
+        new RegExp(`^## ${heading}\\n[\\s\\S]*?(?=^## |(?![\\s\\S]))`, 'm'),
+        ''
+      ),
+    markdown
+  )
 }
 
 function resolveMarkdownLink(currentSource, target) {
@@ -306,7 +494,15 @@ function escapeMdxAngles(markdown) {
 
       if (inFence) return line
 
-      return line.replace(/<([^>\n]+)>/g, (_, value) => `&lt;${value}&gt;`)
+      // Odd segments are inline code, where an entity would show up literally.
+      return line
+        .split(/(`+[^`]*`+)/)
+        .map((segment, index) =>
+          index % 2
+            ? segment
+            : segment.replace(/<([^>\n]+)>/g, (_, value) => `&lt;${value}&gt;`)
+        )
+        .join('')
     })
     .join('\n')
 }
@@ -337,7 +533,7 @@ function renderPage(page, input) {
           input.trim(),
           '```',
         ].join('\n')
-      : cleanMarkdown(input, page.from)
+      : cleanMarkdown(dropSections(input, page.dropSections), page.from)
   return `${frontmatter(page)}${body}\n`
 }
 
@@ -368,6 +564,9 @@ description: "Guides and technical references for the Dietrich Analysis Research
   <Card title="Explanation" href="/docs/explanation/architecture">
     Understand why: architecture, data flows, document ingestion, the tool loop.
   </Card>
+  <Card title="Socratic Bots" href="/docs/socratic-bots">
+    The teaching platform built on DARE: run it, deploy it, and see how it works.
+  </Card>
 </Cards>
 `
 
@@ -385,6 +584,7 @@ const meta = {
       'how-to',
       'reference',
       'explanation',
+      socraticFolder,
     ],
   },
   'tutorials/meta.json': section('Tutorials', [
@@ -426,6 +626,53 @@ const meta = {
   ]),
 }
 
+const socraticMeta = {
+  'socratic-bots/meta.json': {
+    title: 'Socratic Bots Documentation',
+    defaultOpen: false,
+    pages: ['tutorials', 'how-to', 'reference', 'explanation'],
+  },
+  'socratic-bots/tutorials/meta.json': {
+    title: 'Tutorials',
+    pages: ['full-stack-quickstart', 'frontend-quickstart', 'voice-quickstart'],
+  },
+  'socratic-bots/how-to/meta.json': {
+    title: 'How-to guides',
+    pages: [
+      'deploy-backend',
+      'deploy-frontend',
+      'deploy-voice',
+      'whisper-backup',
+      'test-voice',
+      'contribute-backend',
+      'contribute-frontend',
+      'contribute-voice',
+    ],
+  },
+  'socratic-bots/reference/meta.json': {
+    title: 'Reference',
+    pages: [
+      'backend-configuration',
+      'frontend-configuration',
+      'voice-configuration',
+      'backend-rules',
+      'frontend-rules',
+      'backend-security',
+      'frontend-security',
+      'voice-security',
+    ],
+  },
+  'socratic-bots/explanation/meta.json': {
+    title: 'Explanation',
+    pages: [
+      'backend-architecture',
+      'frontend-architecture',
+      'voice-architecture',
+      'http-wav-architecture',
+    ],
+  },
+}
+
 // A frontend-only clone has no sibling dare-backend: keep the committed pages as they are.
 if (!existsSync(backendRoot)) {
   console.log(
@@ -434,10 +681,21 @@ if (!existsSync(backendRoot)) {
   process.exit(0)
 }
 
-const missing = pages.filter((page) => !existsSync(page.from))
+// Without the Socratic Bots checkouts, keep their committed pages as they are.
+const hasSocratic = [sbBackendRoot, sbFrontendRoot, sbVoiceRoot].every((root) =>
+  existsSync(root)
+)
+if (!hasSocratic) {
+  console.log(
+    `docs:sync: no Socratic Bots checkouts under ${socraticRoot}; committed Socratic Bots pages are unchanged`
+  )
+}
+const syncedPages = hasSocratic ? [...pages, ...socraticPages] : pages
+
+const missing = syncedPages.filter((page) => !existsSync(page.from))
 if (missing.length) {
   console.error(
-    `docs:sync failed: missing sources (is ../dare-backend on an up-to-date branch?)\n${missing
+    `docs:sync failed: missing sources (are the sibling checkouts on up-to-date branches?)\n${missing
       .map((page) => `  ${page.from}`)
       .join('\n')}`
   )
@@ -445,15 +703,22 @@ if (missing.length) {
 }
 
 const rendered = await Promise.all(
-  pages.map(async (page) => [
+  syncedPages.map(async (page) => [
     page.to,
     renderPage(page, await readFile(page.from, 'utf8')),
   ])
 )
 
-await rm(contentRoot, { recursive: true, force: true })
+for (const entry of await readdir(contentRoot).catch(() => [])) {
+  if (hasSocratic || entry !== socraticFolder) {
+    await rm(path.join(contentRoot, entry), { recursive: true, force: true })
+  }
+}
 const files = [['index.mdx', indexPage], ...rendered]
-for (const [name, value] of Object.entries(meta)) {
+for (const [name, value] of Object.entries({
+  ...meta,
+  ...(hasSocratic ? socraticMeta : {}),
+})) {
   files.push([name, `${JSON.stringify(value, null, 2)}\n`])
 }
 for (const [name, content] of files) {

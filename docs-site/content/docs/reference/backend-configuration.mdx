@@ -101,8 +101,8 @@ WEAVIATE_COLLECTION_NAME=DocumentNomic768
 Ollama honours `dimensions` for `nomic-embed-text`, so memory gets 512-dimension vectors
 from the same server.
 
-vLLM works the same way: `vllm serve &lt;model&gt; --task embed` and point
-`EMBEDDING_BASE_URL` at `http://&lt;host&gt;:8000/v1`.
+vLLM works the same way: `vllm serve <model> --task embed` and point
+`EMBEDDING_BASE_URL` at `http://<host>:8000/v1`.
 
 Memory embeddings that the server rejects, or that are not 512 long, are dropped, and
 memory ranks on its lexical and recency signals alone. To keep semantic memory on a local
@@ -120,7 +120,7 @@ needs a fresh container and a re-embed:
    index with the new dimension in `PINECONE_INDEX_NAME`.
 2. Restart the backend and the workers.
 3. Re-embed documents: `python manage.py reprocess_documents --all --limit 100000`.
-4. Re-import shared libraries: `python manage.py import_library --library &lt;slug&gt; ...`,
+4. Re-import shared libraries: `python manage.py import_library --library <slug> ...`,
    which re-embeds with the configured model. Update the library's `embedding_model` and
    `dims` in Django admin.
 
@@ -249,7 +249,7 @@ Used for unified authentication, email links and inter-service calls.
 | Variable | Default | Description |
 | --- | --- | --- |
 | `HERMES_GATEWAY_URL` | `http://127.0.0.1:8642` | Hermes agent gateway. |
-| `HERMES_PROFILES_ROOT` | `~/.hermes/profiles` | Directory of per-project Hermes profiles (one `HERMES_HOME` each, served under `/p/&lt;profile&gt;/`). |
+| `HERMES_PROFILES_ROOT` | `~/.hermes/profiles` | Directory of per-project Hermes profiles (one `HERMES_HOME` each, served under `/p/<profile>/`). |
 | `HERMES_PROFILE_PREFIX` | `dare-proj` | Profile name prefix. Names must match `[a-z0-9][a-z0-9_-]{0,63}`. |
 | `HERMES_PROFILE_MODEL` | `claude-sonnet-5` | Model pinned into every project profile. |
 | `HERMES_PROFILE_MODEL_PROVIDER` | `anthropic` | Provider for that model. |

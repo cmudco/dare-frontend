@@ -1,0 +1,117 @@
+---
+title: "Set Up the Whisper Backup"
+description: "Run a self-hosted faster-whisper worker as a speech-to-text backup."
+---
+Set up a self-hosted [faster-whisper](https://github.com/SYSTRAN/faster-whisper) worker that takes
+over a student's turn when Mistral Voxtral realtime, the primary speech-to-text, stalls and a rebuild
+does not recover it. (This is OpenAI's Whisper model, not the Wispr dictation product.)
+
+The backup is optional. With its two settings empty, the runtime behaves exactly as without it, and
+the backup control never appears in the frontend. How the switch works is in
+[docs/explanation/architecture.md](/docs/socratic-bots/explanation/voice-architecture#speech-to-text-and-recovery).
+
+## How it fits together
+
+- The worker is a **separate process** with its **own virtualenv**. It must not share the runtime's
+  environment.
+- It listens on **loopback only** (default `127.0.0.1:8011`) and requires a bearer token. The token
+  is the only thing protecting an endpoint that transcribes student audio, so never expose the port.
+- The runtime talks to it with `VOICE_RUNTIME_WHISPER_URL` and `VOICE_RUNTIME_WHISPER_TOKEN`.
+- `/health` on the runtime reports `"sttFallbackConfigured": true` when both are set. That is a
+  configuration check only; `python -m runtime.preflight` is the real test.
+
+## Setup
+
+**1. Install the worker into its own environment**
+
+```bash
+python3 -m venv .venv-whisper
+.venv-whisper/bin/pip install -r requirements-whisper.txt
+```
+
+**2. Generate the shared token**
+
+```bash
+./scripts/setup_whisper_backup.sh
+```
+
+This appends `VOICE_RUNTIME_WHISPER_URL` and `VOICE_RUNTIME_WHISPER_TOKEN` to `.env` (backing it up
+first) and prints the worker command. Re-running it reuses the existing token. Set `WHISPER_PORT`
+to use a port other than 8011.
+
+**3. Start the worker**
+
+```bash
+set -a && . ./.env && set +a
+export WHISPER_MODEL=tiny.en WHISPER_DEVICE=cpu WHISPER_COMPUTE_TYPE=int8 PYTHONPATH=.
+.venv-whisper/bin/python -m uvicorn runtime.whisper_worker:app \
+  --host 127.0.0.1 --port 8011 --no-access-log
+```
+
+The model loads at startup; the worker's own `/health` reports `"ready": true` once it has. Wait for
+that before enabling the backup.
+
+**4. Restart the runtime and verify**
+
+```bash
+.venv/bin/python -m runtime.preflight
+curl -sf http://127.0.0.1:8010/health
+```
+
+Preflight prints `Backup configured, model loaded, and authenticated inference passed.`
+
+## Run it under systemd
+
+```ini
+# /etc/systemd/system/voice-whisper-worker.service
+[Unit]
+Description=Socratic Bots voice runtime - Whisper STT backup
+After=network-online.target
+
+[Service]
+User=voice
+WorkingDirectory=/srv/voice/voice-agent-runtime
+EnvironmentFile=/srv/voice/voice-agent-runtime/.env
+Environment=PYTHONPATH=. WHISPER_MODEL=tiny.en WHISPER_DEVICE=cpu WHISPER_COMPUTE_TYPE=int8
+ExecStart=/srv/voice/voice-agent-runtime/.venv-whisper/bin/python -m uvicorn runtime.whisper_worker:app --host 127.0.0.1 --port 8011 --no-access-log
+Restart=on-failure
+MemoryMax=4G
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Start the worker before the runtime. The maintainers' `deploy.sh` restarts only the runtime, not the
+worker.
+
+## Choosing a model and capacity
+
+- `tiny.en` is fast on CPU and adequate for a backup that runs only when the primary STT fails. Larger
+  models (`base`, `small`) are more accurate and slower. `WHISPER_MODEL` can be a local directory to
+  avoid downloading on startup.
+- The worker runs **one inference at a time** (`WHISPER_CPU_THREADS`, default 4) and returns `503`
+  when busy. The runtime retries a busy worker four times, one second apart, so two students pausing
+  together do not lose an answer. Each request has a 30-second total deadline.
+- RAM does not tell you concurrent capacity. Benchmark your chosen model on the target machine. No
+  production load test has been published for this worker.
+- The runtime pins the transcription language for English sessions (`?language=en`) because
+  auto-detection on a short clip can invent text in the wrong language. Other sessions auto-detect.
+
+## Privacy
+
+Only PCM16 mono 16 kHz audio is accepted. It is held in memory, never written to disk or logged, and
+the worker returns text only.
+
+## Troubleshooting
+
+- **`401 Unauthorized` although both sides hold the same token.** The worker reads the token at
+  import time. Export it into the environment (`set -a && . ./.env && set +a`) instead of prefixing
+  the command with `VAR=… python …`.
+- **Runtime refuses to start: `VOICE_RUNTIME_WHISPER_TOKEN is required when Whisper is enabled`.**
+  The URL is set without a token. Set both or neither.
+- **Runtime refuses to start: `Whisper fallback requires a positive STT liveness deadline`.**
+  `VOICE_RUNTIME_STT_LIVENESS_DEADLINE_SECS` is `0` or negative. The watchdog is what triggers the
+  switch.
+- **No backup button in the frontend.** The runtime advertises the backup only when both settings
+  are set.
+- **STT Lab returns `503` for the Whisper provider.** The backup is not configured on this runtime.

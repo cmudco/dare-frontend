@@ -1,0 +1,9 @@
+{
+  "title": "Explanation",
+  "pages": [
+    "backend-architecture",
+    "frontend-architecture",
+    "voice-architecture",
+    "http-wav-architecture"
+  ]
+}

@@ -1,0 +1,220 @@
+---
+title: "Backend Rules"
+description: "The engineering rules every backend change follows."
+---
+These rules are the default for new work and touched code in the Socratic Bots backend. Exceptions
+need a concrete reason in the PR.
+
+## 1. Pass typed DTOs, not parameter sprawl
+
+A function that needs five or more related values takes a DTO instead.
+
+- Use frozen dataclasses (`@dataclass(frozen=True)`); see `voice/dtos.py`.
+- Group related fields into nested configs (core, voice, behaviour) rather than one flat class.
+- Put common questions about the data on the DTO as small helper methods (`is_voice_enabled()`).
+- Parse raw payloads once with a `from_dict` classmethod; downstream code trusts the DTO.
+- Do not pass `Dict[str, Any]` between layers when a dataclass can name the fields.
+
+## 2. Call DARE only through `utils/dare_api/`
+
+Every DARE request goes through a client class in `backend/utils/dare_api/`.
+
+- Each DARE area has one client (`DareAuthClient`, `DareFilesClient`, `DareModelsClient`,
+  `DareNotificationsClient`, `DareWalletsClient`, `DareConversationsClient`), all extending
+  `BaseDareApiClient` in `base.py`.
+- `BaseDareApiClient` sets the base URL and the `Origin`/`Referer` headers DARE uses to recognise
+  Socratic Bots traffic. Methods that hit DARE's internal endpoints add `X-Internal-Key` themselves.
+- Import the shared instances (`auth_client`, `files_client`, `models_client`,
+  `notifications_client`) or the per-token factories (`get_wallets_client(token)`,
+  `get_conversations_client`).
+- Never call DARE with `requests` or `httpx` from a view, serializer or service. Add a method to the
+  matching client.
+- Wrap client calls that should surface as form errors with `handle_dare_api_error`, which turns a
+  `DareApiError` into a DRF `ValidationError`.
+
+## 3. Keep views thin; put logic in services
+
+Views validate, authorize, call a service and serialize.
+
+- Business logic that spans models or external calls lives in a service module
+  (`voice/services/`, `bots/model_check_service.py`), not in views or serializers.
+- External providers sit behind an abstract base class with one implementation per provider:
+  `BaseVoiceProvider` with `ElevenLabsVoiceProvider` and `MistralVoiceProvider` in
+  `voice/services/providers.py`.
+- Add a new provider by implementing the base class, not by branching on provider names in views.
+- Keep high-level orchestration and low-level details in separate functions; split giant functions.
+- Extract repeated code into a helper instead of copying it.
+
+## 4. Use DRF viewsets and serializers the standard way
+
+CRUD endpoints are `ModelViewSet`s registered on a router.
+
+- Filter in `get_queryset()` so a user never sees another user's rows.
+- Set the owner and other server-side defaults in `perform_create()`, never from client input.
+- Put non-CRUD endpoints on the viewset with `@action(detail=..., methods=[...])`.
+- Pass `request` in serializer context when nested serializers need it.
+- In serializers, mark derived fields `read_only=True`, write-only foreign keys with
+  `PrimaryKeyRelatedField(write_only=True)`, and validate single fields in `validate_<field>()`.
+- Register viewsets with `DefaultRouter`, or `NestedDefaultRouter` for tutors under groups
+  (`bots/urls.py`).
+
+## 5. Enforce permissions on every view
+
+Every endpoint states who may call it, and every queryset is scoped.
+
+- The global default is `IsAuthenticated`; loosen it only for public tutor endpoints and say why.
+- Scope querysets to the requesting user, or to the tutors they own or collaborate on.
+- Use the role helpers on `CustomUser` (`is_creator`, `is_student`, `is_supervisor_or_above`) and the
+  permission classes in `common/permissions.py` and `bots/permissions.py`. Do not compare role
+  strings in views.
+- Endpoints that DARE calls use `@require_internal_key` from `utils/internal_auth.py`, which
+  rejects every request while `DARE_INTERNAL_KEY` is empty. Voice runtime callbacks check the same
+  key in `voice/api/runtime_views.py`.
+
+## 6. Keep the API contract camelCase on the wire
+
+`djangorestframework-camel-case` converts every request and response, so Python stays snake_case.
+
+- Serializers, models and service code use snake_case; the frontend receives camelCase.
+- DARE uses the same library, so its responses are already camelCase. Pass them through unchanged;
+  never re-camelize them.
+- The one exception is `voice_runtime_session_context`, which uses DRF's plain `JSONRenderer` because
+  the voice runtime reads snake_case.
+- Call `djangorestframework_camel_case.util.camelize` only on a dict you build by hand outside a
+  serializer.
+- Give each payload shape its own named field (`voiceConfig`, `chatConfig`) instead of one ambiguous
+  field whose shape depends on a mode.
+
+## 7. Imports at the top, in order
+
+All imports sit at module top level.
+
+- No imports inside functions. An unavoidable cycle needs a one-line comment explaining it.
+- Order: standard library, third-party, Django and DRF, then local apps, with a blank line between
+  groups.
+- Packages that re-export names list them in `__all__` (`utils/dare_api/__init__.py`,
+  `voice/services/__init__.py`).
+
+## 8. Type everything
+
+Every function signature has type hints, including the return type.
+
+- Use `Any` only to avoid a circular import (with a comment naming the real type) or for truly
+  dynamic data.
+- Name complex types with an alias (`MessageList = List[Dict[str, str]]`).
+
+## 9. Handle errors where you can add context
+
+Catch specific exceptions at the layer that can recover or explain the failure.
+
+- Log the operation name and the error, then raise an error the caller understands.
+- Let DRF `ValidationError` propagate unchanged.
+- A fallback (for example a caller's own provider key, then the platform key) is explicit, logged,
+  and ends in a clear configuration error when nothing is available.
+- Never swallow an exception and return a default that looks like success.
+
+## 10. External voice providers
+
+Provider clients take an explicit key and fall back to the platform setting.
+
+- `ElevenLabsService(api_key=None)` falls back to `ELEVENLABS_API_KEY` and raises when neither is set.
+- Store provider results on our own models: transcripts land on `VoiceConversation.transcript`, keyed
+  by `provider_conversation_id` or `elevenlabs_conversation_id`.
+- Read provider URLs, keys and secrets from settings or the environment, never hard-coded.
+
+## 11. Async code
+
+Most of this backend is synchronous WSGI; keep async code contained.
+
+- Wrap ORM calls made from async code with `asgiref.sync.sync_to_async`.
+- Use `httpx.AsyncClient` in an `async with` block for async external calls, and call
+  `raise_for_status()` before reading the body.
+
+## 12. Document the why
+
+Docstrings and comments explain contracts and non-obvious behaviour.
+
+- Each module opens with a short docstring saying what it handles.
+- Public functions document `Args`, `Returns` and `Raises` when they are not obvious from the types.
+- Large files separate public API from private helpers with section comments.
+
+## 13. Micro-examples
+
+### Use a DTO
+
+```python
+# Bad: nine loose parameters.
+def create_conversation(user_id, bot_id, title, system_prompt, model_id, temperature, ...): ...
+
+# Good: one typed argument.
+@dataclass(frozen=True)
+class CreateConversationDTO:
+    user_id: int
+    bot_id: int
+    title: str
+    config: ConversationConfig
+
+def create_conversation(dto: CreateConversationDTO) -> Conversation: ...
+```
+
+### Pass DARE responses through
+
+```python
+# Good: DARE already returns camelCase.
+return Response(models_client.get_llm_models(token))
+
+# Bad: double conversion.
+return Response(camelize(models_client.get_llm_models(token)))
+```
+
+### Scope the queryset and set the owner
+
+```python
+class OwnedNoteViewSet(viewsets.ModelViewSet):  # illustrative
+    serializer_class = NoteSerializer
+
+    def get_queryset(self):
+        return Note.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+```
+
+### Fail with context
+
+```python
+# Bad: a DARE outage looks like an empty list.
+except Exception:
+    return []
+
+# Good: translate the failure this layer understands.
+except DareApiError as error:
+    logger.error("list_tutor_files failed: %s", error)
+    raise ValidationError(error.message) from error
+```
+
+## 14. Definition of done
+
+- Every view has permissions and a scoped queryset, and tests prove a student cannot reach another
+  student's notes or a creator's tutor settings.
+- DARE calls go through `utils/dare_api/` only.
+- A model change ships with its migration in the same PR; `makemigrations --check --dry-run` is clean.
+- A new environment variable lands in `core/settings.py`, `env.example` and
+  [configuration.md](/docs/socratic-bots/reference/backend-configuration#adding-a-variable) in the same PR.
+- A request or response shape change that DARE or the frontend uses is called out in the PR, with
+  the matching PR in the other repo linked.
+- `manage.py check` and `manage.py test` pass from `backend/`.
+- Comments and docs describe the final design, not how the patch evolved.
+
+## Project conventions
+
+- No formatter or linter is configured. Match the surrounding style.
+- File names: `models.py`, `views.py`, `serializers.py`, `urls.py`, `services.py` (or a
+  `services/` package), `dtos.py`, `helpers.py`, `constants.py`, `permissions.py`; external clients
+  are `<service>_client.py` or `<service>_service.py`.
+- Apps: `users`, `bots`, `access_codes`, `notes`, `files`, `voice` are installed; `conversations` and
+  `wallet` are URL-only proxies with no models; `common` holds shared permissions; `utils` holds the
+  DARE clients and `internal_auth.py`.
+- Roles are never stored locally. `users.authentication.JWTAuthentication` verifies DARE's JWT and
+  fetches the user's platform role from DARE on every request.
+- Tests run on SQLite with no network: mock the `utils/dare_api` clients instead of calling DARE.

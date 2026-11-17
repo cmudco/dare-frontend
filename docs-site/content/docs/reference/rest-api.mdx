@@ -118,7 +118,7 @@ held to the member limit.
 A member who has used their limit cannot dispatch through the group key. Chat
 answers with the socket error `spend_limit_reached`; other paths raise
 `PaymentRequiredError` with code `LITELLM_SPEND_LIMIT_REACHED`. Every LiteLLM
-call is sent with the OpenAI `user` field set to `dare-user-&lt;id&gt;`, so the
+call is sent with the OpenAI `user` field set to `dare-user-<id>`, so the
 gateway can attribute spend per DARE user.
 
 ## Document reprocessing and vision model selection

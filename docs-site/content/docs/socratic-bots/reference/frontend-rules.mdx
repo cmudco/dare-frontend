@@ -1,0 +1,228 @@
+---
+title: "Frontend Rules"
+description: "The engineering rules every frontend change follows."
+---
+These rules are the default for new work and touched code in the Socratic Bots frontend.
+Exceptions need a concrete reason in the PR.
+
+## 1. Use camelCase for REST data
+
+Properties, variables, API types and state are camelCase.
+
+- The backend's DRF camel-case integration converts every request to snake_case and every
+  response to camelCase. Never convert by hand.
+- Never use snake_case in TypeScript types for REST payloads.
+- Socket payloads are the exception: they are not converted. Follow `tests/SOCKET_CONTRACT.md`.
+
+## 2. Type every data shape
+
+Define an interface for every data structure and reuse it.
+
+- Reuse the types for backend responses in `src/types/` or the service; do not recreate similar
+  types.
+- Use explicit interfaces instead of `Record<string, T>`.
+- Write `MyInterface[]`, not `Array<MyInterface>`.
+- No `any`. ESLint (`typescript-eslint` recommended) fails on it; if unsure, define an interface.
+
+## 3. One field per data shape
+
+When a value can hold different structures, use separate named fields, not a union.
+
+- `voiceConfig?: VoiceConfig` and `chatConfig?: ChatConfig`, not `config?: VoiceConfig | ChatConfig`.
+- Pick the field from an explicit discriminator (such as the mode), then use it with its own type.
+
+## 4. Name finite sets
+
+Use a TypeScript `enum` or an `as const` object for every finite option set.
+
+- Keep constants in `src/constants/`, one file per domain (`roles.ts`, `wallet.ts`,
+  `requests.ts`).
+- Compare against the enum value (`VoiceProvider.MistralVoice`), never a string literal.
+- No hard-coded magic strings in components.
+
+## 5. Keep imports at the top and in order
+
+All imports sit at the top of the file; no inline imports.
+
+- Prettier (`@trivago/prettier-plugin-sort-imports`) sorts them into groups: `react`, third-party
+  packages, `@/hooks`, `@/stores`, `@/services`, `@/lib`, `@/utils`, `@/components`, `@/types`,
+  then relative paths.
+- Use the `@/` alias for `src/`. ESLint rejects parent-directory imports (`../`).
+- `npx eslint <file> --fix` and Prettier fix order and duplicates.
+
+## 6. Call REST through a service
+
+Every REST call goes through a method on a service in `src/services/*.service.ts` built on
+`baseRequest` from `src/utils/baseRequest.ts`.
+
+- One service per backend area (`bots.service.ts`, `botGroups.service.ts`, `wallet.service.ts`).
+- Services return typed promises (`baseRequest<Bot[]>`) and use `METHOD` from
+  `src/constants/requests.ts`.
+- Never call `axios` or `fetch` against the backend from a component or store.
+- `baseRequest` adds the base URL and the `Bearer` token; do not add them again.
+
+## 7. Keep server state in TanStack Query
+
+Anything fetched over REST lives in a TanStack Query hook in `src/hooks/queries/`.
+
+- Each area exports a query-key factory (`botKeys.list(botGroupId)`, `botKeys.detail(...)`) and
+  uses it for every query and invalidation.
+- Mutations invalidate the matching keys in `onSuccess`.
+- Guard queries that need an id or a signed-in user with `enabled`.
+- Fetch with a query hook, not `useEffect` + `setState`.
+
+## 8. Keep client state in focused Zustand stores
+
+Socket messages, streaming text, UI toggles and form drafts live in Zustand stores.
+
+- One store per concern, in `src/stores/core/` (chat), `src/stores/ui/` or `src/stores/forms/`.
+- Type the store's state and actions in one interface; mutations are store actions.
+- Compute derived values with selectors; do not store them twice.
+- No REST calls or other async data loading in stores; use TanStack Query.
+- Never copy server data from TanStack Query into a store.
+
+## 9. One component per file
+
+Each React component lives in its own file, even a small helper.
+
+- Split a large component into focused sub-components or hooks.
+- Use a Zustand store or context instead of drilling props through many levels.
+- Build on the shadcn/ui primitives in `src/components/ui/`.
+- Type props with a `<Component>Props` interface.
+
+## 10. Style with Tailwind and theme tokens
+
+Style with Tailwind CSS utility classes in the component.
+
+- No new `.css` files except global styles and bot chat themes (`src/themes/`, `src/styles/`).
+- Merge conditional classes with `cn()` from `@/lib/utils`.
+- Express component variants with `cva` (class-variance-authority), as the `ui/` components do.
+- Use theme tokens (`bg-primary`, `text-muted-foreground`), never hard-coded accent colors.
+
+## 11. Build forms with React Hook Form and Zod
+
+New forms use React Hook Form with a Zod schema through `zodResolver`.
+
+- Infer the form type from the schema (`z.infer<typeof schema>`).
+- Shared schemas live in `src/schemas/` (`botFormSchema.ts`).
+- Older forms use Formik + Yup. Never mix the two in one form.
+
+## 12. Keep effects small
+
+Use `useEffect` only for real side effects, with the fewest dependencies that are correct.
+
+- Do not add dependencies that cause render loops.
+- When a dependency must be left out, disable `react-hooks/exhaustive-deps` on that line only.
+- Combine effects that implement one piece of logic.
+- Never fetch data in an effect (see rule 7).
+
+## 13. Wrap reusable logic in hooks
+
+Custom hooks live in `src/hooks/`; query hooks in `src/hooks/queries/`.
+
+- A hook takes a typed options object and returns a typed object, not a tuple of unrelated values.
+- Wrap callbacks the hook returns in `useCallback`.
+
+## 14. Keep the chat and voice transports in one place
+
+Chat and voice connections go through their existing clients only.
+
+- Chat uses the Socket.IO stores in `src/stores/core/` and `src/services/socket.service.ts`.
+  Never open another socket.
+- The `send_message` payload is built in `src/utils/botChatPayload.ts` for both signed-in and
+  public chat.
+- Voice sessions start from the signed URL the backend returns (`get_signed_url`), for both
+  ElevenLabs and Mistral/Pipecat. Never start a session from a raw agent id.
+
+## 15. Never put secrets in the bundle
+
+Only `VITE_*` variables reach the app, and Vite compiles them into the public JavaScript.
+
+- Never put API keys, internal service keys or other secrets in them.
+- New variables go in `.env.example` and `docs/reference/configuration.md`.
+
+## 16. Micro-examples
+
+Examples clarify a rule; they are not templates.
+
+### Explicit types
+
+```typescript
+// Bad: no shape, no safety.
+type Bot = Record<string, any>;
+
+// Good: an explicit interface.
+interface Bot {
+  id: number;
+  name: string;
+  voiceConfig?: VoiceConfig;
+}
+```
+
+### Service on `baseRequest`
+
+```typescript
+async getBots(botGroupId: number): Promise<Bot[]> {
+  return baseRequest<Bot[]>({ url: `bot-groups/${botGroupId}/bots/`, method: METHOD.GET });
+}
+```
+
+### Query, not effect
+
+```typescript
+// Bad
+useEffect(() => {
+  fetchBots().then(setBots);
+}, []);
+
+// Good
+const { data: bots } = useBots(botGroupId);
+```
+
+### Separate fields, not a union
+
+```typescript
+// Bad: which one is it?
+interface Bot {
+  config?: VoiceConfig | ChatConfig;
+}
+
+// Good
+interface Bot {
+  voiceConfig?: VoiceConfig;
+  chatConfig?: ChatConfig;
+}
+```
+
+## 17. Definition of done
+
+A change is ready only when:
+
+- `npm run lint`, `npm run format:check`, `npm test`, `npm run test:voice-contract` and
+  `npm run build` pass (the `check` skill runs them);
+- it works in a browser against a local Socratic Bots backend and DARE;
+- a socket change updates `tests/SOCKET_CONTRACT.md`, passes the browser-console regressions in
+  `tests/README.md`, and links its matching DARE change;
+- a change that needs a backend change links that PR and says which to deploy first;
+- no `any`, no new hard-coded colors, no secrets in `VITE_*`;
+- the diff holds no unrelated formatting (Prettier ran only on touched files).
+
+## Project conventions
+
+- **Domain.** Bot groups contain bots. There are no books or chapters.
+- **REST pattern.** Add a method to the relevant `src/services/*.service.ts` using `baseRequest`,
+  then a TanStack Query hook in `src/hooks/queries/`. Components use the hook.
+- **State split.** Server data in TanStack Query; streaming and UI state in Zustand. The two chat
+  stores, `websocketStore` (signed in) and `publicWebSocketStore` (public bots), share their event
+  handling through `src/stores/core/chatSocketCore.ts`.
+- **Auth storage.** `access_token` and `refresh_token` live in `localStorage`. `baseRequest` sends
+  the access token as `Bearer`; the socket sends it as `auth.token`. Token refresh is disabled
+  (`authService.refreshToken` throws), so expiry means logging in again.
+- **Roles.** The user payload has `isCreator` and `platformRole`. Creator-only navigation is in
+  `src/types/navigation.ts`. The backend enforces permissions; UI gating is cosmetic.
+- **Routes.** All routes are in `src/App.tsx`; protected routes sit under `ProtectedRoute` +
+  `Layout`.
+- **Tests.** Vitest suites are `tests/*.test.ts(x)`; chat regressions are browser-console scripts
+  in `tests/`.
+- **Formatting.** Prettier: single quotes, semicolons, 100-column lines, `arrowParens: avoid`,
+  Tailwind class sorting.

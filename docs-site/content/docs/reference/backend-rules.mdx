@@ -217,7 +217,7 @@ Leave touched code cleaner than you found it, but keep cleanup evidence-driven a
 - **Serializers.** Keep read and write fields separate; casing rules are in
   [serialization.md](/docs/reference/serialization).
 - **Background jobs.** Send blocking, slow or external work through Django RQ with
-  `@job("&lt;queue&gt;")` on a queue defined in `RQ_QUEUES` (`config/settings/common.py`). Log enough to
+  `@job("<queue>")` on a queue defined in `RQ_QUEUES` (`config/settings/common.py`). Log enough to
   diagnose a failure from `python manage.py rqstats` and the worker log.
 - **Tests.** Use `TestCase` for database tests and `SimpleTestCase` otherwise. Mock LLM APIs,
   vector stores and email.

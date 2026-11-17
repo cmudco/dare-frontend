@@ -39,7 +39,7 @@ git pull --ff-only origin dev
 git checkout -b your-name/feature/short-description
 ```
 
-Name branches `&lt;author&gt;/&lt;feature|fix|refactor|docs|chore&gt;/&lt;short-description&gt;`.
+Name branches `<author>/<feature|fix|refactor|docs|chore>/<short-description>`.
 
 ### Before you open a PR
 
@@ -73,7 +73,7 @@ Screenshots are required for any visible change.
 
 ### Commit messages
 
-Use `&lt;type&gt;: &lt;summary&gt;`, where type is `feat`, `fix`, `refactor`, `docs`, `style`, `test` or
+Use `<type>: <summary>`, where type is `feat`, `fix`, `refactor`, `docs`, `style`, `test` or
 `chore`. Keep the summary under 70 characters.
 
 ```
@@ -88,7 +88,7 @@ Add a body when the change needs explaining, and close issues with `Closes #123`
 
 `AGENTS.md` holds the commands and traps every agent reads; `.claude/CLAUDE.md`
 imports it for Claude Code. Task procedures (`run-frontend`, `check`) live in
-`.agents/skills/&lt;name&gt;/SKILL.md`, and `.claude/skills/` symlinks to them; see
+`.agents/skills/<name>/SKILL.md`, and `.claude/skills/` symlinks to them; see
 `.agents/README.md`. Invoke a skill by name (`/run-frontend` in Claude Code,
 `$run-frontend` in Codex) or describe the task and let the agent pick it. Treat these files like
 code: if you change how the app is run, built or checked, update the matching skill in the same PR.

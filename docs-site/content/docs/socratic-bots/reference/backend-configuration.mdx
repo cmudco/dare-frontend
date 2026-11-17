@@ -1,0 +1,108 @@
+---
+title: "Backend Configuration"
+description: "Every backend environment variable, and which must match DARE."
+---
+Every variable below is read in `backend/core/settings.py`
+(except `ELEVENLABS_API_KEY`, read in `backend/voice/services/elevenlabs_service.py`); copy
+`env.example` to `.env` to start.
+
+On startup `python-dotenv` loads `.env` from the repository root (or `backend/`). Variables already
+set in the environment win over the file.
+
+## Values that must match across services
+
+| Value | DARE backend | This backend | Voice runtime |
+| --- | --- | --- | --- |
+| JWT signing key | `SSO_JWT_KEY` | `SSO_JWT_KEY` | — |
+| Internal service key | `DARE_INTERNAL_KEY` | `DARE_INTERNAL_KEY` | `DARE_INTERNAL_KEY` |
+| Voice session token secret | — | `VOICE_RUNTIME_SESSION_SECRET` (defaults to `DARE_INTERNAL_KEY`) | `VOICE_RUNTIME_SESSION_SECRET` (same default) |
+| This backend's URL | `SOCRATIC_BOTS_BACKEND_URL` | `SOCRATIC_BOTS_BACKEND_URL` | `SOCRATIC_BOTS_BACKEND_URLS` |
+| The Socratic Bots frontend URL | `SOCRATIC_BOTS_FRONTEND_URL` | — | `VOICE_RUNTIME_CORS_ORIGINS` |
+
+## Django
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `DJANGO_SECRET_KEY` | `django-insecure-default-key`; **Required** in production | Django's signing key. `SECRET_KEY` is read as a fallback. Never use the default outside local development. |
+| `DEBUG` | `False` | `True` enables debug pages and media serving, and turns off secure-only cookies. Only the exact string `True` counts. |
+| `ALLOWED_HOSTS` | empty; **Required** in production | Comma-separated hostnames added to the built-in list (`localhost`, `127.0.0.1`). |
+| `CORS_ALLOWED_ORIGINS` | empty; **Required** in production | Comma-separated origins (e.g. `https://bots.example.org`) added to the built-in list, which allows `http://localhost:5173` and `:5174`. |
+| `CSRF_TRUSTED_ORIGINS` | empty; **Required** in production | Comma-separated origins added to the built-in list, which trusts `http://localhost:8001`. Needed for the Django admin on your domain. |
+
+## Database
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `DB_HOST` | empty | Empty means SQLite at `backend/db.sqlite3`. Any value switches to PostgreSQL. |
+| `DB_NAME` | `django_db` | PostgreSQL database name. Ignored for SQLite. |
+| `DB_USER` | `django_user` | PostgreSQL user. Ignored for SQLite. |
+| `DB_PASSWORD` | `django_password` | PostgreSQL password. Ignored for SQLite. |
+| `DB_PORT` | `5432` | PostgreSQL port. Ignored for SQLite. |
+
+## DARE
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `DARE_BACKEND_URL` | `http://127.0.0.1:8000` | Base URL for every DARE call. |
+| `SSO_JWT_KEY` | **Required** | Verifies DARE-issued JWTs (HS256). Must equal DARE's `SSO_JWT_KEY`. When empty, every request is treated as anonymous. |
+| `DARE_INTERNAL_KEY` | **Required** (`local-dev-internal-key` when `DEBUG=True`, otherwise empty) | Sent as `X-Internal-Key` on internal calls to DARE, and required on DARE's and the voice runtime's calls to this backend. Internal endpoints reject every request while it is empty. |
+| `SOCRATIC_BOTS_BACKEND_URL` | `http://127.0.0.1:8001` | This backend's own URL. Sent to DARE as `Origin`/`Referer` so DARE tags the traffic as Socratic Bots. |
+
+## Voice: self-hosted runtime (Mistral / Pipecat)
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VOICE_RUNTIME_PUBLIC_URL` | empty | Browser-reachable URL of the [voice-agent-runtime](https://github.com/cmudco/voice-agent-runtime). **Required** for runtime-backed agents; empty disables them. |
+| `VOICE_RUNTIME_SESSION_SECRET` | `DARE_INTERNAL_KEY` | Signs the short-lived session token the browser hands to the runtime. |
+| `VOICE_RUNTIME_ICE_SERVERS` | `stun:stun.l.google.com:19302` | Comma-separated STUN/TURN URLs given to the browser for WebRTC. Add a TURN server for users behind strict NATs. |
+| `VOICE_RUNTIME_STARTUP_CLAIMS_ENABLED` | `false` | Use atomic session claiming at startup. Turn on only with a runtime version that supports it. |
+| `MISTRAL_API_KEY` | empty | Lets the agent editor list Mistral voices (`/api/voice/mistral-voices/` returns 503 without it). |
+
+## Voice: ElevenLabs
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `ELEVENLABS_API_KEY` | empty; **Required** for ElevenLabs agents | Creates and updates agents and fetches signed URLs. |
+| `ELEVENLABS_WEBHOOK_SECRET` | empty; **Required** for ElevenLabs agents | Verifies the HMAC signature on post-call webhooks. Without it every webhook is rejected. |
+| `ELEVENLABS_WEBHOOK_ID` | empty | Webhook linked to agents by `manage.py update_agent_webhooks`. |
+
+## Error reporting
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `SENTRY_DSN` | empty | Sentry project DSN. Empty disables Sentry. |
+| `SENTRY_ENVIRONMENT` | `development` | Environment tag on events. |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | Fraction of requests traced. |
+
+## Docker Compose only
+
+Read by `docker-compose.yml` and `docker/entrypoint.sh`, not by Django.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `DB_PASSWORD` | none (required) | Password for the bundled PostgreSQL. Compose refuses to start without it. |
+| `WEB_PORT` | `8001` | Host port for the API. `127.0.0.1:8001` binds it to localhost only. |
+| `POSTGRES_PORT` | `5433` | Host port for the bundled PostgreSQL, bound to `127.0.0.1`. |
+| `DOCKER_DEBUG` | `False` | `DEBUG` inside the containers. `True` also swaps Gunicorn for Django's reloading dev server. |
+| `DOCKER_DARE_BACKEND_URL` | `http://host.docker.internal:8000` | DARE URL as seen from inside the container. Overrides `DARE_BACKEND_URL`. With `host.docker.internal`, add that name to DARE's `ALLOWED_HOSTS`. |
+| `GUNICORN_WORKERS` | `3` | Gunicorn worker processes. |
+| `LOG_LEVEL` | `info` | Gunicorn log level. |
+| `SCHEDULER_INTERVAL_SECONDS` | `60` | How often the `scheduler` service runs `expire_voice_startups`. |
+
+Inside Compose, `DB_HOST` is always `db`, and `DB_NAME` and `DB_USER` default to `socraticbots`.
+
+## Fixed settings worth knowing
+
+These are not configurable through the environment.
+
+- **Throttling:** anonymous clients get 100 requests a day, signed-in users 1000 a day, and
+  authentication endpoints 5 a minute.
+- **JSON casing:** requests and responses use camelCase; Python code uses snake_case.
+- **Static files:** collected to `staticfiles/` and served by WhiteNoise.
+- **Uploaded media:** stored in `backend/mediafiles/`.
+
+## Adding a variable
+
+1. Read it in `backend/core/settings.py` with a safe default.
+2. Add it, with a short comment, to `env.example`.
+3. Add a row to the matching table in this file.
