@@ -5,89 +5,30 @@ import {
   BaseEdge,
   Controls,
   getStraightPath,
-  Handle,
   MarkerType,
-  Position,
   ReactFlow,
   ReactFlowProvider,
   useInternalNode,
-  useNodesInitialized,
   useReactFlow,
   type Edge,
   type EdgeProps,
   type InternalNode,
   type Node,
-  type NodeProps,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
 import { useAppSelector } from '@/redux/hooks'
 import { selectResolvedMode } from '@/redux/themeSlice'
-import type {
-  GraphNode,
-  KnowledgeGraphView,
-} from '@/redux/types/knowledgeGraph'
+import type { KnowledgeGraphView } from '@/redux/types/knowledgeGraph'
 
-import { entityKind, relationText } from './entityKinds'
+import EntityNode, { type EntityNodeData } from './EntityNode'
+import { relationText } from './entityKinds'
 import { forceLayout } from './forceLayout'
 
 const ARROW_GAP = 3
-
-const CENTER_HANDLE = {
-  top: '50%',
-  left: '50%',
-  width: 1,
-  height: 1,
-  minWidth: 0,
-  minHeight: 0,
-  opacity: 0,
-  border: 0,
-  pointerEvents: 'none' as const,
-}
-
-type EntityNodeData = {
-  entity: GraphNode
-  emphasis: 'selected' | 'path' | 'near' | 'plain' | 'dim'
-  prominent: boolean
-}
-
-const EMPHASIS_CLASS: Record<EntityNodeData['emphasis'], string> = {
-  selected: 'border-primary bg-primary text-primary-foreground shadow-md',
-  path: 'border-primary bg-primary/15 text-foreground shadow-sm',
-  near: 'border-foreground/40 bg-card text-foreground',
-  plain: 'border-border bg-card text-foreground hover:border-foreground/40',
-  dim: 'border-border/60 bg-card/70 text-muted-foreground opacity-40',
-}
-
-const EntityNode = ({ data }: NodeProps<Node<EntityNodeData>>) => {
-  const { icon: Icon } = entityKind(data.entity.kind)
-  return (
-    <div
-      className={`flex items-center gap-1.5 rounded-full border px-3 transition-all duration-150 ${
-        data.prominent ? 'py-1.5 text-sm font-medium' : 'py-1 text-xs'
-      } ${EMPHASIS_CLASS[data.emphasis]}`}
-    >
-      <Handle
-        type='target'
-        position={Position.Top}
-        isConnectable={false}
-        style={CENTER_HANDLE}
-      />
-      <Handle
-        type='source'
-        position={Position.Top}
-        isConnectable={false}
-        style={CENTER_HANDLE}
-      />
-      <Icon
-        className={`shrink-0 ${data.prominent ? 'h-3.5 w-3.5' : 'h-3 w-3'}`}
-      />
-      <span className='max-w-44 truncate whitespace-nowrap'>
-        {data.entity.label}
-      </span>
-    </div>
-  )
-}
+const OFF_PAGE_MARK_WIDTH = 10
+// Close enough to read the located name, far enough to see what is around it.
+const LOCATE_ZOOM = 0.9
 
 const NODE_TYPES = { entity: EntityNode }
 
@@ -158,6 +99,10 @@ const NODE_ORIGIN: [number, number] = [0.5, 0.5]
 interface GraphCanvasProps {
   view: KnowledgeGraphView
   selectedId: number | null
+  /** A name picked from outside this page; it keeps its links. */
+  focusId: number | null
+  /** The name to move the camera to; a new nonce moves it again. */
+  locate: { id: number; nonce: number } | null
   onSelect: (id: number | null) => void
   showLinks: boolean
   highlightedIds: number[]
@@ -168,50 +113,45 @@ const pairKey = (a: number, b: number) => (a < b ? `${a}-${b}` : `${b}-${a}`)
 const Canvas = ({
   view,
   selectedId,
+  focusId,
+  locate,
   onSelect,
   showLinks,
   highlightedIds,
 }: GraphCanvasProps) => {
   const mode = useAppSelector(selectResolvedMode)
-  const { fitView } = useReactFlow()
+  const { fitView, setCenter } = useReactFlow()
 
-  // With only stated relationships showing, an unconnected entity is just noise.
-  const shownLinks = useMemo(
-    () =>
-      showLinks || view.relations.length === 0
-        ? view.links.filter((link) => link.strong)
-        : [],
-    [showLinks, view.links, view.relations.length]
-  )
-  const shownNodes = useMemo(() => {
-    const connected = new Set<number>()
-    for (const edge of [...view.relations, ...shownLinks]) {
-      connected.add(edge.source)
-      connected.add(edge.target)
-    }
-    return connected.size
-      ? view.nodes.filter((node) => connected.has(node.id))
-      : view.nodes
-  }, [view.nodes, view.relations, shownLinks])
+  const shownNodes = view.nodes
+  const shownLinks = useMemo(() => {
+    // Only a graph with no stated relationships at all falls back to these; a
+    // page that happens to have none must not show them with the toggle off.
+    const everyStrong = showLinks || view.stats.relations === 0
+    return view.links.filter(
+      (link) =>
+        link.strong &&
+        (everyStrong || link.source === focusId || link.target === focusId)
+    )
+  }, [showLinks, view.links, view.stats.relations, focusId])
 
   const visibleLinks = useMemo(() => {
     if (selectedId == null) return shownLinks
-    const shownIds = new Set(shownNodes.map((node) => node.id))
     const touching = view.links.filter(
-      (link) =>
-        (link.source === selectedId || link.target === selectedId) &&
-        shownIds.has(link.source) &&
-        shownIds.has(link.target)
+      (link) => link.source === selectedId || link.target === selectedId
     )
     return [...new Set([...shownLinks, ...touching])]
-  }, [selectedId, shownLinks, shownNodes, view.links])
+  }, [selectedId, shownLinks, view.links])
 
   const positions = useMemo(() => {
     const maxMentions = Math.max(...shownNodes.map((n) => n.mentions), 1)
     return forceLayout(
       shownNodes.map((node) => ({
         id: node.id,
-        radius: 46 + (node.mentions / maxMentions) * 34 + node.label.length * 2,
+        radius:
+          46 +
+          (node.mentions / maxMentions) * 34 +
+          node.label.length * 2 +
+          (node.elsewhere ? OFF_PAGE_MARK_WIDTH : 0),
       })),
       [
         ...view.relations.map((edge) => ({
@@ -275,8 +215,9 @@ const Canvas = ({
             entity,
             emphasis,
             prominent:
+              entity.id === selectedId ||
               entity.relations * 3 + entity.files * 2 + entity.mentions / 8 >=
-              prominentCut,
+                prominentCut,
           },
           draggable: true,
         }
@@ -342,10 +283,33 @@ const Canvas = ({
     return [...links, ...typed]
   }, [view.relations, visibleLinks, selectedId, focusing, pathPairs])
 
-  const measured = useNodesInitialized()
+  // Where the located name sits, as one string so a refresh that moves
+  // nothing does not move the camera again.
+  const located = useMemo(() => {
+    const point = locate && positions.get(locate.id)
+    return point ? `${locate.nonce}:${locate.id}:${point.x}:${point.y}` : ''
+  }, [locate, positions])
   useEffect(() => {
-    if (measured) void fitView({ padding: 0.1, duration: 250 })
-  }, [fitView, measured, shownNodes.length])
+    if (!located) {
+      void fitView({ padding: 0.1, duration: 250 })
+      return
+    }
+    const [, , x, y] = located.split(':').map(Number)
+    void setCenter(x, y, { zoom: LOCATE_ZOOM, duration: 500 })
+  }, [located, shownNodes.length, fitView, setCenter])
+  // React Flow fits the view again whenever names are added, so that fit has
+  // to aim at the located name too or it would undo the move above.
+  const fitViewOptions = useMemo(
+    () =>
+      located
+        ? {
+            nodes: [{ id: located.split(':')[1] }],
+            maxZoom: LOCATE_ZOOM,
+            duration: 500,
+          }
+        : { padding: 0.1, duration: 250 },
+    [located]
+  )
 
   return (
     <ReactFlow
@@ -356,6 +320,7 @@ const Canvas = ({
       nodeOrigin={NODE_ORIGIN}
       colorMode={mode}
       fitView
+      fitViewOptions={fitViewOptions}
       minZoom={0.15}
       maxZoom={2}
       nodesConnectable={false}

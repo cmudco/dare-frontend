@@ -48,6 +48,8 @@ export interface GraphNode {
   files: number
   aliases: number
   relations: number
+  /** Names it has a stated relationship with that are not in the picture. */
+  elsewhere: number
 }
 
 export interface GraphRelationEdge {
@@ -101,7 +103,8 @@ export interface GraphStats {
   documents: number
   passages: number
   entities: number
-  shownEntities: number
+  /** Names on this page of the picture, before any picked name is added. */
+  pageEntities: number
   spellings: number
   mergedEntities: number
   crossDocumentEntities: number
@@ -109,9 +112,26 @@ export interface GraphStats {
   entityBands: EntityBand[]
 }
 
+export interface GraphEntity {
+  id: number
+  label: string
+  kind: string
+  /** Chunks the name appears in. */
+  passages: number
+}
+
+/** One slice of every name in the graph, most connected first. */
+export interface GraphNamesPage {
+  total: number
+  counts: Record<'person' | 'location' | 'organization' | 'other', number>
+  /** Names that fit the kind and search asked for. */
+  matches: number
+  results: GraphEntity[]
+}
+
 export interface KnowledgeGraphView {
+  /** The names the picture draws. */
   nodes: GraphNode[]
-  entities: { id: number; label: string }[]
   relations: GraphRelationEdge[]
   links: GraphLinkEdge[]
   labels: RelationLabel[]

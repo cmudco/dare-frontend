@@ -1,19 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, Search, X } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 
-import { getGraphAPI, getGraphViewAPI } from '@/api/knowledgeGraph'
+import {
+  getGraphAPI,
+  getGraphViewAPI,
+  PICTURE_SIZES,
+} from '@/api/knowledgeGraph'
 import AskPanel from '@/components/KnowledgeGraph/AskPanel'
-import EntityBands from '@/components/KnowledgeGraph/EntityBands'
+import EntityList from '@/components/KnowledgeGraph/EntityList'
 import EntityPanel from '@/components/KnowledgeGraph/EntityPanel'
 import EvalPanel from '@/components/KnowledgeGraph/EvalPanel'
 import GraphCanvas from '@/components/KnowledgeGraph/GraphCanvas'
 import GraphFilesDialog from '@/components/KnowledgeGraph/GraphFilesDialog'
+import GraphLegend from '@/components/KnowledgeGraph/GraphLegend'
+import GraphPager from '@/components/KnowledgeGraph/GraphPager'
+import GraphSearchBox from '@/components/KnowledgeGraph/GraphSearchBox'
+import GraphStats from '@/components/KnowledgeGraph/GraphStats'
 import RelationshipsPanel from '@/components/KnowledgeGraph/RelationshipsPanel'
+import { tierRanges } from '@/components/KnowledgeGraph/tiers'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type {
   KnowledgeGraphSummary,
@@ -24,15 +31,6 @@ const BUSY = ['preparing', 'discovering', 'building']
 const POLL_MS = 2500
 const FEW_RELATIONS = 8
 
-const Stat = ({ label, value }: { label: string; value: number }) => (
-  <div className='min-w-0'>
-    <p className='text-lg leading-tight font-semibold tabular-nums'>
-      {value.toLocaleString()}
-    </p>
-    <p className='truncate text-xs text-muted-foreground'>{label}</p>
-  </div>
-)
-
 const KnowledgeGraphDetail = () => {
   const { graphId } = useParams()
   const id = Number(graphId)
@@ -40,10 +38,18 @@ const KnowledgeGraphDetail = () => {
   const [view, setView] = useState<KnowledgeGraphView | null>(null)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [focusId, setFocusId] = useState<number | null>(null)
+  const [locate, setLocate] = useState<{ id: number; nonce: number } | null>(
+    null
+  )
+  const [size, setSize] = useState(PICTURE_SIZES[0])
+  const [offset, setOffset] = useState(0)
   const [pathIds, setPathIds] = useState<number[]>([])
   const [showLinks, setShowLinks] = useState(false)
-  const [search, setSearch] = useState('')
   const [tab, setTab] = useState('graph')
+  const [side, setSide] = useState('ask')
+  // The names list loads the first time it is opened, and reloads on a merge.
+  const [namesOpened, setNamesOpened] = useState(false)
+  const [revision, setRevision] = useState(0)
   const [failed, setFailed] = useState(false)
   const [editing, setEditing] = useState(false)
   const latestRequest = useRef(0)
@@ -55,7 +61,7 @@ const KnowledgeGraphDetail = () => {
     try {
       ;[summary, payload] = await Promise.all([
         getGraphAPI(id),
-        getGraphViewAPI(id, focusId),
+        getGraphViewAPI(id, { focus: focusId, size, offset }),
       ])
     } catch {
       // A failed poll keeps the last good view; only a first load has nothing to show.
@@ -67,8 +73,8 @@ const KnowledgeGraphDetail = () => {
     setGraph(summary)
     setView(payload)
     // A graph with few stated relationships would look empty without these.
-    setShowLinks((shown) => shown || payload.relations.length < FEW_RELATIONS)
-  }, [id, focusId])
+    setShowLinks((shown) => shown || payload.stats.relations < FEW_RELATIONS)
+  }, [id, focusId, size, offset])
 
   useEffect(() => {
     void refresh()
@@ -81,13 +87,32 @@ const KnowledgeGraphDetail = () => {
     return () => window.clearInterval(timer)
   }, [busy, refresh])
 
-  const matches = useMemo(() => {
-    const needle = search.trim().toLowerCase()
-    if (!needle || !view) return []
-    return view.entities
-      .filter((entity) => entity.label.toLowerCase().includes(needle))
-      .slice(0, 6)
-  }, [search, view])
+  const drawnIds = useMemo(
+    () => new Set(view?.nodes.map((node) => node.id)),
+    [view]
+  )
+
+  /** Selects a name, moves the camera to it, and draws it if it was not. */
+  const pick = (entityId: number) => {
+    setSelectedId(entityId)
+    setLocate((last) => ({ id: entityId, nonce: (last?.nonce ?? 0) + 1 }))
+    if (!drawnIds.has(entityId)) setFocusId(entityId)
+  }
+  const turnTo = (nextOffset: number, nextSize = size) => {
+    setOffset(nextOffset)
+    setSize(nextSize)
+    setFocusId(null)
+    setSelectedId(null)
+    setLocate(null)
+  }
+  const openNames = () => {
+    setNamesOpened(true)
+    setSide('names')
+  }
+  const reload = async () => {
+    await refresh()
+    setRevision((current) => current + 1)
+  }
 
   if ((!graph || !view) && failed) {
     return (
@@ -107,6 +132,8 @@ const KnowledgeGraphDetail = () => {
       </div>
     )
   }
+
+  const focusNode = view.nodes.find((node) => node.id === focusId)
 
   return (
     <div className='flex h-full min-h-0 flex-col'>
@@ -150,20 +177,7 @@ const KnowledgeGraphDetail = () => {
               </button>
             )}
           </div>
-          <div className='flex gap-7'>
-            <Stat label='Documents' value={view.stats.documents} />
-            <Stat label='Chunks' value={view.stats.passages} />
-            <EntityBands
-              total={view.stats.entities}
-              bands={view.stats.entityBands}
-            />
-            <Stat label='Merged names' value={view.stats.mergedEntities} />
-            <Stat
-              label='Across documents'
-              value={view.stats.crossDocumentEntities}
-            />
-            <Stat label='Relationships' value={view.stats.relations} />
-          </div>
+          <GraphStats stats={view.stats} />
         </div>
       </header>
 
@@ -182,53 +196,42 @@ const KnowledgeGraphDetail = () => {
 
         <TabsContent value='graph' className='mt-0 flex min-h-0 flex-1'>
           <div className='relative min-w-0 flex-1'>
-            <div className='absolute top-3 left-3 z-10 w-64'>
-              <div className='relative'>
-                <Search className='absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground' />
-                <Input
-                  className='bg-card pl-8 shadow-sm'
-                  placeholder='Find an entity'
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-                {search && (
-                  <button
-                    type='button'
-                    aria-label='Clear search'
-                    onClick={() => setSearch('')}
-                    className='absolute top-2.5 right-2.5 text-muted-foreground hover:text-foreground'
-                  >
-                    <X className='h-4 w-4' />
-                  </button>
-                )}
-              </div>
-              {matches.length > 0 && (
-                <div className='mt-1 overflow-hidden rounded-md border border-border bg-card shadow-sm'>
-                  {matches.map((node) => (
-                    <button
-                      key={node.id}
-                      type='button'
-                      className='block w-full truncate px-3 py-1.5 text-left text-sm hover:bg-accent'
-                      onClick={() => {
-                        setSelectedId(node.id)
-                        setFocusId(node.id)
-                        setSearch('')
-                      }}
-                    >
-                      {node.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <label className='absolute top-3 right-3 z-10 flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground shadow-sm'>
-              <Switch checked={showLinks} onCheckedChange={setShowLinks} />
-              Mentioned together
-            </label>
+            <GraphSearchBox graphId={id} onPick={pick} />
+            <GraphLegend showLinks={showLinks} onShowLinks={setShowLinks} />
+            {view.nodes.length > 0 && (
+              <GraphPager
+                offset={offset}
+                size={size}
+                pageCount={view.stats.pageEntities}
+                total={view.stats.entities}
+                tiers={tierRanges(view.stats.entityBands)}
+                added={
+                  focusNode && view.nodes.length > view.stats.pageEntities
+                    ? {
+                        label: focusNode.label,
+                        count: view.nodes.length - view.stats.pageEntities,
+                      }
+                    : null
+                }
+                onPage={turnTo}
+                onSize={(next) => turnTo(offset, next)}
+                onRemoveAdded={() => {
+                  if (selectedId === focusId) setSelectedId(null)
+                  setFocusId(null)
+                  setLocate(null)
+                }}
+                onBrowse={() => {
+                  setSelectedId(null)
+                  openNames()
+                }}
+              />
+            )}
             {view.nodes.length > 0 ? (
               <GraphCanvas
                 view={view}
                 selectedId={selectedId}
+                focusId={focusId}
+                locate={locate}
                 onSelect={setSelectedId}
                 showLinks={showLinks}
                 highlightedIds={pathIds}
@@ -242,18 +245,55 @@ const KnowledgeGraphDetail = () => {
             )}
           </div>
           <aside className='flex w-[26rem] shrink-0 flex-col border-l border-border'>
-            {selectedId != null ? (
+            {selectedId != null && (
               <EntityPanel
                 graphId={id}
                 entityId={selectedId}
-                entities={view.entities}
                 onClose={() => setSelectedId(null)}
-                onSelect={setSelectedId}
-                onChanged={() => void refresh()}
+                onSelect={pick}
+                onChanged={() => void reload()}
               />
-            ) : (
-              <AskPanel graphId={id} onPath={setPathIds} />
             )}
+            {/* Stays mounted behind an open entity, so the list keeps its place. */}
+            <Tabs
+              value={side}
+              onValueChange={(next) =>
+                next === 'names' ? openNames() : setSide(next)
+              }
+              className={
+                selectedId != null ? 'hidden' : 'flex min-h-0 flex-1 flex-col'
+              }
+            >
+              <div className='border-b border-border px-4 py-2'>
+                <TabsList className='grid w-full grid-cols-2'>
+                  <TabsTrigger value='ask'>Trace a question</TabsTrigger>
+                  <TabsTrigger value='names'>
+                    All names ({view.stats.entities.toLocaleString()})
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent
+                value='ask'
+                forceMount
+                className='mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden'
+              >
+                <AskPanel graphId={id} onPath={setPathIds} />
+              </TabsContent>
+              <TabsContent
+                value='names'
+                forceMount
+                className='mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden'
+              >
+                {namesOpened && (
+                  <EntityList
+                    graphId={id}
+                    revision={revision}
+                    drawnIds={drawnIds}
+                    onSelect={pick}
+                  />
+                )}
+              </TabsContent>
+            </Tabs>
           </aside>
         </TabsContent>
 

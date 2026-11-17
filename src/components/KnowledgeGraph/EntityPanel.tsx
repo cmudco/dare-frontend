@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowRight, FileText, Loader2, X } from 'lucide-react'
 
 import {
@@ -8,6 +8,7 @@ import {
 } from '@/api/knowledgeGraph'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useGraphNameSearch } from '@/hooks/useGraphNameSearch'
 import type { EntityAlias, EntityDetail } from '@/redux/types/knowledgeGraph'
 import { toast } from '@/utils/toast'
 
@@ -28,14 +29,12 @@ const fileLabel = (name: string) =>
 const EntityPanel = ({
   graphId,
   entityId,
-  entities,
   onClose,
   onSelect,
   onChanged,
 }: {
   graphId: number
   entityId: number
-  entities: { id: number; label: string }[]
   onClose: () => void
   onSelect: (id: number) => void
   onChanged: () => void
@@ -77,21 +76,11 @@ const EntityPanel = ({
     }
   }
 
-  const mergeMatches = useMemo(() => {
-    const needle = mergeSearch.trim().toLowerCase()
-    if (!needle) return []
-    return entities
-      .filter(
-        (other) =>
-          other.id !== entityId && other.label.toLowerCase().includes(needle)
-      )
-      .sort(
-        (a, b) =>
-          Number(b.label.toLowerCase().startsWith(needle)) -
-          Number(a.label.toLowerCase().startsWith(needle))
-      )
-      .slice(0, MERGE_MATCHES)
-  }, [mergeSearch, entities, entityId])
+  // One extra, in case this entity is among the matches.
+  const search = useGraphNameSearch(graphId, mergeSearch, MERGE_MATCHES + 1)
+  const mergeMatches = search.names
+    .filter((other) => other.id !== entityId)
+    .slice(0, MERGE_MATCHES)
 
   const merge = async () => {
     if (!mergeTarget) return
@@ -238,11 +227,13 @@ const EntityPanel = ({
                   ))}
                 </div>
               )}
-              {mergeSearch.trim() && mergeMatches.length === 0 && (
-                <p className='mt-1 text-xs text-muted-foreground'>
-                  No other name matches.
-                </p>
-              )}
+              {mergeSearch.trim() &&
+                search.settled &&
+                mergeMatches.length === 0 && (
+                  <p className='mt-1 text-xs text-muted-foreground'>
+                    No other name matches.
+                  </p>
+                )}
             </>
           )}
         </section>
