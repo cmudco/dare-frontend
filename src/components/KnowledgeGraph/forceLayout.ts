@@ -19,6 +19,8 @@ const CENTER_PULL = 0.024
 const COOLING = 0.992
 const ROUTED_EDGE_STRENGTH = 1.5
 const CLEARANCE_ROUNDS = 20
+// Clearing lines costs seconds on a crowded picture and cannot succeed there.
+const CLEARANCE_MAX_NODES = 180
 const NODE_WIDTH_SHARE = 0.8
 const NODE_HALF_HEIGHT = 18
 const LINE_MARGIN = 8
@@ -87,11 +89,13 @@ export const forceLayout = (
     }
     heat *= COOLING
   }
-  clearEdges(
-    points,
-    edges.filter((edge) => edge.strength >= ROUTED_EDGE_STRENGTH),
-    byId
-  )
+  if (points.length <= CLEARANCE_MAX_NODES) {
+    clearEdges(
+      points,
+      edges.filter((edge) => edge.strength >= ROUTED_EDGE_STRENGTH),
+      byId
+    )
+  }
   return new Map(points.map(({ id, x, y }) => [id, { x, y }]))
 }
 

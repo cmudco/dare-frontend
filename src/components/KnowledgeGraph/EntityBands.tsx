@@ -5,13 +5,7 @@ import {
 } from '@/components/ui/popover'
 import type { EntityBand } from '@/redux/types/knowledgeGraph'
 
-const BAND_TEXT: Record<EntityBand['band'], { title: string; note: string }> = {
-  '6+': { title: '6 or more passages', note: 'The main cast' },
-  '3-5': { title: '3 to 5 passages', note: 'Recurring names' },
-  '2': { title: '2 passages', note: 'Named twice' },
-  '1': { title: '1 passage', note: 'Named once, in passing' },
-}
-const ORDER: EntityBand['band'][] = ['6+', '3-5', '2', '1']
+import { TIERS } from './tiers'
 
 interface EntityBandsProps {
   total: number
@@ -21,7 +15,10 @@ interface EntityBandsProps {
 
 const EntityBands = ({ total, bands = [] }: EntityBandsProps) => {
   const byBand = new Map(bands.map((band) => [band.band, band]))
-  const rows = ORDER.flatMap((key) => byBand.get(key) ?? [])
+  const rows = TIERS.flatMap((tier) => {
+    const band = byBand.get(tier.band)
+    return band ? [{ ...band, ...tier }] : []
+  })
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -39,7 +36,7 @@ const EntityBands = ({ total, bands = [] }: EntityBandsProps) => {
           <p className='text-sm font-semibold'>How often each name appears</p>
           <p className='text-xs text-muted-foreground'>
             Most names are mentioned once. The ones that keep coming back are
-            the ones the graph is about.
+            the ones the graph is about, so tier 1 comes first everywhere.
           </p>
         </div>
         <ul className='space-y-3'>
@@ -48,11 +45,11 @@ const EntityBands = ({ total, bands = [] }: EntityBandsProps) => {
               <div className='flex items-baseline justify-between gap-3'>
                 <p className='text-sm'>
                   <span className='font-medium'>
-                    {BAND_TEXT[row.band].title}
+                    Tier {row.tier} · {row.title}
                   </span>
                   <span className='text-muted-foreground'>
                     {' · '}
-                    {BAND_TEXT[row.band].note}
+                    {row.passages}
                   </span>
                 </p>
                 <p className='text-sm font-semibold tabular-nums'>

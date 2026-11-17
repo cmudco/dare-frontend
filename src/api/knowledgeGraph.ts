@@ -3,6 +3,7 @@ import type {
   EntityDetail,
   EvalReport,
   GraphEstimate,
+  GraphNamesPage,
   KnowledgeGraphSummary,
   KnowledgeGraphView,
   RelationLabel,
@@ -49,10 +50,27 @@ export const updateGraphAPI = (
 export const deleteGraphAPI = (id: number) =>
   baseRequest<void>({ url: `${BASE}/${id}/`, method: METHOD.DELETE })
 
-export const getGraphViewAPI = (id: number, focus?: number | null) =>
+/** Sizes the backend accepts for one page of the picture. */
+export const PICTURE_SIZES = [60, 150, 300]
+
+export const getGraphViewAPI = (
+  id: number,
+  page: { focus: number | null; size: number; offset: number }
+) =>
   baseRequest<KnowledgeGraphView>({
-    url: `${BASE}/${id}/view/${focus ? `?focus=${focus}` : ''}`,
+    url: `${BASE}/${id}/view/`,
     method: METHOD.GET,
+    params: { ...page, focus: page.focus ?? undefined },
+  })
+
+export const getGraphNamesAPI = (
+  id: number,
+  slice: { group?: string; q?: string; offset?: number; limit: number }
+) =>
+  baseRequest<GraphNamesPage>({
+    url: `${BASE}/${id}/names/`,
+    method: METHOD.GET,
+    params: slice,
   })
 
 export const getGraphEstimateAPI = (id: number) =>
