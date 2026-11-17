@@ -21,4 +21,4 @@ export enum AvatarType {
 }
 
 export const EMAIL_DELIVERY_UNAVAILABLE_MESSAGE =
-  "This server isn't set up to send email, so no verification link was sent. Contact your administrator to verify your account."
+  "This server isn't set up to send verification emails. Contact your deployment administrator for help."
