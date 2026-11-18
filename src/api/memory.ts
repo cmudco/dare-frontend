@@ -15,6 +15,10 @@ import type {
   MemoryExportBundle,
   MemoryImportResult,
   ForeignImportResult,
+  OmpArchive,
+  OmpImportRun,
+  OmpRecord,
+  OmpReleaseResult,
   MemoryBackfillResponse,
   MemoryBackfillRange,
 } from '@/redux/types/memory'
@@ -170,6 +174,43 @@ export const importForeignMemoryAPI = async (
     url: 'api/memory/v2/import/foreign/',
     method: METHOD.POST,
     data: { text },
+  })
+}
+
+/** Export current memories as an Open Memory Protocol archive */
+export const exportOmpMemoryAPI = async (
+  includeSensitive: boolean
+): Promise<OmpArchive> => {
+  return await baseRequest<OmpArchive>({
+    url: `api/memory/v2/omp/export/${includeSensitive ? '?include_sensitive=true' : ''}`,
+    method: METHOD.GET,
+  })
+}
+
+/** One memory as its Open Memory Protocol record */
+export const getOmpRecordAPI = async (recordId: string): Promise<OmpRecord> => {
+  return await baseRequest<OmpRecord>({
+    url: `api/memory/v2/omp/records/${recordId}/`,
+    method: METHOD.GET,
+  })
+}
+
+/** Import an Open Memory Protocol archive; what is accepted waits as held */
+export const importOmpMemoryAPI = async (
+  archive: object
+): Promise<OmpImportRun> => {
+  return await baseRequest<OmpImportRun>({
+    url: 'api/memory/v2/omp/import/',
+    method: METHOD.POST,
+    data: archive,
+  })
+}
+
+/** Release every imported memory that is still held */
+export const releaseOmpImportsAPI = async (): Promise<OmpReleaseResult> => {
+  return await baseRequest<OmpReleaseResult>({
+    url: 'api/memory/v2/omp/imports/release/',
+    method: METHOD.POST,
   })
 }
 

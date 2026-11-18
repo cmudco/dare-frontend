@@ -8,10 +8,18 @@
  * a flat list.
  */
 import { ChangeEvent, useMemo, useRef, useState } from 'react'
-import { Check, Copy, Download, Loader2, Upload } from 'lucide-react'
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  Download,
+  Loader2,
+  Upload,
+} from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   exportMemory,
+  exportOmpMemory,
   getMemoryItems,
   getRetiredMemoryItems,
   importForeignMemory,
@@ -28,7 +36,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Textarea } from '@/components/ui/textarea'
+import OmpImportPanel from './OmpImportPanel'
 
 const SCHEMA = 'dare-memory-v2'
 
@@ -39,6 +57,20 @@ const SCHEMA = 'dare-memory-v2'
 const FOREIGN_EXPORT_PROMPT = `Export everything durable you know about me, from your saved memories AND what you can infer from our conversation history. Include: who I am and what I work on; my preferences and how I like answers written; standing instructions and corrections I've given you (keep my exact wording for these); people, projects and tools I've mentioned; constraints like allergies, schedule rules or hard limits.
 
 Write it as plain bullet points, each one a complete standalone sentence in my voice ("I live in…", "Always answer me in…", "My advisor Simon…"). No headings, no commentary, no session-specific chatter — only things that will still be true next month.`
+
+const downloadJson = (payload: unknown, filename: string) => {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: 'application/json',
+  })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
 
 interface ParsedPreview {
   records: number
@@ -55,7 +87,8 @@ const MemoryPortability = ({ memoryCount }: { memoryCount: number }) => {
   const importing = useAppSelector((state) => state.memory.importing)
 
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [mode, setMode] = useState<'bundle' | 'foreign'>('bundle')
+  const [mode, setMode] = useState<'bundle' | 'omp' | 'foreign'>('bundle')
+  const [includeSensitive, setIncludeSensitive] = useState(false)
   const [raw, setRaw] = useState('')
   const [foreignText, setForeignText] = useState('')
   const [copied, setCopied] = useState(false)
@@ -91,18 +124,19 @@ const MemoryPortability = ({ memoryCount }: { memoryCount: number }) => {
     const result = await dispatch(exportMemory())
     if (exportMemory.fulfilled.match(result)) {
       const stamp = new Date().toISOString().slice(0, 10)
-      const blob = new Blob([JSON.stringify(result.payload, null, 2)], {
-        type: 'application/json',
-      })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `dare-memory-${stamp}.json`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
+      downloadJson(result.payload, `dare-memory-${stamp}.json`)
       toast.success('Memory bundle downloaded')
+    }
+  }
+
+  const handleOmpExport = async () => {
+    const result = await dispatch(exportOmpMemory(includeSensitive))
+    if (exportOmpMemory.fulfilled.match(result)) {
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadJson(result.payload, `dare-memory-${stamp}.omp.json`)
+      toast.success(
+        `Exported ${result.payload.memories.length} memories as an Open Memory Protocol file`
+      )
     }
   }
 
@@ -162,14 +196,38 @@ const MemoryPortability = ({ memoryCount }: { memoryCount: number }) => {
   return (
     <>
       {memoryCount > 0 && (
-        <Button variant='outline' onClick={handleExport} disabled={exporting}>
-          {exporting ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            <Download className='h-4 w-4' />
-          )}
-          Export
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='outline' disabled={exporting}>
+              {exporting ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <Download className='h-4 w-4' />
+              )}
+              Export
+              <ChevronDown className='h-3.5 w-3.5' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end' className='w-72'>
+            <DropdownMenuItem onClick={handleExport}>
+              DARE backup
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className='text-xs font-normal text-muted-foreground'>
+              Open Memory Protocol (experimental)
+            </DropdownMenuLabel>
+            <DropdownMenuItem onClick={handleOmpExport}>
+              File for other systems
+            </DropdownMenuItem>
+            <DropdownMenuCheckboxItem
+              checked={includeSensitive}
+              onCheckedChange={setIncludeSensitive}
+              onSelect={(event) => event.preventDefault()}
+            >
+              Include held and sensitive memories
+            </DropdownMenuCheckboxItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -190,6 +248,13 @@ const MemoryPortability = ({ memoryCount }: { memoryCount: number }) => {
                   store — export first if anything here matters, then Forget
                   everything.
                 </>
+              ) : mode === 'omp' ? (
+                <>
+                  Bring memories in from another system that writes Open Memory
+                  Protocol files. This is experimental. Nothing you already have
+                  is replaced, and what comes in waits as held until you release
+                  it.
+                </>
               ) : (
                 <>
                   Bring your memories over from ChatGPT, Claude, or any other
@@ -205,6 +270,7 @@ const MemoryPortability = ({ memoryCount }: { memoryCount: number }) => {
             {(
               [
                 ['bundle', 'DARE bundle'],
+                ['omp', 'OMP file'],
                 ['foreign', 'From another AI'],
               ] as const
             ).map(([value, label]) => (
@@ -222,6 +288,10 @@ const MemoryPortability = ({ memoryCount }: { memoryCount: number }) => {
               </button>
             ))}
           </div>
+
+          {mode === 'omp' && (
+            <OmpImportPanel onDone={() => setDialogOpen(false)} />
+          )}
 
           {mode === 'foreign' && (
             <div className='space-y-3'>

@@ -8,7 +8,15 @@
  */
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { CalendarClock, Check, Copy, Pencil, Trash2, Zap } from 'lucide-react'
+import {
+  Braces,
+  CalendarClock,
+  Check,
+  Copy,
+  Pencil,
+  Trash2,
+  Zap,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
   Tooltip,
@@ -33,6 +41,8 @@ interface Props {
   showScore?: boolean
   /** Filter the feed by a category tag */
   onCategoryClick?: (category: string) => void
+  /** Show this memory as its Open Memory Protocol record */
+  onViewFormat?: (id: string) => void
 }
 
 /**
@@ -57,6 +67,7 @@ const MemoryCard = ({
   saving = false,
   showScore = false,
   onCategoryClick,
+  onViewFormat,
 }: Props) => {
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -212,6 +223,16 @@ const MemoryCard = ({
               · {formatRelativeDate(item.updatedAt)}
             </span>
           </span>
+        )}
+        {onViewFormat && !item.id.startsWith('doc:') && (
+          <button
+            type='button'
+            onClick={() => onViewFormat(item.id)}
+            className='ml-auto inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 font-medium transition-colors hover:bg-muted hover:text-foreground'
+          >
+            <Braces className='h-3.5 w-3.5' />
+            OMP format
+          </button>
         )}
       </div>
     </motion.div>
