@@ -64,6 +64,7 @@ const AppRoutes = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.user)
   const enableMcp = useFeatureFlag('enableMcp')
   const enableMemory = useFeatureFlag('enableMemory')
+  const enableRag = useFeatureFlag('enableRag', true)
   const canAccessResearch = useCanAccessResearch()
 
   return (
@@ -180,12 +181,19 @@ const AppRoutes = () => {
             <Route path='/projects' element={<ProjectsPage />} />
             <Route path='/projects/:projectId' element={<ProjectDetail />} />
             <Route path='/dashboard' element={<Dashboard />} />
-            <Route path='/files' element={<Files />} />
-            <Route path='/knowledge-graphs' element={<KnowledgeGraphsPage />} />
-            <Route
-              path='/knowledge-graphs/:graphId'
-              element={<KnowledgeGraphDetail />}
-            />
+            {enableRag && (
+              <>
+                <Route path='/files' element={<Files />} />
+                <Route
+                  path='/knowledge-graphs'
+                  element={<KnowledgeGraphsPage />}
+                />
+                <Route
+                  path='/knowledge-graphs/:graphId'
+                  element={<KnowledgeGraphDetail />}
+                />
+              </>
+            )}
             <Route
               path={TEMPLATES_PATH}
               element={<Navigate to={PROMPT_TEMPLATES_PATH} replace />}

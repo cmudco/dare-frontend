@@ -82,6 +82,7 @@ const Sidebar = () => {
     (state) => state.billing.ownedGroups.length > 0
   )
   const canAccessResearch = useCanAccessResearch()
+  const enableRag = useFeatureFlag('enableRag', true)
   const showResearchTools =
     useFeatureFlag('enableResearchTools') && isResearchToolsEnabled()
 
@@ -126,8 +127,16 @@ const Sidebar = () => {
     { name: 'Dashboard', icon: RectangleGroupIcon, path: '/dashboard' },
     { name: 'Conversations', icon: ChatBubbleLeftIcon, path: '/conversation' },
     { name: 'Projects', icon: RectangleStackIcon, path: '/projects' },
-    { name: 'Sources', icon: FolderOpenIcon, path: '/files' },
-    { name: 'Knowledge graphs', icon: ShareIcon, path: '/knowledge-graphs' },
+    ...(enableRag
+      ? [
+          { name: 'Sources', icon: FolderOpenIcon, path: '/files' },
+          {
+            name: 'Knowledge graphs',
+            icon: ShareIcon,
+            path: '/knowledge-graphs',
+          },
+        ]
+      : []),
     { name: 'Templates', icon: PromptsIcon, path: TEMPLATES_PATH },
     { name: 'Workflows', icon: WorkflowsIcon, path: '/workflows' },
     ...(canAccessResearch

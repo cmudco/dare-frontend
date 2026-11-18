@@ -41,6 +41,7 @@ import { clearSelectedWorkflow } from '@/redux/workflowSlice'
 import { toast } from '@/utils/toast'
 import type { GetActivePartialRunResponse } from '@/redux/types/workflow'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { useWorkflowSocket } from '@/hooks/useWorkflowSocket'
 import { useAutoExpandOutputNodes } from '@/hooks/useAutoExpandOutputNodes'
 import {
@@ -291,6 +292,7 @@ const WorkflowEditPage = () => {
   // Track if initial load is done to avoid saving on mount
   const [isLoaded, setIsLoaded] = useState(false)
   const [batchDialogOpen, setBatchDialogOpen] = useState(false)
+  const enableRag = useFeatureFlag('enableRag', true)
 
   useEffect(() => {
     if (loadedWorkflow) {
@@ -605,15 +607,17 @@ const WorkflowEditPage = () => {
 
           {id && !manualModeEnabled && (
             <div className='flex items-center gap-2'>
-              <Button
-                size='sm'
-                variant='outline'
-                onClick={() => setBatchDialogOpen(true)}
-                disabled={isRunning}
-                className='normal-case'
-              >
-                Run Batch
-              </Button>
+              {enableRag && (
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => setBatchDialogOpen(true)}
+                  disabled={isRunning}
+                  className='normal-case'
+                >
+                  Run Batch
+                </Button>
+              )}
               <Button
                 size='sm'
                 variant='outline'

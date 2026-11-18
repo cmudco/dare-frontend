@@ -15,6 +15,7 @@ import {
   uploadNewFile,
 } from '../../redux/asyncThunks/file'
 import VisionModelSelect from './VisionModelSelect'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import DocumentProcessingSelect from './DocumentProcessingSelect'
 import { toast } from '@/utils/toast'
 import { addTag, getTags } from '../../redux/asyncThunks/tag'
@@ -59,6 +60,7 @@ const FileUploadModal: React.FC = () => {
   const [newTag, setNewTag] = useState<string>('')
   const [isChunkPopoverOpen, setIsChunkPopoverOpen] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
+  const enableOcr = useFeatureFlag('enableOcr', true)
 
   const {
     selectedTags,
@@ -401,7 +403,7 @@ const FileUploadModal: React.FC = () => {
               </ul>
             </div>
           )}
-          {processingMode === DocumentProcessingMode.Advanced && (
+          {enableOcr && processingMode === DocumentProcessingMode.Advanced && (
             <div className='space-y-1.5'>
               <div className='flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1'>
                 <Label htmlFor='upload-vision-model'>Vision model</Label>

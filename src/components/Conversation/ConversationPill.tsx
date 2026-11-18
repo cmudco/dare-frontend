@@ -78,6 +78,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
     return last?.streaming ? last.id : undefined
   })
   const enableMcp = useFeatureFlag('enableMcp')
+  const enableRag = useFeatureFlag('enableRag', true)
   const enableArtifacts = useFeatureFlag('enableArtifacts')
   const activeConversation = useSelector(
     (state: RootState) => state.conversation.activeConversation
@@ -462,7 +463,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
           )}
         >
           <div className='flex min-w-0 flex-1 flex-wrap items-center gap-1.5 overflow-x-auto py-1 sm:flex-nowrap'>
-            <ConversationFileSelect />
+            {enableRag && <ConversationFileSelect />}
             <PromptSet />
             <div className='h-8 w-[2px] shrink-0 rounded-lg bg-border'></div>
             <ConversationReferenceSelect />

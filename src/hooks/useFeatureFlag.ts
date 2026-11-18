@@ -5,13 +5,15 @@ import type { FeatureFlagMap } from '@/api/featureFlags'
 
 /**
  * Returns the resolved value of a single feature flag for the current user.
- * Defaults to ``false`` while flags are loading or if the key is unknown.
+ * While flags are loading or if the key is unknown it returns ``fallback``:
+ * pass ``true`` for a feature that is on by default, so it does not blink
+ * out of view before the flags arrive.
  *
  * Keys are camelCase (post-renderer transform), e.g. ``enableByok``.
  */
-export function useFeatureFlag(key: string): boolean {
+export function useFeatureFlag(key: string, fallback = false): boolean {
   return useSelector<RootState, boolean>(
-    (state) => state.featureFlags.flags[key] === true
+    (state) => state.featureFlags.flags[key] ?? fallback
   )
 }
 
