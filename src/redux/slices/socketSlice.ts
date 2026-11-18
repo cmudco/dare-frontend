@@ -16,18 +16,19 @@ export interface SocketState {
   connected: boolean
   subscribedConversations: string[]
   error: string | null
-  billingError: BillingError | null
+  sendRefusal: SendRefusal | null
 }
 
-export enum BillingErrorCode {
+export enum SendRefusalCode {
   INSUFFICIENT_CREDITS = 'insufficient_credits',
   INSUFFICIENT_BALANCE = 'insufficient_balance',
   SPEND_LIMIT_REACHED = 'spend_limit_reached',
+  PROVIDER_NOT_CONFIGURED = 'provider_not_configured',
 }
 
-/** A chat send the backend refused for billing reasons. */
-export interface BillingError {
-  code: BillingErrorCode
+/** A chat send the backend refused, with a reason the user can act on. */
+export interface SendRefusal {
+  code: SendRefusalCode
   message: string
 }
 
@@ -38,10 +39,10 @@ interface SocketErrorEvent {
   errorMessage: string
 }
 
-const BILLING_ERROR_CODES = new Set<string>(Object.values(BillingErrorCode))
+const SEND_REFUSAL_CODES = new Set<string>(Object.values(SendRefusalCode))
 
-const isBillingErrorCode = (code: string): code is BillingErrorCode =>
-  BILLING_ERROR_CODES.has(code)
+const isSendRefusalCode = (code: string): code is SendRefusalCode =>
+  SEND_REFUSAL_CODES.has(code)
 
 export interface RawArtifact {
   id: number | string
@@ -91,7 +92,7 @@ const initialState: SocketState = {
   connected: false,
   subscribedConversations: [],
   error: null,
-  billingError: null,
+  sendRefusal: null,
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -105,8 +106,8 @@ export const socketSlice = createSlice({
     clearError: (state) => {
       state.error = null
     },
-    clearBillingError: (state) => {
-      state.billingError = null
+    clearSendRefusal: (state) => {
+      state.sendRefusal = null
     },
   },
   extraReducers: (builder) => {
@@ -146,15 +147,15 @@ export const socketSlice = createSlice({
           action.type === 'socket/error',
         (state, action) => {
           const { errorCode, errorMessage } = action.payload
-          if (isBillingErrorCode(errorCode)) {
-            state.billingError = { code: errorCode, message: errorMessage }
+          if (isSendRefusalCode(errorCode)) {
+            state.sendRefusal = { code: errorCode, message: errorMessage }
           }
         }
       )
   },
 })
 
-export const { clearError, clearBillingError } = socketSlice.actions
+export const { clearError, clearSendRefusal } = socketSlice.actions
 export default socketSlice.reducer
 
 // ════════════════════════════════════════════════════════════════════════════
