@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { ChunkSettings, User, UserState, UserStats } from '../types/user'
 import {
+  exchangeSsoCode,
   forgotPasswordUser,
   loginUser,
   registerUser,
@@ -73,6 +74,17 @@ export const userLogin = createAsyncThunk(
         localStorage.setItem('token', data.access)
       }
       return data
+    } catch (error) {
+      return thunkAPI.rejectWithValue((error as Error).message)
+    }
+  }
+)
+
+export const ssoLogin = createAsyncThunk(
+  'user/ssoLogin',
+  async (code: string, thunkAPI) => {
+    try {
+      return await exchangeSsoCode(code)
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }
