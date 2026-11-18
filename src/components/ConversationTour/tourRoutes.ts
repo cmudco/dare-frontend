@@ -14,7 +14,7 @@ export function getTourPageKeyFromPath(pathname: string): TourPageKey | null {
   if (pathname.startsWith('/dashboard')) return 'dashboard'
   if (pathname.startsWith('/files')) return 'files'
   if (pathname.startsWith('/workflows')) return 'workflows'
-  if (pathname.startsWith('/help')) return 'help'
+  if (pathname === '/help' || pathname === '/help/') return 'help'
   if (pathname.startsWith('/billing')) return 'billing'
   if (/^\/projects\/\d+/.test(pathname)) return 'project'
   if (pathname.startsWith('/projects')) return 'projects'
