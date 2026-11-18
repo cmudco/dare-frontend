@@ -29,6 +29,7 @@ import {
   ExternalLink,
   ArrowLeft,
   Unplug,
+  RefreshCw,
 } from 'lucide-react'
 import { McpAuthType, McpCatalogSlug } from '@/utils/constants/mcp'
 import {
@@ -64,6 +65,7 @@ const MCPServerDetail = () => {
   const [credentials, setCredentials] = useState<Record<string, string>>({})
   const [showSetupGuide, setShowSetupGuide] = useState(false)
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
+  const [reconnecting, setReconnecting] = useState(false)
 
   const server = servers.find((s) => s.slug === serverSlug)
   const connection = connections.find((c) => c.server.slug === serverSlug)
@@ -198,7 +200,16 @@ const MCPServerDetail = () => {
               <CheckCircle2 className='h-4 w-4' />
               Connected
             </span>
-            {!isSyftboxServer && (
+            {isSyftboxServer ? (
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setReconnecting((open) => !open)}
+              >
+                <RefreshCw className='mr-2 h-4 w-4' />
+                {reconnecting ? 'Cancel' : 'Reconnect'}
+              </Button>
+            ) : (
               <Button
                 variant='outline'
                 size='sm'
@@ -262,9 +273,11 @@ const MCPServerDetail = () => {
       </Dialog>
 
       {/* Connection Section */}
-      {!isConnected && (
+      {(!isConnected || reconnecting) && (
         <div className='rounded-lg border bg-card p-6'>
-          <h3 className='mb-4 text-lg font-medium'>Connect to {server.name}</h3>
+          <h3 className='mb-4 text-lg font-medium'>
+            {reconnecting ? 'Reconnect to' : 'Connect to'} {server.name}
+          </h3>
 
           {/* Help URL */}
           {server.credentialsHelpUrl && (
@@ -308,7 +321,10 @@ const MCPServerDetail = () => {
           )}
 
           {server.slug === McpCatalogSlug.SYFTBOX ? (
-            <SyftBoxOtpConnect serverName={server.name} />
+            <SyftBoxOtpConnect
+              serverName={server.name}
+              onConnected={() => setReconnecting(false)}
+            />
           ) : isOAuthServer ? (
             <div className='space-y-4'>
               <p className='text-sm text-muted-foreground'>
