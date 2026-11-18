@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog'
 import DocumentProcessingSelect from './DocumentProcessingSelect'
 import VisionModelSelect from './VisionModelSelect'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { Label } from '@/components/ui/label'
 
 interface Props {
@@ -26,6 +27,7 @@ interface Props {
 
 export default function FileReprocessingDialog({ file, onClose }: Props) {
   const dispatch = useAppDispatch()
+  const enableOcr = useFeatureFlag('enableOcr', true)
   const [mode, setMode] = useState(
     file.processingMode ?? DocumentProcessingMode.Advanced
   )
@@ -50,8 +52,9 @@ export default function FileReprocessingDialog({ file, onClose }: Props) {
       reprocessFile({
         fileId: file.id,
         action,
-        ...(action === DocumentReprocessingAction.RetryImages ||
-        mode === DocumentProcessingMode.Advanced
+        ...(enableOcr &&
+        (action === DocumentReprocessingAction.RetryImages ||
+          mode === DocumentProcessingMode.Advanced)
           ? { modelIdentifier: selectedIdentifier }
           : {}),
         ...(action === DocumentReprocessingAction.Reparse
@@ -82,52 +85,53 @@ export default function FileReprocessingDialog({ file, onClose }: Props) {
           onChange={setMode}
           disabled={busy}
         />
-        {(mode === DocumentProcessingMode.Advanced ||
-          !!file.failedImageCount) && (
-          <div className='space-y-2'>
-            <Label htmlFor='reprocess-vision-model'>
-              Vision model for this run
-            </Label>
-            <VisionModelSelect
-              id='reprocess-vision-model'
-              models={visionModels?.models ?? []}
-              value={selectedIdentifier}
-              onChange={setModelIdentifier}
-              disabled={busy || !visionModels || !!visionModelsError}
-            />
-            <p className='text-xs text-muted-foreground'>
-              Used for scanned pages and figure descriptions during Advanced
-              reprocessing, or for failed image descriptions when retrying.
-              Applies only to this run; your upload default stays unchanged.
-            </p>
-            {visionModelsError ? (
-              <div role='alert' className='text-sm text-destructive'>
-                {visionModelsError}
-                <Button
-                  variant='link'
-                  disabled={busy}
-                  onClick={() => dispatch(fetchVisionModels())}
-                >
-                  Reload models
-                </Button>
-              </div>
-            ) : !visionModels ? (
-              <p role='status' className='text-sm text-muted-foreground'>
-                Loading vision models…
+        {enableOcr &&
+          (mode === DocumentProcessingMode.Advanced ||
+            !!file.failedImageCount) && (
+            <div className='space-y-2'>
+              <Label htmlFor='reprocess-vision-model'>
+                Vision model for this run
+              </Label>
+              <VisionModelSelect
+                id='reprocess-vision-model'
+                models={visionModels?.models ?? []}
+                value={selectedIdentifier}
+                onChange={setModelIdentifier}
+                disabled={busy || !visionModels || !!visionModelsError}
+              />
+              <p className='text-xs text-muted-foreground'>
+                Used for scanned pages and figure descriptions during Advanced
+                reprocessing, or for failed image descriptions when retrying.
+                Applies only to this run; your upload default stays unchanged.
               </p>
-            ) : visionModels.models.length === 0 ? (
-              <p role='status' className='text-sm text-muted-foreground'>
-                No vision models are available in your active wallet.
-              </p>
-            ) : null}
-          </div>
-        )}
+              {visionModelsError ? (
+                <div role='alert' className='text-sm text-destructive'>
+                  {visionModelsError}
+                  <Button
+                    variant='link'
+                    disabled={busy}
+                    onClick={() => dispatch(fetchVisionModels())}
+                  >
+                    Reload models
+                  </Button>
+                </div>
+              ) : !visionModels ? (
+                <p role='status' className='text-sm text-muted-foreground'>
+                  Loading vision models…
+                </p>
+              ) : visionModels.models.length === 0 ? (
+                <p role='status' className='text-sm text-muted-foreground'>
+                  No vision models are available in your active wallet.
+                </p>
+              ) : null}
+            </div>
+          )}
         <p className='text-sm text-muted-foreground'>
           Reprocessing generates embeddings again. Advanced may also use paid
           vision calls through your selected wallet. Scanned-page approval
           limits still apply.
         </p>
-        {!!file.failedImageCount && (
+        {enableOcr && !!file.failedImageCount && (
           <div className='space-y-2 rounded-md border p-3'>
             <p className='text-sm'>
               {file.failedImageCount} image descriptions failed. Retry those
@@ -155,7 +159,8 @@ export default function FileReprocessingDialog({ file, onClose }: Props) {
           <Button
             disabled={
               busy ||
-              (mode === DocumentProcessingMode.Advanced &&
+              (enableOcr &&
+                mode === DocumentProcessingMode.Advanced &&
                 (!hasModel || !!visionModelsError))
             }
             onClick={() => submit(DocumentReprocessingAction.Reparse)}

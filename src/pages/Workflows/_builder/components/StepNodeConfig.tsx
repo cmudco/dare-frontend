@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useDebouncedNodeField } from '@/hooks/useDebouncedNodeField'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { RagMode } from '@/utils/constants/conversation'
 import { selectLibraries } from '@/redux/librarySlice'
 import { getSharedLibraries } from '@/redux/asyncThunks/library'
@@ -113,6 +114,7 @@ export default function StepNodeConfig({
   )
 
   const dispatch = useDispatch<AppDispatch>()
+  const enableRag = useFeatureFlag('enableRag', true)
   const sharedLibraries = useSelector(selectLibraries)
   const mcpServers = useSelector((state: RootState) => state.mcp.servers)
   useEffect(() => {
@@ -259,161 +261,165 @@ export default function StepNodeConfig({
         </p>
       </div>
 
-      {/* Content Files */}
-      <MultiSelectBadge
-        label='Files'
-        icon={FileText}
-        selectedIds={nodeData?.contentFiles || []}
-        items={files}
-        nameMap={nodeData?.contentFileNames}
-        placeholder='+ Add file'
-        onAdd={(id) =>
-          updateNodeData({
-            contentFiles: [...(nodeData?.contentFiles || []), id],
-          })
-        }
-        onRemove={(id) =>
-          updateNodeData({
-            contentFiles: (nodeData?.contentFiles || []).filter(
-              (fid) => fid !== id
-            ),
-          })
-        }
-      />
-
-      {/* Embedding Files */}
-      <MultiSelectBadge
-        label='Embedding'
-        icon={Database}
-        selectedIds={nodeData?.embeddingFiles || []}
-        items={files}
-        nameMap={nodeData?.embeddingFileNames}
-        placeholder='+ Add embedding file'
-        onAdd={(id) =>
-          updateNodeData({
-            embeddingFiles: [...(nodeData?.embeddingFiles || []), id],
-          })
-        }
-        onRemove={(id) =>
-          updateNodeData({
-            embeddingFiles: (nodeData?.embeddingFiles || []).filter(
-              (fid) => fid !== id
-            ),
-          })
-        }
-      />
-
-      {/* Shared Libraries */}
-      {sharedLibraries.length > 0 && (
+      {enableRag && (
         <>
+          {/* Content Files */}
           <MultiSelectBadge
-            label='Shared Libraries'
-            icon={Library}
-            selectedIds={nodeData?.libraries || []}
-            items={sharedLibraries}
-            nameMap={nodeData?.libraryNames}
-            placeholder='+ Add library'
+            label='Files'
+            icon={FileText}
+            selectedIds={nodeData?.contentFiles || []}
+            items={files}
+            nameMap={nodeData?.contentFileNames}
+            placeholder='+ Add file'
             onAdd={(id) =>
               updateNodeData({
-                libraries: [...(nodeData?.libraries || []), id],
+                contentFiles: [...(nodeData?.contentFiles || []), id],
               })
             }
             onRemove={(id) =>
               updateNodeData({
-                libraries: (nodeData?.libraries || []).filter(
-                  (lid) => lid !== id
+                contentFiles: (nodeData?.contentFiles || []).filter(
+                  (fid) => fid !== id
                 ),
               })
             }
           />
-          <p className='-mt-2 text-xs text-muted-foreground'>
-            Curated corpora searched alongside this step&apos;s files.
-          </p>
-        </>
-      )}
 
-      {/* MCP Servers */}
-      {mcpServers.length > 0 && (
-        <>
+          {/* Embedding Files */}
           <MultiSelectBadge
-            label='MCP Servers'
-            icon={Server}
-            selectedIds={nodeData?.mcpServers || []}
-            items={mcpServers}
-            nameMap={nodeData?.mcpServerNames}
-            placeholder='+ Add MCP server'
+            label='Embedding'
+            icon={Database}
+            selectedIds={nodeData?.embeddingFiles || []}
+            items={files}
+            nameMap={nodeData?.embeddingFileNames}
+            placeholder='+ Add embedding file'
             onAdd={(id) =>
               updateNodeData({
-                mcpServers: [...(nodeData?.mcpServers || []), id],
+                embeddingFiles: [...(nodeData?.embeddingFiles || []), id],
               })
             }
             onRemove={(id) =>
               updateNodeData({
-                mcpServers: (nodeData?.mcpServers || []).filter(
-                  (sid) => sid !== id
+                embeddingFiles: (nodeData?.embeddingFiles || []).filter(
+                  (fid) => fid !== id
                 ),
               })
             }
           />
-          <p className='-mt-2 text-xs text-muted-foreground'>
-            Connected servers whose tools this step&apos;s LLM may call.
-          </p>
-        </>
-      )}
 
-      {/* Retrieval Mode */}
-      <div className='space-y-2'>
-        <Label className='flex items-center gap-2 text-xs font-medium'>
-          <Database className='h-3 w-3' />
-          Retrieval Mode
-        </Label>
-        <Select
-          value={nodeData?.ragMode || RagMode.NAIVE}
-          onValueChange={(value) => {
-            updateNodeData({ ragMode: value })
-          }}
-        >
-          <SelectTrigger className='bg-background text-sm'>
-            <SelectValue placeholder='Select retrieval mode' />
-          </SelectTrigger>
-          <SelectContent>
-            {RAG_MODE_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label} — {option.description}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className='text-xs text-muted-foreground'>
-          How document context is retrieved for this step. Autonomous lets the
-          model search on demand with the search_documents tool.
-        </p>
-      </div>
+          {/* Shared Libraries */}
+          {sharedLibraries.length > 0 && (
+            <>
+              <MultiSelectBadge
+                label='Shared Libraries'
+                icon={Library}
+                selectedIds={nodeData?.libraries || []}
+                items={sharedLibraries}
+                nameMap={nodeData?.libraryNames}
+                placeholder='+ Add library'
+                onAdd={(id) =>
+                  updateNodeData({
+                    libraries: [...(nodeData?.libraries || []), id],
+                  })
+                }
+                onRemove={(id) =>
+                  updateNodeData({
+                    libraries: (nodeData?.libraries || []).filter(
+                      (lid) => lid !== id
+                    ),
+                  })
+                }
+              />
+              <p className='-mt-2 text-xs text-muted-foreground'>
+                Curated corpora searched alongside this step&apos;s files.
+              </p>
+            </>
+          )}
 
-      {/* Embedding Tags */}
-      {tags.length > 0 && (
-        <>
-          <MultiSelectBadge
-            label='Tags'
-            icon={Tag}
-            selectedIds={nodeData?.tags || []}
-            items={tags}
-            nameMap={nodeData?.tagNames}
-            placeholder='+ Add embedding tag'
-            onAdd={(id) =>
-              updateNodeData({
-                tags: [...(nodeData?.tags || []), id],
-              })
-            }
-            onRemove={(id) =>
-              updateNodeData({
-                tags: (nodeData?.tags || []).filter((tid) => tid !== id),
-              })
-            }
-          />
-          <p className='-mt-2 text-xs text-muted-foreground'>
-            Files from these tags are retrieved via embedding / RAG search.
-          </p>
+          {/* MCP Servers */}
+          {mcpServers.length > 0 && (
+            <>
+              <MultiSelectBadge
+                label='MCP Servers'
+                icon={Server}
+                selectedIds={nodeData?.mcpServers || []}
+                items={mcpServers}
+                nameMap={nodeData?.mcpServerNames}
+                placeholder='+ Add MCP server'
+                onAdd={(id) =>
+                  updateNodeData({
+                    mcpServers: [...(nodeData?.mcpServers || []), id],
+                  })
+                }
+                onRemove={(id) =>
+                  updateNodeData({
+                    mcpServers: (nodeData?.mcpServers || []).filter(
+                      (sid) => sid !== id
+                    ),
+                  })
+                }
+              />
+              <p className='-mt-2 text-xs text-muted-foreground'>
+                Connected servers whose tools this step&apos;s LLM may call.
+              </p>
+            </>
+          )}
+
+          {/* Retrieval Mode */}
+          <div className='space-y-2'>
+            <Label className='flex items-center gap-2 text-xs font-medium'>
+              <Database className='h-3 w-3' />
+              Retrieval Mode
+            </Label>
+            <Select
+              value={nodeData?.ragMode || RagMode.NAIVE}
+              onValueChange={(value) => {
+                updateNodeData({ ragMode: value })
+              }}
+            >
+              <SelectTrigger className='bg-background text-sm'>
+                <SelectValue placeholder='Select retrieval mode' />
+              </SelectTrigger>
+              <SelectContent>
+                {RAG_MODE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label} — {option.description}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className='text-xs text-muted-foreground'>
+              How document context is retrieved for this step. Autonomous lets
+              the model search on demand with the search_documents tool.
+            </p>
+          </div>
+
+          {/* Embedding Tags */}
+          {tags.length > 0 && (
+            <>
+              <MultiSelectBadge
+                label='Tags'
+                icon={Tag}
+                selectedIds={nodeData?.tags || []}
+                items={tags}
+                nameMap={nodeData?.tagNames}
+                placeholder='+ Add embedding tag'
+                onAdd={(id) =>
+                  updateNodeData({
+                    tags: [...(nodeData?.tags || []), id],
+                  })
+                }
+                onRemove={(id) =>
+                  updateNodeData({
+                    tags: (nodeData?.tags || []).filter((tid) => tid !== id),
+                  })
+                }
+              />
+              <p className='-mt-2 text-xs text-muted-foreground'>
+                Files from these tags are retrieved via embedding / RAG search.
+              </p>
+            </>
+          )}
         </>
       )}
 

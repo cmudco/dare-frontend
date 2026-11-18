@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import TagsDisplay from '@/components/FileManager/TagsDisplay'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { useAppSelector } from '@/redux/hooks'
 import { ContentMatch, MyFile, MyFolder } from '@/redux/types/files'
 import { Tag } from '@/redux/types/tags'
@@ -73,8 +74,10 @@ const SourceRow = ({
 }: SourceRowProps) => {
   const searchQuery = useAppSelector((state) => state.files.searchQuery.trim())
   const name = file.name || 'Unnamed'
+  const enableOcr = useFeatureFlag('enableOcr', true)
   const ocrActionable =
-    file.ocr?.status === 'awaiting_approval' || file.ocr?.status === 'partial'
+    enableOcr &&
+    (file.ocr?.status === 'awaiting_approval' || file.ocr?.status === 'partial')
 
   return (
     <li

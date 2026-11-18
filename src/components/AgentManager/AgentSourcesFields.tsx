@@ -111,6 +111,7 @@ const AgentSourcesFields: React.FC<AgentSourcesFieldsProps> = ({
 }) => {
   const enableMcp = useFeatureFlag('enableMcp')
   const enableArtifacts = useFeatureFlag('enableArtifacts')
+  const enableRag = useFeatureFlag('enableRag', true)
   const allFiles = useSelector((state: RootState) => state.files.files)
   const allLibraries = useSelector(selectLibraries)
   const files = useMemo(
@@ -136,96 +137,100 @@ const AgentSourcesFields: React.FC<AgentSourcesFieldsProps> = ({
 
   return (
     <div className='space-y-5'>
-      <FilePicker
-        id='agent-content-files'
-        label='Full-text files'
-        hint='Sent whole with every message.'
-        icon={<FileText className='h-3.5 w-3.5' />}
-        files={files}
-        selectedIds={setup.contentFiles}
-        onChange={(contentFiles) => onChange({ contentFiles })}
-      />
-      <FilePicker
-        id='agent-embedding-files'
-        label='Searched files'
-        hint='Searched for the passages relevant to each message.'
-        icon={<Database className='h-3.5 w-3.5' />}
-        files={files}
-        selectedIds={setup.embeddingFiles}
-        onChange={(embeddingFiles) => onChange({ embeddingFiles })}
-      />
+      {enableRag && (
+        <div className='space-y-5'>
+          <FilePicker
+            id='agent-content-files'
+            label='Full-text files'
+            hint='Sent whole with every message.'
+            icon={<FileText className='h-3.5 w-3.5' />}
+            files={files}
+            selectedIds={setup.contentFiles}
+            onChange={(contentFiles) => onChange({ contentFiles })}
+          />
+          <FilePicker
+            id='agent-embedding-files'
+            label='Searched files'
+            hint='Searched for the passages relevant to each message.'
+            icon={<Database className='h-3.5 w-3.5' />}
+            files={files}
+            selectedIds={setup.embeddingFiles}
+            onChange={(embeddingFiles) => onChange({ embeddingFiles })}
+          />
 
-      {libraries.length > 0 && (
-        <div className='space-y-2'>
-          <Label className='flex items-center gap-2'>
-            <BookOpen className='h-3.5 w-3.5' />
-            Shared libraries
-          </Label>
-          <div className='flex flex-wrap gap-2'>
-            {libraries.map((library) => {
-              const selected = setup.libraries.includes(library.id)
-              return (
-                <Button
-                  key={library.id}
-                  type='button'
-                  size='sm'
-                  variant={selected ? 'default' : 'outline'}
-                  aria-pressed={selected}
-                  onClick={() => toggleLibrary(library.id)}
-                >
-                  {library.name}
-                </Button>
-              )
-            })}
-          </div>
-        </div>
-      )}
+          {libraries.length > 0 && (
+            <div className='space-y-2'>
+              <Label className='flex items-center gap-2'>
+                <BookOpen className='h-3.5 w-3.5' />
+                Shared libraries
+              </Label>
+              <div className='flex flex-wrap gap-2'>
+                {libraries.map((library) => {
+                  const selected = setup.libraries.includes(library.id)
+                  return (
+                    <Button
+                      key={library.id}
+                      type='button'
+                      size='sm'
+                      variant={selected ? 'default' : 'outline'}
+                      aria-pressed={selected}
+                      onClick={() => toggleLibrary(library.id)}
+                    >
+                      {library.name}
+                    </Button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
-      {hasSources && (
-        <div className='space-y-4 rounded-lg border border-border p-3'>
-          <div className='space-y-2'>
-            <Label>Retrieval</Label>
-            <RagModeSelector
-              value={setup.ragMode}
-              onChange={(ragMode) => onChange({ ragMode })}
-            />
-          </div>
-          <div className='space-y-2'>
-            <div className='flex items-center justify-between'>
-              <Label>Passages per message</Label>
-              <span className='rounded-md bg-muted px-2 py-0.5 font-mono text-sm'>
-                {setup.maxContextSnippets}
-              </span>
+          {hasSources && (
+            <div className='space-y-4 rounded-lg border border-border p-3'>
+              <div className='space-y-2'>
+                <Label>Retrieval</Label>
+                <RagModeSelector
+                  value={setup.ragMode}
+                  onChange={(ragMode) => onChange({ ragMode })}
+                />
+              </div>
+              <div className='space-y-2'>
+                <div className='flex items-center justify-between'>
+                  <Label>Passages per message</Label>
+                  <span className='rounded-md bg-muted px-2 py-0.5 font-mono text-sm'>
+                    {setup.maxContextSnippets}
+                  </span>
+                </div>
+                <Slider
+                  value={[setup.maxContextSnippets]}
+                  min={1}
+                  max={20}
+                  step={1}
+                  onValueChange={(values) =>
+                    onChange({ maxContextSnippets: values[0] })
+                  }
+                  aria-label='Passages per message'
+                />
+              </div>
+              <div className='space-y-2'>
+                <div className='flex items-center justify-between'>
+                  <Label>Minimum relevance</Label>
+                  <span className='rounded-md bg-muted px-2 py-0.5 font-mono text-sm'>
+                    {setup.documentSimilarityThreshold.toFixed(2)}
+                  </span>
+                </div>
+                <Slider
+                  value={[setup.documentSimilarityThreshold]}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  onValueChange={(values) =>
+                    onChange({ documentSimilarityThreshold: values[0] })
+                  }
+                  aria-label='Minimum relevance'
+                />
+              </div>
             </div>
-            <Slider
-              value={[setup.maxContextSnippets]}
-              min={1}
-              max={20}
-              step={1}
-              onValueChange={(values) =>
-                onChange({ maxContextSnippets: values[0] })
-              }
-              aria-label='Passages per message'
-            />
-          </div>
-          <div className='space-y-2'>
-            <div className='flex items-center justify-between'>
-              <Label>Minimum relevance</Label>
-              <span className='rounded-md bg-muted px-2 py-0.5 font-mono text-sm'>
-                {setup.documentSimilarityThreshold.toFixed(2)}
-              </span>
-            </div>
-            <Slider
-              value={[setup.documentSimilarityThreshold]}
-              min={0}
-              max={1}
-              step={0.05}
-              onValueChange={(values) =>
-                onChange({ documentSimilarityThreshold: values[0] })
-              }
-              aria-label='Minimum relevance'
-            />
-          </div>
+          )}
         </div>
       )}
 

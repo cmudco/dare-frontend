@@ -34,6 +34,7 @@ import {
   projectSourceCount,
   projectUploadProblem,
 } from '@/components/Projects/projectSources'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { useProjects } from '@/hooks/useProjects'
 import { cn } from '@/lib/utils'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
@@ -93,6 +94,7 @@ const ProjectDetail = () => {
   const projectId = Number(projectIdParam)
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
+  const enableRag = useFeatureFlag('enableRag', true)
   const { status } = useProjects()
   const project = useAppSelector((state) => selectProjectById(state, projectId))
   const projectChats = useAppSelector((state) =>
@@ -260,7 +262,9 @@ const ProjectDetail = () => {
 
   const tabs = [
     { value: ProjectTab.CHATS, label: 'Chats', count: conversations.length },
-    { value: ProjectTab.SOURCES, label: 'Sources', count: sourceCount },
+    ...(enableRag
+      ? [{ value: ProjectTab.SOURCES, label: 'Sources', count: sourceCount }]
+      : []),
   ]
 
   return (

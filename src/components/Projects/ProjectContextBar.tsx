@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ChevronRight, FileText } from 'lucide-react'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag'
 import { useProjects } from '@/hooks/useProjects'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { setSourcePickerOpen } from '@/redux/conversationSlice'
@@ -11,6 +12,7 @@ import ProjectIcon from './ProjectIcon'
 /** Breadcrumb above a chat that belongs to a project. */
 const ProjectContextBar = () => {
   useProjects()
+  const enableRag = useFeatureFlag('enableRag', true)
   const projectId = useAppSelector(
     (state) => state.conversation.activeConversation?.project ?? null
   )
@@ -47,7 +49,11 @@ const ProjectContextBar = () => {
           Memory limited to this project
         </span>
       )}
-      <div className='ml-auto flex shrink-0 items-center gap-1'>
+      <div
+        className={
+          enableRag ? 'ml-auto flex shrink-0 items-center gap-1' : 'hidden'
+        }
+      >
         <ChatSourceModeMenu />
         <button
           type='button'
