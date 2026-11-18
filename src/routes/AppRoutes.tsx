@@ -6,6 +6,7 @@ import Dashboard from '../pages/Dashboard'
 import Files from '../pages/Files'
 import VerifyCodeScreen from '../pages/VerifyCode'
 import LoginScreen from '../pages/Login'
+import SsoCallbackScreen from '../pages/SsoCallback'
 import ForgotScreen from '../pages/ForgotPassword'
 import RegistrationScreen from '../pages/Registration'
 import CoversationScreen from '../pages/Conversation/index.tsx'
@@ -71,6 +72,7 @@ const AppRoutes = () => {
         {isAuthenticated && <FeedbackWidget />}
         <Routes>
           <Route path='/login' element={<LoginScreen />} />
+          <Route path='/sso/callback' element={<SsoCallbackScreen />} />
           <Route path='/register' element={<RegistrationScreen />} />
           <Route path='/users/confirm-email' element={<VerifyEmailScreen />} />
           <Route path='/forgot-password' element={<ForgotScreen />} />

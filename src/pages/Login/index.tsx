@@ -10,7 +10,7 @@ import {
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from '../../redux/store'
 import { toggleMode } from '../../redux/themeSlice'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   getUserData,
   userLogin,
@@ -21,7 +21,18 @@ import { useAppSelector } from '../../redux/hooks'
 import { Button } from '../../components/ui/button'
 import { Moon, Sun } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
-import { EmailVerificationSentResponse } from '@/redux/types/auth'
+import { EmailVerificationSentResponse, SsoConfig } from '@/redux/types/auth'
+import { getSsoConfig, SSO_LOGIN_URL } from '@/api/auth'
+
+const SSO_ERROR_MESSAGES: Record<string, string> = {
+  domain_not_allowed: "Your account isn't allowed to sign in here.",
+  signup_closed:
+    "You don't have a DARE account yet. Ask your administrator for access.",
+  account_inactive: 'Your DARE account is deactivated.',
+  no_email: "Your organization's sign-in didn't share your email address.",
+  email_unverified: "Your organization's sign-in didn't verify your email.",
+}
+const SSO_ERROR_FALLBACK = "Sign-in didn't complete. Please try again."
 
 const LoginScreen: React.FC = () => {
   const navigate = useNavigate()
@@ -29,6 +40,15 @@ const LoginScreen: React.FC = () => {
   const { user } = useAppSelector((state) => state.user)
   const [resendResult, setResendResult] =
     useState<EmailVerificationSentResponse | null>(null)
+  const [sso, setSso] = useState<SsoConfig | null>(null)
+  const [searchParams] = useSearchParams()
+  const ssoError = searchParams.get('sso_error')
+
+  useEffect(() => {
+    getSsoConfig()
+      .then(setSso)
+      .catch((error) => console.error('Failed to load SSO config:', error))
+  }, [])
 
   useEffect(() => {
     dispatch(resetError())
@@ -132,6 +152,18 @@ const LoginScreen: React.FC = () => {
         onResendVerification={handleResendVerification}
         footer={
           <>
+            {sso?.enabled && (
+              <div className='flex justify-center'>
+                <Button asChild variant='outline'>
+                  <a href={SSO_LOGIN_URL}>Sign in with {sso.label}</a>
+                </Button>
+              </div>
+            )}
+            {ssoError && (
+              <p className='mt-3 text-center text-xs font-medium text-destructive'>
+                {SSO_ERROR_MESSAGES[ssoError] ?? SSO_ERROR_FALLBACK}
+              </p>
+            )}
             <AuthFormFooter
               text="Don't have an account?"
               route='/register'

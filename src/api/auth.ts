@@ -1,8 +1,10 @@
 import { User } from '../redux/types/user'
 import { baseRequest } from '@/utils/requests'
 import { METHOD } from '@/utils/constants/requests'
+import { config } from '@/config/environment'
 import {
   AuthResponse,
+  SsoConfig,
   EmailVerificationSentResponse,
   VerifyEmailResponse,
   Setup2FAResponse,
@@ -42,6 +44,27 @@ export const loginUser = async (data: {
     url: 'users/api/dj-rest-auth/login/',
     method: METHOD.POST,
     data,
+  })
+}
+
+// A full-page navigation, not a request: the identity provider's sign-in page
+// has to load in the browser.
+export const SSO_LOGIN_URL = `${config.apiUrl}/users/api/sso/login/`
+
+export const getSsoConfig = async (): Promise<SsoConfig> => {
+  return await baseRequest<SsoConfig>({
+    url: 'users/api/sso/config/',
+    method: METHOD.GET,
+    includeAuthToken: false,
+  })
+}
+
+export const exchangeSsoCode = async (code: string): Promise<AuthResponse> => {
+  return await baseRequest<AuthResponse>({
+    url: 'users/api/sso/token/',
+    method: METHOD.POST,
+    data: { code },
+    includeAuthToken: false,
   })
 }
 

@@ -7,6 +7,11 @@ export interface AuthResponse {
   user: User
 }
 
+export interface SsoConfig {
+  enabled: boolean
+  label: string
+}
+
 export interface ErrorResponse {
   error: string
   message: string

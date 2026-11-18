@@ -1,9 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialState } from './initialState/user'
-import { User, ConversationSettings } from './types/user'
+import { User, UserState, ConversationSettings } from './types/user'
+import { AuthResponse } from './types/auth'
 import {
   forgotPassword,
   userLogin,
+  ssoLogin,
   userRegister,
   resetPassword,
   setup2FA,
@@ -19,6 +21,16 @@ import {
   updateChunkSettings,
   updateUserProfile,
 } from './asyncThunks/user'
+
+const signedIn = (state: UserState, action: PayloadAction<AuthResponse>) => {
+  state.loading = false
+  state.user = action.payload.user
+  state.isAuthenticated = true
+  state.error = null
+  state.token = action.payload.access
+  localStorage.setItem('token', state.token)
+  localStorage.setItem('refreshToken', action.payload.refresh)
+}
 
 const userSlice = createSlice({
   name: 'user',
@@ -71,15 +83,8 @@ const userSlice = createSlice({
         state.loading = true
         state.error = null
       })
-      .addCase(userLogin.fulfilled, (state, action) => {
-        state.loading = false
-        state.user = action.payload.user
-        state.isAuthenticated = true
-        state.error = null
-        state.token = action.payload.access
-        localStorage.setItem('token', state.token)
-        localStorage.setItem('refreshToken', action.payload.refresh)
-      })
+      .addCase(userLogin.fulfilled, signedIn)
+      .addCase(ssoLogin.fulfilled, signedIn)
       .addCase(userLogin.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
