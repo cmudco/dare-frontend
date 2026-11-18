@@ -6,6 +6,8 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 
+import { Markdown } from '../Markdown/Markdown'
+
 interface ThinkingSummaryProps {
   summary: string
   streaming?: boolean
@@ -20,11 +22,7 @@ const ThinkingSummary: React.FC<ThinkingSummaryProps> = ({
   if (!summary.trim()) return null
 
   return (
-    <Collapsible
-      open={isOpen}
-      onOpenChange={setIsOpen}
-      className='not-prose mb-3'
-    >
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className='mb-3'>
       <CollapsibleTrigger asChild>
         <button
           type='button'
@@ -45,8 +43,8 @@ const ThinkingSummary: React.FC<ThinkingSummaryProps> = ({
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className='mt-1 max-h-64 max-w-full overflow-x-hidden overflow-y-auto rounded-md border border-border bg-muted/30 p-3 text-sm leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap text-muted-foreground'>
-          {summary}
+        <div className='prose prose-sm mt-1 max-h-64 max-w-full overflow-x-hidden overflow-y-auto rounded-md border border-border bg-muted/30 p-3 [overflow-wrap:anywhere] text-muted-foreground dark:prose-invert'>
+          <Markdown content={summary} streaming={streaming} />
         </div>
       </CollapsibleContent>
     </Collapsible>
