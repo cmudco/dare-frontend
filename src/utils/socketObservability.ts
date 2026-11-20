@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react'
+import type { DisconnectDescription, Socket } from 'socket.io-client'
 
 export type SocketChannel = 'chat' | 'workflow'
 
@@ -8,18 +9,14 @@ const lastCaptureByKey = new Map<string, number>()
 interface SocketContext {
   active?: boolean
   attempt?: number
+  closeCode?: number
   reason?: string
   transport?: string
 }
 
 export function recordSocketLifecycle(
   channel: SocketChannel,
-  state:
-    | 'connected'
-    | 'disconnected'
-    | 'reconnect_attempt'
-    | 'reconnected'
-    | 'reconnect_exhausted',
+  state: 'connected' | 'disconnected' | 'reconnect_attempt' | 'reconnected',
   context: SocketContext = {}
 ) {
   Sentry.addBreadcrumb({
@@ -32,12 +29,7 @@ export function recordSocketLifecycle(
 
 export function captureSocketFailure(
   channel: SocketChannel,
-  phase:
-    | 'connect'
-    | 'reconnect'
-    | 'reconnect_exhausted'
-    | 'send'
-    | 'forced_disconnect',
+  phase: 'connect' | 'reconnect' | 'drop' | 'send' | 'forced_disconnect',
   error: Error,
   context: SocketContext = {}
 ) {
@@ -54,4 +46,31 @@ export function captureSocketFailure(
     },
     extra: { ...context },
   })
+}
+
+const DROP_REASONS: ReadonlySet<Socket.DisconnectReason> = new Set([
+  'transport close',
+  'transport error',
+  'ping timeout',
+])
+
+// The WebSocket close code tells a network cut (1006) from a server-side
+// close such as a keepalive timeout (1011) or a restart (1001/1012).
+export function captureSocketDrop(
+  channel: SocketChannel,
+  reason: Socket.DisconnectReason,
+  details: DisconnectDescription | undefined
+) {
+  if (!DROP_REASONS.has(reason)) return
+  const closeCode =
+    details && 'context' in details && details.context instanceof CloseEvent
+      ? details.context.code
+      : undefined
+  const suffix = closeCode === undefined ? '' : ` (close code ${closeCode})`
+  captureSocketFailure(
+    channel,
+    'drop',
+    new Error(`${channel} socket dropped: ${reason}${suffix}`),
+    { reason, closeCode }
+  )
 }

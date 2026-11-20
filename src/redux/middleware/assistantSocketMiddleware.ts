@@ -59,7 +59,6 @@ export const assistantSocketMiddleware: Middleware = ({ dispatch }) => {
         path: '/socket.io/',
         auth: { token: action.payload.jwtToken },
         transports: ['websocket', 'polling'],
-        reconnectionAttempts: SOCKET_RECONNECT_POLICY.maxAttempts,
         reconnectionDelay: SOCKET_RECONNECT_POLICY.initialDelayMs,
         reconnectionDelayMax: SOCKET_RECONNECT_POLICY.maxDelayMs,
       })
