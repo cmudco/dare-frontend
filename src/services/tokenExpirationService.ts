@@ -105,24 +105,15 @@ export class TokenExpirationService {
   }
 
   private async checkTokenHealth(): Promise<void> {
-    try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        return
-      }
+    if (!localStorage.getItem('token')) return
 
-      const response = await baseRequest<TokenHealthResponse>({
-        url: 'users/api/token-health/',
-        method: METHOD.GET,
-        includeAuthToken: true,
-      })
-
-      if (response.status === 'valid') {
-        return
-      }
-    } catch {
-      this.handleTokenExpiration()
-    }
+    // baseRequest logs out on a 401. Any other failure, such as the server
+    // restarting during a deploy, is retried on the next interval.
+    await baseRequest<TokenHealthResponse>({
+      url: 'users/api/token-health/',
+      method: METHOD.GET,
+      includeAuthToken: true,
+    }).catch(() => undefined)
   }
 
   isCurrentlyMonitoring(): boolean {

@@ -1001,7 +1001,18 @@ const conversationSlice = createSlice({
         state.activeConversation = action.payload
       })
       .addCase(fetchConversationMessages.fulfilled, (state, action) => {
-        state.activeConversationMessages = action.payload
+        // A reply still running server-side is stored empty until it ends;
+        // keep the text already streamed here until its next chunk lands.
+        const streamed = new Map(
+          state.activeConversationMessages
+            .filter((msg) => msg.streaming && msg.message)
+            .map((msg) => [String(msg.id), msg.message])
+        )
+        state.activeConversationMessages = action.payload.map((msg) =>
+          !msg.message && streamed.has(String(msg.id))
+            ? { ...msg, message: streamed.get(String(msg.id)) ?? '' }
+            : msg
+        )
         const pending = new Set(state.pendingActiveGenerationIds)
         state.activeConversationMessages.forEach((message) => {
           if (pending.has(String(message.id))) message.streaming = true
@@ -1393,7 +1404,9 @@ const conversationSlice = createSlice({
           type: string
           payload: { error?: string; message?: string }
         } =>
-          action.type === 'socket/error' || action.type === 'websocket/error',
+          // Not websocket/error: a dropped connection does not end the turn,
+          // which keeps running server-side and resumes on reconnect.
+          action.type === 'socket/error',
         (state, action) => {
           const notice =
             action.payload?.message ||

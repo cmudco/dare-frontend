@@ -531,10 +531,20 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
           )}
           title={isSocketConnected ? 'Socket connected' : 'Socket disconnected'}
         />
-        <p className='text-center text-sm text-muted-foreground'>
+        <p
+          role='status'
+          className={clsx(
+            'text-center text-sm',
+            !disabled && !isSocketConnected
+              ? 'font-medium text-foreground'
+              : 'text-muted-foreground'
+          )}
+        >
           {disabled
             ? 'Select a conversation to start chatting'
-            : 'DARE Chat can make mistakes. Check important information.'}
+            : isSocketConnected
+              ? 'DARE Chat can make mistakes. Check important information.'
+              : 'Chat is offline. Reconnecting… Your message stays here until it can send.'}
         </p>
       </div>
     </>
