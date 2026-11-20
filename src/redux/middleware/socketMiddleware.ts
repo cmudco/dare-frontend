@@ -27,6 +27,8 @@ import { SOCKET_RECONNECT_POLICY } from '@/config/socket'
 import { debugLog } from '@/utils/debugLogger'
 import { SenderType } from '@/utils/constants/conversation'
 import { getWallets } from '@/redux/asyncThunks/billing'
+import { fetchConversationMessages } from '@/redux/asyncThunks/conversation'
+import type { RootState } from '@/redux/store'
 import {
   captureSocketDrop,
   captureSocketFailure,
@@ -286,13 +288,21 @@ export function createSocketMiddleware(): Middleware {
           )
           dispatch({ type: 'websocket/connected' })
 
-          // Re-subscribe after reconnect
+          const activeId = (store.getState() as RootState).conversation
+            .activeConversation?.conversationId
           subscriptions.forEach((convId) => {
-            socket?.emit(
-              'subscribe_conversation',
-              { conversationId: convId },
-              () => {}
-            )
+            const subscribe = () =>
+              socket?.emit(
+                'subscribe_conversation',
+                { conversationId: convId },
+                () => {}
+              )
+            if (convId !== activeId) return subscribe()
+            // A reply may have finished while offline, and that final event
+            // is gone. Reload first; subscribing then re-marks running ones.
+            void (dispatch as ThunkDispatch<unknown, unknown, UnknownAction>)(
+              fetchConversationMessages(convId)
+            ).finally(subscribe)
           })
         })
 
