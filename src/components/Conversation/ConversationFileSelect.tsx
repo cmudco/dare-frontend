@@ -482,12 +482,8 @@ const ConversationFileSelect: React.FC = () => {
       : readSize.size.fitsFullFiles
         ? `The AI reads ${selectedFiles.length === 1 ? 'this file' : 'these files'} in full (${formatTokenEstimate(readSize.size.estimatedTokens)}).`
         : `Too long for this model: ${formatTokenEstimate(readSize.size.estimatedTokens)}, and it has room for about ${formatTokenEstimate(readSize.size.tokenLimit)} of files. Pick a model with a larger context window, or use Embeddings to search ${selectedFiles.length === 1 ? 'it' : 'them'}.`
-  const searchNote = selectedEmbeddings.length
-    ? `The AI searches ${selectedEmbeddings.length === 1 ? 'this embedding' : 'these embeddings'} and reads the most relevant passages.`
-    : null
 
   const footerNotes = [
-    { key: 'search', text: searchNote },
     { key: 'read', text: readNote },
     { key: 'table', text: tableHint },
   ].filter((note): note is { key: string; text: string } => Boolean(note.text))
