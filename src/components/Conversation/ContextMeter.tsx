@@ -93,12 +93,6 @@ const TokenCard = ({
   </div>
 )
 
-/**
- * How much of the selected model's context window the last reply used: its
- * final prompt (history, files, web results, tool output) plus the reply.
- * Web results and tool output belong to that turn only, so the next prompt
- * can be smaller.
- */
 const isCounting = (ids: number[], size: SourceSizeState) =>
   ids.length > 0 &&
   (size.status === 'idle' ||
@@ -120,6 +114,12 @@ const filesReadInFull = (reply: Message | undefined): Set<number> | null => {
   return ids.every((id): id is number => id !== undefined) ? new Set(ids) : null
 }
 
+/**
+ * How much of the selected model's context window the last reply used: its
+ * final prompt (history, files, web results, tool output) plus the reply.
+ * Web results and tool output belong to that turn only, so the next prompt
+ * can be smaller.
+ */
 const ContextMeter = () => {
   const messages = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages
@@ -228,7 +228,8 @@ const ContextMeter = () => {
         side='top'
         align='end'
         sideOffset={10}
-        className='w-[min(360px,calc(100vw-2rem))] space-y-4 p-4'
+        collisionPadding={8}
+        className='max-h-[var(--radix-popover-content-available-height)] w-[min(360px,calc(100vw-2rem))] space-y-4 overflow-y-auto p-4'
       >
         <div>
           <div className='flex items-baseline justify-between gap-3'>
