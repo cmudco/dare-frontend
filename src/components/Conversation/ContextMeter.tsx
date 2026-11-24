@@ -159,6 +159,9 @@ const ContextMeter = () => {
       ? removedSize.size.estimatedTokens
       : 0
   const nextMayOverflow = used + added - removed > windowTokens
+  const nextEstimated =
+    (addedSize.status === 'ready' && addedSize.size.estimated) ||
+    (removedSize.status === 'ready' && removedSize.size.estimated)
   const label = last
     ? `Last reply used ${percent(share)} of the context window`
     : 'Context window'
@@ -290,10 +293,12 @@ const ContextMeter = () => {
                   className={`h-2 w-2 shrink-0 rounded-full ${fill} opacity-20`}
                 />
                 Next message:
-                {added > 0 && ` +${compact.format(added)} from files you added`}
+                {added > 0 &&
+                  ` ${nextEstimated ? '~' : ''}+${compact.format(added)} from files you added`}
                 {added > 0 && removed > 0 && ','}
                 {removed > 0 &&
-                  ` −${compact.format(removed)} from files you removed`}
+                  ` ${nextEstimated ? '~' : ''}−${compact.format(removed)} from files you removed`}
+                {nextEstimated && ' (estimated)'}
                 {nextMayOverflow && '. It may not fit this model.'}
               </motion.p>
             )}
