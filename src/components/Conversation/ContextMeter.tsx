@@ -6,7 +6,7 @@ import type { Message } from '@/redux/types/conversation'
 import { SenderType } from '@/utils/constants/conversation'
 import { sumUsage, usageRounds } from '@/utils/usageDetails'
 import { formatUsdPrecise } from '@/utils/wallets'
-import { useSourceSize } from '@/hooks/useSourceSize'
+import { type SourceSizeState, useSourceSize } from '@/hooks/useSourceSize'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 
 const compact = new Intl.NumberFormat(undefined, {
@@ -98,6 +98,15 @@ const TokenCard = ({
  * Web results and tool output belong to that turn only, so the next prompt
  * can be smaller.
  */
+const isCounting = (ids: number[], size: SourceSizeState) =>
+  ids.length > 0 &&
+  (size.status === 'idle' ||
+    size.status === 'loading' ||
+    (size.status === 'ready' && size.refreshing))
+
+const measuredTokens = (ids: number[], size: SourceSizeState) =>
+  ids.length && size.status === 'ready' ? size.size.estimatedTokens : 0
+
 const ContextMeter = () => {
   const messages = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages
@@ -150,18 +159,15 @@ const ContextMeter = () => {
   const nearlyFull = share >= NEARLY_FULL
   const fill = nearlyFull ? 'bg-destructive' : 'bg-primary'
   const totals = replies.map(tokensOf).reduce(addTotals, EMPTY)
-  const added =
-    addedIds.length && addedSize.status === 'ready'
-      ? addedSize.size.estimatedTokens
-      : 0
-  const removed =
-    removedIds.length && removedSize.status === 'ready'
-      ? removedSize.size.estimatedTokens
-      : 0
+  const nextCounting =
+    isCounting(addedIds, addedSize) || isCounting(removedIds, removedSize)
+  const added = nextCounting ? 0 : measuredTokens(addedIds, addedSize)
+  const removed = nextCounting ? 0 : measuredTokens(removedIds, removedSize)
   const nextMayOverflow = used + added - removed > windowTokens
   const nextEstimated =
-    (addedSize.status === 'ready' && addedSize.size.estimated) ||
-    (removedSize.status === 'ready' && removedSize.size.estimated)
+    !nextCounting &&
+    ((addedSize.status === 'ready' && addedSize.size.estimated) ||
+      (removedSize.status === 'ready' && removedSize.size.estimated))
   const label = last
     ? `Last reply used ${percent(share)} of the context window`
     : 'Context window'
@@ -278,7 +284,7 @@ const ContextMeter = () => {
             </span>
           </div>
           <AnimatePresence initial={false}>
-            {(added > 0 || removed > 0) && (
+            {(nextCounting || added > 0 || removed > 0) && (
               <motion.p
                 key='next'
                 initial={{ opacity: 0, height: 0 }}
@@ -293,6 +299,7 @@ const ContextMeter = () => {
                   className={`h-2 w-2 shrink-0 rounded-full ${fill} opacity-20`}
                 />
                 Next message:
+                {nextCounting && ' counting tokens for the files you changed…'}
                 {added > 0 &&
                   ` ${nextEstimated ? '~' : ''}+${compact.format(added)} from files you added`}
                 {added > 0 && removed > 0 && ','}
