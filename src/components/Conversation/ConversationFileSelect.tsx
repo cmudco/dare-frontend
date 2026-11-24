@@ -469,7 +469,7 @@ const ConversationFileSelect: React.FC = () => {
       ? null
       : readSize.size.fitsFullFiles
         ? `The AI reads ${selectedFiles.length === 1 ? 'this file' : 'these files'} in full (${formatTokenEstimate(readSize.size.estimatedTokens)}).`
-        : `Too long to read in full on this model (${formatTokenEstimate(readSize.size.estimatedTokens)}, limit ${formatTokenEstimate(readSize.size.tokenLimit)}), so the AI searches ${selectedFiles.length === 1 ? 'it' : 'them'} instead.`
+        : `Too long for this model: ${formatTokenEstimate(readSize.size.estimatedTokens)}, and it has room for about ${formatTokenEstimate(readSize.size.tokenLimit)} of files. Pick a model with a larger context window, or use Embeddings to search ${selectedFiles.length === 1 ? 'it' : 'them'}.`
   const searchNote = selectedEmbeddings.length
     ? `The AI searches ${selectedEmbeddings.length === 1 ? 'this embedding' : 'these embeddings'} and reads the most relevant passages.`
     : null
@@ -658,8 +658,7 @@ const ConversationFileSelect: React.FC = () => {
 
               <TabsContent value='files' className='mt-4'>
                 <p className='mb-2 px-1 text-xs text-muted-foreground'>
-                  Gives the AI the whole file, or searches it if it is too long
-                  for the model.
+                  Gives the AI the whole file.
                 </p>
                 <div className='max-h-[300px] space-y-1 overflow-y-auto'>
                   {filteredFiles.map((file) => {
