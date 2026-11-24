@@ -107,6 +107,18 @@ const isCounting = (ids: number[], size: SourceSizeState) =>
 const measuredTokens = (ids: number[], size: SourceSizeState) =>
   ids.length && size.status === 'ready' ? size.size.estimatedTokens : 0
 
+/** Ids the reply read in full, from its trace; null when the trace can't say. */
+const filesReadInFull = (reply: Message | undefined): Set<number> | null => {
+  if (!reply) return new Set()
+  if (!reply.contextTrace) return null
+  const entries = (
+    reply.contextTrace.stages.find((stage) => stage.kind === 'files')?.files ??
+    []
+  ).filter((entry) => !entry.sandbox)
+  const ids = entries.map((entry) => entry.id)
+  return ids.every((id): id is number => id !== undefined) ? new Set(ids) : null
+}
+
 const ContextMeter = () => {
   const messages = useSelector(
     (state: RootState) => state.conversation.activeConversationMessages
@@ -131,20 +143,16 @@ const ContextMeter = () => {
     [messages]
   )
   // Files read in full go out with every message, so only the difference
-  // from what the last message sent changes the next prompt.
+  // from what the last reply read in full changes the next prompt.
   const { addedIds, removedIds } = useMemo(() => {
-    const lastAsk = [...(messages ?? [])]
-      .reverse()
-      .find((message) => message.senderType === SenderType.PLAYER)
-    const sent = new Set(
-      (lastAsk?.files ?? []).filter((file) => !file.isMedia).map((f) => f.id)
-    )
+    const read = filesReadInFull(replies[replies.length - 1])
+    if (!read) return { addedIds: [], removedIds: [] }
     const picked = new Set(selectedFiles.map((file) => file.id))
     return {
-      addedIds: [...picked].filter((id) => !sent.has(id)),
-      removedIds: [...sent].filter((id) => !picked.has(id)),
+      addedIds: [...picked].filter((id) => !read.has(id)),
+      removedIds: [...read].filter((id) => !picked.has(id)),
     }
-  }, [messages, selectedFiles])
+  }, [replies, selectedFiles])
   const addedSize = useSourceSize(addedIds, NO_FOLDERS, selectedModel)
   const removedSize = useSourceSize(removedIds, NO_FOLDERS, selectedModel)
   if (!model?.maxInputTokens) return null
