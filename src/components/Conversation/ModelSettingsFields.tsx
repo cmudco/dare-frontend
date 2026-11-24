@@ -139,23 +139,19 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
     (walletMeta?.supportsWebSearch ?? true) &&
     (model?.supportsWebSearch ?? true)
   const provider = model?.provider?.toLowerCase()
-  const isGemini = provider === 'gemini'
   const showWebFetch =
     showWebSearch && (provider === 'claude' || provider === 'gemini')
   const sandboxAvailable = supportsCodeSandbox(model, walletMeta)
   const showEffort = model?.supportsEffort ?? false
 
+  const allEfforts = Object.values(EffortLevel)
+  const maxEffort = model?.maxEffort ?? EffortLevel.Max
+  const effortOptions = allEfforts.slice(0, allEfforts.indexOf(maxEffort) + 1)
   const requestedEffort =
     settings.effort ?? model?.defaultEffort ?? EffortLevel.High
-  const effort =
-    isGemini &&
-    (requestedEffort === EffortLevel.XHigh ||
-      requestedEffort === EffortLevel.Max)
-      ? EffortLevel.High
-      : requestedEffort
-  const effortOptions = isGemini
-    ? [EffortLevel.Low, EffortLevel.Medium, EffortLevel.High]
-    : Object.values(EffortLevel)
+  const effort = effortOptions.includes(requestedEffort)
+    ? requestedEffort
+    : maxEffort
   const usesAdaptiveThinking = model?.supportsAdaptiveThinking ?? false
   const effortGuidance = ADAPTIVE_EFFORT_GUIDANCE[effort]
 
@@ -224,19 +220,14 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
               {EffortLevelLabels[effort]}
             </span>
           </div>
-          <div
-            className={cn(
-              'grid gap-1',
-              isGemini ? 'grid-cols-3' : 'grid-cols-5'
-            )}
-          >
+          <div className='flex gap-1'>
             {effortOptions.map((value) => (
               <Button
                 key={value}
                 type='button'
                 size='sm'
                 variant={effort === value ? 'default' : 'outline'}
-                className='h-8 px-1 text-xs'
+                className='h-8 flex-1 px-1 text-xs'
                 onClick={() => onChange({ effort: value })}
               >
                 {EffortLevelLabels[value]}
