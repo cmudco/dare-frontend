@@ -134,11 +134,14 @@ const ContextMeter = () => {
   const selectedModel = useSelector(
     (state: RootState) => state.conversation.selectedModel
   )
+  // A failed reply used none of the window, so it can't anchor the meter.
   const replies = useMemo(
     () =>
       (messages ?? []).filter(
         (message) =>
-          message.senderType === SenderType.AI_ASSISTANT && !message.streaming
+          message.senderType === SenderType.AI_ASSISTANT &&
+          !message.streaming &&
+          usageRounds(message).length > 0
       ),
     [messages]
   )
