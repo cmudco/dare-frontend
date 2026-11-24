@@ -25,6 +25,7 @@ import ExportButton from './ExportButton'
 import ImagePreview from './ImagePreview'
 import ImageGenerationPanel from './ImageGenerationPanel'
 import AudioTranscriptionPanel from './AudioTranscriptionPanel'
+import ContextMeter from './ContextMeter'
 import VoiceModeButton from './VoiceModeButton'
 import { AlertCircle, ArrowUp, Pencil, Square, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
@@ -417,6 +418,7 @@ const ConversationPill: React.FC<ConversationPillProps> = ({
             style={{ minHeight: '3.5rem', maxHeight: '10rem' }}
           />
           <div className='absolute top-1/2 right-[16px] flex -translate-y-1/2 items-center gap-2'>
+            <ContextMeter />
             {/* Voice Mode Button */}
             <VoiceModeButton disabled={disabled} />
             {/* Send / Stop Button */}

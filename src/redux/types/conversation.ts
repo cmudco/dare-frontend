@@ -595,6 +595,7 @@ export interface PickerModel {
   isAudioTranscriber?: boolean
   /** LiteLLM entries only: whether this gateway model can search the web. */
   supportsWebSearch?: boolean
+  maxInputTokens: number
   inputTokenRatePerMillion: number | null
   outputTokenRatePerMillion: number | null
   tier: string | null
