@@ -6,6 +6,7 @@ import type { Message } from '@/redux/types/conversation'
 import { SenderType } from '@/utils/constants/conversation'
 import { sumUsage, usageRounds } from '@/utils/usageDetails'
 import { formatUsdPrecise } from '@/utils/wallets'
+import { isImageOrAudioModel } from '@/redux/utils/modelSyncHelpers'
 import { type SourceSizeState, useSourceSize } from '@/hooks/useSourceSize'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 
@@ -134,34 +135,37 @@ const ContextMeter = () => {
   const selectedModel = useSelector(
     (state: RootState) => state.conversation.selectedModel
   )
-  // A failed reply used none of the window, so it can't anchor the meter.
   const replies = useMemo(
     () =>
       (messages ?? []).filter(
         (message) =>
-          message.senderType === SenderType.AI_ASSISTANT &&
-          !message.streaming &&
-          usageRounds(message).length > 0
+          message.senderType === SenderType.AI_ASSISTANT && !message.streaming
       ),
     [messages]
+  )
+  // Failed and image replies used none of the window, so they can't anchor it.
+  const last = useMemo(
+    () =>
+      [...replies].reverse().find((message) => usageRounds(message).length > 0),
+    [replies]
   )
   // Files read in full go out with every message, so only the difference
   // from what the last reply read in full changes the next prompt.
   const { addedIds, removedIds } = useMemo(() => {
-    const read = filesReadInFull(replies[replies.length - 1])
+    const read = filesReadInFull(last)
     if (!read) return { addedIds: [], removedIds: [] }
     const picked = new Set(selectedFiles.map((file) => file.id))
     return {
       addedIds: [...picked].filter((id) => !read.has(id)),
       removedIds: [...read].filter((id) => !picked.has(id)),
     }
-  }, [replies, selectedFiles])
+  }, [last, selectedFiles])
   const addedSize = useSourceSize(addedIds, NO_FOLDERS, selectedModel)
   const removedSize = useSourceSize(removedIds, NO_FOLDERS, selectedModel)
-  if (!model?.maxInputTokens) return null
+  // Image and audio models answer without a chat context window.
+  if (!model?.maxInputTokens || isImageOrAudioModel(model)) return null
   const windowTokens = model.maxInputTokens
 
-  const last = replies[replies.length - 1]
   const lastRound = last ? usageRounds(last).slice(-1)[0] : undefined
   const prompt = lastRound?.inputTokens ?? 0
   const reply = lastRound?.outputTokens ?? 0

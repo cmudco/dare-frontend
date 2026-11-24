@@ -12,7 +12,7 @@
 
 import { ConversationState, PickerModel } from '../types/conversation'
 
-const isImageOrAudioModel = (m: PickerModel): boolean =>
+export const isImageOrAudioModel = (m: PickerModel): boolean =>
   Boolean(m.isImageGenerator || m.isAudioTranscriber)
 
 export const filterPickerEntriesByImageGeneration = (
