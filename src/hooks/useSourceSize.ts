@@ -33,7 +33,11 @@ export const useSourceSize = (
       return
     }
     let stale = false
-    setState({ status: 'loading', size: null })
+    // Keep the last answer on screen while re-measuring, so the note never
+    // blinks out and back in on every tick.
+    setState((current) =>
+      current.status === 'ready' ? current : { status: 'loading', size: null }
+    )
     getSourceSizeAPI({ fileIds: files, folderIds: folders, modelRef: model })
       .then((size) => !stale && setState({ status: 'ready', size }))
       .catch(() => !stale && setState({ status: 'error', size: null }))
