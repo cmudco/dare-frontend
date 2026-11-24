@@ -561,6 +561,7 @@ export interface LLMModel {
   supportsEffort: boolean
   supportsAdaptiveThinking: boolean
   defaultEffort: EffortLevel
+  maxEffort: EffortLevel
   defaultAdaptiveThinkingEnabled: boolean
   isImageGenerator?: boolean
   isAudioTranscriber?: boolean
@@ -588,6 +589,7 @@ export interface PickerModel {
   supportsEffort: boolean
   supportsAdaptiveThinking: boolean
   defaultEffort: EffortLevel
+  maxEffort: EffortLevel
   defaultAdaptiveThinkingEnabled: boolean
   isImageGenerator?: boolean
   isAudioTranscriber?: boolean
