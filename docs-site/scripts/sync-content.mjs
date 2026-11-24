@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -12,6 +13,31 @@ const sbBackendRoot = path.join(socraticRoot, 'socraticbots-backend')
 const sbFrontendRoot = path.join(socraticRoot, 'socraticbots-frontend')
 const sbVoiceRoot = path.join(socraticRoot, 'voice-agent-runtime')
 const contentRoot = path.join(docsSite, 'content', 'docs')
+
+// Sibling repos are read from their merged branch, never their working tree,
+// so a local checkout on a feature branch cannot leak unmerged docs into dev.
+const mergedBranch = new Map([
+  [backendRoot, 'origin/dev'],
+  [sbBackendRoot, 'origin/dev'],
+  [sbFrontendRoot, 'origin/dev'],
+  [sbVoiceRoot, 'origin/main'],
+])
+
+function readSource(file) {
+  const root = [...mergedBranch.keys()].find((repo) =>
+    file.startsWith(repo + path.sep)
+  )
+  if (!root) return existsSync(file) ? readFile(file, 'utf8') : null
+  const ref = `${mergedBranch.get(root)}:${path.relative(root, file)}`
+  try {
+    return execFileSync('git', ['-C', root, 'show', ref], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+  } catch {
+    return null
+  }
+}
 const socraticFolder = 'socratic-bots'
 
 const pages = [
@@ -692,22 +718,21 @@ if (!hasSocratic) {
 }
 const syncedPages = hasSocratic ? [...pages, ...socraticPages] : pages
 
-const missing = syncedPages.filter((page) => !existsSync(page.from))
+const sources = await Promise.all(syncedPages.map((page) => readSource(page.from)))
+const missing = syncedPages.filter((_, index) => sources[index] === null)
 if (missing.length) {
   console.error(
-    `docs:sync failed: missing sources (are the sibling checkouts on up-to-date branches?)\n${missing
+    `docs:sync failed: missing sources (run git fetch in the sibling repos)\n${missing
       .map((page) => `  ${page.from}`)
       .join('\n')}`
   )
   process.exit(1)
 }
 
-const rendered = await Promise.all(
-  syncedPages.map(async (page) => [
-    page.to,
-    renderPage(page, await readFile(page.from, 'utf8')),
-  ])
-)
+const rendered = syncedPages.map((page, index) => [
+  page.to,
+  renderPage(page, sources[index]),
+])
 
 for (const entry of await readdir(contentRoot).catch(() => [])) {
   if (hasSocratic || entry !== socraticFolder) {

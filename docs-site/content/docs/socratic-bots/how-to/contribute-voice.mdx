@@ -75,8 +75,6 @@ are its coding rules.
 - **Backend contract.** The session token format, the context endpoint and the start/end callbacks
   are shared with the Socratic Bots backend. Keep changes backward compatible, or document the
   deploy order.
-- **Bug fixes.** Remove the root cause. When a small refactor makes the bad state impossible, do it
-  instead of adding a guard, catch, retry, or special case.
 - **Tests.** Use `unittest`. Mock Mistral and other providers; tests must not make network calls.
 
 ### PR description
