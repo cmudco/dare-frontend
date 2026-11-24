@@ -262,18 +262,6 @@ export const TOOLTIP_CONTENT = {
         'Individual files up to 50MB. Larger files take longer to process.',
       tip: 'For very large documents, consider splitting into smaller sections for better performance.',
     },
-    contentFiles: {
-      title: 'Content Files',
-      description:
-        'Files directly passed to the AI as context. The entire content is included in the prompt.',
-      tip: 'Use for small, important files that should be fully read by the AI.',
-    },
-    embeddingFiles: {
-      title: 'Embedding Files',
-      description:
-        'Files processed into vector embeddings for semantic search (RAG). Only relevant chunks are retrieved.',
-      tip: 'Use for large documents where you want the AI to find and use relevant sections.',
-    },
   },
 
   // Workflows

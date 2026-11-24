@@ -77,6 +77,7 @@ export interface MoveConversationsResult {
 export interface SourceSizeRequest {
   fileIds: number[]
   folderIds: number[]
+  modelRef: string | null
 }
 
 /** Estimated prompt cost of reading files in full; libraries are always searched. */

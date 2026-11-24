@@ -60,6 +60,8 @@ import ModelContextSettings from './ModelContextSettings'
 import { FileStatus } from '@/utils/constants/file'
 import { supportsCodeSandbox } from '@/utils/modelConfigUtils'
 import { isSpreadsheetFile } from '@/utils/spreadsheet/protocol'
+import { useSourceSize } from '@/hooks/useSourceSize'
+import { formatTokenEstimate } from '../Projects/projectSources'
 
 // Tables are searched by a summary card, so their parser is not the story.
 const sourceLabel = (
@@ -68,14 +70,9 @@ const sourceLabel = (
 ): string =>
   isSpreadsheetFile(name) ? 'Table' : DOCUMENT_PARSER_LABELS[parserName]
 
-type SourceTab =
-  | 'files'
-  | 'embeddings'
-  | 'media'
-  | 'tags'
-  | 'folders'
-  | 'libraries'
-  | 'graphs'
+const NO_FOLDERS: number[] = []
+
+type SourceTab = 'files' | 'media' | 'tags' | 'folders' | 'libraries' | 'graphs'
 
 const ConversationFileSelect: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -100,6 +97,9 @@ const ConversationFileSelect: React.FC = () => {
       ),
       state.conversation.activeWalletMeta
     )
+  )
+  const selectedModel = useSelector(
+    (state: RootState) => state.conversation.selectedModel
   )
   const selectedMediaFiles = useSelector(
     (state: RootState) => state.conversation.selectedMediaFiles
@@ -134,7 +134,7 @@ const ConversationFileSelect: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectionDirty, setSelectionDirty] = useState(false)
   const [showAllSources, setShowAllSources] = useState(false)
-  const [activeTab, setActiveTab] = useState<SourceTab>('embeddings')
+  const [activeTab, setActiveTab] = useState<SourceTab>('files')
   const [graphs, setGraphs] = useState<KnowledgeGraphSummary[] | null>(null)
 
   useEffect(() => {
@@ -300,22 +300,26 @@ const ConversationFileSelect: React.FC = () => {
     )
   }, [addedLibraries, searchQuery, scope, selectedLibraries])
 
-  const handleToggleFile = (file: MyFile) => {
-    const newSelectedFiles = selectedFiles.some((f) => f.id === file.id)
-      ? selectedFiles.filter((f) => f.id !== file.id)
-      : [...selectedFiles, file]
-    setSelectionDirty(true)
-    dispatch(updateSelectedFiles(newSelectedFiles))
-  }
+  const isFileSelected = (file: MyFile) =>
+    selectedFiles.some((f) => f.id === file.id) ||
+    selectedEmbeddings.some((f) => f.id === file.id)
 
-  const handleToggleEmbedding = (file: MyFile) => {
-    const newSelectedEmbeddings = selectedEmbeddings.some(
-      (f) => f.id === file.id
-    )
-      ? selectedEmbeddings.filter((f) => f.id !== file.id)
-      : [...selectedEmbeddings, file]
+  // Picked files are read in full; the server searches them when they do not
+  // fit the model. Files searched by a graph or an older chat untick the same way.
+  const handleToggleFile = (file: MyFile) => {
     setSelectionDirty(true)
-    dispatch(updateSelectedEmbeddings(newSelectedEmbeddings))
+    if (isFileSelected(file)) {
+      dispatch(
+        updateSelectedFiles(selectedFiles.filter((f) => f.id !== file.id))
+      )
+      dispatch(
+        updateSelectedEmbeddings(
+          selectedEmbeddings.filter((f) => f.id !== file.id)
+        )
+      )
+    } else {
+      dispatch(updateSelectedFiles([...selectedFiles, file]))
+    }
   }
 
   const handleToggleMedia = (file: MyFile) => {
@@ -432,12 +436,15 @@ const ConversationFileSelect: React.FC = () => {
   }
 
   const selectionCounts = [
-    { n: selectedEmbeddings.length, label: 'embeddings' },
-    { n: selectedFiles.length, label: 'files' },
-    { n: selectedMediaFiles.length, label: 'media' },
-    { n: selectedTags.length, label: 'tags' },
-    { n: selectedFolders.length, label: 'folders' },
-    { n: selectedLibraries.length, label: 'libraries' },
+    { n: selectedFiles.length, label: ['file', 'files'] },
+    {
+      n: selectedEmbeddings.length,
+      label: ['searched file', 'searched files'],
+    },
+    { n: selectedMediaFiles.length, label: ['media file', 'media files'] },
+    { n: selectedTags.length, label: ['tag', 'tags'] },
+    { n: selectedFolders.length, label: ['folder', 'folders'] },
+    { n: selectedLibraries.length, label: ['library', 'libraries'] },
   ]
   const totalSelected = selectionCounts.reduce((sum, c) => sum + c.n, 0)
   // Tables ticked under either tab are sent to the sandbox.
@@ -452,11 +459,24 @@ const ConversationFileSelect: React.FC = () => {
           ? 'To process this file or run any calculations on it, turn on Code sandbox in chat settings.'
           : "This model can't run code. To process this file or run any calculations on it, pick an OpenAI or Claude model and turn on Code sandbox."
       : null
+  const readSize = useSourceSize(
+    selectedFiles.map((file) => file.id),
+    NO_FOLDERS,
+    selectedModel
+  )
+  const readNote =
+    readSize.status !== 'ready'
+      ? null
+      : readSize.size.fitsFullFiles
+        ? `The AI reads ${selectedFiles.length === 1 ? 'this file' : 'these files'} in full (${formatTokenEstimate(readSize.size.estimatedTokens)}).`
+        : `Too long to read in full on this model (${formatTokenEstimate(readSize.size.estimatedTokens)}, limit ${formatTokenEstimate(readSize.size.tokenLimit)}), so the AI searches ${selectedFiles.length === 1 ? 'it' : 'them'} instead.`
   const selectionSummary = [
     ...(selectedGraphs.length
       ? [`Graph: ${selectedGraphs.map((graph) => graph.name).join(', ')}`]
       : []),
-    ...selectionCounts.filter((c) => c.n > 0).map((c) => `${c.n} ${c.label}`),
+    ...selectionCounts
+      .filter((c) => c.n > 0)
+      .map((c) => `${c.n} ${c.label[c.n === 1 ? 0 : 1]}`),
   ].join(' · ')
 
   const clearSelections = () => {
@@ -542,12 +562,6 @@ const ConversationFileSelect: React.FC = () => {
             >
               <TabsList className='flex w-full overflow-x-auto border-border bg-muted/50'>
                 <TabsTrigger
-                  value='embeddings'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Embeddings
-                </TabsTrigger>
-                <TabsTrigger
                   value='files'
                   className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
                 >
@@ -585,50 +599,6 @@ const ConversationFileSelect: React.FC = () => {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value='embeddings' className='mt-4'>
-                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredFiles.map((file) => {
-                    const isShared = isOwnerFile(file.id)
-                    return (
-                      <div
-                        key={file.id}
-                        onClick={() => handleToggleEmbedding(file)}
-                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground'
-                      >
-                        <div
-                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                            selectedEmbeddings.some((f) => f.id === file.id)
-                              ? 'border-primary bg-primary'
-                              : 'border-input hover:border-muted-foreground'
-                          }`}
-                        >
-                          {selectedEmbeddings.some((f) => f.id === file.id) && (
-                            <Check className='h-3 w-3 text-primary-foreground' />
-                          )}
-                        </div>
-                        <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                        <span className='flex-1 text-sm text-foreground'>
-                          {file.name}
-                          {file.parserName && (
-                            <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
-                              {sourceLabel(file.name ?? '', file.parserName)}
-                            </span>
-                          )}
-                        </span>
-                        {isShared && (
-                          <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
-                        )}
-                      </div>
-                    )
-                  })}
-                  {filteredFiles.length === 0 && (
-                    <p className='py-4 text-center text-muted-foreground'>
-                      No files found
-                    </p>
-                  )}
-                </div>
-              </TabsContent>
-
               <TabsContent value='files' className='mt-4'>
                 <div className='max-h-[300px] space-y-1 overflow-y-auto'>
                   {filteredFiles.map((file) => {
@@ -641,18 +611,18 @@ const ConversationFileSelect: React.FC = () => {
                       >
                         <div
                           className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                            selectedFiles.some((f) => f.id === file.id)
+                            isFileSelected(file)
                               ? 'border-primary bg-primary'
                               : 'border-input hover:border-muted-foreground'
                           }`}
                         >
-                          {selectedFiles.some((f) => f.id === file.id) && (
+                          {isFileSelected(file) && (
                             <Check className='h-3 w-3 text-primary-foreground' />
                           )}
                         </div>
                         <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
                         <span
-                          className={`flex-1 text-sm ${selectedFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'}`}
+                          className={`flex-1 text-sm ${isFileSelected(file) ? 'font-medium text-primary' : 'text-foreground'}`}
                         >
                           {file.name}
                           {file.parserName && (
@@ -885,6 +855,9 @@ const ConversationFileSelect: React.FC = () => {
                 <p className='px-1 text-xs text-muted-foreground'>
                   {selectionSummary}
                 </p>
+              )}
+              {readNote && (
+                <p className='px-1 text-xs text-muted-foreground'>{readNote}</p>
               )}
               {tableHint && (
                 <p className='rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground'>

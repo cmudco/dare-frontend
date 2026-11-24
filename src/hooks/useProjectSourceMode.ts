@@ -10,7 +10,8 @@ export const useProjectSourceMode = (project: Project) => {
   const readsFull = project.sourceMode === ProjectSourceMode.FULL
   const sizeState = useSourceSize(
     readsFull ? project.fileIds : [],
-    readsFull ? project.folderIds : []
+    readsFull ? project.folderIds : [],
+    project.defaultModelRef
   )
   const tooLargeTokens =
     sizeState.status === 'ready' && !sizeState.size.fitsFullFiles
