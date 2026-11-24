@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/redux/store'
@@ -6,6 +6,7 @@ import type { Message } from '@/redux/types/conversation'
 import { SenderType } from '@/utils/constants/conversation'
 import { sumUsage, usageRounds } from '@/utils/usageDetails'
 import { formatUsdPrecise } from '@/utils/wallets'
+import { useSourceSize } from '@/hooks/useSourceSize'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 
 const compact = new Intl.NumberFormat(undefined, {
@@ -16,6 +17,7 @@ const RING = 2 * Math.PI * 7
 // Past this share of the window, the next reply risks running out of room.
 const NEARLY_FULL = 0.8
 const SPRING = { type: 'spring', stiffness: 140, damping: 22 } as const
+const NO_FOLDERS: number[] = []
 
 interface TokenTotals {
   uncached: number
@@ -105,6 +107,12 @@ const ContextMeter = () => {
       (entry) => entry.id === state.conversation.selectedModel
     )
   )
+  const selectedFiles = useSelector(
+    (state: RootState) => state.conversation.selectedFiles
+  )
+  const selectedModel = useSelector(
+    (state: RootState) => state.conversation.selectedModel
+  )
   const replies = useMemo(
     () =>
       (messages ?? []).filter(
@@ -113,6 +121,23 @@ const ContextMeter = () => {
       ),
     [messages]
   )
+  // Files read in full go out with every message, so only the difference
+  // from what the last message sent changes the next prompt.
+  const { addedIds, removedIds } = useMemo(() => {
+    const lastAsk = [...(messages ?? [])]
+      .reverse()
+      .find((message) => message.senderType === SenderType.PLAYER)
+    const sent = new Set(
+      (lastAsk?.files ?? []).filter((file) => !file.isMedia).map((f) => f.id)
+    )
+    const picked = new Set(selectedFiles.map((file) => file.id))
+    return {
+      addedIds: [...picked].filter((id) => !sent.has(id)),
+      removedIds: [...sent].filter((id) => !picked.has(id)),
+    }
+  }, [messages, selectedFiles])
+  const addedSize = useSourceSize(addedIds, NO_FOLDERS, selectedModel)
+  const removedSize = useSourceSize(removedIds, NO_FOLDERS, selectedModel)
   if (!model?.maxInputTokens) return null
   const windowTokens = model.maxInputTokens
 
@@ -125,6 +150,15 @@ const ContextMeter = () => {
   const nearlyFull = share >= NEARLY_FULL
   const fill = nearlyFull ? 'bg-destructive' : 'bg-primary'
   const totals = replies.map(tokensOf).reduce(addTotals, EMPTY)
+  const added =
+    addedIds.length && addedSize.status === 'ready'
+      ? addedSize.size.estimatedTokens
+      : 0
+  const removed =
+    removedIds.length && removedSize.status === 'ready'
+      ? removedSize.size.estimatedTokens
+      : 0
+  const nextMayOverflow = used + added - removed > windowTokens
   const label = last
     ? `Last reply used ${percent(share)} of the context window`
     : 'Context window'
@@ -218,6 +252,14 @@ const ContextMeter = () => {
               }}
               transition={SPRING}
             />
+            <motion.div
+              className={`${fill} opacity-20`}
+              initial={false}
+              animate={{
+                width: `${(Math.min(added, windowTokens) / windowTokens) * 100}%`,
+              }}
+              transition={SPRING}
+            />
           </div>
           <div className='mt-2 flex gap-4 text-xs text-muted-foreground'>
             <span className='flex items-center gap-1.5'>
@@ -232,6 +274,30 @@ const ContextMeter = () => {
               {compact.format(Math.max(windowTokens - used, 0))} free
             </span>
           </div>
+          <AnimatePresence initial={false}>
+            {(added > 0 || removed > 0) && (
+              <motion.p
+                key='next'
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className={`flex items-center gap-1.5 overflow-hidden pt-2 text-xs ${
+                  nextMayOverflow ? 'text-destructive' : 'text-foreground'
+                }`}
+              >
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${fill} opacity-20`}
+                />
+                Next message:
+                {added > 0 && ` +${compact.format(added)} from files you added`}
+                {added > 0 && removed > 0 && ','}
+                {removed > 0 &&
+                  ` −${compact.format(removed)} from files you removed`}
+                {nextMayOverflow && '. It may not fit this model.'}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
 
         <p className='text-xs leading-relaxed text-muted-foreground'>
