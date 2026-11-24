@@ -438,15 +438,26 @@ const ConversationFileSelect: React.FC = () => {
     }
   }
 
-  const selectionCounts = [
-    { n: selectedEmbeddings.length, label: ['embedding', 'embeddings'] },
-    { n: selectedFiles.length, label: ['file', 'files'] },
-    { n: selectedMediaFiles.length, label: ['media file', 'media files'] },
-    { n: selectedTags.length, label: ['tag', 'tags'] },
-    { n: selectedFolders.length, label: ['folder', 'folders'] },
-    { n: selectedLibraries.length, label: ['library', 'libraries'] },
+  const sourceTabs: { value: SourceTab; label: string; count: number }[] = [
+    {
+      value: 'embeddings',
+      label: 'Embeddings',
+      count: selectedEmbeddings.length,
+    },
+    { value: 'files', label: 'Files', count: selectedFiles.length },
+    { value: 'media', label: 'Media', count: selectedMediaFiles.length },
+    { value: 'tags', label: 'Tags', count: selectedTags.length },
+    { value: 'folders', label: 'Folders', count: selectedFolders.length },
+    { value: 'libraries', label: 'Libraries', count: selectedLibraries.length },
+    { value: 'graphs', label: 'Graphs', count: selectedGraphs.length },
   ]
-  const totalSelected = selectionCounts.reduce((sum, c) => sum + c.n, 0)
+  const totalSelected =
+    selectedEmbeddings.length +
+    selectedFiles.length +
+    selectedMediaFiles.length +
+    selectedTags.length +
+    selectedFolders.length +
+    selectedLibraries.length
   // Tables ticked under either tab are sent to the sandbox.
   const isTable = (file: MyFile) => isSpreadsheetFile(file.name ?? '')
   const tableInFiles = selectedFiles.some(isTable)
@@ -473,14 +484,6 @@ const ConversationFileSelect: React.FC = () => {
   const searchNote = selectedEmbeddings.length
     ? `The AI searches ${selectedEmbeddings.length === 1 ? 'this embedding' : 'these embeddings'} and reads the most relevant passages.`
     : null
-  const selectionSummary = [
-    ...(selectedGraphs.length
-      ? [`Graph: ${selectedGraphs.map((graph) => graph.name).join(', ')}`]
-      : []),
-    ...selectionCounts
-      .filter((c) => c.n > 0)
-      .map((c) => `${c.n} ${c.label[c.n === 1 ? 0 : 1]}`),
-  ].join(' · ')
 
   const clearSelections = () => {
     setSelectionDirty(true)
@@ -564,48 +567,20 @@ const ConversationFileSelect: React.FC = () => {
               onValueChange={(value) => setActiveTab(value as SourceTab)}
             >
               <TabsList className='flex w-full overflow-x-auto border-border bg-muted/50'>
-                <TabsTrigger
-                  value='embeddings'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Embeddings
-                </TabsTrigger>
-                <TabsTrigger
-                  value='files'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Files
-                </TabsTrigger>
-                <TabsTrigger
-                  value='media'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Media
-                </TabsTrigger>
-                <TabsTrigger
-                  value='tags'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Tags
-                </TabsTrigger>
-                <TabsTrigger
-                  value='folders'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Folders
-                </TabsTrigger>
-                <TabsTrigger
-                  value='libraries'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Libraries
-                </TabsTrigger>
-                <TabsTrigger
-                  value='graphs'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Graphs
-                </TabsTrigger>
+                {sourceTabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className='flex-auto gap-1 px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
+                  >
+                    {tab.label}
+                    {tab.count > 0 && (
+                      <span className='min-w-4 rounded-full bg-primary px-1 text-[10px] leading-4 font-medium text-primary-foreground'>
+                        {tab.count}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
               <TabsContent value='embeddings' className='mt-4'>
@@ -911,11 +886,6 @@ const ConversationFileSelect: React.FC = () => {
             <Separator />
 
             <div className='space-y-2'>
-              {totalSelected > 0 && (
-                <p className='px-1 text-xs text-muted-foreground'>
-                  {selectionSummary}
-                </p>
-              )}
               {searchNote && (
                 <p className='px-1 text-xs text-muted-foreground'>
                   {searchNote}
