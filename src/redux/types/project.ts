@@ -86,4 +86,6 @@ export interface SourceSize {
   estimatedTokens: number
   tokenLimit: number
   fitsFullFiles: boolean
+  /** Some files could not be counted by the model's own tokenizer. */
+  estimated: boolean
 }
