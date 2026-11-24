@@ -204,6 +204,8 @@ except DareApiError as error:
 - A request or response shape change that DARE or the frontend uses is called out in the PR, with
   the matching PR in the other repo linked.
 - `manage.py check` and `manage.py test` pass from `backend/`.
+- A bug fix removes its root cause: when a small refactor makes the bad state impossible, it
+  replaces the guard, catch, retry, or special case.
 - Comments and docs describe the final design, not how the patch evolved.
 
 ## Project conventions

@@ -189,6 +189,7 @@ A feature is ready only when:
 - every field has one type, owner, default, transformation, and consumer;
 - send, regenerate, REST history, and socket events agree on one state shape;
 - no dead state, duplicate transform, unused flag, or compatibility branch was introduced;
+- a bug fix removes its root cause: when a small refactor makes the bad state impossible, it replaces the guard, catch, retry, or special case;
 - loading, empty, error, retry, and accessibility behavior are complete;
 - lint, formatting, type checks, relevant tests, and production build pass;
 - the diff contains no unrelated user work;
