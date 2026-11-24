@@ -482,9 +482,11 @@ const ConversationFileSelect: React.FC = () => {
   const readNote =
     readSize.status !== 'ready'
       ? null
-      : readSize.size.fitsFullFiles
-        ? `The AI reads ${selectedFiles.length === 1 ? 'this file' : 'these files'} in full (${formatTokenCount(readSize.size.estimatedTokens, readSize.size.estimated)}).`
-        : `Too long for this model: ${formatTokenCount(readSize.size.estimatedTokens, readSize.size.estimated)}, and it has room for about ${formatTokenEstimate(readSize.size.tokenLimit)} of files. Pick a model with a larger context window, or use Embeddings to search ${selectedFiles.length === 1 ? 'it' : 'them'}.`
+      : readSize.refreshing
+        ? `Counting tokens for ${selectedFiles.length === 1 ? 'this file' : 'these files'} on this model…`
+        : readSize.size.fitsFullFiles
+          ? `The AI reads ${selectedFiles.length === 1 ? 'this file' : 'these files'} in full (${formatTokenCount(readSize.size.estimatedTokens, readSize.size.estimated)}).`
+          : `Too long for this model: ${formatTokenCount(readSize.size.estimatedTokens, readSize.size.estimated)}, and it has room for about ${formatTokenEstimate(readSize.size.tokenLimit)} of files. Pick a model with a larger context window, or use Embeddings to search ${selectedFiles.length === 1 ? 'it' : 'them'}.`
 
   const footerNotes = [
     { key: 'read', text: readNote },
