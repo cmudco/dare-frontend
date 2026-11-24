@@ -26,3 +26,9 @@ const compactTokens = new Intl.NumberFormat(undefined, {
 /** "~42K tokens" — estimates are rough, so they read as approximate. */
 export const formatTokenEstimate = (tokens: number) =>
   `~${compactTokens.format(tokens)} tokens`
+
+/** Counted by the model's own tokenizer: "42K tokens"; otherwise an estimate. */
+export const formatTokenCount = (tokens: number, estimated: boolean) =>
+  estimated
+    ? `${formatTokenEstimate(tokens)}, estimated`
+    : `${compactTokens.format(tokens)} tokens`
