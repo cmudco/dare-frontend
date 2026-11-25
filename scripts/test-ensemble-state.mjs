@@ -18,6 +18,10 @@ const bundle = await build({
   platform: 'node',
   format: 'esm',
   write: false,
+  // Vite injects this at build time; src/config/environment.ts reads it.
+  define: {
+    'import.meta.env': JSON.stringify({ VITE_APP_ENVIRONMENT: 'local' }),
+  },
   plugins: [
     {
       name: 'block-http',
