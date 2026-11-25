@@ -87,7 +87,7 @@ const ProjectsPage = () => {
 
   return (
     <div className='h-full overflow-y-auto'>
-      <div className='mx-auto max-w-4xl px-6 pt-10 pb-16'>
+      <div className='px-6 pt-8 pb-16 md:px-10'>
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
           <h1 className='text-3xl font-semibold tracking-tight'>Projects</h1>
           <div className='flex items-center gap-2'>
