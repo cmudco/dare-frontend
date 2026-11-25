@@ -688,6 +688,10 @@ export interface ConversationState {
   pendingActiveGenerationIds: string[]
   // Opaque dispatch id from the picker — echoed back to the BE on send.
   selectedModel: string | null
+  /** The chat model to return to when image or audio mode is switched off. */
+  textModeModel: string | null
+  /** Request id of the newest save per conversation; only its reply updates the open chat. */
+  latestConversationSave: Record<string, string>
   // Multi-model composition from the picker. Inactive until depth leaves
   // 'single' and at least two responders are picked.
   ensemble: EnsembleConfig

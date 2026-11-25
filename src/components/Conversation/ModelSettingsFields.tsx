@@ -12,8 +12,8 @@ import {
 } from '@/redux/types/conversation'
 import { EffortLevel, EffortLevelLabels } from '@/utils/constants/model'
 import { supportsCodeSandbox } from '@/utils/modelConfigUtils'
-import { Button } from '../ui/button'
 import { Slider } from '../ui/slider'
+import { StepSlider } from '../ui/step-slider'
 import { Switch } from '../ui/switch'
 import {
   Tooltip,
@@ -123,6 +123,98 @@ const ToggleRow: React.FC<ToggleRowProps> = ({
   </div>
 )
 
+interface SliderFieldProps {
+  info: InfoLabelProps
+  value: number
+  min: number
+  max: number
+  step: number
+  onCommit: (value: number) => void
+  format?: (value: number) => React.ReactNode
+  className?: string
+  children?: React.ReactNode
+}
+
+// Holds the value while it is dragged, so only this row renders until release.
+const SliderField: React.FC<SliderFieldProps> = ({
+  info,
+  value,
+  onCommit,
+  format = (shown) => shown,
+  className,
+  children,
+  ...range
+}) => {
+  const [draft, setDraft] = React.useState<number | null>(null)
+
+  return (
+    <div className={cn('space-y-4', className)}>
+      <div className='flex items-center justify-between'>
+        <InfoLabel {...info} />
+        <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
+          {format(draft ?? value)}
+        </span>
+      </div>
+      <Slider
+        {...range}
+        value={[draft ?? value]}
+        onValueChange={([next]) => setDraft(next)}
+        onValueCommit={([next]) => {
+          onCommit(next)
+          setDraft(null)
+        }}
+        className='my-4 cursor-pointer'
+        aria-label={info.title}
+      />
+      {children}
+    </div>
+  )
+}
+
+interface EffortFieldProps {
+  options: EffortLevel[]
+  value: EffortLevel
+  onCommit: (effort: EffortLevel) => void
+}
+
+// Names the level under the thumb while it is swept, and applies it on release.
+const EffortField: React.FC<EffortFieldProps> = ({
+  options,
+  value,
+  onCommit,
+}) => {
+  const [swept, setSwept] = React.useState<EffortLevel | null>(null)
+  const shown = swept ?? value
+
+  return (
+    <div className='space-y-3 border-t border-border pt-2'>
+      <div className='flex items-center justify-between'>
+        <InfoLabel
+          title='Effort'
+          description='Controls reasoning depth for models that support provider-native effort settings.'
+        />
+        <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
+          {EffortLevelLabels[shown]}
+        </span>
+      </div>
+      <StepSlider
+        aria-label='Effort'
+        labels={options.map((option) => EffortLevelLabels[option])}
+        value={options.indexOf(shown)}
+        onValueChange={(index) => setSwept(options[index])}
+        onValueCommit={(index) => {
+          onCommit(options[index])
+          setSwept(null)
+        }}
+      />
+      <div className='flex justify-between px-1 text-xs text-muted-foreground'>
+        <span>Faster</span>
+        <span>Smarter</span>
+      </div>
+    </div>
+  )
+}
+
 /** Model settings shown for the chosen model, for a chat or an agent. */
 const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
   settings,
@@ -210,74 +302,40 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
       </div>
 
       {showEffort && (
-        <div className='space-y-3 border-t border-border pt-2'>
-          <div className='flex items-center justify-between'>
-            <InfoLabel
-              title='Effort'
-              description='Controls reasoning depth for models that support provider-native effort settings.'
-            />
-            <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
-              {EffortLevelLabels[effort]}
-            </span>
-          </div>
-          <div className='flex gap-1'>
-            {effortOptions.map((value) => (
-              <Button
-                key={value}
-                type='button'
-                size='sm'
-                variant={effort === value ? 'default' : 'outline'}
-                className='h-8 flex-1 px-1 text-xs'
-                onClick={() => onChange({ effort: value })}
-              >
-                {EffortLevelLabels[value]}
-              </Button>
-            ))}
-          </div>
-        </div>
+        <EffortField
+          options={effortOptions}
+          value={effort}
+          onCommit={(next) => onChange({ effort: next })}
+        />
       )}
 
       {showTemperature && (
-        <div className='space-y-4'>
-          <div className='flex items-center justify-between'>
-            <InfoLabel {...TOOLTIP_CONTENT.modelConfig.temperature} />
-            <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
-              {settings.temperature.toFixed(1)}
-            </span>
-          </div>
-          <Slider
-            value={[settings.temperature]}
-            min={0}
-            max={1}
-            step={0.1}
-            onValueChange={(values) => onChange({ temperature: values[0] })}
-            className='my-4 cursor-pointer'
-            aria-label='Temperature'
-          />
+        <SliderField
+          info={TOOLTIP_CONTENT.modelConfig.temperature}
+          value={settings.temperature}
+          min={0}
+          max={1}
+          step={0.1}
+          format={(shown) => shown.toFixed(1)}
+          onCommit={(temperature) => onChange({ temperature })}
+        >
           <div className='flex justify-between px-1 text-xs text-muted-foreground'>
             <span>Precise</span>
             <span>Balanced</span>
             <span>Creative</span>
           </div>
-        </div>
+        </SliderField>
       )}
 
-      <div className='space-y-4 border-t border-border pt-2'>
-        <div className='flex items-center justify-between'>
-          <InfoLabel {...TOOLTIP_CONTENT.modelConfig.maxTokens} />
-          <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
-            {settings.maxTokens}
-          </span>
-        </div>
-        <Slider
-          value={[settings.maxTokens]}
-          min={256}
-          max={MODEL_CONFIG.maxTokensCeiling}
-          step={256}
-          onValueChange={(values) => onChange({ maxTokens: values[0] })}
-          className='my-4 cursor-pointer'
-          aria-label='Max tokens'
-        />
+      <SliderField
+        className='border-t border-border pt-2'
+        info={TOOLTIP_CONTENT.modelConfig.maxTokens}
+        value={settings.maxTokens}
+        min={256}
+        max={MODEL_CONFIG.maxTokensCeiling}
+        step={256}
+        onCommit={(maxTokens) => onChange({ maxTokens })}
+      >
         {usesAdaptiveThinking && (
           <p className='text-xs text-muted-foreground'>
             This ceiling is shared by hidden thinking and visible text.
@@ -291,32 +349,24 @@ const ModelSettingsFields: React.FC<ModelSettingsFieldsProps> = ({
               little room for the visible answer.
             </p>
           )}
-      </div>
+      </SliderField>
 
-      <div className='space-y-4 border-t border-border pt-2'>
-        <div className='flex items-center justify-between'>
-          <InfoLabel {...TOOLTIP_CONTENT.modelConfig.historyLimit} />
-          <span className='rounded-md bg-muted px-2 py-1 font-mono text-sm text-foreground'>
-            {settings.historyLimit === 50
-              ? 'Full Context'
-              : settings.historyLimit}
-          </span>
-        </div>
-        <Slider
-          value={[settings.historyLimit]}
-          min={1}
-          max={50}
-          step={1}
-          onValueChange={(values) => onChange({ historyLimit: values[0] })}
-          className='my-4 cursor-pointer'
-          aria-label='History limit'
-        />
+      <SliderField
+        className='border-t border-border pt-2'
+        info={TOOLTIP_CONTENT.modelConfig.historyLimit}
+        value={settings.historyLimit}
+        min={1}
+        max={50}
+        step={1}
+        format={(shown) => (shown === 50 ? 'Full Context' : shown)}
+        onCommit={(historyLimit) => onChange({ historyLimit })}
+      >
         <div className='flex justify-between px-1 text-xs text-muted-foreground'>
           <span>Minimal</span>
           <span>Standard</span>
           <span>Max</span>
         </div>
-      </div>
+      </SliderField>
     </div>
   )
 }

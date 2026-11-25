@@ -2,7 +2,27 @@ import * as React from 'react'
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import { Circle } from 'lucide-react'
 
+import { motionAllowed } from '@/lib/motion'
 import { cn } from '@/lib/utils'
+
+// The newly picked dot springs in.
+function playPick(item: HTMLButtonElement) {
+  if (!motionAllowed() || item.dataset.state === 'checked') return
+  requestAnimationFrame(() => {
+    if (item.dataset.state !== 'checked') return
+    item
+      .querySelector('svg')
+      ?.animate(
+        [
+          { scale: 0 },
+          { scale: 1.25, offset: 0.5 },
+          { scale: 0.95, offset: 0.78 },
+          { scale: 1 },
+        ],
+        { duration: 380, easing: 'ease-out' }
+      )
+  })
+}
 
 const RadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,
@@ -21,7 +41,7 @@ RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 const RadioGroupItem = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
->(({ className, ...props }, ref) => {
+>(({ className, onClick, ...props }, ref) => {
   return (
     <RadioGroupPrimitive.Item
       ref={ref}
@@ -30,6 +50,10 @@ const RadioGroupItem = React.forwardRef<
         className
       )}
       {...props}
+      onClick={(event) => {
+        onClick?.(event)
+        playPick(event.currentTarget)
+      }}
     >
       <RadioGroupPrimitive.Indicator className='flex items-center justify-center'>
         <Circle className='h-2.5 w-2.5 fill-current text-current' />

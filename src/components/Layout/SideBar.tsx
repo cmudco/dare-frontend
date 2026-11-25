@@ -102,19 +102,14 @@ const Sidebar = () => {
     }
   }, [location.pathname, dispatch])
 
+  // Follows the phone breakpoint only when it is crossed, so resizing the
+  // window leaves a sidebar the user collapsed or opened as it is.
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setIsCollapsed(true)
-      } else {
-        setIsCollapsed(false)
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-    handleResize()
-
-    return () => window.removeEventListener('resize', handleResize)
+    const narrow = window.matchMedia('(max-width: 767px)')
+    const sync = () => setIsCollapsed(narrow.matches)
+    narrow.addEventListener('change', sync)
+    sync()
+    return () => narrow.removeEventListener('change', sync)
   }, [])
 
   interface MenuItem {
@@ -166,7 +161,7 @@ const Sidebar = () => {
       <div
         className={`relative flex shrink-0 ${
           isCollapsed ? 'w-[80px]' : 'w-[160px] md:w-[200px] lg:w-[200px]'
-        } h-full flex-col border border-t-0 border-sidebar-border bg-sidebar bg-clip-border text-sidebar-foreground transition-all duration-300`}
+        } h-full flex-col border border-t-0 border-sidebar-border bg-sidebar bg-clip-border text-sidebar-foreground transition-[width] duration-300`}
       >
         <div className='flex items-center justify-between p-4'>
           <button
@@ -180,7 +175,7 @@ const Sidebar = () => {
             />
           </button>
         </div>
-        <nav className='flex grow flex-col gap-1 p-2 font-sans text-base font-normal'>
+        <nav className='flex grow flex-col gap-1 overflow-x-clip p-2 font-sans text-base font-normal'>
           {menuItems.map((item) => {
             const isActive = NESTED_ROUTE_PATHS.includes(item.path)
               ? location.pathname.startsWith(item.path)
@@ -189,13 +184,15 @@ const Sidebar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-hidden transition-all ${
+                className={`flex w-full press items-center rounded-xl p-3 text-start leading-tight outline-hidden [--press-scale:1.03_0.92] ${
                   isActive
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                     : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground'
                 }`}
               >
-                <div className={`${isCollapsed ? 'mx-auto' : 'mr-2'} relative`}>
+                <div
+                  className={`relative mr-2 transition-[margin] duration-300 ${isCollapsed ? 'ml-[9px]' : ''}`}
+                >
                   {isActive ? (
                     <item.icon
                       className='h-5 w-5 shrink-0 font-bold transition-all duration-300'
@@ -210,11 +207,7 @@ const Sidebar = () => {
                   )}
                 </div>
                 <span
-                  className={`whitespace-nowrap transition-all duration-300 ${
-                    isCollapsed
-                      ? 'w-0 overflow-hidden opacity-0'
-                      : 'w-auto opacity-100'
-                  }`}
+                  className={`whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'opacity-0' : ''}`}
                 >
                   {isActive ? (
                     <span className='text-dare'>{item.name}</span>
@@ -230,17 +223,15 @@ const Sidebar = () => {
             {/* Tutorial button */}
             <button
               onClick={handleStartTutorial}
-              className='flex w-full items-center rounded-lg p-3 text-start leading-tight outline-hidden transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
+              className='flex w-full press items-center rounded-lg p-3 text-start leading-tight outline-hidden [--press-scale:1.03_0.92] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
             >
-              <div className={`${isCollapsed ? 'mx-auto' : 'mr-4'} relative`}>
+              <div
+                className={`relative mr-4 transition-[margin] duration-300 ${isCollapsed ? 'ml-[9px]' : ''}`}
+              >
                 <AcademicCapIcon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
               </div>
               <span
-                className={`whitespace-nowrap transition-all duration-300 ${
-                  isCollapsed
-                    ? 'w-0 overflow-hidden opacity-0'
-                    : 'w-auto opacity-100'
-                }`}
+                className={`whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'opacity-0' : ''}`}
               >
                 Tutorial
               </span>
@@ -249,17 +240,15 @@ const Sidebar = () => {
             {showResearchTools && (
               <button
                 onClick={handleGoToResearchTools}
-                className='flex w-full items-center rounded-lg p-3 text-start leading-tight outline-hidden transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
+                className='flex w-full press items-center rounded-lg p-3 text-start leading-tight outline-hidden [--press-scale:1.03_0.92] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
               >
-                <div className={`${isCollapsed ? 'mx-auto' : 'mr-4'} relative`}>
+                <div
+                  className={`relative mr-4 transition-[margin] duration-300 ${isCollapsed ? 'ml-[9px]' : ''}`}
+                >
                   <ArrowTopRightOnSquareIcon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
                 </div>
                 <span
-                  className={`whitespace-nowrap transition-all duration-300 ${
-                    isCollapsed
-                      ? 'w-0 overflow-hidden opacity-0'
-                      : 'w-auto opacity-100'
-                  }`}
+                  className={`whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'opacity-0' : ''}`}
                 >
                   Research Tools
                 </span>
@@ -274,14 +263,14 @@ const Sidebar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex w-full items-center rounded-lg p-3 text-start leading-tight outline-hidden transition-all ${
+                  className={`flex w-full press items-center rounded-lg p-3 text-start leading-tight outline-hidden [--press-scale:1.03_0.92] ${
                     isActive
                       ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                       : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground'
                   }`}
                 >
                   <div
-                    className={`${isCollapsed ? 'mx-auto' : 'mr-4'} relative`}
+                    className={`relative mr-4 transition-[margin] duration-300 ${isCollapsed ? 'ml-[9px]' : ''}`}
                   >
                     {isActive ? (
                       <item.icon
@@ -297,11 +286,7 @@ const Sidebar = () => {
                     )}
                   </div>
                   <span
-                    className={`whitespace-nowrap transition-all duration-300 ${
-                      isCollapsed
-                        ? 'w-0 overflow-hidden opacity-0'
-                        : 'w-auto opacity-100'
-                    }`}
+                    className={`whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'opacity-0' : ''}`}
                   >
                     {isActive ? (
                       <span className='text-dare'>{item.name}</span>
