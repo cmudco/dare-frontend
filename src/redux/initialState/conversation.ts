@@ -20,6 +20,8 @@ export const initialState: ConversationState = {
   activeConversationMessages: [],
   pendingActiveGenerationIds: [],
   selectedModel: null,
+  textModeModel: null,
+  latestConversationSave: {},
   ensemble: {
     depth: 'single',
     responderIds: [],

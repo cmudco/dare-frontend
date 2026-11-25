@@ -12,31 +12,21 @@ import {
 } from '@/redux/asyncThunks/conversation'
 import { getPrompts } from '@/redux/asyncThunks/prompt'
 import { getAgents } from '@/redux/asyncThunks/agent'
-import { Conversation } from '@/redux/types/conversation'
-import { updateActiveConversation } from '@/redux/conversationSlice'
-import { useParams, useLocation } from 'react-router-dom'
 
 const ConversationLayout: React.FC = () => {
   const dispatch = useAppDispatch()
   useConversationTourAutoTrigger()
-  const { id } = useParams<{ id: string }>()
-  const location = useLocation()
 
+  // Loaded once per visit; switching chats reads these from the store.
   useEffect(() => {
     dispatch(getFiles())
     dispatch(getFolders())
     dispatch(getTags())
     dispatch(getConversations())
-      .unwrap()
-      .then((conversations: Conversation[]) => {
-        if (!id && conversations.length > 0) {
-          dispatch(updateActiveConversation(conversations[0] || null))
-        }
-      })
     dispatch(fetchConversationSummaries())
     dispatch(getPrompts())
     dispatch(getAgents())
-  }, [dispatch, id, location.pathname])
+  }, [dispatch])
 
   return (
     <div className='flex h-full min-h-0 overflow-hidden'>

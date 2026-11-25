@@ -135,18 +135,28 @@ const ActiveConversation: React.FC = () => {
   // EFFECTS
   // ──────────────────────────────────────────────────────────────────────────
 
-  // Set active conversation from URL param
+  // Open the chat the URL names, or the most recent one when it names none.
   useEffect(() => {
-    if (id) {
-      const conversation = conversations.find((c) => c.conversationId === id)
-      if (!activeConversation && conversation) {
-        dispatch(updateActiveConversation(conversation))
-        dispatch(fetchConversationMessages(conversation.conversationId))
-      }
-    } else {
-      dispatch(updateActiveConversation(null))
-    }
+    if (activeConversation) return
+    const conversation = id
+      ? conversations.find((c) => c.conversationId === id)
+      : conversations[0]
+    if (!conversation) return
+    dispatch(updateActiveConversation(conversation))
+    dispatch(fetchConversationMessages(conversation.conversationId))
   }, [id, conversations, activeConversation, dispatch])
+
+  // Close the chat when the URL drops its id and when the page is left, so the
+  // effect above reopens one with fresh messages.
+  useEffect(() => {
+    if (!id) dispatch(updateActiveConversation(null))
+  }, [id, dispatch])
+  useEffect(
+    () => () => {
+      dispatch(updateActiveConversation(null))
+    },
+    [dispatch]
+  )
 
   // Clear conversation state when switching
   useEffect(() => {
@@ -159,11 +169,10 @@ const ActiveConversation: React.FC = () => {
   }, [activeConversation?.conversationId, dispatch])
 
   // Navigate to conversation URL
+  const activeConversationId = activeConversation?.conversationId
   useEffect(() => {
-    if (activeConversation) {
-      navigate(`/conversation/${activeConversation.conversationId}`)
-    }
-  }, [activeConversation, navigate])
+    if (activeConversationId) navigate(`/conversation/${activeConversationId}`)
+  }, [activeConversationId, navigate])
 
   // Reset edit state on conversation change
   useEffect(() => {

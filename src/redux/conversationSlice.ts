@@ -77,11 +77,24 @@ import {
 import { userLogin, userLogout } from './asyncThunks/user'
 import { ProjectSourceMode } from '@/utils/constants/project'
 
+const isTextMode = (state: ConversationState) =>
+  !state.imageGenerationEnabled && !state.audioTranscriptionEnabled
+
 /** Make `conversation` the active chat and mirror its toggles and model choice. */
 function setActiveConversation(
   state: ConversationState,
   conversation: Conversation | null
 ) {
+  const left = state.activeConversation
+  if (left && left.conversationId !== conversation?.conversationId) {
+    // The list is not reloaded on every switch, so it keeps the model picked
+    // for the chat being left: the one the server reports once it has answered.
+    const entry = state.conversations.find(
+      (c) => c.conversationId === left.conversationId
+    )
+    const model = isTextMode(state) ? state.selectedModel : state.textModeModel
+    if (entry && model) entry.selectedModelRef = model
+  }
   state.activeConversation = conversation
   if (conversation) {
     // Update toggle states from conversation
@@ -96,10 +109,26 @@ function setActiveConversation(
 
     const desired = conversation.selectedModelRef ?? null
 
+    state.textModeModel = null
     syncPickerEntriesWithMode(state, desired)
     // Preserve the saved choice until the catalog arrives and validates it.
     if (!state.pickerEntries.length) state.selectedModel = desired
   }
+}
+
+/** Change image or audio mode, keeping the chat model to restore on the way back to text. */
+function switchModelMode(state: ConversationState, enterMode: () => void) {
+  if (isTextMode(state)) state.textModeModel = state.selectedModel
+  enterMode()
+  if (!isTextMode(state)) {
+    syncPickerEntriesWithMode(state, state.selectedModel)
+    return
+  }
+  syncPickerEntriesWithMode(
+    state,
+    state.textModeModel ?? state.activeConversation?.selectedModelRef
+  )
+  state.textModeModel = null
 }
 
 function selectModel(state: ConversationState, modelId: string | null) {
@@ -352,13 +381,12 @@ const conversationSlice = createSlice({
       }
     },
     updateImageGenerationEnabled(state, action: PayloadAction<boolean>) {
-      // Update global and conversation-level state
-      state.imageGenerationEnabled = action.payload
-      if (state.activeConversation) {
-        state.activeConversation.imageGenerationEnabled = action.payload
-      }
-
-      syncPickerEntriesWithMode(state, state.selectedModel)
+      switchModelMode(state, () => {
+        state.imageGenerationEnabled = action.payload
+        if (state.activeConversation) {
+          state.activeConversation.imageGenerationEnabled = action.payload
+        }
+      })
     },
     updateSelectedMcpServers(state, action: PayloadAction<number[]>) {
       if (state.activeConversation) {
@@ -381,13 +409,12 @@ const conversationSlice = createSlice({
       state.imageGenerationSettings = action.payload
     },
     updateAudioTranscriptionEnabled(state, action: PayloadAction<boolean>) {
-      // Update global and conversation-level state
-      state.audioTranscriptionEnabled = action.payload
-      if (state.activeConversation) {
-        state.activeConversation.audioTranscriptionEnabled = action.payload
-      }
-
-      syncPickerEntriesWithMode(state, state.selectedModel)
+      switchModelMode(state, () => {
+        state.audioTranscriptionEnabled = action.payload
+        if (state.activeConversation) {
+          state.activeConversation.audioTranscriptionEnabled = action.payload
+        }
+      })
     },
     updateAudioTranscriptionSettings(
       state,
@@ -705,22 +732,29 @@ const conversationSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
-      .addCase(updateConversation.pending, (state) => {
+      .addCase(updateConversation.pending, (state, action) => {
         state.loading = true
         state.error = null
+        state.latestConversationSave[action.meta.arg.conversationId] =
+          action.meta.requestId
       })
       .addCase(updateConversation.fulfilled, (state, action) => {
         state.loading = false
+        const { conversationId } = action.payload
         const index = state.conversations.findIndex(
-          (conv) => conv.conversationId === action.payload.conversationId
+          (conv) => conv.conversationId === conversationId
         )
         if (index !== -1) {
           state.conversations[index] = action.payload
         }
+        // A newer save is still on its way: the open chat already shows its
+        // edit, and this older reply would put the previous value back.
         if (
-          state.activeConversation?.conversationId ===
-          action.payload.conversationId
-        ) {
+          state.latestConversationSave[conversationId] !== action.meta.requestId
+        )
+          return
+        delete state.latestConversationSave[conversationId]
+        if (state.activeConversation?.conversationId === conversationId) {
           state.activeConversation = action.payload
         }
       })

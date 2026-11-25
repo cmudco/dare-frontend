@@ -154,6 +154,43 @@ export const deleteConversation = createAsyncThunk<
   }
 })
 
+// Saves to one conversation go out one at a time, so the server applies them in
+// the order they were made. Edits made while a save is in flight are merged
+// into a single request that follows it.
+interface WaitingSave {
+  updates: Partial<Conversation>
+  saved: Promise<Conversation>
+}
+const savesInFlight = new Map<string, Promise<unknown>>()
+const savesWaiting = new Map<string, WaitingSave>()
+
+function saveConversation(
+  conversationId: string,
+  updates: Partial<Conversation>
+): Promise<Conversation> {
+  const waiting = savesWaiting.get(conversationId)
+  if (waiting) {
+    Object.assign(waiting.updates, updates)
+    return waiting.saved
+  }
+  const batch = { ...updates }
+  const saved = (savesInFlight.get(conversationId) ?? Promise.resolve())
+    .catch(() => undefined)
+    .then(() => {
+      savesWaiting.delete(conversationId)
+      return updateConversationAPI(conversationId, batch)
+    })
+  savesWaiting.set(conversationId, { updates: batch, saved })
+  savesInFlight.set(conversationId, saved)
+  saved
+    .catch(() => undefined)
+    .finally(() => {
+      if (savesInFlight.get(conversationId) === saved)
+        savesInFlight.delete(conversationId)
+    })
+  return saved
+}
+
 export const updateConversation = createAsyncThunk<
   Conversation,
   { conversationId: string; updates: Partial<Conversation> },
@@ -162,11 +199,7 @@ export const updateConversation = createAsyncThunk<
   'conversation/updateConversation',
   async ({ conversationId, updates }, thunkAPI) => {
     try {
-      const updatedConversation = await updateConversationAPI(
-        conversationId,
-        updates
-      )
-      return updatedConversation
+      return await saveConversation(conversationId, updates)
     } catch (error) {
       return thunkAPI.rejectWithValue((error as Error).message)
     }
