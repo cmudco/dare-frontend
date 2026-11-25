@@ -11,7 +11,7 @@ import {
 import { useChatProjectSources } from '@/hooks/useChatProjectSources'
 import { useSourceSize } from '@/hooks/useSourceSize'
 import { switchChatSourceMode } from '@/redux/asyncThunks/conversation'
-import { useAppDispatch } from '@/redux/hooks'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   PROJECT_SOURCE_MODE_LABELS,
   ProjectSourceMode,
@@ -25,7 +25,10 @@ const NO_FOLDERS: number[] = []
 const ChatSourceModeMenu = () => {
   const dispatch = useAppDispatch()
   const { fileIds, mode } = useChatProjectSources()
-  const sizeState = useSourceSize(fileIds, NO_FOLDERS)
+  const selectedModel = useAppSelector(
+    (state) => state.conversation.selectedModel
+  )
+  const sizeState = useSourceSize(fileIds, NO_FOLDERS, selectedModel)
 
   if (mode === null) return null
 

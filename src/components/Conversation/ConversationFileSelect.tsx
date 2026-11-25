@@ -1,8 +1,8 @@
 import { DOCUMENT_PARSER_LABELS } from '@/utils/constants/file'
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
-  Check,
   FileIcon,
   Search,
   Tag as TagIcon,
@@ -56,10 +56,16 @@ import {
 } from '../ui/popover'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs'
 import GraphSourceList from './GraphSourceList'
+import SourceCheck from './SourceCheck'
 import ModelContextSettings from './ModelContextSettings'
 import { FileStatus } from '@/utils/constants/file'
 import { supportsCodeSandbox } from '@/utils/modelConfigUtils'
 import { isSpreadsheetFile } from '@/utils/spreadsheet/protocol'
+import { useSourceSize } from '@/hooks/useSourceSize'
+import {
+  formatTokenCount,
+  formatTokenEstimate,
+} from '../Projects/projectSources'
 
 // Tables are searched by a summary card, so their parser is not the story.
 const sourceLabel = (
@@ -67,6 +73,8 @@ const sourceLabel = (
   parserName: keyof typeof DOCUMENT_PARSER_LABELS
 ): string =>
   isSpreadsheetFile(name) ? 'Table' : DOCUMENT_PARSER_LABELS[parserName]
+
+const NO_FOLDERS: number[] = []
 
 type SourceTab =
   | 'files'
@@ -100,6 +108,9 @@ const ConversationFileSelect: React.FC = () => {
       ),
       state.conversation.activeWalletMeta
     )
+  )
+  const selectedModel = useSelector(
+    (state: RootState) => state.conversation.selectedModel
   )
   const selectedMediaFiles = useSelector(
     (state: RootState) => state.conversation.selectedMediaFiles
@@ -431,15 +442,26 @@ const ConversationFileSelect: React.FC = () => {
     }
   }
 
-  const selectionCounts = [
-    { n: selectedEmbeddings.length, label: 'embeddings' },
-    { n: selectedFiles.length, label: 'files' },
-    { n: selectedMediaFiles.length, label: 'media' },
-    { n: selectedTags.length, label: 'tags' },
-    { n: selectedFolders.length, label: 'folders' },
-    { n: selectedLibraries.length, label: 'libraries' },
+  const sourceTabs: { value: SourceTab; label: string; count: number }[] = [
+    {
+      value: 'embeddings',
+      label: 'Embeddings',
+      count: selectedEmbeddings.length,
+    },
+    { value: 'files', label: 'Files', count: selectedFiles.length },
+    { value: 'media', label: 'Media', count: selectedMediaFiles.length },
+    { value: 'tags', label: 'Tags', count: selectedTags.length },
+    { value: 'folders', label: 'Folders', count: selectedFolders.length },
+    { value: 'libraries', label: 'Libraries', count: selectedLibraries.length },
+    { value: 'graphs', label: 'Graphs', count: selectedGraphs.length },
   ]
-  const totalSelected = selectionCounts.reduce((sum, c) => sum + c.n, 0)
+  const totalSelected =
+    selectedEmbeddings.length +
+    selectedFiles.length +
+    selectedMediaFiles.length +
+    selectedTags.length +
+    selectedFolders.length +
+    selectedLibraries.length
   // Tables ticked under either tab are sent to the sandbox.
   const isTable = (file: MyFile) => isSpreadsheetFile(file.name ?? '')
   const tableInFiles = selectedFiles.some(isTable)
@@ -452,12 +474,24 @@ const ConversationFileSelect: React.FC = () => {
           ? 'To process this file or run any calculations on it, turn on Code sandbox in chat settings.'
           : "This model can't run code. To process this file or run any calculations on it, pick an OpenAI or Claude model and turn on Code sandbox."
       : null
-  const selectionSummary = [
-    ...(selectedGraphs.length
-      ? [`Graph: ${selectedGraphs.map((graph) => graph.name).join(', ')}`]
-      : []),
-    ...selectionCounts.filter((c) => c.n > 0).map((c) => `${c.n} ${c.label}`),
-  ].join(' · ')
+  const readSize = useSourceSize(
+    selectedFiles.map((file) => file.id),
+    NO_FOLDERS,
+    selectedModel
+  )
+  const readNote =
+    readSize.status !== 'ready'
+      ? null
+      : readSize.refreshing
+        ? `Counting tokens for ${selectedFiles.length === 1 ? 'this file' : 'these files'} on this model…`
+        : readSize.size.fitsFullFiles
+          ? `The AI reads ${selectedFiles.length === 1 ? 'this file' : 'these files'} in full (${formatTokenCount(readSize.size.estimatedTokens, readSize.size.estimated)}).`
+          : `Too long for this model: ${formatTokenCount(readSize.size.estimatedTokens, readSize.size.estimated)}, and it has room for ${formatTokenEstimate(readSize.size.tokenLimit)} of files. Pick a model with a larger context window, or use Embeddings to search ${selectedFiles.length === 1 ? 'it' : 'them'}.`
+
+  const footerNotes = [
+    { key: 'read', text: readNote },
+    { key: 'table', text: tableHint },
+  ].filter((note): note is { key: string; text: string } => Boolean(note.text))
 
   const clearSelections = () => {
     setSelectionDirty(true)
@@ -483,433 +517,402 @@ const ConversationFileSelect: React.FC = () => {
           side='top'
           sideOffset={8}
         >
-          <div className='space-y-4 text-foreground'>
-            <div className='relative'>
-              <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
-              <Input
-                placeholder={`Search ${activeTab}`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className='pr-10 pl-9'
-              />
-              <SettingsPopover
-                open={settingsOpen}
-                onOpenChange={setSettingsOpen}
+          <MotionConfig reducedMotion='user'>
+            <div className='space-y-4 text-foreground'>
+              <div className='relative'>
+                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                <Input
+                  placeholder={`Search ${activeTab}`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className='pr-10 pl-9'
+                />
+                <SettingsPopover
+                  open={settingsOpen}
+                  onOpenChange={setSettingsOpen}
+                >
+                  <SettingsPopoverTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      className='absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 p-0 hover:bg-accent'
+                    >
+                      <Settings className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
+                    </Button>
+                  </SettingsPopoverTrigger>
+                  <SettingsPopoverContent
+                    align='start'
+                    side='right'
+                    sideOffset={12}
+                    collisionPadding={20}
+                    className='mb-6 w-[24rem] max-w-[90vw] border border-border bg-popover p-4'
+                  >
+                    <ModelContextSettings
+                      onClose={() => setSettingsOpen(false)}
+                    />
+                  </SettingsPopoverContent>
+                </SettingsPopover>
+              </div>
+
+              {projectScope && project && (
+                <div className='flex items-center justify-between gap-2 text-xs text-muted-foreground'>
+                  <span className='truncate'>
+                    {showAllSources
+                      ? 'Showing all your sources'
+                      : `Showing sources in ${project.name}`}
+                  </span>
+                  <Button
+                    variant='link'
+                    size='sm'
+                    onClick={() => setShowAllSources((v) => !v)}
+                    className='h-auto shrink-0 p-0 text-xs'
+                  >
+                    {showAllSources ? 'Project only' : 'Show all'}
+                  </Button>
+                </div>
+              )}
+
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as SourceTab)}
               >
-                <SettingsPopoverTrigger asChild>
+                <TabsList className='flex w-full overflow-x-auto border-border bg-muted/50'>
+                  {sourceTabs.map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className='relative flex-auto px-1 text-xs text-muted-foreground hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none'
+                    >
+                      {activeTab === tab.value && (
+                        <motion.span
+                          layoutId='source-tab-pill'
+                          className='absolute inset-0 rounded-sm bg-background shadow-xs'
+                          transition={{
+                            type: 'spring',
+                            stiffness: 500,
+                            damping: 34,
+                          }}
+                        />
+                      )}
+                      <span className='relative'>{tab.label}</span>
+                      <AnimatePresence initial={false}>
+                        {tab.count > 0 && (
+                          <motion.span
+                            key={tab.count}
+                            initial={{ scale: 0.4, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.4, opacity: 0 }}
+                            transition={{
+                              type: 'spring',
+                              stiffness: 700,
+                              damping: 20,
+                            }}
+                            className='absolute -top-1 -right-0.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] leading-4 font-medium text-primary-foreground tabular-nums'
+                          >
+                            {tab.count}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                <TabsContent value='embeddings' className='mt-4'>
+                  <p className='mb-2 px-1 text-xs text-muted-foreground'>
+                    Searches these files and gives the AI only the most relevant
+                    passages.
+                  </p>
+                  <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                    {filteredFiles.map((file) => {
+                      const isShared = isOwnerFile(file.id)
+                      return (
+                        <div
+                          key={file.id}
+                          onClick={() => handleToggleEmbedding(file)}
+                          className='flex cursor-pointer items-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground'
+                        >
+                          <SourceCheck
+                            checked={selectedEmbeddings.some(
+                              (f) => f.id === file.id
+                            )}
+                          />
+                          <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+                          <span className='flex-1 text-sm text-foreground'>
+                            {file.name}
+                            {file.parserName && (
+                              <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
+                                {sourceLabel(file.name ?? '', file.parserName)}
+                              </span>
+                            )}
+                          </span>
+                          {isShared && (
+                            <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
+                          )}
+                        </div>
+                      )
+                    })}
+                    {filteredFiles.length === 0 && (
+                      <p className='py-4 text-center text-muted-foreground'>
+                        No files found
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value='files' className='mt-4'>
+                  <p className='mb-2 px-1 text-xs text-muted-foreground'>
+                    Gives the AI the whole file.
+                  </p>
+                  <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                    {filteredFiles.map((file) => {
+                      const isShared = isOwnerFile(file.id)
+                      return (
+                        <div
+                          key={file.id}
+                          onClick={() => handleToggleFile(file)}
+                          className='flex cursor-pointer items-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground'
+                        >
+                          <SourceCheck
+                            checked={selectedFiles.some(
+                              (f) => f.id === file.id
+                            )}
+                          />
+                          <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+                          <span
+                            className={`flex-1 text-sm ${selectedFiles.some((f) => f.id === file.id) ? 'text-primary' : 'text-foreground'}`}
+                          >
+                            {file.name}
+                            {file.parserName && (
+                              <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
+                                {sourceLabel(file.name ?? '', file.parserName)}
+                              </span>
+                            )}
+                          </span>
+                          {isShared && (
+                            <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
+                          )}
+                        </div>
+                      )
+                    })}
+                    {filteredFiles.length === 0 && (
+                      <p className='py-4 text-center text-muted-foreground'>
+                        No files found
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value='media' className='mt-4'>
+                  <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                    {filteredMediaFiles.map((file) => {
+                      const isShared = isOwnerFile(file.id)
+                      return (
+                        <div
+                          key={file.id}
+                          onClick={() => handleToggleMedia(file)}
+                          className='flex cursor-pointer items-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground'
+                        >
+                          <SourceCheck
+                            checked={selectedMediaFiles.some(
+                              (f) => f.id === file.id
+                            )}
+                          />
+                          <Image className='mr-2 h-4 w-4 text-muted-foreground' />
+                          <span
+                            className={`flex-1 text-sm ${selectedMediaFiles.some((f) => f.id === file.id) ? 'text-primary' : 'text-foreground'}`}
+                          >
+                            {file.name}
+                            {file.parserName && (
+                              <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
+                                {sourceLabel(file.name ?? '', file.parserName)}
+                              </span>
+                            )}
+                          </span>
+                          <span className='ml-1 text-xs text-muted-foreground'>
+                            ({file.mediaType})
+                          </span>
+                          {isShared && (
+                            <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
+                          )}
+                        </div>
+                      )
+                    })}
+                    {filteredMediaFiles.length === 0 && (
+                      <p className='py-4 text-center text-muted-foreground'>
+                        No media files found
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value='tags' className='mt-4'>
+                  <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                    {filteredTags.map((tag) => {
+                      const isSelected = selectedTags.some(
+                        (t) => t.id === tag.id
+                      )
+                      const hasFiles = (tag.fileCount || 0) > 0
+                      return (
+                        <div
+                          key={tag.id}
+                          onClick={() => hasFiles && handleToggleTag(tag)}
+                          className={`flex items-center rounded-md p-2 transition-colors ${
+                            hasFiles
+                              ? isSelected
+                                ? 'cursor-pointer bg-accent text-accent-foreground'
+                                : 'cursor-pointer text-foreground hover:bg-accent hover:text-accent-foreground'
+                              : 'cursor-not-allowed opacity-50'
+                          }`}
+                        >
+                          <SourceCheck checked={isSelected} />
+                          <TagIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+                          <span
+                            className={`text-sm ${isSelected ? 'text-primary' : 'text-foreground'}`}
+                          >
+                            {tag.label}
+                          </span>
+                          <span className='ml-2 text-xs text-muted-foreground'>
+                            ({tag.fileCount || 0})
+                          </span>
+                        </div>
+                      )
+                    })}
+                    {filteredTags.length === 0 && (
+                      <p className='py-4 text-center text-muted-foreground'>
+                        No tags found
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value='folders' className='mt-4'>
+                  <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                    {filteredFolders.map((folder) => {
+                      const isSelected = selectedFolders.some(
+                        (f) => f.id === folder.id
+                      )
+                      const hasFiles = folder.fileCount > 0
+                      return (
+                        <div
+                          key={folder.id}
+                          onClick={() => hasFiles && handleToggleFolder(folder)}
+                          className={`flex items-center rounded-md p-2 transition-colors ${
+                            hasFiles
+                              ? isSelected
+                                ? 'cursor-pointer bg-accent text-accent-foreground'
+                                : 'cursor-pointer text-foreground hover:bg-accent hover:text-accent-foreground'
+                              : 'cursor-not-allowed opacity-50'
+                          }`}
+                        >
+                          <SourceCheck checked={isSelected} />
+                          <Folder className='mr-2 h-4 w-4 text-muted-foreground' />
+                          <span
+                            className={`text-sm ${isSelected ? 'text-primary' : 'text-foreground'}`}
+                          >
+                            {folder.name}
+                          </span>
+                          <span className='ml-2 text-xs text-muted-foreground'>
+                            ({folder.fileCount})
+                          </span>
+                        </div>
+                      )
+                    })}
+                    {filteredFolders.length === 0 && (
+                      <p className='py-4 text-center text-muted-foreground'>
+                        No folders found
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value='libraries' className='mt-4'>
+                  <div className='max-h-[300px] space-y-1 overflow-y-auto'>
+                    {filteredLibraries.map((library) => {
+                      const isSelected = selectedLibraries.some(
+                        (l) => l.id === library.id
+                      )
+                      return (
+                        <div
+                          key={library.id}
+                          onClick={() => handleToggleLibrary(library)}
+                          className={`flex items-center rounded-md p-2 transition-colors ${
+                            isSelected
+                              ? 'cursor-pointer bg-accent text-accent-foreground'
+                              : 'cursor-pointer text-foreground hover:bg-accent hover:text-accent-foreground'
+                          }`}
+                        >
+                          <SourceCheck checked={isSelected} />
+                          <Library className='mr-2 h-4 w-4 text-muted-foreground' />
+                          <span
+                            className={`flex-1 text-sm ${isSelected ? 'text-primary' : 'text-foreground'}`}
+                          >
+                            {library.name}
+                          </span>
+                          <span className='ml-2 text-xs text-muted-foreground'>
+                            {library.curator}
+                          </span>
+                        </div>
+                      )
+                    })}
+                    {filteredLibraries.length === 0 && (
+                      <p className='py-4 text-center text-muted-foreground'>
+                        No libraries added yet
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value='graphs' className='mt-4'>
+                  <GraphSourceList
+                    graphs={filteredGraphs}
+                    selectedIds={
+                      new Set(selectedGraphs.map((graph) => graph.id))
+                    }
+                    onToggle={handleToggleGraph}
+                  />
+                </TabsContent>
+              </Tabs>
+
+              <Separator />
+
+              <div>
+                <AnimatePresence initial={false}>
+                  {footerNotes.map((note) => (
+                    <motion.div
+                      key={note.key}
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                      className='overflow-hidden'
+                    >
+                      <p
+                        className={`mb-2 text-xs text-muted-foreground ${note.key === 'table' ? 'rounded-md bg-muted px-2 py-1.5' : 'px-1'}`}
+                      >
+                        {note.text}
+                      </p>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                <div className='flex items-center justify-between'>
                   <Button
                     variant='ghost'
-                    className='absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 p-0 hover:bg-accent'
+                    size='sm'
+                    onClick={clearSelections}
+                    className='text-foreground hover:bg-accent'
                   >
-                    <Settings className='h-4 w-4 text-muted-foreground transition-colors hover:text-foreground' />
+                    Clear
                   </Button>
-                </SettingsPopoverTrigger>
-                <SettingsPopoverContent
-                  align='start'
-                  side='right'
-                  sideOffset={12}
-                  collisionPadding={20}
-                  className='mb-6 w-[24rem] max-w-[90vw] border border-border bg-popover p-4'
-                >
-                  <ModelContextSettings
-                    onClose={() => setSettingsOpen(false)}
-                  />
-                </SettingsPopoverContent>
-              </SettingsPopover>
-            </div>
-
-            {projectScope && project && (
-              <div className='flex items-center justify-between gap-2 text-xs text-muted-foreground'>
-                <span className='truncate'>
-                  {showAllSources
-                    ? 'Showing all your sources'
-                    : `Showing sources in ${project.name}`}
-                </span>
-                <Button
-                  variant='link'
-                  size='sm'
-                  onClick={() => setShowAllSources((v) => !v)}
-                  className='h-auto shrink-0 p-0 text-xs'
-                >
-                  {showAllSources ? 'Project only' : 'Show all'}
-                </Button>
-              </div>
-            )}
-
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) => setActiveTab(value as SourceTab)}
-            >
-              <TabsList className='flex w-full overflow-x-auto border-border bg-muted/50'>
-                <TabsTrigger
-                  value='embeddings'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Embeddings
-                </TabsTrigger>
-                <TabsTrigger
-                  value='files'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Files
-                </TabsTrigger>
-                <TabsTrigger
-                  value='media'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Media
-                </TabsTrigger>
-                <TabsTrigger
-                  value='tags'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Tags
-                </TabsTrigger>
-                <TabsTrigger
-                  value='folders'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Folders
-                </TabsTrigger>
-                <TabsTrigger
-                  value='libraries'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Libraries
-                </TabsTrigger>
-                <TabsTrigger
-                  value='graphs'
-                  className='flex-auto px-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs'
-                >
-                  Graphs
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value='embeddings' className='mt-4'>
-                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredFiles.map((file) => {
-                    const isShared = isOwnerFile(file.id)
-                    return (
-                      <div
-                        key={file.id}
-                        onClick={() => handleToggleEmbedding(file)}
-                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground'
-                      >
-                        <div
-                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                            selectedEmbeddings.some((f) => f.id === file.id)
-                              ? 'border-primary bg-primary'
-                              : 'border-input hover:border-muted-foreground'
-                          }`}
-                        >
-                          {selectedEmbeddings.some((f) => f.id === file.id) && (
-                            <Check className='h-3 w-3 text-primary-foreground' />
-                          )}
-                        </div>
-                        <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                        <span className='flex-1 text-sm text-foreground'>
-                          {file.name}
-                          {file.parserName && (
-                            <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
-                              {sourceLabel(file.name ?? '', file.parserName)}
-                            </span>
-                          )}
-                        </span>
-                        {isShared && (
-                          <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
-                        )}
-                      </div>
-                    )
-                  })}
-                  {filteredFiles.length === 0 && (
-                    <p className='py-4 text-center text-muted-foreground'>
-                      No files found
-                    </p>
-                  )}
+                  <Button
+                    size='sm'
+                    onClick={() => setOpen(false)}
+                    className='bg-primary text-primary-foreground hover:bg-primary/90'
+                  >
+                    Done{totalSelected > 0 ? ` (${totalSelected})` : ''}
+                  </Button>
                 </div>
-              </TabsContent>
-
-              <TabsContent value='files' className='mt-4'>
-                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredFiles.map((file) => {
-                    const isShared = isOwnerFile(file.id)
-                    return (
-                      <div
-                        key={file.id}
-                        onClick={() => handleToggleFile(file)}
-                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground'
-                      >
-                        <div
-                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                            selectedFiles.some((f) => f.id === file.id)
-                              ? 'border-primary bg-primary'
-                              : 'border-input hover:border-muted-foreground'
-                          }`}
-                        >
-                          {selectedFiles.some((f) => f.id === file.id) && (
-                            <Check className='h-3 w-3 text-primary-foreground' />
-                          )}
-                        </div>
-                        <FileIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                        <span
-                          className={`flex-1 text-sm ${selectedFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'}`}
-                        >
-                          {file.name}
-                          {file.parserName && (
-                            <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
-                              {sourceLabel(file.name ?? '', file.parserName)}
-                            </span>
-                          )}
-                        </span>
-                        {isShared && (
-                          <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
-                        )}
-                      </div>
-                    )
-                  })}
-                  {filteredFiles.length === 0 && (
-                    <p className='py-4 text-center text-muted-foreground'>
-                      No files found
-                    </p>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value='media' className='mt-4'>
-                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredMediaFiles.map((file) => {
-                    const isShared = isOwnerFile(file.id)
-                    return (
-                      <div
-                        key={file.id}
-                        onClick={() => handleToggleMedia(file)}
-                        className='flex cursor-pointer items-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground'
-                      >
-                        <div
-                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                            selectedMediaFiles.some((f) => f.id === file.id)
-                              ? 'border-primary bg-primary'
-                              : 'border-input hover:border-muted-foreground'
-                          }`}
-                        >
-                          {selectedMediaFiles.some((f) => f.id === file.id) && (
-                            <Check className='h-3 w-3 text-primary-foreground' />
-                          )}
-                        </div>
-                        <Image className='mr-2 h-4 w-4 text-muted-foreground' />
-                        <span
-                          className={`flex-1 text-sm ${selectedMediaFiles.some((f) => f.id === file.id) ? 'font-medium text-primary' : 'text-foreground'}`}
-                        >
-                          {file.name}
-                          {file.parserName && (
-                            <span className='ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
-                              {sourceLabel(file.name ?? '', file.parserName)}
-                            </span>
-                          )}
-                        </span>
-                        <span className='ml-1 text-xs text-muted-foreground'>
-                          ({file.mediaType})
-                        </span>
-                        {isShared && (
-                          <Users className='ml-2 h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
-                        )}
-                      </div>
-                    )
-                  })}
-                  {filteredMediaFiles.length === 0 && (
-                    <p className='py-4 text-center text-muted-foreground'>
-                      No media files found
-                    </p>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value='tags' className='mt-4'>
-                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredTags.map((tag) => {
-                    const isSelected = selectedTags.some((t) => t.id === tag.id)
-                    const hasFiles = (tag.fileCount || 0) > 0
-                    return (
-                      <div
-                        key={tag.id}
-                        onClick={() => hasFiles && handleToggleTag(tag)}
-                        className={`flex items-center rounded-md p-2 transition-colors ${
-                          hasFiles
-                            ? isSelected
-                              ? 'cursor-pointer bg-accent text-accent-foreground'
-                              : 'cursor-pointer text-foreground hover:bg-accent hover:text-accent-foreground'
-                            : 'cursor-not-allowed opacity-50'
-                        }`}
-                      >
-                        <div
-                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                            isSelected
-                              ? 'border-primary bg-primary'
-                              : 'border-input hover:border-muted-foreground'
-                          }`}
-                        >
-                          {isSelected && (
-                            <Check className='h-3 w-3 text-primary-foreground' />
-                          )}
-                        </div>
-                        <TagIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                        <span
-                          className={`text-sm ${isSelected ? 'font-medium text-primary' : 'text-foreground'}`}
-                        >
-                          {tag.label}
-                        </span>
-                        <span className='ml-2 text-xs text-muted-foreground'>
-                          ({tag.fileCount || 0})
-                        </span>
-                      </div>
-                    )
-                  })}
-                  {filteredTags.length === 0 && (
-                    <p className='py-4 text-center text-muted-foreground'>
-                      No tags found
-                    </p>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value='folders' className='mt-4'>
-                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredFolders.map((folder) => {
-                    const isSelected = selectedFolders.some(
-                      (f) => f.id === folder.id
-                    )
-                    const hasFiles = folder.fileCount > 0
-                    return (
-                      <div
-                        key={folder.id}
-                        onClick={() => hasFiles && handleToggleFolder(folder)}
-                        className={`flex items-center rounded-md p-2 transition-colors ${
-                          hasFiles
-                            ? isSelected
-                              ? 'cursor-pointer bg-accent text-accent-foreground'
-                              : 'cursor-pointer text-foreground hover:bg-accent hover:text-accent-foreground'
-                            : 'cursor-not-allowed opacity-50'
-                        }`}
-                      >
-                        <div
-                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                            isSelected
-                              ? 'border-primary bg-primary'
-                              : 'border-input hover:border-muted-foreground'
-                          }`}
-                        >
-                          {isSelected && (
-                            <Check className='h-3 w-3 text-primary-foreground' />
-                          )}
-                        </div>
-                        <Folder className='mr-2 h-4 w-4 text-muted-foreground' />
-                        <span
-                          className={`text-sm ${isSelected ? 'font-medium text-primary' : 'text-foreground'}`}
-                        >
-                          {folder.name}
-                        </span>
-                        <span className='ml-2 text-xs text-muted-foreground'>
-                          ({folder.fileCount})
-                        </span>
-                      </div>
-                    )
-                  })}
-                  {filteredFolders.length === 0 && (
-                    <p className='py-4 text-center text-muted-foreground'>
-                      No folders found
-                    </p>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value='libraries' className='mt-4'>
-                <div className='max-h-[300px] space-y-1 overflow-y-auto'>
-                  {filteredLibraries.map((library) => {
-                    const isSelected = selectedLibraries.some(
-                      (l) => l.id === library.id
-                    )
-                    return (
-                      <div
-                        key={library.id}
-                        onClick={() => handleToggleLibrary(library)}
-                        className={`flex items-center rounded-md p-2 transition-colors ${
-                          isSelected
-                            ? 'cursor-pointer bg-accent text-accent-foreground'
-                            : 'cursor-pointer text-foreground hover:bg-accent hover:text-accent-foreground'
-                        }`}
-                      >
-                        <div
-                          className={`mr-3 flex h-5 w-5 items-center justify-center rounded border-2 ${
-                            isSelected
-                              ? 'border-primary bg-primary'
-                              : 'border-input hover:border-muted-foreground'
-                          }`}
-                        >
-                          {isSelected && (
-                            <Check className='h-3 w-3 text-primary-foreground' />
-                          )}
-                        </div>
-                        <Library className='mr-2 h-4 w-4 text-muted-foreground' />
-                        <span
-                          className={`flex-1 text-sm ${isSelected ? 'font-medium text-primary' : 'text-foreground'}`}
-                        >
-                          {library.name}
-                        </span>
-                        <span className='ml-2 text-xs text-muted-foreground'>
-                          {library.curator}
-                        </span>
-                      </div>
-                    )
-                  })}
-                  {filteredLibraries.length === 0 && (
-                    <p className='py-4 text-center text-muted-foreground'>
-                      No libraries added yet
-                    </p>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value='graphs' className='mt-4'>
-                <GraphSourceList
-                  graphs={filteredGraphs}
-                  selectedIds={new Set(selectedGraphs.map((graph) => graph.id))}
-                  onToggle={handleToggleGraph}
-                />
-              </TabsContent>
-            </Tabs>
-
-            <Separator />
-
-            <div className='space-y-2'>
-              {totalSelected > 0 && (
-                <p className='px-1 text-xs text-muted-foreground'>
-                  {selectionSummary}
-                </p>
-              )}
-              {tableHint && (
-                <p className='rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground'>
-                  {tableHint}
-                </p>
-              )}
-              <div className='flex items-center justify-between'>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={clearSelections}
-                  className='text-foreground hover:bg-accent'
-                >
-                  Clear
-                </Button>
-                <Button
-                  size='sm'
-                  onClick={() => setOpen(false)}
-                  className='bg-primary text-primary-foreground hover:bg-primary/90'
-                >
-                  Done{totalSelected > 0 ? ` (${totalSelected})` : ''}
-                </Button>
               </div>
             </div>
-          </div>
+          </MotionConfig>
         </PopoverContent>
       </Popover>
     </div>

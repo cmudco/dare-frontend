@@ -85,7 +85,7 @@ Add a body when the change needs explaining, and close issues with `Closes #123`
 ## Using AI coding agents
 
 [AGENTS.md](../AGENTS.md) holds the commands and traps every agent reads; `.claude/CLAUDE.md`
-imports it for Claude Code. Task procedures (`run-frontend`, `check`) live in
+imports it for Claude Code. Task procedures (`run-frontend`, `check`, `e2e`, `verify`) live in
 `.agents/skills/<name>/SKILL.md`, and `.claude/skills/` symlinks to them; see
 [.agents/README.md](../.agents/README.md). Invoke a skill by name (`/run-frontend` in Claude Code,
 `$run-frontend` in Codex) or describe the task and let the agent pick it. Treat these files like

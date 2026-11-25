@@ -349,7 +349,7 @@ export interface ContextTraceStage {
   limit?: number | null
   /** Files read in full. */
   /** Sandbox files are copied into the code sandbox, so they carry no chars. */
-  files?: { name: string; chars?: number; sandbox?: boolean }[]
+  files?: { id?: number; name: string; chars?: number; sandbox?: boolean }[]
   /** Retrieval: settings used and the per-source pipeline traces. */
   mode?: string
   threshold?: number
@@ -595,6 +595,7 @@ export interface PickerModel {
   isAudioTranscriber?: boolean
   /** LiteLLM entries only: whether this gateway model can search the web. */
   supportsWebSearch?: boolean
+  maxInputTokens: number
   inputTokenRatePerMillion: number | null
   outputTokenRatePerMillion: number | null
   tier: string | null

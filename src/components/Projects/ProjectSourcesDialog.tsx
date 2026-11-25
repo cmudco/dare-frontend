@@ -58,7 +58,11 @@ const SourcesForm = ({
   })
   const [query, setQuery] = useState('')
   const [sort, setSort] = useSourceSort()
-  const sizeState = useSourceSize(selection.fileIds, selection.folderIds)
+  const sizeState = useSourceSize(
+    selection.fileIds,
+    selection.folderIds,
+    project.defaultModelRef
+  )
   const hasFiles = selection.fileIds.length + selection.folderIds.length > 0
   const tooLargeForFull =
     selection.sourceMode === ProjectSourceMode.FULL &&
