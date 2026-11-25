@@ -438,6 +438,54 @@ html:has(body.dark) {
   }
 }
 
+/* Tooltip: fades in while it glides 8px into place on a spring, and leaves the
+   same way. It never scales, so its text stays sharp. Follows LibreChat's tooltip. */
+@keyframes tooltip-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes tooltip-glide {
+  from {
+    translate: var(--tooltip-shift);
+  }
+}
+
+@keyframes tooltip-out {
+  to {
+    opacity: 0;
+    translate: var(--tooltip-shift);
+  }
+}
+
+@utility tooltip-motion {
+  --tooltip-shift: 0 -8px;
+  animation:
+    tooltip-fade 200ms ease-out,
+    tooltip-glide 350ms var(--ease-spring);
+
+  &[data-side='bottom'] {
+    --tooltip-shift: 0 8px;
+  }
+
+  &[data-side='left'] {
+    --tooltip-shift: -8px 0;
+  }
+
+  &[data-side='right'] {
+    --tooltip-shift: 8px 0;
+  }
+
+  &[data-state='closed'] {
+    animation: tooltip-out 150ms ease-in forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    --tooltip-shift: 0 0 !important;
+  }
+}
+
 /* Slider glide: the thumb holder and the filled range ease to each new step.
    Radix positions both with inline left/right, so they are reached by structure. */
 @utility slider-glide {
