@@ -189,7 +189,7 @@ const Sidebar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex w-full items-center rounded-xl p-3 text-start leading-tight outline-hidden transition-all ${
+                className={`flex w-full press items-center rounded-xl p-3 text-start leading-tight outline-hidden [--press-scale:1.03_0.92] ${
                   isActive
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                     : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground'
@@ -230,7 +230,7 @@ const Sidebar = () => {
             {/* Tutorial button */}
             <button
               onClick={handleStartTutorial}
-              className='flex w-full items-center rounded-lg p-3 text-start leading-tight outline-hidden transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
+              className='flex w-full press items-center rounded-lg p-3 text-start leading-tight outline-hidden [--press-scale:1.03_0.92] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
             >
               <div className={`${isCollapsed ? 'mx-auto' : 'mr-4'} relative`}>
                 <AcademicCapIcon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
@@ -249,7 +249,7 @@ const Sidebar = () => {
             {showResearchTools && (
               <button
                 onClick={handleGoToResearchTools}
-                className='flex w-full items-center rounded-lg p-3 text-start leading-tight outline-hidden transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
+                className='flex w-full press items-center rounded-lg p-3 text-start leading-tight outline-hidden [--press-scale:1.03_0.92] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground'
               >
                 <div className={`${isCollapsed ? 'mx-auto' : 'mr-4'} relative`}>
                   <ArrowTopRightOnSquareIcon className='h-5 w-5 shrink-0 font-bold transition-all duration-300' />
@@ -274,7 +274,7 @@ const Sidebar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex w-full items-center rounded-lg p-3 text-start leading-tight outline-hidden transition-all ${
+                  className={`flex w-full press items-center rounded-lg p-3 text-start leading-tight outline-hidden [--press-scale:1.03_0.92] ${
                     isActive
                       ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                       : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground'

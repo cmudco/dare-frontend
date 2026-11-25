@@ -1,7 +1,19 @@
 import React, { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react'
+import { speedLines, ticks } from '@/lib/motion'
 import { ToastItem, useToastStore } from '@/stores/ui/toastStore'
+
+// As a toast lands, speed lines trail behind it; a success also throws ticks off its icon.
+function playLanding(toast: HTMLDivElement, confirmed: boolean) {
+  setTimeout(() => {
+    const box = toast.getBoundingClientRect()
+    speedLines(box.right + 4, box.top + box.height / 2, { direction: 0 })
+    const icon = toast.firstElementChild?.getBoundingClientRect()
+    if (confirmed && icon)
+      ticks(icon.right, icon.top, { length: 6, distance: 9 })
+  }, 250)
+}
 
 const ToastItemView: React.FC<{
   toast: ToastItem
@@ -24,7 +36,10 @@ const ToastItemView: React.FC<{
     <div
       role='status'
       aria-live='polite'
-      className={`pointer-events-auto flex w-96 items-center gap-3 rounded-md border p-3 shadow-lg ${base}`}
+      className={`pointer-events-auto flex w-96 items-center gap-3 rounded-md border p-3 shadow-lg motion-safe:animate-toast-in ${base}`}
+      onAnimationStart={(event) =>
+        playLanding(event.currentTarget, toast.type === 'success')
+      }
     >
       <div
         className={`flex h-5 w-5 shrink-0 items-center justify-center ${iconColor}`}
