@@ -43,3 +43,6 @@ export enum SharingErrorCode {
   CANNOT_PUBLISH_FORKED = 'cannot_publish_forked',
   FORK_FAILED = 'fork_failed',
 }
+
+// Past this share of the context window, the next reply risks running out of room.
+export const CONTEXT_NEARLY_FULL_SHARE = 0.8

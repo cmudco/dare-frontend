@@ -23,6 +23,10 @@ const compactTokens = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 1,
 })
 
+/** "42K", "1.2M": a token count at a glance. */
+export const formatCompactTokens = (tokens: number) =>
+  compactTokens.format(tokens)
+
 /** "~42K tokens" — estimates are rough, so they read as approximate. */
 export const formatTokenEstimate = (tokens: number) =>
   `~${compactTokens.format(tokens)} tokens`

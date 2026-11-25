@@ -1,191 +1,80 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useMemo } from 'react'
-import { useSelector } from 'react-redux'
-import type { RootState } from '@/redux/store'
-import type { Message } from '@/redux/types/conversation'
-import { SenderType } from '@/utils/constants/conversation'
-import { sumUsage, usageRounds } from '@/utils/usageDetails'
-import { formatUsdPrecise } from '@/utils/wallets'
+import { useNextMessageFiles } from '@/hooks/useNextMessageFiles'
+import { cn } from '@/lib/utils'
+import {
+  selectChatTokenTotals,
+  selectLastMeasuredReply,
+  selectSelectedPickerEntry,
+} from '@/redux/conversationSlice'
+import { useAppSelector } from '@/redux/hooks'
 import { isImageOrAudioModel } from '@/redux/utils/modelSyncHelpers'
-import { type SourceSizeState, useSourceSize } from '@/hooks/useSourceSize'
+import { CONTEXT_NEARLY_FULL_SHARE } from '@/utils/constants/conversation'
+import { tokenTotals, usageRounds } from '@/utils/usageDetails'
+import { formatCompactTokens } from '../Projects/projectSources'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import ContextTokenCard from './ContextTokenCard'
 
-const compact = new Intl.NumberFormat(undefined, {
-  notation: 'compact',
-  maximumFractionDigits: 1,
-})
 const RING = 2 * Math.PI * 7
-// Past this share of the window, the next reply risks running out of room.
-const NEARLY_FULL = 0.8
 const SPRING = { type: 'spring', stiffness: 140, damping: 22 } as const
-const NO_FOLDERS: number[] = []
-
-interface TokenTotals {
-  uncached: number
-  cacheRead: number
-  cacheWrite: number
-  output: number
-  cost: number
-}
-
-const EMPTY: TokenTotals = {
-  uncached: 0,
-  cacheRead: 0,
-  cacheWrite: 0,
-  output: 0,
-  cost: 0,
-}
-
-const tokensOf = (message: Message): TokenTotals => {
-  const cacheRead = sumUsage(message, 'cachedInputTokens')
-  const cacheWrite = sumUsage(message, 'cacheWriteInputTokens')
-  return {
-    uncached: (message.inputTokens ?? 0) - cacheRead - cacheWrite,
-    cacheRead,
-    cacheWrite,
-    output: message.outputTokens ?? 0,
-    cost: Number(message.cost ?? 0),
-  }
-}
-
-const addTotals = (a: TokenTotals, b: TokenTotals): TokenTotals => ({
-  uncached: a.uncached + b.uncached,
-  cacheRead: a.cacheRead + b.cacheRead,
-  cacheWrite: a.cacheWrite + b.cacheWrite,
-  output: a.output + b.output,
-  cost: a.cost + b.cost,
-})
 
 const percent = (share: number) =>
   `${share > 0 && share < 0.01 ? '<1' : Math.round(share * 100)}%`
 
-const TokenCard = ({
-  title,
-  totals,
-}: {
-  title: string
-  totals: TokenTotals
-}) => (
-  <div className='rounded-lg bg-muted/50 p-3'>
-    <div className='mb-2 flex items-baseline justify-between'>
-      <p className='text-xs font-medium text-foreground'>{title}</p>
-      <p className='text-xs text-muted-foreground tabular-nums'>
-        {formatUsdPrecise(String(totals.cost))}
-      </p>
-    </div>
-    <dl className='grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs'>
-      {(
-        [
-          ['Input', totals.uncached],
-          ['Output', totals.output],
-          ['Cache read', totals.cacheRead],
-          ['Cache write', totals.cacheWrite],
-        ] as const
-      ).map(([label, value]) => (
-        <div key={label} className='flex justify-between gap-2'>
-          <dt className='text-muted-foreground'>{label}</dt>
-          <dd className='font-medium text-foreground tabular-nums'>
-            {compact.format(value)}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  </div>
-)
+interface NextMessage {
+  counting: boolean
+  added: number
+  removed: number
+  estimated: boolean
+}
 
-const isCounting = (ids: number[], size: SourceSizeState) =>
-  ids.length > 0 &&
-  (size.status === 'idle' ||
-    size.status === 'loading' ||
-    (size.status === 'ready' && size.refreshing))
-
-const measuredTokens = (ids: number[], size: SourceSizeState) =>
-  ids.length && size.status === 'ready' ? size.size.estimatedTokens : 0
-
-/** Ids the reply read in full, from its trace; null when the trace can't say. */
-const filesReadInFull = (reply: Message | undefined): Set<number> | null => {
-  if (!reply) return new Set()
-  if (!reply.contextTrace) return null
-  const entries = (
-    reply.contextTrace.stages.find((stage) => stage.kind === 'files')?.files ??
-    []
-  ).filter((entry) => !entry.sandbox)
-  const ids = entries.map((entry) => entry.id)
-  return ids.every((id): id is number => id !== undefined) ? new Set(ids) : null
+const nextMessageText = (next: NextMessage, mayOverflow: boolean) => {
+  if (next.counting)
+    return 'Next message: counting tokens for the files you changed…'
+  const approx = next.estimated ? '~' : ''
+  const parts = [
+    next.added > 0 &&
+      `${approx}+${formatCompactTokens(next.added)} from files you added`,
+    next.removed > 0 &&
+      `${approx}−${formatCompactTokens(next.removed)} from files you removed`,
+  ].filter(Boolean)
+  return [
+    `Next message: ${parts.join(', ')}`,
+    next.estimated && ' (estimated)',
+    mayOverflow && '. It may not fit this model.',
+  ]
+    .filter(Boolean)
+    .join('')
 }
 
 /**
  * How much of the selected model's context window the last reply used: its
  * final prompt (history, files, web results, tool output) plus the reply.
- * Web results and tool output belong to that turn only, so the next prompt
- * can be smaller.
  */
 const ContextMeter = () => {
-  const messages = useSelector(
-    (state: RootState) => state.conversation.activeConversationMessages
-  )
-  const model = useSelector((state: RootState) =>
-    state.conversation.pickerEntries.find(
-      (entry) => entry.id === state.conversation.selectedModel
-    )
-  )
-  const selectedFiles = useSelector(
-    (state: RootState) => state.conversation.selectedFiles
-  )
-  const selectedModel = useSelector(
-    (state: RootState) => state.conversation.selectedModel
-  )
-  const replies = useMemo(
-    () =>
-      (messages ?? []).filter(
-        (message) =>
-          message.senderType === SenderType.AI_ASSISTANT && !message.streaming
-      ),
-    [messages]
-  )
-  // Failed and image replies used none of the window, so they can't anchor it.
-  const last = useMemo(
-    () =>
-      [...replies].reverse().find((message) => usageRounds(message).length > 0),
-    [replies]
-  )
-  // Files read in full go out with every message, so only the difference
-  // from what the last reply read in full changes the next prompt.
-  const { addedIds, removedIds } = useMemo(() => {
-    const read = filesReadInFull(last)
-    if (!read) return { addedIds: [], removedIds: [] }
-    const picked = new Set(selectedFiles.map((file) => file.id))
-    return {
-      addedIds: [...picked].filter((id) => !read.has(id)),
-      removedIds: [...read].filter((id) => !picked.has(id)),
-    }
-  }, [last, selectedFiles])
-  const addedSize = useSourceSize(addedIds, NO_FOLDERS, selectedModel)
-  const removedSize = useSourceSize(removedIds, NO_FOLDERS, selectedModel)
+  const model = useAppSelector(selectSelectedPickerEntry)
+  const last = useAppSelector(selectLastMeasuredReply)
+  const chatTotals = useAppSelector(selectChatTokenTotals)
+  const next = useNextMessageFiles(last)
   // Image and audio models answer without a chat context window.
-  if (!model?.maxInputTokens || isImageOrAudioModel(model)) return null
-  const windowTokens = model.maxInputTokens
+  if (!model || isImageOrAudioModel(model)) return null
 
+  const windowTokens = model.maxInputTokens
   const lastRound = last ? usageRounds(last).slice(-1)[0] : undefined
   const prompt = lastRound?.inputTokens ?? 0
   const reply = lastRound?.outputTokens ?? 0
   const used = prompt + reply
   const share = Math.min(used / windowTokens, 1)
-  const nearlyFull = share >= NEARLY_FULL
+  const nearlyFull = share >= CONTEXT_NEARLY_FULL_SHARE
   const fill = nearlyFull ? 'bg-destructive' : 'bg-primary'
-  const totals = replies.map(tokensOf).reduce(addTotals, EMPTY)
-  const nextCounting =
-    isCounting(addedIds, addedSize) || isCounting(removedIds, removedSize)
-  const added = nextCounting ? 0 : measuredTokens(addedIds, addedSize)
-  const removed = nextCounting ? 0 : measuredTokens(removedIds, removedSize)
-  const nextMayOverflow = used + added - removed > windowTokens
-  const nextEstimated =
-    !nextCounting &&
-    ((addedSize.status === 'ready' && addedSize.size.estimated) ||
-      (removedSize.status === 'ready' && removedSize.size.estimated))
+  const mayOverflow = used + next.added - next.removed > windowTokens
   const label = last
     ? `Last reply used ${percent(share)} of the context window`
     : 'Context window'
+  const segments = [
+    { key: 'prompt', tokens: prompt, className: fill },
+    { key: 'reply', tokens: reply, className: cn(fill, 'opacity-50') },
+    { key: 'added', tokens: next.added, className: cn(fill, 'opacity-20') },
+  ]
 
   return (
     <Popover>
@@ -237,22 +126,23 @@ const ContextMeter = () => {
               Context window
             </p>
             <p className='truncate text-xs text-muted-foreground'>
-              {model.name} · {compact.format(windowTokens)}
+              {model.name} · {formatCompactTokens(windowTokens)}
             </p>
           </div>
           <div className='mt-3 flex items-baseline gap-1.5'>
             <span className='text-2xl font-semibold text-foreground tabular-nums'>
-              {compact.format(used)}
+              {formatCompactTokens(used)}
             </span>
             <span className='text-xs text-muted-foreground'>
-              of {compact.format(windowTokens)} used by the last reply
+              of {formatCompactTokens(windowTokens)} used by the last reply
             </span>
             <span
-              className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium tabular-nums ${
+              className={cn(
+                'ml-auto rounded-full px-2 py-0.5 text-xs font-medium tabular-nums',
                 nearlyFull
                   ? 'bg-destructive/10 text-destructive'
                   : 'bg-primary/10 text-primary'
-              }`}
+              )}
             >
               {percent(share)}
             </span>
@@ -261,68 +151,51 @@ const ContextMeter = () => {
 
         <div>
           <div className='flex h-2 overflow-hidden rounded-full bg-muted'>
-            <motion.div
-              className={fill}
-              initial={false}
-              animate={{
-                width: `${(Math.min(prompt, windowTokens) / windowTokens) * 100}%`,
-              }}
-              transition={SPRING}
-            />
-            <motion.div
-              className={`${fill} opacity-50`}
-              initial={false}
-              animate={{
-                width: `${(Math.min(reply, windowTokens) / windowTokens) * 100}%`,
-              }}
-              transition={SPRING}
-            />
-            <motion.div
-              className={`${fill} opacity-20`}
-              initial={false}
-              animate={{
-                width: `${(Math.min(added, windowTokens) / windowTokens) * 100}%`,
-              }}
-              transition={SPRING}
-            />
+            {segments.map((segment) => (
+              <motion.div
+                key={segment.key}
+                className={segment.className}
+                initial={false}
+                animate={{
+                  width: `${(Math.min(segment.tokens, windowTokens) / windowTokens) * 100}%`,
+                }}
+                transition={SPRING}
+              />
+            ))}
           </div>
           <div className='mt-2 flex gap-4 text-xs text-muted-foreground'>
             <span className='flex items-center gap-1.5'>
-              <span className={`h-2 w-2 rounded-full ${fill}`} />
-              Prompt {compact.format(prompt)}
+              <span className={cn('h-2 w-2 rounded-full', fill)} />
+              Prompt {formatCompactTokens(prompt)}
             </span>
             <span className='flex items-center gap-1.5'>
-              <span className={`h-2 w-2 rounded-full ${fill} opacity-50`} />
-              Reply {compact.format(reply)}
+              <span className={cn('h-2 w-2 rounded-full opacity-50', fill)} />
+              Reply {formatCompactTokens(reply)}
             </span>
             <span className='ml-auto'>
-              {compact.format(Math.max(windowTokens - used, 0))} free
+              {formatCompactTokens(Math.max(windowTokens - used, 0))} free
             </span>
           </div>
           <AnimatePresence initial={false}>
-            {(nextCounting || added > 0 || removed > 0) && (
+            {(next.counting || next.added > 0 || next.removed > 0) && (
               <motion.p
                 key='next'
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className={`flex items-center gap-1.5 overflow-hidden pt-2 text-xs ${
-                  nextMayOverflow ? 'text-destructive' : 'text-foreground'
-                }`}
+                className={cn(
+                  'flex items-center gap-1.5 overflow-hidden pt-2 text-xs',
+                  mayOverflow ? 'text-destructive' : 'text-foreground'
+                )}
               >
                 <span
-                  className={`h-2 w-2 shrink-0 rounded-full ${fill} opacity-20`}
+                  className={cn(
+                    'h-2 w-2 shrink-0 rounded-full opacity-20',
+                    fill
+                  )}
                 />
-                Next message:
-                {nextCounting && ' counting tokens for the files you changed…'}
-                {added > 0 &&
-                  ` ${nextEstimated ? '~' : ''}+${compact.format(added)} from files you added`}
-                {added > 0 && removed > 0 && ','}
-                {removed > 0 &&
-                  ` ${nextEstimated ? '~' : ''}−${compact.format(removed)} from files you removed`}
-                {nextEstimated && ' (estimated)'}
-                {nextMayOverflow && '. It may not fit this model.'}
+                {nextMessageText(next, mayOverflow)}
               </motion.p>
             )}
           </AnimatePresence>
@@ -338,8 +211,8 @@ const ContextMeter = () => {
 
         {last && (
           <div className='grid gap-2'>
-            <TokenCard title='Last reply' totals={tokensOf(last)} />
-            <TokenCard title='This chat' totals={totals} />
+            <ContextTokenCard title='Last reply' totals={tokenTotals(last)} />
+            <ContextTokenCard title='This chat' totals={chatTotals} />
           </div>
         )}
       </PopoverContent>

@@ -1,5 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialState } from './initialState/conversation'
+import type { RootState } from './store'
 import {
   getConversations,
   fetchConversationById,
@@ -48,7 +49,13 @@ import {
   EnsembleRole,
 } from './types/conversation'
 import { ToolCallOrigin, ToolLoopState } from '@/utils/constants/dareTools'
-import { ConversationTab } from '@/utils/constants/conversation'
+import { ConversationTab, SenderType } from '@/utils/constants/conversation'
+import {
+  addTokenTotals,
+  EMPTY_TOKEN_TOTALS,
+  tokenTotals,
+  usageRounds,
+} from '@/utils/usageDetails'
 import { EMPTY_BRIEFS } from '@/utils/ensemble'
 import type {
   ToolCallPendingEvent,
@@ -1496,4 +1503,38 @@ export const {
   updateSelectedDareTools,
   setActiveTab,
 } = conversationSlice.actions
+const selectMessages = (state: RootState) =>
+  state.conversation.activeConversationMessages
+
+export const selectSelectedPickerEntry = createSelector(
+  [
+    (state: RootState) => state.conversation.pickerEntries,
+    (state: RootState) => state.conversation.selectedModel,
+  ],
+  (entries, selectedModel) =>
+    entries.find((entry) => entry.id === selectedModel)
+)
+
+export const selectFinishedReplies = createSelector(
+  [selectMessages],
+  (messages) =>
+    messages.filter(
+      (message) =>
+        message.senderType === SenderType.AI_ASSISTANT && !message.streaming
+    )
+)
+
+/** The latest reply with usage; failed and image replies used none of the window. */
+export const selectLastMeasuredReply = createSelector(
+  [selectFinishedReplies],
+  (replies) =>
+    [...replies].reverse().find((message) => usageRounds(message).length > 0)
+)
+
+export const selectChatTokenTotals = createSelector(
+  [selectFinishedReplies],
+  (replies) =>
+    replies.map(tokenTotals).reduce(addTokenTotals, EMPTY_TOKEN_TOTALS)
+)
+
 export default conversationSlice.reducer
