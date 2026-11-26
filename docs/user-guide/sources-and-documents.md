@@ -25,7 +25,7 @@ Check the status badge beside the file name. It shows the current processing sta
 3. Choose **Save** and check that the label appears in the file's **Tags** column. Creating a tag alone does not attach it to the file.
 4. Use **View** in the file's actions to inspect the stored content, especially after processing a table or scanned page.
 
-To see how many tokens a file takes, choose **Tokens** in its **Actions** menu. It shows the count on Claude, OpenAI and Gemini, since each provider counts the same text differently. Files are counted once, when they finish processing.
+To see how many tokens a file takes, choose **Tokens** in its **Actions** menu. It shows the count on Claude, OpenAI and Gemini, since each provider counts the same text differently. Older Claude models (4.5 and earlier) count up to about 25% fewer tokens than the number shown. Files are counted once, when they finish processing.
 
 Deleting a file moves it to **Recently deleted** in the Sources menu. From there you can restore it or choose **Delete permanently**.
 
@@ -43,7 +43,7 @@ Open the folder icon in the conversation toolbar. It contains separate **Embeddi
 | **Files** | The selected document's full text, subject to model limits. | A short document, an overall summary or a question about structure. |
 | Both tabs | Retrieved passages and full document text. | A task that needs both; expect more context and possible extra usage. |
 
-Under **Files**, a note shows whether the model can read the selected files in full and how many tokens they take. If they are too long for the model, the context meter next to the send button turns red and its card shows the count against the model's limit. You can still send; to stay within the limit, untick some files, pick a model with a larger context window, or select them under **Embeddings** so the conversation searches them instead.
+Under **Files**, a note shows how many tokens the selected files take when the model can read them in full. If they are too long for the model, the context meter next to the send button turns red and its card shows the count against the model's limit. You can still send; to stay within the limit, untick some files, pick a model with a larger context window, or select them under **Embeddings** so the conversation searches them instead.
 
 Select the document in the intended tab, then choose **Done**. The selection summary shows what is included. Use **Clear** to remove selections you no longer need.
 

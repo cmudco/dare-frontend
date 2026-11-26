@@ -62,10 +62,7 @@ import { FileStatus } from '@/utils/constants/file'
 import { supportsCodeSandbox } from '@/utils/modelConfigUtils'
 import { isSpreadsheetFile } from '@/utils/spreadsheet/protocol'
 import { useSourceSize } from '@/hooks/useSourceSize'
-import {
-  formatTokenCount,
-  formatTokenEstimate,
-} from '../Projects/projectSources'
+import { formatTokenCount } from '../Projects/projectSources'
 
 // Tables are searched by a summary card, so their parser is not the story.
 const sourceLabel = (
@@ -486,7 +483,7 @@ const ConversationFileSelect: React.FC = () => {
         ? `Counting tokens for ${selectedFiles.length === 1 ? 'this file' : 'these files'} on this model…`
         : readSize.size.fitsFullFiles
           ? `The AI reads ${selectedFiles.length === 1 ? 'this file' : 'these files'} in full (${formatTokenCount(readSize.size.estimatedTokens, readSize.size.estimated)}).`
-          : `Too long for this model: ${formatTokenCount(readSize.size.estimatedTokens, readSize.size.estimated)}, and it has room for ${formatTokenEstimate(readSize.size.tokenLimit)} of files. Pick a model with a larger context window, or use Embeddings to search ${selectedFiles.length === 1 ? 'it' : 'them'}.`
+          : null
 
   const footerNotes = [
     { key: 'read', text: readNote },
