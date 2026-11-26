@@ -41,6 +41,10 @@ node scripts/test-ensemble-state.mjs      # the only automated test
 - **A new theme touches four places:** a CSS file in `src/themes/`, its `@import` in
   `src/index.css`, `THEME_NAMES` in `src/redux/themeSlice.ts`, and a card in
   `src/components/Settings/AppearanceSettings.tsx`.
+- **A visible change updates the user manual in the same PR.** The in-app manual
+  (`/help/user-guide`) is one markdown file per topic in `docs/user-guide/`; frontmatter sets
+  title, summary, icon, group and order. A new or renamed button, setting or page means editing
+  the topic that describes it. A new topic is a new file.
 - **Feature flags come from the backend, not `.env`.** Read them with `useFeatureFlag`
   (`src/hooks/useFeatureFlag.ts`); `src/api/featureFlags.ts` fetches `api/feature-flags/me/`.
 - **The env example is `.env.example`**; the backend's is `.example.env`. Every variable is in

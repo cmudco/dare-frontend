@@ -29,6 +29,7 @@ Closes #
 - [ ] `npm run lint` passes
 - [ ] `npx prettier --check <changed files>` passes
 - [ ] Tried in a real browser against a running backend, in light and dark mode
+- [ ] The user manual in `docs/user-guide/` matches any visible change
 - [ ] New or changed environment variables are in `.env.example` and
       `docs/reference/configuration.md`
 - [ ] `AGENTS.md` or a skill in `.agents/skills/` is updated, if a command or trap changed
