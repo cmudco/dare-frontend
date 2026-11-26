@@ -66,23 +66,31 @@ const FileTokensDialog = ({ file, onClose }: FileTokensDialogProps) => {
             Counting tokens…
           </div>
         ) : (
-          <table className='w-full text-sm'>
-            <tbody className='divide-y divide-border'>
-              {rows.map((row) => (
-                <tr key={row.provider}>
-                  <td className='py-2.5'>
-                    <div>{PROVIDER_LABELS[row.provider] ?? row.provider}</div>
-                    <div className='text-xs text-muted-foreground'>
-                      {row.model}
-                    </div>
-                  </td>
-                  <td className='py-2.5 text-right font-medium tabular-nums'>
-                    ~{row.tokens.toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <>
+            <table className='w-full text-sm'>
+              <tbody className='divide-y divide-border'>
+                {rows.map((row) => (
+                  <tr key={row.provider}>
+                    <td className='py-2.5'>
+                      <div>{PROVIDER_LABELS[row.provider] ?? row.provider}</div>
+                      <div className='text-xs text-muted-foreground'>
+                        {row.model}
+                      </div>
+                    </td>
+                    <td className='py-2.5 text-right font-medium tabular-nums'>
+                      ~{row.tokens.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {rows.some((row) => row.provider === 'claude') && (
+              <p className='text-xs text-muted-foreground'>
+                Older Claude models (4.5 and earlier) count up to ~25% fewer
+                tokens.
+              </p>
+            )}
+          </>
         )}
       </DialogContent>
     </Dialog>
