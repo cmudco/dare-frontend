@@ -40,10 +40,9 @@ const FileStatusPoller: React.FC = () => {
               dispatch(getFolders())
             }
           })
-          .catch((error) => {
-            console.error('Polling error:', error)
-            clearInterval(interval)
-          })
+          // A failed poll is retried on the next tick; stopping here left
+          // files stuck as processing after one network blip.
+          .catch((error) => console.warn('Polling error:', error))
       }, 5000)
 
       return () => clearInterval(interval)

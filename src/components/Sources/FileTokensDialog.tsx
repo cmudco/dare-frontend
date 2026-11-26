@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { MyFile } from '@/redux/types/files'
+import { FileStatus } from '@/utils/constants/file'
 
 const PROVIDER_LABELS: Record<string, string> = {
   claude: 'Claude',
@@ -25,9 +26,11 @@ const FileTokensDialog = ({ file, onClose }: FileTokensDialogProps) => {
   const [rows, setRows] = useState<ProviderTokens[] | null>(null)
   const [failed, setFailed] = useState(false)
   const fileId = file?.id
+  // Counting waits for processing: the text is still being written.
+  const processing = file?.status === FileStatus.PROCESSING
 
   useEffect(() => {
-    if (fileId === undefined) return
+    if (fileId === undefined || processing) return
     let stale = false
     setRows(null)
     setFailed(false)
@@ -37,7 +40,7 @@ const FileTokensDialog = ({ file, onClose }: FileTokensDialogProps) => {
     return () => {
       stale = true
     }
-  }, [fileId])
+  }, [fileId, processing])
 
   return (
     <Dialog open={!!file} onOpenChange={(open) => !open && onClose()}>
@@ -48,7 +51,12 @@ const FileTokensDialog = ({ file, onClose }: FileTokensDialogProps) => {
             {file?.name}
           </DialogDescription>
         </DialogHeader>
-        {failed ? (
+        {processing ? (
+          <p className='py-2 text-sm text-muted-foreground'>
+            This file is still processing. Its tokens will show here when it's
+            done.
+          </p>
+        ) : failed ? (
           <p className='text-sm text-destructive'>
             Couldn't count tokens for this file. Try again.
           </p>
