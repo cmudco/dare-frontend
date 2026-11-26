@@ -126,6 +126,23 @@ const Help = () => {
           </CardHeader>
           <CardContent>
             <div className='space-y-4'>
+              <Link
+                to='/help/user-guide'
+                className='flex items-start justify-between gap-4 rounded-lg border border-border p-4 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
+              >
+                <div>
+                  <h3 className='font-medium text-foreground'>User Manual</h3>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    Conversations, documents, templates and workflows, with
+                    exercises you can check. Each topic can be printed or saved
+                    as a PDF.
+                  </p>
+                </div>
+                <FileText
+                  className='h-5 w-5 shrink-0 text-primary'
+                  aria-hidden='true'
+                />
+              </Link>
               <div className='rounded-lg border border-border p-4 transition-all hover:border-blue-300 hover:shadow-md'>
                 <a href='/docs/' className='flex items-start justify-between'>
                   <div>
