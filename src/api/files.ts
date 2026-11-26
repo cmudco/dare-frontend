@@ -427,3 +427,18 @@ export const fetchFileBlobAPI = async (
     method: METHOD.GET,
     responseType: 'blob',
   })
+
+export interface ProviderTokens {
+  provider: string
+  model: string
+  tokens: number
+  estimated: boolean
+}
+
+export const getFileTokensAPI = async (
+  fileId: number
+): Promise<ProviderTokens[]> =>
+  baseRequest<ProviderTokens[]>({
+    url: `api/files/${fileId}/tokens/`,
+    method: METHOD.GET,
+  })

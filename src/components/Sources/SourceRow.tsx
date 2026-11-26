@@ -2,6 +2,7 @@ import {
   EllipsisVerticalIcon,
   Eye,
   FolderMinus,
+  Hash,
   RefreshCw,
   ScanText,
   Share2,
@@ -44,6 +45,7 @@ export type SourceRowAction =
   | 'share'
   | 'reprocess'
   | 'reviewOcr'
+  | 'tokens'
   | 'removeFromFolder'
   | 'delete'
 
@@ -159,6 +161,12 @@ const SourceRow = ({
               <Eye className='mr-2 h-4 w-4' />
               View
             </DropdownMenuItem>
+            {!file.isMedia && (
+              <DropdownMenuItem onClick={() => onAction('tokens', file)}>
+                <Hash className='mr-2 h-4 w-4' />
+                Tokens
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => onAction('tag', file)}>
               <TagIcon className='mr-2 h-4 w-4' />
               {file.tags.length === 0 ? 'Add tags' : 'Edit tags'}

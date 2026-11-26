@@ -26,6 +26,7 @@ import { MyFile } from '@/redux/types/files'
 import { toast } from '@/utils/toast'
 import MoveToRecentlyDeletedDialog from './MoveToRecentlyDeletedDialog'
 import SourceRow, { SourceRowAction } from './SourceRow'
+import FileTokensDialog from './FileTokensDialog'
 
 const PAGE_SIZE = 50
 
@@ -202,6 +203,10 @@ const SourceList = ({ files, emptyState, folderId }: SourceListProps) => {
       )}
       <MoveToRecentlyDeletedDialog
         files={dialog?.action === 'delete' && dialogFile ? [dialogFile] : null}
+        onClose={closeDialog}
+      />
+      <FileTokensDialog
+        file={dialog?.action === 'tokens' ? (dialogFile ?? null) : null}
         onClose={closeDialog}
       />
       <OcrApprovalDialog

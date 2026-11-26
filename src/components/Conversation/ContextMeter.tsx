@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import { useFilesTooLong } from '@/hooks/useFilesTooLong'
 import { useNextMessageFiles } from '@/hooks/useNextMessageFiles'
 import { cn } from '@/lib/utils'
 import {
@@ -10,7 +11,11 @@ import { useAppSelector } from '@/redux/hooks'
 import { isImageOrAudioModel } from '@/redux/utils/modelSyncHelpers'
 import { CONTEXT_NEARLY_FULL_SHARE } from '@/utils/constants/conversation'
 import { tokenTotals, usageRounds } from '@/utils/usageDetails'
-import { formatCompactTokens } from '../Projects/projectSources'
+import {
+  formatCompactTokens,
+  formatTokenCount,
+  formatTokenEstimate,
+} from '../Projects/projectSources'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import ContextTokenCard from './ContextTokenCard'
 
@@ -55,6 +60,7 @@ const ContextMeter = () => {
   const last = useAppSelector(selectLastMeasuredReply)
   const chatTotals = useAppSelector(selectChatTokenTotals)
   const next = useNextMessageFiles(last)
+  const filesOver = useFilesTooLong()
   // Image and audio models answer without a chat context window.
   if (!model || isImageOrAudioModel(model)) return null
 
@@ -64,7 +70,7 @@ const ContextMeter = () => {
   const reply = lastRound?.outputTokens ?? 0
   const used = prompt + reply
   const share = Math.min(used / windowTokens, 1)
-  const nearlyFull = share >= CONTEXT_NEARLY_FULL_SHARE
+  const nearlyFull = share >= CONTEXT_NEARLY_FULL_SHARE || filesOver !== null
   const fill = nearlyFull ? 'bg-destructive' : 'bg-primary'
   const mayOverflow = used + next.added - next.removed > windowTokens
   const label = last
@@ -176,6 +182,14 @@ const ContextMeter = () => {
               {formatCompactTokens(Math.max(windowTokens - used, 0))} free
             </span>
           </div>
+          {filesOver && !mayOverflow && (
+            <p className='pt-2 text-xs text-destructive'>
+              Selected files take{' '}
+              {formatTokenCount(filesOver.estimatedTokens, filesOver.estimated)}
+              , more than this model's{' '}
+              {formatTokenEstimate(filesOver.tokenLimit)}.
+            </p>
+          )}
           <AnimatePresence initial={false}>
             {(next.counting || next.added > 0 || next.removed > 0) && (
               <motion.p
