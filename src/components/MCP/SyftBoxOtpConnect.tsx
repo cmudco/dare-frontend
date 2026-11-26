@@ -14,12 +14,16 @@ import { toast } from '@/utils/toast'
 
 interface SyftBoxOtpConnectProps {
   serverName: string
+  onConnected?: () => void
 }
 
 /**
  * SyftBox connect flow: request OTP, then verify to establish MCP connection.
  */
-const SyftBoxOtpConnect = ({ serverName }: SyftBoxOtpConnectProps) => {
+const SyftBoxOtpConnect = ({
+  serverName,
+  onConnected,
+}: SyftBoxOtpConnectProps) => {
   const dispatch = useAppDispatch()
   const [otp, setOtp] = useState('')
   const [otpRequested, setOtpRequested] = useState(false)
@@ -50,6 +54,7 @@ const SyftBoxOtpConnect = ({ serverName }: SyftBoxOtpConnectProps) => {
     try {
       await dispatch(verifySyftboxOtp(otp)).unwrap()
       toast.success(`Connected to ${serverName}`)
+      onConnected?.()
       await dispatch(getMcpConnections()).unwrap()
       try {
         await dispatch(getUserData()).unwrap()
