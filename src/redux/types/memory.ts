@@ -108,6 +108,68 @@ export interface MemoryImportResult {
   document: boolean
 }
 
+/**
+ * An Open Memory Protocol archive. Its keys are the protocol's own
+ * (snake_case), so the file is passed through as-is and never retyped here.
+ */
+export interface OmpArchive {
+  manifest: Record<string, unknown>
+  memories: unknown[]
+  tombstones: unknown[]
+}
+
+/** One memory as its Open Memory Protocol record */
+export interface OmpFieldEntry {
+  /** What DARE calls it; empty for a field added on export */
+  label: string
+  value: string
+  /** The record fields it lands in */
+  omp: string[]
+  how: 'kept' | 'reshaped' | 'stays' | 'added'
+  note: string
+}
+
+export interface OmpRecord {
+  origin: string
+  /** The header of the file this record would be exported in */
+  manifest: Record<string, unknown>
+  memory: Record<string, unknown>
+  fields: OmpFieldEntry[]
+}
+
+export type OmpOutcome =
+  | 'accepted'
+  | 'transformed'
+  | 'unchanged'
+  | 'omitted'
+  | 'rejected'
+
+/** What an import did with one memory or forget marker from the file */
+export interface OmpReceiptEntry {
+  kind: 'memory' | 'tombstone'
+  origin: string
+  identifier: string
+  status: OmpOutcome
+  reason: string
+  recordId: string
+}
+
+/** One Open Memory Protocol import and its receipt */
+export interface OmpImportRun {
+  id: string
+  createdAt: string
+  origin: string
+  counts: Record<OmpOutcome, number>
+  /** Imported memories, from any import, still waiting to be released */
+  held: number
+  entries: OmpReceiptEntry[]
+}
+
+export interface OmpReleaseResult {
+  released: number
+  stillHeld: number
+}
+
 /** What the foreign-paste endpoint reports: work queued, not yet done */
 export interface ForeignImportResult {
   queuedChunks: number
