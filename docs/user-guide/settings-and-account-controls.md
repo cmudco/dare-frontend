@@ -29,6 +29,10 @@ In [**Settings → Data**](/settings/data), open **Your data and account**:
 
 A conversation's **Export** control downloads that conversation as PDF, rather than an account archive. A workflow's **Export JSON** downloads its definition. Choose the export that matches what you need to keep.
 
+### Create an account and sign in
+
+To create an account, open [**Create Account**](/register). If you have an access code, enter it in **Access Code (optional)**. On a deployment that reviews signups, leave the code blank to ask an administrator for approval. You then see **Account awaiting approval**, and you can sign in once an administrator approves you and you have verified your email. Use **Resend** there if the verification email does not arrive. To get a single-use code instead, use [**Request access**](/request-access): give your name, email and an optional reason, then register with the code you receive if you are approved.
+
 If your deployment offers single sign-on, the login page shows a **Sign in with** button for your organization. That account's password is managed by your organization, not by DARE.
 
 Use [**Forgot Password?**](/forgot-password) on the login page for a forgotten password. Changing a password or profile does not approve an account, change permissions or allocate wallet credit.
