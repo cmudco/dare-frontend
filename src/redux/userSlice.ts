@@ -71,9 +71,11 @@ const userSlice = createSlice({
       .addCase(verifyEmailRegistration.fulfilled, (state, action) => {
         state.loading = false
         state.error = null
-        state.successMessage = action.payload?.alreadyVerified
-          ? 'Your email is already verified'
-          : 'Email verified successfully'
+        state.successMessage = action.payload?.approvalRequired
+          ? 'Email verified. Administrator approval is still required.'
+          : action.payload?.alreadyVerified
+            ? 'Your email is already verified'
+            : 'Email verified successfully'
       })
       .addCase(verifyEmailRegistration.rejected, (state, action) => {
         state.loading = false
@@ -144,6 +146,8 @@ const userSlice = createSlice({
       })
       .addCase(userRegister.fulfilled, (state) => {
         state.loading = false
+        state.user = null
+        state.isAuthenticated = false
         state.error = null
       })
       .addCase(userRegister.rejected, (state, action) => {

@@ -58,7 +58,7 @@ const EmailConfirmationScreen: React.FC = () => {
       title='Email Confirmation'
       subtitle={
         emailDeliveryConfigured
-          ? 'A verification link has been sent to your email. Please check your email and click on the link to verify your account.'
+          ? 'Check your inbox for the verification link. If it does not arrive, request another email or contact your deployment administrator.'
           : EMAIL_DELIVERY_UNAVAILABLE_MESSAGE
       }
       inputs={[]}
@@ -66,7 +66,7 @@ const EmailConfirmationScreen: React.FC = () => {
       buttonText='Back to login'
       showBackButton={false}
       footer={
-        emailDeliveryConfigured && (
+        email && (
           <>
             <AuthFormFooter
               text="Didn't receive an email?"
