@@ -25,7 +25,7 @@ Check the status badge beside the file name. It shows the current processing sta
 3. Choose **Save** and check that the label appears in the file's **Tags** column. Creating a tag alone does not attach it to the file.
 4. Use **View** in the file's actions to inspect the stored content, especially after processing a table or scanned page.
 
-To see how many tokens a file takes, choose **Tokens** in its **Actions** menu. It shows the count on Claude, OpenAI and Gemini, since each provider counts the same text differently. Files are counted once, when they finish processing.
+To see how many tokens a file takes, choose **Tokens** in its **Actions** menu. It shows the count on Claude, OpenAI and Gemini, since each provider counts the same text differently. Older Claude models (4.5 and earlier) count fewer tokens than the number shown; when one is selected in a conversation, the **Files** note says by how much. Files are counted once, when they finish processing.
 
 Deleting a file moves it to **Recently deleted** in the Sources menu. From there you can restore it or choose **Delete permanently**.
 

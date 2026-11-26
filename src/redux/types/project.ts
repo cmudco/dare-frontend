@@ -88,4 +88,7 @@ export interface SourceSize {
   fitsFullFiles: boolean
   /** Some files could not be counted by the model's own tokenizer. */
   estimated: boolean
+  /** The provider's reference model (the Tokens dialog's count), when another model is picked. */
+  referenceModel: string | null
+  referenceTokens: number | null
 }

@@ -22,6 +22,7 @@ import {
   updateSelectedLibraries,
   updateRagMode,
   setSourcePickerOpen,
+  selectSelectedPickerEntry,
 } from '@/redux/conversationSlice'
 import {
   selectAddedLibraries,
@@ -112,6 +113,7 @@ const ConversationFileSelect: React.FC = () => {
   const selectedModel = useSelector(
     (state: RootState) => state.conversation.selectedModel
   )
+  const selectedModelName = useSelector(selectSelectedPickerEntry)?.name
   const selectedMediaFiles = useSelector(
     (state: RootState) => state.conversation.selectedMediaFiles
   )
@@ -488,8 +490,25 @@ const ConversationFileSelect: React.FC = () => {
           ? `The AI reads ${selectedFiles.length === 1 ? 'this file' : 'these files'} in full (${formatTokenCount(readSize.size.estimatedTokens, readSize.size.estimated)}).`
           : `Too long for this model: ${formatTokenCount(readSize.size.estimatedTokens, readSize.size.estimated)}, and it has room for ${formatTokenEstimate(readSize.size.tokenLimit)} of files. Pick a model with a larger context window, or use Embeddings to search ${selectedFiles.length === 1 ? 'it' : 'them'}.`
 
+  // Older tokenizers drift from the reference count the Tokens dialog shows.
+  const drift =
+    readSize.status === 'ready' &&
+    !readSize.refreshing &&
+    readSize.size.referenceTokens &&
+    readSize.size.estimatedTokens > 0
+      ? Math.round(
+          (1 - readSize.size.estimatedTokens / readSize.size.referenceTokens) *
+            100
+        )
+      : 0
+  const tokenizerNote =
+    Math.abs(drift) >= 5 && readSize.status === 'ready'
+      ? `${selectedModelName ?? 'This model'} counts ~${Math.abs(drift)}% ${drift > 0 ? 'fewer' : 'more'} tokens than ${readSize.size.referenceModel} (${formatTokenEstimate(readSize.size.referenceTokens ?? 0)}) in Sources.`
+      : null
+
   const footerNotes = [
     { key: 'read', text: readNote },
+    { key: 'tokenizer', text: tokenizerNote },
     { key: 'table', text: tableHint },
   ].filter((note): note is { key: string; text: string } => Boolean(note.text))
 
