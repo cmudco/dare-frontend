@@ -6,9 +6,11 @@ import { store } from './redux/store.ts'
 import { ThemeProvider } from './providers/ThemeProvider.tsx'
 import * as Sentry from '@sentry/react'
 import { installDeliberationDevTools } from './dev/simulateDeliberation'
+import { config } from './config/environment'
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
+  environment: config.environment,
   integrations: [
     Sentry.browserTracingIntegration(),
     Sentry.replayIntegration({

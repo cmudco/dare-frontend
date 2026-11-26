@@ -30,8 +30,9 @@ import { getWallets } from '@/redux/asyncThunks/billing'
 import { fetchConversationMessages } from '@/redux/asyncThunks/conversation'
 import type { RootState } from '@/redux/store'
 import {
-  captureSocketDrop,
   captureSocketFailure,
+  captureSocketStillDown,
+  closeCodeOf,
   recordSocketLifecycle,
 } from '@/utils/socketObservability'
 import { reconnectOnWake } from '@/utils/socketWake'
@@ -309,8 +310,11 @@ export function createSocketMiddleware(): Middleware {
         socket.on('disconnect', (reason, details) => {
           debugLog('🔌 Socket.IO disconnected:', reason)
           const active = socket?.active ?? false
-          recordSocketLifecycle('chat', 'disconnected', { reason, active })
-          captureSocketDrop('chat', reason, details)
+          recordSocketLifecycle('chat', 'disconnected', {
+            reason,
+            active,
+            closeCode: closeCodeOf(details),
+          })
           dispatch({ type: 'websocket/disconnected', payload: { reason } })
 
           // A server-forced namespace disconnect disables Socket.IO's normal
@@ -329,10 +333,15 @@ export function createSocketMiddleware(): Middleware {
 
         socket.on('connect_error', (error) => {
           console.error('🔌 Socket.IO error:', error.message)
-          captureSocketFailure('chat', 'connect', error, {
+          const context = {
             active: socket?.active,
+            error: error.message,
             transport: socket?.io.engine?.transport.name,
-          })
+          }
+          recordSocketLifecycle('chat', 'connect_error', context)
+          // Inactive means the server refused the handshake and no retry follows.
+          if (!socket?.active)
+            captureSocketFailure('chat', 'connect', error, context)
           dispatch({
             type: 'websocket/error',
             payload: { error: error.message },
@@ -343,11 +352,12 @@ export function createSocketMiddleware(): Middleware {
           recordSocketLifecycle('chat', 'reconnect_attempt', {
             attempt,
           })
+          captureSocketStillDown('chat', attempt)
         })
 
         socket.io.on('reconnect_error', (error) => {
-          captureSocketFailure('chat', 'reconnect', error, {
-            active: socket?.active,
+          recordSocketLifecycle('chat', 'reconnect_error', {
+            error: error.message,
           })
         })
 
