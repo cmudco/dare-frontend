@@ -23,8 +23,9 @@ import { config } from '@/config/environment'
 import { SOCKET_RECONNECT_POLICY } from '@/config/socket'
 import { debugLog } from '@/utils/debugLogger'
 import {
-  captureSocketDrop,
   captureSocketFailure,
+  captureSocketStillDown,
+  closeCodeOf,
   recordSocketLifecycle,
 } from '@/utils/socketObservability'
 import { reconnectOnWake } from '@/utils/socketWake'
@@ -280,8 +281,11 @@ export function createWorkflowSocketMiddleware(): Middleware {
       socket.on('disconnect', (reason, details) => {
         debugLog('🔧 Workflow Socket.IO disconnected:', reason)
         const active = socket?.active ?? false
-        recordSocketLifecycle('workflow', 'disconnected', { reason, active })
-        captureSocketDrop('workflow', reason, details)
+        recordSocketLifecycle('workflow', 'disconnected', {
+          reason,
+          active,
+          closeCode: closeCodeOf(details),
+        })
         dispatch(wsDisconnected())
 
         if (reason === 'io server disconnect') {
@@ -297,21 +301,27 @@ export function createWorkflowSocketMiddleware(): Middleware {
 
       socket.on('connect_error', (error) => {
         console.error('🔧 Workflow Socket.IO error:', error.message)
-        captureSocketFailure('workflow', 'connect', error, {
+        const context = {
           active: socket?.active,
+          error: error.message,
           transport: socket?.io.engine?.transport.name,
-        })
+        }
+        recordSocketLifecycle('workflow', 'connect_error', context)
+        // Inactive means the server refused the handshake and no retry follows.
+        if (!socket?.active)
+          captureSocketFailure('workflow', 'connect', error, context)
       })
 
       socket.io.on('reconnect_attempt', (attempt) => {
         recordSocketLifecycle('workflow', 'reconnect_attempt', {
           attempt,
         })
+        captureSocketStillDown('workflow', attempt)
       })
 
       socket.io.on('reconnect_error', (error) => {
-        captureSocketFailure('workflow', 'reconnect', error, {
-          active: socket?.active,
+        recordSocketLifecycle('workflow', 'reconnect_error', {
+          error: error.message,
         })
       })
 
