@@ -12,6 +12,7 @@ const VerifyEmailScreen = () => {
     (state) => state.user
   )
   const [alreadyVerified, setAlreadyVerified] = useState(false)
+  const [approvalRequired, setApprovalRequired] = useState(false)
   const verificationRequested = useRef(false)
 
   useEffect(() => {
@@ -22,7 +23,10 @@ const VerifyEmailScreen = () => {
       verificationRequested.current = true
       dispatch(verifyEmailRegistration({ key }))
         .unwrap()
-        .then((data) => setAlreadyVerified(Boolean(data?.alreadyVerified)))
+        .then((data) => {
+          setAlreadyVerified(Boolean(data?.alreadyVerified))
+          setApprovalRequired(Boolean(data?.approvalRequired))
+        })
         .catch(() => {})
     }
   }, [searchParams, dispatch])
@@ -53,9 +57,11 @@ const VerifyEmailScreen = () => {
       title='Email Verification'
       subtitle={
         successMessage
-          ? alreadyVerified
-            ? 'Your email is already verified.'
-            : 'Your email has been verified successfully.'
+          ? approvalRequired
+            ? 'Your email is verified. Please wait for administrator approval before signing in.'
+            : alreadyVerified
+              ? 'Your email is already verified.'
+              : 'Your email has been verified successfully.'
           : 'Verifying your email...'
       }
       subtitleClassName='text-center'

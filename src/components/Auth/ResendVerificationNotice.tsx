@@ -14,7 +14,7 @@ const ResendVerificationNotice: React.FC<ResendVerificationNoticeProps> = ({
     className='mt-3 rounded-md border border-border bg-muted px-4 py-2 text-xs font-medium text-foreground'
   >
     {result.emailDeliveryConfigured
-      ? 'Verification email resent. Please check your inbox.'
+      ? 'Verification email requested. If it does not arrive, contact your deployment administrator.'
       : EMAIL_DELIVERY_UNAVAILABLE_MESSAGE}
   </p>
 )

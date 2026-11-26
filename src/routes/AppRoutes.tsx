@@ -8,6 +8,8 @@ import VerifyCodeScreen from '../pages/VerifyCode'
 import LoginScreen from '../pages/Login'
 import SsoCallbackScreen from '../pages/SsoCallback'
 import ForgotScreen from '../pages/ForgotPassword'
+import RequestAccessScreen from '../pages/RequestAccess'
+import SignupPendingScreen from '../pages/SignupPending'
 import RegistrationScreen from '../pages/Registration'
 import CoversationScreen from '../pages/Conversation/index.tsx'
 import UserView from '../components/Layout/UserView'
@@ -75,6 +77,8 @@ const AppRoutes = () => {
         <Routes>
           <Route path='/login' element={<LoginScreen />} />
           <Route path='/sso/callback' element={<SsoCallbackScreen />} />
+          <Route path='/request-access' element={<RequestAccessScreen />} />
+          <Route path='/signup-pending' element={<SignupPendingScreen />} />
           <Route path='/register' element={<RegistrationScreen />} />
           <Route path='/users/confirm-email' element={<VerifyEmailScreen />} />
           <Route path='/forgot-password' element={<ForgotScreen />} />

@@ -20,6 +20,8 @@ interface AuthCardProps<T extends FormikValues> {
   subtitleClassName?: string
   inputs: InputField[]
   formikConfig: FormikConfig<T>
+  loading?: boolean
+  error?: string | null
   buttonText: string
   showBackButton?: boolean
   showForgotPassword?: boolean
@@ -37,6 +39,8 @@ const AuthCard = <T extends FormikValues>({
   inputs,
   formikConfig,
   buttonText,
+  loading: loadingOverride,
+  error: errorOverride,
   showBackButton = false,
   showForgotPassword = false,
   showprivacyPolicy = false,
@@ -46,8 +50,11 @@ const AuthCard = <T extends FormikValues>({
   onResendVerification,
 }: AuthCardProps<T>) => {
   const navigate = useNavigate()
-  const error = useSelector((state: RootState) => state.user.error)
-  const loading = useSelector((state: RootState) => state.user.loading)
+  const userError = useSelector((state: RootState) => state.user.error)
+  const userLoading = useSelector((state: RootState) => state.user.loading)
+
+  const error = errorOverride === undefined ? userError : errorOverride
+  const loading = loadingOverride ?? userLoading
 
   const showResendButton =
     onResendVerification &&
@@ -115,6 +122,7 @@ const AuthCard = <T extends FormikValues>({
               {buttonText && (
                 <Button
                   type='submit'
+                  disabled={loading}
                   variant='default'
                   className='text-md mt-3 flex w-full items-center justify-center rounded-md px-4 py-2 font-medium'
                 >

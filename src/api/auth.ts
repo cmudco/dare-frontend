@@ -5,6 +5,7 @@ import { config } from '@/config/environment'
 import {
   AuthResponse,
   SsoConfig,
+  RegistrationResponse,
   EmailVerificationSentResponse,
   VerifyEmailResponse,
   Setup2FAResponse,
@@ -17,11 +18,12 @@ export const registerUser = async (data: {
   email: string
   password1: string
   password2: string
-  accessCode: string
-}): Promise<EmailVerificationSentResponse> => {
-  return await baseRequest<EmailVerificationSentResponse>({
+  accessCode?: string
+}): Promise<RegistrationResponse> => {
+  return await baseRequest<RegistrationResponse>({
     url: 'users/api/dj-rest-auth/registration/',
     method: METHOD.POST,
+    includeAuthToken: false,
     data,
   })
 }
