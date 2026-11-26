@@ -1,85 +1,85 @@
 import {
   BookOpen,
-  Compass,
-  MessageSquare,
-  Files,
-  FileText,
   Bot,
-  Workflow,
-  Wallet,
-  Settings,
+  Compass,
+  FileText,
+  Files,
   LifeBuoy,
+  MessageSquare,
+  Settings,
+  Wallet,
+  Workflow,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import manual from '../../../docs/user-guide.md?raw'
 
-const metadata: Record<string, { icon: LucideIcon; summary: string }> = {
-  'Your first conversation': {
-    icon: BookOpen,
-    summary:
-      'A short, practical walkthrough from the dashboard to your first response.',
+export const MANUAL_GROUPS = [
+  { id: 'start', label: '01 / Get oriented', title: 'Conversations & sources' },
+  {
+    id: 'build',
+    label: '02 / Build on your work',
+    title: 'Prompts, agents & workflows',
   },
-  'Find your way around': {
-    icon: Compass,
-    summary:
-      'Know where to find tools, wallet controls, notifications and help.',
+  {
+    id: 'manage',
+    label: '03 / Manage your workspace',
+    title: 'Usage & support',
   },
-  'Conversations and models': {
-    icon: MessageSquare,
-    summary:
-      'Start a conversation, choose a model and continue the discussion.',
-  },
-  'Sources and documents': {
-    icon: Files,
-    summary:
-      'Upload documents, choose processing options and use files in a conversation.',
-  },
-  'Reusable prompts': {
-    icon: FileText,
-    summary:
-      'Save instructions, manage versions and understand the default prompt.',
-  },
-  Agents: {
-    icon: Bot,
-    summary:
-      'Combine a prompt and language model in a reusable agent configuration.',
-  },
-  Workflows: {
-    icon: Workflow,
-    summary: 'Build, save and test a small workflow before expanding it.',
-  },
-  'Wallets and cost tracking': {
-    icon: Wallet,
-    summary: 'Review your selected wallet, credit and transaction history.',
-  },
-  'Settings and account controls': {
-    icon: Settings,
-    summary:
-      'Adjust appearance and preferences, and review account data controls.',
-  },
-  'Troubleshooting and support': {
-    icon: LifeBuoy,
-    summary: 'Resolve model, credit, document and workflow problems.',
-  },
+] as const
+
+export type ManualGroupId = (typeof MANUAL_GROUPS)[number]['id']
+
+export interface ManualTopic {
+  id: string
+  title: string
+  summary: string
+  icon: LucideIcon
+  group?: ManualGroupId
+  order: number
+  markdown: string
 }
 
-export const manualTopics = manual
-  .split(/^## /m)
-  .slice(1)
-  .flatMap((block) => {
-    const newline = block.indexOf('\n')
-    const title = block.slice(0, newline).trim()
-    const details = metadata[title]
-    if (!details) return []
-    return [
-      {
-        id: title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-|-$/g, ''),
-        title,
-        markdown: `# ${title}\n${block.slice(newline)}`,
-        ...details,
-      },
-    ]
-  })
+// Icons a topic's frontmatter can name; add one here to use it.
+const ICONS: Record<string, LucideIcon> = {
+  BookOpen,
+  Bot,
+  Compass,
+  FileText,
+  Files,
+  LifeBuoy,
+  MessageSquare,
+  Settings,
+  Wallet,
+  Workflow,
+}
+
+const FRONTMATTER = /^---\n([\s\S]*?)\n---\n/
+const FIELD = /^(\w+):\s*(.*)$/
+
+const files = import.meta.glob<string>('../../../docs/user-guide/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+})
+
+const parseTopic = (path: string, raw: string): ManualTopic => {
+  const [header, block] = raw.match(FRONTMATTER) ?? ['', '']
+  const fields = Object.fromEntries(
+    block.split('\n').flatMap((line) => {
+      const match = line.match(FIELD)
+      return match ? [[match[1], match[2]]] : []
+    })
+  )
+  return {
+    id: path.slice(path.lastIndexOf('/') + 1, -'.md'.length),
+    title: fields.title,
+    summary: fields.summary,
+    icon: ICONS[fields.icon] ?? FileText,
+    group: MANUAL_GROUPS.find((group) => group.id === fields.group)?.id,
+    order: Number(fields.order),
+    markdown: raw.slice(header.length),
+  }
+}
+
+export const manualTopics = Object.entries(files)
+  .map(([path, raw]) => parseTopic(path, raw))
+  .sort((a, b) => a.order - b.order)
