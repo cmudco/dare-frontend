@@ -105,7 +105,9 @@ const RelationshipsPanel = ({
     : 0
   const building = graph.status === 'building'
   const discovering = graph.status === 'discovering'
-  const preparing = graph.status === 'preparing'
+  // Preparing or re-checking names: no read can start until it finishes.
+  const namesBusy =
+    graph.status === 'preparing' || graph.status === 'checking_names'
   const build = estimate?.build
   const newTypes = estimate?.newTypes
   const newFiles = estimate?.newFiles
@@ -156,7 +158,7 @@ const RelationshipsPanel = ({
           <Button
             variant='outline'
             size='sm'
-            disabled={preparing || discovering || building || starting}
+            disabled={namesBusy || discovering || building || starting}
             onClick={() => void run(() => discoverLabelsAPI(graph.id, goal))}
           >
             {discovering ? (
@@ -358,14 +360,14 @@ const RelationshipsPanel = ({
                   {scope !== 'all' && build && (
                     <Button
                       variant='outline'
-                      disabled={preparing || starting}
+                      disabled={namesBusy || starting}
                       onClick={() => void run(() => approveBuildAPI(graph.id))}
                     >
                       Rerun all · {money(build.cost)}
                     </Button>
                   )}
                   <Button
-                    disabled={preparing || starting || !build}
+                    disabled={namesBusy || starting || !build}
                     onClick={() =>
                       void run(() => approveBuildAPI(graph.id, scope))
                     }

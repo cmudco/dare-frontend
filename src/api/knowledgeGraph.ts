@@ -50,6 +50,13 @@ export const updateGraphAPI = (
 export const deleteGraphAPI = (id: number) =>
   baseRequest<void>({ url: `${BASE}/${id}/`, method: METHOD.DELETE })
 
+/** Starts re-scoring this graph's names; poll the graph until it stops checking. */
+export const recheckNamesAPI = (id: number) =>
+  baseRequest<KnowledgeGraphSummary>({
+    url: `${BASE}/${id}/recheck-names/`,
+    method: METHOD.POST,
+  })
+
 /** Sizes the backend accepts for one page of the picture. */
 export const PICTURE_SIZES = [60, 150, 300]
 

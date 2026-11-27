@@ -4,6 +4,7 @@ export type GraphStatus =
   | 'discovering'
   | 'awaiting_approval'
   | 'building'
+  | 'checking_names'
   | 'ready'
   | 'failed'
 
@@ -30,6 +31,16 @@ export interface KnowledgeGraphSummary {
   hasEvalReport: boolean
   /** Types the last read saw in your documents that the list doesn't have. */
   proposedTypes: ProposedType[]
+  nameCheck: NameCheck | null
+}
+
+/** Counts from the last "Re-check names" run. */
+export interface NameCheck {
+  merged: number
+  separated: number
+  /** Pairs left for the model check at the next relationships read. */
+  review: number
+  checkedAt: string
 }
 
 export interface ProposedType {
