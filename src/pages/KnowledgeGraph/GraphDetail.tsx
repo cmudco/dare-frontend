@@ -17,6 +17,7 @@ import GraphLegend from '@/components/KnowledgeGraph/GraphLegend'
 import GraphPager from '@/components/KnowledgeGraph/GraphPager'
 import GraphSearchBox from '@/components/KnowledgeGraph/GraphSearchBox'
 import GraphStats from '@/components/KnowledgeGraph/GraphStats'
+import NameCheckButton from '@/components/KnowledgeGraph/NameCheckButton'
 import RelationshipsPanel from '@/components/KnowledgeGraph/RelationshipsPanel'
 import { tierRanges } from '@/components/KnowledgeGraph/tiers'
 import { Button } from '@/components/ui/button'
@@ -27,7 +28,7 @@ import type {
   KnowledgeGraphView,
 } from '@/redux/types/knowledgeGraph'
 
-const BUSY = ['preparing', 'discovering', 'building']
+const BUSY = ['preparing', 'discovering', 'building', 'checking_names']
 const POLL_MS = 2500
 const FEW_RELATIONS = 8
 
@@ -53,6 +54,7 @@ const KnowledgeGraphDetail = () => {
   const [failed, setFailed] = useState(false)
   const [editing, setEditing] = useState(false)
   const latestRequest = useRef(0)
+  const lastStatus = useRef<string | null>(null)
 
   const refresh = useCallback(async () => {
     const request = ++latestRequest.current
@@ -69,6 +71,14 @@ const KnowledgeGraphDetail = () => {
       return
     }
     if (request !== latestRequest.current) return
+    // A finished name check changed the names, so the list reloads.
+    if (
+      lastStatus.current === 'checking_names' &&
+      summary.status !== 'checking_names'
+    ) {
+      setRevision((current) => current + 1)
+    }
+    lastStatus.current = summary.status
     setFailed(false)
     setGraph(summary)
     setView(payload)
@@ -176,6 +186,13 @@ const KnowledgeGraphDetail = () => {
                 not read for relationships yet
               </button>
             )}
+            <div className='mt-2'>
+              <NameCheckButton
+                graph={graph}
+                disabled={busy}
+                onStarted={() => void refresh()}
+              />
+            </div>
           </div>
           <GraphStats stats={view.stats} />
         </div>
