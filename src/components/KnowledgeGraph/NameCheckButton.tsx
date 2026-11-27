@@ -16,7 +16,7 @@ import { toast } from '@/utils/toast'
 
 interface NameCheckButtonProps {
   graph: KnowledgeGraphSummary
-  /** Another job is running, so a re-check can't start. */
+  /** A job, this re-check included, is running. */
   disabled: boolean
   onStarted: () => void
 }
@@ -53,7 +53,7 @@ const NameCheckButton = ({
       <Button
         variant='outline'
         size='sm'
-        disabled={disabled || checking}
+        disabled={disabled}
         onClick={() => setConfirming(true)}
       >
         {checking ? (

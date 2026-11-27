@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type {
+  GraphStatus,
   KnowledgeGraphSummary,
   KnowledgeGraphView,
 } from '@/redux/types/knowledgeGraph'
@@ -54,7 +55,7 @@ const KnowledgeGraphDetail = () => {
   const [failed, setFailed] = useState(false)
   const [editing, setEditing] = useState(false)
   const latestRequest = useRef(0)
-  const lastStatus = useRef<string | null>(null)
+  const lastStatus = useRef<GraphStatus | null>(null)
 
   const refresh = useCallback(async () => {
     const request = ++latestRequest.current
